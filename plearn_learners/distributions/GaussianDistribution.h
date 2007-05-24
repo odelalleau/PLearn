@@ -73,6 +73,7 @@ public:
     real min_eig;
     bool use_last_eig;
     float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
+    Vec given_mu;
 
 public:
     GaussianDistribution();

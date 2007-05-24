@@ -116,6 +116,9 @@ void GaussianDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "ignore_weights_below", &GaussianDistribution::ignore_weights_below, OptionBase::buildoption | OptionBase::nosave,
                   "DEPRECATED: When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored");
 
+    declareOption(ol, "given_mu", &GaussianDistribution::given_mu, OptionBase::buildoption,
+                  "If this is set (i.e. not an empty vec), then train will not learn mu from the data, but simply copy its value given here.");
+
     // Learnt options
     declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
     declareOption(ol, "eigenvalues", &GaussianDistribution::eigenvalues, OptionBase::learntoption, "");
@@ -173,12 +176,27 @@ void GaussianDistribution::train()
     // (declared static to avoid repeated dynamic memory allocation)
     static Mat covarmat;
 
-    if(ws==0)
-        computeMeanAndCovar(training_set, mu, covarmat);
-    else if(ws==1)
-        computeInputMeanAndCovar(training_set, mu, covarmat);
+    if(given_mu.length()>0)
+    { // we have a fixed given_mu
+        int d = given_mu.length();
+        mu.resize(d);
+        mu << given_mu;
+        if(ws==0)
+            computeCovar(training_set, mu, covarmat);
+        else if(ws==1)
+            computeInputCovar(training_set, mu, covarmat);
+        else
+            PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
+    }
     else
-        PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
+    {
+        if(ws==0)
+            computeMeanAndCovar(training_set, mu, covarmat);
+        else if(ws==1)
+            computeInputMeanAndCovar(training_set, mu, covarmat);
+        else
+            PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
+    }
 
     // cerr << "maxneigval: " << maxneigval << " ";
     // cerr << eigenvalues.length() << endl;
