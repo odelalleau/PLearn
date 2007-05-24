@@ -219,6 +219,10 @@ protected:
     //! Used to store gradient w.r.t. bias of visible layer
     Vec visible_bias_grad;
 
+    //! Used to cache the hidden layer expectations and activations
+    Mat hidden_exp_store;
+    Mat hidden_act_store;
+
     //! names of the ports
     TVec<string> ports;
 

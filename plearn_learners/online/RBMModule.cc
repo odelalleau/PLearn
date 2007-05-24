@@ -271,6 +271,9 @@ void RBMModule::fprop(const Vec& input, Vec& output) const
 void RBMModule::fprop(const TVec<Mat*>& ports_value)
 {
     PLASSERT( ports_value.length() == nPorts() );
+    PLASSERT( visible_layer );
+    PLASSERT( hidden_layer );
+    PLASSERT( connection );
     int port = 0;
     Mat* visible = ports_value[port++]; 
     Mat* hidden = ports_value[port++];
@@ -309,56 +312,63 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         visible_layer->setExpectations(*visible);
     }
 
-    // compute the energy if asked
+    // COMPUTE ENERGY
     if (energy) 
     {
         PLASSERT_MSG( energy->isEmpty(), 
                       "RBMModule: the energy port can only be an output port\n" );
-        if (visible && !visible->isEmpty() &&
-            hidden && !hidden->isEmpty()) 
-            // we know x and h: energy(h,x) = b'x + c'h + h'Wx
-            //  = visible_layer->energy(x) + hidden_layer->energy(h) + dot(h,hidden_layer->activation)
+        if (visible && !visible->isEmpty())
         {
-            energy->resize(visible->length(),1);
-            energy->clear();
-            for (int i=0;i<visible->length();i++)
+            int mbs = visible->length();
+            if (hidden && !hidden->isEmpty()) 
+                // FULLY OBSERVED CASE
+                // we know x and h: energy(h,x) = b'x + c'h + h'Wx
+                //  = visible_layer->energy(x) + hidden_layer->energy(h) + dot(h,hidden_layer->activation)
             {
-                connection->setAsDownInputs(*visible);
-                hidden_layer->getAllActivations(connection, 0, true);
-                hidden_activations_are_computed=true;
-                (*energy)(i,0) = visible_layer->energy((*visible)(i)) + 
-                    hidden_layer->energy((*hidden)(i)) + 
-                    dot((*hidden)(i),hidden_layer->activations(i));
-            }
-        } else if (visible && !visible->isEmpty()) 
-            // we know x: free energy = -log sum_h e^{-energy(h,x)}
-            //                        = b'x + sum_i log sigmoid(-c_i - W_i'x) .... FOR BINOMIAL HIDDEN LAYER
-            //                        = visible_layer->energy(x) + sum_i log hidden_layer->expectation[i]
-            // or more robustly,      = visible_layer->energy(x) - sum_i softplus(-hidden_layer->activation[i])
-        {
-            PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
-            energy->resize(visible->length(),1);
-            energy->clear();
-            for (int i=0;i<visible->length();i++)
+                energy->resize(mbs,1);
+                energy->clear();
+                for (int i=0;i<mbs;i++)
+                {
+                    connection->setAsDownInputs(*visible);
+                    hidden_layer->getAllActivations(connection, 0, true);
+                    hidden_activations_are_computed=true;
+                    (*energy)(i,0) = visible_layer->energy((*visible)(i)) + 
+                        hidden_layer->energy((*hidden)(i)) + 
+                        dot((*hidden)(i),hidden_layer->activations(i));
+                }
+            } else 
+                // FREE-ENERGY(visible) CASE
+                // we know x: free energy = -log sum_h e^{-energy(h,x)}
+                //                        = b'x + sum_i log sigmoid(-c_i - W_i'x) .... FOR BINOMIAL HIDDEN LAYER
+                //                        = visible_layer->energy(x) + sum_i log hidden_layer->expectation[i]
+                // or more robustly,      = visible_layer->energy(x) - sum_i softplus(-hidden_layer->activation[i])
             {
-                connection->setAsDownInputs(*visible);
-                hidden_layer->getAllActivations(connection, 0, true);
-                hidden_activations_are_computed=true;
-                (*energy)(i,0) = visible_layer->energy((*visible)(i));
-                for (int j=0;j<hidden_layer->size;j++)
-                    (*energy)(i,0) += softplus(hidden_layer->activations(i,j));
+                PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+                energy->resize(mbs,1);
+                energy->clear();
+                for (int i=0;i<mbs;i++)
+                {
+                    connection->setAsDownInputs(*visible);
+                    hidden_layer->getAllActivations(connection, 0, true);
+                    hidden_activations_are_computed=true;
+                    (*energy)(i,0) = visible_layer->energy((*visible)(i));
+                    for (int j=0;j<hidden_layer->size;j++)
+                        (*energy)(i,0) += softplus(hidden_layer->activations(i,j));
+                }
             }
         }
         else if (hidden && !hidden->isEmpty())
+            // FREE-ENERGY(hidden) CASE
             // we know h: free energy = -log sum_x e^{-energy(h,x)}
             //                        = c'h + sum_i log sigmoid(-b_i - W_{.i}'h) .... FOR BINOMIAL INPUT LAYER
             //                        = hidden_layer->energy(h) + sum_i log visible_layer->expectation[i]
             // or more robustly,      = hidden_layer->energy(h) - sum_i softplus(-visible_layer->activation[i])
         {
             PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
-            energy->resize(visible->length(),1);
+            int mbs = hidden->length();
+            energy->resize(mbs,1);
             energy->clear();
-            for (int i=0;i<hidden->length();i++)
+            for (int i=0;i<mbs;i++)
             {
                 connection->setAsUpInputs(*hidden);
                 visible_layer->getAllActivations(connection, 0, true);
@@ -373,6 +383,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     "only possible if at least visible or hidden are provided).\n");
         found_a_valid_configuration = true;
     }
+    // REGULAR FPROP
     // we are given the visible units and we want to compute the hidden
     // activation and/or the hidden expectation
     if ( visible && !visible->isEmpty() &&
@@ -404,6 +415,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         //PLASSERT( !visible_sample && !hidden_sample );
         found_a_valid_configuration = true;
     } 
+    // SAMPLING
     if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
         || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
     {
@@ -454,23 +466,35 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         found_a_valid_configuration = true;
     }
+    // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
     if (contrastive_divergence)
     {
         PLASSERT_MSG( contrastive_divergence->isEmpty(), 
                       "RBMModule: the contrastive_divergence port can only be an output port\n" );
-        if (visible && !visible->isEmpty() && (!hidden || hidden->isEmpty()))
+        if (visible && !visible->isEmpty())
         {
             int mbs = visible->length();
+            Mat& hidden_expectations = hidden_layer->getExpectations();
             if (!hidden_activations_are_computed) // it must be because neither hidden nor hidden_act were asked
             {
+                PLASSERT(!hidden_act);
                 connection->setAsDownInputs(*visible); 
                 hidden_layer->getAllActivations(connection, 0, true);
                 hidden_activations_are_computed=true;
+                // we need to save the hidden activations somewhere
+                hidden_act_store.resize(mbs,hidden_layer->size);
+                hidden_act_store << hidden_layer->activations;
+                hidden_act = &hidden_act_store;
             }
             if (!hidden_expectations_are_computed) // it must be because hidden outputs were not asked
             {
+                PLASSERT(!hidden);
                 hidden_layer->computeExpectations();
                 hidden_expectations_are_computed=true;
+                // we need to save the hidden expectations somewhere
+                hidden_exp_store.resize(mbs,hidden_layer->size);
+                hidden_exp_store << hidden_expectations;
+                hidden = &hidden_exp_store;
             }
             // perform negative phase
             for( int i=0; i<n_Gibbs_steps_CD; i++)
@@ -487,22 +511,40 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
             *negative_phase_visible_samples << visible_layer->samples;
-            Mat& hidden_expectations = hidden_layer->getExpectations();
             negative_phase_hidden_expectations->resize(hidden_expectations.length(),
                                                        hidden_expectations.width());
             *negative_phase_hidden_expectations << hidden_expectations;
+
             // compute the energy (again for now only in the binomial case)
             PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+
+            // note that hidden_act and hidden may point to hidden_act_store and hidden_exp_store
+            PLASSERT(!hidden_act->isEmpty()); 
+            PLASSERT(!hidden->isEmpty());
+
             contrastive_divergence->resize(hidden_expectations.length(),1);
             // compute contrastive divergence itself
-            //for (int i=0;i<mbs;i++)
-            //    (*contrastive_divergence)(i,0) = visible_layer->energy(
+            for (int i=0;i<mbs;i++)
+            {
+                (*contrastive_divergence)(i,0) = 
+                    // positive phase energy
+                    visible_layer->energy((*visible)(i))
+                    + hidden_layer->energy((*hidden)(i))
+                    + dot((*hidden)(i),(*hidden_act)(i))
+                    // minus
+                    - 
+                    // negative phase energy
+                    (visible_layer->energy(visible_layer->samples(i))
+                     + hidden_layer->energy(hidden_expectations(i))
+                     + dot(hidden_expectations(i),hidden_layer->activations(i)));
+            }
         }
         else
             PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
                     "only possible if only visible are provided in input).\n");
         found_a_valid_configuration = true;
     }
+    // COMPUTE AUTO-ASSOCIATOR RECONSTRUCTION ERROR
     if ( visible && !visible->isEmpty() && 
          ( ( visible_reconstruction && visible_reconstruction->isEmpty() ) || 
            ( visible_reconstruction_activations && 
