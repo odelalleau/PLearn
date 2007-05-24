@@ -130,6 +130,19 @@ void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
                   (BodyDoc("Returns the matValue of the parameter variable with the given name"),
                    ArgDoc("varname", "name of the variable searched for"),
                    RetDoc("Returns the value of the parameter as a Mat")));
+
+
+    declareMethod(rmm,
+                  "listParameterNames",
+                  &DeepReconstructorNet::listParameterNames,
+                  (BodyDoc("Returns a list of the names of the parameters"),
+                   RetDoc("Returns a list of the names of the parameters")));
+
+    declareMethod(rmm,
+                  "listParameter",
+                  &DeepReconstructorNet::listParameter,
+                  (BodyDoc("Returns a list of the parameters"),
+                   RetDoc("Returns a list of the names")));
 }
 
 void DeepReconstructorNet::build_()
@@ -368,6 +381,24 @@ Mat DeepReconstructorNet::getParameterValue(const string& varname)
     PLERROR("There is no parameter  named %s", varname.c_str());
     return Mat(0,0);
 }
+
+TVec<string> DeepReconstructorNet::listParameterNames()
+{
+    TVec<string> nameListe(0);
+    for (int i=0; i<parameters.length(); i++)
+        if (parameters[i]->getName() != "")
+            nameListe.append(parameters[i]->getName());
+    return nameListe;
+}
+
+TVec<Mat> DeepReconstructorNet::listParameter()
+{
+    TVec<Mat> matList(0);
+    for (int i=0; i<parameters.length(); i++)
+        matList.append(parameters[i]->matValue);
+    return matList;
+}
+
 
 } // end of namespace PLearn
 

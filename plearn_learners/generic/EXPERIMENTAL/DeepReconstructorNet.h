@@ -163,7 +163,11 @@ public:
     //! Returns the matValue of the parameter variable with the given name
     Mat getParameterValue(const string& varname);
 
+    //! Returns a list of the names of the parameters (in the same order as in listParameter)
     TVec<string> listParameterNames();
+
+    //! Returns a list of the parameters
+    TVec<Mat> listParameter();
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs

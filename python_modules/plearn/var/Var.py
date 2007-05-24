@@ -33,6 +33,7 @@
 from plearn.pyplearn import *
 from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
 
+from math import sqrt
     
 class Var:
 
@@ -169,8 +170,10 @@ def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, basename="")
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
-    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    #M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
+    #W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    M = Var(ow/ogs, iw, "uniform", -1./sqrt(iw), 1./sqrt(iw), False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -1./sqrt(iw), 1./sqrt(iw), False, varname=basename+"_W")
     hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
     cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
     return hidden, cost
