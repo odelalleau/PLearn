@@ -35,9 +35,8 @@
 ## library, go to the PLearn Web site at www.plearn.org
 
 $ScriptName="lauchdbi.py";
-
-if (scalar(@ARGV) == 0) {
-    die <<EOUSAGE
+$ShortHelp='Usage: dbidispatch [--help|-h] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
+$LongHelp=<<EOUSAGE;
 Usage: dbidispatch [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
@@ -84,6 +83,15 @@ cdispatch --test --file=tests
 
 In the file, their must not be double quote around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
 EOUSAGE
+    ;
+
+if (scalar(@ARGV) == 0) {
+    die $ShortHelp;
+}
+
+if($ARGV[0] eq "--help" || $ARGV[0] eq "-h"){
+    print $LongHelp;
+    exit;
 }
 
 if ($ARGV[0] eq "--test") {
