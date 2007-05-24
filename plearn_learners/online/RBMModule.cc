@@ -178,56 +178,55 @@ void RBMModule::build_()
     // buid ports and port_sizes
 
     ports.resize(0);
-    ports.append("visible");
-    // NOTE THAT with "hidden" the name of the hidden port, WE CANNOT DO CONTRASTIVE DIVERGENCE
-    // ON A TOP-LEVEL RBM WHICH IS NOT CONNECTED TO SOMETHING HIGHER 
-    // (which would be what we want for purely unsupervised training)
-    // The user would have to connect the hidden to something (possibly a dummy MatrixModule).
-    ports.append("hidden.state");
-    ports.append("hidden_activations.state");
-    ports.append("visible_sample");
-    ports.append("hidden_sample");
-    ports.append("energy");
+    addportname("visible");
+    addportname("hidden.state");
+    addportname("hidden_activations.state");
+    addportname("visible_sample");
+    addportname("hidden_sample");
+    addportname("energy");
+    // addportname("bias"); port to be added in the near future, to do conditional RBMs
     if(reconstruction_connection)
     {
-        ports.append("visible_reconstruction.state");
-        ports.append("visible_reconstruction_activations.state");
-        ports.append("reconstruction_error.state");
+        addportname("visible_reconstruction.state");
+        addportname("visible_reconstruction_activations.state");
+        addportname("reconstruction_error.state");
     }
     if (compute_contrastive_divergence)
     {
-        ports.append("contrastive_divergence");
-        ports.append("negative_phase_visible_samples.state");
-        ports.append("negative_phase_hidden_expectations.state");
+        addportname("contrastive_divergence");
+        addportname("negative_phase_visible_samples.state");
+        addportname("negative_phase_hidden_expectations.state");
     }
 
     port_sizes.resize(nPorts(), 2);
     port_sizes.fill(-1);
     if (visible_layer) {
-        port_sizes(0, 1) = visible_layer->size; // "visible"
-        port_sizes(3, 1) = visible_layer->size; // "visible_sample"
+        port_sizes(portname2index("visible"), 1) = visible_layer->size;
+        port_sizes(portname2index("visible_sample"), 1) = visible_layer->size;
     }
     if (hidden_layer) {
-        port_sizes(1, 1) = hidden_layer->size; // "hidden.state"
-        port_sizes(2, 1) = hidden_layer->size; // "hidden_activations.state"
-        port_sizes(4, 1) = hidden_layer->size; // "hidden_sample"
+        port_sizes(portname2index("hidden.state"), 1) = hidden_layer->size;
+        port_sizes(portname2index("hidden_activations.state"), 1) = hidden_layer->size; 
+        port_sizes(portname2index("hidden_sample"), 1) = hidden_layer->size; 
     }
-    port_sizes(5,1) = 1; // "energy"
+    port_sizes(portname2index("energy"),1) = 1;
     if(reconstruction_connection)
     {
         if (visible_layer) {
-            port_sizes(6,1) = visible_layer->size; // "visible_reconstruction.state"
-            port_sizes(7,1) = visible_layer->size; // "visible_reconstruction_activations.state"
+            port_sizes(portname2index("visible_reconstruction.state"),1) = 
+                visible_layer->size; 
+            port_sizes(portname2index("visible_reconstruction_activations.state"),1) = 
+                       visible_layer->size; 
         }
-        port_sizes(8,1) = 1; // "reconstruction_error.state"
+        port_sizes(portname2index("reconstruction_error.state"),1) = 1; 
     }
     if (compute_contrastive_divergence)
     {
-        port_sizes(9,1) = 1; // "contrastive_divergence"
+        port_sizes(portname2index("contrastive_divergence"),1) = 1; 
         if (visible_layer) 
-            port_sizes(10,1) = visible_layer->size; // "negative_phase_visible_samples.state"
+            port_sizes(portname2index("negative_phase_visible_samples.state"),1) = visible_layer->size; 
         if (hidden_layer)
-            port_sizes(11,1) = hidden_layer->size; // "negative_phase_hidden_expectations.state"
+            port_sizes(portname2index("negative_phase_hidden_expectations.state"),1) = hidden_layer->size; 
     }
 }
 
@@ -258,6 +257,8 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(visible_exp_grad, copies);
     deepCopyField(visible_act_grad, copies);
     deepCopyField(visible_bias_grad, copies);
+
+    deepCopyField(portname_to_index, copies);
 }
 
 ///////////
@@ -274,30 +275,34 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     PLASSERT( visible_layer );
     PLASSERT( hidden_layer );
     PLASSERT( connection );
-    int port = 0;
-    Mat* visible = ports_value[port++]; 
-    Mat* hidden = ports_value[port++];
-    Mat* hidden_act = ports_value[port++];
-    Mat* visible_sample = ports_value[port++];
-    Mat* hidden_sample = ports_value[port++];
-    Mat* energy = ports_value[port++];
+    Mat* visible = ports_value[portname2index("visible")]; 
+    Mat* hidden = ports_value[portname2index("hidden.state")];
+    Mat* hidden_act = ports_value[portname2index("hidden_activations.state")];
+    Mat* visible_sample = ports_value[portname2index("visible_sample")];
+    Mat* hidden_sample = ports_value[portname2index("hidden_sample")];
+    Mat* energy = ports_value[portname2index("energy")];
     Mat* visible_reconstruction = 0;
     Mat* visible_reconstruction_activations = 0;
     Mat* reconstruction_error = 0;
     if(reconstruction_connection)
     {
-        visible_reconstruction = ports_value[port++]; // 6
-        visible_reconstruction_activations = ports_value[port++];
-        reconstruction_error = ports_value[port++];
+        visible_reconstruction = 
+            ports_value[portname2index("visible_reconstruction.state")]; 
+        visible_reconstruction_activations = 
+            ports_value[portname2index("visible_reconstruction_activaitons.state")];
+        reconstruction_error = 
+            ports_value[portname2index("reconstruction_error.state")];
     }
     Mat* contrastive_divergence = 0;
     Mat* negative_phase_visible_samples = 0;
     Mat* negative_phase_hidden_expectations = 0;
     if (compute_contrastive_divergence)
     {
-        contrastive_divergence = ports_value[port++]; // 6 or 9
-        negative_phase_visible_samples = ports_value[port++];
-        negative_phase_hidden_expectations = ports_value[port++];
+        contrastive_divergence = ports_value[portname2index("contrastive_divergence")]; 
+        negative_phase_visible_samples = 
+            ports_value[portname2index("negative_phase_visible_samples.state")];
+        negative_phase_hidden_expectations = 
+            ports_value[portname2index("negative_phase_hidden_expectations.state")];
     }
 
     bool hidden_expectations_are_computed=false;
