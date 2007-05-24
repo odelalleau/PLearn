@@ -56,6 +56,9 @@ class Var:
     def sigmoid(self):
         return Var(pl.SigmoidVariable(input=self.v))
 
+    def tanh(self):
+        return Var(pl.TanhVariable(input=self.v))
+
     def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
         # asking for plearn_repr could be to send specification over
         # to another prg so that will open the .pmat
@@ -65,20 +68,48 @@ class Var:
     def probabilityPairs(self, min, max):
         return Var(pl.ProbabilityPairsVariable(input=self.v, min=min, max=max))
 
-    def matrixProduct(self, W):
-        return Var(pl.ProductVariable(self.v, W))
+    def transpose(self):
+        return Var(pl.TransposeVariable(input=self.v))
 
-    def matrixTransposeProduct(self, W):
-        return Var(pl.TransposeProductVariable(self.v, W))
+    def matrixProduct(self, other):
+        return self.matrixProduct_A_B(other)
+    
+    def matrixProduct_A_B(self, other):
+        return Var(pl.ProductVariable(input1=self.v, input2=other.v))
+
+    def matrixProduct_At_B(self, other):
+        return Var(pl.TransposeProductVariable(input1=self.v, input2=other.v))
+
+    def matrixProduct_A_Bt(self, other):
+        return Var(pl.ProductTransposeVariable(input1=self.v, input2=other.v))
+
+    def matrixProduct_At_Bt(self, other):
+        return other.matrixProduct(self).transpose()         
 
     def affineTransform(self, W):
         return Var(pl.AffineTransformVariable(self.v, W))
 
+    # TODO: verifier si NegCrossEntropySigmoidVariable est bien ce qui est utilise par Hugo
+    def negCrossEntropySigmoid(self, other, regularizer=0., ignore_missing=False):
+        return Var(pl.NegCrossEntropySigmoidVariable(input1=self.v, input2=other.v, regularizer=regularizer, ignore_missing=ignore_missing))
+        
     def doubleProduct(self, W, M):
         return Var(pl.DoubleProductVariable(varray=[self.v, W, M]))
 
-    def dot(self, input):
-        return Var(pl.DotProductVariable(input1=self, input2=input))
+    def logSoftMax(self):
+        return Var(pl.LogSoftmaxVariable(input=self.v))
+
+    def getElement(self, index):
+        """Returns a Var that selects an element from the current Var
+        index must be another scalar variable whose value will be
+        interpreted as an integer index of the element to select."""
+        return Var(pl.VarElementVariable(input1=self.v, input2=index.v))
+
+    def __getitem__(self, index):
+        return self.getElement(index)
+
+    def dot(self, other):
+        return Var(pl.DotProductVariable(input1=self.v, input2=other.v))
 
     def multiMax(self, igs, computation_type):        
         return Var(pl.MultiMaxVariable(input=self.v, groupsize=igs, computation_type=PLChar(computation_type)))
@@ -95,58 +126,93 @@ class Var:
     def square(self):
         return Var(pl.SquareVariable(input=self.v))
 
-    def __add__(self, other):
+    def add(self, other):
         return Var(pl.PlusVariable(input1=self.v, input2=other.v))
+
+    def __add__(self, other):
+        return self.add(other)
 
     def __sub__(self, other):
         return Var(pl.MinusVariable(input1=self.v,input2=other.v))
 
-    def __neg__(self):
+    def neg(self):
         return Var(pl.NegateElementsVariable(input=self.v))
-    
+
+    def __neg__(self):
+        return self.neg()
     
 
-    
+###################################################    
 # RLayer stands for reconstruciton hidden layer
 
-def addSigmoidRLayer(input, iw, ow):
-    """Returns a triple (hidden, reconstruciton_cost, params)"""
-    W = Var(1+iw,ow)
-    hidden = input.affineTransform(W).sigmoid()
-    cost = -hidden.matrixTransposeProduct(W).log_sigmoid().dot(input)
-    return (hidden, cost, W)
-
-
-
+def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
+    """This assumes the input is a (1,iw) matrix,
+    and will produce an output that will be a (1, ow) matrix.
+    It will create parameter W(ow,iw)
+    and an optional parameter b(1,ow)
+    Then output = sigmoid(input.W^T + b)
+    
+    Returns a triple (hidden, reconstruciton_cost)"""
+    W = Var(ow,iw,"uniform", -1./iw, varname=basename+'_W')
+    
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')
+        hidden = input.matrixProduct_A_Bt(W).add(b).sigmoid()
+        br = Var(1,iw,"fill",0, varname=basename+'_br')
+        cost = hidden.matrixProduct(W).add(br).negCrossEntropySigmoid(input)
+    else:
+        hidden = input.matrixProduct_A_Bt(W).sigmoid()
+        cost = hidden.matrixProduct(W).negCrossEntropySigmoid(input)
+    return hidden, cost
 
 def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, basename=""):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, "uniform", -1/iw, 1/iw, False, varname=basename+"_M")
-    W = Var(ogs, iw, "uniform", -1/iw, 1/iw, False, varname=basename+"_W")
+    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
     hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
     cost = -hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs).dot(input)            
-    return hidden, cost, (W,M)
+    return hidden, cost
 
-def addMultiSoftMaxDoubleProductNotTiedRLayer(input, iw, igs, ow, ogs):
-    return 1,2,3
+def addMultiSoftMaxDoubleProductRLayer(input, iw, igs, ow, ogs, basename=""):
+    """iw is the input's width
+    igs is the input's group size
+    ow and ogs analog but for output"""
+    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
+    Mr = Var(iw/igs, ow, "uniform", -1./ow, 1./ow, False, varname=basename+"_Mr")
+    Wr = Var(igs, ow, "uniform", -1./ow, 1./ow, False, varname=basename+"_Wr")
+    cost = -hidden.doubleProduct(Wr,Mr).multiLogSoftMax(igs).dot(input)       
+    return hidden, cost
 
-def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs):
-    W = Var(iw, ow)
-    hidden = input.matrixProduct(W).multiSoftMax(ogs)
-    cost = -hidden.matrixTransposeProduct(W).multiLogSoftMax(igs).dot(input)
-    return hidden, cost, W
+def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, basename=""):
+    W = Var(ow, iw, "uniform", -1./iw, varname=basename+'_W')
+    hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
+    cost = -hidden.matrixProduct(W).multiLogSoftMax(igs).dot(input)
+    return hidden, cost
 
-def addMultiSoftMaxSimpleProductNotTiedRLayer(input, iw, igs, ow, ogs):
-    W = Var(iw,ow)
-    hidden = input.matrixProduct(W).multiSoftMax(ogs)
-    Wr = Var(ow, iw)
-    cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs)
-    return hidden, cost, (W, Wr)
+def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs):
+    W = Var(ow, iw, "uniform", -1./iw, varname=basename+'_W')
+    hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
+    Wr = Var(ow, iw, "uniform", -1./ow, varname=basename+'_Wr')
+    cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs).dot(input)
+    return hidden, cost
 
+#################################
+# These build supervised layers
 
-
+def addClassificationNegLogSoftmaxLayer(activation, target):
+    """Assumes that target is a scalar variable containing a class number between 0 and m-1,
+    and activation is a m-dimensional vector of class scores (reals).
+    Returns a pair of output, cost variables where:
+      output = log(sotmax(activation))
+      cost = -output[target]
+      """
+    output = activation.logSoftMax()
+    cost = -output[target]
+    return output, cost
 
 
 
