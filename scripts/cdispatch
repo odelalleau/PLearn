@@ -38,7 +38,7 @@ $ScriptName="lauchdbi.py";
 
 if (scalar(@ARGV) == 0) {
     die <<EOUSAGE
-Usage: dbidispatch [--test] [--req="CONDOR_REQUIREMENT"]<command-template>
+Usage: dbidispatch [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
@@ -74,8 +74,13 @@ The optional parameter '--test' make that cdispatch generate the file $ScriptNam
 
 The optional parameter '--req="CONDOR_REQUIREMENT"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '"' must be escaped 3 times! So the requirement (Machine == "computer.example.com") must be writed like that:
 
-cdispatch "--req=Machine\\\"computer.example.com\\\""
+cdispatch "--req=Machine\\\\\\"computer.example.com\\\\\\""
+or
+cdispatch '--req=Machine\\"computer.example.com\\"'
 
+It the the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
+
+cdispatch --test --file=tests
 
 EOUSAGE
 }
@@ -87,24 +92,26 @@ if ($ARGV[0] eq "--test") {
     $TEST = 0;
 }
 
-if (substr($ARGV[0],0,6) eq "--req=") {
-    $REQ = substr($ARGV[0],6);
+if (substr($ARGV[0],0,7) eq "--file=") {
+    $FILE = substr($ARGV[0],7);
     shift;
-} elsif (substr($ARGV[0],0,1) eq '-'){
-    die "Unknow parameter $ARGV[0]\n";
+}else {
+    $FILE = "";
+}
+
+if(scalar(@ARGV) != 0) {
+    if (substr($ARGV[0],0,6) eq "--req=") {
+	$REQ = substr($ARGV[0],6);
+	shift;
+    } elsif (substr($ARGV[0],0,1) eq '-'){
+	die "Unknow parameter ($ARGV[0]) or wrong parameter order\n";
+    } else {
+	$REQ = "";
+    }
 } else {
     $REQ = "";
 }
-
-$command_name = shift;
-### Find replacement lists in the arguments
-my @repl = ();
-foreach my $arg (@ARGV) {
-    $arg =~ /{{(.*)}}/;
-    my @curargs = ("");
-    @curargs = split(",",$1) if $arg =~ /{{(.*)}}/;
-    push @repl, \@curargs;
-}
+#$command_name = shift;
 
 #print $command_name, "\n";
 #for ($i=0; $i < scalar(@ARGV); ++$i) {
@@ -115,38 +122,21 @@ open(SCRIPT,">$ScriptName");
 print SCRIPT "#! /usr/bin/env python\n".
     "from plearn.parallel.dbi import DBI\n".
     "jobs = DBI([\n";
-my @idx = (0) x @ARGV;
 $nbcommand=0;
-if(scalar(@ARGV) == 0){
-    print SCRIPT "'$command_name'\n";
-    $nbcommand=1;
+
+#print the command
+if ($FILE ne "") {
+    open (FD, $FILE)|| die "couldn't open the file $FILE!";
+    while ($record = <FD>) {
+	my @rec = split(" ", $record, 1024);
+	$nbcommand+=printAndExpendArgs(@rec);
+	}
+    
+    close(FD);
 } else {
-    while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
-	### Compute current argument list
-	my @curargs;
-	for (my $i=0; $i < scalar(@idx); ++$i) {
-	    my $arg = $ARGV[$i];
-	    if ($arg =~ /{{.*}}/) {
-		my $value = ($repl[$i])->[$idx[$i]];
-		$arg =~ s/{{.*}}/$value/;
-	    }
-	    push @curargs, $arg;
-	}
-	### Two passes are necessary to properly increment
-	for (my $i=0; $i < scalar(@idx); ++$i) {
-	    $idx[$i]++;
-	    last if $idx[$i] < scalar(@{$repl[$i]}) || $i == $#idx;
-	    $idx[$i] = 0;
-	}
-	
-	
-	###There are two distinct steps: command creation and command execution
-	### Command creation depending on cluster or direct launch:
-	$cmdstr = "$command_name " . join(" ",@curargs);
-	print SCRIPT "'$cmdstr',\n";
-	$nbcommand+=1;
-    }
+    $nbcommand=printAndExpendArgs(@ARGV)
 }
+
 print SCRIPT "   ],'Condor'";
 
 if ($REQ ne "") {
@@ -171,4 +161,45 @@ if ($TEST){
 } else {
     print "Launching the script $ScriptName\n";
     system("./$ScriptName");
+}
+
+sub printAndExpendArgs
+{
+### Find replacement lists in the arguments
+    my @repl = ();
+    foreach my $arg (@_) {
+	$arg =~ /{{(.*)}}/;
+	my @curargs = ("");
+	@curargs = split(",",$1) if $arg =~ /{{(.*)}}/;
+	push @repl, \@curargs;
+    }
+
+    my @idx = (0) x @_;
+    my $nbcommand=0;
+    while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
+	### Compute current argument list
+	my @curargs;
+	for (my $i=0; $i < scalar(@idx); ++$i) {
+	    my $arg = $_[$i];
+	    if ($arg =~ /{{.*}}/) {
+		my $value = ($repl[$i])->[$idx[$i]];
+		$arg =~ s/{{.*}}/$value/;
+	    }
+	    push @curargs, $arg;
+	}
+	### Two passes are necessary to properly increment
+	for (my $i=0; $i < scalar(@idx); ++$i) {
+	    $idx[$i]++;
+	    last if $idx[$i] < scalar(@{$repl[$i]}) || $i == $#idx;
+	    $idx[$i] = 0;
+	}
+	
+	
+	###There are two distinct steps: command creation and command execution
+	### Command creation depending on cluster or direct launch:
+	$cmdstr = "" . join(" ",@curargs);
+	print SCRIPT "'$cmdstr',\n";
+	$nbcommand+=1;
+    }
+    return $nbcommand
 }
