@@ -345,36 +345,6 @@ void MaxSubsampling2DModule::setLearningRate(real dynamic_learning_rate)
     // Do nothing.
 }
 
-////////////////////////
-// getPortDescription //
-////////////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-TVec<string> MaxSubsampling2DModule::getPortDescription(const string& port)
-{
-}
-*/
-
-//////////////////
-// getPortIndex //
-//////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int MaxSubsampling2DModule::getPortIndex(const string& port)
-{
-}
-*/
-
-/////////////////
-// getPortName //
-/////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-string MaxSubsampling2DModule::getPortName(int i)
-{
-}
-*/
-
 //////////////
 // getPorts //
 //////////////
@@ -390,38 +360,6 @@ const TMat<int>& MaxSubsampling2DModule::getPortSizes()
 {
     return port_sizes;
 }
-
-///////////////////
-// getPortLength //
-///////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int MaxSubsampling2DModule::getPortLength(const string& port)
-{
-    PLASSERT( getPortIndex(port) >= 0 );
-    return getPortSizes()(getPortIndex(port), 0);
-}
-*/
-
-//////////////////
-// getPortWidth //
-//////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int MaxSubsampling2DModule::getPortWidth(const string& port)
-{
-}
-*/
-
-////////////
-// nPorts //
-////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int MaxSubsampling2DModule::nPorts()
-{
-}
-*/
 
 }
 // end of namespace PLearn

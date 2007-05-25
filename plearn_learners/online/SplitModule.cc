@@ -222,36 +222,6 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     //       "'%s'", classname().c_str());
 }
 
-////////////////////////
-// getPortDescription //
-////////////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-TVec<string> SplitModule::getPortDescription(const string& port)
-{
-} 
-*/
-
-//////////////////
-// getPortIndex //
-//////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int SplitModule::getPortIndex(const string& port)
-{
-}
-*/
-
-/////////////////
-// getPortName //
-/////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-string SplitModule::getPortName(int i)
-{
-}
-*/
-
 //////////////
 // getPorts //
 //////////////
@@ -278,28 +248,6 @@ const TMat<int>& SplitModule::getPortSizes() {
     }
     return sizes;
 }
-
-///////////////////
-// getPortLength //
-///////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int SplitModule::getPortLength(const string& port)
-{
-    PLASSERT( getPortIndex(port) >= 0 );
-    return getPortSizes()(getPortIndex(port), 0);
-}
-*/
-
-//////////////////
-// getPortWidth //
-//////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-int SplitModule::getPortWidth(const string& port)
-{
-}
-*/
 
 ////////////
 // nPorts //

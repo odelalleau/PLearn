@@ -141,32 +141,8 @@ public:
     //!           are respectively 'input' and 'output')
     virtual const TMat<int>& getPortSizes();
 
-    /* Optional
-    //! Return the width of a specific port.
-    int getPortWidth(const string& port);
-    //! Return the length of a specific port.
-    int getPortLength(const string& port);
-    */
-
     //! Return the number of ports in the module.
     int nPorts();
-
-    /* Optional
-    //! Return the index (as in the list of ports returned by getPorts()) of
-    //! a given port.
-    //! If 'port' does not exist, -1 is returned.
-    int getPortIndex(const string& port);
-
-    //! Return name of the i-th port.
-    string getPortName(int i);
-
-    //! Return a list of strings, that represents the description of the values
-    //! taken by a given port: the i-th string is the name for the i-th column
-    //! value computed in 'port'.
-    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
-    //! 'port_name' is the name of the port, and 'n' its size.
-    virtual TVec<string> getPortDescription(const string& port);
-    */
 
     //#####  PLearn::Object Protocol  #########################################
 
