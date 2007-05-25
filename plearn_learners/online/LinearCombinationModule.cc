@@ -87,7 +87,7 @@ void LinearCombinationModule::build_()
         n_ports = weights.length();
         port_names.resize(n_ports);
         for (int i=0;i<n_ports-1;i++)
-            port_names[i]="in_" + string(i+1);
+            port_names[i]="in_" + tostring(i+1);
         port_names[n_ports-1]="output";
     }
     if (weights.length()==0 && port_names.length()!=0)
