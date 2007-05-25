@@ -79,12 +79,13 @@ void LinearCombinationModule::declareOptions(OptionList& ol)
 
 void LinearCombinationModule::build_()
 {
-    PLASSERT(weights.length()==0 || port_names.length()==0 || weights.length()==port_names.length());
+    PLASSERT(weights.length()==0 || port_names.length()==0 ||
+             weights.length() + 1 ==port_names.length());
     int n_ports=0;
     if (weights.length()!=0 && port_names.length()==0)
         // weights provided but not ports: give default port names
     {
-        n_ports = weights.length();
+        n_ports = weights.length() + 1;
         port_names.resize(n_ports);
         for (int i=0;i<n_ports-1;i++)
             port_names[i]="in_" + tostring(i+1);
@@ -94,7 +95,8 @@ void LinearCombinationModule::build_()
         // ports provided but not weights: initialize weights to 0
     {
         n_ports = port_names.length();
-        weights.resize(n_ports); // automatically set to 0 initially here
+        weights.resize(n_ports - 1);
+        weights.fill(0);
         if (!adaptive)
             PLWARNING("LinearCombinationModule::build: non-adaptive weights set to 0! the module will always output 0.");
     }
@@ -120,7 +122,7 @@ void LinearCombinationModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void LinearCombinationModule::fprop(const TVec<Mat*>& ports_value)
 {
-    int n_ports = weights.length();
+    int n_ports = weights.length() + 1;
     if ( n_ports < 2 )
         // has build completed? there should be at least one input port + the output port
         PLERROR("LinearCombinationModule should have at least 2 ports (one input port and one output port)\n");
@@ -156,7 +158,7 @@ void LinearCombinationModule::fprop(const TVec<Mat*>& ports_value)
 void LinearCombinationModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                           const TVec<Mat*>& ports_gradient)
 {
-    int n_ports = weights.length();
+    int n_ports = weights.length() + 1;
     PLASSERT( ports_value.length() == n_ports && ports_gradient.length() == n_ports);
 
     const TVec<Mat*>& input_grad = ports_gradient;
@@ -169,9 +171,10 @@ void LinearCombinationModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         {
             if (input_grad[i])
             {
-                PLASSERT(input_grad[i]->isEmpty());
+                PLASSERT(input_grad[i]->isEmpty() &&
+                         input_grad[i]->width() == width);
                 input_grad[i]->resize(mbs,width);
-                multiply(*input_grad[i],*output_grad,weights[i]);
+                multiplyAcc(*input_grad[i],*output_grad,weights[i]);
             }
             if (adaptive && learning_rate!=0)
             {
