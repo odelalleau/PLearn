@@ -55,9 +55,13 @@ def readAMat(amatname):
     ### updating each row as it is read...  Bizarrely enough
     f = open(amatname)
     a = []
+    fieldnames = []
     for line in f:
         if line.startswith("#size:"):
             (length,width) = line[6:].strip().split()
+        elif line.startswith("#sizes:"):  # ignore input/target/weight/extra sizes
+            continue
+
         elif line.startswith("#:"):
             fieldnames = line[2:].strip().split()
             pass
