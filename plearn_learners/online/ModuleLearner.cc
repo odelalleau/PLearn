@@ -62,10 +62,11 @@ PLEARN_IMPLEMENT_OBJECT(
     "ComputeOutputAndCost and for training) are obtained from the 'output'\n"
     "port and the ports defined by the 'cost_ports' option.\n"
     "\n"
-    "During training gradient is propagated from the costs and the bpropUpdate()\n"
-    "method of the module is called (possibly one mini-batch of examples at a time)\n"
-    "so as to update the internal parameters of the module. During ComputeOutput,\n"
-    "it is not necessary to provide a target in order to obtain an output.\n"
+    "During training gradient is propagated from the first cost (only) and\n"
+    "the bpropUpdate() method of the module is called (possibly one mini-\n"
+    "batch of examples at a time), so as to update the internal parameters\n"
+    "of the module. During ComputeOutput, it is not necessary to provide a\n"
+    "target in order to obtain an output.\n"
 );
 
 /////////////////////
@@ -100,7 +101,8 @@ void ModuleLearner::declareOptions(OptionList& ol)
 
     declareOption(ol, "cost_ports", &ModuleLearner::cost_ports,
                   OptionBase::buildoption,
-       "List of ports that contain costs being optimized.");
+       "List of ports that contain costs being computed (the first cost is\n"
+       "also the only one being optimized by this learner).");
 
     declareOption(ol, "input_ports", &ModuleLearner::input_ports,
                   OptionBase::buildoption,
@@ -194,10 +196,11 @@ void ModuleLearner::build_()
         PP<MatrixModule> store = new MatrixModule("store_costs_" + tostring(i),
                                                   true);
         all_modules.append(get_pointer(store));
-        // Note that these connections do propagate the gradient.
+        // Note that only the first connection propagates the gradient (we
+        // only optimize the first cost).
         all_connections.append(new NetworkConnection(
                     module, cost_port,
-                    get_pointer(store), "data", true));
+                    get_pointer(store), "data", i == 0));
         store_costs.append(store);
     }
 
@@ -330,8 +333,8 @@ void ModuleLearner::trainingStep(const Mat& inputs, const Mat& targets,
     // Initialize cost gradients to 1.
     // Note that we may not need to re-do it at every iteration, but this is so
     // cheap it should not impact performance.
-    for (int i = 0; i < store_costs.length(); i++)
-        store_costs[i]->setGradientTo(1);
+    if (!store_costs.isEmpty())
+        store_costs[0]->setGradientTo(1);
 
     // Backpropagation.
     network->bpropAccUpdate(null_pointers, null_pointers);
