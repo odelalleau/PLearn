@@ -258,7 +258,7 @@ protected:
     void computeVisibleActivations(Mat& hidden, bool using_reconstruction_connection=false) {
         if (using_reconstruction_connection)
         {
-            reconstruction_connection->setAsUpInputs(hidden);
+            reconstruction_connection->setAsDownInputs(hidden);
             visible_layer->getAllActivations(reconstruction_connection, 0, true);
         }
         else

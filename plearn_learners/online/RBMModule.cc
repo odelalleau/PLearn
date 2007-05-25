@@ -536,7 +536,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     "only possible if only visible are provided in input).\n");
         found_a_valid_configuration = true;
     }
-    // COMPUTE AUTO-ASSOCIATOR RECONSTRUCTION ERROR
+    // COMPUTE AUTOASSOCIATOR RECONSTRUCTION ERROR
     if ( visible && !visible->isEmpty() && 
          ( ( visible_reconstruction && visible_reconstruction->isEmpty() ) || 
            ( visible_reconstruction_activations && 
