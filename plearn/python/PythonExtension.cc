@@ -40,34 +40,34 @@ namespace PLearn {
 // Trampoline for global PLearn 'remote' functions
 PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args)
 {
-  RemoteTrampoline* t= 
-    static_cast<RemoteTrampoline*>(PyCObject_AsVoidPtr(self));
-  int nas= PyTuple_GET_SIZE(args);
-  TVec<PythonObjectWrapper> as;
-  for(int i= 0; i < nas; ++i)
-    as.push_back(PythonObjectWrapper(PyTuple_GET_ITEM(args, i)));
-  try
+    RemoteTrampoline* t= 
+        static_cast<RemoteTrampoline*>(PyCObject_AsVoidPtr(self));
+    int nas= PyTuple_GET_SIZE(args);
+    TVec<PythonObjectWrapper> as;
+    for(int i= 0; i < nas; ++i)
+        as.push_back(PythonObjectWrapper(PyTuple_GET_ITEM(args, i)));
+    try
     {
         PythonObjectWrapper returned_value= t->call(0, as);
         PyObject* to_return= returned_value.getPyObject();
         Py_XINCREF(to_return);
         return to_return;
     }
-  catch(const PLearnError& e) 
+    catch(const PLearnError& e) 
     {
-      PyErr_SetString(PyExc_Exception, e.message().c_str());
-      return 0;
+        PyErr_SetString(PyExc_Exception, e.message().c_str());
+        return 0;
     }
-  catch(const std::exception& e) 
+    catch(const std::exception& e) 
     {
-      PyErr_SetString(PyExc_Exception, e.what());
-      return 0;
+        PyErr_SetString(PyExc_Exception, e.what());
+        return 0;
     }
-  catch(...) 
+    catch(...) 
     {
-      PyErr_SetString(PyExc_Exception,
-		      "Caught unknown C++ exception");
-      return 0;
+        PyErr_SetString(PyExc_Exception,
+                        "Caught unknown C++ exception");
+        return 0;
     }
 }
 
@@ -79,39 +79,40 @@ static TVec<string> funcs_help;
 // init module, then inject global funcs
 void initPythonExtensionModule(char* module_name)
 {
-  PyObject* plext= Py_InitModule(module_name, NULL);
+    PythonObjectWrapper::initializePython();
+    PyObject* plext= Py_InitModule(module_name, NULL);
 
-  const RemoteMethodMap::MethodMap& global_funcs= 
-    getGlobalFunctionMap().getMap();
+    const RemoteMethodMap::MethodMap& global_funcs= 
+        getGlobalFunctionMap().getMap();
 
-  for(RemoteMethodMap::MethodMap::const_iterator it=
-	global_funcs.begin();
-      it != global_funcs.end(); ++it)
+    for(RemoteMethodMap::MethodMap::const_iterator it=
+            global_funcs.begin();
+        it != global_funcs.end(); ++it)
     {
-      PyObject* self= 
-	PyCObject_FromVoidPtr(it->second, NULL);
+        PyObject* self= 
+            PyCObject_FromVoidPtr(it->second, NULL);
     
-      PyMethodDef* py_method= pyfuncs.allocate();
-      py_method->ml_name= 
-	const_cast<char*>(it->first.first.c_str());
-      py_method->ml_meth= pythonGlobalFuncTramp;
-      py_method->ml_flags= METH_VARARGS;
-      funcs_help.push_back(
-          HelpSystem::helpOnFunction(it->first.first.c_str(), 
-                                     it->first.second));
-      py_method->ml_doc= const_cast<char*>(funcs_help.last().c_str());
+        PyMethodDef* py_method= pyfuncs.allocate();
+        py_method->ml_name= 
+            const_cast<char*>(it->first.first.c_str());
+        py_method->ml_meth= pythonGlobalFuncTramp;
+        py_method->ml_flags= METH_VARARGS;
+        funcs_help.push_back(
+            HelpSystem::helpOnFunction(it->first.first.c_str(), 
+                                       it->first.second));
+        py_method->ml_doc= const_cast<char*>(funcs_help.last().c_str());
     
-      PyObject* pyfunc= 
-	PyCFunction_NewEx(py_method, self, plext);
+        PyObject* pyfunc= 
+            PyCFunction_NewEx(py_method, self, plext);
 	    
-      if(pyfunc) 
-	PyObject_SetAttrString(plext, 
-			       py_method->ml_name, 
-			       pyfunc);
-      else
-	PLERROR("Cannot inject global function "
-		"'%s' into python.",
-		py_method->ml_name);
+        if(pyfunc) 
+            PyObject_SetAttrString(plext, 
+                                   py_method->ml_name, 
+                                   pyfunc);
+        else
+            PLERROR("Cannot inject global function "
+                    "'%s' into python.",
+                    py_method->ml_name);
     }
 }
 

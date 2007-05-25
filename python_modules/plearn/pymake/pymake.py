@@ -2474,7 +2474,7 @@ def main( args ):
     # do we want to create a .so instead of an executable file
     if 'so' in optionargs:
         create_so = 1
-        #optionargs.remove('so')
+        optionargs.remove('so')
     else:
         create_so = 0
 

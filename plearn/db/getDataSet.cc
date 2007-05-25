@@ -261,6 +261,18 @@ VMatrixExtensionRegistrar::registeredExtensionsAux()
 }
 
 
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("getDataSet", &getDataSet,
+                    (BodyDoc("Returns a VMat from a path to the corresponding file.\n"),
+                     ArgDoc("dataset_path", 
+                            "the path to the VMat file or directory"),
+                     RetDoc ("corresponding VMat object")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
+
+
 } // end of namespace PLearn
 
 

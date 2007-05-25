@@ -971,6 +971,18 @@ void viewVMat(const VMat& vm, string dataset_spec)
 }
 
 
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("viewVMat", &viewVMat,
+                    (BodyDoc("Displays a VMat's contents using curses.\n"),
+                     ArgDoc("vm", 
+                            "the VMat to display"),
+                     ArgDoc("dataset_spec", 
+                            "optional specification of the dataset that will be used to 'reload' it (\"\" works just fine)")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
+
 } // end of namespace PLearn
 
 
