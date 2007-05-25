@@ -326,7 +326,7 @@ void NetworkModule::build_()
                             null = all_modules.lastElement();
                         }
                         all_connections.append( new NetworkConnection(
-                                    modules[i], port, null, "_null_", false));
+                                    modules[i], port, null, "null", false));
                     }
                 }
             }
@@ -490,12 +490,16 @@ void NetworkModule::build_()
                 TVec<Mat*> bprop_mats;
                 TVec<int> fprop_mats_idx;
                 TVec<int> bprop_mats_idx;
+                int n_in_conn = in_conn.size();
+                int n_in_conn_found = 0;
                 for (int j = 0; j < mod_ports.length(); j++) {
-                    if (in_conn.find(mod_ports[j]) != in_conn.end()) {
+                    int count_inc_conn = in_conn.count(mod_ports[j]);
+                    if (count_inc_conn > 0) {
                         // This port has an incoming connection: it is thus an
                         // input, and the corresponding matrices for storing
                         // its value and gradient are found by looking at the
                         // source port of the connection.
+                        n_in_conn_found += count_inc_conn;
                         PP<NetworkConnection> conn = in_conn[mod_ports[j]];
                         int src_mod = module_to_index[conn->getSourceModule()];
                         int path_index = module_index_to_path_index[src_mod];
@@ -565,6 +569,11 @@ void NetworkModule::build_()
                         bprop_mats_idx.append(-1);
                     }
                 }
+                if (n_in_conn != n_in_conn_found)
+                    PLERROR("In NetworkModule::build_ - Not all incoming "
+                            "connections were found for module '%s', please "
+                            "ensure all destination ports do exist",
+                            all_modules[i]->name.c_str());
                 module_index_to_path_index[i] = fprop_path.length();
                 // Update fprop path.
                 PLASSERT( fprop_mats.length() == fprop_mats_idx.length() );
