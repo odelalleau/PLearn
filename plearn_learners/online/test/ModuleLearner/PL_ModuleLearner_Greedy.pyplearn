@@ -104,7 +104,7 @@ networks.append(
                 ('NLL', 'nll.cost')
             ]))
 
-# Module that encapsulates all networks, and forward calls to a single one,
+# Module that encapsulates all networks, and forwards calls to a single one,
 # depending on the stage of optimization.
 # Note that it is important to start with the 'final' network, so that the
 # learner's test cost names are readily available.
@@ -128,6 +128,8 @@ splitter = pl.ExplicitSplitter(
         splitsets = TMat(1, 2, [ dataset, dataset ]))
 
 hyper = pl.HyperLearner(
+        # We need to declare here all options that will be modified, to ensure
+        # the network is never reset.
         dont_restart_upon_change = \
             [ 'module.forward_to', 'nstages', 'cost_ports', 'target_ports' ] + \
             [ 'module.modules[%s].modules[%s].cd_learning_rate' % (i, i - 1) for i in range(1, n_rbms + 1) ],
