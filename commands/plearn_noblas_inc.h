@@ -202,6 +202,7 @@
 #include <plearn_learners/online/DeepBeliefNet.h>
 #include <plearn_learners/online/ForwardModule.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
+#include <plearn_learners/online/LinearCombinationModule.h>
 #include <plearn_learners/online/MatrixModule.h>
 #include <plearn_learners/online/MaxSubsampling2DModule.h>
 #include <plearn_learners/online/ModuleLearner.h>
