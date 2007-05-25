@@ -159,17 +159,40 @@ Vec HyperSetOption::optimize()
                 size_t dot_pos = option.find('.');
                 if (dot_pos == string::npos)
                     break;
-                string sub_object_opt = option.substr(0, dot_pos);
+                size_t bracket_pos = option.find(']');
+                bool indexed_object = (dot_pos == bracket_pos + 1);
+                string sub_object_opt;
+                int index = -1;
+                if (indexed_object) {
+                    size_t left_bracket_pos = option.find('[');
+                    sub_object_opt = option.substr(0, left_bracket_pos);
+                    index = toint(option.substr(left_bracket_pos + 1,
+                                                bracket_pos));
+                    PLCHECK( index >= 0 );
+                } else {
+                    sub_object_opt = option.substr(0, dot_pos);
+                }
                 OptionList& options = object->getOptionList();
+                bool found = false;
                 for (OptionList::iterator it = options.begin();
                     it != options.end(); ++it)
                 {
                     if ((*it)->optionname() == sub_object_opt) {
                         previous_object = object;
-                        object = (*it)->getAsObject(object);
+                        if (indexed_object) {
+                            object = (*it)->getIndexedObject(object, index);
+                        } else {
+                            object = (*it)->getAsObject(object);
+                        }
+                        found = true;
                         break;
                     }
                 }
+                if (!found)
+                    PLERROR("In HyperSetOption::optimize - Could not find "
+                            "option '%s' in an object of class '%s'",
+                            sub_object_opt.c_str(),
+                            object->classname().c_str());
                 option = option.substr(dot_pos + 1);
             }
         }
