@@ -52,6 +52,10 @@ except ImportError:
 
 ###  Usage
 
+def printshortusage():
+    print 'Usage: pymake [options] <list of targets, files or directories>'
+    print 'Where targets are .cc file names or base names or directories'
+    print 'For long help: pymake -help'
 def printusage():
     print 'Usage: pymake [options] <list of targets, files or directories>'
     print 'Where targets are .cc file names or base names or directories'
@@ -587,7 +591,7 @@ def getOptions(options_choices,optionargs):
             options.append(choice[0])
     if optionargs: # there are remaining optionargs
         print 'Invalid options: ' + string.join(map(lambda s: '-'+s, optionargs))
-        printusage()
+        printshortusage()
         sys.exit(100)
 
     return options
@@ -2397,7 +2401,7 @@ def main( args ):
 
     ######  Processing of the arguments
     if len(args)==0:
-        printusage()
+        printshortusage()
         sys.exit(100)
 
     ####  Storing arguments
