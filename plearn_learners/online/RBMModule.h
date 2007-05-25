@@ -234,7 +234,7 @@ protected:
             PLERROR("RBMModule: asking for unknown port name %s",name.c_str());
         return it->second;
     }
-    void addportname(string name) { ports.append(name); portname2index(name)=ports.length()-1; }
+    void addportname(string name) { ports.append(name); portname_to_index[name]=ports.length()-1; }
     //#####  Protected Member Functions  ######################################
 
     //! Forward the given learning rate to all elements of this module.
