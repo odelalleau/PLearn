@@ -6,14 +6,18 @@
 from plearn.pyplearn import pl
 
 cd_lr = 1e-3    # Contrastive divergence learning rate
-grad_lr = 1e-3  # Fine-tuning learning rate
 inputsize = 5
 targetsize = 1
 n_classes = 2
 batch_size = 10
 greedy_nstages = 1000 # Number of samples per greedy step.
-fine_tuning_nstages = 2000 # Number of samples for fine-tuning step.
 
+# List of pairs (number of stages, learning rate) for the fine-tuning step.
+fine_tuning = \
+        [ ( 0, 1e-2 ),      # Note: this is a dumb example. No training here (0 stages).
+          ( 2000, 1e-3 ),
+        ]
+          
 rbm_sizes = [ 15, 20 ] # Size of the 'hidden' layer of each RBM.
 
 n_rbms = len(rbm_sizes) # Number of RBMs
@@ -45,14 +49,13 @@ def connection(src, dst, propagate_gradient = True):
 
 layer_sizes = [ inputsize ] + rbm_sizes
 
-rbms = [ rbm(cd_lr, grad_lr, layer_sizes[k], layer_sizes[k + 1],
+rbms = [ rbm(cd_lr, 0, layer_sizes[k], layer_sizes[k + 1],
              'rbm_%s' % k ) for k in range(n_rbms) ]
 
 affine_net = pl.GradNNetLayerModule(
         name = 'affine_net',
         input_size = rbm_sizes[-1],
-        output_size = n_classes,
-        start_learning_rate = grad_lr)
+        output_size = n_classes)
 
 softmax = pl.SoftmaxModule(
         name = 'softmax',
@@ -127,12 +130,35 @@ dataset = pl.AutoVMatrix(
 splitter = pl.ExplicitSplitter(
         splitsets = TMat(1, 2, [ dataset, dataset ]))
 
+# Compute list of options to be modified to change the learning rate during the
+# fine-tuning steps.
+n_ft_steps = len(fine_tuning)
+ft_option_names = \
+        [ # First the learning rates for all RBMs in the fine-tuning network.
+          'module.modules[%s].modules[%s].grad_learning_rate' % (n_rbms, i) \
+                for i in range(n_rbms)
+        ] + \
+        [ # Then the learning rate for the affine top layer.
+          'module.modules[%s].modules[%s].start_learning_rate' % (n_rbms, n_rbms),
+          # And finally the number of stages to perform.
+          'nstages'
+        ]
+# Compute the corresponding lists of values for each step of fine-tuning.
+ft_option_values = []
+current_nstages = greedy_nstages * n_rbms;
+for (nstages, grad_lr) in fine_tuning:
+    current_nstages += nstages;
+    ft_option_values.append(
+            [ str(grad_lr) for i in range(n_rbms + 1) ] +
+            [ str(current_nstages) ])
+
 hyper = pl.HyperLearner(
         # We need to declare here all options that will be modified, to ensure
         # the network is never reset.
         dont_restart_upon_change = \
             [ 'module.forward_to', 'nstages', 'cost_ports', 'target_ports' ] + \
-            [ 'module.modules[%s].modules[%s].cd_learning_rate' % (i, i - 1) for i in range(1, n_rbms + 1) ],
+            [ 'module.modules[%s].modules[%s].cd_learning_rate' % (i, i - 1) for i in range(1, n_rbms + 1) ] + \
+            ft_option_names,
         learner = learner,
         save_final_learner = 0,
         option_fields = [ 'nstages' ],
@@ -157,17 +183,28 @@ hyper = pl.HyperLearner(
             for i in range(n_rbms)
         ]) + \
         [
+            # Initialize options for fine-tuning.
             pl.HyperSetOption(
                 call_build = 1,
                 options = [
                     ('module.forward_to', 'network_%s' % n_rbms),
-                    ('nstages', str(greedy_nstages * n_rbms + fine_tuning_nstages)),
                     ('cost_ports', '[ "NLL" ]'),
                     ('target_ports', '[ "target" ]'),
                     ('module.modules[%s].modules[%s].cd_learning_rate' % (n_rbms, n_rbms-1), '0')
-                ]),
-            pl.HyperRetrain( call_forget = False )
-        ],
+                ])
+        ] + \
+            # List of all pairs of (HyperSetoption, HyperRetrain) corresponding
+            # to a fine tuning step.
+            reduce(lambda x,y : x + y,
+        [
+            [ pl.HyperSetOption(
+                call_build = 0, # No need to call build when changing nstages or learning rates
+                options = [ (ft_option_names[i], ft_option_values[k][i]) \
+                            for i in range(len(ft_option_names)) ]),
+              pl.HyperRetrain( call_forget = False )
+            ]
+            for k in range(n_ft_steps)
+        ]),
         tester = pl.PTester(splitter = splitter)
         )
 

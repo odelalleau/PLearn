@@ -334,8 +334,8 @@ save_test_confidence = 0 ;
 enforce_clean_expdir = 1  )
 ;
 option_fields = 1 [ "nstages" ] ;
-dont_restart_upon_change = 6 [ "module.forward_to" "nstages" "cost_ports" "target_ports" "module.modules[1].modules[0].cd_learning_rate" "module.modules[2].modules[1].cd_learning_rate" ] ;
-strategy = 6 [ *27 ->HyperSetOption(
+dont_restart_upon_change = 10 [ "module.forward_to" "nstages" "cost_ports" "target_ports" "module.modules[1].modules[0].cd_learning_rate" "module.modules[2].modules[1].cd_learning_rate" "module.modules[2].modules[0].grad_learning_rate" "module.modules[2].modules[1].grad_learning_rate" "module.modules[2].modules[2].start_learning_rate" "nstages" ] ;
+strategy = 9 [ *27 ->HyperSetOption(
 option_name = "" ;
 option_value = "" ;
 options = 4 [ ("module.forward_to" , "network_0" )("nstages" , "1000" )("cost_ports" , "[]" )("target_ports" , "[]" )] ;
@@ -356,9 +356,23 @@ call_forget = 0  )
 *31 ->HyperSetOption(
 option_name = "" ;
 option_value = "" ;
-options = 5 [ ("module.forward_to" , "network_2" )("nstages" , "4000" )("cost_ports" , "[ \"NLL\" ]" )("target_ports" , "[ \"target\" ]" )("module.modules[2].modules[1].cd_learning_rate" , "0" )] ;
+options = 4 [ ("module.forward_to" , "network_2" )("cost_ports" , "[ \"NLL\" ]" )("target_ports" , "[ \"target\" ]" )("module.modules[2].modules[1].cd_learning_rate" , "0" )] ;
 call_build = 1  )
-*32 ->HyperRetrain(
+*32 ->HyperSetOption(
+option_name = "" ;
+option_value = "" ;
+options = 4 [ ("module.modules[2].modules[0].grad_learning_rate" , "0.01" )("module.modules[2].modules[1].grad_learning_rate" , "0.01" )("module.modules[2].modules[2].start_learning_rate" , "0.01" )("nstages" , "2000" )] ;
+call_build = 0  )
+*33 ->HyperRetrain(
+splitter = *0 ;
+provide_tester_expdir = 0 ;
+call_forget = 0  )
+*34 ->HyperSetOption(
+option_name = "" ;
+option_value = "" ;
+options = 4 [ ("module.modules[2].modules[0].grad_learning_rate" , "0.001" )("module.modules[2].modules[1].grad_learning_rate" , "0.001" )("module.modules[2].modules[2].start_learning_rate" , "0.001" )("nstages" , "4000" )] ;
+call_build = 0  )
+*35 ->HyperRetrain(
 splitter = *0 ;
 provide_tester_expdir = 0 ;
 call_forget = 0  )

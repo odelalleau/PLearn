@@ -1,3 +1,4 @@
  WARNING: RBMMatrixConnection: cannot forget() without random_gen
  WARNING: RBMMatrixConnection: cannot forget() without random_gen
  WARNING: GradNNetLayerModule: cannot forget() without random_gen
+ WARNING: In PLearner::initTrain (called by 'ModuleLearner') - The learner is already trained
