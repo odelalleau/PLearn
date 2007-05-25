@@ -293,7 +293,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         visible_reconstruction = 
             ports_value[portname2index("visible_reconstruction.state")]; 
         visible_reconstruction_activations = 
-            ports_value[portname2index("visible_reconstruction_activaitons.state")];
+            ports_value[portname2index("visible_reconstruction_activations.state")];
         reconstruction_error = 
             ports_value[portname2index("reconstruction_error.state")];
     }
