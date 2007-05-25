@@ -682,9 +682,9 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
                 g*=activations_scaling[i-1]; // pass gradient through scaling
             }
         if (input_size_lrate_normalization_power==-1)
-            layer_lrate_factor /= (sumsquare(neuron_extended_outputs_per_layer[i-1])/minibatch_size);
+            layer_lrate_factor /= sumsquare(neuron_extended_outputs_per_layer[i-1]);
         else if (input_size_lrate_normalization_power==-2)
-            layer_lrate_factor /= sqrt(sumsquare(neuron_extended_outputs_per_layer[i-1])/minibatch_size);
+            layer_lrate_factor /= sqrt(sumsquare(neuron_extended_outputs_per_layer[i-1]));
         else if (input_size_lrate_normalization_power!=0)
         {
             int fan_in = neuron_extended_outputs_per_layer[i-1].length();

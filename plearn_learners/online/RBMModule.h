@@ -243,6 +243,35 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    Mat* bias;
+
+    void computeHiddenActivations(Mat& visible) {
+        connection->setAsDownInputs(visible);
+        hidden_layer->getAllActivations(connection, 0, true);
+        if (bias && !bias->isEmpty())
+            hidden_layer->activations += *bias;
+    }
+    void sampleHiddenGivenVisible(Mat& visible) {
+        computeHiddenActivations(visible);
+        hidden_layer->generateSamples();
+    }
+    void computeVisibleActivations(Mat& hidden, bool using_reconstruction_connection=false) {
+        if (using_reconstruction_connection)
+        {
+            reconstruction_connection->setAsUpInputs(hidden);
+            visible_layer->getAllActivations(reconstruction_connection, 0, true);
+        }
+        else
+        {
+            connection->setAsUpInputs(hidden);
+            visible_layer->getAllActivations(connection, 0, true);
+        }
+    }
+    void sampleVisibleGivenHidden(Mat& hidden) {
+        computeVisibleActivations(hidden);
+        visible_layer->generateSamples();
+    }
+
 private:
     //#####  Private Member Functions  ########################################
 

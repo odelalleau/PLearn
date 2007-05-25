@@ -284,6 +284,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* visible_sample = ports_value[portname2index("visible_sample")];
     Mat* hidden_sample = ports_value[portname2index("hidden_sample")];
     Mat* energy = ports_value[portname2index("energy")];
+    bias = ports_value[portname2index("bias")];
     Mat* visible_reconstruction = 0;
     Mat* visible_reconstruction_activations = 0;
     Mat* reconstruction_error = 0;
@@ -337,8 +338,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 energy->clear();
                 for (int i=0;i<mbs;i++)
                 {
-                    connection->setAsDownInputs(*visible);
-                    hidden_layer->getAllActivations(connection, 0, true);
+                    computeHiddenActivations(*visible);
                     hidden_activations_are_computed=true;
                     (*energy)(i,0) = visible_layer->energy((*visible)(i)) + 
                         hidden_layer->energy((*hidden)(i)) + 
@@ -356,8 +356,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 energy->clear();
                 for (int i=0;i<mbs;i++)
                 {
-                    connection->setAsDownInputs(*visible);
-                    hidden_layer->getAllActivations(connection, 0, true);
+                    computeHiddenActivations(*visible);
                     hidden_activations_are_computed=true;
                     (*energy)(i,0) = visible_layer->energy((*visible)(i));
                     for (int j=0;j<hidden_layer->size;j++)
@@ -378,8 +377,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             energy->clear();
             for (int i=0;i<mbs;i++)
             {
-                connection->setAsUpInputs(*hidden);
-                visible_layer->getAllActivations(connection, 0, true);
+                computeVisibleActivations(*hidden);
                 visible_activations_are_computed=true; 
                 (*energy)(i,0) = hidden_layer->energy((*hidden)(i));
                 for (int j=0;j<visible_layer->size;j++)
@@ -400,8 +398,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         if (!hidden_activations_are_computed)
         {
-            connection->setAsDownInputs(*visible); 
-            hidden_layer->getAllActivations(connection, 0, true);
+            computeHiddenActivations(*visible);
             hidden_activations_are_computed=true;
         }
         if (hidden_activations_are_computed && hidden_act) {
@@ -430,18 +427,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         PLWARNING("In RBMModule::fprop - sampling in RBMModule has not been tested");
         if (hidden && !hidden->isEmpty()) // sample visible conditionally on hidden
         {
-            connection->setAsUpInputs(*hidden);
-            visible_layer->getAllActivations(connection, 0, true);
-            visible_layer->generateSamples();
+            sampleVisibleGivenHidden(*hidden);
             visible_sample->resize(visible_layer->samples.length(),visible_layer->samples.width());
             *visible_sample << visible_layer->samples;
             Gibbs_step = 0; // that would restart the chain for unconditional sampling
         }
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
-            connection->setAsDownInputs(visible_layer->samples);
-            hidden_layer->getAllActivations(connection, 0, true);
-            hidden_layer->generateSamples();
+            sampleHiddenGivenVisible(visible_layer->samples);
             Gibbs_step = 0; // that would restart the chain for unconditional sampling
         }
         else // sample unconditionally: Gibbs sample after k steps
@@ -452,12 +445,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                             min_n_Gibbs_steps);
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
-                connection->setAsDownInputs(visible_layer->samples);
-                hidden_layer->getAllActivations(connection, 0, true);
-                hidden_layer->generateSamples();
-                connection->setAsUpInputs(hidden_layer->samples);
-                visible_layer->getAllActivations(connection, 0, true);
-                visible_layer->generateSamples();
+                sampleHiddenGivenVisible(visible_layer->samples);
+                sampleVisibleGivenHidden(hidden_layer->samples);
             }
         }
         if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
@@ -486,8 +475,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             if (!hidden_activations_are_computed) // it must be because neither hidden nor hidden_act were asked
             {
                 PLASSERT(!hidden_act);
-                connection->setAsDownInputs(*visible); 
-                hidden_layer->getAllActivations(connection, 0, true);
+                computeHiddenActivations(*visible);
                 hidden_activations_are_computed=true;
                 // we need to save the hidden activations somewhere
                 hidden_act_store.resize(mbs,hidden_layer->size);
@@ -509,13 +497,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             {
                 hidden_layer->generateSamples();
                 // (Negative phase) Generate visible samples.
-                connection->setAsUpInputs(hidden_layer->samples);
-                visible_layer->getAllActivations(connection, 0, true);
-                visible_layer->generateSamples();
+                sampleVisibleGivenHidden(hidden_layer->samples);
                 // compute corresponding hidden expectations.
-                connection->setAsDownInputs(visible_layer->samples);
-                hidden_layer->getAllActivations(connection, 0, true);
-                hidden_layer->computeExpectations();
+                sampleHiddenGivenVisible(visible_layer->samples);
             }
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
             *negative_phase_visible_samples << visible_layer->samples;
@@ -563,8 +547,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         PLASSERT( ports_value.length() == nPorts() );
         if (!hidden_activations_are_computed)
         {
-            connection->setAsDownInputs(*visible); 
-            hidden_layer->getAllActivations(connection, 0, true);
+            computeHiddenActivations(*visible); 
             hidden_activations_are_computed=true;
         }
         if(!hidden_expectations_are_computed)
@@ -579,9 +562,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         // Don't need to verify if they are asked in a port, this was done previously
         
-        reconstruction_connection->setAsDownInputs(hidden_layer->getExpectations());
-        visible_layer->getAllActivations(
-            reconstruction_connection, 0, true);
+        computeVisibleActivations(hidden_layer->getExpectations(),true);
         if(visible_reconstruction_activations) 
         {
             PLASSERT( visible_reconstruction_activations->isEmpty() );
@@ -686,12 +667,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 {
                     hidden_layer->generateSamples();
                     // (Negative phase) Generate visible samples.
-                    connection->setAsUpInputs(hidden_layer->samples);
-                    visible_layer->getAllActivations(connection, 0, true);
-                    visible_layer->generateSamples();
+                    sampleVisibleGivenHidden(hidden_layer->samples);
                     // compute corresponding hidden expectations.
-                    connection->setAsDownInputs(visible_layer->samples);
-                    hidden_layer->getAllActivations(connection, 0, true);
+                    computeHiddenActivations(visible_layer->samples);
                     hidden_layer->computeExpectations();
                 }
                 if (!negative_phase_hidden_expectations)
