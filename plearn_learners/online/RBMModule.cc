@@ -145,11 +145,6 @@ void RBMModule::declareOptions(OptionList& ol)
 void RBMModule::build_()
 {
     PLASSERT( cd_learning_rate >= 0 && grad_learning_rate >= 0 );
-    if (fast_exact_is_equal(cd_learning_rate, 0) &&
-        fast_exact_is_equal(grad_learning_rate, 0) )
-        PLWARNING("In RBMModule::build_ - 'cd_learning_rate' and "
-                  "'grad_learning_rate' are set to 0, the RBM will not learn "
-                  "much");
     if(visible_layer)
         visible_bias_grad.resize(visible_layer->size);
 
