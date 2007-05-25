@@ -201,7 +201,7 @@ class VMat:
                 return array_columns( self.getRows(0,self.length),
                                       self.fieldnames.index(key)  )
             except ValueError:
-                print >>sys.stderr, "Key is", key, "while fieldnames are"
+                print >>sys.stderr, "Key is '%s' while fieldnames are:" % key
                 print >>sys.stderr, self.fieldnames
                 raise
                 
