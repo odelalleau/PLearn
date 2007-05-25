@@ -187,7 +187,7 @@ void RBMModule::build_()
     addportname("visible_sample");
     addportname("hidden_sample");
     addportname("energy");
-    addportname("bias"); 
+    addportname("hidden_bias"); 
     if(reconstruction_connection)
     {
         addportname("visible_reconstruction.state");
@@ -284,7 +284,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* visible_sample = ports_value[portname2index("visible_sample")];
     Mat* hidden_sample = ports_value[portname2index("hidden_sample")];
     Mat* energy = ports_value[portname2index("energy")];
-    bias = ports_value[portname2index("bias")];
+    hidden_bias = ports_value[portname2index("hidden_bias")];
     Mat* visible_reconstruction = 0;
     Mat* visible_reconstruction_activations = 0;
     Mat* reconstruction_error = 0;
@@ -610,7 +610,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* hidden = ports_value[portname2index("hidden.state")];
     Mat* hidden_act = ports_value[portname2index("hidden_activations.state")];
     Mat* reconstruction_error_grad = 0;
-    
+    Mat* hidden_bias_grad = ports_gradient[portname2index("hidden_bias")];    
+
     if(reconstruction_connection)
         reconstruction_error_grad = 
             ports_gradient[portname2index("reconstruction_error.state")];
@@ -627,6 +628,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             hidden_layer->bpropUpdate(
                     *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
                     false);
+            if (hidden_bias_grad)
+            {
+                PLASSERT(hidden_bias_grad->isEmpty());
+                hidden_bias_grad->resize(mbs,hidden_layer->size);
+                *hidden_bias_grad += hidden_act_grad;
+            }
             // Compute gradient w.r.t. expectations of the visible layer (=
             // inputs).
             Mat* store_visible_grad = NULL;
@@ -695,6 +702,15 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                *negative_phase_visible_samples,
                                *negative_phase_hidden_expectations);
             hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
+            if (hidden_bias_grad)
+            {
+                if (hidden_bias_grad->isEmpty())
+                    hidden_bias_grad->resize(mbs,hidden_layer->size);
+                // d(contrastive_divergence)/dhidden_bias =
+                //     hidden - negative_phase_hidden_expectations
+                *hidden_bias_grad += *hidden;
+                *hidden_bias_grad -= *negative_phase_hidden_expectations;
+            }
     }
 
     if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()
@@ -743,6 +759,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         hidden_layer->bpropUpdate(*hidden_act,
                                   *hidden, hidden_act_grad,
                                   hidden_exp_grad, false);
+        if (hidden_bias_grad)
+        {
+            if (hidden_bias_grad->isEmpty())
+                hidden_bias_grad->resize(mbs,hidden_layer->size);
+            *hidden_bias_grad += hidden_act_grad;
+        }
         // Connection update
         if(visible_grad)
         {

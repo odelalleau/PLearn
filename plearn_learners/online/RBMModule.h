@@ -243,13 +243,13 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    Mat* bias;
+    Mat* hidden_bias;
 
     void computeHiddenActivations(Mat& visible) {
         connection->setAsDownInputs(visible);
         hidden_layer->getAllActivations(connection, 0, true);
-        if (bias && !bias->isEmpty())
-            hidden_layer->activations += *bias;
+        if (hidden_bias && !hidden_bias->isEmpty())
+            hidden_layer->activations += *hidden_bias;
     }
     void sampleHiddenGivenVisible(Mat& visible) {
         computeHiddenActivations(visible);
