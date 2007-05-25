@@ -272,7 +272,6 @@ expdir = "" ;
 random_gen = *5   )
 *13 ->SoftmaxModule(
 input_size = 2 ;
-output_size = 2 ;
 name = "softmax" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
