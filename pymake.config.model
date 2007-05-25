@@ -82,7 +82,8 @@ cpp_variables = []
 # Global preprocessing definitions
 cpp_definitions = []
 
-compileflags = ''
+# We add -fPIC, as it it requested to make an '.so' file and it do not have any speed impact and is ignored by the compiler if he can't use it.
+compileflags += ' -fPIC'
 
 # The platform variable contains the type of platform from which pymake has been invoked. 
 # This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...
@@ -427,9 +428,8 @@ options_choices = [
     'noblas', 'veclib', 'scs', 'goto', 'lisa' ],
   
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
-    'logging=extreme', 'logging=dbg-profile' ],
+    'logging=extreme', 'logging=dbg-profile' ]
 
-  [ 'exe', 'so' ]
 ]
 
 #####  Compiler-Related Options  ############################################
@@ -530,16 +530,6 @@ pymakeOption( name = 'vc++',
 
 cpp_variables += ['USING_MPI']
 
-
-#####  Make an executable or a library?  ######################################
-
-pymakeOption( name = 'exe',
-              description = 'Make an executable' )
-            
-pymakeOption( name = 'so',
-              description = 'Make a .so shared object library',
-              compileroptions = '-fPIC' )
-            
 
 #####  Debugging/Optimization Options  ######################################
 
