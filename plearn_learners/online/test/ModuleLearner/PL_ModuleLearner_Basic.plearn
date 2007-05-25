@@ -37,13 +37,15 @@ PTester(
                     ]
 
                     ports = [
-                        "input"     "affine_net.input"
-                        "target"    "mse.target"
-                        "output"    "affine_net.output"
-                        "cost"      "mse.cost"
+                        "input":"affine_net.input",
+                        "target":"mse.target",
+                        "output":"affine_net.output",
+                        "mse":"mse.cost"
                     ]
                 )
 
+            cost_ports = [ "mse" ]
+            
             batch_size = 1
 
             nstages = ${nstages}

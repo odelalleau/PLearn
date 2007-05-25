@@ -138,13 +138,6 @@ public:
     //!           are respectively 'input' and 'output')
     virtual const TMat<int>& getPortSizes();
 
-    //! Return a list of strings, that represents the description of the values
-    //! taken by a given port: the i-th string is the name for the i-th column
-    //! value computed in 'port'.
-    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
-    //! 'port_name' is the name of the port, and 'n' its size.
-    virtual TVec<string> getPortDescription(const string& port);
-
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

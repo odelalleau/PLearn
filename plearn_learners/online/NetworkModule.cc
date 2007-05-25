@@ -54,12 +54,12 @@ PLEARN_IMPLEMENT_OBJECT(
     "connections between these modules.\n"
     "The network's ports are given through the 'ports' option. A typical\n"
     "value for 'ports' would be for instance something like:\n"
-    "   [ \"input\"  \"rbm.visible\"\n"
-    "     \"target\" \"nll.target\"\n"
-    "     \"output\" \"rbm.hidden\"\n"
-    "     \"cost\"   \"nll.cost\"\n"
+    "   [ \"input\":\"rbm.visible\",\n"
+    "     \"target\":\"nll.target\",\n"
+    "     \"output\":\"rbm.hidden\",\n"
+    "     \"NLL\":\"nll.cost\"\n"
     "   ]\n"
-    "which means this module has four ports (input, target, output and cost)\n"
+    "which means this module has four ports (input, target, output and NLL)\n"
     "which redirect to specific ports of modules in the network.\n"
 );
 
@@ -86,9 +86,10 @@ void NetworkModule::declareOptions(OptionList& ol)
     declareOption(ol, "ports", &NetworkModule::ports,
                   OptionBase::buildoption,
        "A sequence of pairs of strings, where each pair is of the form\n"
-       "('P', 'M.N') with 'M' the name of an underlying module, 'N' one of\n"
+       "\"P\":\"M.N\" with 'M' the name of an underlying module, 'N' one of\n"
        "its ports, and 'P' the name under which the NetworkModule sees this\n"
-       "port. See the class help for an example with the correct syntax.");
+       "port. See the class help for an example. If 'P' is an empty string,\n"
+       "then the port name will be 'M.N'.");
 
     declareOption(ol, "save_states", &NetworkModule::save_states,
                   OptionBase::buildoption,
@@ -377,7 +378,6 @@ void NetworkModule::build_()
         module_to_index[all_modules[i]] = i;
     
     // Analyze the list of ports.
-    PLASSERT( ports.length() % 2 == 0 );
     // The 'port_correspondances' lists, for each module, the correspondances
     // between the modules' ports and the ports of the NetworkModule.
     TVec< TMat<int> > port_correspondances(all_modules.length());
@@ -386,12 +386,15 @@ void NetworkModule::build_()
     TVec<int> new_row(2);
     all_ports.resize(0);
     port_sizes.resize(0, 2);
-    int n_ports = ports.length() / 2;
-    port_descriptions.resize(n_ports);
+    int n_ports = ports.length();
     for (int i = 0; i < n_ports; i++) {
-        const string& new_name = ports[2*i];
+        const pair<string, string>& new_old = ports[i];
+        string new_name = new_old.first;
+        const string& old_name = new_old.second;
+        if (new_name.empty())
+            // Empty string: we use the full name of the form 'module.port'.
+            new_name = old_name;
         all_ports.append(new_name);
-        const string& old_name = ports[2*i + 1];
         size_t dot_pos = old_name.find('.');
         PLASSERT( dot_pos != string::npos );
         string old_module_name = old_name.substr(0, dot_pos);
@@ -405,7 +408,6 @@ void NetworkModule::build_()
         new_row[0] = old_module->getPortLength(old_module_port);
         new_row[1] = old_module->getPortWidth(old_module_port);
         port_sizes.appendRow(new_row);
-        port_descriptions[i] = old_module->getPortDescription(old_module_port);
     }
 
     // The i-th element of 'in_connections' maps each port in the i-th module
@@ -681,14 +683,6 @@ void NetworkModule::fprop(const TVec<Mat*>& ports_value) {
     }
 }
 
-////////////////////////
-// getPortDescription //
-////////////////////////
-TVec<string> NetworkModule::getPortDescription(const string& port)
-{
-    return port_descriptions[getPortIndex(port)];
-}
-
 //////////////
 // getPorts //
 //////////////
@@ -726,7 +720,6 @@ void NetworkModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(bprop_toresize, copies);
     deepCopyField(all_mats, copies);
     deepCopyField(all_ports, copies);
-    deepCopyField(port_descriptions, copies);
 
     // Special code to handle the deep copy of 'fprop_data' and 'bprop_data'.
     // A better way may exist to do this!

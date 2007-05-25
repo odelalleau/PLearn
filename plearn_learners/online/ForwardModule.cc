@@ -194,14 +194,6 @@ void ForwardModule::setLearningRate(real dynamic_learning_rate)
      modules[current]->setLearningRate(dynamic_learning_rate);
 }
 
-////////////////////////
-// getPortDescription //
-////////////////////////
-TVec<string> ForwardModule::getPortDescription(const string& port)
-{
-    return modules[current]->getPortDescription(port);
-} 
-
 //////////////
 // getPorts //
 //////////////

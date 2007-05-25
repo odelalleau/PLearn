@@ -266,13 +266,6 @@ public:
     //! Return name of the i-th port.
     string getPortName(int i);
 
-    //! Return a list of strings, that represents the description of the values
-    //! taken by a given port: the i-th string is the name for the i-th column
-    //! value computed in 'port'.
-    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
-    //! 'port_name' is the name of the port, and 'n' its size.
-    virtual TVec<string> getPortDescription(const string& port);
-
     //! This method may be called at the end of the 'fprop' or 'bpropAccUpdate'
     //! methods (respectively with 'ports_value' or 'ports_gradient' as
     //! argument) in order to ensure all required ports have been properly
@@ -300,10 +293,6 @@ protected:
 
     //! Used to store the size of each port (may be used in sub-classes).
     TMat<int> port_sizes;
-
-    //! Used to store the description of each port (may be used in
-    //! sub-classes).
-    TVec< TVec<string> > port_descriptions;
 
     // Also used in CostModule for instance
     mutable Vec tmp_input_gradient;

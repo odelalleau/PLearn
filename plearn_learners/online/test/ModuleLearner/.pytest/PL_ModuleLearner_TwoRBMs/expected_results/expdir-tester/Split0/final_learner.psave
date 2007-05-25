@@ -1,6 +1,6 @@
 *1 ->ModuleLearner(
 module = *2 ->NetworkModule(
-modules = 7 [ *3 ->RBMModule(
+modules = 8 [ *3 ->RBMModule(
 visible_layer = *4 ->RBMBinomialLayer(
 size = 5 ;
 learning_rate = 0.00100000000000000002 ;
@@ -276,8 +276,7 @@ name = "softmax" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-*14 ->CombiningCostsModule(
-sub_costs = 2 [ *15 ->NLLCostModule(
+*14 ->NLLCostModule(
 target_size = 1 ;
 input_size = 2 ;
 output_size = 1 ;
@@ -285,7 +284,7 @@ name = "nll" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-*16 ->ClassErrorCostModule(
+*15 ->ClassErrorCostModule(
 target_size = 1 ;
 input_size = 2 ;
 output_size = 1 ;
@@ -293,24 +292,14 @@ name = "class_error" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-] ;
-cost_weights = 2 [ 1 0 ] ;
-n_sub_costs = 2 ;
-target_size = 1 ;
-input_size = 2 ;
-output_size = 3 ;
-name = "costs" ;
-estimate_simpler_diag_hessian = 0 ;
-expdir = "" ;
-random_gen = *5   )
-*17 ->ArgmaxModule(
+*16 ->ArgmaxModule(
 input_size = -1 ;
 output_size = 1 ;
 name = "argmax_class" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
-*18 ->SquaredErrorCostModule(
+*17 ->SquaredErrorCostModule(
 target_size = 1 ;
 input_size = 1 ;
 output_size = 1 ;
@@ -319,22 +308,26 @@ estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *5   )
 ] ;
-connections = 6 [ *19 ->NetworkConnection(
+connections = 7 [ *18 ->NetworkConnection(
 source = "rbm_1.hidden.state" ;
 destination = "rbm_2.visible" ;
 propagate_gradient = 1  )
-*20 ->NetworkConnection(
+*19 ->NetworkConnection(
 source = "rbm_2.hidden.state" ;
 destination = "affine_net.input" ;
 propagate_gradient = 1  )
-*21 ->NetworkConnection(
+*20 ->NetworkConnection(
 source = "affine_net.output" ;
 destination = "softmax.input" ;
 propagate_gradient = 1  )
+*21 ->NetworkConnection(
+source = "softmax.output" ;
+destination = "nll.prediction" ;
+propagate_gradient = 1  )
 *22 ->NetworkConnection(
 source = "softmax.output" ;
-destination = "costs.prediction" ;
-propagate_gradient = 1  )
+destination = "class_error.prediction" ;
+propagate_gradient = 0  )
 *23 ->NetworkConnection(
 source = "affine_net.output" ;
 destination = "argmax_class.input" ;
@@ -344,7 +337,7 @@ source = "argmax_class.output" ;
 destination = "mse.prediction" ;
 propagate_gradient = 0  )
 ] ;
-ports = 12 [ "input" "rbm_1.visible" "target_1" "costs.target" "target_2" "mse.target" "output" "affine_net.output" "cost_1" "costs.cost" "cost_2" "mse.cost" ] ;
+ports = 8 [ ("input" , "rbm_1.visible" )("" , "nll.target" )("" , "class_error.target" )("" , "mse.target" )("output" , "affine_net.output" )("NLL" , "nll.cost" )("class_error" , "class_error.cost" )("mse" , "mse.cost" )] ;
 save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
@@ -352,9 +345,9 @@ expdir = "" ;
 random_gen = *5   )
 ;
 batch_size = 11 ;
-cost_ports = 2 [ "cost_1" "cost_2" ] ;
+cost_ports = 3 [ "NLL" "class_error" "mse" ] ;
 input_ports = 1 [ "input" ] ;
-target_ports = 2 [ "target_1" "target_2" ] ;
+target_ports = 3 [ "nll.target" "class_error.target" "mse.target" ] ;
 weight_ports = []
 ;
 mbatch_size = 11 ;

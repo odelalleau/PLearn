@@ -77,8 +77,8 @@ for i in range(n_rbms):
                     for k in range(i)
                 ],
                 ports = [
-                'input', 'rbm_0.visible',
-                'output', 'rbm_%s.hidden.state' % i
+                    ('input', 'rbm_0.visible'),
+                    ('output', 'rbm_%s.hidden.state' % i)
                 ]))
 
 
@@ -98,10 +98,10 @@ networks.append(
                     connection('softmax.output', 'nll.prediction')
                 ],
             ports = [
-                'input', 'rbm_0.visible',
-                'output', 'affine_net.output',
-                'target', 'nll.target',
-                'cost', 'nll.cost'
+                ('input', 'rbm_0.visible'),
+                ('output', 'affine_net.output'),
+                ('target', 'nll.target'),
+                ('NLL', 'nll.cost')
             ]))
 
 # Module that encapsulates all networks, and forward calls to a single one,
@@ -115,7 +115,8 @@ network = pl.ForwardModule(
 
 learner = pl.ModuleLearner(
     module = network,
-    batch_size = batch_size)
+    batch_size = batch_size,
+    cost_ports = [ 'NLL' ])
 
 dataset = pl.AutoVMatrix(
     filename = 'PLEARNDIR:examples/data/test_suite/linear_4x_2y_binary_class.vmat',
@@ -159,7 +160,7 @@ hyper = pl.HyperLearner(
                 options = [
                     ('module.forward_to', 'network_%s' % n_rbms),
                     ('nstages', str(greedy_nstages * n_rbms + fine_tuning_nstages)),
-                    ('cost_ports', '[ "cost" ]'),
+                    ('cost_ports', '[ "NLL" ]'),
                     ('target_ports', '[ "target" ]'),
                     ('module.modules[%s].modules[%s].cd_learning_rate' % (n_rbms, n_rbms-1), '0')
                 ]),

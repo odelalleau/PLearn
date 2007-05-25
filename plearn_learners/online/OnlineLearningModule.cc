@@ -261,7 +261,6 @@ void OnlineLearningModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(random_gen,             copies);
     deepCopyField(port_sizes,             copies);
-    deepCopyField(port_descriptions,      copies);
     deepCopyField(tmp_input_gradient,     copies);
     deepCopyField(tmpm_input_gradient,    copies);
     deepCopyField(tmp_input_diag_hessian, copies);
@@ -330,24 +329,6 @@ void OnlineLearningModule::checkProp(const TVec<Mat*>& ports_data)
     for (int i = 0; i < ports_data.length(); i++) {
         PLCHECK( !ports_data[i] || !ports_data[i]->isEmpty() );
     }
-}
-
-////////////////////////
-// getPortDescription //
-////////////////////////
-TVec<string> OnlineLearningModule::getPortDescription(const string& port)
-{
-    port_descriptions.resize(nPorts());
-    int idx = getPortIndex(port);
-    TVec<string>& descr = port_descriptions[idx];
-    int desired_size = getPortWidth(port);
-    PLCHECK_MSG( desired_size >= 0, "Port width must be defined" );
-    if (descr.length() != desired_size) {
-        descr.resize(desired_size);
-        for (int i = 0; i < desired_size; i++)
-            descr[i] = port + "_" + tostring(i);
-    }
-    return descr;
 }
 
 //////////////////

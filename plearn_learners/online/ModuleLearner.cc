@@ -456,10 +456,7 @@ void ModuleLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
 //////////////////////
 TVec<string> ModuleLearner::getTestCostNames() const
 {
-    TVec<string> cost_names;
-    for (int i = 0; i < cost_ports.length(); i++)
-        cost_names.append(module->getPortDescription(cost_ports[i]));
-    return cost_names;
+    return cost_ports;
 }
 
 ///////////////////////

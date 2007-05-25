@@ -39,7 +39,7 @@ source = "affine_net.output" ;
 destination = "mse.prediction" ;
 propagate_gradient = 1  )
 ] ;
-ports = 8 [ "input" "affine_net.input" "target" "mse.target" "output" "affine_net.output" "cost" "mse.cost" ] ;
+ports = [ "input":"affine_net.input" "target":"mse.target" "output":"affine_net.output" "mse":"mse.cost" ] ;
 save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
@@ -47,7 +47,7 @@ expdir = "" ;
 random_gen = *4   )
 ;
 batch_size = 1 ;
-cost_ports = 1 [ "cost" ] ;
+cost_ports = 1 [ "mse" ] ;
 input_ports = 1 [ "input" ] ;
 target_ports = 1 [ "target" ] ;
 weight_ports = []

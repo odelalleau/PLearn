@@ -70,22 +70,14 @@ PTester(
                             output_size = ${n_classes}
                         )
 
-                        CombiningCostsModule( 
-                            name = "costs"
-                            cost_weights = [1 0]
-                            sub_costs = [
+                        NLLCostModule( 
+                            name = "nll"
+                            input_size = ${n_classes}
+                        )
 
-                                NLLCostModule( 
-                                    name = "nll"
-                                    input_size = ${n_classes}
-                                )
-
-                                ClassErrorCostModule(
-                                    name = "class_error"
-                                    input_size = ${n_classes}
-                                )
-
-                            ]
+                        ClassErrorCostModule(
+                            name = "class_error"
+                            input_size = ${n_classes}
                         )
 
                         ArgmaxModule(
@@ -117,7 +109,13 @@ PTester(
 
                         NetworkConnection( 
                             source = "softmax.output"
-                            destination = "costs.prediction"
+                            destination = "nll.prediction"
+                        )
+
+                        NetworkConnection( 
+                            source = "softmax.output"
+                            destination = "class_error.prediction"
+                            propagate_gradient = 0
                         )
 
                         NetworkConnection( 
@@ -134,17 +132,19 @@ PTester(
                     ]
 
                     ports = [
-                        "input"     "rbm_1.visible"
-                        "target_1"  "costs.target"
-                        "target_2"  "mse.target"
-                        "output"    "affine_net.output"
-                        "cost_1"    "costs.cost"
-                        "cost_2"    "mse.cost"
+                        "input":"rbm_1.visible"
+                        "":"nll.target"
+                        "":"class_error.target"
+                        "":"mse.target"
+                        "output":"affine_net.output"
+                        "NLL":"nll.cost"
+                        "class_error":"class_error.cost"
+                        "mse":"mse.cost"
                     ]
                 )
 
-                cost_ports = [ "cost_1" "cost_2" ]
-                target_ports = [ "target_1" "target_2" ]
+                cost_ports = [ "NLL" "class_error" "mse" ]
+                target_ports = [ "nll.target" "class_error.target" "mse.target" ]
 
                 batch_size = ${batch_size}
                 nstages = ${nstages}

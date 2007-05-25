@@ -200,13 +200,6 @@ public:
     //!         - 'input_size' for the first row and 'output_size' for the
     //!           second row if nPorts() >= 2
     virtual const TMat<int>& getPortSizes();
-
-    //! Return a list of strings, that represents the description of the values
-    //! taken by a given port: the i-th string is the name for the i-th column
-    //! value computed in 'port'.
-    //! The default version returns [ "port_name_1", ..., "port_name_n" ] where
-    //! 'port_name' is the name of the port, and 'n' its size.
-    virtual TVec<string> getPortDescription(const string& port);
     */
 
     //#####  PLearn::Object Protocol  #########################################

@@ -224,16 +224,6 @@ void LinearCombinationModule::setLearningRate(real dynamic_learning_rate)
 }
 */
 
-////////////////////////
-// getPortDescription //
-////////////////////////
-/* OPTIONAL
-// The default implementation is probably appropriate
-TVec<string> LinearCombinationModule::getPortDescription(const string& port)
-{
-} 
-*/
-
 //////////////
 // getPorts //
 //////////////

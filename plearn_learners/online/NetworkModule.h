@@ -55,7 +55,7 @@ public:
     TVec< PP<OnlineLearningModule> > modules;
     TVec< PP<NetworkConnection> > connections;
 
-    TVec<string> ports;
+    TVec< pair<string, string > > ports;
 
     bool save_states;
 
@@ -82,9 +82,6 @@ public:
 
     //! Return the size of each port.
     virtual const TMat<int>& getPortSizes();
-
-    //! Return the description of a given port.
-    virtual TVec<string> getPortDescription(const string& port);
 
     //! Reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
@@ -167,9 +164,6 @@ protected:
     //! The list of ports, computed from the 'ports' option.
     TVec<string> all_ports;
 
-    //! The description of each port, obtained from the underlying modules.
-    TVec< TVec<string> > port_descriptions;
-    
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
