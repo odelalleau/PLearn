@@ -58,12 +58,11 @@ def readAMat(amatname):
     for line in f:
         if line.startswith("#size:"):
             (length,width) = line[6:].strip().split()
-
         elif line.startswith("#:"):
             fieldnames = line[2:].strip().split()
             pass
-
-        else:
+        elif not line.startswith('#'):
+            # Add all non-comment lines.
             row = [ safefloat(x) for x in line.strip().split() ]
             a.append(row)
 
