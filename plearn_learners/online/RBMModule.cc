@@ -62,6 +62,7 @@ PLEARN_IMPLEMENT_OBJECT(
 RBMModule::RBMModule():
     cd_learning_rate(0),
     grad_learning_rate(0),
+    compute_contrastive_divergence(false),
     n_Gibbs_steps_CD(1)
 {
 }
