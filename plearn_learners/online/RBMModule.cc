@@ -63,7 +63,11 @@ RBMModule::RBMModule():
     cd_learning_rate(0),
     grad_learning_rate(0),
     compute_contrastive_divergence(false),
-    n_Gibbs_steps_CD(1)
+    n_Gibbs_steps_CD(1),
+    min_n_Gibbs_steps(1),
+    n_Gibbs_steps_per_generated_sample(1),
+    Gibbs_step(0),
+    hidden_bias(0)
 {
 }
 
