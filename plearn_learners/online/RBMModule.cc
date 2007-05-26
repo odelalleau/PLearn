@@ -590,6 +590,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
     if (!found_a_valid_configuration)
         PLERROR("In RBMModule::fprop - Unknown port configuration");
+
+    checkProp(ports_value);
 }
 
 ////////////////////
