@@ -76,8 +76,7 @@ void RBMMatrixTransposeConnection::declareOptions(OptionList& ol)
 void RBMMatrixTransposeConnection::build_()
 {
     if( !rbm_matrix_connection )
-        PLERROR("In RBMMatrixTransposeConnection::build_(): "
-            "rbm_matrix_connection needs to be provided.");
+        return;
 
     // If we have a random_gen and rbm_matrix_connection does not, share it
     if( random_gen && !(rbm_matrix_connection->random_gen) )
@@ -196,6 +195,7 @@ void RBMMatrixTransposeConnection::update( const Vec& pos_down_values, // v_0
                                            const Vec& neg_down_values, // v_1
                                            const Vec& neg_up_values )  // h_1
 {
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
     // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
     // or:
     // weights[i][j] += learning_rate * (h_1[i] v_1[j] - h_0[i] v_0[j]);
@@ -257,6 +257,8 @@ void RBMMatrixTransposeConnection::computeProduct( int start, int length,
                                           bool accumulate ) const
 {
     PLASSERT( activations.length() == length );
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
+
     if( going_up )
     {
         PLASSERT( start+length <= up_size );
@@ -290,6 +292,7 @@ void RBMMatrixTransposeConnection::computeProducts(int start, int length,
                                           Mat& activations,
                                           bool accumulate ) const
 {
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
     activations.resize(inputs_mat.length(), length);
     if( going_up )
     {
@@ -330,6 +333,7 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input,
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
     PLASSERT( output_gradient.size() == up_size );
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
 
     if( accumulate )
     {
@@ -359,6 +363,7 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Mat& inputs, const Mat& out
     PLASSERT( inputs.width() == down_size );
     PLASSERT( outputs.width() == up_size );
     PLASSERT( output_gradients.width() == up_size );
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
 
     if( accumulate )
     {
@@ -386,6 +391,7 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Mat& inputs, const Mat& out
 //! Note that this method is necessarily called from build().
 void RBMMatrixTransposeConnection::forget()
 {
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
     clearStats();
     if( !random_gen )
     {
@@ -422,6 +428,7 @@ int RBMMatrixTransposeConnection::nParameters() const
 //! This allows to easily chain calls of this method on multiple RBMParameters.
 Vec RBMMatrixTransposeConnection::makeParametersPointHere(const Vec& global_parameters)
 {
+    PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
     Vec ret = rbm_matrix_connection->makeParametersPointHere(global_parameters);
     weights = rbm_matrix_connection->weights;
     return ret;
