@@ -297,6 +297,7 @@ void NetworkModule::build_()
         // Ensure all ports which are states are correctly saved.
         // This is done by adding connections to a NullModule in order to force
         // them being saved.
+        int count_null = 0;
         for (int i = 0; i < modules.length(); i++) {
             const TVec<string>& mod_ports = modules[i]->getPorts();
             for (int j = 0; j < mod_ports.length(); j++) {
@@ -315,16 +316,22 @@ void NetworkModule::build_()
                             break;
                         }
                     if (!has_a_connection) {
+                        // Currently we create one NullModule / state, since
+                        // multiple incoming connections are not correctly
+                        // handled.
                         PP<OnlineLearningModule> null;
+                        /*
                         if (all_modules.length() == modules.length()) {
                             // No null module added yet.
-                            null = new NullModule("_null_");
+                            */
+                            null = new NullModule("_null_" +
+                                    tostring(count_null++));
                             all_modules.append(null);
-                        } else {
+                        /*} else {
                             PLASSERT( all_modules.length() == 
                                         modules.length() + 1 );
                             null = all_modules.lastElement();
-                        }
+                        }*/
                         all_connections.append( new NetworkConnection(
                                     modules[i], port, null, "null", false));
                     }
@@ -432,12 +439,19 @@ void NetworkModule::build_()
         compute_input_of[src].append(dest);
         map<string, PP<NetworkConnection> >& in_conn = in_connections[dest];
         if (in_conn.find(connection->getDestinationPort()) != in_conn.end()) {
+            /*
             // The port has more than one incoming connection. Currently, we
             // only allow this to happen if the module is a NullModule (this is
             // for safety). If in the future we want more modules to allow
             // multiple incoming connections, we may get rid of this error.
             NullModule* test = dynamic_cast<NullModule*>(
                     get_pointer(connection->getDestinationModule()));
+                    */
+            // TODO ACTUALLY this does not work, as the fprop/bprop paths may
+            // not be correctly computed in the case of multiple incoming
+            // connections. Until this is fixed, multiple incoming connections
+            // are not allowed.
+            bool test = false;
             if (!test)
                 PLERROR("In LearningNetwork::build_ - A port may have only one "
                         "incoming connection");
