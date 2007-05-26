@@ -445,7 +445,6 @@ void NetworkModule::build_()
         in_conn[connection->getDestinationPort()] = connection;
         out_connections[src][connection->getSourcePort()].append(connection);
     }
-
     // The fprop and bprop paths can now be computed.
     fprop_path.resize(0);
     bprop_path.resize(all_modules.length());

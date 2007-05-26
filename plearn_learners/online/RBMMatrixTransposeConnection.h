@@ -151,6 +151,11 @@ public:
                              const Vec& output_gradient,
                              bool accumulate=false);
 
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate = false);
+
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
     //! build().

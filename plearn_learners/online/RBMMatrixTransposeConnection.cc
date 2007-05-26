@@ -192,9 +192,9 @@ void RBMMatrixTransposeConnection::update()
 // Instead of using the statistics, we assume we have only one markov chain
 // runned and we update the parameters from the first 4 values of the chain
 void RBMMatrixTransposeConnection::update( const Vec& pos_down_values, // v_0
-                                  const Vec& pos_up_values,   // h_0
-                                  const Vec& neg_down_values, // v_1
-                                  const Vec& neg_up_values )  // h_1
+                                           const Vec& pos_up_values,   // h_0
+                                           const Vec& neg_down_values, // v_1
+                                           const Vec& neg_up_values )  // h_1
 {
     // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
     // or:
@@ -350,6 +350,37 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input,
     // weights -= learning_rate * output_gradient * input'
     externalProductScaleAcc( weights, input, output_gradient, -learning_rate );
 }
+
+void RBMMatrixTransposeConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                                       Mat& input_gradients,
+                                       const Mat& output_gradients,
+                                       bool accumulate)
+{
+    PLASSERT( inputs.width() == down_size );
+    PLASSERT( outputs.width() == up_size );
+    PLASSERT( output_gradients.width() == up_size );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == down_size &&
+                      input_gradients.length() == inputs.length(),
+                      "Cannot resize input_gradients and accumulate into it" );
+
+        // input_gradients += output_gradient * weights
+        productScaleAcc(input_gradients, output_gradients, false, weights, true, 1., 1.);
+    }
+    else
+    {
+        input_gradients.resize(inputs.length(), down_size);
+        // input_gradients = output_gradient * weights
+        productScaleAcc(input_gradients, output_gradients, false, weights, true, 1., 0.);
+    }
+
+    // weights -= learning_rate/n * output_gradients' * inputs
+    productScaleAcc(weights, inputs, true, output_gradients, false, 
+                    -learning_rate / inputs.length(), 1.);
+}
+
 
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
