@@ -518,6 +518,16 @@ void NetworkModule::build_()
                         int path_index = module_index_to_path_index[src_mod];
                         int port_index = conn->getSourceModule()->getPortIndex(
                                 conn->getSourcePort());
+                        if (port_index < 0)
+                            PLERROR("In NetworkModule::build_ - no port named"
+                                    " \"%s\"\n"
+                                    "in module \"%s\". Valid port names are:\n"
+                                    "%s\n",
+                                    conn->getSourcePort().c_str(),
+                                    conn->getSourceModule()->name.c_str(),
+                                    tostring(conn->getSourceModule()
+                                             ->getPorts()).c_str()
+                                    );
                         fprop_mats.append(fprop_data[path_index][port_index]);
                         fprop_mats_idx.append(
                                 fprop_data_idx[path_index][port_index]);
