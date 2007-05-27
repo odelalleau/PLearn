@@ -870,7 +870,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         pb = new ProgressBar("Testing learner", len);
 
     PP<PRandom> copy_random_gen=0;
-    if (use_a_separate_random_generator_for_testing)
+    if (use_a_separate_random_generator_for_testing && random_gen)
     {
         CopiesMap copies;
         copy_random_gen = random_gen->deepCopy(copies);
@@ -1052,7 +1052,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         }
     }
 
-    if (use_a_separate_random_generator_for_testing)
+    if (use_a_separate_random_generator_for_testing && random_gen)
         *random_gen = *copy_random_gen;
 }
 
