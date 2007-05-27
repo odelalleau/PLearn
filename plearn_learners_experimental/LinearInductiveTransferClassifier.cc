@@ -63,14 +63,17 @@
 //#include <plearn/var/PowVariable.h>
 #include <plearn/var/ProductTransposeVariable.h>
 #include <plearn/var/ProductVariable.h>
+#include <plearn/var/ReshapeVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/SumAbsVariable.h>
 #include <plearn/var/SumOfVariable.h>
 #include <plearn/var/SumSquareVariable.h>
+#include <plearn/var/TanhVariable.h>
+#include <plearn/var/TimesVariable.h>
 #include <plearn/var/TransposeVariable.h>
-//#include <plearn/var/TransposeProductVariable.h>
+#include <plearn/var/TransposeProductVariable.h>
 #include <plearn/var/VarRowsVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
@@ -97,56 +100,79 @@ LinearInductiveTransferClassifier::LinearInductiveTransferClassifier()
       dont_consider_train_targets(false),
       use_bias_in_weights_prediction(false),
       multi_target_classifier(false),
-      sigma_min(1e-5)
+      sigma_min(1e-5),
+      nhidden(-1)
 {
     random_gen = new PRandom();
 }
 
 void LinearInductiveTransferClassifier::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "optimizer", &LinearInductiveTransferClassifier::optimizer, OptionBase::buildoption,
+    declareOption(ol, "optimizer", &LinearInductiveTransferClassifier::optimizer, 
+                  OptionBase::buildoption,
                   "Optimizer of the discriminative classifier");
-    declareOption(ol, "batch_size", &LinearInductiveTransferClassifier::batch_size, OptionBase::buildoption, 
+    declareOption(ol, "batch_size", &LinearInductiveTransferClassifier::batch_size,
+                  OptionBase::buildoption, 
                   "How many samples to use to estimate the avergage gradient before updating the weights\n"
                   "0 is equivalent to specifying training_set->length() \n");
-    declareOption(ol, "weight_decay", &LinearInductiveTransferClassifier::weight_decay, OptionBase::buildoption, 
+    declareOption(ol, "weight_decay", 
+                  &LinearInductiveTransferClassifier::weight_decay, 
+                  OptionBase::buildoption, 
                   "Global weight decay for all layers\n");
-    declareOption(ol, "model_type", &LinearInductiveTransferClassifier::model_type, OptionBase::buildoption, 
+    declareOption(ol, "model_type", &LinearInductiveTransferClassifier::model_type,
+                  OptionBase::buildoption, 
                   "Model type. Choose between:\n"
-                  " - \"discriminative\"             (multiclass classifier)\n"
-                  " - \"discriminative_1_vs_all\"    (1 vs all multitask classier)\n"
-                  " - \"generative\"                 (gaussian input)\n"
-                  " - \"generative_0-1\"             ([0,1] input)\n"
+                  " - \"discriminative\"               (multiclass classifier)\n"
+                  " - \"discriminative_1_vs_all\"      (1 vs all multitask classier)\n"
+                  " - \"generative\"                   (gaussian input)\n"
+                  " - \"generative_0-1\"               ([0,1] input)\n"
+                  " - \"nnet_discriminative_1_vs_all\" ([0,1] input)\n"
         );
-    declareOption(ol, "penalty_type", &LinearInductiveTransferClassifier::penalty_type,
+    declareOption(ol, "penalty_type", 
+                  &LinearInductiveTransferClassifier::penalty_type,
                   OptionBase::buildoption,
                   "Penalty to use on the weights (for weight and bias decay).\n"
                   "Can be any of:\n"
                   "  - \"L1\": L1 norm,\n"
                   "  - \"L1_square\": square of the L1 norm,\n"
                   "  - \"L2_square\" (default): square of the L2 norm.\n");
-    declareOption(ol, "initialization_method", &LinearInductiveTransferClassifier::initialization_method, OptionBase::buildoption, 
+    declareOption(ol, "initialization_method", 
+                  &LinearInductiveTransferClassifier::initialization_method, 
+                  OptionBase::buildoption, 
                   "The method used to initialize the weights:\n"
                   " - \"normal_linear\"  = a normal law with variance 1/n_inputs\n"
                   " - \"normal_sqrt\"    = a normal law with variance 1/sqrt(n_inputs)\n"
                   " - \"uniform_linear\" = a uniform law in [-1/n_inputs, 1/n_inputs]\n"
                   " - \"uniform_sqrt\"   = a uniform law in [-1/sqrt(n_inputs), 1/sqrt(n_inputs)]\n"
                   " - \"zero\"           = all weights are set to 0\n");    
-    declareOption(ol, "paramsvalues", &LinearInductiveTransferClassifier::paramsvalues, OptionBase::learntoption, 
+    declareOption(ol, "paramsvalues", 
+                  &LinearInductiveTransferClassifier::paramsvalues, 
+                  OptionBase::learntoption, 
                   "The learned parameters\n");
-    declareOption(ol, "class_reps", &LinearInductiveTransferClassifier::class_reps, OptionBase::buildoption, 
+    declareOption(ol, "class_reps", &LinearInductiveTransferClassifier::class_reps,
+                  OptionBase::buildoption, 
                   "Class vector representations\n");
-    declareOption(ol, "dont_consider_train_targets", &LinearInductiveTransferClassifier::dont_consider_train_targets, OptionBase::buildoption, 
+    declareOption(ol, "dont_consider_train_targets", 
+                  &LinearInductiveTransferClassifier::dont_consider_train_targets, 
+                  OptionBase::buildoption, 
                   "Indication that the targets seen in the training set\n"
                   "should not be considered when tagging a new set\n");
-    declareOption(ol, "use_bias_in_weights_prediction", &LinearInductiveTransferClassifier::use_bias_in_weights_prediction, OptionBase::buildoption, 
+    declareOption(ol, "use_bias_in_weights_prediction", 
+                  &LinearInductiveTransferClassifier::use_bias_in_weights_prediction, 
+                  OptionBase::buildoption, 
                   "Indication that a bias should be used for weights prediction\n");
-    declareOption(ol, "multi_target_classifier", &LinearInductiveTransferClassifier::multi_target_classifier, OptionBase::buildoption, 
+    declareOption(ol, "multi_target_classifier", 
+                  &LinearInductiveTransferClassifier::multi_target_classifier, 
+                  OptionBase::buildoption, 
                   "Indication that the classifier works with multiple targets,\n"
                   "possibly ON simulatneously.\n");
-    declareOption(ol, "sigma_min", &LinearInductiveTransferClassifier::sigma_min, OptionBase::buildoption, 
+    declareOption(ol, "sigma_min", &LinearInductiveTransferClassifier::sigma_min, 
+                  OptionBase::buildoption, 
                   "Minimum variance for all coordinates, which is added\n"
                   "to the maximum likelihood estimates.\n");
+    declareOption(ol, "nhidden", &LinearInductiveTransferClassifier::nhidden, 
+                  OptionBase::buildoption, 
+                  "Number of hidden units for neural network.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -192,19 +218,49 @@ void LinearInductiveTransferClassifier::build_()
         {
             class_reps_to_use = class_reps;
         }
+                
 
-        A = Var(inputsize_,class_reps_to_use.width());
-        //fillWeights(A,false);        
-        A->value.fill(0);
-        s = Var(1,inputsize_,"sigma_square");
-        s->value.fill(1);
-        params.push_back(A);
-        params.push_back(s);
+        if(model_type == "nnet_discriminative_1_vs_all")
+        {
+            if(nhidden <= 0)
+                PLERROR("In LinearInductiveTransferClassifier::build_(): nhidden "
+                        "must be > 0.");
+//            Ws.resize(nhidden); 
+//            As.resize(nhidden);
+//            s_hids.resize(nhidden);
+//            s = Var(1,nhidden,"sigma_square");
+//            for(int i=0; i<Ws.length(); i++)
+//            {
+//                Ws[i] = Var(inputsize_,class_reps_to_use.width());
+//                As[i] = Var(1,class_reps_to_use.width());
+//                s_hids[i] = Var(1,inputsize_);
+//            }
+            W = Var(inputsize_+1,nhidden,"hidden_weights");
+            A = Var(nhidden,class_reps_to_use.width());
+            s = Var(1,nhidden,"sigma_square");
+            params.push_back(W);
+            params.push_back(A);
+            params.push_back(s);
+//            params.append(Ws);
+//            params.append(As);
+//            params.append(s);
+//            params.append(s_hids);
+//            A = vconcat(As);
+        }
+        else
+        {
+            A = Var(inputsize_,class_reps_to_use.width());
+            s = Var(1,inputsize_,"sigma_square");
+            //fillWeights(A,false);     
+            params.push_back(A);
+            params.push_back(s);        
+        }
         
+
         class_reps_var = new SourceVariable(class_reps_to_use);
         Var weights = productTranspose(A,class_reps_var);
         if(model_type == "discriminative" || model_type == "discriminative_1_vs_all")
-        {
+        { 
             weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that the scaling factor is going to be positive
             output = affine_transform(input, weights);
         }
@@ -216,11 +272,34 @@ void LinearInductiveTransferClassifier::build_()
         }
         else if(model_type == "generative")
         {
-            weights =vconcat(-columnSum(square(weights)/transpose(duplicateRow(s,noutputs))) & 2*weights/transpose(duplicateRow(s,noutputs)));
+            weights = vconcat(-columnSum(square(weights)/transpose(duplicateRow(s,noutputs))) & 2*weights/transpose(duplicateRow(s,noutputs)));
             if(targetsize() == 1)
                 output = affine_transform(input, weights);
             else
                 output = exp(affine_transform(input, weights) - duplicateRow(dot(transpose(input)/s,input),noutputs))+REAL_EPSILON;
+        }
+        else if(model_type == "nnet_discriminative_1_vs_all")
+        {
+            //hidden_neurons.resize(nhidden);
+            //Var weights;
+            //for(int i=0; i<nhidden; i++)
+            //{
+            //    weights = productTranspose(Ws[i],class_reps_var);
+            //    weights = vconcat(-product(exp(s_hids[i]),square(weights)) 
+            //                      & weights); 
+            //    hidden_neurons[i] = tanh(affine_transform(input, weights));
+            //}
+            //
+            //weights = productTranspose(A,class_reps_var);
+            //output = -transpose(product(exp(s),square(weights)));
+            //
+            //for(int i=0; i<nhidden; i++)
+            //{
+            //    output = output + times(productTranspose(class_reps_var,As[i]),
+            //                   hidden_neurons[i]);
+            //}
+            weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that the scaling factor is going to be positive
+            output = affine_transform(tanh(affine_transform(input,W)), weights);
         }
         else
             PLERROR("In LinearInductiveTransferClassifier::build_(): model_type %s is not valid", model_type.c_str());
@@ -297,7 +376,7 @@ void LinearInductiveTransferClassifier::build_()
         }
 
         // Build costs
-        if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1")
+        if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1" || model_type == "nnet_discriminative_1_vs_all")
         {
             if(model_type == "discriminative")
             {
@@ -312,7 +391,8 @@ void LinearInductiveTransferClassifier::build_()
                 new_costs[0] = neg_log_pi(new_output,new_target);
                 new_costs[1] = classification_loss(new_output, new_target);
             }
-            if(model_type == "discriminative_1_vs_all")
+            if(model_type == "discriminative_1_vs_all" 
+               || model_type == "nnet_discriminative_1_vs_all")
             {
                 costs.resize(2);
                 new_costs.resize(2);
@@ -481,6 +561,12 @@ void LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy(CopiesMap& c
     varDeepCopyField(s, copies);
     varDeepCopyField(class_reps_var, copies);
 
+    deepCopyField(W, copies);
+    //deepCopyField(As, copies);
+    //deepCopyField(Ws, copies);
+    //deepCopyField(s_hids, copies);
+    //deepCopyField(hidden_neurons, copies);
+
     varDeepCopyField(input, copies);
     varDeepCopyField(output, copies);
     varDeepCopyField(sup_output, copies);
@@ -510,9 +596,27 @@ void LinearInductiveTransferClassifier::forget()
         optimizer->reset();
     stage = 0;
     
-    fillWeights(A,false);
-    s->value.fill(1);
- 
+    if(model_type == "nnet_discriminative_1_vs_all")
+    {
+//        for(int i=0; i<Ws.length(); i++)
+//        {
+//            fillWeights(Ws[i],false,1./(inputsize_*class_reps.width()));
+//            fillWeights(As[i],false,1./(nhidden*class_reps.width()));
+//            s_hids[i]->value.fill(1);
+//        }
+        fillWeights(W,true);
+        fillWeights(A,false,1./(nhidden*class_reps.width()));
+        s->value.fill(1);
+    }
+    else
+    {
+        //A = Var(inputsize_,class_reps_to_use.width());
+        A->value.fill(0);
+        s->value.fill(1);
+    }
+
+    // Might need to recompute proppaths (if number of task representations changed
+    // for instance)
     build();
 }
     
@@ -529,7 +633,7 @@ void LinearInductiveTransferClassifier::train()
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
     
-    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1")
+    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1" || model_type == "nnet_discriminative_1_vs_all")
     {
         // number of samples seen by optimizer before each optimizer update
         int nsamples = batch_size>0 ? batch_size : l;
@@ -752,7 +856,7 @@ void LinearInductiveTransferClassifier::computeOutputAndCosts(const Vec& inputv,
 TVec<string> LinearInductiveTransferClassifier::getTestCostNames() const
 {
     TVec<string> costs_str;
-    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1")
+    if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1" || model_type == "nnet_discriminative_1_vs_all")
     {
         if(model_type == "discriminative" || model_type == "generative_0-1")
         {
@@ -760,7 +864,8 @@ TVec<string> LinearInductiveTransferClassifier::getTestCostNames() const
             costs_str[0] = "NLL";
             costs_str[1] = "class_error";
         }
-        if(model_type == "discriminative_1_vs_all")
+        if(model_type == "discriminative_1_vs_all" 
+           || model_type == "nnet_discriminative_1_vs_all")
         {
             costs_str.resize(1);
             costs_str[0] = "cross_entropy";
@@ -815,29 +920,47 @@ void LinearInductiveTransferClassifier::buildPenalties() {
     penalties.resize(0);  // prevents penalties from being added twice by consecutive builds
     if(weight_decay > 0)
     {
-        penalties.append(affine_transform_weight_penalty(A, weight_decay, (use_bias_in_weights_prediction ? 0 : weight_decay), penalty_type));
+        if(model_type == "nnet_discriminative_1_vs_all")
+        {
+            //for(int i=0; i<Ws.length(); i++)
+            //{
+            //    penalties.append(affine_transform_weight_penalty(Ws[i], weight_decay, weight_decay, penalty_type));
+            //}
+            penalties.append(affine_transform_weight_penalty(W, weight_decay, 0, penalty_type));
+        }
+        
+        penalties.append(affine_transform_weight_penalty(A, weight_decay, weight_decay, penalty_type));
     }
 }
 
-void LinearInductiveTransferClassifier::fillWeights(const Var& weights, bool fill_first_row, real fill_with_this) {
+void LinearInductiveTransferClassifier::fillWeights(const Var& weights, 
+                                                    bool zero_first_row, 
+                                                    real scale_with_this) {
     if (initialization_method == "zero") {
         weights->value->clear();
         return;
     }
     real delta;
-    int is = weights.length();
-    if (fill_first_row)
-        is--; // -1 to get the same result as before.
-    if (initialization_method.find("linear") != string::npos)
-        delta = 1.0 / real(is);
+    if(scale_with_this < 0)
+    {
+        int is = weights.length();
+        if (zero_first_row)
+            is--; // -1 to get the same result as before.
+        if (initialization_method.find("linear") != string::npos)
+            delta = 1.0 / real(is);
+        else
+            delta = 1.0 / sqrt(real(is));
+    }
     else
-        delta = 1.0 / sqrt(real(is));
+        delta = scale_with_this;
+
     if (initialization_method.find("normal") != string::npos)
         random_gen->fill_random_normal(weights->value, 0, delta);
     else
         random_gen->fill_random_uniform(weights->value, -delta, delta);
-    if (fill_first_row)
-        weights->matValue(0).fill(fill_with_this);
+
+    if(zero_first_row)
+        weights->matValue(0).clear();
 }
 
 void LinearInductiveTransferClassifier::buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight){

@@ -89,6 +89,8 @@ public:
     //! Minimum variance for all coordinates, which is added
     //! to the maximum likelihood estimates.
     real sigma_min;
+    //! Number of hidden units for neural network
+    int nhidden;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -212,6 +214,17 @@ protected:
     //! Function: output & target -> cost
     mutable Func sup_output_and_target_to_cost; 
 
+    // Neural networks variables
+    //! Parameters for hidden to output layer weights prediction
+    VarArray As;
+    //! Parameters for input to hidden layer weights prediction
+    VarArray Ws;
+    //! Input to hidden layer weights 
+    Var W;
+    //! Scale parameter for input to hidden layer weights prediction
+    VarArray s_hids;
+    //! Hidden layer neurons
+    VarArray hidden_neurons;
     
 protected:
     //#####  Protected Member Functions  ######################################
@@ -239,7 +252,8 @@ protected:
     //! Fill a matrix of weights according to the 'initialization_method' specified.
     //! The 'clear_first_row' boolean indicates whether we should fill the first
     //! row with zeros.
-    void fillWeights(const Var& weights, bool fill_first_row, real fill_with_this=0);
+    void fillWeights(const Var& weights, bool zero_first_row, 
+                     real scale_with_this=-1);
 
     //! Fill the costs penalties.
     virtual void buildPenalties();
