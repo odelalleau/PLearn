@@ -61,6 +61,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
     "the corresponding bprop.\n"
     );
 
+bool OnlineLearningModule::during_training=false;
+
 //////////////////////////
 // OnlineLearningModule //
 //////////////////////////

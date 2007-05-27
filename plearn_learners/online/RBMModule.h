@@ -82,9 +82,13 @@ public:
     int min_n_Gibbs_steps; 
     int n_Gibbs_steps_per_generated_sample;
 
+    bool compute_log_likelihood;
+
     //#####  Public Learnt Options  ############################################
     //! used to generate samples from the RBM
     int Gibbs_step;
+    real log_partition_function;
+    bool partition_function_is_stale;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -205,6 +209,8 @@ public:
 
 protected:
 
+    Mat* hidden_bias;
+
     //! Used to store gradient w.r.t. expectations of the hidden layer.
     Mat hidden_exp_grad;
 
@@ -223,6 +229,8 @@ protected:
     //! Used to cache the hidden layer expectations and activations
     Mat hidden_exp_store;
     Mat hidden_act_store;
+    Mat* hidden_act;
+    bool hidden_activations_are_computed;
 
     //! names of the ports
     TVec<string> ports;
@@ -243,19 +251,26 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    Mat* hidden_bias;
-
-    void computeHiddenActivations(Mat& visible) {
+    void computeHiddenActivations(const Mat& visible) {
         connection->setAsDownInputs(visible);
         hidden_layer->getAllActivations(connection, 0, true);
         if (hidden_bias && !hidden_bias->isEmpty())
             hidden_layer->activations += *hidden_bias;
     }
-    void sampleHiddenGivenVisible(Mat& visible) {
+    void computePositivePhaseHiddenActivations(const Mat& visible) {
+        computeHiddenActivations(visible);
+        hidden_activations_are_computed=true;
+        if (hidden_act && hidden_act->isEmpty())
+        {
+            hidden_act->resize(visible.length(),hidden_layer->size);
+            *hidden_act << hidden_layer->activations;
+        }
+    }
+    void sampleHiddenGivenVisible(const Mat& visible) {
         computeHiddenActivations(visible);
         hidden_layer->generateSamples();
     }
-    void computeVisibleActivations(Mat& hidden, bool using_reconstruction_connection=false) {
+    void computeVisibleActivations(const Mat& hidden, bool using_reconstruction_connection=false) {
         if (using_reconstruction_connection)
         {
             reconstruction_connection->setAsDownInputs(hidden);
@@ -267,11 +282,53 @@ protected:
             visible_layer->getAllActivations(connection, 0, true);
         }
     }
-    void sampleVisibleGivenHidden(Mat& hidden) {
+    void sampleVisibleGivenHidden(const Mat& hidden) {
         computeVisibleActivations(hidden);
         visible_layer->generateSamples();
     }
-
+    void computeFreeEnergyOfVisible(const Mat& visible, Mat& energy, bool positive_phase=true) {
+        int mbs=visible.length();
+        if (energy.isEmpty())
+            energy.resize(mbs,1);
+        PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+        if (positive_phase)
+            computePositivePhaseHiddenActivations(visible);
+        else
+            computeHiddenActivations(visible);
+        for (int i=0;i<mbs;i++)
+        {
+            energy(i,0) = visible_layer->energy(visible(i));
+            for (int j=0;j<hidden_layer->size;j++)
+                energy(i,0) += softplus(hidden_layer->activations(i,j));
+        }
+    }
+    void computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy) {
+        int mbs=hidden.length();
+        if (energy.isEmpty())
+            energy.resize(mbs,1);
+        PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
+        computeVisibleActivations(hidden);
+        for (int i=0;i<mbs;i++)
+        {
+            energy(i,0) = hidden_layer->energy(hidden(i));
+            for (int j=0;j<visible_layer->size;j++)
+                energy(i,0) += softplus(visible_layer->activations(i,j));
+        }
+    }
+    void computeEnergy(const Mat& visible, const Mat& hidden, Mat& energy, 
+                       bool positive_phase=true) 
+    {
+        int mbs=hidden.length();
+        energy.resize(mbs,1);
+        if (positive_phase)
+            computePositivePhaseHiddenActivations(visible);
+        else
+            computeHiddenActivations(visible);
+        for (int i=0;i<mbs;i++)
+            energy(i,0) = visible_layer->energy(visible(i)) + 
+                hidden_layer->energy(hidden(i)) + 
+                dot(hidden(i),hidden_layer->activations(i));
+    }
 private:
     //#####  Private Member Functions  ########################################
 

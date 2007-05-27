@@ -275,6 +275,7 @@ void ModuleLearner::train()
     if (!initTrain())
         return;
 
+    OnlineLearningModule::during_training=true;
     if (stage == 0) {
         // Perform training set-dependent initialization here.
         if (batch_size == 0)
@@ -310,6 +311,7 @@ void ModuleLearner::train()
         PLWARNING("In ModuleLearner::train - The network was trained for "
                 "only %d stages (instead of nstages = %d, which is not a "
                 "multiple of batch_size = %d", stage, nstages, batch_size);
+    OnlineLearningModule::during_training=false;
 }
 
 //////////////////

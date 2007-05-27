@@ -65,6 +65,9 @@ class OnlineLearningModule : public Object
     typedef Object inherited;
 
 public:
+    // BICK UGLY HACK to let modules know if we are performing training of testing
+    static bool during_training;
+
     //#####  Public Build Options  ############################################
 
     //! input size
