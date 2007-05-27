@@ -1,0 +1,2 @@
+__REVISION__ = "PL7350"
+data                                          = PLEARNDIR:examples/data/test_suite/linear_2x_2y.amat
