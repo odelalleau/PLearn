@@ -1,0 +1,41 @@
+*6 -> PTester(
+    dataset = *1 -> AutoVMatrix(
+        inputsize = 4,
+        specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat",
+        targetsize = 2,
+        weightsize = 0
+        ),
+    expdir = "expdir",
+    learner = *4 -> StackedLearner(
+        base_learners = [
+            *2 -> PCA(
+                algo = "classical",
+                ncomponents = 2,
+                normalize = 1,
+                normalize_warning = 0
+                )
+            ],
+        combiner = *3 -> LinearRegressor( ),
+        precompute_base_learners_output = 1
+        ),
+    provide_learner_expdir = 1,
+    save_test_confidence = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *5 -> FractionSplitter(
+        splits = 1 2 [
+                (0, 0.75),
+                (0.75, 1)
+                ]
+        ),
+    statnames = [
+        "E[train.E[mse]]",
+        "E[train.E[aic]]",
+        "E[train.E[bic]]",
+        "E[train.E[mabic]]",
+        "E[test.E[mse]]",
+        "E[test.E[aic]]",
+        "E[test.E[bic]]",
+        "E[test.E[mabic]]"
+        ]
+    )

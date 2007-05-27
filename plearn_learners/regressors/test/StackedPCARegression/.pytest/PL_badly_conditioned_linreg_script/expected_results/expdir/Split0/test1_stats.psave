@@ -1,0 +1,108 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 5 [ "mse+penalty" "mse" "aic" "bic" "mabic" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+window_nan_code = 0 ;
+no_removal_warnings = 0 ;
+stats = 5 [ StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 50 ;
+sumsquarew_ = 50 ;
+sum_ = -61031.4440677611565 ;
+sumsquare_ = 88239109.550819248 ;
+sumcube_ = -124602854141.718964 ;
+sumfourth_ = 187860766474339.531 ;
+min_ = 1.23065096944085917 ;
+max_ = 2757.59439270702978 ;
+first_ = 1651.65821078803242 ;
+last_ = 892.793570994575475 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 50 ;
+sumsquarew_ = 50 ;
+sum_ = -61031.4440677611565 ;
+sumsquare_ = 88239109.550819248 ;
+sumcube_ = -124602854141.718964 ;
+sumfourth_ = 187860766474339.531 ;
+min_ = 1.23065096944085917 ;
+max_ = 2757.59439270702978 ;
+first_ = 1651.65821078803242 ;
+last_ = 892.793570994575475 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 50 ;
+sumsquarew_ = 50 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 6.09268868403331076 ;
+max_ = 6.09268868403331076 ;
+first_ = 6.09268868403331076 ;
+last_ = 6.09268868403331076 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 50 ;
+sumsquarew_ = 50 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 6.2933977036397275 ;
+max_ = 6.2933977036397275 ;
+first_ = 6.2933977036397275 ;
+last_ = 6.2933977036397275 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 50 ;
+sumsquarew_ = 50 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 6.19304319383651958 ;
+max_ = 6.19304319383651958 ;
+first_ = 6.19304319383651958 ;
+last_ = 6.19304319383651958 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )
