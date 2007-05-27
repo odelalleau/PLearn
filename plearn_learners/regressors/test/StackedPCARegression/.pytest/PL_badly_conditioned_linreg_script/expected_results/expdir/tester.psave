@@ -20,7 +20,7 @@ splits = 1  2  [
  )
 ;
 statnames = 8 [ "E[train.E[mse]]" "E[train.E[aic]]" "E[train.E[bic]]" "E[train.E[mabic]]" "E[test.E[mse]]" "E[test.E[aic]]" "E[test.E[bic]]" "E[test.E[mabic]]" ] ;
-statmask = TVec(0 0 *0 )
+statmask = []
 ;
 learner = *3 ->LinearRegressor(
 include_bias = 1 ;
@@ -32,9 +32,8 @@ weights = 0  0  [
 ;
 AIC = nan ;
 BIC = nan ;
-resid_variance = TVec(0 0 *0 )
+resid_variance = []
 ;
-expdir = "" ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -45,7 +44,9 @@ nstages = 1 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
-save_trainingset_prefix = ""  )
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1  )
 ;
 perf_evaluators = {};
 report_stats = 1 ;
@@ -58,9 +59,11 @@ save_test_outputs = 1 ;
 call_forget_in_run = 1 ;
 save_test_costs = 1 ;
 provide_learner_expdir = 1 ;
-train = 1 ;
+should_train = 1 ;
+should_test = 1 ;
 template_stats_collector = *0 ;
 global_template_stats_collector = *0 ;
-final_commands = TVec(0 0 *0 )
+final_commands = []
 ;
-save_test_confidence = 1  )
+save_test_confidence = 1 ;
+enforce_clean_expdir = 1  )

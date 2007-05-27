@@ -200,4 +200,6 @@ nstages = 1 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
-save_trainingset_prefix = ""  )
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1  )

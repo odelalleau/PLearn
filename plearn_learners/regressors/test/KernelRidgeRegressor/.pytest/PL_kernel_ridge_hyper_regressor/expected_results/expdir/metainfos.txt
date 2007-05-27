@@ -1,8 +1,0 @@
-__REVISION__ = "AP5427.PL6431"
-DataOpt.data                                  = PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat
-HyperKRR.kfold                                = 10
-HyperKRR.lambda_list                          = 1e-8,1e-6,1e-4,1e-2,1e0
-HyperKRR.sigma_list                           = 1e-2,1e-1,1e0,1e1,1e2
-HyperKRR.statnames                            = E[test.E[mse]],E[train.E[mse]]
-HyperKRR.valid_fraction                       = 0.25
-HyperKRR.which_cost                           = 0

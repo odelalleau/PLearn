@@ -2,6 +2,7 @@
 L = 1 ;
 type = "diagonal" ;
 n_eigen = -1 ;
+f_eigen = 0 ;
 efficient_missing = 0 ;
 efficient_k_median = 1 ;
 max_samples_in_cluster = -1 ;
@@ -17,7 +18,7 @@ center = 1  4  [
 -0.0868066666666664766 	-0.062603333333333358 	-1.50779199999992364 	5.35029800000000844 	
 ]
 ;
-sigma = TVec(0 0 *0 )
+sigma = []
 ;
 diags = 1  4  [ 
 0.845990712712336057 	1.00475472778631381 	100.744943207475913 	54.5397186407694221 	
@@ -26,21 +27,20 @@ diags = 1  4  [
 eigenvalues = 0  0  [ 
 ]
 ;
-eigenvectors = TVec(0 0 *0 )
+eigenvectors = []
 ;
 n_eigen_computed = -1 ;
 D = 4 ;
 outputs_def = "l" ;
 predictor_size = 0 ;
 predicted_size = -1 ;
-predictor_part = TVec(0 0 *0 )
+predictor_part = []
 ;
 n_curve_points = -1 ;
 lower_bound = 0 ;
 upper_bound = 0 ;
 n_predictor = 0 ;
 n_predicted = 4 ;
-expdir = "" ;
 seed = 123456 ;
 stage = 10 ;
 n_examples = 150 ;
@@ -52,4 +52,6 @@ nstages = 10 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
-save_trainingset_prefix = ""  )
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1  )

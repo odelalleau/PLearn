@@ -1,3 +1,0 @@
-__REVISION__ = AP4497.PL5798
-data                                          = PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat
-sigma                                         = 1.0

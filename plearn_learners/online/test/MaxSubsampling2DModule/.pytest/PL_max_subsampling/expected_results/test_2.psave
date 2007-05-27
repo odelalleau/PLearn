@@ -24,8 +24,7 @@ output_size = 4 ;
 name = "MaxSubsampling2DModule" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *0 ;
-output_size = 4  )
+random_gen = *0  )
 ;
 save = 1 ;
 save_path = "test_2.psave"  )

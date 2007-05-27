@@ -72,6 +72,7 @@ PLearner::PLearner()
       save_trainingset_prefix(""),
       parallelize_here(true),
       master_sends_testset_rows(false),
+      use_a_separate_random_generator_for_testing(true),
       inputsize_(-1),
       targetsize_(-1),
       weightsize_(-1),
@@ -240,6 +241,20 @@ void PLearner::declareOptions(OptionList& ol)
         "Size of minibatches used during testing to take advantage\n"
         "of efficient (possibly parallelized) implementations when\n"
         "multiple examples are processed at once. \n");
+
+    declareOption(
+        ol, "use_a_separate_random_generator_for_testing", 
+        &PLearner::use_a_separate_random_generator_for_testing,
+        OptionBase::buildoption,
+        "This option allows to perform testing always in the same\n"
+        "conditions in terms of the random generator (if testing involves\n"
+        "some non-deterministic component, this can be useful in order\n"
+        "to obtain repeatable test results).\n"
+        "If non-zero, the base class test() method will use a different\n"
+        "random generator than the rest of the code (i.e. training).\n"
+        "The non-zero value is the seed to be used during testing.\n"
+        "A value of -1 sets the seed differently each time depending on clock.\n"
+        "(which is probably not desired here).\n");
 
     inherited::declareOptions(ol);
 }
@@ -854,6 +869,14 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     if (report_progress) 
         pb = new ProgressBar("Testing learner", len);
 
+    PP<PRandom> copy_random_gen=0;
+    if (use_a_separate_random_generator_for_testing)
+    {
+        CopiesMap copies;
+        copy_random_gen = random_gen->deepCopy(copies);
+        random_gen->manual_seed(use_a_separate_random_generator_for_testing);
+    }
+
     PLearnService& service(PLearnService::instance());
 
     //DUMMY: need to find a better way to calc. nservers -xsm
@@ -1028,6 +1051,9 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             }
         }
     }
+
+    if (use_a_separate_random_generator_for_testing)
+        *random_gen = *copy_random_gen;
 }
 
 void PLearner::computeOutput(const Vec& input, Vec& output) const

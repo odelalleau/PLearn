@@ -183,6 +183,19 @@ public:
      */
     bool master_sends_testset_rows;
 
+    /**
+     * This option allows to perform testing always in the same
+     * conditions in terms of the random generator (if testing involves
+     * some non-deterministic component, this can be useful in order
+     * to obtain repeatable test results).
+     * If non-zero, the base class test() method will use a different
+     * random generator than the rest of the code (i.e. training).
+     * The non-zero value is the seed to be used during testing.
+     * A value of -1 sets the seed differently each time depending on clock.
+     * (which is probably not desired here).
+     */
+    int use_a_separate_random_generator_for_testing;
+
 protected:
 
     /**

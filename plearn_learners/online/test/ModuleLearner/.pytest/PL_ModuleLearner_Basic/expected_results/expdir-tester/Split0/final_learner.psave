@@ -39,7 +39,7 @@ source = "affine_net.output" ;
 destination = "mse.prediction" ;
 propagate_gradient = 1  )
 ] ;
-ports = [ "input":"affine_net.input" "target":"mse.target" "output":"affine_net.output" "mse":"mse.cost" ] ;
+ports = 4 [ ("input" , "affine_net.input" )("target" , "mse.target" )("output" , "affine_net.output" )("mse" , "mse.cost" )] ;
 save_states = 1 ;
 name = "NetworkModule" ;
 estimate_simpler_diag_hessian = 0 ;
@@ -65,4 +65,5 @@ report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = "" ;
-test_minibatch_size = 1000  )
+test_minibatch_size = 1000 ;
+use_a_separate_random_generator_for_testing = 1  )
