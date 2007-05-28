@@ -99,7 +99,8 @@ RBMModule::RBMModule():
     Gibbs_step(0),
     log_partition_function(0),
     partition_function_is_stale(true),
-    hidden_bias(0)
+    hidden_bias(0),
+    hidden_activations_are_computed(false)
 {
 }
 
@@ -320,7 +321,6 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(hidden_act_store, copies);
 
     deepCopyField(ports, copies);
-    deepCopyField(portname_to_index, copies);
 }
 
 ///////////
@@ -428,8 +428,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             {
                 PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
                 // assuming a binary input we sum over all bit configurations
-                int n_configurations = 1;
-                n_configurations << visible_layer->size; // = 2^{visible_layer->size}
+                int n_configurations = 1 << visible_layer->size; // = 2^{visible_layer->size}
                 Mat inputs = visible_layer->getExpectations();
                 inputs.resize(1,visible_layer->size);
                 Vec input = inputs(0);
@@ -458,8 +457,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             {
                 PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
                 // assuming a binary hidden we sum over all bit configurations
-                int n_configurations = 1;
-                n_configurations << hidden_layer->size; // = 2^{hidden_layer->size}
+                int n_configurations = 1 << hidden_layer->size; // = 2^{hidden_layer->size}
                 Mat& inputs = hidden_layer->getExpectations();
                 inputs.resize(1,hidden_layer->size);
                 Vec input = inputs(0);
@@ -732,9 +730,13 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         reconstruction_error_grad = 
             ports_gradient[portname2index("reconstruction_error.state")];
 
+    // Ensure the visible gradient is not provided as input. This is because we
+    // accumulate more than once in 'visible_grad'.
+    PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "Cannot provide "
+            "an input gradient w.r.t. visible units" );
+    
     if (visible && !visible->isEmpty() && 
-        (hidden_grad && !hidden_grad->isEmpty() &&
-         (!visible_grad || visible_grad->isEmpty())))
+        (hidden_grad && !hidden_grad->isEmpty()))
     {
         int mbs = visible->length();
         if (grad_learning_rate > 0) {
@@ -831,8 +833,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             partition_function_is_stale = true;
     }
 
-    if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()
-        && ( !visible_grad || visible_grad->isEmpty() ) ) {
+    if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()) {
         setAllLearningRates(grad_learning_rate);
         PLASSERT( reconstruction_connection != 0 );
         // Perform gradient descent on Autoassociator reconstruction cost
@@ -886,7 +887,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         // Connection update
         if(visible_grad)
         {
-            PLASSERT( visible_grad->width() == visible_layer->size );
+            // The length of 'visible_grad' must be either 0 (if not computed
+            // previously) or the size of the mini-batches (otherwise).
+            PLASSERT( visible_grad->width() == visible_layer->size &&
+                      visible_grad->length() == 0 ||
+                      visible_grad->length() == mbs );
+            visible_grad->resize(mbs, visible_grad->width());
             connection->bpropUpdate(
                 *visible, *hidden_act,
                 *visible_grad, hidden_act_grad, true);
