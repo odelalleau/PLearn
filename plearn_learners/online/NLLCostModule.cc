@@ -190,7 +190,7 @@ void NLLCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             // input_gradient[ t ] = -1/x[t]
             int target_k = (int) round((*target)(k, 0));
             (*prediction_grad)(k, target_k) -=
-                (*cost)(k, 0) / (*prediction)(k, target_k);
+                (*cost_grad)(k, 0) / (*prediction)(k, target_k);
         }
     }
     else
