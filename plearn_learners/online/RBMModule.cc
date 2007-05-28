@@ -748,7 +748,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     false);
             if (hidden_bias_grad)
             {
-                PLASSERT(hidden_bias_grad->isEmpty());
+                PLASSERT( hidden_bias_grad->isEmpty() &&
+                          hidden_bias_grad->width() == hidden_layer->size );
                 hidden_bias_grad->resize(mbs,hidden_layer->size);
                 *hidden_bias_grad += hidden_act_grad;
             }
@@ -823,8 +824,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
             if (hidden_bias_grad)
             {
-                if (hidden_bias_grad->isEmpty())
+                if (hidden_bias_grad->isEmpty()) {
+                    PLASSERT(hidden_bias_grad->width() == hidden_layer->size);
                     hidden_bias_grad->resize(mbs,hidden_layer->size);
+                }
                 // d(contrastive_divergence)/dhidden_bias =
                 //     hidden - negative_phase_hidden_expectations
                 *hidden_bias_grad += *hidden;
@@ -880,8 +883,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                   hidden_exp_grad, false);
         if (hidden_bias_grad)
         {
-            if (hidden_bias_grad->isEmpty())
+            if (hidden_bias_grad->isEmpty()) {
+                PLASSERT( hidden_bias_grad->width() == hidden_layer->size );
                 hidden_bias_grad->resize(mbs,hidden_layer->size);
+            }
             *hidden_bias_grad += hidden_act_grad;
         }
         // Connection update
