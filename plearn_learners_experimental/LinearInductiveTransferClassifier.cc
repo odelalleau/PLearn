@@ -561,7 +561,7 @@ void LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy(CopiesMap& c
     varDeepCopyField(s, copies);
     varDeepCopyField(class_reps_var, copies);
 
-    deepCopyField(W, copies);
+    varDeepCopyField(W, copies);
     //deepCopyField(As, copies);
     //deepCopyField(Ws, copies);
     //deepCopyField(s_hids, copies);
