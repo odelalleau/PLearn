@@ -231,12 +231,14 @@ void LLC::train()
     // Obtain the number of components in the mixture (= the number of 'experts').
     // We assume here the mixture has a 'n_components' option.
     int n_comp_mixture;
-    openString(mixture->getOption("n_components"), PStream::plearn_ascii) >> n_comp_mixture;
+    string mixture_n_components = mixture->getOption("n_components");
+    openString(mixture_n_components, PStream::plearn_ascii) >> n_comp_mixture;
     // Obtain the dimension of each expert in the mixture.
     // We assume here the mixture has a 'outputsizes' option which is a TVec<int>
     // containing the outputsize of each expert.
     TVec<int> dimension;
-    PStream in = openString(mixture->getOption("outputsizes"), PStream::plearn_ascii);
+    string mixture_outputsizes;
+    PStream in = openString(mixture_outputsizes, PStream::plearn_ascii);
     in >> dimension; // TODO See what's wrong...
     sum_of_dim = n_comp_mixture;
     for (int k = 0; k < dimension.length(); k++)

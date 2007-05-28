@@ -498,7 +498,8 @@ void Plide::executePyPLearn(const string& script_code, const string& root_dir) c
     pyplearn_in >> pyplearn_script;
     PLASSERT( pyplearn_script );
 
-    PStream plearn_in = openString(pyplearn_script->getScript(),
+    string pyplearn_script_string = pyplearn_script->getScript();
+    PStream plearn_in = openString(pyplearn_script_string,
                                    PStream::plearn_ascii);
     while (plearn_in) {
         PP<Object> o = readObject(plearn_in);

@@ -160,9 +160,9 @@ void Popen::launch(const string& program, const vector<string>& arguments, bool 
 void Popen::launch(const string& commandline, bool redirect_stderr)
 {
     // Parse command line into individual argments
-    PStream s = openString(string("[") + commandline + "]",
-                           PStream::plearn_ascii);
-  
+    string tmp_commandline = "[" + commandline + "]";
+    PStream s = openString(tmp_commandline, PStream::plearn_ascii);
+
     vector<string> command_and_args;
     s >> command_and_args;
     const string command = command_and_args[0];

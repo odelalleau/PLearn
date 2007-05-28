@@ -100,7 +100,8 @@ public:
     {
         PP<PyPLearnScript> script = PyPLearnScript::process(filename, args, drivername);
 
-        PStream in = openString( script->plearn_script, PStream::plearn_ascii );
+        string plearn_script_string = script->plearn_script;
+        PStream in = openString( plearn_script_string, PStream::plearn_ascii );
         PP<Obj> o  = new Obj();
         in >> o;
 

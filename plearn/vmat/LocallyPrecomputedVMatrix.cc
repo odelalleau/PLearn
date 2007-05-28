@@ -165,15 +165,21 @@ void LocallyPrecomputedVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////////////////
 LocallyPrecomputedVMatrix::~LocallyPrecomputedVMatrix()
 {
-    if (temporary && hasMetaDataDir()) {
+    if (temporary && hasMetaDataDir())
+    {
         string filename_option;
         // Get the name of the precomputed file.
         if (precomp_type == "pmat")
-            openString(precomp_source->getOption("filename"), PStream::plearn_ascii)
+        {
+            string source_filename = precomp_source->getOption("filename");
+            openString(source_filename, PStream::plearn_ascii)
                 >> filename_option;
-        else {
+        }
+        else
+        {
             PLASSERT( precomp_type == "dmat" );
-            openString(precomp_source->getOption("dirname"), PStream::plearn_ascii)
+            string source_dirname = precomp_source->getOption("dirname");
+            openString(source_dirname, PStream::plearn_ascii)
                 >> filename_option;
         }
         PPath precomputed_file(filename_option);
