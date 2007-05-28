@@ -520,7 +520,8 @@ void Object::newread(PStream &in)
                 // Create a dummy object that will read this option.
                 if (!dummy_obj) {
                     dummy_obj = new Object();
-                    PStream dummy_in = openString(this->classname() + "()", PStream::plearn_ascii);
+                    string dummy_string = this->classname() + "()";
+                    PStream dummy_in = openString(dummy_string, PStream::plearn_ascii);
                     dummy_in >> dummy_obj;
                 }
                 dummy_obj->readOptionVal(in, optionname);
