@@ -77,6 +77,9 @@ void LinearCombinationModule::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void LinearCombinationModule::build_()
 {
     PLASSERT(weights.length()==0 || port_names.length()==0 ||
@@ -100,9 +103,13 @@ void LinearCombinationModule::build_()
         if (!adaptive)
             PLWARNING("LinearCombinationModule::build: non-adaptive weights set to 0! the module will always output 0.");
     }
+
+    PLCHECK( learning_rate >= 0 );
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void LinearCombinationModule::build()
 {
     inherited::build();
@@ -110,11 +117,15 @@ void LinearCombinationModule::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void LinearCombinationModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(weights, copies);
+    deepCopyField(weights,    copies);
+    deepCopyField(port_names, copies);
 }
 
 ///////////
@@ -130,23 +141,21 @@ void LinearCombinationModule::fprop(const TVec<Mat*>& ports_value)
     
     const TVec<Mat*>& inputs = ports_value;
     Mat* output = ports_value[n_ports-1];
-    bool all_inputs_provided = true;
-    for (int i=0;i<n_ports-1;i++)
-        if (!inputs[i] || inputs[i]->isEmpty())
-        {
-            all_inputs_provided=false;
-            break;
-        }
-    if (all_inputs_provided && output && output->isEmpty())
-    {
+    if (output) {
+        PLASSERT_MSG( output->isEmpty() );
+        PLASSERT( inputs[0] );
         int mbs = inputs[0]->length();
         int width = inputs[0]->width();
-        output->resize(mbs,width);
+        output->resize(mbs, width);
         output->clear();
-        for (int i=0;i<n_ports-1;i++)
-            multiplyAcc(*output,*inputs[i],weights[i]);
+        for (int i=0;i<n_ports-1;i++) {
+            Mat* input_i = inputs[i];
+            if (!input_i || input_i->isEmpty())
+                PLERROR("In LinearCombinationModule::fprop - The %d-th input "
+                        "port is missing or empty", i);
+            multiplyAcc(*output, *input_i, weights[i]);
+        }
     }
-    else PLERROR("In LinearCombinationModule::fprop - input ports should be provided and output port empty");
 
     // Ensure all required ports have been computed.
     checkProp(ports_value);
@@ -156,7 +165,7 @@ void LinearCombinationModule::fprop(const TVec<Mat*>& ports_value)
 // bpropAccUpdate //
 ////////////////////
 void LinearCombinationModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
-                                          const TVec<Mat*>& ports_gradient)
+                                             const TVec<Mat*>& ports_gradient)
 {
     int n_ports = weights.length() + 1;
     PLASSERT( ports_value.length() == n_ports && ports_gradient.length() == n_ports);
@@ -176,7 +185,7 @@ void LinearCombinationModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 input_grad[i]->resize(mbs,width);
                 multiplyAcc(*input_grad[i],*output_grad,weights[i]);
             }
-            if (adaptive && learning_rate!=0)
+            if (adaptive && learning_rate > 0)
             {
                 Mat* input_i = ports_value[i];
                 PLASSERT(input_i);
