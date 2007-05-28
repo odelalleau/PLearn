@@ -48,6 +48,18 @@ targets = sys.argv[1:]
 if not targets:
     targets = [ os.getcwd() ]
 
+help = False
+if "-h" in targets:
+    targets.remove("-h")
+    help = True
+elif "--help" in targets:
+    targets.remove("--help")
+    help = True
+
+if help:
+    print __doc__
+
+
 for target in targets:
     if os.path.isdir(target):
         dirlist = os.listdir(target)
