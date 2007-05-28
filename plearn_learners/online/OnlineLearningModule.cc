@@ -127,6 +127,10 @@ void OnlineLearningModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if (ports_gradient.length() == 2) {
         Mat* input_grad = ports_gradient[0];
         Mat* output_grad = ports_gradient[1];
+        if (!input_grad && !output_grad) {
+            // Nothing to do.
+            return;
+        }
         if (output_grad && !output_grad->isEmpty() &&
              (!input_grad || input_grad->isEmpty()))
         {
