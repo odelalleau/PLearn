@@ -193,6 +193,12 @@ void NLLCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 (*cost_grad)(k, 0) / (*prediction)(k, target_k);
         }
     }
+    else if( !prediction_grad && !target_grad && !cost_grad )
+        return;
+    else if( !cost_grad && prediction_grad && prediction_grad->isEmpty() )
+        PLERROR("In NLLCostModule::bpropAccUpdate - cost gradient is NULL,\n"
+                "cannot compute prediction gradient. Maybe you should set\n"
+                "\"propagate_gradient = 0\" on the incoming connection.\n");
     else
         PLERROR("In OnlineLearningModule::bpropAccUpdate - Port configuration "
                 "not implemented for class '%s'", classname().c_str());
