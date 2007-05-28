@@ -859,24 +859,18 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
         // Combine with incoming gradient
         PLASSERT( (*reconstruction_error_grad).width() == 1 );
-        real* m_i = visible_act_grad.data();
-        real* vv;
-        for(int i=0; i<visible_act_grad.length(); 
-            i++, m_i+=visible_act_grad.mod())
-        {
-            vv = (*reconstruction_error_grad).data();
-            for(int j=0; j<visible_act_grad.width(); 
-                j++, vv += (*reconstruction_error_grad).mod())
-                m_i[j] *= *vv;
-        }
+        for (int t=0;t<mbs;t++)
+            visible_act_grad(t) *= (*reconstruction_error_grad)(t,0);
 
         // Visible bias update
         columnSum(visible_act_grad,visible_bias_grad);
         visible_layer->update(visible_bias_grad);
+
         // Reconstruction connection update
         reconstruction_connection->bpropUpdate(
             *hidden, *visible_reconstruction_activations,
             hidden_exp_grad, visible_act_grad, false);
+        
         // Hidden layer bias update
         hidden_layer->bpropUpdate(*hidden_act,
                                   *hidden, hidden_act_grad,
