@@ -142,7 +142,7 @@ void LinearCombinationModule::fprop(const TVec<Mat*>& ports_value)
     const TVec<Mat*>& inputs = ports_value;
     Mat* output = ports_value[n_ports-1];
     if (output) {
-        PLASSERT_MSG( output->isEmpty() );
+        PLASSERT( output->isEmpty() );
         PLASSERT( inputs[0] );
         int mbs = inputs[0]->length();
         int width = inputs[0]->width();
