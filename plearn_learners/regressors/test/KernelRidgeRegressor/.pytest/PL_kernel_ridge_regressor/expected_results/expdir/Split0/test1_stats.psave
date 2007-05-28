@@ -1,0 +1,40 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 1 [ "mse" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+window_nan_code = 0 ;
+no_removal_warnings = 0 ;
+stats = 1 [ StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 75 ;
+sumsquarew_ = 75 ;
+sum_ = 144.001912089437212 ;
+sumsquare_ = 10604.5784209182184 ;
+sumcube_ = 1024145.0899799359 ;
+sumfourth_ = 102318280.068502203 ;
+min_ = 5.47450516263987552e-06 ;
+max_ = 100.55774961254312 ;
+first_ = 0.0159720402812144995 ;
+last_ = 0.000951497798096395436 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )

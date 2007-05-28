@@ -1,0 +1,28 @@
+*5 -> PTester(
+    dataset = *1 -> AutoVMatrix(
+        inputsize = 1,
+        specification = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat",
+        targetsize = 2,
+        weightsize = 0
+        ),
+    expdir = "expdir",
+    learner = *3 -> KernelRidgeRegressor(
+        kernel = *2 -> GaussianKernel( sigma = 1.0 ),
+        weight_decay = 1e-08
+        ),
+    provide_learner_expdir = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *4 -> FractionSplitter(
+        splits = 1 3 [
+                (0, 0.75),
+                (0.75, 1),
+                (0, 1)
+                ]
+        ),
+    statnames = [
+        "E[train.E[mse]]",
+        "E[test1.E[mse]]",
+        "E[test2.E[mse]]"
+        ]
+    )

@@ -1,0 +1,57 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 2 [ "E[test.E[mse]]" "E[train.E[mse]]" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+window_nan_code = 0 ;
+no_removal_warnings = 0 ;
+stats = 2 [ StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 1 ;
+nnonmissing_ = 0 ;
+sumsquarew_ = 0 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = nan ;
+max_ = nan ;
+first_ = nan ;
+last_ = nan ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 1 ;
+sumsquarew_ = 1 ;
+sum_ = 0 ;
+sumsquare_ = 0 ;
+sumcube_ = 0 ;
+sumfourth_ = 0 ;
+min_ = 0.0521801135176278436 ;
+max_ = 0.0521801135176278436 ;
+first_ = 0.0521801135176278436 ;
+last_ = 0.0521801135176278436 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )
