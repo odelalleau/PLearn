@@ -69,6 +69,13 @@ public:
     //! given the input and target, compute the cost
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
 
+    //! batch version
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs)
+        const;
+
+    //! new version
+    virtual void fprop(const TVec<Mat*>& ports_value);
+
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop.
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,

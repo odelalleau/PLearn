@@ -97,6 +97,61 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
     cost[0] = -pl_log( input[ the_target ] );
 }
 
+void NLLCostModule::fprop(const Mat& inputs, const Mat& targets, Mat& costs)
+    const
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+
+    int batch_size = inputs.length();
+    PLASSERT( inputs.length() == batch_size );
+    PLASSERT( targets.length() == batch_size );
+
+    costs.resize(batch_size, output_size);
+
+    for( int k=0; k<batch_size; k++ )
+    {
+        int target_k = (int) round( targets(k, 0) );
+        costs(k, 0) = -pl_log( inputs(k, target_k) );
+    }
+}
+
+void NLLCostModule::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == nPorts() );
+
+    Mat* prediction = ports_value[0];
+    Mat* target = ports_value[1];
+    Mat* cost = ports_value[2];
+
+    // If we have prediction and target, and we want cost
+    if( prediction && !prediction->isEmpty()
+        && target && !target->isEmpty()
+        && cost && cost->isEmpty() )
+
+    {
+        PLASSERT( prediction->width() == port_sizes(0, 1) );
+        PLASSERT( target->width() == port_sizes(1, 1) );
+
+        int batch_size = prediction->length();
+        PLASSERT( target->length() == batch_size );
+
+        cost->resize(batch_size, port_sizes(2, 1));
+
+        for( int k=0; k<batch_size; k++ )
+        {
+            int target_k = (int) round( (*target)(k,0) );
+            (*cost)(k,0) = -pl_log( (*prediction)(k, target_k) );
+        }
+    }
+    else if( !prediction && !target && !cost )
+        return;
+    else
+        PLCHECK_MSG( false, "Unknown port configuration" );
+
+    checkProp(ports_value);
+}
+
 /////////////////
 // bpropUpdate //
 /////////////////
@@ -202,6 +257,9 @@ void NLLCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     else
         PLERROR("In OnlineLearningModule::bpropAccUpdate - Port configuration "
                 "not implemented for class '%s'", classname().c_str());
+
+    checkProp(ports_value);
+    checkProp(ports_gradient);
 }
 
 void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
