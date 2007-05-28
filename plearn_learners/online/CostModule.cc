@@ -152,6 +152,19 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             checkProp(ports_gradient);
             return;
         }
+        if (pred_grad && pred_grad->isEmpty() && !cost_grad) {
+            // We are asked to compute a gradient w.r.t. prediction, but no
+            // gradient w.r.t. output cost is being provided.
+            PLERROR("In CostModule::bpropAccUpdate - Module '%s' of class '%s'"
+                    " cannot compute a gradient w.r.t. its 'prediction' port "
+                    "when no gradient w.r.t. its 'cost' port is being provided"
+                    " (if within a NetworkModule, ensure incoming connections "
+                    "to '%s.prediction' have their 'propagate_gradient' flag "
+                    "set to false, or outgoing connections from '%s.cost' have"
+                    " their 'propagate_gradient' flag set to true).",
+                    OnlineLearningModule::name.c_str(), classname().c_str(),
+                    OnlineLearningModule::name.c_str());
+        }
     }
     // Try to use the parent's default method.
     inherited::bpropAccUpdate(ports_value, ports_gradient);
@@ -379,10 +392,16 @@ void CostModule::bbpropUpdate(const Vec& input_and_target, const Vec& output,
                              accumulate );
 }
 
+////////////
+// forget //
+////////////
 void CostModule::forget()
 {
 }
 
+//////////
+// name //
+//////////
 TVec<string> CostModule::name()
 {
     return TVec<string>();
