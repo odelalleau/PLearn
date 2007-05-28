@@ -82,7 +82,8 @@ cpp_variables = []
 # Global preprocessing definitions
 cpp_definitions = []
 
-# We add -fPIC, as it it requested to make an '.so' file and it do not have any speed impact and is ignored by the compiler if he can't use it.
+# We add -fPIC, as it is requested to make a shared '.so' file, it does not
+# have any speed impact, and is ignored by the compiler if it cannot use it.
 compileflags += ' -fPIC'
 
 # The platform variable contains the type of platform from which pymake has been invoked. 
