@@ -980,6 +980,12 @@ BEGIN_DECLARE_REMOTE_FUNCTIONS
                             "the string representation of the object"),
                      RetDoc ("newly created object")));
 
+    declareFunction("loadObject", &loadObject,
+                    (BodyDoc("Returns PLearn object from a file describing it.\n"),
+                     ArgDoc("filename", 
+                            "file containing the object to load"),
+                     RetDoc ("newly created object")));
+
 END_DECLARE_REMOTE_FUNCTIONS
 
 
