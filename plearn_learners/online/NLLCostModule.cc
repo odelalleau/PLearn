@@ -149,6 +149,55 @@ void NLLCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
     }
 }
 
+void NLLCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                   const TVec<Mat*>& ports_gradient)
+{
+    PLASSERT( ports_value.length() == nPorts() );
+    PLASSERT( ports_gradient.length() == nPorts() );
+
+    Mat* prediction = ports_value[0];
+    Mat* target = ports_value[1];
+    Mat* cost = ports_value[2];
+    Mat* prediction_grad = ports_gradient[0];
+    Mat* target_grad = ports_gradient[1];
+    Mat* cost_grad = ports_gradient[2];
+
+    // If we have cost_grad and we want prediction_grad
+    if( prediction_grad && prediction_grad->isEmpty()
+        && cost_grad && !cost_grad->isEmpty() )
+    {
+        PLASSERT( prediction );
+        PLASSERT( target );
+        PLASSERT( cost );
+        PLASSERT( !target_grad );
+
+        PLASSERT( prediction->width() == port_sizes(0,1) );
+        PLASSERT( target->width() == port_sizes(1,1) );
+        PLASSERT( cost->width() == port_sizes(2,1) );
+        PLASSERT( prediction_grad->width() == port_sizes(0,1) );
+        PLASSERT( cost_grad->width() == port_sizes(2,1) );
+
+        int batch_size = prediction->length();
+        PLASSERT( target->length() == batch_size );
+        PLASSERT( cost->length() == batch_size );
+        PLASSERT( cost_grad->length() == batch_size );
+
+        prediction_grad->resize(batch_size, port_sizes(0,1));
+
+        for( int k=0; k<batch_size; k++ )
+        {
+            // input_gradient[ i ] = 0 if i != t,
+            // input_gradient[ t ] = -1/x[t]
+            int target_k = (int) round((*target)(k, 0));
+            (*prediction_grad)(k, target_k) -=
+                (*cost)(k, 0) / (*prediction)(k, target_k);
+        }
+    }
+    else
+        PLERROR("In OnlineLearningModule::bpropAccUpdate - Port configuration "
+                "not implemented for class '%s'", classname().c_str());
+}
+
 void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
                                  real cost,
                                  Vec& input_gradient, Vec& input_diag_hessian,

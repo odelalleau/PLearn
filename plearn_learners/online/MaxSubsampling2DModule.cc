@@ -264,6 +264,9 @@ void MaxSubsampling2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if( input_grad && input_grad->isEmpty()
         && output_grad && !output_grad->isEmpty() )
     {
+        PLASSERT( input );
+        PLASSERT( output );
+        PLASSERT( argmax );
         PLASSERT( !argmax_grad );
 
         PLASSERT( input->width() == port_sizes(0,1) );

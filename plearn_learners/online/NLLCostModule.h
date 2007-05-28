@@ -82,6 +82,10 @@ public:
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost)
     {}
 
+    //! New version of backpropagation
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this back.
     virtual void bbpropUpdate(const Vec& input, const Vec& target, real cost,
