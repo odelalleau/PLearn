@@ -58,7 +58,7 @@ elif "--help" in targets:
 
 if help:
     print __doc__
-
+    sys.exit(0)
 
 for target in targets:
     if os.path.isdir(target):
