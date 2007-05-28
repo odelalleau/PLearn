@@ -73,5 +73,5 @@ for target in targets:
             if not os.path.exists("CSV"):
                 os.mkdir("CSV")
             print "Converting", os.path.join(target,fname)
-            os.system("plearn --no-version --no-progress vmat convert %s CSV/%s.csv"
-                      %( os.path.join(target,fname), froot ))
+            os.system("plearn --no-version --no-progress vmat convert "
+                "%s CSV/%s.csv --convert-date"%( os.path.join(target,fname), froot ))
