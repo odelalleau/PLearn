@@ -81,7 +81,7 @@ It the the optinal parameter '--file=FILEPATH' is set, the script will take comm
 
 cdispatch --test --file=tests
 
-In the file, their must not be double quote around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
+In the file, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
 EOUSAGE
     ;
 
