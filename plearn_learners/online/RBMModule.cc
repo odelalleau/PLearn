@@ -178,7 +178,7 @@ void RBMModule::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Used in generative mode (when visible_sample or hidden_sample is requested)\n"
                   "when one has to sample from the joint or a marginal of visible and hidden,\n"
-                  "Keeps track of the number of steps that have been ran since the beginning\n"
+                  "Keeps track of the number of steps that have been run since the beginning\n"
                   "of the chain.\n");
 
     declareOption(ol, "log_partition_function", 
@@ -500,21 +500,24 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")]; 
         if (!contrastive_divergence || !contrastive_divergence->isEmpty())
-            PLERROR("RBMModule: when option compute_contrastive_divergence=true\n"
-                    "the contrastive_divergence port should be provided, as an output.\n");
+            PLERROR("In RBMModule::fprop - When option "
+                    "'compute_contrastive_divergence' is 'true', the "
+                    "'contrastive_divergence' port should be provided, as an "
+                    "output.");
         negative_phase_visible_samples = 
             ports_value[getPortIndex("negative_phase_visible_samples.state")];
         negative_phase_hidden_expectations = 
             ports_value[getPortIndex("negative_phase_hidden_expectations.state")];
     }
 
-    bool hidden_expectations_are_computed=false;
-    hidden_activations_are_computed=false;
+    bool hidden_expectations_are_computed = false;
+    hidden_activations_are_computed = false;
     bool found_a_valid_configuration = false;
 
     if (visible && !visible->isEmpty())
-    // when an input is provided, that would restart the chain for unconditional sampling, from that example
     {
+        // When an input is provided, that would restart the chain for
+        // unconditional sampling, from that example.
         Gibbs_step = 0; 
         visible_layer->setExpectations(*visible);
     }
