@@ -412,7 +412,8 @@ void ModuleTester::build_()
         }
     }
     if (ok)
-        pout << "All tests passed successfully" << endl;
+        pout << "All tests passed successfully on module " <<
+            module->classname() << endl;
     else
         pout << "*** ERRROR ***" << endl;
 }
