@@ -236,25 +236,25 @@ void RBMModule::build_()
     // buid ports and port_sizes
 
     ports.resize(0);
-    addportname("visible");
-    addportname("hidden.state");
-    addportname("hidden_activations.state");
-    addportname("visible_sample");
-    addportname("hidden_sample");
-    addportname("energy");
-    addportname("hidden_bias"); 
-    addportname("neg_log_likelihood");
+    addPortName("visible");
+    addPortName("hidden.state");
+    addPortName("hidden_activations.state");
+    addPortName("visible_sample");
+    addPortName("hidden_sample");
+    addPortName("energy");
+    addPortName("hidden_bias"); 
+    addPortName("neg_log_likelihood");
     if(reconstruction_connection)
     {
-        addportname("visible_reconstruction.state");
-        addportname("visible_reconstruction_activations.state");
-        addportname("reconstruction_error.state");
+        addPortName("visible_reconstruction.state");
+        addPortName("visible_reconstruction_activations.state");
+        addPortName("reconstruction_error.state");
     }
     if (compute_contrastive_divergence)
     {
-        addportname("contrastive_divergence");
-        addportname("negative_phase_visible_samples.state");
-        addportname("negative_phase_hidden_expectations.state");
+        addPortName("contrastive_divergence");
+        addPortName("negative_phase_visible_samples.state");
+        addPortName("negative_phase_hidden_expectations.state");
     }
 
     port_sizes.resize(nPorts(), 2);
@@ -300,6 +300,140 @@ void RBMModule::build()
     build_();
 }
 
+/////////////////
+// addPortName //
+/////////////////
+void RBMModule::addPortName(const string& name)
+{
+    PLASSERT( portname_to_index.find(name) == portname_to_index.end() );
+    portname_to_index[name] = ports.length();
+    ports.append(name);
+}
+
+///////////////////
+// computeEnergy //
+///////////////////
+void RBMModule::computeEnergy(const Mat& visible, const Mat& hidden,
+                              Mat& energy, bool positive_phase)
+{
+    int mbs=hidden.length();
+    energy.resize(mbs, 1);
+    Mat* hidden_activations = NULL;
+    if (positive_phase) {
+        computePositivePhaseHiddenActivations(visible);
+        hidden_activations = hidden_act;
+    } else {
+        computeHiddenActivations(visible);
+        hidden_activations = & hidden_layer->activations;
+    }
+    PLASSERT( hidden_activations );
+    for (int i=0;i<mbs;i++)
+        energy(i,0) = visible_layer->energy(visible(i)) + 
+            hidden_layer->energy(hidden(i)) + 
+            dot(hidden(i), (*hidden_activations)(i));
+}
+
+///////////////////////////////
+// computeFreeEnergyOfHidden //
+///////////////////////////////
+void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
+{
+    int mbs=hidden.length();
+    if (energy.isEmpty())
+        energy.resize(mbs,1);
+    else {
+        PLASSERT( energy.length() == mbs && energy.width() == 1 );
+    }
+    PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
+    computeVisibleActivations(hidden, false);
+    for (int i=0;i<mbs;i++)
+    {
+        energy(i,0) = hidden_layer->energy(hidden(i));
+        for (int j=0;j<visible_layer->size;j++)
+            energy(i,0) += softplus(visible_layer->activations(i,j));
+    }
+}
+
+////////////////////////////////
+// computeFreeEnergyOfVisible //
+////////////////////////////////
+void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
+                                           bool positive_phase)
+{
+    int mbs=visible.length();
+    if (energy.isEmpty())
+        energy.resize(mbs,1);
+    else {
+        PLASSERT( energy.length() == mbs && energy.width() == 1 );
+    }
+    PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+    Mat* hidden_activations = NULL;
+    if (positive_phase) {
+        computePositivePhaseHiddenActivations(visible);
+        hidden_activations = hidden_act;
+    }
+    else {
+        computeHiddenActivations(visible);
+        hidden_activations = & hidden_layer->activations;
+    }
+    PLASSERT( hidden_activations && hidden_activations->length() == mbs
+            && hidden_activations->width() == hidden_layer->size );
+    for (int i=0;i<mbs;i++)
+    {
+        energy(i,0) = visible_layer->energy(visible(i));
+        for (int j=0;j<hidden_layer->size;j++)
+            energy(i,0) += softplus((*hidden_activations)(i,j));
+    }
+}
+
+//////////////////////////////
+// computeHiddenActivations //
+//////////////////////////////
+void RBMModule::computeHiddenActivations(const Mat& visible)
+{
+    connection->setAsDownInputs(visible);
+    hidden_layer->getAllActivations(connection, 0, true);
+    if (hidden_bias && !hidden_bias->isEmpty())
+        hidden_layer->activations += *hidden_bias;
+}
+
+///////////////////////////////////////////
+// computePositivePhaseHiddenActivations //
+///////////////////////////////////////////
+void RBMModule::computePositivePhaseHiddenActivations(const Mat& visible)
+{
+    if (hidden_activations_are_computed) {
+        // Nothing to do.
+        PLASSERT( !hidden_act || !hidden_act->isEmpty() );
+        return;
+    }
+    computeHiddenActivations(visible);
+    if (hidden_act && hidden_act->isEmpty())
+    {
+        hidden_act->resize(visible.length(),hidden_layer->size);
+        *hidden_act << hidden_layer->activations;
+    }
+    hidden_activations_are_computed = true;
+}
+
+///////////////////////////////
+// computeVisibleActivations //
+///////////////////////////////
+void RBMModule::computeVisibleActivations(const Mat& hidden,
+                                          bool using_reconstruction_connection)
+{
+    if (using_reconstruction_connection)
+    {
+        PLASSERT( reconstruction_connection );
+        reconstruction_connection->setAsDownInputs(hidden);
+        visible_layer->getAllActivations(reconstruction_connection, 0, true);
+    }
+    else
+    {
+        connection->setAsUpInputs(hidden);
+        visible_layer->getAllActivations(connection, 0, true);
+    }
+}
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
@@ -978,6 +1112,24 @@ void RBMModule::setAllLearningRates(real lr)
     connection->setLearningRate(lr);
     if(reconstruction_connection)
         reconstruction_connection->setLearningRate(lr);
+}
+
+//////////////////////////////
+// sampleHiddenGivenVisible //
+//////////////////////////////
+void RBMModule::sampleHiddenGivenVisible(const Mat& visible)
+{
+    computeHiddenActivations(visible);
+    hidden_layer->generateSamples();
+}
+
+//////////////////////////////
+// sampleVisibleGivenHidden //
+//////////////////////////////
+void RBMModule::sampleVisibleGivenHidden(const Mat& hidden)
+{
+    computeVisibleActivations(hidden);
+    visible_layer->generateSamples();
 }
 
 /////////////////////

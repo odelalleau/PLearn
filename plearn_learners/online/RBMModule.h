@@ -193,6 +193,11 @@ public:
     //! The ports' sizes are given by the corresponding RBM layers.
     virtual const TMat<int>& getPortSizes();
 
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    virtual int getPortIndex(const string& port);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -238,14 +243,10 @@ protected:
     //! Map from a port name to its index in the 'ports' vector.
     map<string, int> portname_to_index;
 
-    //! Return the index (as in the list of ports returned by getPorts()) of
-    //! a given port.
-    //! If 'port' does not exist, -1 is returned.
-    virtual int getPortIndex(const string& port);
-
-    void addportname(string name) { ports.append(name); portname_to_index[name]=ports.length()-1; }
-
     //#####  Protected Member Functions  ######################################
+
+    //! Add a new port to the 'portname_to_index' map and 'ports' vector.
+    void addPortName(const string& name);
 
     //! Forward the given learning rate to all elements of this module.
     void setAllLearningRates(real lr);
@@ -253,109 +254,51 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    void computeHiddenActivations(const Mat& visible) {
-        connection->setAsDownInputs(visible);
-        hidden_layer->getAllActivations(connection, 0, true);
-        if (hidden_bias && !hidden_bias->isEmpty())
-            hidden_layer->activations += *hidden_bias;
-    }
+    //! Compute activations on the hidden layer based on the provided
+    //! visible input.
+    //! If 'hidden_bias' is not null nor empty, then it is used as an
+    //! additional bias for hidden activations.
+    void computeHiddenActivations(const Mat& visible);
 
-    void computePositivePhaseHiddenActivations(const Mat& visible) {
-        if (hidden_activations_are_computed) {
-            // Nothing to do.
-            PLASSERT( !hidden_act || !hidden_act->isEmpty() );
-            return;
-        }
-        computeHiddenActivations(visible);
-        if (hidden_act && hidden_act->isEmpty())
-        {
-            hidden_act->resize(visible.length(),hidden_layer->size);
-            *hidden_act << hidden_layer->activations;
-        }
-        hidden_activations_are_computed=true;
-    }
+    //! Compute activations on the visible layer.
+    //! If 'using_reconstruction_connection' is true, then we use the
+    //! reconstruction connection to compute these activations. Otherwise, we
+    //! use the normal connection, in a 'top->down' fashion.
+    void computeVisibleActivations(const Mat& hidden,
+                                   bool using_reconstruction_connection=false);
 
-    void sampleHiddenGivenVisible(const Mat& visible) {
-        computeHiddenActivations(visible);
-        hidden_layer->generateSamples();
-    }
-    void computeVisibleActivations(const Mat& hidden, bool using_reconstruction_connection=false) {
-        if (using_reconstruction_connection)
-        {
-            reconstruction_connection->setAsDownInputs(hidden);
-            visible_layer->getAllActivations(reconstruction_connection, 0, true);
-        }
-        else
-        {
-            connection->setAsUpInputs(hidden);
-            visible_layer->getAllActivations(connection, 0, true);
-        }
-    }
-    void sampleVisibleGivenHidden(const Mat& hidden) {
-        computeVisibleActivations(hidden);
-        visible_layer->generateSamples();
-    }
+    //! Compute activations on the hidden layer based on the provided visible
+    //! input during positive phase. This method is called to ensure hidden
+    //! hidden activations are computed only once, and during a fprop it should
+    //! always be called with the same 'visible' input.
+    //! If 'hidden_act' is not null, it is filled with the computed hidden
+    //! activations.
+    void computePositivePhaseHiddenActivations(const Mat& visible);
 
-    void computeFreeEnergyOfVisible(const Mat& visible, Mat& energy, bool positive_phase=true) {
-        int mbs=visible.length();
-        if (energy.isEmpty())
-            energy.resize(mbs,1);
-        else {
-            PLASSERT( energy.length() == mbs && energy.width() == 1 );
-        }
-        PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
-        Mat* hidden_activations = NULL;
-        if (positive_phase) {
-            computePositivePhaseHiddenActivations(visible);
-            hidden_activations = hidden_act;
-        }
-        else {
-            computeHiddenActivations(visible);
-            hidden_activations = & hidden_layer->activations;
-        }
-        PLASSERT( hidden_activations && hidden_activations->length() == mbs
-                  && hidden_activations->width() == hidden_layer->size );
-        for (int i=0;i<mbs;i++)
-        {
-            energy(i,0) = visible_layer->energy(visible(i));
-            for (int j=0;j<hidden_layer->size;j++)
-                energy(i,0) += softplus((*hidden_activations)(i,j));
-        }
-    }
+    //! Sample hidden layer data based on the provided 'visible' inputs.
+    void sampleHiddenGivenVisible(const Mat& visible);
 
-    void computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy) {
-        int mbs=hidden.length();
-        if (energy.isEmpty())
-            energy.resize(mbs,1);
-        PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
-        computeVisibleActivations(hidden);
-        for (int i=0;i<mbs;i++)
-        {
-            energy(i,0) = hidden_layer->energy(hidden(i));
-            for (int j=0;j<visible_layer->size;j++)
-                energy(i,0) += softplus(visible_layer->activations(i,j));
-        }
-    }
+    //! Sample visible layer data based on the provided 'hidden' inputs.
+    void sampleVisibleGivenHidden(const Mat& hidden);
 
+    //! Compute free energy on the visible layer and store it in the 'energy'
+    //! matrix.
+    //! The 'positive_phase' boolean is used to save computations when we know
+    //! we are in the positive phase of fprop.
+    void computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
+                                    bool positive_phase = true);
+
+    //! Compute free energy on the hidden layer and store it in the 'energy'
+    //! matrix.
+    void computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy);
+
+    //! Compute energy of the joint (visible, hidden) configuration and store
+    //! it in the 'energy' matrix.
+    //! The 'positive_phase' boolean is used to save computations when we know
+    //! we are in the positive phase of fprop.
     void computeEnergy(const Mat& visible, const Mat& hidden, Mat& energy, 
-                       bool positive_phase=true) 
-    {
-        int mbs=hidden.length();
-        energy.resize(mbs,1);
-        Mat* hidden_activations = NULL;
-        if (positive_phase) {
-            computePositivePhaseHiddenActivations(visible);
-            hidden_activations = hidden_act;
-        } else {
-            computeHiddenActivations(visible);
-            hidden_activations = & hidden_layer->activations;
-        }
-        PLASSERT( hidden_activations );
-        for (int i=0;i<mbs;i++)
-            energy(i,0) = visible_layer->energy(visible(i)) + 
-                hidden_layer->energy(hidden(i)) + 
-                dot(hidden(i), (*hidden_activations)(i));
-    }
+                       bool positive_phase = true);
+
 private:
     //#####  Private Member Functions  ########################################
 
