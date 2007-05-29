@@ -252,6 +252,12 @@ public:
     //!           second row if nPorts() >= 2
     virtual const TMat<int>& getPortSizes();
 
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    // Default implementation performs a simple linear search in getPorts().
+    virtual int getPortIndex(const string& port);
+
     //! Return the width of a specific port.
     int getPortWidth(const string& port);
 
@@ -260,11 +266,6 @@ public:
 
     //! Return the number of ports in the module.
     int nPorts();
-
-    //! Return the index (as in the list of ports returned by getPorts()) of
-    //! a given port.
-    //! If 'port' does not exist, -1 is returned.
-    int getPortIndex(const string& port);
 
     //! Return name of the i-th port.
     string getPortName(int i);
