@@ -63,6 +63,9 @@ public:
 
     // Your other public member functions go here
 
+    //! Perform a fprop step.
+    virtual void fprop(const TVec<Mat*>& ports_value);
+
     //! given the input and target, compute the cost
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
 

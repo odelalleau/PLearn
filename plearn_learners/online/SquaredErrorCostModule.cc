@@ -64,12 +64,17 @@ void SquaredErrorCostModule::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void SquaredErrorCostModule::build_()
 {
     target_size = input_size;
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void SquaredErrorCostModule::build()
 {
     inherited::build();
@@ -77,6 +82,9 @@ void SquaredErrorCostModule::build()
 }
 
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void SquaredErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -86,6 +94,24 @@ void SquaredErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 // fprop //
 ///////////
+void SquaredErrorCostModule::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == 3 );
+    Mat* pred = ports_value[0];
+    Mat* target = ports_value[1];
+    Mat* mse = ports_value[2];
+    if (mse && mse->isEmpty()) {
+        PLASSERT( pred && !pred->isEmpty() && target && !target->isEmpty() );
+        mse->resize(pred->length(), 1);
+        // TODO It may be possible to come up with a more efficient
+        // implementation.
+        for (int i = 0; i < pred->length(); i++) {
+            (*mse)(i, 0) = powdistance( (*pred)(i), (*target)(i) );
+        }
+    }
+    checkProp(ports_value);
+}
+
 void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
                                    Vec& cost) const
 {
@@ -95,7 +121,6 @@ void SquaredErrorCostModule::fprop(const Vec& input, const Vec& target,
 
     cost[0] = powdistance( input, target );
 }
-
 
 /////////////////
 // bpropUpdate //
