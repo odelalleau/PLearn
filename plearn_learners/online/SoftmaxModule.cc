@@ -67,7 +67,7 @@ void SoftmaxModule::declareOptions(OptionList& ol)
     // Hide unused options.
 
     redeclareOption(ol, "output_size", &SoftmaxModule::output_size,
-                    OptionBase::learntoption,
+                    OptionBase::nosave,
                     "Set at build time.");
 }
 
