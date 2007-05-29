@@ -239,7 +239,7 @@ void LLC::train()
     TVec<int> dimension;
     string mixture_outputsizes;
     PStream in = openString(mixture_outputsizes, PStream::plearn_ascii);
-    in >> dimension; // TODO See what's wrong...
+    in >> dimension;
     sum_of_dim = n_comp_mixture;
     for (int k = 0; k < dimension.length(); k++)
         sum_of_dim += dimension[k];
