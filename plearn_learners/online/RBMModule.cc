@@ -99,7 +99,8 @@ RBMModule::RBMModule():
     Gibbs_step(0),
     log_partition_function(0),
     partition_function_is_stale(true),
-    hidden_bias(0),
+    hidden_bias(NULL),
+    hidden_act(NULL),
     hidden_activations_are_computed(false)
 {
 }
@@ -188,7 +189,7 @@ void RBMModule::declareOptions(OptionList& ol)
                   "the neg_log_likelihood port is requested.\n");
 
     declareOption(ol, "partition_function_is_stale", 
-                  &RBMModule::log_partition_function,
+                  &RBMModule::partition_function_is_stale,
                   OptionBase::learntoption,
                   "Whether parameters have changed since the last computation\n"
                   "of the log_partition_function (to know if it should be recomputed\n"
@@ -511,8 +512,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
          ((hidden && hidden->isEmpty() ) ||
           (hidden_act && hidden_act->isEmpty())) )
     {
-        if (!hidden_activations_are_computed)
-            computePositivePhaseHiddenActivations(*visible);
+        computePositivePhaseHiddenActivations(*visible);
         if (hidden) {
             PLASSERT( hidden->isEmpty() );
             hidden_layer->computeExpectations();
@@ -664,8 +664,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {        
         // Autoassociator reconstruction cost
         PLASSERT( ports_value.length() == nPorts() );
-        if (!hidden_activations_are_computed)
-            computePositivePhaseHiddenActivations(*visible); 
+        computePositivePhaseHiddenActivations(*visible); 
         if(!hidden_expectations_are_computed)
         {
             hidden_layer->computeExpectations();
@@ -705,10 +704,16 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         found_a_valid_configuration = true;
     }
 
+    // Reset some class fields to ensure they are not reused by mistake.
+    hidden_act = NULL;
+    hidden_bias = NULL;
+    hidden_activations_are_computed = false;
+
     if (!found_a_valid_configuration)
         PLERROR("In RBMModule::fprop - Unknown port configuration");
 
     checkProp(ports_value);
+
 }
 
 ////////////////////
@@ -722,7 +727,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* hidden_grad = ports_gradient[portname2index("hidden.state")];
     Mat* visible = ports_value[portname2index("visible")];
     Mat* hidden = ports_value[portname2index("hidden.state")];
-    Mat* hidden_act = ports_value[portname2index("hidden_activations.state")];
+    hidden_act = ports_value[portname2index("hidden_activations.state")];
     Mat* reconstruction_error_grad = 0;
     Mat* hidden_bias_grad = ports_gradient[portname2index("hidden_bias")];    
 
@@ -907,6 +912,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     }
 
     checkProp(ports_gradient);
+
+    // Reset 'hidden_act' pointer to ensure we do not reuse it by mistake.
+    hidden_act = NULL;
 }
 
 ////////////
