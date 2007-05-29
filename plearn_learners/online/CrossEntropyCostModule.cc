@@ -164,7 +164,8 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
         for( int i=0; i < batch_size; i++ )
             for ( int j=0; j < target->width(); j++ ) 
-                (*prediction_grad)(i, j) += (*target)(i,j) - sigmoid(-(*prediction)(i,j) );
+                (*prediction_grad)(i, j) += 
+                (*cost_grad)(i,0)*((*target)(i,j) - sigmoid(-(*prediction)(i,j) ));
     }
 
     else if( !prediction_grad && !target_grad && !cost_grad )
