@@ -72,7 +72,7 @@ PLearner::PLearner()
       save_trainingset_prefix(""),
       parallelize_here(true),
       master_sends_testset_rows(false),
-      use_a_separate_random_generator_for_testing(true),
+      use_a_separate_random_generator_for_testing(1827),
       inputsize_(-1),
       targetsize_(-1),
       weightsize_(-1),
@@ -254,7 +254,9 @@ void PLearner::declareOptions(OptionList& ol)
         "random generator than the rest of the code (i.e. training).\n"
         "The non-zero value is the seed to be used during testing.\n"
         "A value of -1 sets the seed differently each time depending on clock.\n"
-        "(which is probably not desired here).\n");
+        "(which is probably not desired here).\n"
+        "Note that this option might not be taken into account in some\n"
+        "sub-classes that override the PLearner's test method.");
 
     inherited::declareOptions(ol);
 }
