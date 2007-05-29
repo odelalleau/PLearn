@@ -236,17 +236,15 @@ protected:
     TVec<string> ports;
 
     //! Map from a port name to its index in the 'ports' vector.
-    map<string,int> portname_to_index;
+    map<string, int> portname_to_index;
 
-    int& portname2index(string name) 
-    { 
-        map<string,int>::iterator it=portname_to_index.find(name);
-        if (it==portname_to_index.end()) 
-            PLERROR("RBMModule: asking for unknown port name %s",name.c_str());
-        return it->second;
-    }
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    virtual int getPortIndex(const string& port);
 
     void addportname(string name) { ports.append(name); portname_to_index[name]=ports.length()-1; }
+
     //#####  Protected Member Functions  ######################################
 
     //! Forward the given learning rate to all elements of this module.
