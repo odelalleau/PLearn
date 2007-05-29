@@ -182,17 +182,8 @@ void CostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
 
 void CostModule::fprop(const Mat& inputs, const Mat& targets, Mat& costs) const
 {
-    //PLWARNING("CostModule::fprop - Not implemented for class %s",
-    //       classname().c_str());
-    // Default (possibly inefficient) implementation.
-    costs.resize(inputs.length(), output_size);
-    Vec input, target, cost;
-    for (int i = 0; i < inputs.length(); i++) {
-        input = inputs(i);
-        target = targets(i);
-        cost = costs(i);
-        this->fprop(input, target, cost);
-    }
+    PLERROR("In CostModule::fprop - Mini-batch version not implemented for "
+            "class %s", classname().c_str());
 }
 
 void CostModule::fprop(const Vec& input, const Vec& target, real& cost) const
@@ -204,8 +195,6 @@ void CostModule::fprop(const Vec& input, const Vec& target, real& cost) const
 
 void CostModule::fprop(const Mat& inputs, const Mat& targets, Vec& costs)
 {
-    //PLWARNING("In CostModule::fprop - Using default (possibly inefficient) "
-    //        "implementation for class %s", classname().c_str());
     // Keep only the first cost.
     tmp_costs_mat.resize(inputs.length(), output_size);
     fprop(inputs, targets, tmp_costs_mat);
