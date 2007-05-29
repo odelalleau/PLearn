@@ -231,6 +231,7 @@ void NLLCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( cost->width() == port_sizes(2,1) );
         PLASSERT( prediction_grad->width() == port_sizes(0,1) );
         PLASSERT( cost_grad->width() == port_sizes(2,1) );
+        PLASSERT( cost_grad->width() == 1 );
 
         int batch_size = prediction->length();
         PLASSERT( target->length() == batch_size );
