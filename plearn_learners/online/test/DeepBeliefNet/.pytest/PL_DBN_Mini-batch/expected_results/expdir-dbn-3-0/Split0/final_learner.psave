@@ -194,6 +194,7 @@ fixed_seed = 0  )
  )
 *10 ->SoftmaxModule(
 input_size = 2 ;
+output_size = 2 ;
 name = "SoftmaxModule" ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
@@ -264,4 +265,4 @@ verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = "" ;
 test_minibatch_size = 1 ;
-use_a_separate_random_generator_for_testing = 1  )
+use_a_separate_random_generator_for_testing = 1827  )
