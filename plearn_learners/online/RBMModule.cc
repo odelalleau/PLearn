@@ -236,6 +236,7 @@ void RBMModule::build_()
     // buid ports and port_sizes
 
     ports.resize(0);
+    portname_to_index.clear();
     addPortName("visible");
     addPortName("hidden.state");
     addPortName("hidden_activations.state");
