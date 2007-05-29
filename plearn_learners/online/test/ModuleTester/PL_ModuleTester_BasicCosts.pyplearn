@@ -1,0 +1,26 @@
+# Run safety checks on costs that cannot use a gradient w.r.t. their output.
+# Currently we test only SquaredErrorCostModule, but there may be more to test.
+
+from plearn.pyplearn import pl
+
+all_costs = [
+    pl.SquaredErrorCostModule(
+            input_size = 100,
+            target_size = 100),
+
+]
+
+testers = [
+    pl.ModuleTester(
+            module = cost,
+            min_out_grad = 1,
+            max_out_grad = 1,
+            configurations = [ {"in_grad":[ "prediction" ],
+                                "in_nograd":[ "target" ],
+                                "out_grad":[ "cost" ]} ])
+    for cost in all_costs
+]
+
+def main():
+    return pl.RunObject( objects = testers )
+
