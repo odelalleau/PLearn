@@ -35,9 +35,9 @@
 ## library, go to the PLearn Web site at www.plearn.org
 
 $ScriptName="lauchdbi.py";
-$ShortHelp='Usage: cdispatch [--help|-h] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
+$ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
 $LongHelp=<<EOUSAGE;
-Usage: cdispatch [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
+Usage: cdispatch [--help|-h] [--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
@@ -92,6 +92,16 @@ if (scalar(@ARGV) == 0) {
 if($ARGV[0] eq "--help" || $ARGV[0] eq "-h"){
     print $LongHelp;
     exit;
+}
+
+if($ARGV[0] eq "--nolog" ){
+    $LOG = 0;
+    shift;
+} elsif($ARGV[0] eq "--log" ) {
+    $LOG = 1;
+    shift;
+} else {
+    $LOG = 0;
 }
 
 if ($ARGV[0] eq "--test") {
@@ -156,6 +166,11 @@ if ($TEST) {
     print SCRIPT ", test=True";
 }
 
+if($LOG) {
+    print SCRIPT ", dolog=True";
+} else {
+    print SCRIPT ", dolog=False";
+}
 print SCRIPT ")\n".
     "jobs.run() \n".
     "# There is $nbcommand command in the script\n";

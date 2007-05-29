@@ -62,6 +62,7 @@ class DBIBase:
         # Initialize the namespace
         self.requirements = ''
         self.test = False
+        self.dolog = False
         for key in args.keys():
             self.__dict__[key] = args[key]
 
@@ -87,7 +88,7 @@ class DBIBase:
 
 class Task:
 
-    def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], args = {}):
+    def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, args = {}):
         self.unique_id = get_new_sid('')
         self.add_unique_id = 0
         formatted_command = re.sub( '[^a-zA-Z0-9]', '_', command );
@@ -115,25 +116,23 @@ class Task:
         self.commands = []
         if len(pre_tasks) > 0:
             self.commands.extend( pre_tasks )
-#        self.commands.append("cd parent")
 
-        self.commands.append(utils_file + ' set_config_value '+
+        if dolog == True:
+            self.commands.append(utils_file + ' set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_RUNNING)],' '))
-        # set the current date in the field LAUNCH_TIME
-        self.commands.append(utils_file +  ' set_current_date '+
+            # set the current date in the field LAUNCH_TIME
+            self.commands.append(utils_file +  ' set_current_date '+
                 string.join([self.log_file,'LAUNCH_TIME',time_format],' '))
 
-        #cd to parent diectory, run the command, and then cd back
-#	command = 'cd parent;' + command + ';cd ' + self.temp_dir 
+
         self.commands.append( command )
         self.commands.extend( post_tasks )
-
-        self.commands.append(utils_file + ' set_config_value '+
+        if dolog == True:
+            self.commands.append(utils_file + ' set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_FINISHED)],' '))
-        # set the current date in the field FINISHED_TIME
-        self.commands.append(utils_file + ' set_current_date ' +
+            # set the current date in the field FINISHED_TIME
+            self.commands.append(utils_file + ' set_current_date ' +
                 string.join([self.log_file,'FINISHED_TIME',time_format],' '))
-#     self.commands.append("cd parent")
 
         #print "self.commands =", self.commands
 
@@ -195,14 +194,14 @@ class DBICluster(DBIBase):
         DBIBase.__init__(self, commands, **args)
 
         # check if log directory exists, if not create it
-        if not os.path.exists(self.log_dir):
+        if self.dolog and not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
         # create the information about the tasks
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,self.pre_tasks,
-                                   self.post_tasks))
+                                   self.post_tasks,self.dolog))
 
 
     def run_one_job(self, task):
@@ -232,6 +231,7 @@ class DBICluster(DBIBase):
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.pre_batch.err', 'w')
         self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
+
         #print 'pre_batch_command =', pre_batch_command
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
@@ -266,8 +266,7 @@ class DBIbqtools(DBIBase):
         os.symlink( '..', self.parent_dir )
 
         # check if log directory exists, if not create it
-#        self.log_dir = os.path.join( self.parent_dir, self.log_dir )
-        if not os.path.exists(self.log_dir):
+        if self.dolog and not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
         self.log_file = os.path.join( self.parent_dir, self.log_file )
@@ -278,7 +277,7 @@ class DBIbqtools(DBIBase):
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,
                                    [self.pre_tasks, 'cd parent;'],
-                                   self.post_tasks,args))
+                                   self.post_tasks,self.dolog,args))
 
 
     def run(self):
@@ -360,8 +359,7 @@ class DBICondor(DBIBase):
         DBIBase.__init__(self, commands, **args)
 
         # check if log directory exists, if not create it
-#        self.log_dir = os.path.join( self.parent_dir, self.log_dir )
-        if not os.path.exists(self.log_dir):
+        if self.dolog and not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
         if not os.path.exists(self.tmp_dir):
@@ -433,7 +431,7 @@ class DBICondor(DBIBase):
 
             self.tasks.append(Task(newcommand, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
-                                   self.post_tasks,args))
+                                   self.post_tasks,self.dolog,args))
 
             #keeps a list of the temporary files created, so that they can be deleted at will            
         self.temp_files = []
@@ -633,14 +631,14 @@ class DBISsh(DBIBase):
         DBIBase.__init__(self, commands, **args)
 
         # check if log directory exists, if not create it
-        if not os.path.exists(self.log_dir):
+        if self.dolog and not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
         # create the information about the tasks
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
-                                   self.post_tasks))
+                                   self.post_tasks,self.dolog))
         self.hosts= find_all_ssh_hosts()
         
 
@@ -669,7 +667,7 @@ class DBISsh(DBIBase):
         if int(self.file_redirect_stdout):
             output = file(task.log_file + '.out','w')
         if int(self.file_redirect_stderr):
-            error = file(task.log_file + '.err','w')
+            error = file(task.log_file + '.err','w')        
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
