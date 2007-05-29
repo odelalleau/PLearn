@@ -51,7 +51,7 @@ verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = "" ;
 test_minibatch_size = 1 ;
-use_a_separate_random_generator_for_testing = 1  )
+use_a_separate_random_generator_for_testing = 1827  )
 ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;
@@ -68,4 +68,4 @@ verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = "" ;
 test_minibatch_size = 1 ;
-use_a_separate_random_generator_for_testing = 1  )
+use_a_separate_random_generator_for_testing = 1827  )
