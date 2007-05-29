@@ -209,6 +209,7 @@
 #include <plearn_learners/online/ModuleLearner.h>
 #include <plearn_learners/online/ModulesLearner.h>
 #include <plearn_learners/online/ModuleStackModule.h>
+#include <plearn_learners/online/ModuleTester.h>
 #include <plearn_learners/online/NetworkModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
