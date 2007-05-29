@@ -91,7 +91,7 @@ class Var:
         return Var(pl.AffineTransformVariable(self.v, W))
 
     # TODO: verifier si NegCrossEntropySigmoidVariable est bien ce qui est utilise par Hugo
-    def negCrossEntropySigmoid(self, other, regularizer=0., ignore_missing=False):
+    def negCrossEntropySigmoid(self, other, regularizer=0, ignore_missing=False):
         return Var(pl.NegCrossEntropySigmoidVariable(input1=self.v, input2=other.v, regularizer=regularizer, ignore_missing=ignore_missing))
         
     def doubleProduct(self, W, M):
@@ -130,6 +130,9 @@ class Var:
     def add(self, other):
         return Var(pl.PlusVariable(input1=self.v, input2=other.v))
 
+    def classificationLoss(self, class_index):
+        return Var(pl.ClassificationLossVariable(input1=self.v, input2=class_index.v))
+    
     def __add__(self, other):
         return self.add(other)
 
@@ -146,6 +149,7 @@ class Var:
 ###################################################    
 # RLayer stands for reconstruciton hidden layer
 
+
 def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
     """This assumes the input is a (1,iw) matrix,
     and will produce an output that will be a (1, ow) matrix.
@@ -154,11 +158,11 @@ def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
     Then output = sigmoid(input.W^T + b)
     
     Returns a triple (hidden, reconstruciton_cost)"""
-    W = Var(ow,iw,"uniform", -1./iw, varname=basename+'_W')
+    W = Var(ow,iw,"uniform", -1./sqrt(iw), 1./sqrt(iw), varname=basename+'_W')
     
     if add_bias:
-        b = Var(1,ow,"fill",0, varname=basename+'_b')
-        hidden = input.matrixProduct_A_Bt(W).add(b).sigmoid()
+        b = Var(1,ow,"fill",0, varname=basename+'_b')        
+        hidden = input.matrixProduct_A_Bt(W).add(b).sigmoid()        
         br = Var(1,iw,"fill",0, varname=basename+'_br')
         cost = hidden.matrixProduct(W).add(br).negCrossEntropySigmoid(input)
     else:
@@ -191,20 +195,37 @@ def addMultiSoftMaxDoubleProductRLayer(input, iw, igs, ow, ogs, basename=""):
     return hidden, cost
 
 def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, basename=""):
-    W = Var(ow, iw, "uniform", -1./iw, varname=basename+'_W')
+    W = Var(ow, iw, "uniform", -1./iw, 1./iw, varname=basename+'_W')
     hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
     cost = -hidden.matrixProduct(W).multiLogSoftMax(igs).dot(input)
     return hidden, cost
 
 def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs):
-    W = Var(ow, iw, "uniform", -1./iw, varname=basename+'_W')
+    W = Var(ow, iw, "uniform", -1./iw, 1./iw, varname=basename+'_W')
     hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
-    Wr = Var(ow, iw, "uniform", -1./ow, varname=basename+'_Wr')
+    Wr = Var(ow, iw, "uniform", -1./ow, 1./ow, varname=basename+'_Wr')
     cost = -hidden.matrixProduct(Wr).multiLogSoftMax(igs).dot(input)
     return hidden, cost
 
 #################################
 # These build supervised layers
+
+def addLinearLayer(input, iw, ow, add_bias=True, basename=""):
+    """This assumes the input is a (1,iw) matrix,
+    and will produce an output that will be a (1, ow) matrix.
+    It will create parameter W(ow,iw)
+    and an optional parameter b(1,ow)
+    Then output = input.W^T + b    
+    Returns the output layer"""
+    W = Var(ow,iw,"uniform", -1./iw, 1./iw, varname=basename+'_W')
+    
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')
+        out = input.matrixProduct_A_Bt(W).add(b)
+    else:
+        out = input.matrixProduct_A_Bt(W)
+    return out
+
 
 def addClassificationNegLogSoftmaxLayer(activation, target):
     """Assumes that target is a scalar variable containing a class number between 0 and m-1,

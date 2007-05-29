@@ -1,3 +1,4 @@
+
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
@@ -69,7 +70,7 @@ PlusVariable::build_()
 {
     if (input1 && input2) {
         if(input1->size() != input2->size())
-            PLERROR("In PlusVariable: input1 and input2 must have exactly the same size");
+            PLERROR("In PlusVariable: input1 and input2 must have exactly the same size (%ix%i != %ix%i)", input1->length(), input1->width(), input2->length(), input2->width());
     }
 }
 

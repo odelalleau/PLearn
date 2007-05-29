@@ -38,8 +38,10 @@
 
 
 #include "DeepReconstructorNet.h"
-#include <plearn/display/DisplayUtils.h> 
+#include <plearn/display/DisplayUtils.h>
 #include <plearn/var/Var_operators.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/var/ConcatColumnsVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -50,17 +52,10 @@ PLEARN_IMPLEMENT_OBJECT(
    "MULTI-LINE \nHELP");
 
 DeepReconstructorNet::DeepReconstructorNet()
-/* ### Initialize all fields to their default value here */
+    :good_improvement_rate(-1e10),
+     fine_tuning_improvement_rate(-1e10),
+     minibatch_size(1)
 {
-    // ...
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
-
-    // ### If this learner needs to generate random numbers, uncomment the
-    // ### line below to enable the use of the inherited PRandom object.
-    // random_gen = new PRandom();
 }
 
 void DeepReconstructorNet::declareOptions(OptionList& ol)
@@ -94,7 +89,15 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "");
 
-    declareOption(ol, "supervised_cost", &DeepReconstructorNet::supervised_cost,
+    declareOption(ol, "supervised_costs", &DeepReconstructorNet::supervised_costs,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "supervised_costvec", &DeepReconstructorNet::supervised_costvec,
+                  OptionBase::learntoption,
+                  "");
+
+    declareOption(ol, "supervised_costs_names", &DeepReconstructorNet::supervised_costs_names,
                   OptionBase::buildoption,
                   "");
 
@@ -111,6 +114,10 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   "");
 
     declareOption(ol, "good_improvement_rate", &DeepReconstructorNet::good_improvement_rate,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "fine_tuning_improvement_rate", &DeepReconstructorNet::fine_tuning_improvement_rate,
                   OptionBase::buildoption,
                   "");
 
@@ -165,9 +172,19 @@ void DeepReconstructorNet::build_()
     compute_output = Func(layers[0], layers[nlayers-1]);
     nout = layers[nlayers-1]->size();
 
-    if(supervised_cost.isNull())
+    output_and_target_to_cost = Func(layers[nlayers-1]&target, supervised_costvec); 
+
+
+    if(supervised_costs.isNull())
         PLERROR("You must provide a supervised_cost");
-    fullcost = supervised_cost;
+
+    supervised_costvec = hconcat(supervised_costs);
+
+
+    fullcost = supervised_costs[0];
+    for(int i=1; i<supervised_costs.length(); i++)
+        fullcost = fullcost + supervised_costs[i];
+    
     int n_rec_costs = reconstruction_costs.length();
     for(int k=0; k<n_rec_costs; k++)
         fullcost = fullcost + reconstruction_costs[k];
@@ -202,16 +219,23 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
+    deepCopyField(training_schedule, copies);
+    deepCopyField(layers, copies);
+    deepCopyField(reconstruction_costs, copies);
+    deepCopyField(reconstruction_optimizer, copies);
+    deepCopyField(target, copies);
+    deepCopyField(supervised_costs, copies);
+    deepCopyField(supervised_costvec, copies);
+    deepCopyField(fullcost, copies);    
+    deepCopyField(parameters,copies);
+    deepCopyField(supervised_optimizer, copies);
+    deepCopyField(fine_tuning_optimizer, copies);
 
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("DeepReconstructorNet::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(compute_layer, copies);
+    deepCopyField(compute_output, copies);
+    deepCopyField(output_and_target_to_cost, copies);
+    deepCopyField(outmat, copies);
 }
-
 
 int DeepReconstructorNet::outputsize() const
 {
@@ -254,20 +278,30 @@ void DeepReconstructorNet::train()
 
     int nreconstructions = reconstruction_costs.length();
     int insize = train_set->inputsize();
-    VMat dset = train_set.subMatColumns(0,insize);
+    VMat inputs = train_set.subMatColumns(0,insize);
+    VMat targets = train_set.subMatColumns(insize, train_set->targetsize());
+    VMat dset = inputs;
 
-    // hack...
-    dset = dset.subMatRows(0,10);
+    bool must_train_supervised_layer = (training_schedule[training_schedule.length()-2]>0);
+
     for(int k=0; k<nreconstructions; k++)
     {
         trainHiddenLayer(k, dset);
-        int width = layers[k+1].width();
-        outmat[k] = new FileVMatrix(outmatfname+tostring(k)+".pmat",0,width);
-        outmat[k]->defineSizes(width,0);
-        buildHiddenLayerOutputs(k, dset, outmat[k]);
-        dset = outmat[k];
-    }    
+        // 'if' is a hack to avoid precomputing last hidden layer if not needed
+        if(k<nreconstructions-1 ||  must_train_supervised_layer) 
+        { 
+            int width = layers[k+1].width();
+            outmat[k] = new FileVMatrix(outmatfname+tostring(k+1)+".pmat",0,width);
+            outmat[k]->defineSizes(width,0);
+            buildHiddenLayerOutputs(k, dset, outmat[k]);
+            dset = outmat[k];
+        }
+    }
 
+    if(must_train_supervised_layer)
+        trainSupervisedLayer(dset, targets);
+
+    fineTuning();
     /*
     while(stage<nstages)
     {        
@@ -300,12 +334,93 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
     }
 }
 
+void DeepReconstructorNet::fineTuning()
+{
+    int l = train_set->length();
+    int nepochs = training_schedule[training_schedule.length()-1];
+    perr << "\n\n*********************************************" << endl;
+    perr << "*** Performing fine tuning for " << nepochs << " epochs " << endl;
+    perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
+
+    Func f(layers[0]&target, supervised_costvec);
+    Var totalcost = sumOf(train_set, f, minibatch_size);
+    // displayVarGraph(supervised_costvec);
+    // displayVarGraph(totalcost);
+
+    VarArray params = totalcost->parents();
+    supervised_optimizer->setToOptimize(params, totalcost);
+    supervised_optimizer->reset();
+    VecStatsCollector st;
+    real prev_mean = -1;
+    real relative_improvement = fine_tuning_improvement_rate;
+    for(int n=0; n<nepochs && relative_improvement >= fine_tuning_improvement_rate; n++)
+    {
+        st.forget();
+        supervised_optimizer->nstages = l/minibatch_size;
+        supervised_optimizer->optimizeN(st);
+        const StatsCollector& s = st.getStats(0);
+        real m = s.mean();
+        perr << "Epoch " << n+1 << " mean error: " << m << " +- " << s.stderror() << endl;
+        if(prev_mean>0)
+        {
+            relative_improvement = ((prev_mean-m)/prev_mean)*100;
+            perr << "Relative improvement: " << relative_improvement << " %"<< endl;
+        }
+        prev_mean = m;
+    }
+}
+
+
+void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
+{
+    int l = inputs->length();
+    int last_hidden_layer = layers.length()-2;
+    int nepochs = training_schedule[training_schedule.length()-2];
+    perr << "\n\n*********************************************" << endl;
+    perr << "*** Training only supervised layer for " << nepochs << " epochs " << endl;
+    perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
+
+    Func f(layers[last_hidden_layer]&target, supervised_costvec);
+    // displayVarGraph(supervised_costvec);
+    VMat inputs_targets = hconcat(inputs, targets);
+    inputs_targets->defineSizes(inputs.width(),targets.width());
+
+    Var totalcost = sumOf(inputs_targets, f, minibatch_size);
+    // displayVarGraph(totalcost);
+
+    VarArray params = totalcost->parents();
+    supervised_optimizer->setToOptimize(params, totalcost);
+    supervised_optimizer->reset();
+    VecStatsCollector st;
+    real prev_mean = -1;
+    real relative_improvement = good_improvement_rate;
+    for(int n=0; n<nepochs && relative_improvement >= good_improvement_rate; n++)
+    {
+        st.forget();
+        supervised_optimizer->nstages = l/minibatch_size;
+        supervised_optimizer->optimizeN(st);
+        const StatsCollector& s = st.getStats(0);
+        real m = s.mean();
+        perr << "Epoch " << n+1 << " Mean costs: " << st.getMean() << " stderr " << st.getStdError() << endl;
+        perr << "mean error: " << m << " +- " << s.stderror() << endl;
+        if(prev_mean>0)
+        {
+            relative_improvement = ((prev_mean-m)/prev_mean)*100;
+            perr << "Relative improvement: " << relative_improvement << " %"<< endl;
+        }
+        prev_mean = m;
+        //displayVarGraph(supervised_costvec, true);
+
+    }
+    
+}
+
 void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
 {
     int l = inputs->length();
     int nepochs = training_schedule[which_input_layer];
     perr << "\n\n*********************************************" << endl;
-    perr << "*** Training layer " << which_input_layer << " for " << nepochs << " epochs " << endl;
+    perr << "*** Training layer " << which_input_layer+1 << " for " << nepochs << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
     Func f(layers[which_input_layer], reconstruction_costs[which_input_layer]);
     //displayVarGraph(reconstruction_costs[which_input_layer]);
@@ -324,7 +439,7 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
         reconstruction_optimizer->optimizeN(st);
         const StatsCollector& s = st.getStats(0);
         real m = s.mean();
-        perr << "Epoch " << n << " mean error: " << m << " +- " << s.stderror() << endl;
+        perr << "Epoch " << n+1 << " mean error: " << m << " +- " << s.stderror() << endl;
         if(prev_mean>0)
         {
             relative_improvement = ((prev_mean-m)/prev_mean)*100;
@@ -344,33 +459,18 @@ void DeepReconstructorNet::computeOutput(const Vec& input, Vec& output) const
 void DeepReconstructorNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output.
-// ...
+    costs.resize(supervised_costs_names.length());
+    output_and_target_to_cost->fprop(output&target, costs);
 }
 
 TVec<string> DeepReconstructorNet::getTestCostNames() const
 {
-    // Return the names of the costs computed by computeCostsFromOutputs
-    // (these may or may not be exactly the same as what's returned by
-    // getTrainCostNames).
-    // ...
-    
-    //TODO : retourner la bonne chose ici !
-    TVec<string> todo(0);
-    return todo;
+    return supervised_costs_names;
 }
 
 TVec<string> DeepReconstructorNet::getTrainCostNames() const
-{
-    // Return the names of the objective costs that the train method computes
-    // and for which it updates the VecStatsCollector train_stats
-    // (these may or may not be exactly the same as what's returned by
-    // getTestCostNames).
-    // ...
-
-    //TODO : retourner la bonne chose ici !
-    TVec<string> todo(0);
-    return todo;
+{ 
+    return supervised_costs_names;
 }
 
 Mat DeepReconstructorNet::getParameterValue(const string& varname)
@@ -402,7 +502,7 @@ TVec<Mat> DeepReconstructorNet::listParameter()
 
 } // end of namespace PLearn
 
-
+
 /*
   Local Variables:
   mode:c++
@@ -413,4 +513,4 @@ TVec<Mat> DeepReconstructorNet::listParameter()
   fill-column:79
   End:
 */
-// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :50

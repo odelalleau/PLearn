@@ -84,8 +84,10 @@ ProductTransposeVariable::build_()
 void ProductTransposeVariable::recomputeSize(int& l, int& w) const
 {
     if (input1 && input2) {
+        if (input1->width() != input2->width())
+            PLERROR("In ProductVariable: the size of m1 and m2 are not compatible for a matrix product");
         l = input1->length();
-        w = input2->width();
+        w = input2->length();
     } else
         l = w = 0;
 }

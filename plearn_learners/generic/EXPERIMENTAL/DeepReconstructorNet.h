@@ -77,6 +77,7 @@ public:
     TVec<int> training_schedule;
 
     real good_improvement_rate;
+    real fine_tuning_improvement_rate;
 
     // layers[0] is the input variable
     // last layer is final output layer
@@ -89,7 +90,11 @@ public:
 
 
     Var target;
-    Var supervised_cost;
+    //TVec<Var> supervised_costs;
+    VarArray supervised_costs;
+    Var supervised_costvec; // hconcat(supervised_costs)
+
+    TVec<string> supervised_costs_names;
 
     Var fullcost;
     
@@ -107,6 +112,7 @@ protected:
 
     TVec<Func> compute_layer;
     Func compute_output;
+    Func output_and_target_to_cost;
     TVec<VMat> outmat;
     
 
@@ -168,6 +174,11 @@ public:
 
     //! Returns a list of the parameters
     TVec<Mat> listParameter();
+
+    void fineTuning();
+
+    void trainSupervisedLayer(VMat inputs, VMat targets);
+    
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs

@@ -82,7 +82,7 @@ void VarElementVariable::fprop()
     {
         int k = int(input2->valuedata[0]);
 #ifdef BOUNDCHECK
-        if (k >= input1->length())
+        if (k >= input1->length() && k>= input1->width()) // we want to allow acces both to row vectors and column vectors.
             PLERROR("VarElementVariable::fprop() - k = %d is out of range (size is %d)", k, input1->length());
 #endif
         valuedata[0] = input1->valuedata[k];
