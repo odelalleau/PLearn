@@ -7,8 +7,12 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     DERIVEDCLASS,
     "ONE LINE DESCRIPTION",
-    "MULTI-LINE \nHELP");
+    "MULTI-LINE \nHELP"
+);
 
+//////////////////
+// DERIVEDCLASS //
+//////////////////
 DERIVEDCLASS::DERIVEDCLASS()
 /* ### Initialize all fields to their default value here */
 {
@@ -19,6 +23,9 @@ DERIVEDCLASS::DERIVEDCLASS()
     // ### in the parent classes' constructors, something that you must ensure)
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void DERIVEDCLASS::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
@@ -39,6 +46,9 @@ void DERIVEDCLASS::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void DERIVEDCLASS::build_()
 {
     // ### This method should do the real building of the object,
@@ -53,45 +63,13 @@ void DERIVEDCLASS::build_()
     // ### called.
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void DERIVEDCLASS::build()
 {
     inherited::build();
     build_();
-}
-
-
-void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
-{
-    inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-}
-
-///////////
-// fprop //
-///////////
-void DERIVEDCLASS::fprop(const TVec<Mat*>& ports_value)
-{
-    PLASSERT( ports_value.length() == nPorts() );
-    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty())
-    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
-    // and which ports are ignored (!ports_value[i]).
-    // If that combination of (input,output,ignored) is feasible by this class
-    // then perform the corresponding computation. Otherwise launch the error below.
-    // See the comment in the header file for more information.
-    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
-            "'%s'", classname().c_str());
-
-    // Ensure all required ports have been computed.
-    checkProp(ports_value);
 }
 
 ////////////////////
@@ -120,12 +98,15 @@ void DERIVEDCLASS::bpropAccUpdate(const TVec<Mat*>& ports_value,
     checkProp(ports_gradient);
 }
 
-////////////
-// forget //
-////////////
-void DERIVEDCLASS::forget()
+//////////////////////
+// bpropDoesNothing //
+//////////////////////
+/* THIS METHOD IS OPTIONAL
+// the default implementation returns false
+bool DERIVEDCLASS::bpropDoesNothing()
 {
 }
+*/
 
 //////////////
 // finalize //
@@ -136,15 +117,74 @@ void DERIVEDCLASS::finalize()
 }
 */
 
-//////////////////////
-// bpropDoesNothing //
-//////////////////////
-/* THIS METHOD IS OPTIONAL
-// the default implementation returns false
-bool DERIVEDCLASS::bpropDoesNothing()
+////////////
+// forget //
+////////////
+void DERIVEDCLASS::forget()
 {
 }
+
+///////////
+// fprop //
+///////////
+void DERIVEDCLASS::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == nPorts() );
+    // check which ports are input (ports_value[i] && !ports_value[i]->isEmpty())
+    // which ports are output (ports_value[i] && ports_value[i]->isEmpty())
+    // and which ports are ignored (!ports_value[i]).
+    // If that combination of (input,output,ignored) is feasible by this class
+    // then perform the corresponding computation. Otherwise launch the error below.
+    // See the comment in the header file for more information.
+    PLERROR("In DERIVEDCLASS::fprop - Not implemented for class "
+            "'%s'", classname().c_str());
+
+    // Ensure all required ports have been computed.
+    checkProp(ports_value);
+}
+
+//////////////////
+// getPortIndex //
+//////////////////
+/* Optional
+int DERIVEDCLASS::getPortIndex(const string& port)
+{}
 */
+
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& DERIVEDCLASS::getPorts() {
+    // ### If this is a simple module with only an 'input' and 'output' port,
+    // ### on may simply use:
+    // ###    return inherited::getPorts();
+    PLERROR("In DERIVEDCLASS::getPorts - Not implemented");
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+/* Optional
+const TMat<int>& DERIVEDCLASS::getPortSizes() {
+}
+*/
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
+void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    // ### Call deepCopyField on all "pointer-like" fields
+    // ### that you wish to be deepCopied rather than
+    // ### shallow-copied.
+    // ### ex:
+    // deepCopyField(trainvec, copies);
+
+    // ### Remove this line when you have fully implemented this method.
+    PLERROR("DERIVEDCLASS::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+}
 
 /////////////////////
 // setLearningRate //
@@ -156,23 +196,6 @@ void DERIVEDCLASS::setLearningRate(real dynamic_learning_rate)
 }
 */
 
-//////////////
-// getPorts //
-//////////////
-const TVec<string>& DERIVEDCLASS::getPorts() {
-    // If this is a simple module with only an 'input' and 'output' port, one
-    // may simply use:
-    //     return inherited::getPorts();
-    PLERROR("In DERIVEDCLASS::getPorts - Not implemented");
-}
-
-//////////////////
-// getPortSizes //
-//////////////////
-/* Optional
-const TMat<int>& DERIVEDCLASS::getPortSizes() {
-}
-*/
 
 }
 // end of namespace PLearn

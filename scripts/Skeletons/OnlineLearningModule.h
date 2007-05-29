@@ -200,6 +200,13 @@ public:
     //!         - 'input_size' for the first row and 'output_size' for the
     //!           second row if nPorts() >= 2
     virtual const TMat<int>& getPortSizes();
+
+    //! Return the index (as in the list of ports returned by getPorts()) of
+    //! a given port.
+    //! If 'port' does not exist, -1 is returned.
+    //  ### Default implementation performs a simple linear search in
+    //  ### getPorts().
+    virtual int getPortIndex(const string& port);
     */
 
     //#####  PLearn::Object Protocol  #########################################
