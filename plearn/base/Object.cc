@@ -167,6 +167,16 @@ void Object::setOptionFromPython(const string& optionname, const PythonObjectWra
 }
 #endif //def PL_PYTHON_VERSION 
 
+bool Object::hasOption(const string &optionname) const
+{ 
+    OptionList &options= getOptionList();
+    for(OptionList::iterator it= options.begin(); 
+        it != options.end(); ++it)
+        if((*it)->optionname() == optionname)
+            return true;
+    return false;
+}
+
 string Object::getOption(const string &optionname) const
 { 
     string s;
@@ -690,6 +700,11 @@ namespace {
 
 void Object::declareMethods(RemoteMethodMap& rmm)
 {
+    declareMethod(rmm, "hasOption", &Object::hasOption,
+                  (BodyDoc("Checks whether the object has an option with the given name"),
+                   ArgDoc ("optionname","The name of the option looked for"),
+                   RetDoc ("A bool that is true if the option was found.")));
+
     declareMethod(rmm, "changeOptions", &Object::changeOptions,
                   (BodyDoc("Change a set of options within the object"),
                    ArgDoc ("option_map",

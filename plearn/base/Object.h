@@ -740,6 +740,13 @@ public:
 #endif //def PL_PYTHON_VERSION 
 
     /**
+     * Returns true if the object has an option with the given name. 
+     *  @param optionname  Name of option to get
+     *  @return            bool indicating whether the option exists.
+     */
+    bool hasOption(const string &optionname) const;
+
+    /**
      *  Return the string representation of an object's option (data field).
      *  This is a generic method to be able to retrieve the value of an
      *  option supported by the object (and its derivatives). The option

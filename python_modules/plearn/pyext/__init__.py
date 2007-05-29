@@ -30,7 +30,13 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-from plearn.pyext.plext import *
+if globals().has_key('plextdbg'):
+   if plextdbg:
+      from plearn.pyext.plextdbg import *
+   else:
+      from plearn.pyext.plextopt import *
+else:
+   from plearn.pyext.plext import *
 from plearn.pyplearn.plargs import *
 import cgitb
 cgitb.enable(format='PLearn')

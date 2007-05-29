@@ -43,6 +43,7 @@
 #include <assert.h>
 #include <plearn/base/stringutils.h>    //!< For pl_isnumber.
 #include <plearn/io/openString.h>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;
@@ -163,6 +164,27 @@ void VecStatsCollector::declareOptions(OptionList& ol)
   
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+}
+
+////////////////////
+// declareMethods //
+////////////////////
+void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "getStat", &VecStatsCollector::getStat,
+        (BodyDoc("Returns a particular statistic of a particular cost.\n"),
+         ArgDoc ("statspec", 
+                 "A string that is standard statistics specification of the form ex: STAT[fieldname]\n"
+                 "or STAT[fieldnum] where STAT is one of the statistics names understood by\n"
+                 "StatsCollector::getStat. fieldnum start at 0, and fieldnames must have been\n"
+                 "registered with setFieldNames.\n"),
+         RetDoc ("Requested statistic (a real number).")));
+
 }
 
 int VecStatsCollector::length() const

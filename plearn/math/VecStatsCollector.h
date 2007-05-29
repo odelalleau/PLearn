@@ -284,6 +284,9 @@ protected:
 protected: 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
     
 private: 
     //! This does the actual building. 

@@ -102,6 +102,12 @@ class RemotePLearnServer:
         helpClassParents(classname)
         """
 
+    def __repr__(self):
+        return "PLearnServer"
+
+    def __str__(self):
+        return "PLearnServer"
+
     def __init__(self, from_server, to_server, pid=-1, logger=None):
         """from_server and to_server are expected to be two file-like objects
         (supporting read, write, flush).
@@ -408,24 +414,35 @@ class RemotePLearnServer:
             raise RuntimeError, 'The "kill" method is only available with Python 2.4 and above.'
         os.kill(self.pid, 15)
 
-class RemotePObject:
+
+class RemotePObject(object):
     
     def __init__(self, serv, objid):
         self.server = serv
         self.objid = objid
         self._by_value = False
+        self.__initialised = True
 
     def _serial_number(self):
         return self.objid
         
     def __getattr__(self,methodname):
-        def f(*args):
-            return self.callMethod(methodname,*args)
-        return f
+        """methodname can also be an optionname"""
+        if self.callMethod("hasOption", methodname):
+            return self.getOption(methodname)
+        else:
+            def f(*args):
+                return self.callMethod(methodname,*args)
+            return f
 
-    #def __setattr__(self, optionname, value):
-    #    print optionname, value
-        # self.callMethod('setOption',optionname,value)
+    def __setattr__(self, optionname, value):
+        dict = self.__dict__
+        if not dict.has_key('_RemotePObject__initialised'):  # this test allows attributes to be set in the __init__ method
+            return object.__setattr__(self, optionname, value)
+        elif dict.has_key(optionname):       # any normal attributes are handled normally
+            return object.__setattr__(self, optionname, value)
+        else:
+            self.callMethod('changeOptions',{optionname:plearn_repr(value)})
 
     def callMethod(self,methodname, *args):
         return self.server.callMethod(self.objid, methodname, *args)

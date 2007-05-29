@@ -288,7 +288,13 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
 
         elif len(shape) == 2:
             l,w = shape
-            listrepr = [ f for row in obj for f in row ]
+            listrepr = []
+            # we do this explicit for due to a numarray bug for 0x0 matrices...
+            for i in xrange(l):
+                row = obj[i]
+                for elem in row:
+                    listrepr.append(elem)
+            # listrepr = [ f for row in obj for f in row ]
             return "%d %d %s" % ( l, w, inner_repr(listrepr, indent_level+1) )
 
         raise ValueError( "Only numarrays of dimension 1 and 2 are understood by plearn_repr." )
