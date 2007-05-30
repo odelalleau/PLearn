@@ -195,9 +195,15 @@ def train_adapting_lr(learner,
                     if k==cost_to_select_best and j==0:
                         if plearn.bridgemode.interactive:
                             start = all_start[active]
-                            plot(results[start:t+1,0],
-                                 results[start:t+1,j*n_costs+k+2],colors[active%7]+styles[j%15],
-                                 label='candidate'+str(active)+':'+costname)
+                            if start==t:
+                                plot(results[start:t+1,0],
+                                     results[start:t+1,j*n_costs+k+2],colors[active%7]+styles[j%15],
+                                     label='candidate'+str(active)+':'+costname)
+                                legend() 
+                            else:
+                                plot(results[start:t+1,0],
+                                     results[start:t+1,j*n_costs+k+2],colors[active%7]+styles[j%15])
+
                         #if s>epoch:
                         #        all_slope[active]=0.5*all_slope[active]+0.5*(err-all_last_err[active])
                         all_last_err[active]=err
@@ -227,8 +233,6 @@ def train_adapting_lr(learner,
                     del actives[j-ndeleted]
                     ndeleted+=1
             # add a candidate with slightly lower learning rate than best_active, starting from it
-            if plearn.bridgemode.interactive:
-                legend()
             new_candidate = deepcopy(all_candidates[best_active])
             new_a = len(all_candidates)
             actives.append(new_a)
