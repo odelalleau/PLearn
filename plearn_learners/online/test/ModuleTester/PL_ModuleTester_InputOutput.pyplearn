@@ -1,0 +1,22 @@
+# Run safety checks on modules with a simple input/output setup.
+# Currently we test only GradNNetLayerModule.
+
+from plearn.pyplearn import pl
+
+configurations = [ {"in_grad":[ "input" ],
+                    "out_grad":[ "output" ]} ]
+
+testers = [
+
+    pl.ModuleTester(
+            module = pl.GradNNetLayerModule(
+                input_size = 100,
+                output_size = 10),
+            configurations = configurations),
+
+    ]
+
+def main():
+    return pl.RunObject( objects = testers )
+
+
