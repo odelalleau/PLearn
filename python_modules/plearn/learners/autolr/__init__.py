@@ -11,7 +11,11 @@ def deepcopy(plearnobject):
     if plearn.bridgemode.useserver:
         raise NotImplementedError
     else:
-        return newObject(str(plearnobject))
+        o = newObject(str(plearnobject))
+        if o==None:
+            print "deepcopy failed"
+            raise NotImplementedError
+        return o
 
 
 def train_with_schedule(learner,
@@ -152,7 +156,8 @@ def train_adapting_lr(learner,
     previous_best_err = best_err
     best_active = -1
     n_epochs=nstages/epoch
-    all_results = [zeros([n_epochs,2+n_tests*n_costs],Float32)]
+    all_results = [ones([n_epochs,2+n_tests*n_costs],Float32)]
+    all_results[0].fill(float("nan"))
     all_candidates = [learner]
     all_last_err = [best_err]
     #all_slope = [0]
@@ -219,10 +224,12 @@ def train_adapting_lr(learner,
             previous_best_err = best_err
             if logfile:
                 print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
+        else:
+            if logfile:
+                print >>logfile, "THE BEST ACTIVE HAS GOTTEN WORSE!!!!"
         if s%(epoch*nskip)==0 and s<nstages:
-            best_active = argmin(all_last_err)
+            best_active = actives[argmin(array(all_last_err)[actives])]
             # remove candidates that are worse and have higher slope
-            #best_slope = all_slope[best_active]
             best_last = all_last_err[best_active]
             ndeleted = 0
             for (a,j) in zip(actives,range(len(actives))):
