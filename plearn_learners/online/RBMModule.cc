@@ -927,11 +927,13 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "Cannot provide "
             "an input gradient w.r.t. visible units" );
     
+    int mbs = (visible && !visible->isEmpty()) ? visible->length() : -1;
     if (visible && !visible->isEmpty() && 
         (hidden_grad && !hidden_grad->isEmpty()))
     {
-        int mbs = visible->length();
-        if (grad_learning_rate > 0) {
+        // Note: we need to perform the following steps even if the gradient
+        // learning rate is equal to 0. This is because we must propagate the
+        // gradient to the visible layer, even though no update is required.
             setAllLearningRates(grad_learning_rate);
             PLASSERT( hidden && hidden_act );
             // Compute gradient w.r.t. activations of the hidden layer.
@@ -993,15 +995,13 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     hidden_act_grad, true);
             }
             partition_function_is_stale = true;
-        }
-    } 
+    }
 
     if (cd_learning_rate > 0) {
         EXTREME_MODULE_LOG << "Performing contrastive divergence step in RBM '"
                            << name << "'" << endl;
         // Perform a step of contrastive divergence.
         PLASSERT( visible && !visible->isEmpty() );
-            int mbs = visible->length();
             setAllLearningRates(cd_learning_rate);
             PLASSERT( ports_value.length() == nPorts() );
             Mat* negative_phase_visible_samples = 
@@ -1100,7 +1100,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( visible  && hidden_act &&
                   visible_reconstruction && visible_reconstruction_activations &&
                   reconstruction_error);
-        int mbs = reconstruction_error_grad->length();
+        //int mbs = reconstruction_error_grad->length();
 
         PLCHECK_MSG( weights, "In RBMModule::bpropAccUpdate(): reconstruction cost "
                      "for conditional weights is not implemented");
