@@ -143,9 +143,25 @@ void NLLCostModule::fprop(const TVec<Mat*>& ports_value)
 
         cost->resize(batch_size, port_sizes(2, 1));
 
+        PLASSERT_MSG( min(*prediction) >= 0.,
+                "Elements of \"prediction\" should be positive" );
+
+#ifdef BOUNDCHECK
+        for (int i = 0; i < prediction->length(); i++) {
+            // Ensure the distribution probabilities sum to 1. We relax a bit
+            // the default tolerance as probabilities using exponentials could
+            // suffer numerical imprecisions.
+            if (!is_equal( sum((*prediction)(i)), 1., 1., 1e-5, 1e-5 ))
+                PLERROR("In NLLCostModule::fprop - Elements of \"prediction\" "
+                        "should sum to 1 (found a sum = %f)",
+                        sum((*prediction)(i)));
+        }
+#endif
+
         for( int k=0; k<batch_size; k++ )
         {
             int target_k = (int) round( (*target)(k,0) );
+            PLASSERT( is_equal( (*target)(k, 0), target_k ) );
             (*cost)(k,0) = -pl_log( (*prediction)(k, target_k) );
         }
     }
