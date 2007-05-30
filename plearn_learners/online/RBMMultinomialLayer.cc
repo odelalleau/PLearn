@@ -1,4 +1,4 @@
-// -*- C++ -*-
+
 
 // RBMMultinomialLayer.cc
 //
@@ -97,6 +97,21 @@ void RBMMultinomialLayer::generateSample()
     fill_one_hot( sample, i, real(0.), real(1.) );
 }
 
+void RBMMultinomialLayer::generateSamples()
+{
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
+    computeExpectations();
+    PLASSERT( samples.width() == size && samples.length() == batch_size );
+
+    for (int k = 0; k < batch_size; k++)
+    {
+        int i = random_gen->multinomial_sample( expectations(k) );
+        fill_one_hot( samples(k), i, real(0.), real(1.) );
+    }
+}
+
 void RBMMultinomialLayer::computeExpectation()
 {
     if( expectation_is_up_to_date )
@@ -105,6 +120,21 @@ void RBMMultinomialLayer::computeExpectation()
     // expectation = softmax(-activation)
     softmaxMinus(activation, expectation);
     expectation_is_up_to_date = true;
+}
+
+void RBMMultinomialLayer::computeExpectations()
+{
+    if( expectations_are_up_to_date )
+        return;
+
+    PLASSERT( expectations.width() == size
+              && expectations.length() == batch_size );
+
+    // expectation = softmax(-activation)
+    for (int k = 0; k < batch_size; k++)
+        softmaxMinus(activations(k), expectations(k));
+
+    expectations_are_up_to_date = true;
 }
 
 
@@ -188,13 +218,17 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
 }
 
 void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
-        Mat& input_gradients,
-        const Mat& output_gradients,
-        bool accumulate)
+                                      Mat& input_gradients,
+                                      const Mat& output_gradients,
+                                      bool accumulate)
 {
     PLASSERT( inputs.width() == size );
     PLASSERT( outputs.width() == size );
     PLASSERT( output_gradients.width() == size );
+
+    int mbatch_size = inputs.length();
+    PLASSERT( outputs.length() == mbatch_size );
+    PLASSERT( output_gradients.length() == mbatch_size );
 
     if( accumulate )
     {
@@ -205,46 +239,46 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     else
     {
         input_gradients.resize(inputs.length(), size);
-        input_gradients.fill(0);
+        input_gradients.clear();
     }
 
-    PLERROR("In RBMMultinomialLayer::bpropUpdate - Not yet fully implemented "
-            "for mini-batches");
-
-    /*
 
     if( momentum != 0. )
         bias_inc.resize( size );
 
-    // input_gradient[i] =
-    //      (output_gradient . output - output_gradient[i] ) output[i]
-    real outg_dot_out = dot( output_gradient, output );
-    real* out = output.data();
-    real* outg = output_gradient.data();
-    real* ing = input_gradient.data();
-    real* b = bias.data();
-    real* binc = momentum==0?0:bias_inc.data();
+    // TODO see if we can have a speed-up by reorganizing the different steps
 
-    for( int i=0 ; i<size ; i++ )
+    // input_gradients[k][i] =
+    //   (output_gradients[k].outputs[k]-output_gradients[k][i]) outputs[k][i]
+    for( int k=0; k<mbatch_size; k++ )
     {
-        real ing_i = (outg_dot_out - outg[i]) * out[i];
-        ing[i] += ing_i;
+        real outg_dot_out = dot( output_gradients(k), outputs(k) );
+        real* out = outputs(k).data();
+        real* outg = output_gradients(k).data();
+        real* ing = input_gradients(k).data();
+        real* b = bias.data();
+        real* binc = momentum==0?0:bias_inc.data();
 
-        if( momentum == 0. )
+        for( int i=0 ; i<size ; i++ )
         {
-            // update the bias: bias -= learning_rate * input_gradient
-            b[i] -= learning_rate * ing_i;
-        }
-        else
-        {
-            // The update rule becomes:
-            // bias_inc = momentum * bias_inc - learning_rate * input_gradient
-            // bias += bias_inc
-            binc[i] = momentum * binc[i] - learning_rate * ing_i;
-            b[i] += binc[i];
+            real ing_ki = (outg_dot_out - outg[i]) * out[i];
+            ing[i] += ing_ki;
+
+            if( momentum == 0. )
+            {
+                // update the bias: bias -= learning_rate * input_gradient
+                b[i] -= learning_rate * ing_ki;
+            }
+            else
+            {
+                // The update rule becomes:
+                // bias_inc = momentum*bias_inc - learning_rate*input_gradient
+                // bias += bias_inc
+                binc[i] = momentum * binc[i] - learning_rate * ing_ki;
+                b[i] += binc[i];
+            }
         }
     }
-    */
 }
 
 //! TODO: add "accumulate" here

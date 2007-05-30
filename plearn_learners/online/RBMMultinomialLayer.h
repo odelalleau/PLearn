@@ -70,16 +70,16 @@ public:
 
 
     //! generate a sample, and update the sample field
-    virtual void generateSample() ;
+    virtual void generateSample();
 
-    //! Not implemented.
-    virtual void generateSamples() { PLASSERT( false ); }
+    //! batch version
+    virtual void generateSamples();
 
     //! compute the expectation
-    virtual void computeExpectation() ;
+    virtual void computeExpectation();
 
-    //! Not implemented.
-    virtual void computeExpectations() { PLASSERT( false ); }
+    //! batch version
+    virtual void computeExpectations();
 
     //! forward propagation
     virtual void fprop( const Vec& input, Vec& output ) const;
