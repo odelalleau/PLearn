@@ -270,6 +270,8 @@ void RBMModule::build_()
         port_sizes(getPortIndex("hidden_activations.state"), 1) = hidden_layer->size; 
         port_sizes(getPortIndex("hidden_sample"), 1) = hidden_layer->size; 
         port_sizes(getPortIndex("hidden_bias"),1) = hidden_layer->size;
+        if(visible_layer)
+            port_sizes(getPortIndex("weights"),1) = hidden_layer->size * visible_layer->size;
     }
     port_sizes(getPortIndex("energy"),1) = 1;
     port_sizes(getPortIndex("neg_log_likelihood"),1) = 1;
