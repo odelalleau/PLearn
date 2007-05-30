@@ -194,8 +194,10 @@ void ModuleTester::build_()
     long default_seed = 1827;
     if (!module->random_gen) {
         // The module needs to be provided a random generator.
-        sub_rng = new PRandom(default_seed);
+        sub_rng = new PRandom();
         module->random_gen = sub_rng;
+        module->build();
+        sub_rng->manual_seed(default_seed);
         module->forget();
     }
 
