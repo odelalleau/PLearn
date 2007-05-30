@@ -1,12 +1,24 @@
 # Run safety checks on costs that can use a gradient w.r.t. their output.
-# Currently this is only 'CrossEntropyCostModule' (the ModuleTester needs to
-# be upgraded in order to be able to test NLLCostModule for instance).
 
 from plearn.pyplearn import pl
 
 configurations = [ {"in_grad":[ "prediction" ],
                     "in_nograd":[ "target" ],
                     "out_grad":[ "cost" ]} ]
+
+def vpl_softmax(n):
+    # VPL code to perform a softmax on a row.
+    beg = 0
+    last = n - 1
+    exp_vals = ' '.join( ['%s%s exp' % ('%', i) for i in range(beg, last+1) ] )
+    prog = exp_vals + ' 1 ' + exp_vals + ' ' +  \
+            ' '.join([ '+' for i in range(n -1) ]) \
+            + ' / %s vecscalmul :softmax:%s:%s' % (n, beg, last)
+    return prog
+
+
+nll_input_size = 10
+nll_mbs = 5
 
 testers = [
 
@@ -15,6 +27,33 @@ testers = [
                 input_size = 100,
                 target_size = 100),
             configurations = configurations),
+
+    pl.ModuleTester(
+            module = pl.NLLCostModule(
+                input_size = nll_input_size),
+            configurations = configurations,
+            default_length = nll_mbs,
+            relative_tolerance = 1e-4,
+            sampling_data = { \
+                    # Specific sampling data for the 'prediction' port, as it
+                    # is required to represent a probability distribution.
+                    'prediction':pl.ProcessingVMatrix(
+                            prg = vpl_softmax(nll_input_size),
+                            source = pl.VMatrixFromDistribution(
+                                distr = pl.UniformDistribution(
+                                    min = [ -1 ],
+                                    max = [ 1 ],
+                                    n_dim = nll_input_size),
+                                nsamples = nll_mbs)),
+                    # Specific smapling data for the 'target' port, as it is
+                    # required to be a class number.
+                    'target':pl.ProcessingVMatrix(
+                        prg = '%0 rint :target',
+                        source = pl.VMatrixFromDistribution(
+                            distr = pl.UniformDistribution(
+                                min = [ 0 ],
+                                max = [ nll_input_size - 1 ]),
+                            nsamples = nll_mbs)) })
 
     ]
 
