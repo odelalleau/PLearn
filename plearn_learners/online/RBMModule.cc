@@ -100,21 +100,17 @@ RBMModule::RBMModule():
     log_partition_function(0),
     partition_function_is_stale(true),
     hidden_bias(NULL),
+    weights(NULL),
     hidden_act(NULL),
     hidden_activations_are_computed(false)
 {
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void RBMModule::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
     declareOption(ol, "visible_layer", &RBMModule::visible_layer,
                   OptionBase::buildoption,
         "Visible layer of the RBM.");
@@ -895,6 +891,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;
     hidden_bias = NULL;
+    weights = NULL;
     hidden_activations_are_computed = false;
 
     if (!found_a_valid_configuration)
@@ -1166,8 +1163,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     checkProp(ports_gradient);
 
-    // Reset 'hidden_act' pointer to ensure we do not reuse it by mistake.
+    // Reset pointers to ensure we do not reuse them by mistake.
     hidden_act = NULL;
+    weights = NULL;
 }
 
 ////////////
