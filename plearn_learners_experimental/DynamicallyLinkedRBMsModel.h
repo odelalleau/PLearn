@@ -47,6 +47,8 @@
 #include <plearn_learners/online/RBMClassificationModule.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
+#include <plearn_learners/online/RBMMatrixConnection.h>
+#include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 
 #include <plearn_learners/online/GradNNetLayerModule.h>
 
@@ -68,8 +70,17 @@ public:
     //! The learning rate used during the dynamic links learning phase
     real dynamic_learning_rate;
 
+    //! The learning rate used during the dynamic links learning phase for the visible_layer
+    real visible_dynamic_learning_rate;
+
     //! The learning rate used during the fine tuning phase
     real fine_tuning_learning_rate;
+
+    //! The learning rate used during the recurrent phase
+    real recurrent_net_learning_rate;
+
+    //! Indication to untie weights in recurrent net
+    bool untie_weights;
 
     // TODO The weight decay used during the gradient descent 
     //real grad_weight_decay;
@@ -83,6 +94,12 @@ public:
     //! Number of epochs for fine tuning phase
     int fine_tuning_nstages;
 
+    //! Number of epochs for the recurrent phase
+    int recurrent_nstages;
+
+    //! Option for the visible dynamic connection 
+    int visible_connections_option;
+
     //! The visible layer of the RBMs
     PP<RBMLayer> visible_layer;
 
@@ -93,16 +110,22 @@ public:
     //! between RBMs' hidden layers
     PP<GradNNetLayerModule> dynamic_connections;
 
-    //! OnlineLearningModule corresponding to dynamic links
-    //! between RBMs' visible layers
-    PP<GradNNetLayerModule> visible_connections;
-
     //! Copy OnlineLearningModule corresponding to dynamic links
     //! between RBMs' hidden layers
     PP<GradNNetLayerModule> dynamic_connections_copy;
 
+    //! OnlineLearningModule corresponding to dynamic links
+    //! between RBMs' visible layers
+    PP<GradNNetLayerModule> visible_connections;
+
     //! The weights of the connections between the RBM visible and hidden layers
-    PP<RBMConnection> connections;
+    PP<RBMMatrixConnection> connections;
+    PP<RBMConnection> connections_idem;
+
+    //! The weights of the connections between the RBM hidden and input layers.
+    //! It is the transpose "connections".
+    PP<RBMMatrixTransposeConnection> connections_transpose;
+    PP<RBMMatrixTransposeConnection> connections_transpose_copy;
 
     //#####  Public Learnt Options  ###########################################
 
@@ -174,6 +197,13 @@ public:
     //! after the visible units have been clamped
     real fine_tuning_update();
 
+
+    //! Updates both the RBM parameters and the 
+    //! dynamic connections in the recurrent tuning phase,
+    //! after the visible units have been clamped
+    void recurrent_update();
+
+
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
 
@@ -226,11 +256,18 @@ protected:
     //! Stores input gradient of dynamic connections
     mutable Vec input_gradient;
     
+    //! Stores hidden gradient of dynamic connections
+    mutable Vec hidden_gradient;
+    
+    //! Stores hidden gradient of dynamic connections coming from time t+1
+    mutable Vec hidden_temporal_gradient;
+    
     //! Stores previous hidden layer value
     mutable Vec previous_input;
     
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
+    mutable Vec previous_hidden_layer_activation;
 
     //! Stores previous visible layer value
     mutable Vec previous_visible_layer;
@@ -238,8 +275,14 @@ protected:
     //! Stores a sample from the hidden layer
     mutable Vec hidden_layer_sample;
 
+     //! Stores a expectation from the hidden layer
+    mutable Vec hidden_layer_expectation;
+
     //! Stores a sample from the visible layer
     mutable Vec visible_layer_sample;
+
+    //! Stores a input from the visible layer
+    mutable Vec visible_layer_input;
 
     //! Store a copy of the positive phase values
     mutable Vec pos_down_values;
@@ -247,6 +290,26 @@ protected:
 
     //! Parameter of the dynamic connection
     mutable Vec alpha;
+
+    //! List of hidden layers values
+    Mat hidden_list;
+    Mat hidden_activations_list;
+
+    //! List of second hidden layers values
+    Mat hidden2_list;
+    Mat hidden2_activations_list;
+
+    //! List of input prediction values
+    Mat input_prediction_list;
+    Mat input_prediction_activations_list;
+
+    //! List of inputs values
+    Mat input_list;
+
+    //! List of the nll of the input samples in a sequence
+    Vec nll_list;
+
+    
 
 protected:
     //#####  Protected Member Functions  ######################################
