@@ -270,6 +270,7 @@ public:
     inline int get() 
     { return ptr->get(); }
 
+    //! The folowing methods are 'forwarded' from {i|o}stream.
     inline PStream& get(char& c) 
     { 
         c = (char)ptr->get();
@@ -292,6 +293,9 @@ public:
     inline string getline()
     { string s; getline(s); return s; }
 
+    //! The folowing methods are 'forwarded' from {i|o}stream.
+    //! It read from the stream without advancing in it.
+    //! I.E. Multiple successive peek() will return the same data.
     inline int peek() 
     { return ptr->peek(); }
   
