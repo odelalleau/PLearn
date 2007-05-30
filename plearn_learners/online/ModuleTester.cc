@@ -190,6 +190,15 @@ void ModuleTester::build_()
     int max_mats_size = 1000;
     TVec<Mat> mats(max_mats_size);
 
+    PP<PRandom> sub_rng = NULL;
+    long default_seed = 1827;
+    if (!module->random_gen) {
+        // The module needs to be provided a random generator.
+        sub_rng = new PRandom(default_seed);
+        module->random_gen = sub_rng;
+        module->forget();
+    }
+
     bool ok = true;
     for (int j = 0; ok && j < seeds.length(); j++) {
         random_gen->manual_seed(seeds[j]);
@@ -245,6 +254,8 @@ void ModuleTester::build_()
                 fprop_check[idx] = & mats.lastElement();
             }
             // Perform fprop.
+            if (sub_rng)
+                sub_rng->manual_seed(default_seed);
             module->forget();
             module->fprop(fprop_data);
             // Debug output.
@@ -346,6 +357,8 @@ void ModuleTester::build_()
                 int idx = module->getPortIndex(in_grad[k]);
                 bprop_data[idx]->resize(0, bprop_data[idx]->width());
             }
+            if (sub_rng)
+                sub_rng->manual_seed(default_seed);
             module->forget(); // Ensure we are using same parameters.
             module->bpropUpdate(fprop_data, bprop_data);
             // Then compare 'bprop_data' and 'bprop_check'.
@@ -396,6 +409,8 @@ void ModuleTester::build_()
                             PLASSERT( to_clear != idx );
                             fprop_data[to_clear]->resize(0, 0);
                         }
+                        if (sub_rng)
+                            sub_rng->manual_seed(default_seed);
                         module->forget();
                         module->fprop(fprop_data);
                         (*val)(p, q) = backup;
