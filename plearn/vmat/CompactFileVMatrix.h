@@ -58,7 +58,8 @@ struct GroupInfoNode {
         length(length_),
         max(max_),
         bits_per_value(bits_per_value_),
-        next(next_)
+        next(next_),
+        active(false)
     {}
 
     char type; //!< type of data (i for int, o for onehot)
@@ -81,7 +82,6 @@ private:
 
 protected:
     PPath filename_;
-//    char* active_list_;
     Vec active_list_;
     bool in_ram_;
 
@@ -91,8 +91,6 @@ protected:
 #else
     FILE* f;
 #endif
-//    bool file_is_bigendian;
-//    bool file_is_float;
 
     int compact_width_; //!< width of a compacted row
     GroupInfoNode* info_; //!< information on how each field group is encoded
