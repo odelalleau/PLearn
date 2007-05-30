@@ -31,90 +31,90 @@ ptesters = []
 
 for batch_size in [ 1, 3 ]:
     for online in [ 0, 1 ]:
-        dbn = pl.DeepBeliefNet( 
+        dbn = pl.DeepBeliefNet(
             cd_learning_rate = cd_lr,
             batch_size = batch_size,
             connections = [
-                pl.RBMMatrixConnection( 
+                pl.RBMMatrixConnection(
                     down_size = input_size,
                     learning_rate = conn_lr,
                     up_size = n_units,
                     random_gen = pl.PRandom( seed = 1827 )
                 )
             ],
-        
+
             final_cost =
-                pl.CombiningCostsModule( 
+                pl.CombiningCostsModule(
                     cost_weights = [ 1, 0 ],
                     sub_costs = [
-                        pl.NLLCostModule( 
+                        pl.NLLCostModule(
                             input_size = n_classes,
                             output_size = 1,
                             target_size = 1
                         ),
-        
-                        pl.ClassErrorCostModule( 
+
+                        pl.ClassErrorCostModule(
                             input_size = 2,
                             output_size = 1,
                             target_size = 1
                         )
-        
+
                     ]
                 ),
-        
-        
-            final_module = 
-                pl.ModuleStackModule( 
+
+
+            final_module =
+                pl.ModuleStackModule(
                     estimate_simpler_diag_hessian = 0,
                     modules = [
-                        pl.GradNNetLayerModule( 
+                        pl.GradNNetLayerModule(
                             input_size = n_units,
                             output_size = 2,
                             start_learning_rate = nnet_lr,
                             random_gen = pl.PRandom( seed = 1827 )
                         ),
-        
-                        pl.SoftmaxModule( 
+
+                        pl.SoftmaxModule(
                             input_size = 2
                         )
                     ],
                 ),
-        
+
             grad_learning_rate = grad_lr,
-        
+
             layers = [
-                pl.RBMBinomialLayer( 
+                pl.RBMBinomialLayer(
                     learning_rate = rbm_lr,
                     size = input_size
                 ),
-        
-                pl.RBMBinomialLayer( 
+
+                pl.RBMMultinomialLayer(
                     learning_rate = rbm_lr,
                     size = n_units
                 )
             ],
-        
-        
+
+
             n_classes = 2,
-        
+
             nstages = nstage_tot,
-        
+
             online = online,
-        
+
             partial_costs = [
-                pl.NLLCostModule( 
+                pl.NLLCostModule(
                     input_size = n_units,
                     output_size = 1,
                     target_size = 1
                 )
             ],
-        
+
             reconstruct_layerwise = 0,
-        
+
             training_schedule = [ greedy_1, greedy_all ],
-        
+
             use_classification_cost = use_class_cost
-        
+
         )
         ptesters.append(
                 pl.PTester(
@@ -129,7 +129,7 @@ for batch_size in [ 1, 3 ]:
                     save_stat_collectors = 0,
                     save_test_outputs = 0,
                     splitter =
-                        pl.ExplicitSplitter( 
+                        pl.ExplicitSplitter(
                             splitsets = TMat(1, 2, [ dataset, dataset ])
                         ),
                     statnames = [
@@ -138,7 +138,7 @@ for batch_size in [ 1, 3 ]:
                     ]
                 )
             )
-        
+
 def main():
     return pl.RunObject(
             objects     = ptesters,
