@@ -37,7 +37,7 @@
 $ScriptName="lauchdbi.py";
 $ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
 $LongHelp=<<EOUSAGE;
-Usage: cdispatch [--help|-h] [--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
+Usage: cdispatch [--help|-h] [--log|--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
