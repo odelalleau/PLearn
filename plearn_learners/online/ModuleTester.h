@@ -40,7 +40,6 @@
 #ifndef ModuleTester_INC
 #define ModuleTester_INC
 
-#include <plearn/base/Object.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 
 namespace PLearn {
@@ -65,6 +64,7 @@ public:
     PP<OnlineLearningModule> module;
 
     TVec< map<string, TVec<string> > > configurations;
+    map< string, PP<VMatrix> > sampling_data;
 
     TVec<long> seeds;
 

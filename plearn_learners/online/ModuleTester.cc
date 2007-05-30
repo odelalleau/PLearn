@@ -38,6 +38,7 @@
 
 
 #include "ModuleTester.h"
+#include <plearn/vmat/VMatrix.h>
 
 #define PL_LOG_MODULE_NAME "ModuleTester"
 #include <plearn/io/pl_log.h>
@@ -117,6 +118,14 @@ void ModuleTester::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Maximum value used when uniformly sampling output gradient data.\n"
         "If missing, then 'max_in' is used.");
+
+    declareOption(ol, "sampling_data", &ModuleTester::sampling_data,
+                  OptionBase::buildoption,
+        "A map from port names to specific data to use when sampling (either\n"
+        "input data or output gradient data, depending on whether the port\n"
+        "is an input or output) for this port. This mean the port data is\n"
+        "actually not sampled, but filled with the provided VMatrix (which\n"
+        "might be a VMatrixFromDistribution if sampling is needed).");
 
     declareOption(ol, "seeds", &ModuleTester::seeds,
                   OptionBase::buildoption,
@@ -213,8 +222,16 @@ void ModuleTester::build_()
                 Mat* in_k = & mats.lastElement();
                 fprop_data[module->getPortIndex(port)] = in_k;
                 // Fill 'in_k' randomly.
-                in_k->resize(length, width);
-                random_gen->fill_random_uniform(*in_k, min_in, max_in);
+                map<string, PP<VMatrix> >::iterator it =
+                    sampling_data.find(port);
+                if (it == sampling_data.end()) {
+                    in_k->resize(length, width);
+                    random_gen->fill_random_uniform(*in_k, min_in, max_in);
+                } else {
+                    PP<VMatrix> vmat = it->second;
+                    in_k->resize(vmat->length(), vmat->width());
+                    *in_k << vmat->toMat();
+                }
             }
             for (int k = 0; k < all_out.length(); k++) {
                 const string& port = all_out[k];
@@ -281,6 +298,9 @@ void ModuleTester::build_()
                 out_grad_k->resize(out_k->length(), out_k->width());
                 real min = is_missing(min_out_grad) ? min_in : min_out_grad;
                 real max = is_missing(max_out_grad) ? max_in : max_out_grad;
+                PLCHECK_MSG( sampling_data.find(port) == sampling_data.end(),
+                        "Specific sampling data not yet implemented for output"
+                        " gradients" );
                 if (fast_exact_is_equal(min, max))
                     // Special cast to handle in particular the case when we
                     // want the gradient to be exactly 1 (for instance for a
