@@ -331,7 +331,7 @@ PythonObjectWrapper Plide::versionString(const TVec<PythonObjectWrapper>& args) 
 {
     if (args.size() != 0)
         PLERROR("%sExpecting 0 argument; got %d", __FUNCTION__, args.size());
-    return version_string();
+    return PythonObjectWrapper(version_string());
 }
 
 PythonObjectWrapper Plide::getAllClassnames(const TVec<PythonObjectWrapper>& args) const
@@ -349,7 +349,7 @@ PythonObjectWrapper Plide::getAllClassnames(const TVec<PythonObjectWrapper>& arg
         if (it->second.constructor)
             all_classes.push_back(it->second.type_name);
     }
-    return all_classes;
+    return PythonObjectWrapper(all_classes);
 }
 
 PythonObjectWrapper Plide::helpResourcesPath(const TVec<PythonObjectWrapper>& args)
@@ -382,7 +382,7 @@ PythonObjectWrapper Plide::helpIndex(const TVec<PythonObjectWrapper>& args) cons
     PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpIndex(os, m_help_config);
-    return os.str();
+    return PythonObjectWrapper(os.str());
 }
 
 PythonObjectWrapper Plide::helpCommands(const TVec<PythonObjectWrapper>& args) const
@@ -393,7 +393,7 @@ PythonObjectWrapper Plide::helpCommands(const TVec<PythonObjectWrapper>& args) c
     PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpCommands(os, m_help_config);
-    return os.str();
+    return PythonObjectWrapper(os.str());
 }
 
 PythonObjectWrapper Plide::helpClasses(const TVec<PythonObjectWrapper>& args) const
@@ -404,7 +404,7 @@ PythonObjectWrapper Plide::helpClasses(const TVec<PythonObjectWrapper>& args) co
     PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpClasses(os, m_help_config);
-    return os.str();
+    return PythonObjectWrapper(os.str());
 }
 
 PythonObjectWrapper Plide::helpOnCommand(const TVec<PythonObjectWrapper>& args) const
@@ -415,7 +415,7 @@ PythonObjectWrapper Plide::helpOnCommand(const TVec<PythonObjectWrapper>& args) 
     PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpOnCommand(args[0].as<string>(), os, m_help_config);
-    return os.str();
+    return PythonObjectWrapper(os.str());
 }
 
 PythonObjectWrapper Plide::helpOnClass(const TVec<PythonObjectWrapper>& args) const
@@ -426,7 +426,7 @@ PythonObjectWrapper Plide::helpOnClass(const TVec<PythonObjectWrapper>& args) co
     PLASSERT( m_help_config && m_help_command );
     ostringstream os;
     m_help_command->helpOnClass(args[0].as<string>(), os, m_help_config);
-    return os.str();
+    return PythonObjectWrapper(os.str());
 }
 
 PythonObjectWrapper Plide::setOptionLevel(const TVec<PythonObjectWrapper>& args) const
@@ -468,7 +468,7 @@ PythonObjectWrapper Plide::precisOnClass(const TVec<PythonObjectWrapper>& args) 
             if (flags & OptionBase::buildoption)
                 build_options.push_back((*it)->optionname());
         }
-        return make_pair(tme.one_line_descr, build_options);
+        return PythonObjectWrapper(make_pair(tme.one_line_descr, build_options));
     }
     else
         return PythonObjectWrapper();        // None

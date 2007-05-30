@@ -225,6 +225,12 @@ struct ConvertFromPyObject< TVec<T> >
 };
 
 template <class T>
+struct ConvertFromPyObject<TMat<T> >
+{
+    static TMat<T> convert(PyObject*, bool print_traceback);
+};
+
+template <class T>
 struct ConvertFromPyObject< std::vector<T> >
 {
     static std::vector<T> convert(PyObject*, bool print_traceback);
@@ -240,6 +246,148 @@ template <class T, class U>
 struct ConvertFromPyObject< std::pair<T,U> >
 {
     static std::pair<T,U> convert(PyObject*, bool print_traceback);
+};
+
+
+/////////////////////////////////////
+// ConvertToPyObject<>
+// Conversions from PLearn to Python
+template<typename T>
+struct ConvertToPyObject
+{
+    static PyObject* newPyObject(const T& x)
+    {
+        PLERROR("Cannot convert type %s by value to python",
+                TypeTraits<T>::name().c_str());
+        return 0;//shut up compiler
+    }
+};
+
+template<> struct ConvertToPyObject<Object*>
+{ static PyObject* newPyObject(const Object* x); };
+
+template<> struct ConvertToPyObject<bool>
+{ static PyObject* newPyObject(const bool& x); };
+    
+template<> struct ConvertToPyObject<int>
+{ static PyObject* newPyObject(const int& x); };
+template<> struct ConvertToPyObject<unsigned int>
+{ static PyObject* newPyObject(const unsigned int& x); };
+    
+template<> struct ConvertToPyObject<long>
+{ static PyObject* newPyObject(const long& x); };
+template<> struct ConvertToPyObject<unsigned long>
+{ static PyObject* newPyObject(const unsigned long& x); };
+    
+template<> struct ConvertToPyObject<double>
+{ static PyObject* newPyObject(const double& x); };
+
+template<> struct ConvertToPyObject<char*>
+{ static PyObject* newPyObject(const char* x); };
+
+template<size_t N> struct ConvertToPyObject<char[N]>
+{ static PyObject* newPyObject(const char x[N]); };
+    
+template<> struct ConvertToPyObject<string>
+{ static PyObject* newPyObject(const string& x); };
+  
+//! PLearn Vec: use numarray
+template<> struct ConvertToPyObject<Vec>
+{ static PyObject* newPyObject(const Vec&); };
+
+//! PLearn Mat: use numarray
+template<> struct ConvertToPyObject<Mat>
+{ static PyObject* newPyObject(const Mat&); };
+
+//! PLearn VMat.  Very inefficient for now: convert to a temporary Mat
+//! and then bridge to using numarray.  Fieldnames and other metainfos
+//! are lost when converting to Python.
+//!
+//! @TODO  Must provide a complete Python wrapper over VMatrix objects
+template<> struct ConvertToPyObject<VMat>
+{ static PyObject* newPyObject(const VMat& vm); };
+    
+//! Generic PP: wrap pointed object
+template<class T> struct ConvertToPyObject<PP<T> >
+{ static PyObject* newPyObject(const PP<T>&); };
+    
+//! tuples (1 to 7 elts.)
+template<class T> 
+struct ConvertToPyObject<tuple<T> >
+{ static PyObject* newPyObject(const tuple<T>&); };
+template <class T, class U> 
+struct ConvertToPyObject<tuple<T,U> >
+{ static PyObject* newPyObject(const tuple<T, U>&); };
+template <class T, class U, class V> 
+struct ConvertToPyObject<tuple<T,U,V> >
+{ static PyObject* newPyObject(const tuple<T, U, V>&); };
+template <class T, class U, class V, class W> 
+struct ConvertToPyObject<tuple<T,U,V,W> >
+{ static PyObject* newPyObject(const tuple<T, U, V, W>&); };
+template <class T, class U, class V, class W, class X> 
+struct ConvertToPyObject<tuple<T,U,V,W,X> >
+{ static PyObject* newPyObject(const tuple<T, U, V, W, X>&); };
+template <class T, class U, class V, class W, class X, class Y> 
+struct ConvertToPyObject<tuple<T,U,V,W,X,Y> >
+{ static PyObject* newPyObject(const tuple<T, U, V, W, X, Y>&); };
+template <class T, class U, class V, class W, class X, class Y, class Z> 
+struct ConvertToPyObject<tuple<T,U,V,W,X,Y,Z> >
+{ static PyObject* newPyObject(const tuple<T, U, V, W, X, Y, Z>&); };
+
+//! Generic vector: create a Python list of those objects recursively
+template <class T> struct ConvertToPyObject<TVec<T> >
+{ static PyObject* newPyObject(const TVec<T>&); };
+
+//! Generic matrix: create a Python list of those objects recursively
+template <class T> struct ConvertToPyObject<TMat<T> >
+{ static PyObject* newPyObject(const TMat<T>&); };
+
+//! C++ stdlib vector<>: create a Python list of those objects recursively
+template <class T> struct ConvertToPyObject<std::vector<T> >
+{ static PyObject* newPyObject(const std::vector<T>&); };
+
+//! C++ stlib map<>: create a Python dict of those objects
+template <class T, class U> struct ConvertToPyObject<std::map<T,U> >
+{ static PyObject* newPyObject(const std::map<T,U>&); };
+
+//! C++ stdlib pair<>: create a Python tuple with two elements
+template <class T, class U> struct ConvertToPyObject<std::pair<T,U> >
+{ static PyObject* newPyObject(const std::pair<T,U>&); };
+    
+//! Pointer to vector<>: simply dereference pointer, or None if NULL
+//!
+//! (NOTE: we don't have conversion from general pointer type since it's
+//! not clear that we always want to convert by dereferencing; for some
+//! object types, it's possible that we want to preserve object identities).
+template <class T> struct ConvertToPyObject<std::vector<T> const* >
+{ static PyObject* newPyObject(const std::vector<T>*); };
+
+//! Pointer to map<>: simply dereference pointer, or None if NULL
+template <class T, class U> struct ConvertToPyObject<std::map<T,U> const* >
+{ static PyObject* newPyObject(const std::map<T,U>*); };
+
+//! For a general PythonObjectWrapper: we simply increment the refcount
+//! to the underlying Python object, no matter whether we own it or not.
+template<> struct ConvertToPyObject<PythonObjectWrapper>
+{ static PyObject* newPyObject(const PythonObjectWrapper& pow); };
+
+
+
+struct PLPyClass
+{
+    // holds info about a PLearn class
+    // injected into python
+    PLPyClass(PyObject* pyclass_,
+              PP<PObjectPool<PyMethodDef> >& methods_)
+        :pyclass(pyclass_),
+         methods(methods_),
+         methods_help(0),
+         nref(1)
+    {}
+    PyObject* pyclass;
+    PP<PObjectPool<PyMethodDef> > methods;
+    TVec<string> methods_help;
+    int nref;
 };
 
 //#####  PythonGlobalInterpreterLock  #########################################
@@ -342,16 +490,16 @@ public:
     
     //! Constructor for general type (forwarded to newPyObject)
     template <class T>
-    PythonObjectWrapper(const T& x, OwnershipMode o = control_ownership,
+    explicit PythonObjectWrapper(const T& x, OwnershipMode o = control_ownership,
                         bool acquire_gil = true)
         : m_ownership(o)
     {
         if (acquire_gil) {
             PythonGlobalInterpreterLock gil;
-            m_object = newPyObject(x);
+            m_object = ConvertToPyObject<T>::newPyObject(x);
         }
         else
-            m_object = newPyObject(x);
+            m_object = ConvertToPyObject<T>::newPyObject(x);
     }
 
     //! Copy constructor: increment refcount if controlling ownership.
@@ -419,89 +567,9 @@ public:
      *  @function newPyObject
      *  @brief    Create a raw \c PyObject* from various types
      */
+
     static PyObject* newPyObject();  //!< Return None (increments refcount)
 
-    static PyObject* newPyObject(const Object* x);
-
-    static PyObject* newPyObject(const bool& x);
-    
-    static PyObject* newPyObject(const int& x);
-    static PyObject* newPyObject(const unsigned int& x);
-    
-    static PyObject* newPyObject(const long& x);
-    static PyObject* newPyObject(const unsigned long& x);
-    
-    static PyObject* newPyObject(const double& x);
-
-    static PyObject* newPyObject(const char* x);
-    
-    static PyObject* newPyObject(const string& x);
-  
-    //! PLearn Vec: use numarray
-    static PyObject* newPyObject(const Vec&);
-
-    //! PLearn Mat: use numarray
-    static PyObject* newPyObject(const Mat&);
-
-    //! PLearn VMat.  Very inefficient for now: convert to a temporary Mat
-    //! and then bridge to using numarray.  Fieldnames and other metainfos
-    //! are lost when converting to Python.
-    //!
-    //! @TODO  Must provide a complete Python wrapper over VMatrix objects
-    static PyObject* newPyObject(const VMat& vm);
-    
-    //! Generic PP: wrap pointed object
-    template <class T>
-    static PyObject* newPyObject(const PP<T>&);
-    
-    //! tuples (1 to 7 elts.)
-    template <class T>
-    static PyObject* newPyObject(const tuple<T>&);
-    template <class T, class U>
-    static PyObject* newPyObject(const tuple<T, U>&);
-    template <class T, class U, class V>
-    static PyObject* newPyObject(const tuple<T, U, V>&);
-    template <class T, class U, class V, class W>
-    static PyObject* newPyObject(const tuple<T, U, V, W>&);
-    template <class T, class U, class V, class W, class X>
-    static PyObject* newPyObject(const tuple<T, U, V, W, X>&);
-    template <class T, class U, class V, class W, class X, class Y>
-    static PyObject* newPyObject(const tuple<T, U, V, W, X, Y>&);
-    template <class T, class U, class V, class W, class X, class Y, class Z>
-    static PyObject* newPyObject(const tuple<T, U, V, W, X, Y, Z>&);
-
-    //! Generic vector: create a Python list of those objects recursively
-    template <class T>
-    static PyObject* newPyObject(const TVec<T>&);
-
-    //! C++ stdlib vector<>: create a Python list of those objects recursively
-    template <class T>
-    static PyObject* newPyObject(const std::vector<T>&);
-
-    //! C++ stlib map<>: create a Python dict of those objects
-    template <class T, class U>
-    static PyObject* newPyObject(const std::map<T,U>&);
-
-    //! C++ stdlib pair<>: create a Python tuple with two elements
-    template <class T, class U>
-    static PyObject* newPyObject(const std::pair<T,U>&);
-    
-    //! Pointer to vector<>: simply dereference pointer, or None if NULL
-    //!
-    //! (NOTE: we don't have conversion from general pointer type since it's
-    //! not clear that we always want to convert by dereferencing; for some
-    //! object types, it's possible that we want to preserve object identities).
-    template <class T>
-    static PyObject* newPyObject(const std::vector<T>*);
-
-    //! Pointer to map<>: simply dereference pointer, or None if NULL
-    template <class T, class U>
-    static PyObject* newPyObject(const std::map<T,U>*);
-
-    //! For a general PythonObjectWrapper: we simply increment the refcount
-    //! to the underlying Python object, no matter whether we own it or not.
-    static PyObject* newPyObject(const PythonObjectWrapper& pow);
-    
     /**
      *  This function is called by PythonCodeSnippet to carry out
      *  initializations related to libnumarray.
@@ -512,23 +580,6 @@ protected:
     OwnershipMode m_ownership;               //!< Whether we own the PyObject or not
     PyObject* m_object;
     
-    struct PLPyClass
-    {
-        // holds info about a PLearn class
-        // injected into python
-        PLPyClass(PyObject* pyclass_,
-                  PP<PObjectPool<PyMethodDef> >& methods_)
-            :pyclass(pyclass_),
-             methods(methods_),
-             methods_help(0),
-             nref(1)
-        {}
-        PyObject* pyclass;
-        PP<PObjectPool<PyMethodDef> > methods;
-        TVec<string> methods_help;
-        int nref;
-    };
-
     //for the unique unref injected method
     static bool m_unref_injected;
     static PyMethodDef m_unref_method_def;
@@ -539,6 +590,8 @@ protected:
     typedef map<const Object*, PyObject*> wrapped_objects_t;
 
     static wrapped_objects_t m_wrapped_objects; //!< for wrapped PLearn Objects
+
+    template<class T> friend class ConvertToPyObject;
 };
 
 
@@ -591,6 +644,48 @@ TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj, bool print_trac
 
     return TVec<T>();                        // Shut up compiler
 }
+
+template <class T>
+TMat<T> ConvertFromPyObject<TMat<T> >::convert(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT( pyobj );
+    
+    // Here, we support both Python Tuples and Lists
+    if (PyTuple_Check(pyobj)) {
+        // Tuple case
+        int len= PyTuple_GET_SIZE(pyobj);
+        TMat<T> v;
+        for(int i= 0; i < len; ++i) 
+        {
+            PyObject* row_i= PyTuple_GET_ITEM(pyobj, i);
+            TVec<T> r= ConvertFromPyObject<TVec<T> >::convert(row_i, print_traceback);
+            if(i == 0)
+                v.resize(0, r.size());
+            v.appendRow(r);
+        }
+        return v;
+    }
+    else if (PyList_Check(pyobj)) {
+        // List case
+        int len= PyList_GET_SIZE(pyobj);
+        TMat<T> v;
+        for(int i= 0; i < len; ++i) 
+        {
+            PyObject* row_i= PyList_GET_ITEM(pyobj, i);
+            TVec<T> r= ConvertFromPyObject<TVec<T> >::convert(row_i, print_traceback);
+            if(i == 0)
+                v.resize(0, r.size());
+            v.appendRow(r);
+        }
+        return v;
+    }
+    else
+        PLPythonConversionError("ConvertFromPyObject< TMat<T> >", pyobj,
+                                print_traceback);
+
+    return TMat<T>();                        // Shut up compiler
+}
+
 
 template <class T>
 std::vector<T> ConvertFromPyObject< std::vector<T> >::convert(PyObject* pyobj,
@@ -650,40 +745,65 @@ std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
 
 //#####  newPyObject Implementations  #########################################
 
-template <class T>
-PyObject* PythonObjectWrapper::newPyObject(const PP<T>& data)
+template<size_t N> 
+PyObject*  ConvertToPyObject<char[N]>::newPyObject(const char x[N])
 {
-    return newPyObject(static_cast<T*>(data));
+    return ConvertToPyObject<char*>::newPyObject(x);
+}
+
+
+template <class T>
+PyObject* ConvertToPyObject<PP<T> >::newPyObject(const PP<T>& data)
+{
+    Object* o= dynamic_cast<Object*>(static_cast<T*>(data));
+    if(o)
+        return ConvertToPyObject<Object*>::newPyObject(o);
+    return ConvertToPyObject<T*>::newPyObject(static_cast<T*>(data));
 }
 
 template <class T>
-PyObject* PythonObjectWrapper::newPyObject(const TVec<T>& data)
+PyObject* ConvertToPyObject<TVec<T> >::newPyObject(const TVec<T>& data)
 {
     PyObject* newlist = PyList_New(data.size());
     for (int i=0, n=data.size() ; i<n ; ++i) {
         // Since PyList_SET_ITEM steals the reference to the item being set,
         // one does not need to Py_XDECREF the inserted string as was required
         // for the PyArrayObject code above...
-        PyList_SET_ITEM(newlist, i, newPyObject(data[i]));
+        PyList_SET_ITEM(newlist, i, ConvertToPyObject<T>::newPyObject(data[i]));
     }
     return newlist;
 }
 
 template <class T>
-PyObject* PythonObjectWrapper::newPyObject(const std::vector<T>& data)
+PyObject* ConvertToPyObject<TMat<T> >::newPyObject(const TMat<T>& data)
+{
+    PyObject* newlist = PyList_New(data.size());
+    for (int i=0, n=data.size() ; i<n ; ++i) 
+    {
+        // Since PyList_SET_ITEM steals the reference to the item being set,
+        // one does not need to Py_XDECREF the inserted string as was required
+        // for the PyArrayObject code above...
+        PyList_SET_ITEM(newlist, i, 
+                        ConvertToPyObject<TVec<T> >::newPyObject(data(i)));
+    }
+    return newlist;
+}
+
+template <class T>
+PyObject* ConvertToPyObject<std::vector<T> >::newPyObject(const std::vector<T>& data)
 {
     PyObject* newlist = PyList_New(data.size());
     for (int i=0, n=data.size() ; i<n ; ++i) {
         // Since PyList_SET_ITEM steals the reference to the item being set,
         // one does not need to Py_XDECREF the inserted string as was required
         // for the PyArrayObject code above...
-        PyList_SET_ITEM(newlist, i, newPyObject(data[i]));
+        PyList_SET_ITEM(newlist, i, ConvertToPyObject<T>::newPyObject(data[i]));
     }
     return newlist;
 }
     
 template <class T, class U>
-PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
+PyObject* ConvertToPyObject<std::map<T,U> >::newPyObject(const std::map<T,U>& data)
 {
     // From the Python C API Documentation section 1.10.2: (Note that
     // PyDict_SetItem() and friends don't take over ownership -- they are
@@ -692,8 +812,8 @@ PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
     for (typename std::map<T,U>::const_iterator it = data.begin(), end = data.end() ;
          it != end ; ++it)
     {
-        PyObject* new_key = newPyObject(it->first);
-        PyObject* new_val = newPyObject(it->second);
+        PyObject* new_key = ConvertToPyObject<T>::newPyObject(it->first);
+        PyObject* new_val = ConvertToPyObject<U>::newPyObject(it->second);
         int non_success = PyDict_SetItem(newdict, new_key, new_val);
         Py_XDECREF(new_key);
         Py_XDECREF(new_val);
@@ -709,109 +829,109 @@ PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>& data)
 }
 
 template <class T, class U>
-PyObject* PythonObjectWrapper::newPyObject(const std::pair<T,U>& data)
+PyObject* ConvertToPyObject<std::pair<T,U> >::newPyObject(const std::pair<T,U>& data)
 {
     // According to Python Doc, since PyTuple_SET_ITEM steals the reference to
     // the item being set, one does not need to Py_XDECREF the inserted object.
     PyObject* newtuple = PyTuple_New(2);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(data.first));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(data.second));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(data.first));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(data.second));
     return newtuple;
 }
 
 template <class T>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T>& data)
+PyObject* ConvertToPyObject<tuple<T> >::newPyObject(const tuple<T>& data)
 {
     PyObject* newtuple= PyTuple_New(1);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
     return newtuple;
 }
 
 template <class T, class U>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U>& data)
+PyObject* ConvertToPyObject<tuple<T,U> >::newPyObject(const tuple<T, U>& data)
 {
     PyObject* newtuple= PyTuple_New(2);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(get<1>(data)));
     return newtuple;
 }
 
 template <class T, class U, class V>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V>& data)
+PyObject* ConvertToPyObject<tuple<T,U,V> >::newPyObject(const tuple<T, U, V>& data)
 {
     PyObject* newtuple= PyTuple_New(3);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
-    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, ConvertToPyObject<V>::newPyObject(get<2>(data)));
     return newtuple;
 }
 
 template <class T, class U, class V, class W>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W>& data)
+PyObject* ConvertToPyObject<tuple<T,U,V,W> >::newPyObject(const tuple<T, U, V, W>& data)
 {
     PyObject* newtuple= PyTuple_New(4);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
-    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
-    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, ConvertToPyObject<V>::newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, ConvertToPyObject<W>::newPyObject(get<3>(data)));
     return newtuple;
 }
 
 template <class T, class U, class V, class W, class X>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W, X>& data)
+PyObject* ConvertToPyObject<tuple<T,U,V,W,X> >::newPyObject(const tuple<T, U, V, W, X>& data)
 {
     PyObject* newtuple= PyTuple_New(5);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
-    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
-    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
-    PyTuple_SET_ITEM(newtuple, 4, newPyObject(get<4>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, ConvertToPyObject<V>::newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, ConvertToPyObject<W>::newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 4, ConvertToPyObject<X>::newPyObject(get<4>(data)));
     return newtuple;
 }
 
 template <class T, class U, class V, class W, class X, class Y>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W, X, Y>& data)
+PyObject* ConvertToPyObject<tuple<T,U,V,W,X,Y> >::newPyObject(const tuple<T, U, V, W, X, Y>& data)
 {
     PyObject* newtuple= PyTuple_New(6);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
-    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
-    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
-    PyTuple_SET_ITEM(newtuple, 4, newPyObject(get<4>(data)));
-    PyTuple_SET_ITEM(newtuple, 5, newPyObject(get<5>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, ConvertToPyObject<V>::newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, ConvertToPyObject<W>::newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 4, ConvertToPyObject<X>::newPyObject(get<4>(data)));
+    PyTuple_SET_ITEM(newtuple, 5, ConvertToPyObject<Y>::newPyObject(get<5>(data)));
     return newtuple;
 }
 
 template <class T, class U, class V, class W, class X, class Y, class Z>
-PyObject* PythonObjectWrapper::newPyObject(const tuple<T, U, V, W, X, Y, Z>& data)
+PyObject* ConvertToPyObject<tuple<T,U,V,W,X,Y,Z> >::newPyObject(const tuple<T, U, V, W, X, Y, Z>& data)
 {
     PyObject* newtuple= PyTuple_New(7);
-    PyTuple_SET_ITEM(newtuple, 0, newPyObject(get<0>(data)));
-    PyTuple_SET_ITEM(newtuple, 1, newPyObject(get<1>(data)));
-    PyTuple_SET_ITEM(newtuple, 2, newPyObject(get<2>(data)));
-    PyTuple_SET_ITEM(newtuple, 3, newPyObject(get<3>(data)));
-    PyTuple_SET_ITEM(newtuple, 4, newPyObject(get<4>(data)));
-    PyTuple_SET_ITEM(newtuple, 5, newPyObject(get<5>(data)));
-    PyTuple_SET_ITEM(newtuple, 6, newPyObject(get<6>(data)));
+    PyTuple_SET_ITEM(newtuple, 0, ConvertToPyObject<T>::newPyObject(get<0>(data)));
+    PyTuple_SET_ITEM(newtuple, 1, ConvertToPyObject<U>::newPyObject(get<1>(data)));
+    PyTuple_SET_ITEM(newtuple, 2, ConvertToPyObject<V>::newPyObject(get<2>(data)));
+    PyTuple_SET_ITEM(newtuple, 3, ConvertToPyObject<W>::newPyObject(get<3>(data)));
+    PyTuple_SET_ITEM(newtuple, 4, ConvertToPyObject<X>::newPyObject(get<4>(data)));
+    PyTuple_SET_ITEM(newtuple, 5, ConvertToPyObject<Y>::newPyObject(get<5>(data)));
+    PyTuple_SET_ITEM(newtuple, 6, ConvertToPyObject<Z>::newPyObject(get<6>(data)));
     return newtuple;
 }
 
 template <class T>
-PyObject* PythonObjectWrapper::newPyObject(const std::vector<T>* data)
+PyObject* ConvertToPyObject<std::vector<T> const* >::newPyObject(const std::vector<T>* data)
 {
     if (data)
-        return newPyObject(*data);
+        return ConvertToPyObject<std::vector<T> >::newPyObject(*data);
     else
-        return newPyObject();
+        return PythonObjectWrapper::newPyObject();
 }
 
 template <class T, class U>
-PyObject* PythonObjectWrapper::newPyObject(const std::map<T,U>* data)
+PyObject* ConvertToPyObject<std::map<T,U> const* >::newPyObject(const std::map<T,U>* data)
 {
     if (data)
-        return newPyObject(*data);
+        return ConvertToPyObject<std::map<T,U> >::newPyObject(*data);
     else
-        return newPyObject();
+        return PythonObjectWrapper::newPyObject();
 }
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v);

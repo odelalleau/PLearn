@@ -172,7 +172,14 @@ public:
     //! Set an object into the global environment.
     void setGlobalObject(const string& object_name,
                          const PythonObjectWrapper& pow);
-    
+    template<typename T>
+    void setGlobalObject(const string& object_name,
+                         const T& o)
+    {
+        setGlobalObject(object_name, PythonObjectWrapper(o));
+    }
+
+
     
     //#####  Function Call Interface  #########################################
 
@@ -364,7 +371,7 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const T& arg1) const
 {
     TVec<PythonObjectWrapper> args(1);
-    args[0]= arg1;
+    args[0]= PythonObjectWrapper(arg1);
     return invoke(function_name, args);
 /*
 
@@ -414,8 +421,8 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const U& arg2) const
 {
     TVec<PythonObjectWrapper> args(2);
-    args[0]= arg1;
-    args[1]= arg2;
+    args[0]= PythonObjectWrapper(arg1);
+    args[1]= PythonObjectWrapper(arg2);
     return invoke(function_name, args);
 /*
     PythonGlobalInterpreterLock gil;         // For thread-safety
@@ -467,9 +474,9 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const V& arg3) const
 {
     TVec<PythonObjectWrapper> args(3);
-    args[0]= arg1;
-    args[1]= arg2;
-    args[2]= arg3;
+    args[0]= PythonObjectWrapper(arg1);
+    args[1]= PythonObjectWrapper(arg2);
+    args[2]= PythonObjectWrapper(arg3);
     return invoke(function_name, args);
 
 /*
@@ -526,10 +533,10 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const W& arg4) const
 {
     TVec<PythonObjectWrapper> args(4);
-    args[0]= arg1;
-    args[1]= arg2;
-    args[2]= arg3;
-    args[3]= arg4;
+    args[0]= PythonObjectWrapper(arg1);
+    args[1]= PythonObjectWrapper(arg2);
+    args[2]= PythonObjectWrapper(arg3);
+    args[3]= PythonObjectWrapper(arg4);
     return invoke(function_name, args);
 /*
     PythonGlobalInterpreterLock gil;         // For thread-safety
@@ -588,11 +595,11 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const X& arg5) const
 {
     TVec<PythonObjectWrapper> args(5);
-    args[0]= arg1;
-    args[1]= arg2;
-    args[2]= arg3;
-    args[3]= arg4;
-    args[4]= arg5;
+    args[0]= PythonObjectWrapper(arg1);
+    args[1]= PythonObjectWrapper(arg2);
+    args[2]= PythonObjectWrapper(arg3);
+    args[3]= PythonObjectWrapper(arg4);
+    args[4]= PythonObjectWrapper(arg5);
     return invoke(function_name, args);
 /*
     PythonGlobalInterpreterLock gil;         // For thread-safety
@@ -655,12 +662,12 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const Y& arg6) const
 {
     TVec<PythonObjectWrapper> args(6);
-    args[0]= arg1;
-    args[1]= arg2;
-    args[2]= arg3;
-    args[3]= arg4;
-    args[4]= arg5;
-    args[5]= arg6;
+    args[0]= PythonObjectWrapper(arg1);
+    args[1]= PythonObjectWrapper(arg2);
+    args[2]= PythonObjectWrapper(arg3);
+    args[3]= PythonObjectWrapper(arg4);
+    args[4]= PythonObjectWrapper(arg5);
+    args[5]= PythonObjectWrapper(arg6);
     return invoke(function_name, args);
 /*
     PythonGlobalInterpreterLock gil;         // For thread-safety
@@ -729,13 +736,13 @@ PythonCodeSnippet::invoke(const char* function_name,
                           const Z& arg7) const
 {
     TVec<PythonObjectWrapper> args(7);
-    args[0]= arg1;
-    args[1]= arg2;
-    args[2]= arg3;
-    args[3]= arg4;
-    args[4]= arg5;
-    args[5]= arg6;
-    args[6]= arg7;
+    args[0]= PythonObjectWrapper(arg1);
+    args[1]= PythonObjectWrapper(arg2);
+    args[2]= PythonObjectWrapper(arg3);
+    args[3]= PythonObjectWrapper(arg4);
+    args[4]= PythonObjectWrapper(arg5);
+    args[5]= PythonObjectWrapper(arg6);
+    args[6]= PythonObjectWrapper(arg7);
     return invoke(function_name, args);
 /*
     PythonGlobalInterpreterLock gil;         // For thread-safety

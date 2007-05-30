@@ -42,10 +42,15 @@ class pl:
     class __metaclass__(type):
         def __getattr__(cls, name):
             def newObj(**kwargs):
-                obj= newObject(name+'()')
+                call_build= True
+                obj= newObjectFromClassname(name)
                 for k in kwargs.keys():
-                    obj.__setattr__(k, kwargs[k])
-                obj.build()
+                    if k=='__call_build':
+                        call_build= kwargs[k]
+                    else:
+                        obj.__setattr__(k, kwargs[k])
+                if call_build:
+                    obj.build()
                 return obj
             return newObj
 

@@ -987,12 +987,24 @@ void callFunction(const string& funcname, int nargs, PStream& io)
 */
 
 
+
+Object* newObjectFromClassname(const string& classname)
+{
+    return TypeFactory::instance().newObject(classname);
+}
+
 BEGIN_DECLARE_REMOTE_FUNCTIONS
 
     declareFunction("newObject", &newObject,
                     (BodyDoc("Returns PLearn object from a string description.\n"),
                      ArgDoc("representation", 
                             "the string representation of the object"),
+                     RetDoc ("newly created object")));
+
+    declareFunction("newObjectFromClassname", &newObjectFromClassname,
+                    (BodyDoc("Returns PLearn object from a class name (string.)\n"),
+                     ArgDoc("classname", 
+                            "the class of the object, as a string"),
                      RetDoc ("newly created object")));
 
     declareFunction("loadObject", &loadObject,

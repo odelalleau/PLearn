@@ -280,6 +280,11 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
                  "upon setting the training set\n")));
 
     declareMethod(
+        rmm, "getTrainingSet", &PLearner::getTrainingSet,
+        (BodyDoc("Returns the current training set."),
+         RetDoc ("The trainset")));
+
+    declareMethod(
         rmm, "setExperimentDirectory", &PLearner::setExperimentDirectory,
         (BodyDoc("The experiment directory is the directory in which files related to\n"
                  "this model are to be saved.  If it is an empty string, it is understood\n"

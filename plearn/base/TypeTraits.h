@@ -107,6 +107,20 @@ public:
     { return 0xFF; }
 };
 
+template<class T>
+class TypeTraits<T const>
+{
+public:
+    static inline string name() 
+    { return TypeTraits<T>::name()+" const"; }
+
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
+
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
+};
+
 #define DECLARE_TYPE_TRAITS_FOR_BASETYPE(T,LITTLE_ENDIAN_TYPECODE,BIG_ENDIAN_TYPECODE)  \
 template<>                                                                              \
 class TypeTraits<T>                                                                     \

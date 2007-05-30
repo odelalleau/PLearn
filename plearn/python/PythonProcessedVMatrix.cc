@@ -235,7 +235,7 @@ PythonProcessedVMatrix::getSourceRow(const TVec<PythonObjectWrapper>& args) cons
 
     sourcerow.resize(source->width());
     source->getRow(i, sourcerow);
-    return sourcerow;
+    return PythonObjectWrapper(sourcerow);
 }
 
 

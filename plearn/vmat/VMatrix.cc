@@ -225,6 +225,14 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Saves this matrix as a .pmat file."),
          ArgDoc ("pmatfile", "Path of the file to create.")));
 
+    declareMethod(
+        rmm, "subMat", &VMatrix::subMat,
+        (BodyDoc("Return a sub-matrix from a VMatrix\n"),
+         ArgDoc ("i", "start row"),
+         ArgDoc ("j", "start col"),
+         ArgDoc ("l", "length"),
+         ArgDoc ("w", "width"),
+         RetDoc ("The sub-VMatrix")));
 }
 
 

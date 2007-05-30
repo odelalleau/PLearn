@@ -1093,6 +1093,9 @@ inline Object* newObject(const string& representation)
     return readObject(in);
 }
 
+Object* newObjectFromClassname(const string& classname);
+
+
 inline PStream &operator>>(PStream &in, Object &o)
 {
     o.newread(in);
