@@ -400,6 +400,7 @@ void RBMModule::computeHiddenActivations(const Mat& visible)
         int up = connection->up_size;
         int down = connection->down_size;
         PLASSERT( weights->width() == up * down  );
+        hidden_layer->activations.resize(visible.length(),hidden_layer->size);
         for(int i=0; i<visible.length(); i++)
         {
             connection->setAllWeights(Mat(up, down, (*weights)(i)));
@@ -463,6 +464,7 @@ void RBMModule::computeVisibleActivations(const Mat& hidden,
             int up = connection->up_size;
             int down = connection->down_size;
             PLASSERT( weights->width() == up * down  );
+            visible_layer->activations.resize(hidden.length(),visible_layer->size);
             for(int i=0; i<hidden.length(); i++)
             {
                 connection->setAllWeights(Mat(up,down,(*weights)(i)));
@@ -1102,7 +1104,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                   reconstruction_error);
         //int mbs = reconstruction_error_grad->length();
 
-        PLCHECK_MSG( weights, "In RBMModule::bpropAccUpdate(): reconstruction cost "
+        PLCHECK_MSG( !weights, "In RBMModule::bpropAccUpdate(): reconstruction cost "
                      "for conditional weights is not implemented");
 
         // Backprop reconstruction gradient
