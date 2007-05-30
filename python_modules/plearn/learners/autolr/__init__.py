@@ -1,8 +1,12 @@
 from math import *
+from numarray import *
+from plearn.bridge import *
 
 # YET TO BE DOCUMENTED AND CLEANED UP CODE
 
-def deepcopy(plearnobject): # ugly way to copy until done properly with PLearn's deepcopy
+
+# ugly way to copy until done properly with PLearn's deepcopy
+def deepcopy(plearnobject):
     # actually not a deep-copy, only copy options
     if useserver:
         raise NotImplementedError
@@ -16,7 +20,8 @@ def train_with_schedule(learner,
                         stages,         # corresponding list of stages associated with each above learning rate
                         trainset,testsets,expdir,
                         cost_to_select_best=0,
-                        selected_costnames = False):
+                        selected_costnames = False,
+                        logfile=False):
     costnames = learner.getTestCostNames()
     if not selected_costnames:
         # use all cost names if not user-provided
@@ -41,12 +46,14 @@ def train_with_schedule(learner,
         for j in range(0,n_tests):
             ts = pl.VecStatsCollector()
             learner.test(testsets[j],ts,0,0)
-            print >>logfile, "At stage ",learner.stage," test" + str(j+1),": ",
+            if logfile:
+                print >>logfile, "At stage ",learner.stage," test" + str(j+1),": ",
             for k in range(0,n_costs):
                 err = ts.getStat("E["+str(k)+"]")
                 results[i,j*n_costs+k+1]=err
                 costname = costnames[cost_indices[k]]
-                print >>logfile, costname, "=", err,
+                if logfile:
+                    print >>logfile, costname, "=", err,
                 if k==cost_to_select_best and j==0 and err < best_err:
                     best_err = err
                     learner.save(expdir+"/"+"best_learner.psave","plearn_ascii")
@@ -54,7 +61,8 @@ def train_with_schedule(learner,
                     plot(results[0:i+1,0],results[0:i+1,
                          j*n_costs+k+1],colors[k%7]+styles[j%15],
                          label='test'+str(j+1)+':'+costname)
-            print >>logfile
+            if logfile:
+                print >>logfile
         if interactive and i==0:
             legend()
     return (['stage']+selected_costnames,results)
@@ -65,6 +73,7 @@ def choose_initial_lr(learner,trainset,testset,lr_option,
                       cost_to_select_best=0,
                       initial_lr=0.01,
                       lr_steps=exp(log(10)/2)):
+
     log_initial_lr=log(initial_lr)
     log_steps=log(lr_steps)
 
@@ -103,7 +112,6 @@ def choose_initial_lr(learner,trainset,testset,lr_option,
                 best=bottom
     return (lr(best),perfs)
 
-    
 def train_adapting_lr(learner,
                       epoch,nstages,
                       trainset,testsets,expdir,
@@ -113,7 +121,26 @@ def train_adapting_lr(learner,
                       cost_to_select_best=0,
                       save_best=False,
                       selected_costnames = False,
-                      lr_steps=exp(log(10)/2)):
+                      min_epochs_to_delete = 2,
+                      lr_steps=exp(log(10)/2),
+                      logfile=False):
+
+    min_epochs_to_delete = max(1,min_epochs_to_delete) # although 1 is probably too small
+        
+    # used within the dominates function to predict future value of the error
+    def dominates(c1,c2,current_t):
+        """c1 has a lower last error than c2, but
+           will c2 eventually cross c1? if yes return False o/w return True"""
+        start_t = max(all_start[c1],all_start[c2])
+        delta_t = current_t+1-start_t
+        curve1 = all_results[c1][start_t:current_t+1,cost_to_select_best]
+        curve2 = all_results[c2][start_t:current_t+1,cost_to_select_best]
+        # wait to have at least 3 points in curve =2 epochs since split between the candidates
+        if delta_t-1<min_epochs_to_delete or curve1[-1]>=curve2[-1]:
+            return False
+        return curve1[-1]-curve1[-2]  < curve2[-1]-curve2[-2]
+        #return all_last_err[j]>all_last_err[i] and all_slope[j]>=all_slope[i]
+    
     costnames = learner.getTestCostNames()
     if not selected_costnames:
         # use all cost names if not user-provided
@@ -128,7 +155,7 @@ def train_adapting_lr(learner,
     all_results = [zeros([n_epochs,2+n_tests*n_costs],Float32)]
     all_candidates = [learner]
     all_last_err = [best_err]
-    all_slope = [0]
+    #all_slope = [0]
     all_lr = [initial_lr]
     all_start = [0]
     actives = [0]
@@ -138,7 +165,8 @@ def train_adapting_lr(learner,
         styles=['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's', '+', 'x', 'D']
     initial_stage=learner.stage
     for (s,i) in zip(range(epoch,nstages+epoch,epoch),range(n_epochs)):
-        print >>logfile, "At stage ", initial_stage+s
+        if logfile:
+            print >>logfile, "At stage ", initial_stage+s
         for active in actives:
             candidate = all_candidates[active]
             results = all_results[active]
@@ -149,16 +177,19 @@ def train_adapting_lr(learner,
             candidate.train()
             results[i,0] = candidate.stage
             results[i,1] = all_lr[active]
-            print >>logfile, "candidate ",active,":",
+            if logfile:
+                print >>logfile, "candidate ",active,":",
             for j in range(0,n_tests):
                 ts = pl.VecStatsCollector()
                 candidate.test(testsets[j],ts,0,0)
-                print >>logfile, " test" + str(j+1),": ",
+                if logfile:
+                    print >>logfile, " test" + str(j+1),": ",
                 for k in range(0,n_costs):
                     err = ts.getStat("E["+str(k)+"]")
                     results[i,j*n_costs+k+2]=err
                     costname = costnames[cost_indices[k]]
-                    print >>logfile, costname, "=", err,
+                    if logfile:
+                        print >>logfile, costname, "=", err,
                     if k==cost_to_select_best and j==0:
                         if interactive:
                             start = all_start[active]
@@ -167,28 +198,31 @@ def train_adapting_lr(learner,
                                  label='candidate'+str(active)+':'+costname)
                             if active==0 and i==0:
                                 legend()
-                        if s>epoch:
-                                all_slope[active]=0.5*all_slope[active]+0.5*(err-all_last_err[active])
+                        #if s>epoch:
+                        #        all_slope[active]=0.5*all_slope[active]+0.5*(err-all_last_err[active])
                         all_last_err[active]=err
                         if err < best_err:
                             best_err = err
                             best_active = active
                             if save_best:
                                 candidate.save(expdir+"/"+"best_learner.psave","plearn_binary")
-            print >>logfile
-            logfile.flush()
+            if logfile:
+                print >>logfile
+                logfile.flush()
         if previous_best_err > best_err:
             previous_best_err = best_err
-            print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
+            if logfile:
+                print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
         if s%(epoch*nskip)==0 and s<nstages:
             best_active = argmin(all_last_err)
             # remove candidates that are worse and have higher slope
-            best_slope = all_slope[best_active]
+            #best_slope = all_slope[best_active]
             best_last = all_last_err[best_active]
             ndeleted = 0
             for (a,i) in zip(actives,range(len(actives))):
-                if a!=best_active and all_last_err[a]>best_last and all_slope[a]>=best_slope:
-                    print >>logfile,"REMOVE candidate ",a
+                if a!=best_active and dominates(best_active,a,i):
+                    if logfile:
+                        print >>logfile,"REMOVE candidate ",a
                     all_candidates[a]=None # hopefully this destroys the candidate
                     del actives[i-ndeleted]
                     ndeleted+=1
@@ -199,11 +233,12 @@ def train_adapting_lr(learner,
             all_candidates.append(new_candidate)
             all_results.append(all_results[best_active].copy())
             all_last_err.append(best_last)
-            all_slope.append(best_slope)
+            #all_slope.append(best_slope)
             all_lr.append(all_lr[best_active]/lr_steps) # always try a smaller learning rate
             all_start.append(i)
-            print >>logfile,"CREATE candidate ", new_i, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_i]
-            logfile.flush()
+            if logfile:
+                print >>logfile,"CREATE candidate ", new_i, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_i]
+                logfile.flush()
     if save_best:
         final_model = loadObject(expdir+"/"+"best_learner.psave")
     else:
