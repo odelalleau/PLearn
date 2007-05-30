@@ -8,7 +8,7 @@ from plearn.bridge import *
 # ugly way to copy until done properly with PLearn's deepcopy
 def deepcopy(plearnobject):
     # actually not a deep-copy, only copy options
-    if useserver:
+    if plearn.bridgemode.useserver:
         raise NotImplementedError
     else:
         return newObject(str(plearnobject))
@@ -33,7 +33,7 @@ def train_with_schedule(learner,
     n_costs = len(costnames)
     results = zeros([n_train,1+n_tests*n_costs],Float32)
     best_err = 1e10
-    if interactive:
+    if plearn.bridgemode.interactive:
         clf()
     colors="bgrcmyk"
     styles=['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's', '+', 'x', 'D']
@@ -57,13 +57,13 @@ def train_with_schedule(learner,
                 if k==cost_to_select_best and j==0 and err < best_err:
                     best_err = err
                     learner.save(expdir+"/"+"best_learner.psave","plearn_ascii")
-                if interactive:
+                if plearn.bridgemode.interactive:
                     plot(results[0:i+1,0],results[0:i+1,
                          j*n_costs+k+1],colors[k%7]+styles[j%15],
                          label='test'+str(j+1)+':'+costname)
             if logfile:
                 print >>logfile
-        if interactive and i==0:
+        if plearn.bridgemode.interactive and i==0:
             legend()
     return (['stage']+selected_costnames,results)
 
@@ -133,8 +133,8 @@ def train_adapting_lr(learner,
            will c2 eventually cross c1? if yes return False o/w return True"""
         start_t = max(all_start[c1],all_start[c2])
         delta_t = current_t+1-start_t
-        curve1 = all_results[c1][start_t:current_t+1,cost_to_select_best]
-        curve2 = all_results[c2][start_t:current_t+1,cost_to_select_best]
+        curve1 = all_results[c1][start_t:current_t+1,2+cost_to_select_best]
+        curve2 = all_results[c2][start_t:current_t+1,2+cost_to_select_best]
         # wait to have at least 3 points in curve =2 epochs since split between the candidates
         if delta_t-1<min_epochs_to_delete or curve1[-1]>=curve2[-1]:
             return False
@@ -159,14 +159,16 @@ def train_adapting_lr(learner,
     all_lr = [initial_lr]
     all_start = [0]
     actives = [0]
-    if interactive:
+    if plearn.bridgemode.interactive:
         clf()
         colors="bgrcmyk"
         styles=['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's', '+', 'x', 'D']
     initial_stage=learner.stage
-    for (s,i) in zip(range(epoch,nstages+epoch,epoch),range(n_epochs)):
+    for (s,t) in zip(range(epoch,nstages+epoch,epoch),range(n_epochs)):
         if logfile:
             print >>logfile, "At stage ", initial_stage+s
+        print "actives now: ",actives
+        print >>logfile, "actives now: ",actives
         for active in actives:
             candidate = all_candidates[active]
             results = all_results[active]
@@ -175,8 +177,8 @@ def train_adapting_lr(learner,
                 candidate.changeOptions({lr_option:str(all_lr[active])})
             candidate.setTrainingSet(trainset,False)
             candidate.train()
-            results[i,0] = candidate.stage
-            results[i,1] = all_lr[active]
+            results[t,0] = candidate.stage
+            results[t,1] = all_lr[active]
             if logfile:
                 print >>logfile, "candidate ",active,":",
             for j in range(0,n_tests):
@@ -186,18 +188,16 @@ def train_adapting_lr(learner,
                     print >>logfile, " test" + str(j+1),": ",
                 for k in range(0,n_costs):
                     err = ts.getStat("E["+str(k)+"]")
-                    results[i,j*n_costs+k+2]=err
+                    results[t,j*n_costs+k+2]=err
                     costname = costnames[cost_indices[k]]
                     if logfile:
                         print >>logfile, costname, "=", err,
                     if k==cost_to_select_best and j==0:
-                        if interactive:
+                        if plearn.bridgemode.interactive:
                             start = all_start[active]
-                            plot(results[start:i+1,0],
-                                 results[start:i+1,j*n_costs+k+2],colors[active%7]+styles[j%15],
+                            plot(results[start:t+1,0],
+                                 results[start:t+1,j*n_costs+k+2],colors[active%7]+styles[j%15],
                                  label='candidate'+str(active)+':'+costname)
-                            if active==0 and i==0:
-                                legend()
                         #if s>epoch:
                         #        all_slope[active]=0.5*all_slope[active]+0.5*(err-all_last_err[active])
                         all_last_err[active]=err
@@ -219,25 +219,27 @@ def train_adapting_lr(learner,
             #best_slope = all_slope[best_active]
             best_last = all_last_err[best_active]
             ndeleted = 0
-            for (a,i) in zip(actives,range(len(actives))):
-                if a!=best_active and dominates(best_active,a,i):
+            for (a,j) in zip(actives,range(len(actives))):
+                if a!=best_active and dominates(best_active,a,t):
                     if logfile:
                         print >>logfile,"REMOVE candidate ",a
                     all_candidates[a]=None # hopefully this destroys the candidate
-                    del actives[i-ndeleted]
+                    del actives[j-ndeleted]
                     ndeleted+=1
             # add a candidate with slightly lower learning rate than best_active, starting from it
+            if plearn.bridgemode.interactive:
+                legend()
             new_candidate = deepcopy(all_candidates[best_active])
-            new_i = len(all_candidates)
-            actives.append(new_i)
+            new_a = len(all_candidates)
+            actives.append(new_a)
             all_candidates.append(new_candidate)
             all_results.append(all_results[best_active].copy())
             all_last_err.append(best_last)
             #all_slope.append(best_slope)
             all_lr.append(all_lr[best_active]/lr_steps) # always try a smaller learning rate
-            all_start.append(i)
+            all_start.append(t)
             if logfile:
-                print >>logfile,"CREATE candidate ", new_i, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_i]
+                print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_a]
                 logfile.flush()
     if save_best:
         final_model = loadObject(expdir+"/"+"best_learner.psave")

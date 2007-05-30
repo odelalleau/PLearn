@@ -30,7 +30,6 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-import plearn.plextmode
 from plearn.pyext.plext import *
    
 from plearn.pyplearn.plargs import *
