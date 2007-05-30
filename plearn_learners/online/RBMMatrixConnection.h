@@ -188,7 +188,10 @@ public:
     virtual void fprop(const Vec& input, const Mat& rbm_weights,
                        Vec& output) const;
 
-    //! set the internal weight values to rbm_weights (copy)
+    //! provide the internal weight values (not a copy)
+    virtual void getAllWeights(Mat& rbm_weights) const;
+
+    //! set the internal weight values to rbm_weights (not a copy)
     virtual void setAllWeights(const Mat& rbm_weights);
 
     //! this version allows to obtain the input gradient as well
@@ -205,23 +208,26 @@ public:
 
     //! back-propagates the output gradient to the input and the weights
     //! (the weights are not updated)
-    virtual void bpropUpdate(const Vec& input, const Mat& rbm_weights,
-                             const Vec& output,
-                             Vec& input_gradient, Mat& rbm_weights_gradient,
-                             const Vec& output_gradient,
-                             bool accumulate = false);
-
+    virtual void petiteCulotteOlivierUpdate(
+        const Vec& input, const Mat& rbm_weights,
+        const Vec& output,
+        Vec& input_gradient, Mat& rbm_weights_gradient,
+        const Vec& output_gradient,
+        bool accumulate = false);
+    
     //! Computes the contrastive divergence gradient with respect to the weights
     //! It should be noted that bpropCD does not call clearstats().
-    virtual void bpropCD(Mat& weights_gradient);
+    virtual void petiteCulotteOlivierCD(Mat& weights_gradient,
+                                        bool accumulate = false);
     
     //! Computes the contrastive divergence gradient with respect to the weights
     //! given the positive and negative phase values.
-    virtual void bpropCD(const Vec& pos_down_values,
-                         const Vec& pos_up_values,
-                         const Vec& neg_down_values,
-                         const Vec& neg_up_values,
-                         Mat& weights_gradient);
+    virtual void petiteCulotteOlivierCD(const Vec& pos_down_values,
+                                        const Vec& pos_up_values,
+                                        const Vec& neg_down_values,
+                                        const Vec& neg_up_values,
+                                        Mat& weights_gradient,
+                                        bool accumulate = false);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from

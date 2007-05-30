@@ -244,6 +244,7 @@ void RBMModule::build_()
     addPortName("hidden_sample");
     addPortName("energy");
     addPortName("hidden_bias"); 
+    addPortName("weights"); 
     addPortName("neg_log_likelihood");
     if(reconstruction_connection)
     {
@@ -392,10 +393,34 @@ void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
 //////////////////////////////
 void RBMModule::computeHiddenActivations(const Mat& visible)
 {
-    connection->setAsDownInputs(visible);
-    hidden_layer->getAllActivations(connection, 0, true);
-    if (hidden_bias && !hidden_bias->isEmpty())
-        hidden_layer->activations += *hidden_bias;
+    if(weights && !weights->isEmpty())
+    {
+        Mat old_weights;
+        Vec old_activation;
+        connection->getAllWeights(old_weights);
+        old_activation = hidden_layer->activation;
+        int up = connection->up_size;
+        int down = connection->down_size;
+        PLASSERT( weights->width() == up * down  );
+        for(int i=0; i<visible.length(); i++)
+        {
+            connection->setAllWeights(Mat(up, down, (*weights)(i)));
+            connection->setAsDownInput(visible(i));
+            hidden_layer->activation = hidden_layer->activations(i);
+            hidden_layer->getAllActivations(connection, 0, false);
+            if (hidden_bias && !hidden_bias->isEmpty())
+                hidden_layer->activation += (*hidden_bias)(i);
+        }
+        connection->setAllWeights(old_weights);
+        hidden_layer->activation = old_activation;
+    }
+    else
+    {
+        connection->setAsDownInputs(visible);
+        hidden_layer->getAllActivations(connection, 0, true);
+        if (hidden_bias && !hidden_bias->isEmpty())
+            hidden_layer->activations += *hidden_bias;
+    }
 }
 
 ///////////////////////////////////////////
@@ -431,8 +456,30 @@ void RBMModule::computeVisibleActivations(const Mat& hidden,
     }
     else
     {
-        connection->setAsUpInputs(hidden);
-        visible_layer->getAllActivations(connection, 0, true);
+        if(weights && !weights->isEmpty())
+        {
+            Mat old_weights;
+            Vec old_activation;
+            connection->getAllWeights(old_weights);
+            old_activation = visible_layer->activation;
+            int up = connection->up_size;
+            int down = connection->down_size;
+            PLASSERT( weights->width() == up * down  );
+            for(int i=0; i<hidden.length(); i++)
+            {
+                connection->setAllWeights(Mat(up,down,(*weights)(i)));
+                connection->setAsUpInput(hidden(i));
+                visible_layer->activation = visible_layer->activations(i);
+                visible_layer->getAllActivations(connection, 0, false);
+            }
+            connection->setAllWeights(old_weights);
+            visible_layer->activation = old_activation;
+        }
+        else
+        {
+            connection->setAsUpInputs(hidden);
+            visible_layer->getAllActivations(connection, 0, true);
+        }
     }
 }
 
@@ -481,6 +528,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* energy = ports_value[getPortIndex("energy")];
     Mat* neg_log_likelihood = ports_value[getPortIndex("neg_log_likelihood")];
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
+    weights = ports_value[getPortIndex("weights")];
     Mat* visible_reconstruction = 0;
     Mat* visible_reconstruction_activations = 0;
     Mat* reconstruction_error = 0;
@@ -867,7 +915,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* hidden = ports_value[getPortIndex("hidden.state")];
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
     Mat* reconstruction_error_grad = 0;
-    Mat* hidden_bias_grad = ports_gradient[getPortIndex("hidden_bias")];    
+    Mat* hidden_bias_grad = ports_gradient[getPortIndex("hidden_bias")];
+    weights = ports_value[getPortIndex("weights")]; 
+    Mat* weights_grad = ports_gradient[getPortIndex("weights")];    
 
     if(reconstruction_connection)
         reconstruction_error_grad = 
@@ -909,9 +959,40 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 store_visible_grad = &visible_exp_grad;
             }
             store_visible_grad->resize(mbs,visible_layer->size);
-            connection->bpropUpdate(
+            
+            if (weights_grad)
+            {
+                int up = connection->up_size;
+                int down = connection->down_size;
+                PLASSERT( weights && !weights->isEmpty() &&
+                          weights_grad->isEmpty() &&
+                          weights_grad->width() == up * down );
+                weights_grad->resize(mbs, up * down);
+                Mat w, wg;
+                Vec v,h,vg,hg;
+                for(int i=0; i<mbs; i++)
+                {
+                    w = Mat(up, down,(*weights)(i));
+                    wg = Mat(up, down,(*weights_grad)(i));
+                    v = (*visible)(i);
+                    h = (*hidden_act)(i);
+                    vg = (*store_visible_grad)(i);
+                    hg = hidden_act_grad(i);
+                    connection->petiteCulotteOlivierUpdate(
+                        v,
+                        w,
+                        h,
+                        vg,
+                        wg,
+                        hg,true);
+                }
+            }
+            else
+            {
+                connection->bpropUpdate(
                     *visible, *hidden_act, *store_visible_grad,
                     hidden_act_grad, true);
+            }
             partition_function_is_stale = true;
         }
     } 
@@ -961,9 +1042,38 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             }
             // Perform update.
             visible_layer->update(*visible, *negative_phase_visible_samples);
-            connection->update(*visible, *hidden,
-                               *negative_phase_visible_samples,
-                               *negative_phase_hidden_expectations);
+            if (weights_grad)
+            {
+                int up = connection->up_size;
+                int down = connection->down_size;
+                PLASSERT( weights && !weights->isEmpty() &&
+                          weights_grad->isEmpty() &&
+                          weights_grad->width() == up * down );
+                weights_grad->resize(mbs, up * down);
+                    
+                Mat wg;
+                Vec vp, hp, vn, hn;
+                for(int i=0; i<mbs; i++)
+                {
+                    vp = (*visible)(i);
+                    hp = (*hidden)(i);
+                    vn = (*negative_phase_visible_samples)(i);
+                    hn = (*negative_phase_hidden_expectations)(i);
+                    wg = Mat(up, down,(*weights_grad)(i));
+                    connection->petiteCulotteOlivierCD(
+                        vp, hp,
+                        vn,
+                        hn,
+                        wg,
+                        true);
+                }
+            }
+            else
+            {
+                connection->update(*visible, *hidden,
+                                   *negative_phase_visible_samples,
+                                   *negative_phase_hidden_expectations);
+            }
             hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
             if (hidden_bias_grad)
             {
@@ -992,6 +1102,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                   visible_reconstruction && visible_reconstruction_activations &&
                   reconstruction_error);
         int mbs = reconstruction_error_grad->length();
+
+        PLCHECK_MSG( weights, "In RBMModule::bpropAccUpdate(): reconstruction cost "
+                     "for conditional weights is not implemented");
 
         // Backprop reconstruction gradient
 

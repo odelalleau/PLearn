@@ -281,6 +281,48 @@ void RBMConnection::fprop(const Vec& input, Vec& output) const
     computeProduct( 0, output_size, output );
 }
 
+void RBMConnection::getAllWeights(Mat& rbm_weights) const
+{
+    PLERROR("In RBMConnection::getAllWeights(): not implemented");
+}
+
+void RBMConnection::setAllWeights(const Mat& rbm_weights) 
+{
+    PLERROR("In RBMConnection::setAllWeights(): not implemented");
+}
+
+void RBMConnection::petiteCulotteOlivierUpdate(
+    const Vec& input, const Mat& rbm_weights,
+    const Vec& output,
+    Vec& input_gradient, 
+    Mat& rbm_weights_gradient,
+    const Vec& output_gradient,
+    bool accumulate)
+{
+    PLERROR("In RBMConnection::bpropUpdate(): not implemented");
+}
+
+ 
+/////////////
+// bpropCD //
+/////////////
+void RBMConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
+                                           bool accumulate)
+{
+    PLERROR("In RBMConnection::petiteCulotteOlivierCD(): not implemented");
+}
+
+void RBMConnection::petiteCulotteOlivierCD( const Vec& pos_down_values, 
+                                            const Vec& pos_up_values,   
+                                            const Vec& neg_down_values, 
+                                            const Vec& neg_up_values, 
+                                            Mat& weights_gradient,
+                                            bool accumulate)
+{
+    PLERROR("In RBMConnection::petiteCulotteOlivierCD(): not implemented");
+}
+
+
 } // end of namespace PLearn
 
 

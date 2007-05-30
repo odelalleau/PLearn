@@ -486,13 +486,20 @@ void RBMMatrixConnection::fprop(const Vec& input, const Mat& rbm_weights,
 }
 
 ///////////////////
+// getAllWeights //
+///////////////////
+void RBMMatrixConnection::getAllWeights(Mat& rbm_weights) const
+{
+    rbm_weights = weights;
+}
+
+///////////////////
 // setAllWeights //
 ///////////////////
 void RBMMatrixConnection::setAllWeights(const Mat& rbm_weights)
 {
-    weights << rbm_weights;
+    weights = rbm_weights;
 }
-
 
 /////////////////
 // bpropUpdate //
@@ -556,12 +563,13 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
             -learning_rate / inputs.length(), 1.);
 }
 
-void RBMMatrixConnection::bpropUpdate(const Vec& input, const Mat& rbm_weights,
-                                      const Vec& output,
-                                      Vec& input_gradient, 
-                                      Mat& rbm_weights_gradient,
-                                      const Vec& output_gradient,
-                                      bool accumulate)
+void RBMMatrixConnection::petiteCulotteOlivierUpdate(
+    const Vec& input, const Mat& rbm_weights,
+    const Vec& output,
+    Vec& input_gradient, 
+    Mat& rbm_weights_gradient,
+    const Vec& output_gradient,
+    bool accumulate)
 {
     PLASSERT( input.size() == down_size );
     PLASSERT( output.size() == up_size );
@@ -598,7 +606,8 @@ void RBMMatrixConnection::bpropUpdate(const Vec& input, const Mat& rbm_weights,
 /////////////
 // bpropCD //
 /////////////
-void RBMMatrixConnection::bpropCD(Mat& weights_gradient)
+void RBMMatrixConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
+                                                 bool accumulate)
 {
     int l = weights_gradient.length();
     int w = weights_gradient.width();
@@ -610,18 +619,29 @@ void RBMMatrixConnection::bpropCD(Mat& weights_gradient)
     int wps_mod = weights_pos_stats.mod();
     int wns_mod = weights_neg_stats.mod();
     
-    for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
-        for( int j=0 ; j<w ; j++ )
-            w_i[j] = wps_i[j]/pos_count - wns_i[j]/neg_count;
+    if(accumulate)
+    {
+        for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
+            for( int j=0 ; j<w ; j++ )
+                w_i[j] += wps_i[j]/pos_count - wns_i[j]/neg_count;
+    }
+    else
+    {
+        for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
+            for( int j=0 ; j<w ; j++ )
+                w_i[j] = wps_i[j]/pos_count - wns_i[j]/neg_count;
+    }
 }
 
 // Instead of using the statistics, we assume we have only one markov chain
 // runned and we update the parameters from the first 4 values of the chain
-void RBMMatrixConnection::bpropCD( const Vec& pos_down_values, // v_0
-                                   const Vec& pos_up_values,   // h_0
-                                   const Vec& neg_down_values, // v_1
-                                   const Vec& neg_up_values, // h_1
-                                   Mat& weights_gradient) 
+void RBMMatrixConnection::petiteCulotteOlivierCD( 
+    const Vec& pos_down_values, // v_0
+    const Vec& pos_up_values,   // h_0
+    const Vec& neg_down_values, // v_1
+    const Vec& neg_up_values, // h_1
+    Mat& weights_gradient,
+    bool accumulate) 
 {
     int l = weights.length();
     int w = weights.width();
@@ -637,9 +657,18 @@ void RBMMatrixConnection::bpropCD( const Vec& pos_down_values, // v_0
     real* ndv = neg_down_values.data();
     int w_mod = weights_gradient.mod();
 
-    for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
-        for( int j=0 ; j<w ; j++ )
-            w_i[j] =  *puv_i * pdv[j] - *nuv_i * ndv[j] ;
+    if(accumulate)
+    {
+        for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
+            for( int j=0 ; j<w ; j++ )
+                w_i[j] +=  *puv_i * pdv[j] - *nuv_i * ndv[j] ;
+    }
+    else
+    {
+        for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
+            for( int j=0 ; j<w ; j++ )
+                w_i[j] =  *puv_i * pdv[j] - *nuv_i * ndv[j] ;
+    }
 }
 
 ////////////

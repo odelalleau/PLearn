@@ -188,7 +188,35 @@ public:
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
+    //! provide the internal weight values (not a copy)
+    virtual void getAllWeights(Mat& rbm_weights) const;
 
+    //! set the internal weight values to rbm_weights (not a copy)
+    virtual void setAllWeights(const Mat& rbm_weights);
+
+    //! back-propagates the output gradient to the input and the weights
+    //! (the weights are not updated)
+    virtual void petiteCulotteOlivierUpdate(
+        const Vec& input, const Mat& rbm_weights,
+        const Vec& output,
+        Vec& input_gradient, Mat& rbm_weights_gradient,
+        const Vec& output_gradient,
+        bool accumulate = false);
+    
+    //! Computes the contrastive divergence gradient with respect to the weights
+    //! It should be noted that bpropCD does not call clearstats().
+    virtual void petiteCulotteOlivierCD(Mat& weights_gradient, 
+                                        bool accumulate = false);
+    
+    //! Computes the contrastive divergence gradient with respect to the weights
+    //! given the positive and negative phase values.
+    virtual void petiteCulotteOlivierCD(const Vec& pos_down_values,
+                                        const Vec& pos_up_values,
+                                        const Vec& neg_down_values,
+                                        const Vec& neg_up_values,
+                                        Mat& weights_gradient,
+                                        bool accumulate = false);
+    
     //! return the number of parameters
     virtual int nParameters() const = 0;
 

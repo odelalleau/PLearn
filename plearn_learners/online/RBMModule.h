@@ -215,6 +215,7 @@ public:
 protected:
 
     Mat* hidden_bias;
+    Mat* weights;
 
     //! Used to store gradient w.r.t. expectations of the hidden layer.
     Mat hidden_exp_grad;
@@ -235,7 +236,7 @@ protected:
     Mat hidden_exp_store;
     Mat hidden_act_store;
     Mat* hidden_act;
-    bool hidden_activations_are_computed;
+    bool hidden_activations_are_computed;    
 
     //! List of port names.
     TVec<string> ports;
