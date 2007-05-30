@@ -175,7 +175,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         " _ sqrt           : a    -->  sqrt(a)    ; square root\n"
                         " _ ^              : a b  -->  pow(a,b)   ; a^b\n"
                         " _ mod            : b a  -->  int(b) % int(a)\n"
-                        " _ vecscalmul     : x1 ... xn n alpha  -->  (x1*alpha) ... (xn*alpha)\n"
+                        " _ vecscalmul     : x1 ... xn alpha n  -->  (x1*alpha) ... (xn*alpha)\n"
                         " _ select         : v0 v1 v2 v3 ... vn-1 n i  -->  vi  \n"
                         " _ length         : the length of the currently processed column.\n"
                         " _ sign           : a  -->  sign(a)  (0 -1 or +1)\n"
@@ -872,7 +872,7 @@ void VMatLanguage::build_opcodes_map()
         opcodes["sqrt"] = 43;
         opcodes["^"] = 44;
         opcodes["mod"] = 45;
-        opcodes["vecscalmul"] = 46; // x1 ... xn n alpha --> (x1*alpha) ... (xn*alpha)
+        opcodes["vecscalmul"] = 46; // x1 ... xn alpha n --> (x1*alpha) ... (xn*alpha)
         opcodes["__getfieldsrange"] = 47; // %N:%M pushes field %N up to %M. M must be >= N.
         opcodes["select"] = 48; // v0 v1 v2 v3 ... vn-1 n i --> vi
         opcodes["length"] = 49; // the length of the currently processed column.
