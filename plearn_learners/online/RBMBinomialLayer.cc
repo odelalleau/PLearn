@@ -220,19 +220,19 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     PLASSERT( outputs.width() == size );
     PLASSERT( output_gradients.width() == size );
 
-    int batch_size = inputs.length();
-    PLASSERT( outputs.length() == batch_size );
-    PLASSERT( output_gradients.length() == batch_size );
+    int mbatch_size = inputs.length();
+    PLASSERT( outputs.length() == mbatch_size );
+    PLASSERT( output_gradients.length() == mbatch_size );
 
     if( accumulate )
     {
         PLASSERT_MSG( input_gradients.width() == size &&
-                input_gradients.length() == batch_size,
+                input_gradients.length() == mbatch_size,
                 "Cannot resize input_gradients and accumulate into it" );
     }
     else
     {
-        input_gradients.resize(batch_size, size);
+        input_gradients.resize(mbatch_size, size);
         input_gradients.clear();
     }
 
@@ -244,7 +244,7 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     // We use the average gradient over the mini-batch.
     real avg_lr = learning_rate / inputs.length();
 
-    for (int j = 0; j < batch_size; j++)
+    for (int j = 0; j < mbatch_size; j++)
     {
         for( int i=0 ; i<size ; i++ )
         {
