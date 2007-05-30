@@ -93,6 +93,11 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
     PLASSERT( target.size() == target_size );
     cost.resize( output_size );
 
+    PLASSERT_MSG( min(input) >= 0.,
+                  "Elements of \"input\" should be positive" );
+    PLASSERT_MSG( is_equal( sum(input), 1. ),
+                  "Elements of \"input\" should sum to 1" );
+
     int the_target = (int) round( target[0] );
     cost[0] = -pl_log( input[ the_target ] );
 }
