@@ -1,0 +1,2 @@
+ WARNING: GradNNetLayerModule: cannot forget() without random_gen
+All tests passed successfully on module GradNNetLayerModule
