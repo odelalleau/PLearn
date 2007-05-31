@@ -91,7 +91,8 @@ void RBMMultinomialLayer::generateSample()
     PLASSERT_MSG(random_gen,
                  "random_gen should be initialized before generating samples");
 
-    computeExpectation();
+    PLCHECK_MSG(expectation_is_up_to_date, "Expectation should be computed "
+            "before calling generateSample()");
 
     int i = random_gen->multinomial_sample( expectation );
     fill_one_hot( sample, i, real(0.), real(1.) );
@@ -102,7 +103,9 @@ void RBMMultinomialLayer::generateSamples()
     PLASSERT_MSG(random_gen,
                  "random_gen should be initialized before generating samples");
 
-    computeExpectations();
+    PLCHECK_MSG(expectations_are_up_to_date, "Expectations should be computed "
+                        "before calling generateSamples()");
+
     PLASSERT( samples.width() == size && samples.length() == batch_size );
 
     for (int k = 0; k < batch_size; k++)

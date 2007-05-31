@@ -75,7 +75,10 @@ void RBMBinomialLayer::generateSample()
     PLASSERT_MSG(random_gen,
                  "random_gen should be initialized before generating samples");
 
-    computeExpectation();
+    PLCHECK_MSG(expectation_is_up_to_date, "Expectation should be computed "
+            "before calling generateSample()");
+
+    //random_gen->manual_seed(1827);
 
     for( int i=0 ; i<size ; i++ )
         sample[i] = random_gen->binomial_sample( expectation[i] );
@@ -89,8 +92,12 @@ void RBMBinomialLayer::generateSamples()
     PLASSERT_MSG(random_gen,
                  "random_gen should be initialized before generating samples");
 
-    computeExpectations();
+    PLCHECK_MSG(expectations_are_up_to_date, "Expectations should be computed "
+            "before calling generateSamples()");
+
     PLASSERT( samples.width() == size && samples.length() == batch_size );
+
+    //random_gen->manual_seed(1827);
 
     for (int k = 0; k < batch_size; k++) {
         for (int i=0 ; i<size ; i++)
