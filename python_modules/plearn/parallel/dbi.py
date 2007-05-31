@@ -436,18 +436,21 @@ class DBICondor(DBIBase):
             #keeps a list of the temporary files created, so that they can be deleted at will            
         self.temp_files = []
 
-    def run_one_job(self, task):
-        
+    def run_all_job(self):
+        if len(self.tasks)==0:
+            return #no task to run
         # create the bqsubmit.dat, with
-
-        condor_data = os.path.join(self.tmp_dir, task.unique_id + '.data')
-        self.temp_files.append(condor_data)
-        param_dat = open(condor_data, 'w')
-
-        param_dat.write( dedent('''\
-                #!/bin/bash
-                %s''' %('\n'.join(task.commands))))
-        param_dat.close()
+        condor_datas = []
+        for task in self.tasks:
+            condor_data = os.path.join(self.tmp_dir, task.unique_id + '.data')
+            condor_datas.append(condor_data)
+            self.temp_files.append(condor_data)
+            param_dat = open(condor_data, 'w')
+            
+            param_dat.write( dedent('''\
+            #!/bin/bash
+            %s''' %('\n'.join(task.commands))))
+            param_dat.close()
         
 
         condor_file = os.path.join(self.tmp_dir, task.unique_id + ".condor")
@@ -471,16 +474,17 @@ class DBICondor(DBIBase):
 
         condor_dat.write( dedent('''\
                 executable     = %s/launch.sh
-                arguments      = sh %s $$(Arch) 
                 universe       = vanilla
                 requirements   = %s
-                output         = main.%s.%s.out
-                error          = main.%s.%s.error
+                output         = main.%s.%s.$(Process).out
+                error          = main.%s.%s.$(Process).error
                 log            = main.%s.log
-                queue
-                ''' % (self.tmp_dir,condor_data,req,self.targetcondorplatform,task.unique_id,self.targetcondorplatform,task.unique_id,self.targetcondorplatform)))
+                ''' % (self.tmp_dir,req,self.targetcondorplatform,task.unique_id,self.targetcondorplatform,task.unique_id,self.targetcondorplatform)))
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
+
+        for i in condor_datas:
+            condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
         condor_dat.close()
 
         launch_file = os.path.join(self.tmp_dir, 'launch.sh')
@@ -502,8 +506,7 @@ class DBICondor(DBIBase):
             launch_dat.write(dedent('''\
                 #!/bin/sh
                 PROGRAM=$1
-                shift
-                source /cluster/diro/home/lisa/.local.condor\n'''))
+                shift\n'''))
             if None != os.getenv("CONDOR_LOCAL_SOURCE"):
                 launch_dat.write('source ' + os.getenv("CONDOR_LOCAL_SOURCE") + '\n')
             launch_dat.write(dedent('''\
@@ -534,8 +537,7 @@ class DBICondor(DBIBase):
                          '/python_modules/plearn/parallel/configobj.py',  configobj_file)
             self.temp_files.append(configobj_file)            
             os.chmod(configobj_file, 0755)
-                                    
-        # Launch bqsubmit
+        # Launch condor
         output = PIPE
         error = PIPE
         if int(self.file_redirect_stdout):
@@ -548,7 +550,7 @@ class DBICondor(DBIBase):
             self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
         else:
             print "Created condor file: " + condor_file
-
+            
     def clean(self):
                 
         sleep(20)
@@ -561,9 +563,7 @@ class DBICondor(DBIBase):
 
 
     def run(self):
-
-        for task in self.tasks:
-            self.run_one_job(task)
+        self.run_all_job()
 
 
 
