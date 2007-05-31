@@ -39,6 +39,7 @@
 
 
 #include "RBMModule.h"
+#include <plearn/vmat/VMat.h>
 
 #define PL_LOG_MODULE_NAME "RBMModule"
 #include <plearn/io/pl_log.h>
@@ -1239,6 +1240,7 @@ void RBMModule::setAllLearningRates(real lr)
 void RBMModule::sampleHiddenGivenVisible(const Mat& visible)
 {
     computeHiddenActivations(visible);
+    hidden_layer->computeExpectations();
     hidden_layer->generateSamples();
 }
 
@@ -1248,6 +1250,7 @@ void RBMModule::sampleHiddenGivenVisible(const Mat& visible)
 void RBMModule::sampleVisibleGivenHidden(const Mat& hidden)
 {
     computeVisibleActivations(hidden);
+    visible_layer->computeExpectations();
     visible_layer->generateSamples();
 }
 
