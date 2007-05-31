@@ -127,7 +127,8 @@ def train_adapting_lr(learner,
                       selected_costnames = False,
                       min_epochs_to_delete = 2,
                       lr_steps=exp(log(10)/2),
-                      logfile=False):
+                      logfile=False,
+                      keep_lr=2):
 
     min_epochs_to_delete = max(1,min_epochs_to_delete) # although 1 is probably too small
         
@@ -142,7 +143,24 @@ def train_adapting_lr(learner,
         # wait to have at least 3 points in curve =2 epochs since split between the candidates
         if delta_t-1<min_epochs_to_delete or curve1[-1]>=curve2[-1]:
             return False
-        return curve1[-1]-curve1[-2]  < curve2[-1]-curve2[-2]
+        slope1=curve1[-1]-curve1[-2]
+        slope2=curve2[-1]-curve2[-2]
+        if  slope1 >= slope2:
+            return False
+        #check to see if c2 is alone with its learning rate (or nearby); if yes keep it
+        alone=True
+        c2lr=all_lr[c2]
+        c2err=all_last_err[c2]
+        for a in actives:
+            if all_lr[a]==c2lr and all_last_err[a]<c2err:
+                return True # throw it away if worse than other actives of same lr
+            if a!=c2 and abs(log(all_lr[a]/c2lr))<keep_lr*log(lr_steps):
+                alone=False
+        c1lr=all_lr[c1]
+        if alone and c2lr>c1lr: # and slope2<0: 
+            # keep if alone and a larger learning rate and improving
+            return False
+        return True
         #return all_last_err[j]>all_last_err[i] and all_slope[j]>=all_slope[i]
     
     costnames = learner.getTestCostNames()
@@ -156,8 +174,7 @@ def train_adapting_lr(learner,
     previous_best_err = best_err
     best_active = -1
     n_epochs=nstages/epoch
-    all_results = [ones([n_epochs,2+n_tests*n_costs],Float32)]
-    all_results[0].fill(float("nan"))
+    all_results = [1e10*ones([n_epochs,2+n_tests*n_costs],Float32)]
     all_candidates = [learner]
     all_last_err = [best_err]
     #all_slope = [0]
@@ -172,8 +189,8 @@ def train_adapting_lr(learner,
     for (s,t) in zip(range(epoch,nstages+epoch,epoch),range(n_epochs)):
         if logfile:
             print >>logfile, "At stage ", initial_stage+s
-        print "actives now: ",actives
-        print >>logfile, "actives now: ",actives
+        print "actives now: ",actives, " with lr=", array(all_lr)[actives]
+        print >>logfile, "actives now: ",actives, " with lr=", array(all_lr)[actives]
         for active in actives:
             candidate = all_candidates[active]
             results = all_results[active]
