@@ -401,7 +401,7 @@ void RBMModule::computeHiddenActivations(const Mat& visible)
         int up = connection->up_size;
         int down = connection->down_size;
         PLASSERT( weights->width() == up * down  );
-        hidden_layer->activations.resize(visible.length(),hidden_layer->size);
+        hidden_layer->setBatchSize( visible.length() );
         for(int i=0; i<visible.length(); i++)
         {
             connection->setAllWeights(Mat(up, down, (*weights)(i)));
@@ -465,7 +465,7 @@ void RBMModule::computeVisibleActivations(const Mat& hidden,
             int up = connection->up_size;
             int down = connection->down_size;
             PLASSERT( weights->width() == up * down  );
-            visible_layer->activations.resize(hidden.length(),visible_layer->size);
+            visible_layer->setBatchSize( hidden.length() );
             for(int i=0; i<hidden.length(); i++)
             {
                 connection->setAllWeights(Mat(up,down,(*weights)(i)));
@@ -970,12 +970,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             }
             store_visible_grad->resize(mbs,visible_layer->size);
             
-            if (weights_grad)
+            if (weights)
             {
                 int up = connection->up_size;
                 int down = connection->down_size;
-                PLASSERT( weights && !weights->isEmpty() &&
-                          weights_grad->isEmpty() &&
+                PLASSERT( !weights->isEmpty() &&
+                          weights_grad && weights_grad->isEmpty() &&
                           weights_grad->width() == up * down );
                 weights_grad->resize(mbs, up * down);
                 Mat w, wg;
