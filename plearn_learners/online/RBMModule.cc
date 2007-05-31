@@ -1004,90 +1004,90 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                            << name << "'" << endl;
         // Perform a step of contrastive divergence.
         PLASSERT( visible && !visible->isEmpty() );
-            setAllLearningRates(cd_learning_rate);
-            PLASSERT( ports_value.length() == nPorts() );
-            Mat* negative_phase_visible_samples = 
-                compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
-            Mat* negative_phase_hidden_expectations = 
-                compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_hidden_expectations.state")]:0;
-            PLASSERT( visible && hidden );
-            if (!negative_phase_visible_samples || negative_phase_visible_samples->isEmpty())
+        setAllLearningRates(cd_learning_rate);
+        PLASSERT( ports_value.length() == nPorts() );
+        Mat* negative_phase_visible_samples = 
+            compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
+        Mat* negative_phase_hidden_expectations = 
+            compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_hidden_expectations.state")]:0;
+        PLASSERT( visible && hidden );
+        if (!negative_phase_visible_samples || negative_phase_visible_samples->isEmpty())
+        {
+            // Generate hidden samples.
+            hidden_layer->setExpectations(*hidden);
+            for( int i=0; i<n_Gibbs_steps_CD; i++)
             {
-                // Generate hidden samples.
-                hidden_layer->setExpectations(*hidden);
-                for( int i=0; i<n_Gibbs_steps_CD; i++)
-                {
-                    hidden_layer->generateSamples();
-                    // (Negative phase) Generate visible samples.
-                    sampleVisibleGivenHidden(hidden_layer->samples);
-                    // compute corresponding hidden expectations.
-                    computeHiddenActivations(visible_layer->samples);
-                    hidden_layer->computeExpectations();
-                }
-                if (!negative_phase_hidden_expectations)
-                    negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
-                else
-                {
-                    PLASSERT(negative_phase_hidden_expectations->isEmpty());
-                    negative_phase_hidden_expectations->resize(mbs,hidden_layer->size);
-                    *negative_phase_hidden_expectations << hidden_layer->getExpectations();
-                }
-                if (!negative_phase_visible_samples)
-                    negative_phase_visible_samples = &(visible_layer->samples);
-                else
-                {
-                    PLASSERT(negative_phase_visible_samples->isEmpty());
-                    negative_phase_visible_samples->resize(mbs,visible_layer->size);
-                    *negative_phase_visible_samples << visible_layer->samples;
-                }
+                hidden_layer->generateSamples();
+                // (Negative phase) Generate visible samples.
+                sampleVisibleGivenHidden(hidden_layer->samples);
+                // compute corresponding hidden expectations.
+                computeHiddenActivations(visible_layer->samples);
+                hidden_layer->computeExpectations();
             }
-            // Perform update.
-            visible_layer->update(*visible, *negative_phase_visible_samples);
-            if (weights_grad)
+            if (!negative_phase_hidden_expectations)
+                negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
+            else
             {
-                int up = connection->up_size;
-                int down = connection->down_size;
-                PLASSERT( weights && !weights->isEmpty() &&
-                          weights_grad->isEmpty() &&
-                          weights_grad->width() == up * down );
-                weights_grad->resize(mbs, up * down);
-                    
-                Mat wg;
-                Vec vp, hp, vn, hn;
-                for(int i=0; i<mbs; i++)
-                {
-                    vp = (*visible)(i);
-                    hp = (*hidden)(i);
-                    vn = (*negative_phase_visible_samples)(i);
-                    hn = (*negative_phase_hidden_expectations)(i);
-                    wg = Mat(up, down,(*weights_grad)(i));
-                    connection->petiteCulotteOlivierCD(
+                PLASSERT(negative_phase_hidden_expectations->isEmpty());
+                negative_phase_hidden_expectations->resize(mbs,hidden_layer->size);
+                *negative_phase_hidden_expectations << hidden_layer->getExpectations();
+            }
+            if (!negative_phase_visible_samples)
+                negative_phase_visible_samples = &(visible_layer->samples);
+            else
+            {
+                PLASSERT(negative_phase_visible_samples->isEmpty());
+                negative_phase_visible_samples->resize(mbs,visible_layer->size);
+                *negative_phase_visible_samples << visible_layer->samples;
+            }
+        }
+        // Perform update.
+        visible_layer->update(*visible, *negative_phase_visible_samples);
+        if (weights_grad)
+        {
+            int up = connection->up_size;
+            int down = connection->down_size;
+            PLASSERT( weights && !weights->isEmpty() &&
+                    weights_grad->isEmpty() &&
+                    weights_grad->width() == up * down );
+            weights_grad->resize(mbs, up * down);
+
+            Mat wg;
+            Vec vp, hp, vn, hn;
+            for(int i=0; i<mbs; i++)
+            {
+                vp = (*visible)(i);
+                hp = (*hidden)(i);
+                vn = (*negative_phase_visible_samples)(i);
+                hn = (*negative_phase_hidden_expectations)(i);
+                wg = Mat(up, down,(*weights_grad)(i));
+                connection->petiteCulotteOlivierCD(
                         vp, hp,
                         vn,
                         hn,
                         wg,
                         true);
-                }
             }
-            else
-            {
-                connection->update(*visible, *hidden,
-                                   *negative_phase_visible_samples,
-                                   *negative_phase_hidden_expectations);
+        }
+        else
+        {
+            connection->update(*visible, *hidden,
+                    *negative_phase_visible_samples,
+                    *negative_phase_hidden_expectations);
+        }
+        hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
+        if (hidden_bias_grad)
+        {
+            if (hidden_bias_grad->isEmpty()) {
+                PLASSERT(hidden_bias_grad->width() == hidden_layer->size);
+                hidden_bias_grad->resize(mbs,hidden_layer->size);
             }
-            hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
-            if (hidden_bias_grad)
-            {
-                if (hidden_bias_grad->isEmpty()) {
-                    PLASSERT(hidden_bias_grad->width() == hidden_layer->size);
-                    hidden_bias_grad->resize(mbs,hidden_layer->size);
-                }
-                // d(contrastive_divergence)/dhidden_bias =
-                //     hidden - negative_phase_hidden_expectations
-                *hidden_bias_grad += *hidden;
-                *hidden_bias_grad -= *negative_phase_hidden_expectations;
-            }
-            partition_function_is_stale = true;
+            // d(contrastive_divergence)/dhidden_bias =
+            //     hidden - negative_phase_hidden_expectations
+            *hidden_bias_grad += *hidden;
+            *hidden_bias_grad -= *negative_phase_hidden_expectations;
+        }
+        partition_function_is_stale = true;
     }
 
     if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()) {
