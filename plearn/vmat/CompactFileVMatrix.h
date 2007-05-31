@@ -45,6 +45,8 @@
 #define USE_NSPR_FILE
 struct PRFileDesc;
 
+#define COMPACTFILEVMATRIX_HEADERLENGTH_MAX 1024
+
 namespace PLearn {
 using namespace std;
 
@@ -52,14 +54,23 @@ using namespace std;
 //! Each row contains a certain amount of field groups. This
 //! struct provides information about how a field group is encoded and
 //! how to put it in a Vec.
-struct GroupInfoNode {
-    GroupInfoNode(char type_, int length_, int max_, int bits_per_value_, GroupInfoNode* next_):
+struct GroupInfo {
+    GroupInfo():
+        type('\0'),
+        length(-1),
+        max(-1),
+        bits_per_value(-1),
+        active(false),
+        compact_length(-1)
+    {}
+
+    GroupInfo(char type_, int length_, int max_, int bits_per_value_):
         type(type_),
         length(length_),
         max(max_),
         bits_per_value(bits_per_value_),
-        next(next_),
-        active(false)
+        active(false),
+        compact_length(-1)
     {}
 
     char type; //!< type of data (i for int, o for onehot)
@@ -68,7 +79,6 @@ struct GroupInfoNode {
     int bits_per_value; //!< amount of bits used to encode each field (must be <= 8) (8 yields fastest conversion)
     bool active; //!< true if this field group is active
     int compact_length; //!< length of the group in the file
-    GroupInfoNode* next; //!< next node or NULL
 };
 
 
@@ -92,9 +102,11 @@ protected:
     FILE* f;
 #endif
 
+    int header_length;
     int compact_width_; //!< width of a compacted row
-    GroupInfoNode* info_; //!< information on how each field group is encoded
-    char* contents;
+    TVec<GroupInfo> info;
+    TVec<unsigned char> cache_index;
+    mutable string cache;
 
 public:
 
@@ -106,7 +118,9 @@ protected:
     static void declareOptions(OptionList & ol);
     virtual void getNewRow(int i, const Vec& v) const;
 
-    //! Close the current '.pmat' file.
+    //! Open the current file.
+    virtual void openCurrentFile();
+    //! Close the current file.
     virtual void closeCurrentFile();
 
 public:
@@ -122,6 +136,9 @@ public:
 
     //! The amount of fields in the group-th field group
     virtual int groupNFields(int group) const;
+
+    //! The amount of possible values in the group-th field group
+    virtual int groupNValues(int group) const;
 
     //! The length of the group-th field group
     virtual int groupLength(int group) const;
@@ -145,7 +162,7 @@ public:
 private:
 
     void build_();
-    GroupInfoNode* getGroup(int group) const;
+    GroupInfo& getGroup(int group) const;
 
     // seek to element i,j in file
     void moveto(int i, int j=0) const;

@@ -51,12 +51,13 @@ PLEARN_IMPLEMENT_OBJECT(
     "Compact VMatrix where fields are bitfields.",
     "VMatrix whose data is stored on disk in a compacted '.cmat' file. \n"
     "The file contains a certain amount of field groups (with supposed \n"
-    "distinct semantics). Each field group has a type (i = int, o = onehot) \n"
+    "distinct semantics). Each field group has an encoding type, \n"
     "a length and a maximal value (the values range from 0 to that value). \n"
     "Each field in a field group is typically encoded on the minimal amount \n"
     "of bits required to hold it (it is possible to specify more). Values \n"
     "are converted to floats and normalized by max, unless they are \n"
-    "onehot-encoded."
+    "onehot-encoded. \n \n"
+    "Encoding types: 'i' = float between 0 and 1, 'o' = onehot, 'u' = unsigned integer"
 );
 
 ////////////////////////
@@ -64,11 +65,8 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////////
 CompactFileVMatrix::CompactFileVMatrix():
     inherited       (true),
-    active_list_    (Vec()),
     in_ram_         (false),
-    f               (0),
-    info_           (NULL),
-    contents        (NULL)
+    f               (0)
 {
     writable=false;
 }
@@ -76,11 +74,8 @@ CompactFileVMatrix::CompactFileVMatrix():
 CompactFileVMatrix::CompactFileVMatrix(const PPath& filename):
     inherited       (true),
     filename_       (filename.absolute()),
-    active_list_    (Vec()),
     in_ram_         (false),
-    f               (0),
-    info_           (NULL),
-    contents        (NULL)
+    f               (0)
 {
     build_();
 }
@@ -95,6 +90,8 @@ void CompactFileVMatrix::build()
     build_();
 }
 
+
+
 ////////////
 // build_ //
 ////////////
@@ -107,151 +104,156 @@ void CompactFileVMatrix::build_()
     if (filename_.isEmpty())
         return;
 
-    char header[DATAFILE_HEADERLENGTH];
+    char header[COMPACTFILEVMATRIX_HEADERLENGTH_MAX + 1];
+    header[COMPACTFILEVMATRIX_HEADERLENGTH_MAX] = '\n';
 
-    if (!isfile(filename_))
-    {
-        PLERROR("In CompactFileVMatrix::build_ - File does not exist (%s)", filename_.c_str());
+    openCurrentFile();
+
+
+#ifdef USE_NSPR_FILE
+    PR_Read(f,header,COMPACTFILEVMATRIX_HEADERLENGTH_MAX);
+#else
+    fread(header,COMPACTFILEVMATRIX_HEADERLENGTH_MAX,1,f);
+#endif
+
+    int file_length;
+
+    file_length = atoi(header);
+
+    if (!file_length) {
+        PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (0)");
     }
-    else
-    {
+    this->length_ = file_length;
+
+    int i = 0;
+    while (header[i] >= '0' && header[i] <= '9')
+        i++;
+    i++;
+
+    // Here we painfully read the header.
+    while (1) {
+        char type = header[i];
+        if (type == '\n' || type == ' ')
+            break;
+        if (!type || !(type == 'o' || type == 'i' || type == 'u'))
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (bad type: %c)", type);
+        i++;
+
+        if (header[i] != ':')
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (2)");
+        i++;
+
+        int length = atoi(&(header[i]));
+        if (!length)
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (3)");
+        while (header[i] >= '0' && header[i] <= '9')
+            i++;
+
+        if (header[i] != ':')
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (4)");
+        i++;
+
+        int max = atoi(&(header[i]));
+        if (!max)
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (5)");
+        while (header[i] >= '0' && header[i] <= '9')
+            i++;
+
+        if (header[i] != ':')
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (6)");
+        i++;
+
+        int bits_per_value = atoi(&(header[i]));
+        if (!bits_per_value)
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (7)");
+        while (header[i] >= '0' && header[i] <= '9')
+            i++;
+
+        if (bits_per_value > 8)
+            PLERROR("In CompactFileVMatrix::build_ - each field must span at most 8 bits");
+
+        if (header[i] != ' ' && header[i] != '\n')
+            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file");
+
+        info.append(GroupInfo(type, length, max, bits_per_value));
+
+        if (header[i] == '\n') {
+            i++;
+            break;
+        }
+        i++;
+    }
+
+    header_length = i;
+
+        
+
+    // If there is a non-empty list of active groups, activate only those.
+    if (active_list_.length()) {
+        for (int i=0; i<active_list_.length(); i++) {
+            int next_active = (int)(active_list_[i]);
+            if (i && active_list_[i-1] >= next_active)
+                PLERROR("In CompactFileVMatrix - Please give the active fields list in ascending order.");
+            if (i < 0 || i >= info.length())
+                PLERROR("In CompactFileVMatrix - Bad list of active groups: group index out of bounds.");
+            info[next_active].active = true;
+        }
+    }
+    // else, activate all of them
+    else {
+        for(int i=0; i<info.length(); i++)
+            info[i].active = true;
+    }
+
+    int width = 0;
+    int file_width = 0; // real width of an entry in the file
+    for (int i=0; i<info.length(); i++) {
+        info[i].compact_length = (info[i].length * info[i].bits_per_value + 7) / 8;
+        if (info[i].active) {
+            if (info[i].type == 'o') { // one-hot encoding
+                width += info[i].length * (info[i].max + 1);
+            }
+            else if (info[i].type == 'i' || info[i].type == 'u') { // int (if max=1) or float encoding
+                width += info[i].length;
+            }
+        }
+        file_width += info[i].compact_length;
+    }
+
+    this->width_ = width; // + 1;
+    this->compact_width_ = file_width; // + 1;
+
+    // If the option in_ram is specified, we allocate a buffer
+    if (in_ram_) {
+        int sz = length_ * compact_width_;
+        cache = string(sz, '\0');
+        cache_index = TVec<unsigned char>((length_ + 7) / 8);
+    }
+
+    setMtime(mtime(filename_));
+}
+
+
+
+/////////////////////
+// openCurrentFile //
+/////////////////////
+void CompactFileVMatrix::openCurrentFile()
+{
+    if (!isfile(filename_)) {
+        PLERROR("In CompactFileVMatrix::openCurrentFile - File does not exist (%s)", filename_.c_str());
+    }
+    else {
 #ifdef USE_NSPR_FILE
         f = PR_Open(filename_.c_str(), PR_RDONLY, 0666);
 #else
         f = fopen(filename_.c_str(), "rb");
 #endif
-
         if (! f)
-            PLERROR("CompactFileVMatrix::build: could not open file %s", filename_.c_str());
-
-#ifdef USE_NSPR_FILE
-        PR_Read(f,header,DATAFILE_HEADERLENGTH);
-#else
-        fread(header,DATAFILE_HEADERLENGTH,1,f);
-#endif
-        if(header[DATAFILE_HEADERLENGTH-1]!='\n')
-            PLERROR("In CompactFileVMatrix constructor, wrong header for cmat format.");
-        int file_length;
-
-        file_length = atoi(header);
-
-        if (!file_length) {
-            PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (0)");
-        }
-        this->length_ = file_length;
-
-        int i = 0;
-        while (header[i] >= '0' && header[i] <= '9')
-            i++;
-        i++;
-
-        // Here we painfully read the header.
-        GroupInfoNode** slot = &info_;
-        while (1) {
-            char type = header[i];
-            if (type == '\n' || type == ' ')
-                break;
-            if (!type || !(type == 'o' || type == 'i'))
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (bad type: %c)", type);
-            i++;
-
-            if (header[i] != ':')
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (2)");
-            i++;
-
-            int length = atoi(&(header[i]));
-            if (!length)
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (3)");
-            while (header[i] >= '0' && header[i] <= '9')
-                i++;
-
-            if (header[i] != ':')
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (4)");
-            i++;
-
-            int max = atoi(&(header[i]));
-            if (!max)
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (5)");
-            while (header[i] >= '0' && header[i] <= '9')
-                i++;
-
-            if (header[i] != ':')
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (6)");
-            i++;
-
-            int bits_per_value = atoi(&(header[i]));
-            if (!bits_per_value)
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file (7)");
-            while (header[i] >= '0' && header[i] <= '9')
-                i++;
-
-            if (bits_per_value > 8)
-                PLERROR("In CompactFileVMatrix::build_ - each field must span at most 8 bits");
-
-            if (header[i] != ' ' && header[i] != '\n')
-                PLERROR("In CompactFileVMatrix::build_ - ill-formed header for the cmat file");
-            *slot = new GroupInfoNode(type, length, max, bits_per_value, NULL);
-            if (header[i] == '\n')
-                break;
-            i++;
-
-            slot = &((*slot)->next);
-        }
-
-        // If there is a non-empty list of active groups, activate only those.
-        if (active_list_.length()) {
-            for (int i=0; i<active_list_.length(); i++) {
-                int next_active = (int)(active_list_[i]);
-                if (i && active_list_[i-1] >= next_active)
-                    PLERROR("In CompactFileVMatrix - Please give the active fields list in ascending order.");
-                GroupInfoNode* info;
-                for (info = info_; info && next_active; info = info->next)
-                    next_active--;
-                if (!info)
-                    PLERROR("In CompactFileVMatrix - Bad list of active groups: group index out of bounds.");
-                info->active = true;
-            }
-        }
-        // else, activate all of them
-        else { 
-            for (GroupInfoNode* info = info_; info; info = info->next)
-                info->active = true;
-        }
-
-        int width = 0;
-        int file_width = 0; // real width of an entry in the file
-        for (GroupInfoNode* info = info_; info; info = info->next) {
-            info->compact_length = (info->length * info->bits_per_value + 7) / 8;
-            if (info->active) {
-                if (info->type == 'o') { // one-hot encoding
-                    width += info->length * (info->max + 1);
-                }
-                else if (info->type == 'i') { // int (if max=1) or float encoding
-                    width += info->length;
-                }
-            }
-            file_width += info->compact_length;
-        }
-
-        this->width_ = width + 1;
-        this->compact_width_ = file_width + 1;
-
-        // If the option in_ram is active, we load everything in RAM beforehand
-        if (in_ram_) {
-            int sz = length_ * compact_width_;
-            contents = (char*)malloc(sz);
-            if (!contents && errno == ENOMEM)
-                PLERROR("In CompactFileVMatrix - could not allocate %d bytes. Consider putting the in_ram option to False.", sz);
-#ifdef USE_NSPR_FILE
-            PR_Read(f,contents, sz);
-#else
-            fread(contents, sz, 1, f);
-#endif
-        }
+            PLERROR("CompactFileVMatrix::openCurrentFile: could not open file %s", filename_.c_str());
     }
-
-    setMtime(mtime(filename_));
 }
+
 
 
 //////////////////////
@@ -277,7 +279,7 @@ void CompactFileVMatrix::declareOptions(OptionList & ol)
 {
     declareOption(ol, "filename", &CompactFileVMatrix::filename_, OptionBase::buildoption, "Filename of the matrix");
     declareOption(ol, "active_list", &CompactFileVMatrix::active_list_, OptionBase::buildoption, "comma-separated list of active field groups");
-    declareOption(ol, "in_ram", &CompactFileVMatrix::in_ram_, OptionBase::buildoption, "if set to true, all the file will be loaded in main memory for faster access");
+    declareOption(ol, "cache", &CompactFileVMatrix::in_ram_, OptionBase::buildoption, "if set to true, all rows read from the file will be cached");
 
     inherited::declareOptions(ol);
 }
@@ -287,7 +289,14 @@ void CompactFileVMatrix::declareOptions(OptionList & ol)
 /////////////////////////////////
 void CompactFileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    PLERROR("In CompactFileVMatrix::makeDeepCopyFromShallowCopy - not implemented.");
+    inherited::makeDeepCopyFromShallowCopy(copies);
+
+    deepCopyField(info, copies);
+    deepCopyField(cache_index, copies);
+
+    // We don't want to share the file descriptor, so we close/reopen the file.
+    closeCurrentFile();
+    openCurrentFile();
 }
 
 /////////////////////////
@@ -304,17 +313,6 @@ CompactFileVMatrix::~CompactFileVMatrix()
 
 void CompactFileVMatrix::cleanup() {
     CompactFileVMatrix::closeCurrentFile();
-    GroupInfoNode* temp = NULL;
-    GroupInfoNode* info = info_;
-    while (info) {
-        temp = info->next;
-        delete info;
-        info = temp;
-    }
-    if (contents) {
-        free(contents);
-        contents = NULL;
-    }
 }
 
 
@@ -324,10 +322,7 @@ void CompactFileVMatrix::cleanup() {
 
 int CompactFileVMatrix::nGroups() const
 {
-    int i = 0;
-    for (GroupInfoNode* info = info_; info; info = info->next)
-        i++;
-    return i;
+    return info.length();
 }
 
 
@@ -335,18 +330,12 @@ int CompactFileVMatrix::nGroups() const
 // getGroup //
 //////////////
 
-GroupInfoNode* CompactFileVMatrix::getGroup(int group) const
+GroupInfo& CompactFileVMatrix::getGroup(int group) const
 {
-    GroupInfoNode* info;
-    if (group < 0) {
+    if (group < 0 || group >= info.length()) {
         PLERROR("In CompactFileVMatrix::getGroup - group index out of bounds.");
     }
-    for (info = info_; info && group; info = info->next)
-        group--;
-    if (!info) {
-        PLERROR("In CompactFileVMatrix::getGroup - group index out of bounds.");
-    }
-    return info;
+    return info[group];
 }
 
 
@@ -356,7 +345,7 @@ GroupInfoNode* CompactFileVMatrix::getGroup(int group) const
 
 char CompactFileVMatrix::groupEncoding(int group) const
 {
-    return getGroup(group)->type;
+    return getGroup(group).type;
 }
 
 
@@ -367,7 +356,18 @@ char CompactFileVMatrix::groupEncoding(int group) const
 
 int CompactFileVMatrix::groupNFields(int group) const
 {
-    return getGroup(group)->length;
+    return getGroup(group).length;
+}
+
+
+
+//////////////////
+// groupNValues //
+//////////////////
+
+int CompactFileVMatrix::groupNValues(int group) const
+{
+    return getGroup(group).max;
 }
 
 
@@ -378,11 +378,11 @@ int CompactFileVMatrix::groupNFields(int group) const
 
 int CompactFileVMatrix::groupLength(int group) const
 {
-    GroupInfoNode* info = getGroup(group);
-    if (info->type == 'i')
-        return info->length;
+    GroupInfo& info = getGroup(group);
+    if (info.type == 'i')
+        return info.length;
     else
-        return info->length * info->max;
+        return info.length * info.max;
 }
 
 
@@ -399,8 +399,8 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
 
     unsigned char* buffer;
 
-    if (in_ram_) {
-        buffer = (unsigned char*)(contents + (i*compact_width_));
+    if (in_ram_ && (cache_index[i/8] & (1 << (i%8)))) {
+        buffer = (unsigned char*)(cache.data() + (i*compact_width_));
     }
     else {
         buffer = (unsigned char*)malloc(compact_width_);
@@ -409,24 +409,29 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
         moveto(i);
         PR_Read(f, buffer, compact_width_);
 #else
-        fseek(f, DATAFILE_HEADERLENGTH+(i*compact_width_), SEEK_SET);
+        fseek(f, COMPACTFILEVMATRIX_HEADERLENGTH_MAX+(i*compact_width_), SEEK_SET);
         fread(buffer, compact_width_, 1, f);
 #endif
+        if (in_ram_) {
+            cache_index[i/8] |= 1 << (i%8);
+            for (int j=0; j<compact_width_; j++)
+                cache[(i*compact_width_) + j] = buffer[j];
+        }
     }
 
     int current_b = -1;
     int current_v = 0;
     int value_b = 0;
 
-    for (GroupInfoNode* info = info_; info; info = info->next) {
-        if (!info->active) {
-            current_b += info->compact_length;
+    for (int g=0; g<info.length(); g++) {
+        if (!info[g].active) {
+            current_b += info[g].compact_length;
             continue;
         }
-        int nbits = info->bits_per_value;
-        int max = info->max;
-        int length = info->length;
-        char type = info->type;
+        int nbits = info[g].bits_per_value;
+        int max = info[g].max;
+        int length = info[g].length;
+        char type = info[g].type;
 
         if (type == 'o') {
             v.subVec(current_v, length * (max + 1)).clear();
@@ -449,6 +454,8 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
                 remainder = 8 - nbits + remainder;
                 if (type == 'i')
                     v[current_v] = (float)val / max;
+                else if (type == 'u')
+                    v[current_v] = val;
                 else if (type == 'o' && val <= max)
                     v[current_v + val] = 1;
             }
@@ -456,21 +463,20 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
                 int val = (value_b & ((1<<nbits) - 1));
                 if (type == 'i')
                     v[current_v] = (float)val / max;
+                else if (type == 'u')
+                    v[current_v] = val;
                 else if (type == 'o' && val <= max) {
                     v[current_v + val] = 1;
                 }
                 value_b >>= nbits;
                 remainder -= nbits;
             }
-            if (type == 'i')
+            if (type == 'i' || type == 'u')
                 current_v++;
             else if (type == 'o')
                 current_v += max + 1;
         }
     }
-
-    v[v.length() - 1] = buffer[compact_width_ - 1]; // class
-
 }
 
 ///////////////
@@ -487,10 +493,10 @@ void CompactFileVMatrix::moveto(int i, int j) const
     PRInt64 offset = i;
     offset *= compact_width_;
     offset += j;
-    offset += DATAFILE_HEADERLENGTH;
+    offset += header_length;
     PR_Seek64(f, offset, PR_SEEK_SET);
 #else
-    fseek(f, DATAFILE_HEADERLENGTH+(i*compact_width_+j), SEEK_SET);
+    fseek(f, header_length+(i*compact_width_+j), SEEK_SET);
 #endif
 }
 
