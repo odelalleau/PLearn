@@ -48,6 +48,7 @@
 // #include <plearn/io/FdPStreamBuf.h>
 #include <plearn/io/pl_log.h>
 #include <plearn/io/PrPStreamBuf.h>
+#include <plearn/io/openFile.h>
 #include <plearn/base/tostring.h>
 #include <plearn/base/PrUtils.h>
 #include <nspr/prio.h>
@@ -77,11 +78,14 @@ ServerCommand::ServerCommand():
                   "  listening for commands on standard in \n"
                   "  and outputing results on standard out. \n"
                   " \n"
-                  "server [<tcp_port>] \n"
+                  "server <tcp_port> [<outfile>] [-singleuse]\n"
                   "  Launches plearn in TCP server mode \n"
-                  "  Will wait for a connection on the given TCP port. \n"
+                  "  Will then print a line to outfile or to stdout (if no outfile is specified) of the form: \n"
+                  "    PLEARN_SERVER_TCP hostname port pid\n"
+                  "  Will then wait for a connection on the given TCP port. \n"
                   "  All i/o for commands are then done through that connection. \n"
-                  " \n"
+                  "  If you specify -singleuse, then the server will exit when the conneciton \n"
+                  "  with its first client is closed or lost."
         )
 {}
 
@@ -93,6 +97,19 @@ void ServerCommand::run(const vector<string>& args)
         PRStatus st;
         char buf[256];
         int port = toint(args[0]);
+
+        bool singleuse=false;
+        string outfile;
+        if(args.size()>1)
+        {
+            if(args[1]=="-singleuse")
+                singleuse = true;
+            else
+                outfile = args[1];
+            if(args.size()>2 && args[2]=="-singleuse")
+                singleuse = true;
+        }
+
         PRFileDesc* sock = PR_NewTCPSocket();
         if (!sock)
             PLERROR("Servercommand: socket creation failed! (Maybe you ran out of file descriptors?)");
@@ -120,11 +137,23 @@ void ServerCommand::run(const vector<string>& args)
         st= PR_GetSockName(sock, &assigned_addr);
         if(port==0 && st==PR_SUCCESS)
             port= PR_ntohs(assigned_addr.inet.port);
+        
+        if(outfile.size()>0)
+        {
+            string tmpoutfile =outfile+".tmp";
+            PStream out = openFile(tmpoutfile, PStream::raw_ascii, "w");
+            out << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;            
+            out = 0; // close it
+            PR_Rename(tmpoutfile.c_str(), outfile.c_str());
+        }
+        else
+            pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
 
-        pout << "PLEARN_SERVER_TCP " << myhostname << " " << port << " " << mypid << endl;
         NORMAL_LOG << "PLEARN_SERVER STARTING IN TCP MODE ON "  << myhostname << ", PORT " << port << ", PID " << mypid << endl;
+        NORMAL_LOG << "singleuse = " << singleuse << endl;
 
-        for (bool running = true; running; ) {
+        bool running = true;
+        do  {
             NORMAL_LOG << "\nPLEARN_SERVER WAITING FOR CONNECTION"  << endl;
             
             ///***///***
@@ -149,7 +178,8 @@ void ServerCommand::run(const vector<string>& args)
             if (PR_Close(fd) != PR_SUCCESS)
                 PLERROR("ServerCommand: couldn't close client socket from %s!", buf);
 
-        }
+        } while(running && !singleuse);
+
         NORMAL_LOG << "PLEARN_SERVER CLOSING SOCKET" << endl;
         if (PR_Shutdown(sock, PR_SHUTDOWN_BOTH) != PR_SUCCESS)
             PLERROR("ServerCommand: couldn't shutdown socket %d!", port);
