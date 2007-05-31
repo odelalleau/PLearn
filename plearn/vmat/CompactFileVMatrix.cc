@@ -130,6 +130,8 @@ void CompactFileVMatrix::build_()
         i++;
     i++;
 
+    info = TVec<GroupInfo>();
+
     // Here we painfully read the header.
     while (1) {
         char type = header[i];
@@ -186,7 +188,6 @@ void CompactFileVMatrix::build_()
 
     header_length = i;
 
-        
 
     // If there is a non-empty list of active groups, activate only those.
     if (active_list_.length()) {
@@ -240,7 +241,10 @@ void CompactFileVMatrix::build_()
 /////////////////////
 void CompactFileVMatrix::openCurrentFile()
 {
-    if (!isfile(filename_)) {
+    if (f) {
+        PLERROR("In CompactFileVMatrix::openCurrentFile - File already open (%s)", filename_.c_str());
+    }
+    else if (!isfile(filename_)) {
         PLERROR("In CompactFileVMatrix::openCurrentFile - File does not exist (%s)", filename_.c_str());
     }
     else {
@@ -291,11 +295,16 @@ void CompactFileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(info, copies);
+    TVec<GroupInfo> temp = info;
+    info = TVec<GroupInfo>();
+    for (int i=0; i<temp.length(); i++) {
+        info.append(temp[i]);
+    }
+
     deepCopyField(cache_index, copies);
 
-    // We don't want to share the file descriptor, so we close/reopen the file.
-    closeCurrentFile();
+    // We don't want to share the file descriptor
+    f = 0;
     openCurrentFile();
 }
 
@@ -313,6 +322,8 @@ CompactFileVMatrix::~CompactFileVMatrix()
 
 void CompactFileVMatrix::cleanup() {
     CompactFileVMatrix::closeCurrentFile();
+    cache = string();
+    cache_index = TVec<unsigned char>();
 }
 
 
