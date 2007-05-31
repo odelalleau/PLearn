@@ -1012,9 +1012,14 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( ports_value.length() == nPorts() );
         Mat* negative_phase_visible_samples = 
             compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
-        const Mat* negative_phase_hidden_expectations = NULL;
+        const Mat* negative_phase_hidden_expectations =
+            compute_contrastive_divergence ?
+                ports_value[getPortIndex("negative_phase_hidden_expectations.state")]
+                : NULL;
         PLASSERT( visible && hidden );
-        if (!negative_phase_visible_samples || negative_phase_visible_samples->isEmpty())
+        PLASSERT( !negative_phase_visible_samples ||
+                  !negative_phase_visible_samples->isEmpty() );
+        if (!negative_phase_visible_samples)
         {
             // Generate hidden samples.
             hidden_layer->setExpectations(*hidden);
@@ -1027,24 +1032,14 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 computeHiddenActivations(visible_layer->samples);
                 hidden_layer->computeExpectations();
             }
+            PLASSERT( !compute_contrastive_divergence );
+            PLASSERT( !negative_phase_hidden_expectations );
             negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
-            if (compute_contrastive_divergence) {
-                Mat* store =
-                    ports_value[getPortIndex("negative_phase_hidden_expectations.state")];
-                PLASSERT(store->isEmpty());
-                store->resize(mbs, hidden_layer->size);
-                *store << hidden_layer->getExpectations();
-            }
 
-            if (!negative_phase_visible_samples)
-                negative_phase_visible_samples = &(visible_layer->samples);
-            else
-            {
-                PLASSERT(negative_phase_visible_samples->isEmpty());
-                negative_phase_visible_samples->resize(mbs,visible_layer->size);
-                *negative_phase_visible_samples << visible_layer->samples;
-            }
+            negative_phase_visible_samples = &(visible_layer->samples);
         }
+        PLASSERT( negative_phase_hidden_expectations &&
+                  !negative_phase_hidden_expectations->isEmpty() );
         // Perform update.
         visible_layer->update(*visible, *negative_phase_visible_samples);
         if (weights_grad)
