@@ -9,13 +9,13 @@ from plearn.bridge import *
 def deepcopy(plearnobject):
     # actually not a deep-copy, only copy options
     if plearn.bridgemode.useserver:
-        raise NotImplementedError
+        o = newObject(plearnobject.getObject())
     else:
         o = newObject(str(plearnobject))
-        if o==None:
-            print "deepcopy failed"
-            raise NotImplementedError
-        return o
+    if o==None:
+        print "deepcopy failed"
+        raise NotImplementedError
+    return o
 
 
 def train_with_schedule(learner,
@@ -68,6 +68,7 @@ def train_with_schedule(learner,
                          label='test'+str(j+1)+':'+costname)
             if logfile:
                 print >>logfile
+                logfile.flush()
         if plearn.bridgemode.interactive and i==0:
             legend()
     return (['stage']+selected_costnames,results)
