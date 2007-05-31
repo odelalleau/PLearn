@@ -799,6 +799,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             for( int i=0; i<n_Gibbs_steps_CD; i++)
             {
                 hidden_layer->generateSamples();
+                //pout << "Negative phase hidden sample: " <<
+                    //hidden_layer->samples << endl;
                 // (Negative phase) Generate visible samples.
                 sampleVisibleGivenHidden(hidden_layer->samples);
                 // compute corresponding hidden expectations.
@@ -827,13 +829,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 (*contrastive_divergence)(i,0) = 
                     // positive phase energy
                     visible_layer->energy((*visible)(i))
-                    + hidden_layer->energy((*h)(i))
                     + dot((*h)(i),(*h_act)(i))
                     // minus
                     - 
                     // negative phase energy
                     (visible_layer->energy(visible_layer->samples(i))
-                     + hidden_layer->energy(hidden_expectations(i))
                      + dot(hidden_expectations(i),hidden_layer->activations(i)));
             }
         }
@@ -920,6 +920,19 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* hidden_bias_grad = ports_gradient[getPortIndex("hidden_bias")];
     weights = ports_value[getPortIndex("weights")]; 
     Mat* weights_grad = ports_gradient[getPortIndex("weights")];    
+
+    // Ensure the gradient w.r.t. contrastive divergence is 1 (if provided).
+#ifdef BOUNDCHECK
+    if (compute_contrastive_divergence) {
+        Mat* contrastive_divergence_grad =
+            ports_gradient[getPortIndex("contrastive_divergence")];
+        if (contrastive_divergence_grad) {
+            PLASSERT( !contrastive_divergence_grad->isEmpty() );
+            PLASSERT( min(*contrastive_divergence_grad) >= 1 );
+            PLASSERT( max(*contrastive_divergence_grad) <= 1 );
+        }
+    }
+#endif
 
     if(reconstruction_connection)
         reconstruction_error_grad = 
@@ -1244,6 +1257,7 @@ void RBMModule::sampleHiddenGivenVisible(const Mat& visible)
     computeHiddenActivations(visible);
     hidden_layer->computeExpectations();
     hidden_layer->generateSamples();
+    //pout << "sampleHiddenGivenVisible: " << hidden_layer->samples << endl;
 }
 
 //////////////////////////////
@@ -1254,6 +1268,7 @@ void RBMModule::sampleVisibleGivenHidden(const Mat& hidden)
     computeVisibleActivations(hidden);
     visible_layer->computeExpectations();
     visible_layer->generateSamples();
+    //pout << "RBMModule::sampleVisibleGivenHidden: " << visible_layer->samples << endl;
 }
 
 /////////////////////
