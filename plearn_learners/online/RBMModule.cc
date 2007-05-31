@@ -505,6 +505,7 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(hidden_act_store, copies);
 
     deepCopyField(ports, copies);
+    deepCopyField(energy_inputs, copies);
 }
 
 ///////////
@@ -617,12 +618,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
                 // assuming a binary input we sum over all bit configurations
                 int n_configurations = 1 << visible_layer->size; // = 2^{visible_layer->size}
-                Mat inputs = visible_layer->getExpectations();
-                inputs.resize(1,visible_layer->size);
-                Vec input = inputs(0);
+                energy_inputs.resize(1, visible_layer->size);
+                Vec input = energy_inputs(0);
                 // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
                 // AT ONCE IN A 'MINIBATCH'
-                Mat free_energy(1,1);
+                Mat free_energy(1, 1);
                 log_partition_function = 0;
                 for (int c=0;c<n_configurations;c++)
                 {
@@ -633,7 +633,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                         input[i]= x & 1; // take least significant bit
                         x >>= 1; // and shift right (divide by 2)
                     }
-                    computeFreeEnergyOfVisible(inputs,free_energy,false);
+                    visible_layer->setExpectations(energy_inputs); // TODO Why?
+                    computeFreeEnergyOfVisible(energy_inputs,free_energy,false);
                     if (c==0)
                         log_partition_function = -free_energy(0,0);
                     else
@@ -646,9 +647,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
                 // assuming a binary hidden we sum over all bit configurations
                 int n_configurations = 1 << hidden_layer->size; // = 2^{hidden_layer->size}
-                Mat& inputs = hidden_layer->getExpectations();
-                inputs.resize(1,hidden_layer->size);
-                Vec input = inputs(0);
+                energy_inputs.resize(1, hidden_layer->size);
+                Vec input = energy_inputs(0);
                 // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
                 // AT ONCE IN A 'MINIBATCH'
                 Mat free_energy(1,1);
@@ -662,7 +662,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                         input[i]= x & 1; // take least significant bit
                         x >>= 1; // and shift right (divide by 2)
                     }
-                    computeFreeEnergyOfHidden(inputs,free_energy);
+                    hidden_layer->setExpectations(energy_inputs); // TODO Why?
+                    computeFreeEnergyOfHidden(energy_inputs, free_energy);
                     if (c==0)
                         log_partition_function = -free_energy(0,0);
                     else
@@ -702,9 +703,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         computePositivePhaseHiddenActivations(*visible);
         if (hidden) {
             PLASSERT( hidden->isEmpty() );
+            PLCHECK_MSG( !hidden_layer->expectations_are_up_to_date, "Safety "
+                    "check: how were expectations computed previously?" );
             hidden_layer->computeExpectations();
             hidden_expectations_are_computed=true;
-            Mat& hidden_out = hidden_layer->getExpectations();
+            const Mat& hidden_out = hidden_layer->getExpectations();
             hidden->resize(hidden_out.length(), hidden_out.width());
             *hidden << hidden_out;
         }
@@ -763,7 +766,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         if (visible && !visible->isEmpty())
         {
             int mbs = visible->length();
-            Mat& hidden_expectations = hidden_layer->getExpectations();
+            const Mat& hidden_expectations = hidden_layer->getExpectations();
             Mat* h=0;
             Mat* h_act=0;
             if (!hidden_activations_are_computed) // it must be because neither hidden nor hidden_act were asked
@@ -1009,8 +1012,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( ports_value.length() == nPorts() );
         Mat* negative_phase_visible_samples = 
             compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
-        Mat* negative_phase_hidden_expectations = 
-            compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_hidden_expectations.state")]:0;
+        const Mat* negative_phase_hidden_expectations = NULL;
         PLASSERT( visible && hidden );
         if (!negative_phase_visible_samples || negative_phase_visible_samples->isEmpty())
         {
@@ -1025,14 +1027,15 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 computeHiddenActivations(visible_layer->samples);
                 hidden_layer->computeExpectations();
             }
-            if (!negative_phase_hidden_expectations)
-                negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
-            else
-            {
-                PLASSERT(negative_phase_hidden_expectations->isEmpty());
-                negative_phase_hidden_expectations->resize(mbs,hidden_layer->size);
-                *negative_phase_hidden_expectations << hidden_layer->getExpectations();
+            negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
+            if (compute_contrastive_divergence) {
+                Mat* store =
+                    ports_value[getPortIndex("negative_phase_hidden_expectations.state")];
+                PLASSERT(store->isEmpty());
+                store->resize(mbs, hidden_layer->size);
+                *store << hidden_layer->getExpectations();
             }
+
             if (!negative_phase_visible_samples)
                 negative_phase_visible_samples = &(visible_layer->samples);
             else

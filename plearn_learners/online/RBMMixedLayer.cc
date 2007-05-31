@@ -563,8 +563,8 @@ void RBMMixedLayer::build_()
         layer->samples = samples.subMatColumns(init_pos, layer_size);
 
         layer->expectation = expectation.subVec(init_pos, layer_size);
-        layer->getExpectations() = expectations.subMatColumns(init_pos,
-                                                              layer_size);
+        layer->setExpectationsByRef(expectations.subMatColumns(init_pos,
+                                                              layer_size));
 
         layer->bias = bias.subVec(init_pos, layer_size);
 

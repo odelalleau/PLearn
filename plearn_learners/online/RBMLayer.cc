@@ -264,7 +264,7 @@ void RBMLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
 /////////////////////
 // getExpectations //
 /////////////////////
-Mat& RBMLayer::getExpectations() {
+const Mat& RBMLayer::getExpectations() {
     return this->expectations;
 }
 
@@ -571,6 +571,17 @@ void RBMLayer::setExpectations(const Mat& the_expectations)
     batch_size = the_expectations.length();
     setBatchSize( batch_size );
     expectations << the_expectations;
+    expectations_are_up_to_date=true;
+}
+
+//////////////////////////
+// setExpectationsByRef //
+//////////////////////////
+void RBMLayer::setExpectationsByRef(const Mat& the_expectations)
+{
+    batch_size = the_expectations.length();
+    setBatchSize( batch_size );
+    expectations = the_expectations;
     expectations_are_up_to_date=true;
 }
 

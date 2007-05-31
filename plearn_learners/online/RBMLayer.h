@@ -134,8 +134,12 @@ public:
     //! Copy the given expectations in the 'expectations' matrix.
     void setExpectations(const Mat& the_expectations);
 
+    //! Make the 'expectations' matrix point to the given data matrix (so no
+    //! copy is performed).
+    void setExpectationsByRef(const Mat& the_expectations);
+
     //! Accessor to the 'expectations' matrix.
-    Mat& getExpectations();
+    const Mat& getExpectations();
 
     //! Uses "rbmc" to compute the activation of unit "i" of this layer.
     //! This activation is computed by the "i+offset"-th unit of "rbmc"

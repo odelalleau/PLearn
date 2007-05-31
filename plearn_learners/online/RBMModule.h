@@ -244,6 +244,9 @@ protected:
     //! Map from a port name to its index in the 'ports' vector.
     map<string, int> portname_to_index;
 
+    //! Used to store inputs generated to compute the free energy.
+    Mat energy_inputs;
+
     //#####  Protected Member Functions  ######################################
 
     //! Add a new port to the 'portname_to_index' map and 'ports' vector.
