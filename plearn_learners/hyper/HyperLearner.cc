@@ -262,6 +262,32 @@ void HyperLearner::build_()
         strategy[commandnum]->setHyperLearner(this);
 }
 
+/////////
+// run //
+/////////
+void HyperLearner::run()
+{
+    if(!tester)
+        PLERROR("No tester specified for HyperLearner.");
+
+    if(!learner_ && !tester->learner)
+        PLERROR("You must specify the underlying learner, \n"
+                "either in the learner option of the HyperLearner \n"
+                "or in the learne roption of the HyperLearner's tester \n");
+
+    if(!tester->dataset)
+        PLERROR("You must specify a dataset field in the tester");
+
+    if(expdir=="")
+        PLERROR("You should specify an experiment directory with the expdir option.");
+
+    if(!learner_)
+        learner_ = tester->learner;
+    setTrainingSet(tester->dataset);
+    train();    
+}
+
+
 ///////////
 // build //
 ///////////
