@@ -406,8 +406,9 @@ void NetworkModule::build_()
         PLASSERT( dot_pos != string::npos );
         string old_module_name = old_name.substr(0, dot_pos);
         string old_module_port = old_name.substr(dot_pos + 1);
-        PLASSERT( name_to_module.find(old_module_name) !=
-                  name_to_module.end() );
+        if ( name_to_module.find(old_module_name) == name_to_module.end())
+            PLERROR("NetworkModule::Can't find module with name %s\n",old_module_name.c_str());
+
         new_row[0] = i;
         PP<OnlineLearningModule> old_module = name_to_module[old_module_name];
         new_row[1] = old_module->getPortIndex(old_module_port);
