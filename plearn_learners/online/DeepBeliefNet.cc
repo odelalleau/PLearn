@@ -1875,6 +1875,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             up_layer->generateSamples();
             connection->setAsUpInputs( up_layer->samples );
             down_layer->getAllActivations( connection, 0, true );
+            down_layer->computeExpectations();
             down_layer->generateSamples();
             // negative phase
             connection->setAsDownInputs( down_layer->samples );
@@ -1972,8 +1973,9 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         connection->setAsUpInput( up_layer->sample );
 
         down_layer->getAllActivations( connection );
-
+        down_layer->computeExpectation();
         down_layer->generateSample();
+
         // negative phase
         connection->setAsDownInput( down_layer->sample );
         up_layer->getAllActivations( connection, 0, mbatch );
