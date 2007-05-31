@@ -571,6 +571,7 @@ void RBMLayer::setExpectations(const Mat& the_expectations)
     batch_size = the_expectations.length();
     setBatchSize( batch_size );
     expectations << the_expectations;
+    expectations_are_up_to_date=true;
 }
 
 /////////////
