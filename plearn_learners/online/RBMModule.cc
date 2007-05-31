@@ -812,6 +812,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             PLASSERT(negative_phase_hidden_expectations);
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
             *negative_phase_visible_samples << visible_layer->samples;
+            hidden_layer->computeExpectations();
             negative_phase_hidden_expectations->resize(hidden_expectations.length(),
                                                        hidden_expectations.width());
             *negative_phase_hidden_expectations << hidden_expectations;
@@ -932,6 +933,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     // accumulate more than once in 'visible_grad'.
     PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "Cannot provide "
             "an input gradient w.r.t. visible units" );
+
+    bool compute_visible_grad = visible_grad && visible_grad->isEmpty();
     
     int mbs = (visible && !visible->isEmpty()) ? visible->length() : -1;
     if (visible && !visible->isEmpty() && 
@@ -956,7 +959,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             // Compute gradient w.r.t. expectations of the visible layer (=
             // inputs).
             Mat* store_visible_grad = NULL;
-            if (visible_grad) {
+            if (compute_visible_grad) {
                 PLASSERT( visible_grad->width() == visible_layer->size );
                 store_visible_grad = visible_grad;
             } else {
@@ -1140,7 +1143,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             *hidden_bias_grad += hidden_act_grad;
         }
         // Connection update
-        if(visible_grad)
+        if(compute_visible_grad)
         {
             // The length of 'visible_grad' must be either 0 (if not computed
             // previously) or the size of the mini-batches (otherwise).
@@ -1161,6 +1164,11 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         }
         partition_function_is_stale = true;
     }
+
+    // Explicit error message in the case of the 'visible' port.
+    if (compute_visible_grad && visible_grad->isEmpty())
+        PLERROR("In RBMModule::bpropAccUpdate - The gradient with respect "
+                "to the 'visible' port was asked, but not computed");
 
     checkProp(ports_gradient);
 
