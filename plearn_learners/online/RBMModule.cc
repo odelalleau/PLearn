@@ -807,12 +807,12 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 sampleVisibleGivenHidden(hidden_layer->samples);
                 // compute corresponding hidden expectations.
                 computeHiddenActivations(visible_layer->samples);
+                hidden_layer->computeExpectations();
             }
             PLASSERT(negative_phase_visible_samples);
             PLASSERT(negative_phase_hidden_expectations);
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
             *negative_phase_visible_samples << visible_layer->samples;
-            hidden_layer->computeExpectations();
             negative_phase_hidden_expectations->resize(hidden_expectations.length(),
                                                        hidden_expectations.width());
             *negative_phase_hidden_expectations << hidden_expectations;
