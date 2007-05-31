@@ -35,18 +35,19 @@ def train_with_schedule(learner,
     n_train = len(learning_rates)
     n_tests = len(testsets)
     n_costs = len(costnames)
-    results = zeros([n_train,1+n_tests*n_costs],Float32)
+    results = zeros([n_train,2+n_tests*n_costs],Float32)
     best_err = 1e10
     if plearn.bridgemode.interactive:
         clf()
     colors="bgrcmyk"
     styles=['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's', '+', 'x', 'D']
     for i in range(n_train):
-        learner.nstages = stages[i]
+        learner.nstages = int(stages[i])
         for lr_option in lr_options:
             learner.changeOptions({lr_option:str(learning_rates[i])})
         learner.train()
         results[i,0] = learner.stage
+        results[i,1] = learning_rates[i]
         for j in range(0,n_tests):
             ts = pl.VecStatsCollector()
             learner.test(testsets[j],ts,0,0)
@@ -54,7 +55,7 @@ def train_with_schedule(learner,
                 print >>logfile, "At stage ",learner.stage," test" + str(j+1),": ",
             for k in range(0,n_costs):
                 err = ts.getStat("E["+str(k)+"]")
-                results[i,j*n_costs+k+1]=err
+                results[i,j*n_costs+k+2]=err
                 costname = costnames[cost_indices[k]]
                 if logfile:
                     print >>logfile, costname, "=", err,
@@ -63,7 +64,7 @@ def train_with_schedule(learner,
                     learner.save(expdir+"/"+"best_learner.psave","plearn_ascii")
                 if plearn.bridgemode.interactive:
                     plot(results[0:i+1,0],results[0:i+1,
-                         j*n_costs+k+1],colors[k%7]+styles[j%15],
+                         j*n_costs+k+2],colors[k%7]+styles[j%15],
                          label='test'+str(j+1)+':'+costname)
             if logfile:
                 print >>logfile
@@ -72,26 +73,52 @@ def train_with_schedule(learner,
     return (['stage']+selected_costnames,results)
 
 
-def choose_initial_lr(learner,trainset,testset,lr_option,
+def choose_initial_lr(initial_learner,trainset,testset,lr_options,
                       nstages=10000,
                       cost_to_select_best=0,
                       initial_lr=0.01,
+                      call_forget=True,
                       lr_steps=exp(log(10)/2)):
-
+    """
+Optimize initial learning rate by exploring greedily from a given initial learning rate
+If call_forget then the provided initial_learner is changed (and not necessarily the
+optimal one) upon return. But if not call_forget then the initial_learner is unchanged
+(we make deep copies internally).
+"""
     log_initial_lr=log(initial_lr)
     log_steps=log(lr_steps)
+    global best_err
+    global best_learner
+    global initial_stage
+    best_learner=initial_learner
+    initial_stage=initial_learner.stage
+    best_err=1e20
 
     def lr(i):
         return exp(log_initial_lr+i*log_steps)
 
     def perf(i):
-        learner.setTrainingSet(trainset,True) # call forget()
-        learner.changeOptions({lr_option:str(lr(i))})
-        learner.nstages = nstages
+        global best_err
+        global best_learner
+        
+        if call_forget:
+            learner = initial_learner
+        else:
+            learner = deepcopy(initial_learner)
+        learner.setTrainingSet(trainset,call_forget)
+        options = {}
+        for lr_option in lr_options:
+            options[lr_option]=str(lr(i))
+        learner.changeOptions(options)
+        learner.nstages = int(nstages+initial_stage)
         learner.train()
         ts = pl.VecStatsCollector()
         learner.test(testset,ts,0,0)
-        return ts.getStat("E["+str(cost_to_select_best)+"]")
+        err=ts.getStat("E["+str(cost_to_select_best)+"]")
+        if err<best_err:
+            best_learner=learner
+            best_err=err
+        return err
 
     perfs = {}
     top = 1
@@ -114,7 +141,7 @@ def choose_initial_lr(learner,trainset,testset,lr_option,
             perfs[bottom]=perf(bottom)
             if perfs[bottom]<perfs[best]:
                 best=bottom
-    return (lr(best),perfs)
+    return (lr(best),perfs,best_learner)
 
 def train_adapting_lr(learner,
                       epoch,nstages,
@@ -194,7 +221,7 @@ def train_adapting_lr(learner,
         for active in actives:
             candidate = all_candidates[active]
             results = all_results[active]
-            candidate.nstages = initial_stage+s
+            candidate.nstages = int(initial_stage+s)
             for lr_option in lr_options:
                 candidate.changeOptions({lr_option:str(all_lr[active])})
             candidate.setTrainingSet(trainset,False)
