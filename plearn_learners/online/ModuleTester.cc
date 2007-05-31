@@ -324,6 +324,9 @@ void ModuleTester::build_()
                 bprop_data[idx] = out_grad_k;
             }
             // Perform bprop.
+            if (sub_rng)
+                sub_rng->manual_seed(default_seed);
+            module->forget();
             module->bpropAccUpdate(fprop_data, bprop_data);
             // Debug output.
             out_s = openString(output, PStream::plearn_ascii, "w");
@@ -375,7 +378,7 @@ void ModuleTester::build_()
                     for (int q = 0; q < grad->width(); q++)
                         if (!is_equal((*grad)(p,q), (*check)(p,q))) {
                             pout << "Gradient for port '" <<
-                                module->getPortName(k) << "' was not " <<
+                                module->getPortName(idx) << "' was not " <<
                                 "properly accumulated: " << (*grad)(p,q) <<
                                 " != " << (*check)(p,q) << endl;
                             ok = false;
@@ -439,7 +442,7 @@ void ModuleTester::build_()
                                     absolute_tolerance_threshold,
                                     absolute_tolerance, relative_tolerance)) {
                             pout << "Gradient for port '" <<
-                                module->getPortName(k) << "' was not " <<
+                                module->getPortName(idx) << "' was not " <<
                                 "properly estimated: " << (*grad)(p,q) <<
                                 " != " << (*b_check)(p,q) << endl;
                             ok = false;
