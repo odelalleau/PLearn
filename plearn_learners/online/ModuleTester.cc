@@ -237,7 +237,10 @@ void ModuleTester::build_()
                     sampling_data.find(port);
                 if (it == sampling_data.end()) {
                     in_k->resize(length, width);
-                    random_gen->fill_random_uniform(*in_k, min_in, max_in);
+                    if (fast_exact_is_equal(min_in, max_in))
+                        in_k->fill(min_in);
+                    else
+                        random_gen->fill_random_uniform(*in_k, min_in, max_in);
                 } else {
                     PP<VMatrix> vmat = it->second;
                     in_k->resize(vmat->length(), vmat->width());
@@ -443,8 +446,9 @@ void ModuleTester::build_()
                                     absolute_tolerance, relative_tolerance)) {
                             pout << "Gradient for port '" <<
                                 module->getPortName(idx) << "' was not " <<
-                                "properly estimated: " << (*grad)(p,q) <<
-                                " != " << (*b_check)(p,q) << endl;
+                                "properly computed: finite difference (" <<
+                                (*grad)(p,q) << ") != computed (" <<
+                                (*b_check)(p,q) << ")" << endl;
                             ok = false;
                         }
 
