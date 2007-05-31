@@ -330,7 +330,6 @@ void RBMModule::computeEnergy(const Mat& visible, const Mat& hidden,
     PLASSERT( hidden_activations );
     for (int i=0;i<mbs;i++)
         energy(i,0) = visible_layer->energy(visible(i)) + 
-            hidden_layer->energy(hidden(i)) + 
             dot(hidden(i), (*hidden_activations)(i));
 }
 
@@ -351,7 +350,7 @@ void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
     {
         energy(i,0) = hidden_layer->energy(hidden(i));
         for (int j=0;j<visible_layer->size;j++)
-            energy(i,0) += softplus(visible_layer->activations(i,j));
+            energy(i,0) -= softplus(-visible_layer->activations(i,j));
     }
 }
 
@@ -383,7 +382,7 @@ void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
     {
         energy(i,0) = visible_layer->energy(visible(i));
         for (int j=0;j<hidden_layer->size;j++)
-            energy(i,0) += softplus((*hidden_activations)(i,j));
+            energy(i,0) -= softplus(-(*hidden_activations)(i,j));
     }
 }
 
@@ -582,22 +581,21 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             // FULLY OBSERVED CASE
             // we know x and h: energy(h,x) = b'x + c'h + h'Wx
-            //  = visible_layer->energy(x) + hidden_layer->energy(h) + dot(h,hidden_layer->activation)
+            //  = visible_layer->energy(x) + hidden_layer->energy(h) + dot(h,hidden_layer->activation-c)
+            //  = visible_layer->energy(x) + dot(h,hidden_layer->activation)
             computeEnergy(*visible,*hidden,*energy);
         } else if (visible && !visible->isEmpty())
         {
             // FREE-ENERGY(visible) CASE
             // we know x: free energy = -log sum_h e^{-energy(h,x)}
-            //                        = b'x + sum_i log sigmoid(-c_i - W_i'x) .... FOR BINOMIAL HIDDEN LAYER
-            //                        = visible_layer->energy(x) + sum_i log hidden_layer->expectation[i]
+            //                        = b'x + sum_i log sigmoid(c_i + W_i'x) .... FOR BINOMIAL HIDDEN LAYER
             // or more robustly,      = visible_layer->energy(x) - sum_i softplus(-hidden_layer->activation[i])
             computeFreeEnergyOfVisible(*visible,*energy);
         }
         else if (hidden && !hidden->isEmpty())
             // FREE-ENERGY(hidden) CASE
             // we know h: free energy = -log sum_x e^{-energy(h,x)}
-            //                        = c'h + sum_i log sigmoid(-b_i - W_{.i}'h) .... FOR BINOMIAL INPUT LAYER
-            //                        = hidden_layer->energy(h) + sum_i log visible_layer->expectation[i]
+            //                        = c'h + sum_i log sigmoid(b_i + W_{.i}'h) .... FOR BINOMIAL INPUT LAYER
             // or more robustly,      = hidden_layer->energy(h) - sum_i softplus(-visible_layer->activation[i])
         {
             computeFreeEnergyOfHidden(*hidden,*energy);
@@ -633,7 +631,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                         input[i]= x & 1; // take least significant bit
                         x >>= 1; // and shift right (divide by 2)
                     }
-                    visible_layer->setExpectations(energy_inputs); // TODO Why?
                     computeFreeEnergyOfVisible(energy_inputs,free_energy,false);
                     if (c==0)
                         log_partition_function = -free_energy(0,0);
@@ -662,7 +659,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                         input[i]= x & 1; // take least significant bit
                         x >>= 1; // and shift right (divide by 2)
                     }
-                    hidden_layer->setExpectations(energy_inputs); // TODO Why?
                     computeFreeEnergyOfHidden(energy_inputs, free_energy);
                     if (c==0)
                         log_partition_function = -free_energy(0,0);
