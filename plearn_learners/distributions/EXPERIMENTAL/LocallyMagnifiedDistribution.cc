@@ -55,7 +55,8 @@ using namespace std;
 // LocallyMagnifiedDistribution //
 //////////////////
 LocallyMagnifiedDistribution::LocallyMagnifiedDistribution()
-    :mode(0),
+    :display_adapted_width(true),
+     mode(0),
      computation_neighbors(-1),
      kernel_adapt_width_mode(' '),
      fix_localdistr_center(true),
@@ -127,8 +128,8 @@ void LocallyMagnifiedDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "train_set", &LocallyMagnifiedDistribution::train_set, OptionBase::learntoption,
                   "We need to store the training set, as this learner is memory-based...");
 
-    // declareOption(ol, "NN", &LocallyMagnifiedDistribution::NN, OptionBase::learntoption,
-    //              "The nearest neighbor algorithm used to find nearest neighbors");
+    declareOption(ol, "NN", &LocallyMagnifiedDistribution::NN, OptionBase::learntoption,
+                  "The nearest neighbor algorithm used to find nearest neighbors");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -193,8 +194,14 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
         real new_width = 0;
         if(kernel_adapt_width_mode=='M')
         {
-            new_width = width_factor*NN_costs[width_n];
+            new_width = width_factor*NN_costs[width_n-1];
+            // if(display_adapted_width)
+            //   perr << "new_width=" << width_factor << " * NN_costs["<<width_n-1<<"] = "<< new_width << endl;
         }
+        else if(kernel_adapt_width_mode=='Z')
+        {
+            new_width = width_factor*sqrt(square(NN_costs[width_n-1])/w);
+         }
         else if(kernel_adapt_width_mode=='A')
         {
             for(int k=0; k<width_n; k++)
@@ -202,7 +209,20 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
             new_width *= width_factor/width_n;
         }
         else
-            PLERROR("Invalid kernel_adapt_width_mode");
+            PLERROR("Invalid kernel_adapt_width_mode: %c",kernel_adapt_width_mode);
+
+        // hack to display only first adapted width
+        if(display_adapted_width)
+        {
+            /*
+            perr << "NN_outputs = " << NN_outputs << endl;
+            perr << "NN_costs = " << NN_costs << endl;
+            perr << "inutsize = " << w << endl;
+            perr << "length = " << l << endl;
+            */
+            perr << "Adapted kernel width = " << new_width << endl;
+            display_adapted_width = false;
+        }
 
         weighting_kernel->setOption(width_optionname,tostring(new_width));
         weighting_kernel->build(); // rebuild to adapt to width change
@@ -352,13 +372,13 @@ void LocallyMagnifiedDistribution::train()
         NN->copy_weight = false;
         NN->copy_index = true;
         NN->build();
-        NN_outputs.resize(actual_nneighbors);
-        NN_costs.resize(actual_nneighbors);
         if(train_set.isNotNull())
         {
             NN->setTrainingSet(train_set);
             NN->train();
         }
+        NN_outputs.resize(actual_nneighbors);
+        NN_costs.resize(actual_nneighbors);
     }
 }
 

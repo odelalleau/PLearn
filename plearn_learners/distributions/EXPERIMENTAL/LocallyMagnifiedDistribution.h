@@ -62,6 +62,8 @@ private:
 
 protected:
 
+    mutable bool display_adapted_width;
+
     Vec emptyvec;
     mutable Vec NN_outputs;
     mutable Vec NN_costs;
