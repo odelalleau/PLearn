@@ -332,9 +332,15 @@ void OnlineLearningModule::build_()
 ///////////////
 void OnlineLearningModule::checkProp(const TVec<Mat*>& ports_data)
 {
+#ifdef BOUNDCHECK
     for (int i = 0; i < ports_data.length(); i++) {
-        PLCHECK( !ports_data[i] || !ports_data[i]->isEmpty() );
+        if (ports_data[i] && ports_data[i]->isEmpty())
+            PLERROR("In OnlineLearningModule::checkProp - Data for port '%s' "
+                    "of module '%s' (of class '%s') was not properly computed "
+                    "(this may have happened at the end of a fprop or a "
+                    "bpropAccUpdate");
     }
+#endif
 }
 
 //////////////////
