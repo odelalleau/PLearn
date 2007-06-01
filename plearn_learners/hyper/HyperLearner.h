@@ -110,7 +110,7 @@ public:
 
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-    void run();
+    virtual void run();
 
 }; // class HyperLearner
 
