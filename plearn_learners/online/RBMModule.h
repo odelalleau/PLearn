@@ -90,7 +90,9 @@ public:
     real log_partition_function;
     bool partition_function_is_stale;
 
-    bool standard_weights_grad;
+    bool standard_cd_weights_grad;
+    
+    bool standard_cd_grad;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -239,6 +241,12 @@ protected:
     Mat hidden_act_store;
     Mat* hidden_act;
     bool hidden_activations_are_computed;    
+
+    //! Used to store the contrastive divergence gradient w.r.t. weights.
+    Mat store_weights_grad;
+
+    //! Used to store the contrastive divergence gradient w.r.t. hidden bias.
+    Mat store_hidden_bias_grad;
 
     //! List of port names.
     TVec<string> ports;

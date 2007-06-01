@@ -40,6 +40,7 @@
 
 #include "RBMModule.h"
 #include <plearn/vmat/VMat.h>
+#include <plearn_learners/online/RBMMatrixConnection.h>
 
 #define PL_LOG_MODULE_NAME "RBMModule"
 #include <plearn/io/pl_log.h>
@@ -100,7 +101,8 @@ RBMModule::RBMModule():
     Gibbs_step(0),
     log_partition_function(0),
     partition_function_is_stale(true),
-    standard_weights_grad(true),
+    standard_cd_weights_grad(true),
+    standard_cd_grad(true),
     hidden_bias(NULL),
     weights(NULL),
     hidden_act(NULL),
@@ -144,14 +146,23 @@ void RBMModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Compute the constrastive divergence in an output port.");
 
-    declareOption(ol, "standard_weights_grad",
-                  &RBMModule::standard_weights_grad,
+    declareOption(ol, "standard_cd_grad",
+                  &RBMModule::standard_cd_grad,
+                  OptionBase::buildoption,
+        "Whether to use the standard contrastive divergence gradient for\n"
+        "updates, or the true gradient of the contrastive divergence. This\n"
+        "affects only the gradient w.r.t. internal parameters of the layers\n"
+        "and connections. Currently, this option works only with layers of\n"
+        "the type 'RBMBinomialLayer', connected by a 'RBMMatrixConnection'.");
+
+    declareOption(ol, "standard_cd_weights_grad",
+                  &RBMModule::standard_cd_weights_grad,
                   OptionBase::buildoption,
         "This option is only used when weights of the connection are given\n"
         "through the 'weights' port. When this is the case, the gradient of\n"
         "contrastive divergence w.r.t. weights is either computed:\n"
-        "- by the usual formula if 'standard_weights_grad' is true\n"
-        "- by the true gradient if 'standard_weights_grad' is false.");
+        "- by the usual formula if 'standard_cd_weights_grad' is true\n"
+        "- by the true gradient if 'standard_cd_weights_grad' is false.");
 
     declareOption(ol, "n_Gibbs_steps_CD", 
                   &RBMModule::n_Gibbs_steps_CD,
@@ -515,6 +526,8 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(hidden_exp_grad, copies);
     deepCopyField(hidden_act_grad, copies);
+    deepCopyField(store_weights_grad, copies);
+    deepCopyField(store_hidden_bias_grad, copies);
     deepCopyField(visible_exp_grad, copies);
     deepCopyField(visible_act_grad, copies);
     deepCopyField(visible_bias_grad, copies);
@@ -1094,6 +1107,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                   !negative_phase_hidden_expectations->isEmpty() );
         PLASSERT( negative_phase_hidden_activations &&
                   !negative_phase_hidden_activations->isEmpty() );
+
         // Perform update.
         visible_layer->update(*visible, *negative_phase_visible_samples);
 
@@ -1106,7 +1120,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                       weights_grad->width() == up * down );
             weights_grad->resize(mbs, up * down);
 
-            if (standard_weights_grad)
+            if (standard_cd_weights_grad)
             {
                 // Perform both computation of weights gradient and do update
                 // at the same time.
@@ -1127,8 +1141,20 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                             true);
                     connection_update_is_done = true;
                 }
-            } else {
-                // Only do computation of gradient here.
+            }
+        }
+        if (!standard_cd_weights_grad || !standard_cd_grad) {
+            // Compute 'true' gradient of contrastive divergence w.r.t.
+            // the weights matrix.
+            int up = connection->up_size;
+            int down = connection->down_size;
+            Mat* weights_g = weights_grad;
+            if (!weights_g) {
+                // We need to store the gradient in another matrix.
+                store_weights_grad.resize(mbs, up * down);
+                store_weights_grad.clear();
+                weights_g = & store_weights_grad;
+            }
                 PLASSERT( connection->classname() == "RBMMatrixConnection" &&
                           visible_layer->classname() == "RBMBinomialLayer" &&
                           hidden_layer->classname() == "RBMBinomialLayer" );
@@ -1150,44 +1176,78 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                             real v_j_p = (*visible)(k, j);
                             real v_j_n =
                                 (*negative_phase_visible_samples)(k, j);
-                            (*weights_grad)(k, idx) +=
+                            (*weights_g)(k, idx) +=
                                 p_i_p * v_j_p * scale_p   // Positive phase.
                              - (p_i_n * v_j_n * scale_n); // Negative phase.
                         }
                     }
                 }
-            }
+                if (!standard_cd_grad) {
+                    // Update connection manually.
+                    Mat& weights = ((RBMMatrixConnection*)
+                            get_pointer(connection))->weights;
+                    real lr = cd_learning_rate / mbs;
+                    for (int k = 0; k < mbs; k++) {
+                        int idx = 0;
+                        for (int i = 0; i < up; i++)
+                            for (int j = 0; j < down; j++, idx++)
+                                weights(i, j) -= lr * (*weights_g)(k, idx);
+                    }
+                    connection_update_is_done = true;
+                }
         }
         if (!connection_update_is_done)
+            // Perform standard update of the connection.
             connection->update(*visible, *hidden,
                     *negative_phase_visible_samples,
                     *negative_phase_hidden_expectations);
 
-        hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
+        Mat* hidden_bias_g = hidden_bias_grad;
+        if (!standard_cd_grad && !hidden_bias_grad) {
+            // We need to compute the CD gradient w.r.t. bias of hidden layer,
+            // but there is no bias coming from the outside. Thus we need
+            // another matrix to store this gradient.
+            store_hidden_bias_grad.resize(mbs, hidden_layer->size);
+            store_hidden_bias_grad.clear();
+            hidden_bias_g = & store_hidden_bias_grad;
+        }
 
-        if (hidden_bias_grad)
+        if (hidden_bias_g)
         {
-            if (hidden_bias_grad->isEmpty()) {
-                PLASSERT(hidden_bias_grad->width() == hidden_layer->size);
-                hidden_bias_grad->resize(mbs,hidden_layer->size);
+            if (hidden_bias_g->isEmpty()) {
+                PLASSERT(hidden_bias_g->width() == hidden_layer->size);
+                hidden_bias_g->resize(mbs,hidden_layer->size);
             }
             PLASSERT_MSG( hidden_layer->classname() == "RBMBinomialLayer" &&
                           visible_layer->classname() == "RBMBinomialLayer",
                           "Only implemented for binomial layers" );
             // d(contrastive_divergence)/dhidden_bias
-            for (int k = 0; k < hidden_bias_grad->length(); k++) {
-                for (int i = 0; i < hidden_bias_grad->width(); i++) {
+            for (int k = 0; k < hidden_bias_g->length(); k++) {
+                for (int i = 0; i < hidden_bias_g->width(); i++) {
                     real p_i_p = (*hidden)(k, i);
                     real a_i_p = (*hidden_act)(k, i);
                     real p_i_n = (*negative_phase_hidden_expectations)(k, i);
                     real a_i_n = (*negative_phase_hidden_activations)(k, i);
-                    (*hidden_bias_grad)(k, i) +=
+                    (*hidden_bias_g)(k, i) +=
                         - p_i_p * (1 - p_i_p) * a_i_p + p_i_p    // Pos. phase
                      -( - p_i_n * (1 - p_i_n) * a_i_n + p_i_n ); // Neg. phase
 
                 }
             }
         }
+
+        if (standard_cd_grad) {
+            hidden_layer->update(*hidden, *negative_phase_hidden_expectations);
+        } else {
+            PLASSERT( hidden_layer->classname() == "RBMBinomialLayer" );
+            // Update hidden layer by hand.
+            Vec& bias = hidden_layer->bias;
+            real lr = cd_learning_rate / mbs;
+            for (int i = 0; i < mbs; i++)
+                bias -= lr * (*hidden_bias_g)(i);
+        }
+
+
         partition_function_is_stale = true;
     } else {
         PLCHECK_MSG( !contrastive_divergence_grad ||
