@@ -256,8 +256,18 @@ void Variable::build_()
     int w_previous = width();
     int l, w;
     recomputeSize(l, w);
-    if (l && w && (l != l_previous || w != w_previous))
-        resize(l, w);
+    if(l==0 || w==0)
+    {
+        l = l_previous;
+        w = w_previous;
+    }
+    // we call resize in all cases, even if we already had matValue correctly sized
+    // the call to resize makes sure that value, valuedata, matGradient, gradient, gradientdata 
+    // are correctly sized and initialized.
+    resize(l, w);
+
+    //if (l && w && (l != l_previous || w != w_previous))
+    //    resize(l, w);
 }
 
 ///////////
