@@ -192,9 +192,12 @@ def doc(obj, docform = 2, join_token = '\n    '):
     elif docform==1:
         ## Determine a logical starting point that skips blank lines after
         ## the first line of documentation
-        for i in range(1,len(lines)):
+        #for i in range(1,len(lines)):
+        i= 1
+        while i < len(lines):
             if lines[i].strip() != "":
                 break
+            i+= 1
         lines = lines[i:]
     elif docform==2:
         pass

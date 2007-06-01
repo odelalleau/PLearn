@@ -293,6 +293,9 @@ template<size_t N> struct ConvertToPyObject<char[N]>
     
 template<> struct ConvertToPyObject<string>
 { static PyObject* newPyObject(const string& x); };
+
+template<> struct ConvertToPyObject<PPath>
+{ static PyObject* newPyObject(const PPath& x); };
   
 //! PLearn Vec: use numarray
 template<> struct ConvertToPyObject<Vec>
@@ -603,6 +606,10 @@ protected:
 template <class T>
 PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj, bool print_traceback)
 {
+    PLASSERT( pyobj );
+    if(pyobj == Py_None)
+        return 0;
+
     PPointable* o= 0;
     if(PyCObject_Check(pyobj))
         o= ConvertFromPyObject<PPointable*>::convert(pyobj, print_traceback);
@@ -758,6 +765,8 @@ PyObject*  ConvertToPyObject<char[N]>::newPyObject(const char x[N])
 template <class T>
 PyObject* ConvertToPyObject<PP<T> >::newPyObject(const PP<T>& data)
 {
+    if(data == 0)
+        return PythonObjectWrapper::newPyObject();
     Object* o= dynamic_cast<Object*>(static_cast<T*>(data));
     if(o)
         return ConvertToPyObject<Object*>::newPyObject(o);

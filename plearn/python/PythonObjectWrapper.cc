@@ -173,7 +173,15 @@ PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj, bool prin
 Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT(pyobj);
+    if(pyobj == Py_None)
+        return 0;
 
+    if(!PyObject_HasAttrString(pyobj, "_cptr"))
+    {
+        PLERROR("in ConvertFromPyObject<Object*>::convert : "
+                "python object has no attribute '_cptr'");
+        return 0;
+    }
     PyObject* cptr= PyObject_GetAttrString(pyobj, "_cptr");
 
     if (! PyCObject_Check(cptr))
@@ -706,6 +714,11 @@ PyObject* ConvertToPyObject<char*>::newPyObject(const char* x)
 }
     
 PyObject* ConvertToPyObject<string>::newPyObject(const string& x)
+{
+    return PyString_FromString(x.c_str());
+}
+
+PyObject* ConvertToPyObject<PPath>::newPyObject(const PPath& x)
 {
     return PyString_FromString(x.c_str());
 }

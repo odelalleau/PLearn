@@ -890,7 +890,7 @@ class plnamespace:
     getHolder = staticmethod(getHolder)
 
     def getPlopt(cls, optname):
-        return object.__getattribute__(cls, optname)
+        return super(cls, cls).__getattribute__(cls, optname)
     getPlopt = classmethod(getPlopt)
 
     def inherit(namespace):
@@ -921,9 +921,10 @@ class plnamespace:
                 # Do not use plopt.optdict: the documentation, choices and other
                 # property would be lost...
                 for opt in plopt.iterator(namespace):
-                    inh_opt = copy.deepcopy(opt)
-                    inh_opt.set( opt.get() )
-                    dic[inh_opt.getName()] = inh_opt
+                    if not opt.getName() in dic:
+                        inh_opt = copy.deepcopy(opt)
+                        inh_opt.set( opt.get() )
+                        dic[inh_opt.getName()] = inh_opt
                     
                 #OLD: optdict = dict([ (
                 #OLD:     opt.getName(), opt) for opt in plopt.iterator(namespace) ])

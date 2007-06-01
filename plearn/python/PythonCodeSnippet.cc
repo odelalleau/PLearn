@@ -250,12 +250,14 @@ bool PythonCodeSnippet::isInvokable(const char* function_name) const
 
     PyObject* pFunc= 0;
     bool instance_method= false;
-    char* fn= new char[strlen(function_name)+1];
-    strcpy(fn, function_name);
     if(!m_instance.isNull())
-        pFunc= PyObject_GetAttrString(m_instance.getPyObject(),
-                                      fn);
-    delete[] fn;
+    {
+        char* fn= new char[strlen(function_name)+1];
+        strcpy(fn, function_name);
+        if(PyObject_HasAttrString(m_instance.getPyObject(), fn))
+            pFunc= PyObject_GetAttrString(m_instance.getPyObject(), fn);
+        delete[] fn;
+    }
     if(pFunc) 
         instance_method= true;
     else
@@ -276,12 +278,14 @@ PythonCodeSnippet::invoke(const char* function_name) const
 
     PyObject* pFunc= 0;
     bool instance_method= false;
-    char* fn= new char[strlen(function_name)+1];
-    strcpy(fn, function_name);
     if(!m_instance.isNull())
-        pFunc= PyObject_GetAttrString(m_instance.getPyObject(),
-                                      fn);
-    delete[] fn;
+    {
+        char* fn= new char[strlen(function_name)+1];
+        strcpy(fn, function_name);
+        if(PyObject_HasAttrString(m_instance.getPyObject(), fn))
+            pFunc= PyObject_GetAttrString(m_instance.getPyObject(), fn);
+        delete[] fn;
+    }
     if(pFunc) 
         instance_method= true;
     else
@@ -327,12 +331,14 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     PyObject* pFunc= 0;
     bool instance_method= false;
-    char* fn= new char[strlen(function_name)+1];
-    strcpy(fn, function_name);
     if(!m_instance.isNull())
-        pFunc= PyObject_GetAttrString(m_instance.getPyObject(),
-                                      fn);
-    delete[] fn;
+    {
+        char* fn= new char[strlen(function_name)+1];
+        strcpy(fn, function_name);
+        if(PyObject_HasAttrString(m_instance.getPyObject(), fn))
+            pFunc= PyObject_GetAttrString(m_instance.getPyObject(), fn);
+        delete[] fn;
+    }
     if(pFunc) 
         instance_method= true;
     else
@@ -723,6 +729,7 @@ void PythonCodeSnippet::handlePythonErrors(const string& extramsg) const
         }
         else {
             PyErr_Print();
+            PyErr_Clear();
             PLERROR("PythonCodeSnippet: encountered Python exception.\n%s", 
                     extramsg.c_str());
         }
