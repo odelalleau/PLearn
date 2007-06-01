@@ -304,9 +304,6 @@ void LinearInductiveTransferClassifier::build_()
         else
             PLERROR("In LinearInductiveTransferClassifier::build_(): model_type %s is not valid", model_type.c_str());
 
-        Var sup_output;
-        Var new_output;
-
         TVec<bool> class_tags(noutputs);
         if(targetsize() == 1)
         {

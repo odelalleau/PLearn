@@ -215,16 +215,16 @@ protected:
     mutable Func sup_output_and_target_to_cost; 
 
     // Neural networks variables
-    //! Parameters for hidden to output layer weights prediction
-    VarArray As;
-    //! Parameters for input to hidden layer weights prediction
-    VarArray Ws;
     //! Input to hidden layer weights 
     Var W;
-    //! Scale parameter for input to hidden layer weights prediction
-    VarArray s_hids;
-    //! Hidden layer neurons
-    VarArray hidden_neurons;
+//    //! Parameters for hidden to output layer weights prediction
+//    VarArray As;
+//    //! Parameters for input to hidden layer weights prediction
+//    VarArray Ws;
+//    //! Scale parameter for input to hidden layer weights prediction
+//    VarArray s_hids;
+//    //! Hidden layer neurons
+//    VarArray hidden_neurons;
     
 protected:
     //#####  Protected Member Functions  ######################################
