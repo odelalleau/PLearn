@@ -47,7 +47,9 @@ using namespace std;
 /** GeneralizedOneHotVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(GeneralizedOneHotVMatrix,
-                        "ONE LINE DESC", "ONE LINE HELP");
+                        "VMatrix that maps many columns to a one-hot vector", 
+                        "This VMat is a generalization of OneHotVMatrix where many columns (given\n"
+                        "by the Vec index) are mapped, instead of just the last one.");
 
 GeneralizedOneHotVMatrix::GeneralizedOneHotVMatrix(bool call_build_)
     : inherited(call_build_)
@@ -123,13 +125,13 @@ void GeneralizedOneHotVMatrix::declareOptions(OptionList &ol)
                   (OptionBase::learntoption | OptionBase::nosave),
                   "DEPRECATED - use 'source' instead.");
     declareOption(ol, "index", &GeneralizedOneHotVMatrix::index,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption, "Columns to map to one-hot vector representation.");
     declareOption(ol, "nclasses", &GeneralizedOneHotVMatrix::nclasses,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption, "Size of the one-hot vector for each columns to map.");
     declareOption(ol, "cold_value", &GeneralizedOneHotVMatrix::cold_value,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption, "Cold values for all columns to map.");
     declareOption(ol, "hot_value", &GeneralizedOneHotVMatrix::hot_value,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption, "Hot values for all columns to map.");
     inherited::declareOptions(ol);
 }
 
@@ -155,8 +157,9 @@ void GeneralizedOneHotVMatrix::getNewRow(int i, const Vec& v) const
             Vec target = v.subVec(v_pos, nb_class);
             const real cold = cold_value[index_pos];
             const real hot = hot_value[index_pos];
-            const int classnum = int(source->get(i,j));
-            fill_one_hot(target, classnum, cold, hot);
+            const real classnum = source->get(i,j); // Maybe not a desired behavior
+            if(is_missing(classnum)) target.fill(cold);
+            else fill_one_hot(target, (int) classnum, cold, hot);
             v_pos += nb_class;
         }
     }

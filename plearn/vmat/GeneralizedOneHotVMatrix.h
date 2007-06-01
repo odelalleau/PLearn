@@ -51,7 +51,7 @@ namespace PLearn {
 using namespace std;
 
 
-//!  This VMat is a generalization of OneHotVMatrix where all columns (given
+//!  This VMat is a generalization of OneHotVMatrix where many columns (given
 //!  by the Vec index) are mapped, instead of just the last one.
 class GeneralizedOneHotVMatrix: public SourceVMatrix
 {
@@ -59,9 +59,13 @@ class GeneralizedOneHotVMatrix: public SourceVMatrix
 
 protected:
 
+    //! Columns to map to one-hot vector representation
     Vec index;
+    //! Size of the one-hot vector for each columns to map
     Vec nclasses;
+    //! Cold values for all columns to map
     Vec cold_value;
+    //! Hot values for all columns to map
     Vec hot_value;
 
 public:
