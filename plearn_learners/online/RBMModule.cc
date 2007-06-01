@@ -254,6 +254,7 @@ void RBMModule::build_()
         addPortName("contrastive_divergence");
         addPortName("negative_phase_visible_samples.state");
         addPortName("negative_phase_hidden_expectations.state");
+        addPortName("negative_phase_hidden_activations.state");
     }
 
     port_sizes.resize(nPorts(), 2);
@@ -289,6 +290,11 @@ void RBMModule::build_()
             port_sizes(getPortIndex("negative_phase_visible_samples.state"),1) = visible_layer->size; 
         if (hidden_layer)
             port_sizes(getPortIndex("negative_phase_hidden_expectations.state"),1) = hidden_layer->size; 
+        if (fast_exact_is_equal(cd_learning_rate, 0))
+            PLWARNING("In RBMModule::build_ - Contrastive divergence is "
+                    "computed but 'cd_learning_rate' is set to 0: no internal "
+                    "update will be performed AND no contrastive divergence "
+                    "gradient will be propagated.");
     }
 }
 
@@ -545,6 +551,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* contrastive_divergence = 0;
     Mat* negative_phase_visible_samples = 0;
     Mat* negative_phase_hidden_expectations = 0;
+    Mat* negative_phase_hidden_activations = NULL;
     if (compute_contrastive_divergence)
     {
         contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")]; 
@@ -557,6 +564,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             ports_value[getPortIndex("negative_phase_visible_samples.state")];
         negative_phase_hidden_expectations = 
             ports_value[getPortIndex("negative_phase_hidden_expectations.state")];
+        negative_phase_hidden_activations =
+            ports_value[getPortIndex("negative_phase_hidden_activations.state")];
     }
 
     bool hidden_expectations_are_computed = false;
@@ -799,8 +808,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             for( int i=0; i<n_Gibbs_steps_CD; i++)
             {
                 hidden_layer->generateSamples();
-                //pout << "Negative phase hidden sample: " <<
-                    //hidden_layer->samples << endl;
                 // (Negative phase) Generate visible samples.
                 sampleVisibleGivenHidden(hidden_layer->samples);
                 // compute corresponding hidden expectations.
@@ -808,12 +815,19 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 hidden_layer->computeExpectations();
             }
             PLASSERT(negative_phase_visible_samples);
-            PLASSERT(negative_phase_hidden_expectations);
+            PLASSERT(negative_phase_hidden_expectations &&
+                     negative_phase_hidden_expectations->isEmpty());
+            PLASSERT(negative_phase_hidden_activations &&
+                     negative_phase_hidden_activations->isEmpty());
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
             *negative_phase_visible_samples << visible_layer->samples;
             negative_phase_hidden_expectations->resize(hidden_expectations.length(),
                                                        hidden_expectations.width());
             *negative_phase_hidden_expectations << hidden_expectations;
+            const Mat& neg_hidden_act = hidden_layer->activations;
+            negative_phase_hidden_activations->resize(neg_hidden_act.length(),
+                                                      neg_hidden_act.width());
+            *negative_phase_hidden_activations << neg_hidden_act;
 
             // compute the energy (again for now only in the binomial case)
             PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
@@ -920,11 +934,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* hidden_bias_grad = ports_gradient[getPortIndex("hidden_bias")];
     weights = ports_value[getPortIndex("weights")]; 
     Mat* weights_grad = ports_gradient[getPortIndex("weights")];    
+    hidden_bias = ports_value[getPortIndex("hidden_bias")];
+    Mat* contrastive_divergence_grad = NULL;
 
     // Ensure the gradient w.r.t. contrastive divergence is 1 (if provided).
-#ifdef BOUNDCHECK
     if (compute_contrastive_divergence) {
-        Mat* contrastive_divergence_grad =
+        contrastive_divergence_grad =
             ports_gradient[getPortIndex("contrastive_divergence")];
         if (contrastive_divergence_grad) {
             PLASSERT( !contrastive_divergence_grad->isEmpty() );
@@ -932,7 +947,6 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             PLASSERT( max(*contrastive_divergence_grad) <= 1 );
         }
     }
-#endif
 
     if(reconstruction_connection)
         reconstruction_error_grad = 
@@ -1028,6 +1042,11 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             compute_contrastive_divergence ?
                 ports_value[getPortIndex("negative_phase_hidden_expectations.state")]
                 : NULL;
+        Mat* negative_phase_hidden_activations =
+            compute_contrastive_divergence ?
+                ports_value[getPortIndex("negative_phase_hidden_activations.state")]
+                : NULL;
+        
         PLASSERT( visible && hidden );
         PLASSERT( !negative_phase_visible_samples ||
                   !negative_phase_visible_samples->isEmpty() );
@@ -1046,12 +1065,15 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             }
             PLASSERT( !compute_contrastive_divergence );
             PLASSERT( !negative_phase_hidden_expectations );
+            PLASSERT( !negative_phase_hidden_activations );
             negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
-
             negative_phase_visible_samples = &(visible_layer->samples);
+            negative_phase_hidden_activations = &(hidden_layer->activations);
         }
         PLASSERT( negative_phase_hidden_expectations &&
                   !negative_phase_hidden_expectations->isEmpty() );
+        PLASSERT( negative_phase_hidden_activations &&
+                  !negative_phase_hidden_activations->isEmpty() );
         // Perform update.
         visible_layer->update(*visible, *negative_phase_visible_samples);
         if (weights_grad)
@@ -1093,12 +1115,27 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 PLASSERT(hidden_bias_grad->width() == hidden_layer->size);
                 hidden_bias_grad->resize(mbs,hidden_layer->size);
             }
-            // d(contrastive_divergence)/dhidden_bias =
-            //     hidden - negative_phase_hidden_expectations
-            *hidden_bias_grad += *hidden;
-            *hidden_bias_grad -= *negative_phase_hidden_expectations;
+            // d(contrastive_divergence)/dhidden_bias
+            for (int k = 0; k < hidden_bias_grad->length(); k++) {
+                for (int i = 0; i < hidden_bias_grad->width(); i++) {
+                    real p_i_p = (*hidden)(k, i);
+                    real a_i_p = (*hidden_act)(k, i);
+                    real p_i_n = (*negative_phase_hidden_expectations)(k, i);
+                    real a_i_n = (*negative_phase_hidden_activations)(k, i);
+                    (*hidden_bias_grad)(k, i) +=
+                        - p_i_p * (1 - p_i_p) * a_i_p + p_i_p    // Pos. phase
+                     -( - p_i_n * (1 - p_i_n) * a_i_n + p_i_n ); // Neg. phase
+
+                }
+            }
         }
         partition_function_is_stale = true;
+    } else {
+        PLCHECK_MSG( !contrastive_divergence_grad ||
+                     (!hidden_bias_grad && !weights_grad),
+                "You currently cannot compute the "
+                "gradient of contrastive divergence w.r.t. external ports "
+                "when 'cd_learning_rate' is set to 0" );
     }
 
     if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()) {
@@ -1184,6 +1221,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     // Reset pointers to ensure we do not reuse them by mistake.
     hidden_act = NULL;
     weights = NULL;
+    hidden_bias = NULL;
 }
 
 ////////////
@@ -1257,7 +1295,6 @@ void RBMModule::sampleHiddenGivenVisible(const Mat& visible)
     computeHiddenActivations(visible);
     hidden_layer->computeExpectations();
     hidden_layer->generateSamples();
-    //pout << "sampleHiddenGivenVisible: " << hidden_layer->samples << endl;
 }
 
 //////////////////////////////
@@ -1268,7 +1305,6 @@ void RBMModule::sampleVisibleGivenHidden(const Mat& hidden)
     computeVisibleActivations(hidden);
     visible_layer->computeExpectations();
     visible_layer->generateSamples();
-    //pout << "RBMModule::sampleVisibleGivenHidden: " << visible_layer->samples << endl;
 }
 
 /////////////////////
