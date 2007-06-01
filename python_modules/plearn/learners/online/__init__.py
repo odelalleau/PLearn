@@ -10,6 +10,37 @@ def ifthenelse(cond,elsep,condp):
     else:
         return condp
 
+def supervised_classification_mlp(name,input_size,n_hidden,n_classes,
+                                  L1wd=0,L2wd=0):
+    return pl.NetworkModule(name=name,
+                            modules=[ pl.GradNNetLayerModule(name='a1',input_size=input_size,
+                                                             output_size=nh,L2_penalty_factor=L2wd,
+                                                             L1_penalty_factor=L1wd),
+                                      pl.TanhModule(name='tanh',input_size=nh,output_size=nh),
+                                      pl.GradNNetLayerModule(name='a2',input_size=nh,
+                                                             output_size=n_classes,
+                                                             L2_penalty_factor=L2wd,
+                                                             L1_penalty_factor=L1wd),
+                                      pl.SoftmaxModule(name='softmax',input_size=n_classes,
+                                                       output_size=n_classes),
+                                      pl.IdentityModule(name='target'),
+                                      pl.NLLCostModule(name='nll',input_size=n_classes),
+                                      pl.ClassErrorCostModule(name='clerr',input_size=n_classes)],
+                            connections=[  connection('a1.output','tanh.input'),
+                                           connection('tanh.output','a2.input'),
+                                           connection('a2.output','softmax.input'),
+                                           connection('softmax.output','nll.prediction'),
+                                           connection('softmax.output','clerr.prediction'),
+                                           connection('target.output','nll.target'),
+                                           connection('target.output','clerr.target')],
+                            ports = [ ('in', 'a1.input'),
+                                      ('target', 'target.input'),
+                                      ('out', 'softmax.output'),
+                                      ('nll', 'nll.cost')
+                                      ('class_err','clerr.cost') ] )
+                            
+
+
 def rbm(name,
         visible_size,
         hidden_size,
