@@ -1,0 +1,94 @@
+# Run safety checks on RBMModule.
+
+from plearn.pyplearn import pl
+
+def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name,
+        compute_cd = False):
+    # Return a standard binomial RBM.
+    return pl.RBMModule(
+            name = name,
+            compute_contrastive_divergence = compute_cd,
+            cd_learning_rate = cd_learning_rate,
+            grad_learning_rate = grad_learning_rate,
+            visible_layer = pl.RBMBinomialLayer(size = visible_size),
+            hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
+            connection = pl.RBMMatrixConnection(
+                down_size = visible_size,
+                up_size = hidden_size))
+
+
+# All port configurations used in tests.
+conf_basic = \
+        {"in_grad":[ "visible" ],
+         "out_grad":[ "hidden.state" ],
+         "out_nograd":[ "hidden_activations.state" ]}
+
+conf_bias_cd = \
+        {"in_grad":[ "hidden_bias" ],
+         "in_nograd":[ "visible" ],
+         "out_grad":[ "contrastive_divergence" ],
+         "out_nograd":[ "hidden.state", "hidden_activations.state", "negative_phase_visible_samples.state",
+                        "negative_phase_hidden_expectations.state", "negative_phase_hidden_activations.state" ]}
+
+conf_bias_grad = \
+        {"in_grad":[ "hidden_bias" ],
+         "in_nograd":[ "visible" ],
+         "out_grad":[ "hidden.state" ],
+         "out_nograd":[ "hidden_activations.state" ]}
+
+conf_bias_both = \
+        {"in_grad":[ "hidden_bias" ],
+         "in_nograd":[ "visible" ],
+         "out_grad":[ "hidden.state", "contrastive_divergence" ],
+         "out_nograd":[ "hidden_activations.state", "negative_phase_visible_samples.state",
+                        "negative_phase_hidden_expectations.state", "negative_phase_hidden_activations.state" ]}
+
+
+testers = [
+
+    # Test a simple RBM that does not update itself (learning rates are set
+    # to 0).
+    pl.ModuleTester(
+            module = rbm(0, 0, 10, 20, 'rbm'),
+            configurations = [ conf_basic ]),
+
+    # Test with a positive gradient learning rate.
+    pl.ModuleTester(
+            module = rbm(0, 1e-3, 10, 20, 'rbm'),
+            configurations = [ conf_basic ]),
+
+    # Test with a positive contrastive divergence learning rate.
+    pl.ModuleTester(
+            module = rbm(1e-3, 0, 10, 20, 'rbm'),
+            configurations = [ conf_basic ]),
+
+    # Test with both contrastive divergence and gradient learning rate.
+    pl.ModuleTester(
+            module = rbm(1e-3, 1e-2, 10, 20, 'rbm'),
+            configurations = [ conf_basic ]),
+
+    # Test of gradient of contrastive divergence w.r.t. bias.
+    pl.ModuleTester(
+            module = rbm(1e-3, 0, 10, 20, 'rbm', True),
+            configurations = [ conf_bias_cd ],
+            min_out_grad = 1,
+            max_out_grad = 1),
+
+    # Test of backpropagation gradient w.r.t. bias.
+    pl.ModuleTester(
+            module = rbm(0, 1e-3, 10, 20, 'rbm'),
+            configurations = [ conf_bias_grad ]),
+
+    # Test of both backpropagation and contrastive divergence gradients w.r.t. bias.
+    pl.ModuleTester(
+            module = rbm(1e-2, 1e-3, 10, 20, 'rbm', True),
+            configurations = [ conf_bias_both ],
+            min_out_grad = 1,
+            max_out_grad = 1)
+
+    ]
+
+def main():
+    return pl.RunObject( objects = testers )
+
+
