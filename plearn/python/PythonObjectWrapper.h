@@ -282,6 +282,9 @@ template<> struct ConvertToPyObject<unsigned long>
 template<> struct ConvertToPyObject<double>
 { static PyObject* newPyObject(const double& x); };
 
+template<> struct ConvertToPyObject<float>
+{ static PyObject* newPyObject(const float& x); };
+
 template<> struct ConvertToPyObject<char*>
 { static PyObject* newPyObject(const char* x); };
 

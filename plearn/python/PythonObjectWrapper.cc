@@ -695,6 +695,11 @@ PyObject* ConvertToPyObject<double>::newPyObject(const double& x)
     return PyFloat_FromDouble(x);
 }
 
+PyObject* ConvertToPyObject<float>::newPyObject(const float& x)
+{
+    return PyFloat_FromDouble(double(x));
+}
+
 PyObject* ConvertToPyObject<char*>::newPyObject(const char* x)
 {
     return PyString_FromString(x);
