@@ -90,6 +90,8 @@ public:
     real log_partition_function;
     bool partition_function_is_stale;
 
+    bool standard_weights_grad;
+
 public:
     //#####  Public Member Functions  #########################################
 
