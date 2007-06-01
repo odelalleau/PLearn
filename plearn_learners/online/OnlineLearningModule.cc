@@ -338,7 +338,8 @@ void OnlineLearningModule::checkProp(const TVec<Mat*>& ports_data)
             PLERROR("In OnlineLearningModule::checkProp - Data for port '%s' "
                     "of module '%s' (of class '%s') was not properly computed "
                     "(this may have happened at the end of a fprop or a "
-                    "bpropAccUpdate");
+                    "bpropAccUpdate", getPortName(i).c_str(), name.c_str(),
+                    classname().c_str());
     }
 #endif
 }
