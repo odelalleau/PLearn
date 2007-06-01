@@ -56,7 +56,7 @@ ProbabilityPairsVariable::ProbabilityPairsVariable()
 
 ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input, real min, real max)
     : inherited(input, input->length(), input->width()*2),
-      max(max),min(min)
+      min(min),max(max)
 
 {
     build_();

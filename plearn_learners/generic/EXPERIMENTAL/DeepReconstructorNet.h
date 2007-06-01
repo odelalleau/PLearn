@@ -75,16 +75,20 @@ public:
     //! input layer).
 
     TVec<int> training_schedule;
+    int supervised_nepochs;    
 
     real good_improvement_rate;
     real fine_tuning_improvement_rate;
 
     // layers[0] is the input variable
     // last layer is final output layer
-    TVec<Var> layers;
+    VarArray layers;
 
     // reconstruction_costs[k] is the reconstruction cost for layers[k]
-    TVec<Var> reconstruction_costs;
+    VarArray reconstruction_costs;
+
+    // reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]
+    VarArray reconstructed_layers;
 
     PP<Optimizer> reconstruction_optimizer;
 
@@ -175,9 +179,16 @@ public:
     //! Returns a list of the parameters
     TVec<Mat> listParameter();
 
-    void fineTuning();
+    void prepareForFineTuning();
+    void fineTuningFor1Epoch();
+    void fineTuningFullOld();
 
     void trainSupervisedLayer(VMat inputs, VMat targets);
+
+    TVec<Mat> computeRepresentations(Mat input);
+    void reconstructInputFromLayer(int layer);
+    TVec<Mat> computeReconstructions(Mat input);
+
     
 
     // *** SUBCLASS WRITING: ***

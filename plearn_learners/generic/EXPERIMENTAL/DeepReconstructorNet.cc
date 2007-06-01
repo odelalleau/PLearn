@@ -42,6 +42,7 @@
 #include <plearn/var/Var_operators.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -52,7 +53,8 @@ PLEARN_IMPLEMENT_OBJECT(
    "MULTI-LINE \nHELP");
 
 DeepReconstructorNet::DeepReconstructorNet()
-    :good_improvement_rate(-1e10),
+    :supervised_nepochs(0),
+     good_improvement_rate(-1e10),
      fine_tuning_improvement_rate(-1e10),
      minibatch_size(1)
 {
@@ -80,6 +82,10 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
     declareOption(ol, "reconstruction_costs", &DeepReconstructorNet::reconstruction_costs,
                   OptionBase::buildoption,
                   "recontruction_costs[k] is the reconstruction cost for layer[k]");
+
+    declareOption(ol, "reconstructed_layers", &DeepReconstructorNet::reconstructed_layers,
+                  OptionBase::buildoption,
+                  "reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]");
 
     declareOption(ol, "reconstruction_optimizer", &DeepReconstructorNet::reconstruction_optimizer,
                   OptionBase::buildoption,
@@ -121,6 +127,10 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "");
 
+    declareOption(ol, "supervised_nepochs", &DeepReconstructorNet::supervised_nepochs,
+                  OptionBase::buildoption,
+                  "");
+
     
     
     // Now call the parent class' declareOptions
@@ -150,6 +160,20 @@ void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
                   &DeepReconstructorNet::listParameter,
                   (BodyDoc("Returns a list of the parameters"),
                    RetDoc("Returns a list of the names")));
+
+    declareMethod(rmm,
+                  "computeRepresentations",
+                  &DeepReconstructorNet::computeRepresentations,
+                  (BodyDoc("Compute the representation of each hidden layer"),
+                   ArgDoc("input", "the input"),
+                   RetDoc("The representations")));
+
+    declareMethod(rmm,
+                  "computeReconstructions",
+                  &DeepReconstructorNet::computeReconstructions,
+                  (BodyDoc("Compute the reconstructions of the input of each hidden layer"),
+                   ArgDoc("input", "the input"),
+                   RetDoc("The reconstructions")));
 }
 
 void DeepReconstructorNet::build_()
@@ -222,11 +246,13 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(training_schedule, copies);
     deepCopyField(layers, copies);
     deepCopyField(reconstruction_costs, copies);
+    deepCopyField(reconstructed_layers, copies);
     deepCopyField(reconstruction_optimizer, copies);
-    deepCopyField(target, copies);
+    varDeepCopyField(target, copies);
     deepCopyField(supervised_costs, copies);
-    deepCopyField(supervised_costvec, copies);
-    deepCopyField(fullcost, copies);    
+    varDeepCopyField(supervised_costvec, copies);
+    deepCopyField(supervised_costs_names, copies);
+    varDeepCopyField(fullcost, copies);    
     deepCopyField(parameters,copies);
     deepCopyField(supervised_optimizer, copies);
     deepCopyField(fine_tuning_optimizer, copies);
@@ -274,34 +300,48 @@ void DeepReconstructorNet::train()
     if (!initTrain())
         return;
 
-    PPath outmatfname = expdir/"outmat";
-
-    int nreconstructions = reconstruction_costs.length();
-    int insize = train_set->inputsize();
-    VMat inputs = train_set.subMatColumns(0,insize);
-    VMat targets = train_set.subMatColumns(insize, train_set->targetsize());
-    VMat dset = inputs;
-
-    bool must_train_supervised_layer = (training_schedule[training_schedule.length()-2]>0);
-
-    for(int k=0; k<nreconstructions; k++)
+    while(stage<nstages)
     {
-        trainHiddenLayer(k, dset);
-        // 'if' is a hack to avoid precomputing last hidden layer if not needed
-        if(k<nreconstructions-1 ||  must_train_supervised_layer) 
-        { 
-            int width = layers[k+1].width();
-            outmat[k] = new FileVMatrix(outmatfname+tostring(k+1)+".pmat",0,width);
-            outmat[k]->defineSizes(width,0);
-            buildHiddenLayerOutputs(k, dset, outmat[k]);
-            dset = outmat[k];
+        if(stage<1)
+        {
+            PPath outmatfname = expdir/"outmat";
+
+            int nreconstructions = reconstruction_costs.length();
+            int insize = train_set->inputsize();
+            VMat inputs = train_set.subMatColumns(0,insize);
+            VMat targets = train_set.subMatColumns(insize, train_set->targetsize());
+            VMat dset = inputs;
+
+            bool must_train_supervised_layer = (training_schedule[training_schedule.length()-2]>0);
+            
+            PLearn::save(expdir/"learner_0.psave", this);
+            for(int k=0; k<nreconstructions; k++)
+            {
+                trainHiddenLayer(k, dset);
+                PLearn::save(expdir/"learner_"+tostring(k+1)+".psave", this);
+                // 'if' is a hack to avoid precomputing last hidden layer if not needed
+                if(k<nreconstructions-1 ||  must_train_supervised_layer) 
+                { 
+                    int width = layers[k+1].width();
+                    outmat[k] = new FileVMatrix(outmatfname+tostring(k+1)+".pmat",0,width);
+                    outmat[k]->defineSizes(width,0);
+                    buildHiddenLayerOutputs(k, dset, outmat[k]);
+                    dset = outmat[k];
+                }
+            }
+
+            if(must_train_supervised_layer)
+                trainSupervisedLayer(dset, targets);
         }
+        else
+        {
+            pout << "Fine tuning stage " << stage+1 << endl;
+            prepareForFineTuning();            
+            fineTuningFor1Epoch();
+        }
+        ++stage;
+        train_stats->finalize(); // finalize statistics for this epoch
     }
-
-    if(must_train_supervised_layer)
-        trainSupervisedLayer(dset, targets);
-
-    fineTuning();
     /*
     while(stage<nstages)
     {        
@@ -334,14 +374,8 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
     }
 }
 
-void DeepReconstructorNet::fineTuning()
+void DeepReconstructorNet::prepareForFineTuning()
 {
-    int l = train_set->length();
-    int nepochs = training_schedule[training_schedule.length()-1];
-    perr << "\n\n*********************************************" << endl;
-    perr << "*** Performing fine tuning for " << nepochs << " epochs " << endl;
-    perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
-
     Func f(layers[0]&target, supervised_costvec);
     Var totalcost = sumOf(train_set, f, minibatch_size);
     // displayVarGraph(supervised_costvec);
@@ -349,7 +383,69 @@ void DeepReconstructorNet::fineTuning()
 
     VarArray params = totalcost->parents();
     supervised_optimizer->setToOptimize(params, totalcost);
+}
+
+
+TVec<Mat> DeepReconstructorNet::computeRepresentations(Mat input)
+{
+    int nlayers = layers.length();
+    TVec<Mat> representations(nlayers);
+    VarArray proppath = propagationPath(layers[0],layers[nlayers-1]);
+    layers[0]->matValue << input;
+    proppath.fprop();
+    for(int k=0; k<nlayers; k++)
+        representations[k] = layers[k]->matValue.copy();
+    return representations;
+}
+
+void DeepReconstructorNet::reconstructInputFromLayer(int layer)
+{
+    for(int k=layer; k>0; k--)
+    {
+        VarArray proppath = propagationPath(layers[k],reconstructed_layers[k-1]);
+        proppath.fprop();
+        reconstructed_layers[k-1]->matValue >> layers[k-1]->matValue;
+    }
+}
+
+TVec<Mat> DeepReconstructorNet::computeReconstructions(Mat input)
+{
+    int nlayers = layers.length();
+    VarArray proppath = propagationPath(layers[0],layers[nlayers-1]);
+    layers[0]->matValue << input;
+    proppath.fprop();
+
+    TVec<Mat> reconstructions(nlayers-2);
+    for(int k=1; k<nlayers-1; k++)
+    {
+        reconstructInputFromLayer(k);
+        reconstructions[k-1] = layers[0]->matValue.copy();
+    }
+    return reconstructions;
+}
+
+
+void DeepReconstructorNet::fineTuningFor1Epoch()
+{
+    if(train_stats.isNull())
+        train_stats = new VecStatsCollector();
+
+    int l = train_set->length();
     supervised_optimizer->reset();
+    supervised_optimizer->nstages = l/minibatch_size;
+    supervised_optimizer->optimizeN(*train_stats);
+}
+
+void DeepReconstructorNet::fineTuningFullOld()
+{
+    prepareForFineTuning();
+
+    int l = train_set->length();
+    int nepochs = nstages;
+    perr << "\n\n*********************************************" << endl;
+    perr << "*** Performing fine tuning for " << nepochs << " epochs " << endl;
+    perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
+
     VecStatsCollector st;
     real prev_mean = -1;
     real relative_improvement = fine_tuning_improvement_rate;
@@ -375,7 +471,7 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
 {
     int l = inputs->length();
     int last_hidden_layer = layers.length()-2;
-    int nepochs = training_schedule[training_schedule.length()-2];
+    int nepochs = supervised_nepochs;
     perr << "\n\n*********************************************" << endl;
     perr << "*** Training only supervised layer for " << nepochs << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
