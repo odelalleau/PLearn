@@ -152,7 +152,13 @@ TVec<VMat> MultiTaskSeparationSplitter::getSplit(int k)
     TVec<VMat> split(2);
     split[0] = get_input(multi_target_one_hot(add_missing(dataset,miss_cols_train),MISSING_VALUE,MISSING_VALUE),dataset->inputsize(),dataset->targetsize());
     split[1] = get_input(multi_target_one_hot(add_missing(dataset,miss_cols_test),MISSING_VALUE,MISSING_VALUE),dataset->inputsize(),dataset->targetsize());
-    if(append_train) split.append(split[0]);
+    if(append_train)
+    {
+        split.resize(3);
+        split[2] = split[0];
+    }
+    //split.append(split[0]);
+    //if(append_train) split.append(get_input(multi_target_one_hot(add_missing(dataset,miss_cols_train),MISSING_VALUE,MISSING_VALUE),dataset->inputsize(),dataset->targetsize()));
     return split;
 }
 
