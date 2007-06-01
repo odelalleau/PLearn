@@ -79,6 +79,7 @@ ModuleLearner::ModuleLearner():
     target_ports(TVec<string>(1, "target")),
     // Note: many learners do not use weights, thus the default behavior is not
     // to have a 'weight' port in 'weight_ports'.
+    reset_seed_upon_train(0),
     mbatch_size(-1)
 {
     random_gen = new PRandom();
@@ -98,6 +99,12 @@ void ModuleLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
        "User-specified number of samples fed to the network at each iteration of learning.\n"
        "Use '0' for full batch learning.");
+
+    declareOption(ol, "reset_seed_upon_train", &ModuleLearner::reset_seed_upon_train,
+                  OptionBase::buildoption,
+                  "Whether to reset the random generator seed upon starting the train\n"
+                  "method. If positive this is the seed. If -1 use the value of the\n"
+                  "option 'use_a_separate_random_generator_for_testing'.\n");
 
     declareOption(ol, "cost_ports", &ModuleLearner::cost_ports,
                   OptionBase::buildoption,
@@ -275,6 +282,14 @@ void ModuleLearner::train()
     if (!initTrain())
         return;
 
+    if (reset_seed_upon_train)
+    {
+        if (reset_seed_upon_train>0)
+            random_gen->manual_seed(reset_seed_upon_train);
+        else if (reset_seed_upon_train==-1)
+            random_gen->manual_seed(use_a_separate_random_generator_for_testing);
+        else PLERROR("ModuleLearner::reset_seed_upon_train should be >=-1");
+    }
     OnlineLearningModule::during_training=true;
     if (stage == 0) {
         // Perform training set-dependent initialization here.

@@ -630,6 +630,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         if (partition_function_is_stale && !during_training)
         {
+            PLASSERT_MSG(hidden_layer->size<32 || visible_layer->size<32,
+                         "To compute exact log-likelihood of an RBM, hidden_layer->size "
+                         "or visible_layer->size must be <32");
             // recompute partition function
             if (hidden_layer->size > visible_layer->size)
                 // do it by log-summing minus-free-energy of visible configurations
