@@ -79,6 +79,37 @@ void TanhModule::fprop(const Vec& input, Vec& output) const
     }
 }
 
+void TanhModule::fprop(const Mat& inputs, Mat& outputs)
+{
+    int mbs=inputs.length();
+    outputs.resize(mbs,output_size);
+    for (int i=0;i<mbs;i++)
+    {
+        Vec in_i = inputs(i);
+        Vec out_i = outputs(i);
+        fprop(in_i,out_i);
+    }
+}
+
+void TanhModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients, const Mat& output_gradients,
+                             bool accumulate)
+{
+    int mbs=inputs.length();
+    PLASSERT(mbs==outputs.length() && 
+             mbs==output_gradients.length());
+    input_gradients.resize(mbs,input_size);
+    for (int i=0;i<mbs;i++)
+    {
+        Vec in_i = inputs(i);
+        Vec out_i = outputs(i);
+        Vec gin_i = input_gradients(i);
+        Vec gout_i = output_gradients(i);
+        bpropUpdate(in_i,out_i,gin_i,gout_i,
+                    accumulate);
+    }
+}
+
 // Nothing to update
 void TanhModule::bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient)

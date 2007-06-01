@@ -74,9 +74,14 @@ public:
     // Your other public member functions go here
 
     virtual void fprop(const Vec& input, Vec& output) const;
+    virtual void fprop(const Mat& inputs, Mat& outputs);
 
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
+
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients, const Mat& output_gradients,
+                             bool accumulate=false);
 
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              Vec& input_gradient, const Vec& output_gradient,

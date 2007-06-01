@@ -163,6 +163,7 @@ void CostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     "set to false, or outgoing connections from '%s.cost' have"
                     " their 'propagate_gradient' flag set to true).",
                     OnlineLearningModule::name.c_str(), classname().c_str(),
+                    OnlineLearningModule::name.c_str(),
                     OnlineLearningModule::name.c_str());
         }
     }
