@@ -429,6 +429,9 @@ void MultiTargetOneHotVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
   inherited::makeDeepCopyFromShallowCopy(copies);
   deepCopyField(data, copies);
+  deepCopyField(source_target, copies);
+  deepCopyField(target_descriptor, copies);
+  deepCopyField(source_and_target, copies);
 }
 
 } // end of namespace PLearn
