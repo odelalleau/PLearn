@@ -130,7 +130,7 @@ public:
 
 DECLARE_OBJECT_PTR(AddMissingVMatrix);
 
-inline VMat add_missing(VMat source, TVec<int> missing_values_columns)
+inline VMat add_missing(VMat source, const TVec<int>& missing_values_columns)
   {
     AddMissingVMatrix* ret = new AddMissingVMatrix();
     ret->source = source;
