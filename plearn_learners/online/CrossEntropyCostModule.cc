@@ -105,9 +105,10 @@ void CrossEntropyCostModule::fprop(const Vec& input, const Vec& target, real& co
             cost += target_i * softplus(activation_i);
         if(!fast_exact_is_equal(target_i,1.0))
             // ret -= (1-target_i) * pl_log(1-expectation_i);
-            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x))) =
-            //                         = -x -log(1+exp(-x)) = -x-softplus(-x)
-            cost += (1-target_i) * (softplus(activation_i) - activation_i);
+            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+            //                         = log(1/(1+exp(x)))
+            //                         = -log(1+exp(x)) = -softplus(x)
+            cost += (1-target_i) * softplus(-activation_i);
     }
 
 }

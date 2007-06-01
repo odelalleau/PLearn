@@ -319,16 +319,17 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
             ret += target_i * softplus(activation_i);
         if(!fast_exact_is_equal(target_i,1.0))
             // ret -= (1-target_i) * pl_log(1-expectation_i);
-            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x))) = 
-            //                         = -x -log(1+exp(-x)) = -x-softplus(-x)
-            ret += (1-target_i) * (softplus(activation_i) - activation_i);
+            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+            //                         = log(1/(1+exp(x)))
+            //                         = -log(1+exp(x)) = -softplus(x)
+            ret += (1-target_i) * softplus(-activation_i);
     }
     return ret;
 }
 
 void RBMBinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
-    computeExpectations();
+    // computeExpectations(); // why?
 
     PLASSERT( targets.width() == input_size );
     PLASSERT( targets.length() == batch_size );
@@ -350,9 +351,11 @@ void RBMBinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
                 nll += target[i] * softplus(activation[i]);
             if(!fast_exact_is_equal(target[i],1.0))
                 // nll -= (1-target[i]) * pl_log(1-output[i]);
-                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x))) = 
-                //                         = -x -log(1+exp(-x)) = -x-softplus(-x)
-                nll += (1-target[i]) * (softplus(activation[i])-activation[i]);
+                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+                //                         = log(1/(1+exp(x)))
+                //                         = -log(1+exp(x))
+                //                         = -softplus(x)
+                nll += (1-target[i]) * softplus(-activation[i]);
 
         }
         costs_column(k,0) = nll;
