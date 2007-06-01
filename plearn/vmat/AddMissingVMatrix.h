@@ -134,7 +134,8 @@ inline VMat add_missing(VMat source, TVec<int> missing_values_columns)
   {
     AddMissingVMatrix* ret = new AddMissingVMatrix();
     ret->source = source;
-    ret->missing_values_columns = missing_values_columns;
+    ret->missing_values_columns.resize(missing_values_columns.length());
+    ret->missing_values_columns << missing_values_columns;
     ret->build();
     return ret;
   }
