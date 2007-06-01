@@ -31,7 +31,7 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 from plearn.pyext.plext import *
-   
+
 from plearn.pyplearn.plargs import *
 import cgitb
 cgitb.enable(format='PLearn')
@@ -54,6 +54,30 @@ class pl:
                 return obj
             return newObj
 
+# Redefines function TMat to emulate pyplearn behaviour
+def TMat( *args ):
+    """Returns a list of lists, each inner list being a row of the TMat"""
+    nargs = len(args)
+    assert nargs in (0, 1, 3)
+
+    # Empty TMat
+    if nargs == 0:
+        return []
+
+    # Argument is already a list of lists
+    elif nargs == 1:
+        return args[0]
+
+    # Argument is a (length, width, content) tuple, content being a list
+    elif nargs == 3:
+        nrows = args[0]
+        ncols = args[1]
+        content = args[2]
+        assert nrows*ncols == len(content)
+
+        return [ content[i*ncols:(i+1)*ncols] for i in range(nrows) ]
+
+
 # Enact the use of plargs: the current behavior is to consider as a plargs
 # any command-line argument that contains a '=' char and to neglect all
 # others
@@ -69,7 +93,7 @@ if __name__ == "__main__":
     print sys.argv[1:]
     print A.T
     print B.T
-        
+
     # python __init__.py T=10 B.T=25
     # ['T=10', 'B.T=25']
     # 10
