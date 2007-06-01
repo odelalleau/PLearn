@@ -237,8 +237,8 @@ def train_adapting_lr(learner,
            will curve2 eventually cross curve1? if yes return False o/w return True"""
 
         start_t = max(all_start[c1],all_start[c2])
-        curve1 = error_curve(c1,start_t,t),
-        curve2 = error_curve(c2,start_t,t),
+        curve1 = error_curve(c1,start_t,t)
+        curve2 = error_curve(c2,start_t,t)
         if curve1.shape[0]-1<min_epochs_to_delete or curve1[-1]>=curve2[-1]:
             return False
         slope1=curve1[-1]-curve1[-2]

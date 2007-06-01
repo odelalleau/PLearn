@@ -14,10 +14,12 @@ def supervised_classification_mlp(name,input_size,n_hidden,n_classes,
                                   L1wd=0,L2wd=0):
     return pl.NetworkModule(name=name,
                             modules=[ pl.GradNNetLayerModule(name='a1',input_size=input_size,
-                                                             output_size=nh,L2_penalty_factor=L2wd,
+                                                             output_size=n_hidden,
+                                                             L2_penalty_factor=L2wd,
                                                              L1_penalty_factor=L1wd),
-                                      pl.TanhModule(name='tanh',input_size=nh,output_size=nh),
-                                      pl.GradNNetLayerModule(name='a2',input_size=nh,
+                                      pl.TanhModule(name='tanh',input_size=n_hidden,
+                                                    output_size=n_hidden),
+                                      pl.GradNNetLayerModule(name='a2',input_size=n_hidden,
                                                              output_size=n_classes,
                                                              L2_penalty_factor=L2wd,
                                                              L1_penalty_factor=L1wd),
@@ -36,7 +38,7 @@ def supervised_classification_mlp(name,input_size,n_hidden,n_classes,
                             ports = [ ('in', 'a1.input'),
                                       ('target', 'target.input'),
                                       ('out', 'softmax.output'),
-                                      ('nll', 'nll.cost')
+                                      ('nll', 'nll.cost'),
                                       ('class_err','clerr.cost') ] )
                             
 
