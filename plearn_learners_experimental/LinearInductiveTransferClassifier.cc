@@ -675,9 +675,9 @@ void LinearInductiveTransferClassifier::train()
 
         for(int i = 0; i < rbm_nstages; i++)
         {
-            for(int i=0; i<train_set->length(); i++)
+            for(int j=0; j<train_set->length(); j++)
             {
-                train_set->getExample(i,input,target,example_weight);
+                train_set->getExample(j,input,target,example_weight);
 
                 pos_visible = input;
                 layer_connections->setAsUpInput( input );
