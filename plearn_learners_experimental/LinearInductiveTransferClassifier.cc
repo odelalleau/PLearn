@@ -555,30 +555,6 @@ void LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy(CopiesMap& c
     deepCopyField(optimizer, copies);
     deepCopyField(visible_layer, copies);
     deepCopyField(hidden_layer, copies);
-    deepCopyField(params, copies);
-    deepCopyField(paramsvalues, copies);
-    deepCopyField(invars, copies);
-    deepCopyField(costs, copies);
-    deepCopyField(new_costs, copies);
-    deepCopyField(penalties, copies);
-    deepCopyField(seen_targets, copies);
-    deepCopyField(unseen_targets, copies);
-
-    deepCopyField(f, copies);
-    deepCopyField(test_costf, copies);
-    deepCopyField(output_and_target_to_cost, copies);
-    deepCopyField(sup_test_costf, copies);
-    deepCopyField(sup_output_and_target_to_cost, copies);
-
-    varDeepCopyField(A, copies);
-    varDeepCopyField(s, copies);
-    varDeepCopyField(class_reps_var, copies);
-
-    varDeepCopyField(W, copies);
-    //deepCopyField(As, copies);
-    //deepCopyField(Ws, copies);
-    //deepCopyField(s_hids, copies);
-    //deepCopyField(hidden_neurons, copies);
 
     varDeepCopyField(input, copies);
     varDeepCopyField(output, copies);
@@ -588,8 +564,34 @@ void LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy(CopiesMap& c
     varDeepCopyField(sup_target, copies);
     varDeepCopyField(new_target, copies);
     varDeepCopyField(sampleweight, copies);
+    varDeepCopyField(A, copies);
+    varDeepCopyField(s, copies);
+    varDeepCopyField(class_reps_var, copies);
+
+    deepCopyField(costs, copies);
+    deepCopyField(new_costs, copies);
+    deepCopyField(params, copies);
+    deepCopyField(paramsvalues, copies);
+    deepCopyField(penalties, copies);
+
     varDeepCopyField(training_cost, copies);
     varDeepCopyField(test_costs, copies);
+
+    deepCopyField(invars, copies);
+    deepCopyField(seen_targets, copies);
+    deepCopyField(unseen_targets, copies);
+
+    deepCopyField(f, copies);
+    deepCopyField(test_costf, copies);
+    deepCopyField(output_and_target_to_cost, copies);
+    deepCopyField(sup_test_costf, copies);
+    deepCopyField(sup_output_and_target_to_cost, copies);
+
+    varDeepCopyField(W, copies);
+    //deepCopyField(As, copies);
+    //deepCopyField(Ws, copies);
+    //deepCopyField(s_hids, copies);
+    //deepCopyField(hidden_neurons, copies);
 
     //PLERROR("LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
