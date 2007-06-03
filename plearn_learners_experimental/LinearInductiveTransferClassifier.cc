@@ -714,6 +714,7 @@ void LinearInductiveTransferClassifier::train()
             recons = 0;
         }
         W->matValue.subMat(1,0,inputsize_,nhidden) << layer_matrix_connections->weights;
+        W->matValue(0) << hidden_layer->bias;
     }
 
     if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1" || model_type == "nnet_discriminative_1_vs_all")
