@@ -81,6 +81,7 @@
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/math/plapack.h>
+#include <plearn_learners/online/RBMMatrixConnection.h>
 
 namespace PLearn {
 using namespace std;
@@ -111,6 +112,18 @@ void LinearInductiveTransferClassifier::declareOptions(OptionList& ol)
     declareOption(ol, "optimizer", &LinearInductiveTransferClassifier::optimizer, 
                   OptionBase::buildoption,
                   "Optimizer of the discriminative classifier");
+    declareOption(ol, "rbm_nstages", 
+                  &LinearInductiveTransferClassifier::rbm_nstages, 
+                  OptionBase::buildoption,
+                  "Number of RBM training to initialize hidden layer weights");
+    declareOption(ol, "visible_layer",
+                  &LinearInductiveTransferClassifier::visible_layer, 
+                  OptionBase::buildoption,
+                  "Visible layer of the RBM");
+    declareOption(ol, "hidden_layer",
+                  &LinearInductiveTransferClassifier::hidden_layer, 
+                  OptionBase::buildoption,
+                  "Hidden layer of the RBM");
     declareOption(ol, "batch_size", &LinearInductiveTransferClassifier::batch_size,
                   OptionBase::buildoption, 
                   "How many samples to use to estimate the avergage gradient before updating the weights\n"
@@ -301,6 +314,7 @@ void LinearInductiveTransferClassifier::build_()
             weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that the scaling factor is going to be positive
             output = affine_transform(tanh(affine_transform(input,W)), weights);
         }
+
         else
             PLERROR("In LinearInductiveTransferClassifier::build_(): model_type %s is not valid", model_type.c_str());
 
@@ -539,6 +553,8 @@ void LinearInductiveTransferClassifier::makeDeepCopyFromShallowCopy(CopiesMap& c
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(class_reps, copies);
     deepCopyField(optimizer, copies);
+    deepCopyField(visible_layer, copies);
+    deepCopyField(hidden_layer, copies);
     deepCopyField(params, copies);
     deepCopyField(paramsvalues, copies);
     deepCopyField(invars, copies);
@@ -630,6 +646,76 @@ void LinearInductiveTransferClassifier::train()
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
     
+    if(stage == 0 && nstages > 0 && model_type == "nnet_discriminative_1_vs_all")
+    {
+        Vec input, target;
+        real example_weight;
+        real recons = 0;
+        RBMMatrixConnection* c = new RBMMatrixConnection();
+        PP<RBMMatrixConnection> layer_matrix_connections = c;
+        PP<RBMConnection> layer_connections = c;
+        hidden_layer->size = nhidden;
+        visible_layer->size = inputsize_;
+        layer_connections->up_size = inputsize_;
+        layer_connections->down_size = nhidden;
+        
+        hidden_layer->random_gen = random_gen;
+        visible_layer->random_gen = random_gen;
+        layer_connections->random_gen = random_gen;
+        
+        hidden_layer->build();
+        visible_layer->build();
+        layer_connections->build();
+        
+        Vec pos_visible,pos_hidden,neg_visible,neg_hidden;
+        pos_visible.resize(inputsize_);
+        pos_hidden.resize(nhidden);
+        neg_visible.resize(inputsize_);
+        neg_hidden.resize(nhidden);
+
+        for(int i = 0; i < rbm_nstages; i++)
+        {
+            for(int i=0; i<train_set->length(); i++)
+            {
+                train_set->getExample(i,input,target,example_weight);
+
+                pos_visible = input;
+                layer_connections->setAsUpInput( input );
+                hidden_layer->getAllActivations( layer_connections );
+                hidden_layer->computeExpectation();
+                hidden_layer->generateSample();
+                pos_hidden << hidden_layer->expectation;            
+
+                layer_connections->setAsDownInput( hidden_layer->sample );
+                visible_layer->getAllActivations( layer_connections );
+                visible_layer->computeExpectation();
+                visible_layer->generateSample();
+                neg_visible = visible_layer->sample;
+
+                layer_connections->setAsUpInput( visible_layer->sample );
+                hidden_layer->getAllActivations( layer_connections );
+                hidden_layer->computeExpectation();
+                neg_hidden = hidden_layer->expectation;
+
+                // Compute reconstruction error
+                layer_connections->setAsDownInput( pos_hidden );
+                visible_layer->getAllActivations( layer_connections );
+                visible_layer->computeExpectation();
+                recons += visible_layer->fpropNLL(input);
+                
+                // Update
+                visible_layer->update(pos_visible, neg_visible);
+                hidden_layer->update(pos_hidden, neg_hidden);
+                layer_connections->update(pos_hidden, pos_visible,
+                                          neg_hidden, neg_visible);
+            }
+            if(verbosity > 2)
+                cout << "Reconstruction error = " << recons << endl;
+            recons = 0;
+        }
+        W->matValue.subMat(1,0,inputsize_,nhidden) << layer_matrix_connections->weights;
+    }
+
     if(model_type == "discriminative" || model_type == "discriminative_1_vs_all" || model_type == "generative_0-1" || model_type == "nnet_discriminative_1_vs_all")
     {
         // number of samples seen by optimizer before each optimizer update
@@ -955,7 +1041,6 @@ void LinearInductiveTransferClassifier::fillWeights(const Var& weights,
         random_gen->fill_random_normal(weights->value, 0, delta);
     else
         random_gen->fill_random_uniform(weights->value, -delta, delta);
-
     if(zero_first_row)
         weights->matValue(0).clear();
 }

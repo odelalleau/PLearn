@@ -47,6 +47,7 @@
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn/opt/Optimizer.h>
 #include <plearn/var/VarArray.h>
+#include <plearn_learners/online/RBMLayer.h>
 
 namespace PLearn {
 
@@ -91,6 +92,12 @@ public:
     real sigma_min;
     //! Number of hidden units for neural network
     int nhidden;
+    //! Number of RBM training to initialize hidden layer weights
+    int rbm_nstages;
+    //! Visible layer of the RBM
+    PP<RBMLayer> visible_layer;
+    //! Hidden layer of the RBM
+    PP<RBMLayer> hidden_layer;
 
 public:
     //#####  Public Member Functions  #########################################
