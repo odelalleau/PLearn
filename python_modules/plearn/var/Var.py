@@ -69,8 +69,8 @@ class Var:
         # So we make sure data is flushed to disk.
         return self.v.plearn_repr(indent_level, inner_repr)
 
-    def probabilityPairs(self, min, max):
-        return Var(pl.ProbabilityPairsVariable(input=self.v, min=min, max=max))
+    def probabilityPairs(self, min, max, varname=""):
+        return Var(pl.ProbabilityPairsVariable(input=self.v, min=min, max=max, varname=varname))
 
     def transpose(self):
         return Var(pl.TransposeVariable(input=self.v))
@@ -176,16 +176,22 @@ def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
     cost = reconstr_activation.negCrossEntropySigmoid(input)
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, basename=""):
+def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, constrain_mask=False, basename=""):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    #M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
-    #W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
-    M = Var(ow/ogs, iw, "uniform", -1./sqrt(iw), 1./sqrt(iw), False, varname=basename+"_M")
-    W = Var(ogs, iw, "uniform", -1./sqrt(iw), 1./sqrt(iw), False, varname=basename+"_W")
-    hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
-    log_reconstructed = hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs)
+    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
+    if constrain_mask:
+        M = M.sigmoid()
+    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')
+        hidden = input.doubleProduct(W,M).add(b).multiSoftMax(ogs)
+        br = Var(1,iw,"fill",0, varname=basename+'_br')
+        log_reconstructed = hidden.transposeDoubleProduct(W,M).add(br).multiLogSoftMax(igs)
+    else:
+        hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
+        log_reconstructed = hidden.transposeDoubleProduct(W,M).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input

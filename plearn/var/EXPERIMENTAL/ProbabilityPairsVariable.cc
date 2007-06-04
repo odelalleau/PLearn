@@ -133,9 +133,6 @@ void ProbabilityPairsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     // ### If you want to deepCopy a Var field:
     // varDeepCopyField(somevariable, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ProbabilityPairsVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 void ProbabilityPairsVariable::declareOptions(OptionList& ol)

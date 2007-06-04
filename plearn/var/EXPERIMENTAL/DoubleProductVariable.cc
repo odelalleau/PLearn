@@ -142,9 +142,6 @@ void DoubleProductVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     // ### If you want to deepCopy a Var field:
     // varDeepCopyField(somevariable, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("DoubleProductVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 void DoubleProductVariable::declareOptions(OptionList& ol)

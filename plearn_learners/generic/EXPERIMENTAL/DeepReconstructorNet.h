@@ -70,15 +70,11 @@ public:
     //! Start your comments with Doxygen-compatible comments such as //!
     
 
-    //! training_schedule[k] conatins the number of nstages to run the optimizer for the
-    //! training of the hidden layer taking layer k as input (k=0 corresponds to
-    //! input layer).
+    TVec< pair<int,int> > unsupervised_nepochs;
+    Vec unsupervised_min_improvement_rate;
 
-    TVec<int> training_schedule;
-    int supervised_nepochs;    
-
-    real good_improvement_rate;
-    real fine_tuning_improvement_rate;
+    pair<int,int> supervised_nepochs;    
+    real supervised_min_improvement_rate;
 
     // layers[0] is the input variable
     // last layer is final output layer
@@ -181,7 +177,7 @@ public:
 
     void prepareForFineTuning();
     void fineTuningFor1Epoch();
-    void fineTuningFullOld();
+    // void fineTuningFullOld();
 
     void trainSupervisedLayer(VMat inputs, VMat targets);
 

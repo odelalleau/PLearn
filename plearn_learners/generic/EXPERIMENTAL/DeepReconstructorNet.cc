@@ -53,9 +53,8 @@ PLEARN_IMPLEMENT_OBJECT(
    "MULTI-LINE \nHELP");
 
 DeepReconstructorNet::DeepReconstructorNet()
-    :supervised_nepochs(0),
-     good_improvement_rate(-1e10),
-     fine_tuning_improvement_rate(-1e10),
+    :supervised_nepochs(pair<int,int>(0,0)),
+     supervised_min_improvement_rate(-10000),
      minibatch_size(1)
 {
 }
@@ -71,9 +70,25 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
     
-    declareOption(ol, "training_schedule", &DeepReconstructorNet::training_schedule,
+    declareOption(ol, "unsupervised_nepochs", &DeepReconstructorNet::unsupervised_nepochs,
                   OptionBase::buildoption,
-                  "training_schedule[k] conatins the number of epochs for the training of the hidden layer taking layer k as input (k=0 corresponds to input layer).");
+                  "unsupervised_nepochs[k] contains a pair of integers giving the minimum and\n"
+                  "maximum number of epochs for the training of layer k+1 (taking layer k"
+                  "as input). Thus k=0 corresponds to the training of the first hidden layer.");
+
+    declareOption(ol, "unsupervised_min_improvement_rate", &DeepReconstructorNet::unsupervised_min_improvement_rate,
+                  OptionBase::buildoption,
+                  "unsupervised_min_improvement_rate[k] should contain the minimum required relative improvement rate\n"
+                  "for the training of layer k+1 (taking input from layer k.)");
+
+    declareOption(ol, "supervised_nepochs", &DeepReconstructorNet::supervised_nepochs,
+                  OptionBase::buildoption,
+                  "");
+
+    declareOption(ol, "supervised_min_improvement_rate", &DeepReconstructorNet::supervised_min_improvement_rate,
+                  OptionBase::buildoption,
+                  "supervised_min_improvement_rate contains the minimum required relative improvement rate\n"
+                  "for the training of the supervised layer.");
 
     declareOption(ol, "layers", &DeepReconstructorNet::layers,
                   OptionBase::buildoption,
@@ -119,19 +134,6 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "");
 
-    declareOption(ol, "good_improvement_rate", &DeepReconstructorNet::good_improvement_rate,
-                  OptionBase::buildoption,
-                  "");
-
-    declareOption(ol, "fine_tuning_improvement_rate", &DeepReconstructorNet::fine_tuning_improvement_rate,
-                  OptionBase::buildoption,
-                  "");
-
-    declareOption(ol, "supervised_nepochs", &DeepReconstructorNet::supervised_nepochs,
-                  OptionBase::buildoption,
-                  "");
-
-    
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -243,7 +245,11 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(training_schedule, copies);
+    deepCopyField(unsupervised_nepochs, copies);
+    deepCopyField(unsupervised_min_improvement_rate, copies);
+    deepCopyField(supervised_nepochs, copies);
+    deepCopyField(supervised_min_improvement_rate, copies);
+
     deepCopyField(layers, copies);
     deepCopyField(reconstruction_costs, copies);
     deepCopyField(reconstructed_layers, copies);
@@ -312,13 +318,13 @@ void DeepReconstructorNet::train()
             VMat targets = train_set.subMatColumns(insize, train_set->targetsize());
             VMat dset = inputs;
 
-            bool must_train_supervised_layer = (training_schedule[training_schedule.length()-2]>0);
+            bool must_train_supervised_layer = supervised_nepochs.second>0;
             
-            PLearn::save(expdir/"learner_0.psave", this);
+            PLearn::save(expdir/"learner.psave", this);
             for(int k=0; k<nreconstructions; k++)
             {
                 trainHiddenLayer(k, dset);
-                PLearn::save(expdir/"learner_"+tostring(k+1)+".psave", this);
+                PLearn::save(expdir/"learner.psave", this);
                 // 'if' is a hack to avoid precomputing last hidden layer if not needed
                 if(k<nreconstructions-1 ||  must_train_supervised_layer) 
                 { 
@@ -331,12 +337,19 @@ void DeepReconstructorNet::train()
             }
 
             if(must_train_supervised_layer)
+            {
                 trainSupervisedLayer(dset, targets);
+                PLearn::save(expdir/"learner.psave", this);
+            }
+            perr << "\n\n*********************************************" << endl;
+            perr << "****      Now performing fine tuning     ****" << endl;
+            perr << "********************************************* \n" << endl;
+
         }
         else
         {
-            pout << "Fine tuning stage " << stage+1 << endl;
-            prepareForFineTuning();            
+            perr << "+++ Fine tuning stage " << stage+1 << " **" << endl;
+            prepareForFineTuning();
             fineTuningFor1Epoch();
         }
         ++stage;
@@ -436,6 +449,7 @@ void DeepReconstructorNet::fineTuningFor1Epoch()
     supervised_optimizer->optimizeN(*train_stats);
 }
 
+/*
 void DeepReconstructorNet::fineTuningFullOld()
 {
     prepareForFineTuning();
@@ -443,7 +457,7 @@ void DeepReconstructorNet::fineTuningFullOld()
     int l = train_set->length();
     int nepochs = nstages;
     perr << "\n\n*********************************************" << endl;
-    perr << "*** Performing fine tuning for " << nepochs << " epochs " << endl;
+    perr << "*** Performing fine tuning for max. " << nepochs << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
 
     VecStatsCollector st;
@@ -465,15 +479,17 @@ void DeepReconstructorNet::fineTuningFullOld()
         prev_mean = m;
     }
 }
-
+*/
 
 void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
 {
     int l = inputs->length();
+    pair<int,int> nepochs = supervised_nepochs;
+    real min_improvement = supervised_min_improvement_rate;
+
     int last_hidden_layer = layers.length()-2;
-    int nepochs = supervised_nepochs;
     perr << "\n\n*********************************************" << endl;
-    perr << "*** Training only supervised layer for " << nepochs << " epochs " << endl;
+    perr << "*** Training only supervised layer for max. " << nepochs.second << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
 
     Func f(layers[last_hidden_layer]&target, supervised_costvec);
@@ -489,8 +505,8 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
     supervised_optimizer->reset();
     VecStatsCollector st;
     real prev_mean = -1;
-    real relative_improvement = good_improvement_rate;
-    for(int n=0; n<nepochs && relative_improvement >= good_improvement_rate; n++)
+    real relative_improvement = 1000;
+    for(int n=0; n<nepochs.first || (n<nepochs.second && relative_improvement >= min_improvement); n++)
     {
         st.forget();
         supervised_optimizer->nstages = l/minibatch_size;
@@ -501,8 +517,8 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
         perr << "mean error: " << m << " +- " << s.stderror() << endl;
         if(prev_mean>0)
         {
-            relative_improvement = ((prev_mean-m)/prev_mean)*100;
-            perr << "Relative improvement: " << relative_improvement << " %"<< endl;
+            relative_improvement = (prev_mean-m)/prev_mean;
+            perr << "Relative improvement: " << relative_improvement*100 << " %"<< endl;
         }
         prev_mean = m;
         //displayVarGraph(supervised_costvec, true);
@@ -514,9 +530,12 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
 void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
 {
     int l = inputs->length();
-    int nepochs = training_schedule[which_input_layer];
+    pair<int,int> nepochs = unsupervised_nepochs[which_input_layer];
+    real min_improvement = -10000;
+    if(unsupervised_min_improvement_rate.length()!=0)
+        min_improvement = unsupervised_min_improvement_rate[which_input_layer];
     perr << "\n\n*********************************************" << endl;
-    perr << "*** Training layer " << which_input_layer+1 << " for " << nepochs << " epochs " << endl;
+    perr << "*** Training (unsupervised) layer " << which_input_layer+1 << " for max. " << nepochs.second << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
     Func f(layers[which_input_layer], reconstruction_costs[which_input_layer]);
     //displayVarGraph(reconstruction_costs[which_input_layer]);
@@ -525,22 +544,39 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     VarArray params = totalcost->parents();
     reconstruction_optimizer->setToOptimize(params, totalcost);
     reconstruction_optimizer->reset();
+
+    TVec<string> colnames(4);
+    colnames[0] = "nepochs";
+    colnames[1] = "reconstr_cost";
+    colnames[2] = "stderror";
+    colnames[3] = "relative_improvement";
+    VMat training_curve = new FileVMatrix(expdir/"training_costs_layer_"+tostring(which_input_layer+1)+".pmat",0,colnames);
+    Vec costrow(4);
+
     VecStatsCollector st;
     real prev_mean = -1;
-    real relative_improvement = good_improvement_rate;
-    for(int n=0; n<nepochs && relative_improvement >= good_improvement_rate; n++)
+    real relative_improvement = 1000;
+    for(int n=0; n<nepochs.first || (n<nepochs.second && relative_improvement >= min_improvement); n++)
     {
         st.forget();
         reconstruction_optimizer->nstages = l/minibatch_size;
         reconstruction_optimizer->optimizeN(st);
         const StatsCollector& s = st.getStats(0);
         real m = s.mean();
+        real er = s.stderror();
         perr << "Epoch " << n+1 << " mean error: " << m << " +- " << s.stderror() << endl;
         if(prev_mean>0)
         {
-            relative_improvement = ((prev_mean-m)/prev_mean)*100;
-            perr << "Relative improvement: " << relative_improvement << " %"<< endl;
+            relative_improvement = (prev_mean-m)/prev_mean;
+            perr << "Relative improvement: " << relative_improvement*100 << " %"<< endl;
         }
+        costrow[0] = n+1;
+        costrow[1] = m;
+        costrow[2] = er;
+        costrow[3] = relative_improvement*100;
+        training_curve->appendRow(costrow);
+        training_curve->flush();
+
         prev_mean = m;
     }
 }
