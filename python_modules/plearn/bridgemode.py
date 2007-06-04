@@ -4,6 +4,9 @@
 
 useserver = False
 
+# which plearn executable do we want?
+server_exe = 'plearn'
+
 # whether we plot error curve graphs interactively (pylab)
 #
 
