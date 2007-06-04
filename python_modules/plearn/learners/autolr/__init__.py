@@ -1,15 +1,79 @@
 from math import *
 from numarray import *
 from plearn.bridge import *
+from threading import *
 
 # YET TO BE DOCUMENTED AND CLEANED UP CODE
 
 
+servers_lock = Lock() # Lock on the servers list so we don't have race conditions
+servers = [[serv, 0]] # List of [server, amount_of_jobs_server_is_running] lists
+servers_max = 1e10 # Maximal amount of servers we are willing to run
+
+
+def execute(object, tasks, use_threads = False):
+    def job(object):
+        for method, args in tasks: # do each task sequentially
+            getattr(object, method)(*args)
+        
+    if plearn.bridgemode.useserver and use_threads:
+        t = Thread(target = job, args = (object,))
+        t.start()
+        return t
+    else:
+        for method, args in tasks:
+            getattr(object, method)(*args)
+        return True
+
+def acquire_server(use_threads = False):
+    if not use_threads:
+        return serv
+    servers_lock.acquire()
+    min_load = 1e10
+    least_loaded = 0
+    nservers = len(servers)
+    for servinfo, i in zip(servers, xrange(nservers)):
+        server, njobs = servinfo
+        if not njobs:
+            servinfo[1] = 1
+            servers_lock.release()
+            return server
+        if njobs < min_load:
+            min_load = njobs
+            least_loaded = i
+    if nservers < servers_max:
+        command = 'plearn_curses server'
+        server = launch_plearn_server(command)
+        servers.append([server, 1])
+    else:
+        servinfo = servers[least_loaded]
+        server = servinfo[0]
+        servinfo[1] += 1
+    servers_lock.release()
+    return server
+
+def release_server(object, use_threads = False):
+    if plearn.bridgemode.useserver and use_threads:
+        server = object.server
+        servers_lock.acquire()
+        for servinfo in servers:
+            server_, njobs = servinfo
+            if server_ is server: # == doesn't work
+                servinfo[1] -= 1 # this server is done so we reduce its job count
+                break
+        servers_lock.release()
+
+def assign(object, use_threads = False):
+    server = acquire_server(use_threads)
+    o = server.new(object)
+    return o
+
+
 # ugly way to copy until done properly with PLearn's deepcopy
-def deepcopy(plearnobject):
+def deepcopy(plearnobject, use_threads = False):
     # actually not a deep-copy, only copy options
     if plearn.bridgemode.useserver:
-        o = serv.new(plearnobject.getObject())
+        o = assign(plearnobject.getObject(), use_threads)
     else:
         o = newObject(str(plearnobject))
     if o==None:
@@ -229,7 +293,11 @@ def train_adapting_lr(learner,
                       lr_steps=exp(log(10)/2), # Scaling coefficient when modifying learning rates
                       logfile=False,
                       min_lr=1e-6, # do not try to go below this learning rate
-                      keep_lr=2): # Learning rate interval for heuristic
+                      keep_lr=2, # Learning rate interval for heuristic
+                      use_threads=False):
+
+    if plearn.bridgemode.useserver:
+        servers[0][1] = 1 # learner
 
     min_epochs_to_delete = max(1,min_epochs_to_delete) # although 1 is probably too small
 
@@ -313,6 +381,9 @@ def train_adapting_lr(learner,
             print >>logfile, "At stage ", stage
         print "actives now: ",actives, " with lr=", array(all_lr)[actives]
         print >>logfile, "actives now: ",actives, " with lr=", array(all_lr)[actives]
+
+        threads = []
+        active_stats = []
         for active in actives:
             candidate = all_candidates[active]
             results = all_results[active]
@@ -326,16 +397,30 @@ def train_adapting_lr(learner,
                         options[lr_option]=str(learning_rates[t,s])
             candidate.changeOptions(options)
             candidate.setTrainingSet(trainset,False)
-            candidate.train()
+            tasks = [('train', ())]
+            stats = []
+            for j in range(0,n_tests):
+                ts = pl.VecStatsCollector()
+                if plearn.bridgemode.useserver:
+                    ts = candidate.server.new(ts)
+                stats.append(ts)
+                tasks.append(('test', (testsets[j], ts, 0, 0)))
+            active_stats.append(stats)
+            threads.append(execute(candidate, tasks, use_threads))
+
+        for thread in threads:
+            if isinstance(thread, Thread):
+                thread.join() # wait for all experiments to finish
+
+        for active, stats in zip(actives, active_stats):
+            candidate = all_candidates[active]
+            results = all_results[active]
+        
             results[t,0] = candidate.stage
             results[t,1] = all_lr[active]
             if logfile:
                 print >>logfile, "candidate ",active,":",
-            for j in range(0,n_tests):
-                ts = pl.VecStatsCollector()
-                if plearn.bridgemode.useserver:
-                    ts=serv.new(ts)
-                candidate.test(testsets[j],ts,0,0)
+            for j, ts in zip(range(0,n_tests), stats):
                 if logfile:
                     print >>logfile, " test" + str(j+1),": ",
                 for k in range(0,n_costs):
@@ -395,6 +480,7 @@ def train_adapting_lr(learner,
                 if a!=best_active and error_curve_dominates(best_active,a,t):
                     if logfile:
                         print >>logfile,"REMOVE candidate ",a
+                    release_server(all_candidates[a], use_threads)
                     all_candidates[a]=None # hopefully this destroys the candidate
                     del actives[j-ndeleted]
                     ndeleted+=1
@@ -402,7 +488,7 @@ def train_adapting_lr(learner,
             new_lr=all_lr[best_active]/lr_steps # only try a smaller learning rate
             if new_lr>=min_lr:
                 all_lr.append(new_lr)
-                new_candidate = deepcopy(all_candidates[best_active])
+                new_candidate = deepcopy(all_candidates[best_active], use_threads)
                 new_a = len(all_candidates)
                 actives.append(new_a)
                 all_candidates.append(new_candidate)
