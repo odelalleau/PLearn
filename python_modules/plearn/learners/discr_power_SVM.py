@@ -346,60 +346,48 @@ def parameters2list(C, kernel_parameters):
 
 if __name__ == '__main__':
    from random import *
-   
-   raise('hihi')
-   
-   nsamples=10
-   dim=25
-   x=[]
-   t=[]
-   for i in range(nsamples):
-       x.append([])
-       for j in range(dim):
-           x[i].append(random())
-       t.append(randint(0,6))
-   #print x
-   #print t
-   x=zip([-2,-1, 0, 2, 0, 1,-2,-1, 1,-1,0,1,2,3,-3,-3,-3,-2,-2,   -1, 2, 0, 1, 2,-1, 0, 2, 0, 2,-3,-3,-3,-2,-1, 0, 1],
-         [ 2, 2, 2, 2, 1, 1, 0, 0,-1, 3,3,3,3,1, 2, 1, 0,-1,-2,    1, 1, 0, 0, 0,-1,-1,-1,-2,-2,-1,-2,-3,-3,-3,-3,-3])
-   t=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-   x2=zip([3,3,3 , 1],
-          [0,2,-1, -0.5])+x
-   t2=[0,0,1,1]+t
 
    learner = loadObject("/u/bengioy/LisaPLearn/UserExp/bengioy/babyAI/exp/minimize1_baby_image_rbm_trainsize=1000000_nh=100_mbs=20_nstages=1000000_nskip=2_mincost=rec.err._mre=0_2007-06-04#08:51:14.600291/final_learner.psave")
-
-   expdir = "exp/toto"
 
    execfile("/u/bengioy/LisaPLearn/UserExp/bengioy/babyAI/baby_data.py")
 
    valid1000 = pl.SubVMatrix(source=validSet,length=1000)
 
-   (ts,out,c) = learner.test(valid1000,pl.VecStatsCollector(),1,0)
-
+   (ts,image_repr,c) = learner.test(valid1000,pl.VecStatsCollector(),1,0)
 
    data=valid1000.getMat()
 
    y = [ vec[data.shape[1]-1]  for vec in data]
    text = [ vec[1024:data.shape[1]-1]  for vec in data]
-   x = [ [out[isample][coor] for coor in range(len(out[0]))]+[text[isample][coor] for coor in range(len(text[0]))]  for isample in range(len(out)) ]
+   x = [ [image_repr[isample][coor] for coor in range(len(image_repr[0]))]+[text[isample][coor] for coor in range(len(text[0]))]  for isample in range(len(image_repr)) ]
 
+
+   # an EXAMPLE to use the class...
+
+   # Initialisation 
+   
    E=discr_power_SVM_eval()
+   
+   # Compute the accuracies (exploring a bit, each time, the space of parameters)
+   # -> Type E.accuracy to have the accuracy value.
+   
+   E.valid_and_compute_accuracy( 'LINEAR' ,  [[x,y]])
    E.valid_and_compute_accuracy( 'LINEAR' ,  [[x,y]])
    E.valid_and_compute_accuracy( 'RBF' ,    [[x,y]])
-   
+   E.valid_and_compute_accuracy( 'RBF' ,    [[x,y]])
+
+   print E.accuracy
+   print E.best_parameters
+   print E.tried_parameters
+
+   # To reset the explored tables of parameters and accuracies
+   # (only keep the information about the last best parameters sets)
+   # -> This has an interest when you use a new representation/dataset closed to the previous one.
 
    E.reset()
-   
-   
-   
+   E.valid_and_compute_accuracy( 'LINEAR' ,  [[x,y]])
    E.valid_and_compute_accuracy( 'RBF' ,  [[x,t],[x2,t2]])
-   E.valid_and_compute_accuracy( 'RBF' ,  [[x,t],[x2,t2]])
-   E.valid_and_compute_accuracy( 'POLY' ,  [[x,t],[x2,t2]])
 
-   E.accuracy
-   
-   E.reset
-
-   print E.compute_accuracy( [[x,t],[x2,t2]])
-
+   print E.accuracy
+   print E.best_parameters
+   print E.tried_parameters
