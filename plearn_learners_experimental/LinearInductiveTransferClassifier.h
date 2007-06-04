@@ -94,6 +94,8 @@ public:
     int nhidden;
     //! Number of RBM training to initialize hidden layer weights
     int rbm_nstages;
+    //! Learning rate for the RBM
+    real rbm_learning_rate;
     //! Visible layer of the RBM
     PP<RBMLayer> visible_layer;
     //! Hidden layer of the RBM

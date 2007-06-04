@@ -102,7 +102,9 @@ LinearInductiveTransferClassifier::LinearInductiveTransferClassifier()
       use_bias_in_weights_prediction(false),
       multi_target_classifier(false),
       sigma_min(1e-5),
-      nhidden(-1)
+      nhidden(-1),
+      rbm_nstages(0),
+      rbm_learning_rate(0.01)
 {
     random_gen = new PRandom();
 }
@@ -116,6 +118,10 @@ void LinearInductiveTransferClassifier::declareOptions(OptionList& ol)
                   &LinearInductiveTransferClassifier::rbm_nstages, 
                   OptionBase::buildoption,
                   "Number of RBM training to initialize hidden layer weights");
+    declareOption(ol, "rbm_learning_rate", 
+                  &LinearInductiveTransferClassifier::rbm_learning_rate, 
+                  OptionBase::buildoption,
+                  "Learning rate for the RBM");
     declareOption(ol, "visible_layer",
                   &LinearInductiveTransferClassifier::visible_layer, 
                   OptionBase::buildoption,
@@ -312,7 +318,10 @@ void LinearInductiveTransferClassifier::build_()
             //                   hidden_neurons[i]);
             //}
             weights =vconcat(-product(exp(s),square(weights)) & weights); // Making sure that the scaling factor is going to be positive
-            output = affine_transform(tanh(affine_transform(input,W)), weights);
+            if(rbm_nstages>0)
+                output = affine_transform(tanh(affine_transform(input,W)), weights);
+            else
+                output = affine_transform(sigmoid(affine_transform(input,W)), weights);
         }
 
         else
@@ -648,8 +657,15 @@ void LinearInductiveTransferClassifier::train()
     if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
     
-    if(stage == 0 && nstages > 0 && model_type == "nnet_discriminative_1_vs_all")
+    if(rbm_nstages>0 && stage == 0 && nstages > 0 && model_type == "nnet_discriminative_1_vs_all")
     {
+        if(!visible_layer)
+            PLERROR("In LinearInductiveTransferClassifier::train(): "
+                    "visible_layer must be provided.");
+        if(!hidden_layer)
+            PLERROR("In LinearInductiveTransferClassifier::train(): "
+                    "hidden_layer must be provided.");
+
         Vec input, target;
         real example_weight;
         real recons = 0;
@@ -664,6 +680,11 @@ void LinearInductiveTransferClassifier::train()
         hidden_layer->random_gen = random_gen;
         visible_layer->random_gen = random_gen;
         layer_connections->random_gen = random_gen;
+
+        visible_layer->setLearningRate(rbm_learning_rate);
+        hidden_layer->setLearningRate(rbm_learning_rate);
+        layer_connections->setLearningRate(rbm_learning_rate);
+
         
         hidden_layer->build();
         visible_layer->build();
@@ -712,7 +733,7 @@ void LinearInductiveTransferClassifier::train()
                                           neg_hidden, neg_visible);
             }
             if(verbosity > 2)
-                cout << "Reconstruction error = " << recons << endl;
+                cout << "Reconstruction error = " << recons/train_set->length() << endl;
             recons = 0;
         }
         W->matValue.subMat(1,0,inputsize_,nhidden) << layer_matrix_connections->weights;
