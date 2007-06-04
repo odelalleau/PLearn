@@ -90,9 +90,10 @@ public:
     real log_partition_function;
     bool partition_function_is_stale;
 
+    bool standard_cd_grad;
+    bool standard_cd_bias_grad;
     bool standard_cd_weights_grad;
     
-    bool standard_cd_grad;
 
 public:
     //#####  Public Member Functions  #########################################

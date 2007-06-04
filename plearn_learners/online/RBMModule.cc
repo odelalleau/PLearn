@@ -101,8 +101,9 @@ RBMModule::RBMModule():
     Gibbs_step(0),
     log_partition_function(0),
     partition_function_is_stale(true),
-    standard_cd_weights_grad(true),
     standard_cd_grad(true),
+    standard_cd_bias_grad(true),
+    standard_cd_weights_grad(true),
     hidden_bias(NULL),
     weights(NULL),
     hidden_act(NULL),
@@ -154,6 +155,15 @@ void RBMModule::declareOptions(OptionList& ol)
         "affects only the gradient w.r.t. internal parameters of the layers\n"
         "and connections. Currently, this option works only with layers of\n"
         "the type 'RBMBinomialLayer', connected by a 'RBMMatrixConnection'.");
+
+    declareOption(ol, "standard_cd_bias_grad",
+                  &RBMModule::standard_cd_bias_grad,
+                  OptionBase::buildoption,
+        "This option is only used when biases of the hidden layer are given\n"
+        "through the 'hidden_bias' port. When this is the case, the gradient\n"
+        "of contrastive divergence w.r.t. these biases is either computed:\n"
+        "- by the usual formula if 'standard_cd_bias_grad' is true\n"
+        "- by the true gradient if 'standard_cd_bias_grad' is false.");
 
     declareOption(ol, "standard_cd_weights_grad",
                   &RBMModule::standard_cd_weights_grad,
@@ -319,6 +329,10 @@ void RBMModule::build_()
                     "update will be performed AND no contrastive divergence "
                     "gradient will be propagated.");
     }
+
+    PLCHECK_MSG(!(!standard_cd_grad && standard_cd_bias_grad), "You cannot "
+            "compute the standard CD gradient w.r.t. external hidden bias and "
+            "use the 'true' CD gradient w.r.t. internal hidden bias");
 }
 
 ///////////
@@ -1229,6 +1243,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     real p_i_n = (*negative_phase_hidden_expectations)(k, i);
                     real a_i_n = (*negative_phase_hidden_activations)(k, i);
                     (*hidden_bias_g)(k, i) +=
+                        standard_cd_bias_grad ? p_i_p - p_i_n :
                         - p_i_p * (1 - p_i_p) * a_i_p + p_i_p    // Pos. phase
                      -( - p_i_n * (1 - p_i_n) * a_i_n + p_i_n ); // Neg. phase
 

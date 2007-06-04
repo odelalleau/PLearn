@@ -3,7 +3,7 @@
 from plearn.pyplearn import pl
 
 def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name,
-        compute_cd = False, standard_cd_weights_grad = True):
+        compute_cd = False, standard_cd_weights_grad = True, standard_cd_bias_grad = True):
     # Return a standard binomial RBM.
     return pl.RBMModule(
             name = name,
@@ -13,6 +13,7 @@ def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name,
             visible_layer = pl.RBMBinomialLayer(size = visible_size),
             hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
             standard_cd_weights_grad = standard_cd_weights_grad,
+            standard_cd_bias_grad = standard_cd_bias_grad,
             connection = pl.RBMMatrixConnection(
                 down_size = visible_size,
                 up_size = hidden_size))
@@ -76,19 +77,19 @@ testers = [
 
     # Test of gradient of contrastive divergence w.r.t. bias.
     pl.ModuleTester(
-            module = rbm(1e-3, 0, 10, 20, 'rbm', True),
+            module = rbm(1e-3, 0, 10, 20, 'rbm', True, True, False),
             configurations = [ conf_bias_cd ],
             min_out_grad = 1,
             max_out_grad = 1),
 
     # Test of backpropagation gradient w.r.t. bias.
     pl.ModuleTester(
-            module = rbm(0, 1e-3, 10, 20, 'rbm'),
+            module = rbm(0, 1e-3, 10, 20, 'rbm', False, True, False),
             configurations = [ conf_bias_grad ]),
 
     # Test of both backpropagation and contrastive divergence gradients w.r.t. bias.
     pl.ModuleTester(
-            module = rbm(1e-2, 1e-3, 10, 20, 'rbm', True),
+            module = rbm(1e-2, 1e-3, 10, 20, 'rbm', True, True, False),
             configurations = [ conf_bias_both ],
             min_out_grad = 1,
             max_out_grad = 1),
