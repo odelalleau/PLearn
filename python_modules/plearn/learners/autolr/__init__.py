@@ -210,21 +210,21 @@ optimal one) upon return. But if not call_forget then the initial_learner is unc
 
 def train_adapting_lr(learner,
                       trainset,testsets,expdir,
-                      lr_options,
-                      optimized_group=0,
-                      schedules=None,
-                      nstages=None,
-                      epoch=None,
-                      initial_lr=0.1,
-                      nskip=2,
-                      cost_to_select_best=0,
+                      lr_options, # List of lists of options (one list/group of options with a given schedule)
+                      optimized_group=0, # Group of options that is actually optimized
+                      schedules=None, # Matrix of schedules (number of columns = 1 (stage) + number of groups)
+                      nstages=None, # Used to construct default schedule if 'schedules' is None
+                      epoch=None,   # ""
+                      initial_lr=0.1, # Starting value for group being optimized
+                      nskip=2,   # Number of epochs after which we add/remove candidates
+                      cost_to_select_best=0, # Index of cost being optimized
                       return_best_model=False, # o/w return final model
                       save_best=False, # for paranoids: save best model each time an improvement is found
                       selected_costnames = False,
                       min_epochs_to_delete = 2,
-                      lr_steps=exp(log(10)/2),
+                      lr_steps=exp(log(10)/2), # Scaling coefficient when modifying learning rates
                       logfile=False,
-                      keep_lr=2):
+                      keep_lr=2): # Learning rate interval for heuristic
 
     min_epochs_to_delete = max(1,min_epochs_to_delete) # although 1 is probably too small
 
@@ -406,6 +406,11 @@ def train_adapting_lr(learner,
     schedules[:,1+optimized_group]=all_results[best_active][:,1]
     if logfile and best_err < all_last_err[best_active]:
         print >>logfile, "WARNING: best performing model would have stopped early at stage ",best_early_stop
-    return (final_model,schedules,all_results[best_active], 
-            all_results,all_last_err,all_start,best_early_stop)
+    return (final_model,   # Learner
+            schedules,     # Matrix of schedules (including the one that was optimized)
+            all_results[best_active], # Error curve (matrix) for best model
+            all_results, # List of all error curve matrices
+            all_last_err, # List of all last errors recorded for each candidate (not necessarily at last epoch)
+            all_start,  # Epoch index where each candidate was created (not necessarily the first epoch)
+            best_early_stop) # Timestep (in stages) at which early-stopping should have happened (i.e. stage of best error found)
 
