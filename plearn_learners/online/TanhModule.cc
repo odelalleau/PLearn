@@ -75,7 +75,7 @@ void TanhModule::fprop(const Vec& input, Vec& output) const
     output.resize( output_size );
     for( int i=0 ; i<output_size ; i++ )
     {
-        output[i] = ex_scale * tanh( in_scale * input[i] );
+        output[i] = ex_scale * fasttanh( in_scale * input[i] );
     }
 }
 

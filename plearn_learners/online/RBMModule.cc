@@ -393,7 +393,7 @@ void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
     {
         energy(i,0) = hidden_layer->energy(hidden(i));
         for (int j=0;j<visible_layer->size;j++)
-            energy(i,0) -= softplus(-visible_layer->activations(i,j));
+            energy(i,0) -= tabulated_softplus(-visible_layer->activations(i,j));
     }
 }
 
@@ -425,7 +425,7 @@ void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
     {
         energy(i,0) = visible_layer->energy(visible(i));
         for (int j=0;j<hidden_layer->size;j++)
-            energy(i,0) -= softplus(-(*hidden_activations)(i,j));
+            energy(i,0) -= tabulated_softplus(-(*hidden_activations)(i,j));
     }
 }
 

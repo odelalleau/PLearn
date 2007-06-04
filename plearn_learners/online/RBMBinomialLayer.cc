@@ -114,7 +114,7 @@ void RBMBinomialLayer::computeExpectation()
         return;
 
     for( int i=0 ; i<size ; i++ )
-        expectation[i] = sigmoid( -activation[i] );
+        expectation[i] = fastsigmoid( -activation[i] );
 
     expectation_is_up_to_date = true;
 }
@@ -131,7 +131,7 @@ void RBMBinomialLayer::computeExpectations()
               && expectations.length() == batch_size );
     for (int k = 0; k < batch_size; k++)
         for (int i = 0 ; i < size ; i++)
-            expectations(k, i) = sigmoid(-activations(k, i));
+            expectations(k, i) = fastsigmoid(-activations(k, i));
 
     expectations_are_up_to_date = true;
 }
@@ -145,7 +145,7 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
     output.resize( output_size );
 
     for( int i=0 ; i<size ; i++ )
-        output[i] = sigmoid( -input[i] - bias[i] );
+        output[i] = fastsigmoid( -input[i] - bias[i] );
 }
 
 void RBMBinomialLayer::fprop( const Mat& inputs, Mat& outputs ) const
@@ -156,7 +156,7 @@ void RBMBinomialLayer::fprop( const Mat& inputs, Mat& outputs ) const
 
     for( int k = 0; k < mbatch_size; k++ )
         for( int i = 0; i < size; i++ )
-            outputs(k,i) = sigmoid( -inputs(k,i) - bias[i] );
+            outputs(k,i) = fastsigmoid( -inputs(k,i) - bias[i] );
 }
 
 void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
@@ -167,7 +167,7 @@ void RBMBinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
     output.resize( output_size );
 
     for( int i=0 ; i<size ; i++ )
-        output[i] = sigmoid( -input[i] - rbm_bias[i]);
+        output[i] = fastsigmoid( -input[i] - rbm_bias[i]);
 }
 
 /////////////////
