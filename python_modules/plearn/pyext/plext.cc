@@ -32,8 +32,8 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 #include <plearn/python/PythonExtension.h>
-//#include <commands/plearn_full_inc.h>
-#include <commands/myplearn_light_inc.h>
+#include <commands/plearn_full_inc.h>
+//#include <commands/myplearn_light_inc.h>
 #include <commands/PLearnCommands/plearn_main.h>
 
 using namespace PLearn;
