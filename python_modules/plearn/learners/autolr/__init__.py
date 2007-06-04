@@ -223,11 +223,12 @@ def train_adapting_lr(learner,
                       nskip=2,   # Number of epochs after which we add/remove candidates
                       cost_to_select_best=0, # Index of cost being optimized
                       return_best_model=False, # o/w return final model
-                      save_best=False, # for paranoids: save best model each time an improvement is found
+                      save_best=False, # for paranoids: save best model every save_best epochs, or not at all (if = False)
                       selected_costnames = False,
                       min_epochs_to_delete = 2,
                       lr_steps=exp(log(10)/2), # Scaling coefficient when modifying learning rates
                       logfile=False,
+                      min_lr=1e-6, # do not try to go below this learning rate
                       keep_lr=2): # Learning rate interval for heuristic
 
     min_epochs_to_delete = max(1,min_epochs_to_delete) # although 1 is probably too small
@@ -256,7 +257,8 @@ def train_adapting_lr(learner,
         for a in actives:
             if all_lr[a]==c2lr and all_last_err[a]<=c2err:
                 return True # throw it away if worse than other actives of same lr
-            if a!=c2 and abs(log(all_lr[a]/c2lr))<keep_lr*log(lr_steps):
+            # say that it is alone if there are no other actives with nearby and greater lr
+            if a!=c2 and all_lr[a]>c2lr and abs(log(all_lr[a]/c2lr))<keep_lr*log(lr_steps):
                 alone=False
         c1lr=all_lr[c1]
         if alone and c2lr>c1lr: # and slope2<0: 
@@ -361,11 +363,11 @@ def train_adapting_lr(learner,
                             best_early_stop = stage
                             if return_best_model:
                                 best_candidate = deepcopy(candidate)
-                            if save_best: 
-                                candidate.save(expdir+"/"+"best_learner.psave","plearn_binary")
             if logfile:
                 print >>logfile
                 logfile.flush()
+        if save_best and t%save_best==0:
+            all_candidates[best_active].save(expdir+"/"+"best_learner.psave","plearn_binary")
         if previous_best_err > best_err:
             previous_best_err = best_err
             if logfile:
@@ -397,18 +399,19 @@ def train_adapting_lr(learner,
                     del actives[j-ndeleted]
                     ndeleted+=1
             # add a candidate with slightly lower learning rate than best_active, starting from it
-            new_candidate = deepcopy(all_candidates[best_active])
-            new_a = len(all_candidates)
-            actives.append(new_a)
-            all_candidates.append(new_candidate)
-            all_results.append(all_results[best_active].copy())
-            all_last_err.append(best_last)
-            #all_slope.append(best_slope)
-            all_lr.append(all_lr[best_active]/lr_steps) # always try a smaller learning rate
-            all_start.append(t)
-            if logfile:
-                print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_a]
-                logfile.flush()
+            new_lr=all_lr[best_active]/lr_steps # only try a smaller learning rate
+            if new_lr>=min_lr:
+                all_lr.append(new_lr)
+                new_candidate = deepcopy(all_candidates[best_active])
+                new_a = len(all_candidates)
+                actives.append(new_a)
+                all_candidates.append(new_candidate)
+                all_results.append(all_results[best_active].copy())
+                all_last_err.append(best_last)
+                all_start.append(t)
+                if logfile:
+                    print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_a]
+                    logfile.flush()
     if return_best_model:
         final_model = best_candidate
     else:
