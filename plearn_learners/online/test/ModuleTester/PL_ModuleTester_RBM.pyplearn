@@ -3,7 +3,7 @@
 from plearn.pyplearn import pl
 
 def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name,
-        compute_cd = False):
+        compute_cd = False, standard_cd_weights_grad = True):
     # Return a standard binomial RBM.
     return pl.RBMModule(
             name = name,
@@ -12,6 +12,7 @@ def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name,
             grad_learning_rate = grad_learning_rate,
             visible_layer = pl.RBMBinomialLayer(size = visible_size),
             hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
+            standard_cd_weights_grad = standard_cd_weights_grad,
             connection = pl.RBMMatrixConnection(
                 down_size = visible_size,
                 up_size = hidden_size))
@@ -43,9 +44,15 @@ conf_bias_both = \
          "out_nograd":[ "hidden_activations.state", "negative_phase_visible_samples.state",
                         "negative_phase_hidden_expectations.state", "negative_phase_hidden_activations.state" ]}
 
+conf_weights_cd = \
+        {"in_grad":[ "weights" ],
+         "in_nograd":[ "visible" ],
+         "out_grad":[ "contrastive_divergence",  ],
+         "out_nograd":[ "hidden.state", "hidden_activations.state", "negative_phase_visible_samples.state",
+                        "negative_phase_hidden_expectations.state", "negative_phase_hidden_activations.state" ]}
+
 
 testers = [
-
     # Test a simple RBM that does not update itself (learning rates are set
     # to 0).
     pl.ModuleTester(
@@ -84,7 +91,15 @@ testers = [
             module = rbm(1e-2, 1e-3, 10, 20, 'rbm', True),
             configurations = [ conf_bias_both ],
             min_out_grad = 1,
-            max_out_grad = 1)
+            max_out_grad = 1),
+
+    # Test of gradient of contrastive divergence w.r.t. weights.
+    pl.ModuleTester(
+            default_length = 5,
+            module = rbm(1e-3, 0, 10, 20, 'rbm', True, False),
+            configurations = [ conf_weights_cd ],
+            min_out_grad = 1,
+            max_out_grad = 1),
 
     ]
 
