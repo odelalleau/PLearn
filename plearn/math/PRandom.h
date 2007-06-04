@@ -89,7 +89,8 @@ protected:
     // * protected options *
     // *********************
 
-    long fixed_seed;
+    //long fixed_seed;
+    int fixed_seed;
 
 public:
 
@@ -97,7 +98,8 @@ public:
     // * public build options *
     // ************************
 
-    long seed_;
+    //long seed_; // CAUSES PROBLEMS WITH PYTHON SERVER INTERFACE
+    int seed_;
 
     // ****************
     // * Constructors *

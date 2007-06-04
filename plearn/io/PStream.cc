@@ -1185,6 +1185,13 @@ PStream& PStream::operator>>(long &x)
                 || (c==0x08 && byte_order()==LITTLE_ENDIAN_ORDER) )
                 endianswap(&x);
         }
+        else if(c==0x16 || c==0x17)  // plearn_binary
+        {
+            read(reinterpret_cast<char*>(&x),sizeof(long));
+            if( (c==0x16 && byte_order()==BIG_ENDIAN_ORDER) 
+                || (c==0x17 && byte_order()==LITTLE_ENDIAN_ORDER) )
+                endianswap(&x);
+        }
         else  // plearn_ascii
         {
             unget();
@@ -1753,11 +1760,22 @@ PStream& PStream::operator<<(long x)
         put(' ');
         break;
     case plearn_binary:
+        if(sizeof(long)==4)
+        {
 #ifdef BIGENDIAN
         put((char)0x08);
 #else
         put((char)0x07);
 #endif
+        }
+        else if(sizeof(long)==8)
+        {
+#ifdef BIGENDIAN
+        put((char)0x17);
+#else
+        put((char)0x16);
+#endif
+        }
         write((char*)&x,sizeof(long));
         break;
     default:
