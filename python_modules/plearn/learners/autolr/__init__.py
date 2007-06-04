@@ -266,7 +266,7 @@ def train_adapting_lr(learner,
         selected_costnames=costnames
     cost_indices = [costnames.index(name) for name in selected_costnames]
     n_tests = len(testsets)
-    n_costs = len(costnames)
+    n_costs = len(cost_indices)
     if schedules:
         stages = schedules[:,0]
         learning_rates = schedules[:,1:]
@@ -360,6 +360,17 @@ def train_adapting_lr(learner,
             previous_best_err = best_err
             if logfile:
                 print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
+                print >>logfile, "stage\tl.rate\t",
+                for cost_index in cost_indices:
+                    costname = costnames[cost_index]
+                    print >>logfile, costname+"\t",
+                print >>logfile
+                for row in all_results[best_active][0:t+1,:]:
+                    for val in row:
+                        print >>logfile,val,"\t",
+                    print >>logfile
+                print >>logfile
+                
         else:
             if logfile:
                 print >>logfile, "THE BEST ACTIVE HAS GOTTEN WORSE!!!!"

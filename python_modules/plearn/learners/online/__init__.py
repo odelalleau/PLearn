@@ -11,16 +11,18 @@ def ifthenelse(cond,elsep,condp):
         return condp
 
 def supervised_classification_mlp(name,input_size,n_hidden,n_classes,
-                                  L1wd=0,L2wd=0):
+                                  L1wd=0,L2wd=0,lrate=0.01):
     return pl.NetworkModule(name=name,
                             modules=[ pl.GradNNetLayerModule(name='a1',input_size=input_size,
                                                              output_size=n_hidden,
+                                                             start_learning_rate=lrate,
                                                              L2_penalty_factor=L2wd,
                                                              L1_penalty_factor=L1wd),
                                       pl.TanhModule(name='tanh',input_size=n_hidden,
                                                     output_size=n_hidden),
                                       pl.GradNNetLayerModule(name='a2',input_size=n_hidden,
                                                              output_size=n_classes,
+                                                             start_learning_rate=lrate,
                                                              L2_penalty_factor=L2wd,
                                                              L1_penalty_factor=L1wd),
                                       pl.SoftmaxModule(name='softmax',input_size=n_classes,
