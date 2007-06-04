@@ -915,7 +915,7 @@ class plnamespace:
         Note that if 'Existing.some_option=VALUE' is overriden through the command-line,
         the value of 'New.some_option' will be VALUE unless explicitely overrode. 
         """
-        META = plnamespace.__metaclass__
+        META = namespace.__metaclass__
         class __metaclass__(META):
             def __new__(metacls, clsname, bases, dic):
                 # Do not use plopt.optdict: the documentation, choices and other
