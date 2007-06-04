@@ -215,7 +215,7 @@ optimal one) upon return. But if not call_forget then the initial_learner is unc
 def train_adapting_lr(learner,
                       trainset,testsets,expdir,
                       lr_options, # List of lists of options (one list/group of options with a given schedule)
-                      optimized_group=0, # Group of options that is actually optimized
+                      optimized_group=0, # Group of options that is actually optimized (if -1, then no optimization is performed)
                       schedules=None, # Matrix of schedules (number of columns = 1 (stage) + number of groups)
                       nstages=None, # Used to construct default schedule if 'schedules' is None
                       epoch=None,   # ""
@@ -254,7 +254,7 @@ def train_adapting_lr(learner,
         c2lr=all_lr[c2]
         c2err=all_last_err[c2]
         for a in actives:
-            if all_lr[a]==c2lr and all_last_err[a]<c2err:
+            if all_lr[a]==c2lr and all_last_err[a]<=c2err:
                 return True # throw it away if worse than other actives of same lr
             if a!=c2 and abs(log(all_lr[a]/c2lr))<keep_lr*log(lr_steps):
                 alone=False
@@ -282,7 +282,9 @@ def train_adapting_lr(learner,
         schedules = zeros([len(stages),2],Float)
         schedules[:,0]=stages
         schedules[:,1]=learning_rates[:,0]
-        optimized_group=0 # no choice, there is only one group
+        if optimized_group != 0 and optimized_group != -1:
+            print "Incorrect value for 'optimized_group'"
+            raise Error
         if len(lr_options)!=1:
             lr_options=[lr_options[0]]
     n_train = len(stages)
@@ -411,7 +413,8 @@ def train_adapting_lr(learner,
         final_model = best_candidate
     else:
         final_model = all_candidates[best_active]
-    schedules[:,1+optimized_group]=all_results[best_active][:,1]
+    if optimized_group >= 0:
+        schedules[:,1+optimized_group]=all_results[best_active][:,1]
     if logfile and best_err < all_last_err[best_active]:
         print >>logfile, "WARNING: best performing model would have stopped early at stage ",best_early_stop
     return (final_model,   # Learner
