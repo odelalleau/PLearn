@@ -232,9 +232,9 @@ class PLearnIO:
         elif c=="\x06": # unsigned short big endian
             return struct.unpack('>H',self.read(2))[0]
         
-        elif c=="\x07": # int little endian
+        elif c=="\x07": # 32 bit int little endian
             return struct.unpack('<i',self.read(4))[0]
-        elif c=="\x08": # int big endian
+        elif c=="\x08": # 32 bit int big endian
             return struct.unpack('>i',self.read(4))[0]
         elif c=="\x0B": # unsigned int little endian
             return struct.unpack('<I',self.read(4))[0]
@@ -255,9 +255,14 @@ class PLearnIO:
             self.unread(c)
             return self.binread_sequence()
 
-        elif c=="\x16": # DEPRECATED binary pair format (for backward compatibility)
-            self.unread(c)
-            return self.binread_pair()
+        elif c=="\x16": # 64 bit int little endian
+            return struct.unpack('<q',self.read(8))[0]
+        elif c=="\x17": # 64 bit int big endian
+            return struct.unpack('>q',self.read(8))[0]
+
+        #elif c=="\x16": # DEPRECATED binary pair format (for backward compatibility)
+        #    self.unread(c)
+        #    return self.binread_pair()
 
         elif c=='"': # string
             self.unread(c)

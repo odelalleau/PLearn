@@ -9,7 +9,7 @@ from plearn.bridge import *
 def deepcopy(plearnobject):
     # actually not a deep-copy, only copy options
     if plearn.bridgemode.useserver:
-        o = newObject(plearnobject.getObject())
+        o = serv.new(plearnobject.getObject())
     else:
         o = newObject(str(plearnobject))
     if o==None:
@@ -110,6 +110,8 @@ each of the other columns (just like the result of the call to merge_schedules).
             results[i,1+s] = learning_rates[i][s]
         for j in range(0,n_tests):
             ts = pl.VecStatsCollector()
+            if plearn.bridgemode.useserver:
+                ts=serv.new(ts)
             learner.test(testsets[j],ts,0,0)
             if logfile:
                 print >>logfile, "At stage ",learner.stage," test" + str(j+1),": ",
@@ -175,6 +177,8 @@ optimal one) upon return. But if not call_forget then the initial_learner is unc
         learner.nstages = int(nstages+initial_stage)
         learner.train()
         ts = pl.VecStatsCollector()
+        if plearn.bridgemode.useserver:
+            ts=serv.new(ts)
         learner.test(testset,ts,0,0)
         err=ts.getStat("E["+str(cost_to_select_best)+"]")
         if logfile:
@@ -279,6 +283,8 @@ def train_adapting_lr(learner,
         schedules[:,0]=stages
         schedules[:,1]=learning_rates[:,0]
         optimized_group=0 # no choice, there is only one group
+        if len(lr_options)!=1:
+            lr_options=[lr_options[0]]
     n_train = len(stages)
     n_schedules = len(lr_options)
     assert n_schedules==learning_rates.shape[1]
@@ -323,6 +329,8 @@ def train_adapting_lr(learner,
                 print >>logfile, "candidate ",active,":",
             for j in range(0,n_tests):
                 ts = pl.VecStatsCollector()
+                if plearn.bridgemode.useserver:
+                    ts=serv.new(ts)
                 candidate.test(testsets[j],ts,0,0)
                 if logfile:
                     print >>logfile, " test" + str(j+1),": ",
