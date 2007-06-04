@@ -61,6 +61,7 @@ NatGradNNet::NatGradNNet()
       params_averaging_freq(5),
       init_lrate(0.01),
       lrate_decay(0),
+      output_layer_L1_penalty_factor(0.0),
       output_layer_lrate_scale(1),
       minibatch_size(1),
       output_type("NLL"),
@@ -153,6 +154,13 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "lrate_decay", &NatGradNNet::lrate_decay,
                   OptionBase::buildoption,
                   "Learning rate decay factor\n");
+
+    declareOption(ol, "output_layer_L1_penalty_factor",
+                  &NatGradNNet::output_layer_L1_penalty_factor,
+                  OptionBase::buildoption,
+                  "Optional (default=0) factor of L1 regularization term, i.e.\n"
+                  "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| during training.\n"
+                  "Gets multiplied by the learning rate. Only on output layer!!");
 
     declareOption(ol, "output_layer_lrate_scale", &NatGradNNet::output_layer_lrate_scale,
                   OptionBase::buildoption,
@@ -334,6 +342,8 @@ void NatGradNNet::build_()
     }
     else PLERROR("NatGradNNet: output_type should be NLL or MSE\n");
 
+    if( output_layer_L1_penalty_factor < 0. )
+        PLWARNING("NatGradNNet::build_ - output_layer_L1_penalty_factor is negative!\n");
 
     if(use_pvgrad && minibatch_size!=1)
         PLERROR("PV's gradient technique (triggered by use_pvgrad): support for minibatch not yet implemented (must have minibatch_size=1)");
@@ -789,6 +799,23 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     //    (*g_corrprof)(all_params_gradient);
     //    (*ng_corrprof)(all_params_delta);
     //}
+
+    // Output layer L1 regularization
+    if( output_layer_L1_penalty_factor != 0. )    {
+        real L1_delta = lrate * output_layer_L1_penalty_factor;
+        real* m_i = layer_params[n_layers-2].data();
+
+        for(int i=0; i<layer_params[n_layers-2].length(); i++,m_i+=layer_params[n_layers-2].mod())  {
+            for(int j=0; j<layer_params[n_layers-2].width(); j++)   {
+                if( m_i[j] > L1_delta )
+                    m_i[j] -= L1_delta;
+                else if( m_i[j] < -L1_delta )
+                    m_i[j] += L1_delta;
+                else
+                    m_i[j] = 0.;
+            }
+        }
+    }
 
 }
 

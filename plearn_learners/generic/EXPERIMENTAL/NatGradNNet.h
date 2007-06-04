@@ -79,6 +79,9 @@ public:
     //! learning rate decay factor
     real lrate_decay;
 
+    //! L1 penalty applied to the output layer's parameters
+    real output_layer_L1_penalty_factor;
+
     //! scaling factor of the learning rate for the output layer
     real output_layer_lrate_scale;
 
