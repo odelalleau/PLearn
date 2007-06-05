@@ -185,6 +185,13 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
                  "registered with setFieldNames.\n"),
          RetDoc ("Requested statistic (a real number).")));
 
+    declareMethod(
+        rmm, "setFieldNames", &VecStatsCollector::setFieldNames,
+        (BodyDoc("Set field names.\n"),
+         ArgDoc ("fieldnames", 
+                 "A vector of strings corresponding to the names of each field"
+                 " in the VecStatsCollector.\n")));
+
 }
 
 int VecStatsCollector::length() const
