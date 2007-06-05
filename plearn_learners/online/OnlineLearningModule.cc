@@ -72,7 +72,8 @@ OnlineLearningModule::OnlineLearningModule(const string& the_name,
     input_size(-1),
     output_size(-1),
     name(the_name),
-    estimate_simpler_diag_hessian(false)
+    estimate_simpler_diag_hessian(false),
+    use_fast_approximations(true)
 {
     if (call_build_) {
         if (the_name.empty())
@@ -287,7 +288,11 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
 
     declareOption(ol, "name", &OnlineLearningModule::name,
                   OptionBase::buildoption,
-        "Name of the module (if not provided, the class name is used).");
+                  "Name of the module (if not provided, the class name is used).");
+
+    declareOption(ol, "use_fast_approximations", &OnlineLearningModule::use_fast_approximations,
+                  OptionBase::buildoption,
+                  "Use tables to approximate nonlinearities such as sigmoid, tanh, and softplus\n");
 
     declareOption(ol, "estimate_simpler_diag_hessian",
                   &OnlineLearningModule::estimate_simpler_diag_hessian,

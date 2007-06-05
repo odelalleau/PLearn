@@ -94,6 +94,9 @@ public:
     //! optional random generator, possibly shared among several modules
     PP<PRandom> random_gen;
 
+    //! use tables to approximate nonlinearities such as sigmoid, tanh, and softplus
+    bool use_fast_approximations;
+
 public:
     //#####  Public Member Fun ctions  #########################################
 
