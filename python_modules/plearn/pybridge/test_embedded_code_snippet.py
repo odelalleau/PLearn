@@ -87,4 +87,8 @@ class Machin(EmbeddedCodeSnippet):
         gc.collect()
         return gc.get_referrers(self.recTest)
 
-pl_embedded_code_snippet_type= Machin
+class Truc(Machin, Bidule):
+    pass
+    
+
+pl_embedded_code_snippet_type= Truc

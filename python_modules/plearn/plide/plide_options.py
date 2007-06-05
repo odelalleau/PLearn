@@ -33,7 +33,8 @@ import gtk
 
 from plearn.utilities.metaprog import public_members
 #from plearn.pyplearn.pyplearn  import *
-from plearn.pyplearn           import *
+#from plearn.pyplearn           import *
+from plearn.pyplearn           import plargs
 from plearn.utilities.toolkit  import doc as toolkit_doc
 
 from plearn.pl_pygtk import GladeAppWindow, GladeDialog, MessageBox
@@ -67,13 +68,13 @@ class PyPLearnOptionsGroup( object ):
         return self.group_object.is_plopt(option_name)
 
     def get_plopt( self, option_name ):
-        return self.group_object.get_plopt(option_name)
+        return self.group_object.getPlopt(option_name)
 
     def get( self, option_name ):
         return getattr(self.group_object, option_name)
 
     def set( self, option_name, option_value ):
-        if self.group_object.is_plopt(option_name):
+        if True or self.group_object.is_plopt(option_name):
             setattr(self.group_object, option_name, option_value)
         else:
             setattr(self.group_object, option_name,
@@ -88,7 +89,10 @@ class PyPLearnOptionsHolder( object ):
     to initialize the PyPLearnOptionsDialog, which provides the view and
     controller for this object.
     """
-    def __init__( self, script_name, script_code, script_directory ):
+    verbosity_map = { 0:0, 1:1, 2:5, 3:10, 4:500 }
+    inv_verb_map= dict([(y,x) for x,y in verbosity_map.iteritems()])
+    
+    def __init__( self, script_name, script_code, script_directory, namespaces= ['__ALL__'] ):
         self.script_name      = script_name
         self.script_code      = script_code
         self.launch_directory = script_directory
@@ -97,8 +101,8 @@ class PyPLearnOptionsHolder( object ):
         self.log_enable       = [ "__NONE__" ]     # List of named logs to enable
         self.option_overrides = [ ]                # Manual overrides
         self.option_groups    = [ ]                # List of groups of script options
+        self.namespaces= namespaces
         
-
         ## Assume that the script has already been executed and is
         ## syntactically valid.  (More formal execution context passing for
         ## subclasses of plargs_namespace will come later)
@@ -108,14 +112,15 @@ class PyPLearnOptionsHolder( object ):
         #     'GlobalOptions', public_members(plarg_defaults),
         #     plarg_defaults, 'Global Configuration Options'))
 
-        ## Look at all options in plargs_namespace
-        #for clsname,cls in plargs_namespace._subclasses.iteritems():
-        for clsname,cls in plnamespace._subclasses.iteritems():
-            short_doc = toolkit_doc(cls, 0).rstrip('.')
-            full_doc  = toolkit_doc(cls, 1, "\n")
-            group = PyPLearnOptionsGroup(clsname, public_members(cls).keys(),
-                                         cls, short_doc, full_doc)
-            self.option_groups.append(group)
+        ## Look at all options in plnamespace
+        for cls in plargs.getNamespaces():
+            clsname= cls.__name__
+            if clsname in namespaces or '__ALL__' in namespaces:
+                short_doc = toolkit_doc(cls, 0).rstrip('.')
+                full_doc  = toolkit_doc(cls, 1, "\n")
+                group = PyPLearnOptionsGroup(clsname, public_members(cls).keys(),
+                                             cls, short_doc, full_doc)
+                self.option_groups.append(group)
 
     def pyplearn_actualize( self ):
         """Since the values of the fields in the options dialog box have
@@ -130,8 +135,7 @@ class PyPLearnOptionsHolder( object ):
         if self.option_overrides:
             plargs.parse(self.option_overrides)
 
-        verbosity_map = { 0:0, 1:1, 2:5, 3:10, 4:500 }
-        verbosity = verbosity_map.get(self.log_verbosity, 5)
+        verbosity = self.verbosity_map.get(self.log_verbosity, 5)
         injected.loggingControl(verbosity, self.log_enable)
 
 
@@ -144,7 +148,8 @@ class PyPLearnOptionsDialog( GladeDialog ):
     def __init__( self, options_holder ):
         GladeDialog.__init__(self, gladeFile())
         self.options_holder = options_holder
-
+        self.set_title('Script Options ['+options_holder.script_name+']')
+        
         ## Fill out the first page of notebook
         self.w_launch_directory.set_text(options_holder.launch_directory)
         for v in options_holder.log_verbosities:
@@ -166,7 +171,7 @@ class PyPLearnOptionsDialog( GladeDialog ):
 
             ## The body of the notebook page is contained in a scrolled window
             scrolled = gtk.ScrolledWindow()
-            scrolled.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+            scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
             scrolled.set_shadow_type(gtk.SHADOW_NONE)
             align = gtk.Alignment(xalign=0.0, yalign=0.0, xscale=1.0, yscale=1.0)
             align.set_padding(padding_top=8, padding_bottom=6,
@@ -199,6 +204,10 @@ class PyPLearnOptionsDialog( GladeDialog ):
             option_names.sort()
             table = gtk.Table(rows=len(option_names), columns=3, homogeneous=False)
             for i in xrange(len(option_names)):
+                option_object     = group.get_plopt(option_names[i])
+                if not option_object.getGui():
+                    continue
+
                 ## Option name
                 option_label = gtk.Label(option_names[i])
                 option_label.set_alignment(1.0, 0.5)   # Right align and middle-align
@@ -215,14 +224,14 @@ class PyPLearnOptionsDialog( GladeDialog ):
                 ## str      Combobox if multiple choices
                 ## str      Text entry field for unconstrained string
                 ## list     Text entry field
-                if group.is_plopt(option_names[i]):
-                    option_object     = group.get_plopt(option_names[i])
+                if True or group.is_plopt(option_names[i]):
+                    #option_object     = group.get_plopt(option_names[i])
                     option_value      = group.get(option_names[i])
-                    option_type       = option_object.get_type()
-                    option_docstr     = option_object.__doc__
-                    option_bounds     = option_object.get_bounds()
-                    option_choices    = option_object.get_choices()
-                    option_fr_choices = option_object.get_free_choices()
+                    option_type       = option_object.getType()
+                    option_docstr     = option_object._doc
+                    option_bounds     = option_object.getBounds()
+                    option_choices    = option_object.getChoices()
+                    option_fr_choices = option_object.getFreeChoices()
                 else:
                     option_value      = group.get(option_names[i])
                     option_type       = type(option_value)
@@ -304,7 +313,7 @@ class PyPLearnOptionsDialog( GladeDialog ):
                 option_input.show()
                 table.attach(option_input, left_attach=1, right_attach=2,
                              top_attach=i, bottom_attach=i+1,
-                             xoptions=gtk.EXPAND | gtk.FILL, yoptions=gtk.EXPAND | gtk.FILL,
+                             xoptions=gtk.EXPAND | gtk.FILL, yoptions=gtk.EXPAND ,
                              xpadding=4, ypadding=0)
 
                 ## Remember how to map the widget's contents into options
@@ -318,7 +327,7 @@ class PyPLearnOptionsDialog( GladeDialog ):
                 option_doc.show()
                 table.attach(option_doc, left_attach=2, right_attach=3,
                              top_attach=i, bottom_attach=i+1,
-                             xoptions=gtk.EXPAND | gtk.FILL, yoptions=gtk.EXPAND | gtk.FILL,
+                             xoptions=gtk.EXPAND | gtk.FILL , yoptions=gtk.EXPAND | gtk.FILL,
                              xpadding=4, ypadding=0)
 
             table.set_row_spacings(8)
@@ -344,7 +353,8 @@ class PyPLearnOptionsDialog( GladeDialog ):
         """
         for (widget_getter, group, option_name) in self.widget_map:
             value = widget_getter()
-            group.set(option_name, value)
+            if value!='None':
+                group.set(option_name, value)
 
         ## Updates from the first page of the dialog
         self.options_holder.launch_directory = self.w_launch_directory.get_text()

@@ -139,6 +139,11 @@ process( const string& scriptfile,
             }
         }
     }
+
+    final_args.push_back(string("--named-logging=")
+                         + join(PL_Log::instance().namedLogging(), ","));
+    final_args.push_back(string("--verbosity=")
+                         + tostring(PL_Log::instance().verbosity()))    ;
 #ifdef WIN32
     Popen popen("python.exe", final_args);
 #else
@@ -198,7 +203,9 @@ PyPLearnScript::PyPLearnScript() :
     do_help(false),
     do_dump(false),
     metainfos(""),
-    expdir("")
+    expdir(""),
+    verbosity(PL_Log::instance().verbosity()),
+    module_names(PL_Log::instance().namedLogging())
 {}
   
 PLEARN_IMPLEMENT_OBJECT( PyPLearnScript,
@@ -211,6 +218,9 @@ PLEARN_IMPLEMENT_OBJECT( PyPLearnScript,
 
 void PyPLearnScript::run()
 {
+    PL_Log::instance().enableNamedLogging(module_names);
+    PL_Log::instance().verbosity(verbosity);
+
     PStream in = openString( plearn_script, PStream::plearn_ascii );
 
     while ( in )
@@ -249,6 +259,14 @@ void PyPLearnScript::declareOptions(OptionList& ol)
     declareOption( ol, "expdir", &PyPLearnScript::expdir,
                    OptionBase::buildoption,
                    "The expdir of the experiment described by the script" );
+
+    declareOption( ol, "verbosity", &PyPLearnScript::verbosity,
+                   OptionBase::buildoption,
+                   "The verbosity level to set for this experiment" );
+
+    declareOption( ol, "module_names", &PyPLearnScript::module_names,
+                   OptionBase::buildoption,
+                   "Modules for which logging should be activated" );
 
   
     // Now call the parent class' declareOptions

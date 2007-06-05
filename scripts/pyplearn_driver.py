@@ -13,6 +13,19 @@ pyplearn_file = open(sys.argv[1], 'U')
 lines = pyplearn_file.read()
 pyplearn_file.close()
 
+from plearn.utilities import options_dialog
+orig_verb, orig_logs, gui_namespaces, use_gui= options_dialog.getGuiInfo(sys.argv)
+
+gui_code= """
+from plearn.utilities import options_dialog
+runit, verb, logs= options_dialog.optionsDialog(%s,plargs.expdir,%d,%s,%s)
+"""%(repr(sys.argv[1]),orig_verb,repr(orig_logs),repr(gui_namespaces))
+
+if use_gui:
+    lines+= gui_code
+else:
+    lines+= "\nrunit, verb, logs= True, %d, %s\n"%(orig_verb,repr(orig_logs))
+
 if len(sys.argv) == 3 and sys.argv[2] == '--help':
     # Simply print the docstring of the pyplearn script
     lines += 'print __doc__\n'
@@ -21,11 +34,12 @@ elif len(sys.argv) >= 3 and '--PyPLearnScript' in sys.argv:
     # expdirs.
     sys.argv.remove('--PyPLearnScript')
     plargs.parse(sys.argv[2:])
-    lines += 'print PyPLearnScript( main() )\n'
+    lines += 'if runit: print PyPLearnScript( main(), verbosity= verb, module_names= logs)\nelse: print PyPLearnScript("")\n'
 else:
     # Default mode: simply dump the plearn_representation of this
     plargs.parse(sys.argv[2:])
-    lines += 'print main()\n'
+    lines += 'if runit: print main()\nelse: print PyPLearnScript("")\n'
+
 
 # Closing the current context so that, for instance, mispelled plargs can
 # be identified.

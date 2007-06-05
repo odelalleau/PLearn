@@ -299,6 +299,7 @@ class plopt(object):
     def __init__(self, value, **kwargs):
         self._name  = kwargs.pop("name", self.unnamed)
         self._doc   = kwargs.pop("doc", '')
+        self._gui   = kwargs.pop("gui", True)
 
         # type: This keyword can and must only be used when the default
         # value is None. Otherwise, it is infered using 'type(value)'.
@@ -415,6 +416,9 @@ class plopt(object):
 
     def getType(self):
         return self._type
+
+    def getGui(self):
+        return self._gui
 
     def reset(self):
         """Simply deletes any override for this plopt in the current context.

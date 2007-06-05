@@ -47,6 +47,8 @@
 #include <plearn/base/Object.h>
 #include <plearn/io/PPath.h>
 #include <plearn/io/openString.h>
+#include <plearn/io/pl_log.h>
+#include <vector>
 
 namespace PLearn {
 
@@ -145,7 +147,13 @@ public:
 
     //! The expdir of the experiment described by the script
     PPath expdir;
-  
+
+    //! The verbosity level to set for this experiment
+    int verbosity;
+
+    //! Modules for which logging should be activated
+    vector<string> module_names;
+
     // ****************
     // * Constructors *
     // ****************

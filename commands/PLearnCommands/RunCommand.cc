@@ -104,6 +104,9 @@ void RunCommand::run(const vector<string>& args)
         if ( script == "" )
             return;    
 
+        PL_Log::instance().enableNamedLogging(pyplearn_script->module_names);
+        PL_Log::instance().verbosity(pyplearn_script->verbosity);
+
         in = openString( script, PStream::plearn_ascii );
     }
     else if(extension=="plearn")  // perform plearn macro expansion

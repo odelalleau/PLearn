@@ -175,6 +175,8 @@ class GladeDialog(GladeWidget):
     def destroy(self):
         self.w_root.destroy()
 
+    def set_title(self, title):
+        self.w_root.set_title(title)
 
 #####  MessageBox (a la Windows)  ###########################################
 
