@@ -329,22 +329,42 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
 
     real ret = 0;
     real target_i, activation_i;
-    for( int i=0 ; i<size ; i++ )
-    {
-        target_i = target[i];
-        activation_i = activation[i];
-        if(!fast_exact_is_equal(target_i,0.0))
-            // nll -= target[i] * pl_log(expectations[i]); 
-            // but it is numerically unstable, so use instead
-            // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
-            // but note that expectation = sigmoid(-activation)
-            ret += target_i * softplus(activation_i);
-        if(!fast_exact_is_equal(target_i,1.0))
-            // ret -= (1-target_i) * pl_log(1-expectation_i);
-            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
-            //                         = log(1/(1+exp(x)))
-            //                         = -log(1+exp(x)) = -softplus(x)
-            ret += (1-target_i) * softplus(-activation_i);
+    if(use_fast_approximations){
+        for( int i=0 ; i<size ; i++ )
+        {
+            target_i = target[i];
+            activation_i = activation[i];
+            if(!fast_exact_is_equal(target_i,0.0))
+                // nll -= target[i] * pl_log(expectations[i]); 
+                // but it is numerically unstable, so use instead
+                // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
+                // but note that expectation = sigmoid(-activation)
+                ret += target_i * tabulated_softplus(activation_i);
+            if(!fast_exact_is_equal(target_i,1.0))
+                // ret -= (1-target_i) * pl_log(1-expectation_i);
+                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+                //                         = log(1/(1+exp(x)))
+                //                         = -log(1+exp(x)) = -softplus(x)
+                ret += (1-target_i) * tabulated_softplus(-activation_i);
+        }
+    }else{
+        for( int i=0 ; i<size ; i++ )
+        {
+            target_i = target[i];
+            activation_i = activation[i];
+            if(!fast_exact_is_equal(target_i,0.0))
+                // nll -= target[i] * pl_log(expectations[i]); 
+                // but it is numerically unstable, so use instead
+                // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
+                // but note that expectation = sigmoid(-activation)
+                ret += target_i * softplus(activation_i);
+            if(!fast_exact_is_equal(target_i,1.0))
+                // ret -= (1-target_i) * pl_log(1-expectation_i);
+                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+                //                         = log(1/(1+exp(x)))
+                //                         = -log(1+exp(x)) = -softplus(x)
+                ret += (1-target_i) * softplus(-activation_i);
+        }
     }
     return ret;
 }
@@ -363,22 +383,41 @@ void RBMBinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
         real nll = 0;
         real* activation = activations[k];
         real* target = targets[k];
-        for( int i=0 ; i<size ; i++ ) // loop over outputs
-        {
-            if(!fast_exact_is_equal(target[i],0.0))
-                // nll -= target[i] * pl_log(expectations[i]); 
-                // but it is numerically unstable, so use instead
-                // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
-                // but note that expectation = sigmoid(-activation)
-                nll += target[i] * softplus(activation[i]);
-            if(!fast_exact_is_equal(target[i],1.0))
-                // nll -= (1-target[i]) * pl_log(1-output[i]);
-                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
-                //                         = log(1/(1+exp(x)))
-                //                         = -log(1+exp(x))
-                //                         = -softplus(x)
-                nll += (1-target[i]) * softplus(-activation[i]);
-
+        if(use_fast_approximations){
+            for( int i=0 ; i<size ; i++ ) // loop over outputs
+            {
+                if(!fast_exact_is_equal(target[i],0.0))
+                    // nll -= target[i] * pl_log(expectations[i]); 
+                    // but it is numerically unstable, so use instead
+                    // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
+                    // but note that expectation = sigmoid(-activation)
+                    nll += target[i] * tabulated_softplus(activation[i]);
+                if(!fast_exact_is_equal(target[i],1.0))
+                    // nll -= (1-target[i]) * pl_log(1-output[i]);
+                    // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+                    //                         = log(1/(1+exp(x)))
+                    //                         = -log(1+exp(x))
+                    //                         = -softplus(x)
+                    nll += (1-target[i]) * tabulated_softplus(-activation[i]);
+            }
+        }else{
+            for( int i=0 ; i<size ; i++ ) // loop over outputs
+            {
+                if(!fast_exact_is_equal(target[i],0.0))
+                    // nll -= target[i] * pl_log(expectations[i]); 
+                    // but it is numerically unstable, so use instead
+                    // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
+                    // but note that expectation = sigmoid(-activation)
+                    nll += target[i] * softplus(activation[i]);
+                if(!fast_exact_is_equal(target[i],1.0))
+                    // nll -= (1-target[i]) * pl_log(1-output[i]);
+                    // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
+                    //                         = log(1/(1+exp(x)))
+                    //                         = -log(1+exp(x))
+                    //                         = -softplus(x)
+                    nll += (1-target[i]) * softplus(-activation[i]);
+                
+            }
         }
         costs_column(k,0) = nll;
     }
