@@ -42,7 +42,7 @@ def acquire_server(use_threads = False):
             min_load = njobs
             least_loaded = i
     if nservers < servers_max:
-        command = 'plearn_curses server'
+        command = plearn.bridgemode.server_exe + ' server'
         server = launch_plearn_server(command)
         servers.append([server, 1])
     else:
