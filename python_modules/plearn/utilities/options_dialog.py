@@ -30,7 +30,6 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-from plearn.plide.plide_options import *
 import sys, os
 
 def getVerbosity(args):
@@ -94,15 +93,18 @@ def optionsDialog(name, expdir, verbosity, named_logging, namespaces):
     """
     pop a dialog showing all plnamespaces
     """
-    PyPLearnOptionsDialog.define_injected(None, gladeFile)
-    options_holder= PyPLearnOptionsHolder(name, None, expdir, namespaces)
+    from plearn.plide import plide_options
+    import gtk
+    plide_options.PyPLearnOptionsDialog.define_injected(None, gladeFile)
+    options_holder= plide_options.PyPLearnOptionsHolder(name, None,
+                                                        expdir, namespaces)
     options_holder.log_enable= named_logging
     ks= options_holder.inv_verb_map.keys()
     ks.sort()
     for k in ks:
         if k <= verbosity:
             options_holder.log_verbosity= options_holder.inv_verb_map[k]
-    options_dialog= PyPLearnOptionsDialog(options_holder)
+    options_dialog= plide_options.PyPLearnOptionsDialog(options_holder)
     result= options_dialog.run()
     if result == gtk.RESPONSE_OK:
         options_dialog.update_options_holder()
