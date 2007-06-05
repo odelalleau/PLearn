@@ -484,6 +484,7 @@ void NetworkModule::build_()
     // A vector that stores the index of a module in the fprop path.
     TVec<int> module_index_to_path_index(all_modules.length(), -1);
     while (is_done.find(false) >= 0) {
+        bool at_least_one_done = false;
         for (int i = 0; i < all_modules.length(); i++) {
             if (!is_done[i] && inputs_needed[i] == 0) {
                 for (int j = 0; j < compute_input_of[i].length(); j++)
@@ -614,7 +615,20 @@ void NetworkModule::build_()
                 bprop_path[bprop_idx] = i;
 
                 is_done[i] = true;
+                at_least_one_done = true;
             }
+        }
+        if (!at_least_one_done) {
+            // Infinite loop: the algorithm cannot find a module that can be
+            // propagated at this point.
+            string err;
+            for (int i = 0; i < all_modules.length(); i++)
+                if (!is_done[i])
+                    err += all_modules[i]->name + ", ";
+            PLERROR("In NetworkModule::build_ - Cannot build propagation path "
+                    "due to the following modules waiting for incoming "
+                    "connections (there may be an infinite loop): %s",
+                    err.c_str());
         }
     }
     PLASSERT( module_index_to_path_index.find(-1) == -1 );
