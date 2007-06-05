@@ -303,6 +303,14 @@ void displayHistogram(Gnuplot& gp, Mat dataColumn,
 }
 
 
+  //! returns a subvector made of the (max) n "central" values of v
+  Vec centerSubVec(Vec v, int n=16)
+  {
+    int l = v.length();
+    if(l<=n)
+      return v;    
+    return v.subVec((l-n)/2,n);
+  }
 
 /** VarGraph **/
 
@@ -478,7 +486,7 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
       PStream str_descr = openString(descr, PStream::raw_ascii, "w");
       str_descr << v;
 
-      if(display_values && v->size() <= 16)
+      if(display_values)
         {
           gs.usefont("Times-Bold", 11.0);
           gs.centerShow(my_x, my_y+boxheight/4, descr.c_str());
@@ -487,14 +495,14 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
           gs.usefont("Courrier", 6.0);
           if (v->rValue.length()>0) // print rvalue if there are some...
           {
-            gs.centerShow(my_x, my_y-boxheight/5, v->value);
-            gs.centerShow(my_x, my_y-boxheight/3, v->gradient);
-            gs.centerShow(my_x, my_y-boxheight/1, v->rValue);
+            gs.centerShow(my_x, my_y-boxheight/5, centerSubVec(v->value));
+            gs.centerShow(my_x, my_y-boxheight/3, centerSubVec(v->gradient));
+            gs.centerShow(my_x, my_y-boxheight/1, centerSubVec(v->rValue));
           }
           else
           {
-            gs.centerShow(my_x, my_y-boxheight/5, v->value);
-            gs.centerShow(my_x, my_y-boxheight/2.5, v->gradient);
+            gs.centerShow(my_x, my_y-boxheight/5, centerSubVec(v->value));
+            gs.centerShow(my_x, my_y-boxheight/2.5, centerSubVec(v->gradient));
           }
           /*
           cout << descr << " " << nameline << " (" << v->value.length() << ")" << endl;

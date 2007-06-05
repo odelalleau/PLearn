@@ -219,11 +219,17 @@ def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, basename="")
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs):
+def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
     W = Var(ow, iw, "uniform", -1./iw, 1./iw, varname=basename+'_W')
-    hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
     Wr = Var(ow, iw, "uniform", -1./ow, 1./ow, varname=basename+'_Wr')
-    log_reconstructed = hidden.matrixProduct(Wr).multiLogSoftMax(igs)
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')
+        hidden = input.matrixProduct_A_Bt(W).add(b).multiSoftMax(ogs)
+        br = Var(1,iw,"fill",0, varname=basename+'_br')
+        log_reconstructed = hidden.matrixProduct(Wr).add(br).multiLogSoftMax(igs)
+    else:
+        hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
+        log_reconstructed = hidden.matrixProduct(Wr).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input

@@ -406,6 +406,8 @@ TVec<Mat> DeepReconstructorNet::computeRepresentations(Mat input)
     VarArray proppath = propagationPath(layers[0],layers[nlayers-1]);
     layers[0]->matValue << input;
     proppath.fprop();
+    perr << "Graph for computing representations" << endl;
+    // displayVarGraph(proppath,true, 333, "repr");
     for(int k=0; k<nlayers; k++)
         representations[k] = layers[k]->matValue.copy();
     return representations;
@@ -417,7 +419,21 @@ void DeepReconstructorNet::reconstructInputFromLayer(int layer)
     {
         VarArray proppath = propagationPath(layers[k],reconstructed_layers[k-1]);
         proppath.fprop();
-        reconstructed_layers[k-1]->matValue >> layers[k-1]->matValue;
+        perr << "Graph for reconstructing layer " << k-1 << " from layer " << k << endl;
+        //displayVarGraph(proppath,true, 333, "reconstr");
+
+        //WARNING MEGA-HACK
+        if (reconstructed_layers[k-1].width() == 2*layers[k-1].width())
+        {
+            Mat temp(layers[k-1].length(), layers[k-1].width());
+            for (int n=0; n < layers[k-1].length(); n++)
+                for (int i=0; i < layers[k-1].width(); i++)
+                    temp(n,i) = reconstructed_layers[k-1]->matValue(n,i*2);
+            temp >> layers[k-1]->matValue;
+        }        
+        //END OF MEGA-HACK
+        else
+            reconstructed_layers[k-1]->matValue >> layers[k-1]->matValue;
     }
 }
 
@@ -539,7 +555,7 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
     Func f(layers[which_input_layer], reconstruction_costs[which_input_layer]);
     //displayVarGraph(reconstruction_costs[which_input_layer]);
-    // displayVarGraph(fproppath,true, 333, "ffpp", false);
+    //displayFunction(f,false,false, 333, "train_func");
     Var totalcost = sumOf(inputs, f, minibatch_size);
     VarArray params = totalcost->parents();
     reconstruction_optimizer->setToOptimize(params, totalcost);

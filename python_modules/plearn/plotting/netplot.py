@@ -34,6 +34,8 @@ def findMinMax(matrix):
 
 def customColorBar(min, max, (x,y,width,height) = (0.9,0.1,0.1,0.8), nb_ticks = 50., color_map = defaultColorMap):
     axes((x, y, width,height))
+    if(min == max):
+        max=min + 1e-6
     cbarh = arange(min, max,  (max-min)/50.)
     cbar = vecToVerticalMatrix(cbarh)
     cbarh_str = []
@@ -88,7 +90,7 @@ def plotLayer1Old(W, M, width):
             imshow(rowToMatrix(toPlusRow(row),width), interpolation="nearest", cmap = colorMap)
             setPlotParams(names[i%2] + "_" + str(i) + "_" + str(j), False, True)
 
-def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=.01, apply_to_rows_before = None):
+def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=.01, apply_to_rows = None):
 
     
     #some calculations for plotting
@@ -100,12 +102,15 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     mWidth = float(len(M[0]))
     mHeight = float(len(M))
     sbi = space_between_images
-    plotHeight = mHeight/mWidth*plotWidth
+    #plotHeight = mHeight/mWidth*plotWidth
+    plotHeight = mWidth/width/width*plotWidth
     cbw = .01 # color bar width
 
     colorMap = defaultColorMap
 
     mi,ma = findMinMax(M)
+    print 'min', mi
+    print 'max', ma
     
     ma = max(abs(mi),abs(ma))
     mi = -ma
@@ -119,10 +124,17 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     
         #normal
         row = M[i]
+        if apply_to_rows != None:
+            row = apply_to_rows(row)
+        
+
+        print x,y,plotWidth, plotHeight
         
         axes((x, y, plotWidth, plotHeight))
         imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colorMap, vmin = mi, vmax = ma)
         setPlotParams('row_' + str(i), False, True)
+
+        
 
         x = x + plotWidth + sbi
         if x + plotWidth +cbw > 1:
@@ -217,7 +229,7 @@ def plotMatrices(matrices, same_color_bar = False, space_between_matrices = 5):
     '''
     colorMap = cm.gray
     nbMatrices = len(matrices)
-    print 'plotting ' + str(nbMatrices) + ' matrices'
+    #print 'plotting ' + str(nbMatrices) + ' matrices'
 
     totalWidth = 0
     maxHeight = 0
@@ -306,6 +318,8 @@ def truncate_imshow(mat, max_height_or_width = 200, width_height_ratio = 1, spac
 
     #custom colorBar
     mi,ma = findMinMax(mat)
+    print 'min', mi
+    print 'max', ma
     
     ma = max(abs(mi),abs(ma))
     mi = -ma
