@@ -3,22 +3,25 @@ from numarray import *
 from plearn.bridge import *
 from threading import *
 
+
 # YET TO BE DOCUMENTED AND CLEANED UP CODE
 
 
 if plearn.bridgemode.useserver:
     servers_lock = Lock() # Lock on the servers list so we don't have race conditions
-    servers = [[serv, 0]] # List of [server, amount_of_jobs_server_is_running] lists
+    servers = [[serv, 0, Lock()]] # List of [server, amount_of_jobs_server_is_running, lock_on_the_server] lists
     servers_max = 1e10 # Maximal amount of servers we are willing to run
 
 def execute(object, tasks, use_threads = False):
     def job(object):
+        lock = [servinfo[2] for servinfo in servers if servinfo[0] is object.server][0]
+        lock.acquire() # we will only send our job to the server if nothing is already running
         for method, args in tasks: # do each task sequentially
             getattr(object, method)(*args)
+        lock.release()
         
     if plearn.bridgemode.useserver and use_threads:
         t = Thread(target = job, args = (object,))
-        t.start()
         return t
     else:
         for method, args in tasks:
@@ -33,7 +36,7 @@ def acquire_server(use_threads = False):
     least_loaded = 0
     nservers = len(servers)
     for servinfo, i in zip(servers, xrange(nservers)):
-        server, njobs = servinfo
+        server, njobs, lock = servinfo
         if not njobs:
             servinfo[1] = 1
             servers_lock.release()
@@ -43,8 +46,10 @@ def acquire_server(use_threads = False):
             least_loaded = i
     if nservers < servers_max:
         command = plearn.bridgemode.server_exe + ' server'
-        server = launch_plearn_server(command)
-        servers.append([server, 1])
+        server = launch_plearn_server(command = command)
+        time.sleep(0.5) # give some time to the server to get born and well alive (taken from bridge.py)
+        lock = Lock()
+        servers.append([server, 1, lock])
     else:
         servinfo = servers[least_loaded]
         server = servinfo[0]
@@ -57,7 +62,7 @@ def release_server(object, use_threads = False):
         server = object.server
         servers_lock.acquire()
         for servinfo in servers:
-            server_, njobs = servinfo
+            server_, njobs, lock = servinfo
             if server_ is server: # == doesn't work
                 servinfo[1] -= 1 # this server is done so we reduce its job count
                 break
@@ -65,7 +70,12 @@ def release_server(object, use_threads = False):
 
 def assign(object, use_threads = False):
     server = acquire_server(use_threads)
+    if use_threads:
+        lock = [servinfo[2] for servinfo in servers if servinfo[0] is server][0]
+        lock.acquire() # plearn servers are not thread safe
     o = server.new(object)
+    if use_threads:
+        lock.release()
     return o
 
 
@@ -402,15 +412,23 @@ def train_adapting_lr(learner,
             for j in range(0,n_tests):
                 ts = pl.VecStatsCollector()
                 if plearn.bridgemode.useserver:
-                    ts = candidate.server.new(ts)
+                    ts = candidate.server.new(ts) # no threads are running so we don't need to lock here
                 stats.append(ts)
                 tasks.append(('test', (testsets[j], ts, 0, 0)))
             active_stats.append(stats)
             threads.append(execute(candidate, tasks, use_threads))
 
+        # All threads must be started here. The servers are not thread-safe,
+        # but the threads we start get a lock on their respective servers.
         for thread in threads:
             if isinstance(thread, Thread):
-                thread.join() # wait for all experiments to finish
+                thread.start()
+
+        # Similarly, we must wait for all experiments to finish before doing
+        # anything else.
+        for thread in threads:
+            if isinstance(thread, Thread):
+                thread.join()
 
         for active, stats in zip(actives, active_stats):
             candidate = all_candidates[active]
@@ -447,7 +465,7 @@ def train_adapting_lr(learner,
                             best_active = active
                             best_early_stop = stage
                             if return_best_model:
-                                best_candidate = deepcopy(candidate)
+                                best_candidate = deepcopy(candidate, use_threads)
             if logfile:
                 print >>logfile
                 logfile.flush()
