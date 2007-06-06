@@ -69,6 +69,8 @@ ForwardModule::ForwardModule(const string& the_name, bool call_build_):
 void ForwardModule::declareOptions(OptionList& ol)
 {
 
+    // 'build' options.
+
     declareOption(ol, "modules", &ForwardModule::modules,
                   OptionBase::buildoption,
         "The list of modules that can be used to forward calls.");
@@ -83,6 +85,14 @@ void ForwardModule::declareOptions(OptionList& ol)
         "If set to 1, then the forget() method will call forget() on all\n"
         "modules. Otherwise, only the current module pointed by 'forward_to'\n"
         "will be forgotten.");
+
+    // 'nosave' options.
+    
+    // 'current' is an option only so it can be modified in server mode for
+    // instance, in order to bypass a call to build (yes, this is a hack!).
+    declareOption(ol, "current", &ForwardModule::current,
+                  OptionBase::nosave,
+        "Index in 'modules' of the module given by 'forward_to'.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -198,7 +208,7 @@ void ForwardModule::setLearningRate(real dynamic_learning_rate)
 // getPorts //
 //////////////
 const TVec<string>& ForwardModule::getPorts() {
-      return modules[current]->getPorts();
+    return modules[current]->getPorts();
 }
 
 //////////////////
