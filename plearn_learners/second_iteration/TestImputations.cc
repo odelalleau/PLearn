@@ -142,7 +142,7 @@ void TestImputations::build_()
     if (train_set)
     {
         build_ball_tree();
-        for (int iteration = 1; iteration <= 50; iteration++)
+        for (int iteration = 1; iteration <= train_set->width(); iteration++)
         {
             cout << "In TestImputations, Iteration # " << iteration << endl;
             initialize();
@@ -152,7 +152,7 @@ void TestImputations::build_()
             computeNeighborhoodStats();
             train();
         }
-        PLERROR("In TestImputations: we are done here");
+        PLERROR("In TestImputations::build_(): we are done here");
     }
 }
 
@@ -179,12 +179,12 @@ void TestImputations::build_ball_tree()
             break;
         }
         if (train_col >= train_width)
-            PLERROR("In TestImputations:: no field with this name in input dataset: %s", (missing_indicators[mi_col]).c_str());
+            PLERROR("In TestImputations::build_ball_tree():: no field with this name in input dataset: %s", (missing_indicators[mi_col]).c_str());
     }
     weighted_distance_kernel = new WeightedDistance(weights);
 /*
-    if (!reference_set_with_covpres) PLERROR("In TestImputations:: no reference_set_with_covpres provided.");
-    if (!reference_set_with_missing) PLERROR("In TestImputations:: no reference_set_with_missing provided.");
+    if (!reference_set_with_covpres) PLERROR("In TestImputations::build_ball_tree() no reference_set_with_covpres provided.");
+    if (!reference_set_with_missing) PLERROR("In TestImputations::build_ball_tree() no reference_set_with_missing provided.");
     ball_tree = new BallTreeNearestNeighbors();
     ball_tree->setOption("rmin", "1");
     ball_tree->setOption("train_method", "anchor");
@@ -200,8 +200,8 @@ void TestImputations::build_ball_tree()
     ref_cov = reference_set_with_covpres->toMat();
     ref_mis = reference_set_with_missing->toMat();
 */
-    if (!reference_set_with_covpres) PLERROR("In TestImputations:: no reference_set_with_covpres provided.");
-    if (!reference_set_with_missing) PLERROR("In TestImputations:: no reference_set_with_missing provided.");
+    if (!reference_set_with_covpres) PLERROR("In TestImputations::build_ball_tree() no reference_set_with_covpres provided.");
+    if (!reference_set_with_missing) PLERROR("In TestImputations::build_ball_tree() no reference_set_with_missing provided.");
     ball_tree = new ExhaustiveNearestNeighbors();
     ball_tree->setOption("num_neighbors", "100");
     ball_tree->setOption("copy_input", "0");
@@ -288,6 +288,7 @@ void TestImputations::initialize()
     train_set->lockMetaDataDir();
     header_record.resize(train_width);
     header_file_name = train_metadata + "/TestImputation/header.pmat";
+    cout << "header_file_name: " << header_file_name << endl;
     if (!isfile(header_file_name)) createHeaderFile();
     else getHeaderRecord();
     
@@ -295,21 +296,22 @@ void TestImputations::initialize()
     cout << "choose a variable to test imputations for" << endl;
     to_deal_with_total = 0;
     to_deal_with_next = -1;
+
     for (train_col = 0; train_col < train_width; train_col++)
     {
         if (header_record[train_col] != 1.0) continue;
         to_deal_with_total += 1;
         if (to_deal_with_next < 0) to_deal_with_next = train_col;
     }
+    cout << "total number of variable left to deal with: " << to_deal_with_total << endl;
     if (to_deal_with_next < 0)
     {
         train_set->unlockMetaDataDir();
         // reviewGlobalStats();
-        PLERROR("In TestImputations:: we are done here");
+        PLERROR("In TestImputations::initialize() we are done here");
     }
-    to_deal_with_name = train_names[to_deal_with_next];
-    cout << "total number of variable left to deal with: " << to_deal_with_total << endl;
     cout << "next variable to deal with: " << train_names[to_deal_with_next] << endl;
+    to_deal_with_name = train_names[to_deal_with_next];
     updateHeaderRecord(to_deal_with_next);
     train_set->unlockMetaDataDir();
     
@@ -326,7 +328,7 @@ void TestImputations::initialize()
     {
         to_deal_with_value = train_set->get(train_row, to_deal_with_next);
         if (is_missing(to_deal_with_value)) continue;
-        if (ind_next >= indices.length()) PLERROR("In TestImputations:: There seems to be more present values than indicated by the stats file");
+        if (ind_next >= indices.length()) PLERROR("In TestImputations::initialize() There seems to be more present values than indicated by the stats file");
         indices[ind_next] = train_row;
         ind_next += 1;
         pb->update( train_row );
@@ -354,12 +356,12 @@ void TestImputations::initialize()
 
 void TestImputations::computeMeanMedianModeStats()
 {
-    if (!isfile(mean_median_mode_file_name)) PLERROR("In TestImputations:: a valid mean_median_mode_file path must be provided.");
+    if (!isfile(mean_median_mode_file_name)) PLERROR("In TestImputations::computeMeanMedianModeStats() a valid mean_median_mode_file path must be provided.");
     mmmf_file = new FileVMatrix(mean_median_mode_file_name);
     mmmf_length = mmmf_file->length();
     mmmf_width = mmmf_file->width();
-    if (mmmf_length != 3) PLERROR("In TestImputations:: there should be exactly 3 records in the mmm file, got %i.", mmmf_length);
-    if (mmmf_width != train_width) PLERROR("In TestImputations:: train set and mmm width should be the same, got %i.", mmmf_width);
+    if (mmmf_length != 3) PLERROR("In TestImputations::computeMeanMedianModeStats() there should be exactly 3 records in the mmm file, got %i.", mmmf_length);
+    if (mmmf_width != train_width) PLERROR("In TestImputations::computeMeanMedianModeStats() train set and mmm width should be the same, got %i.", mmmf_width);
     mmmf_mean = mmmf_file->get(0, to_deal_with_next);
     mmmf_median = mmmf_file->get(1, to_deal_with_next);
     mmmf_mode = mmmf_file->get(2, to_deal_with_next);
@@ -384,11 +386,13 @@ void TestImputations::computeMeanMedianModeStats()
 void TestImputations::computeTreeCondMeanStats()
 {
     tcmf_file_name = tree_conditional_mean_directory + "/" + to_deal_with_name + "/Split0/test1_outputs.pmat";
-    if (!isfile(tcmf_file_name)) PLERROR("In TestImputations:: a file was not found in the tcf directory.");
+    if (!isfile(tcmf_file_name)) 
+        PLERROR("In TestImputations::computeTreeCondMeanStats(): The '%s' file was not found in the tcf directory.",tcmf_file_name.c_str());
     tcmf_file = new FileVMatrix(tcmf_file_name);
     tcmf_length = tcmf_file->length();
     tcmf_width = tcmf_file->width();
-    if (tcmf_length < train_length) PLERROR("In TestImputations:: there are not enough records in the tree conditional output file.");
+    if (tcmf_length < train_length) 
+        PLERROR("In TestImputations::computeTreeCondMeanStats(): there are only %d records in the tree conditional output file. We need %d.",tcmf_length,train_length);
     tcmf_mean_err = 0.0;
     pb = new ProgressBar( "computing the tree conditional mean imputation errors for " + to_deal_with_name, test_length);
     for (test_row = 0; test_row < test_length; test_row++)
@@ -403,12 +407,13 @@ void TestImputations::computeTreeCondMeanStats()
 
 void TestImputations::computeCovPresStats()
 {
-    if (!isfile(covariance_preservation_file_name)) PLERROR("In TestImputations:: a valid covariance_preservation_file path must be provided.");
+    if (!isfile(covariance_preservation_file_name)) PLERROR("In TestImputations::computeCovPresStats() a valid covariance_preservation_file path must be provided.");
     cvpf_file = new FileVMatrix(covariance_preservation_file_name);
     cvpf_length = cvpf_file->length();
     cvpf_width = cvpf_file->width();
-    if (cvpf_length != train_width + 1) PLERROR("In TestImputations:: there should be %i records in the cvp file, got %i.", train_width + 1, cvpf_length);
-    if (cvpf_width != train_width) PLERROR("In TestImputations:: train set and cvp width should be the same, got %i.", cvpf_width);
+    if (cvpf_length != train_width + 1) PLERROR("In TestImputations::computeCovPresStats() there should be %i records in the cvp file, got %i.",
+                                                train_width + 1, cvpf_length);
+    if (cvpf_width != train_width) PLERROR("In TestImputations::computeCovPresStats() train set and cvp width should be the same, got %i.", cvpf_width);
     cvpf_file = new FileVMatrix(covariance_preservation_file_name);
     cvpf_cov.resize(train_width, train_width);
     cvpf_mu.resize(train_width);
@@ -471,7 +476,7 @@ void TestImputations::computeNeighborhoodStats()
         knnf_sum_value = 0.0;
         knnf_sum_cov = 0.0;
         knnv_value_count = 0.0;
-        for (knnf_row = 0; knnf_row < 100; knnf_row++)
+        for (knnf_row = 0; knnf_row < knnf_neighbors.size(); knnf_row++)
         {
             knnf_value = ref_mis((int) knnf_neighbors[knnf_row], to_deal_with_next);
             if (!is_missing(knnf_value))
@@ -486,7 +491,7 @@ void TestImputations::computeNeighborhoodStats()
             }
             knnf_value = ref_cov((int) knnf_neighbors[knnf_row], to_deal_with_next);
             if (is_missing(knnf_value))
-                PLERROR("In TestImputations::missing value found in the reference with covariance preserved at: %i , %i",
+                PLERROR("In TestImputations::computeNeighborhoodStats(): missing value found in the reference with covariance preserved at: %i , %i",
                          (int) knnf_neighbors[knnf_row], to_deal_with_next);
             knnf_sum_cov += knnf_value;
             knnf_mean_err[knnf_row] += pow(to_deal_with_value - (knnf_sum_cov / (knnf_row + 1)), 2.0);
@@ -494,11 +499,12 @@ void TestImputations::computeNeighborhoodStats()
         pb->update( test_row );
     }
     delete pb;
-    for (knnf_row = 0; knnf_row < 100; knnf_row++) knnf_mean_err[knnf_row] = knnf_mean_err[knnf_row] /  (real) test_length;
+    for (knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++) knnf_mean_err[knnf_row] = knnf_mean_err[knnf_row] /  (real) test_length;
 }
 
 void TestImputations::createHeaderFile()
 { 
+    cout << "in createHeaderFile()" << endl;
     for (train_col = 0; train_col < train_width; train_col++)
     {
         train_stats = train_set->getStats(train_col);
@@ -528,10 +534,10 @@ void TestImputations::updateHeaderRecord(int var_col)
 void TestImputations::train()
 {
     // initialize the output file
-    cout << "initialize the output file" << endl;
-    train_set->lockMetaDataDir();
-    output_record.resize(105);
     output_file_name = train_metadata + "/TestImputation/output.pmat";
+    cout << "initialize the output file: " << output_file_name << endl;
+    train_set->lockMetaDataDir();
+    output_record.resize(knnf_mean_err.size()+5);
     if (!isfile(output_file_name)) createOutputFile();
     else getOutputRecord(to_deal_with_next);
     output_record[0] = mmmf_mean_err;
@@ -539,7 +545,7 @@ void TestImputations::train()
     output_record[2] = mmmf_mode_err;
     output_record[3] = tcmf_mean_err;
     output_record[4] = cvpf_mean_err;
-    for (knnf_row = 0; knnf_row < 100; knnf_row++)
+    for (knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++)
     {
        output_record[knnf_row + 5] = knnf_mean_err[knnf_row];
     }
@@ -549,13 +555,13 @@ void TestImputations::train()
 
 void TestImputations::createOutputFile()
 {
-    output_names.resize(105);
+    output_names.resize(knnf_mean_err.size()+5);
     output_names[0] = "mean";
     output_names[1] = "median";
     output_names[2] = "mode";
     output_names[3] = "tree_cond";
     output_names[4] = "cov_pres";
-    for (knnf_row = 0; knnf_row < 100; knnf_row++)
+    for (knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++)
     {
        output_names[knnf_row + 5] = "KNN_" + tostring(knnf_row);
     }
