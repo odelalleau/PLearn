@@ -35,7 +35,7 @@
 ## library, go to the PLearn Web site at www.plearn.org
 
 $ScriptName="lauchdbi.py";
-$ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
+$ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
 $LongHelp=<<EOUSAGE;
 Usage: cdispatch [--help|-h] [--log|--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
@@ -104,6 +104,19 @@ if($ARGV[0] eq "--nolog" ){
     $LOG = 0;
 }
 
+if ($ARGV[0] eq "--cluster") {
+    $CLUSTER = 1;
+    $LOCAL = 0;
+    shift;
+} elsif ($ARGV[0] eq "--local") {
+    $CLUSTER = 0;
+    $LOCAL = 1;
+    shift;
+} else {
+    $CLUSTER = 0;
+    $LOCAL = 0;
+}
+
 if ($ARGV[0] eq "--test") {
     $TEST = 1;
     shift;
@@ -138,9 +151,10 @@ if(scalar(@ARGV) != 0) {
 #    "\tArglist = (", join(",",@{$repl[$i]}),")\n";
 #}
 open(SCRIPT,">$ScriptName");
-print SCRIPT "#! /usr/bin/env python\n".
-    "from plearn.parallel.dbi import DBI\n".
-    "jobs = DBI([\n";
+    print SCRIPT "#! /usr/bin/env python\n".
+	"from plearn.parallel.dbi import DBI\n".
+	"jobs = DBI([\n";
+
 $nbcommand=0;
 
 #print the command
@@ -156,7 +170,13 @@ if ($FILE ne "") {
     $nbcommand=printAndExpendArgs(@ARGV)
 }
 
-print SCRIPT "   ],'Condor'";
+if($CLUSTER){
+    print SCRIPT "   ],'Cluster'";
+}elsif($LOCAL){
+    print SCRIPT "   ],'Local'";
+}else{
+    print SCRIPT "   ],'Condor'";
+}
 
 if ($REQ ne "") {
     print SCRIPT ", requirements=\"$REQ\"";
