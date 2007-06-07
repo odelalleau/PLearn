@@ -719,14 +719,11 @@ def DBI(commands, launch_system, **args):
     return jobs
 
 def main():
-    #    jobs = DBICluster(['ls','sleep 2'])
-    jobs = DBI([
-        'plearn_exp ${PLEARNDIR}/speedtest/sgrad.plearn task=letter_memvmat nout=26 nh1=100 nh2=100 nh3=100 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=10',
-        'plearn_exp ${PLEARNDIR}/speedtest/sgrad.plearn task=letter_memvmat nout=26 nh1=100 nh2=100 nh3=100 slr=1e-1 dc=0 n=16001 epoch=16000 seed=1 mbs=20'
-        #   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=25 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x25 recons_file=r.txt',
-        #   './plearn dbn.pyplearn n_epochs_grad=250 n_hidden=35 grad_learning_rate=0.05 n_epochs_cd=0 cd_learning_rate=0.00001 unique_id=x35 recons_file=r.txt'
-        ],'Ssh')
-    jobs.run()
+    if len(sys.argv)!=2:
+        print "Usage:dbi.py {Condor|Cluster|Ssh|Local|bqtools} < joblist"
+        print "Where joblist is a file containing one exeperiement by line"
+        sys.exit(0)
+    DBI([ s[0:-1] for s in sys.stdin.readlines() ], sys.argv[1]).run()
 #    jobs.clean()
 
 #    config['LOG_DIRECTORY'] = 'LOGS/'
