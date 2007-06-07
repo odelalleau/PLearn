@@ -219,9 +219,12 @@ class DBICluster(DBIBase):
             output = file(task.log_file + '.out','w')
         if int(self.file_redirect_stderr):
             error = file(task.log_file + '.err','w')
-        task.p = Popen(command, shell=True,stdout=output,stderr=error)
+        if self.test == False:
+            task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
+        if self.test:
+            print "Test mode, we only print the command to be executed, we don't execute them"
         # Execute pre-batch
         pre_batch_command = ';'.join( self.pre_batch )
         output = PIPE
@@ -230,9 +233,10 @@ class DBICluster(DBIBase):
             output = file(self.log_file + '.pre_batch.out', 'w')
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.pre_batch.err', 'w')
-        self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
-
-        #print 'pre_batch_command =', pre_batch_command
+        if self.test:
+            print pre_batch_command
+        else:
+            self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
         for task in self.tasks:
@@ -244,9 +248,11 @@ class DBICluster(DBIBase):
             output = file(self.log_file + '.post_batch.out', 'w')
         if int(self.file_redirect_stderr):
             error = file(self.log_file + '.post_batch.err', 'w')
-        self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
-        #print 'post_batch_command =', post_batch_command
-
+        if self.test:
+            print post_batch_command
+        else:
+            self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
+            
     def clean(self):
         #TODO: delete all log files for the current batch
         pass
