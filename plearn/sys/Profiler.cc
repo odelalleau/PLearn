@@ -51,7 +51,7 @@ bool Profiler::active  = false;
 
 #ifdef PROFILE
 // start recording time for named piece of code
-void Profiler::start(const string& name_of_piece_of_code)
+void Profiler::start(const string& name_of_piece_of_code, const int max_nb_going)
 {
     if (active)
     {
@@ -60,7 +60,7 @@ void Profiler::start(const string& name_of_piece_of_code)
         if (it == codes_statistics.end())
         {
             Stats stats;
-            stats.on_going = true;
+            stats.nb_going = 1;
             stats.wall_last_start   = times(&t);
             stats.user_last_start   = t.tms_utime;
             stats.system_last_start = t.tms_stime;
@@ -69,13 +69,15 @@ void Profiler::start(const string& name_of_piece_of_code)
         else
         {
             Profiler::Stats& stats = it->second;
-            if (stats.on_going)
-                PLERROR("Profiler::start(%s) called while previous start had not ended",
-                        name_of_piece_of_code.c_str());
-            stats.on_going = true;
-            stats.wall_last_start   = times(&t);
-            stats.user_last_start   = t.tms_utime;
-            stats.system_last_start = t.tms_stime;
+            if (stats.nb_going >= max_nb_going)
+                PLERROR("Profiler::start(%s) called while previous %d starts had not ended and we allowed only %d starts",
+                        name_of_piece_of_code.c_str(),stats.nb_going, max_nb_going);
+            if (stats.nb_going==0){
+                stats.wall_last_start   = times(&t);
+                stats.user_last_start   = t.tms_utime;
+                stats.system_last_start = t.tms_stime;
+            }
+            stats.nb_going++;
         }
     }
 }
@@ -94,36 +96,43 @@ void Profiler::end(const string& name_of_piece_of_code)
             PLERROR("Profiler::end(%s) called before any call to start(%s)",
                     name_of_piece_of_code.c_str(),name_of_piece_of_code.c_str());
         Profiler::Stats& stats = it->second;
-        if (!stats.on_going)
+        if (stats.nb_going == 0)
             PLERROR("Profiler::end(%s) called before previous start was called",
                     name_of_piece_of_code.c_str());
 
-        stats.on_going = false;
+        stats.nb_going--;
         stats.frequency_of_occurence++;
-        long wall_duration   = end_time    - stats.wall_last_start;
-        long user_duration   = t.tms_utime - stats.user_last_start;
-        long system_duration = t.tms_stime - stats.system_last_start;
-        if (wall_duration < 0) {
-            wall_duration = user_duration = system_duration = 1;
-            PLWARNING("Profiler: negative duration measured with times!");
+        if (stats.nb_going==0){
+            long wall_duration   = end_time    - stats.wall_last_start;
+            long user_duration   = t.tms_utime - stats.user_last_start;
+            long system_duration = t.tms_stime - stats.system_last_start;
+            stats.wall_duration   += wall_duration;
+            stats.user_duration   += user_duration;
+            stats.system_duration += system_duration;
+            if (wall_duration < 0) {
+                wall_duration = user_duration = system_duration = 1;
+                PLWARNING("Profiler: negative duration measured with times!");
+            }
         }
-        stats.wall_duration   += wall_duration;
-        stats.user_duration   += user_duration;
-        stats.system_duration += system_duration;
     }
 }
 
-// start recording time for named piece of code if PL_PROFILE is set
 #ifdef PL_PROFILE
-void Profiler::pl_profile_start(const string& name_of_piece_of_code){
-        Profiler::start(name_of_piece_of_code);}
-#endif
-// end recording time for named piece of code, and increment
-// frequency of occurence and total duration of this piece of code.
-// if PL_PROFILE is set
-#ifdef PL_PROFILE
+// call Profiler::start if PL_PROFILE is set
+void Profiler::pl_profile_start(const string& name_of_piece_of_code, const int max_nb_going){
+    Profiler::start(name_of_piece_of_code, max_nb_going);}
+// call Profiler::end if PL_PROFILE is set
 void Profiler::pl_profile_end(const string& name_of_piece_of_code){
-        Profiler::end(name_of_piece_of_code);}
+    Profiler::end(name_of_piece_of_code);}
+// call Profiler::activate if PL_PROFILE is set
+void Profiler::pl_profile_activate(){
+    Profiler::activate();}
+// call Profiler::report if PL_PROFILE is set
+void Profiler::pl_profile_report(ostream& out){
+    Profiler::report(out);}
+// call Profiler::reportwall if PL_PROFILE is set
+void Profiler::pl_profile_reportwall(ostream& out){
+    Profiler::reportwall(out);}
 #endif
 
 #endif

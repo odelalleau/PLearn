@@ -107,7 +107,7 @@ public:
         clock_t wall_last_start;             //!< Wall when last started
         clock_t user_last_start;             //!< User when last started
         clock_t system_last_start;           //!< System when last started
-        bool on_going;                       //!< Whether we have started this stat
+        int nb_going;                       //!< Whether we have started this stat
       
         Stats()
             : frequency_of_occurence(0),
@@ -117,7 +117,7 @@ public:
               wall_last_start(0),
               user_last_start(0),
               system_last_start(0),
-              on_going(false)
+              nb_going(0)
         { }
     };
 
@@ -141,9 +141,9 @@ public:
     
     //!  Start recording time for named piece of code
 #ifdef PROFILE
-    static void start(const string& name_of_piece_of_code);
+    static void start(const string& name_of_piece_of_code, const int max_nb_going=1);
 #else
-    static inline void start(const string& name_of_piece_of_code) { }
+    static inline void start(const string& name_of_piece_of_code, const int max_nb_going=1) { }
 #endif
 
     //!  End recording time for named piece of code, and increment
@@ -154,20 +154,39 @@ public:
     static inline void end(const string& name_of_piece_of_code) { } 
 #endif
 
-    //!  Start recording time for named piece of code if PL_PROFILE is set
+    //!  call start if if PL_PROFILE is set
 #if defined(PROFILE) && defined(PL_PROFILE)
-    static void pl_profile_start(const string& name_of_piece_of_code);
+    static void pl_profile_start(const string& name_of_piece_of_code, const int max_nb_going=1);
 #else
-    static inline void pl_profile_start(const string& name_of_piece_of_code) {}
+    static inline void pl_profile_start(const string& name_of_piece_of_code, const int max_nb_going=1) {}
 #endif
 
-    //!  End recording time for named piece of code, and increment
-    //!  frequency of occurence and total duration of this piece of code.
-    //!  if PL_PROFILE is set
+    //!  call end() if if PL_PROFILE is set
 #if defined(PROFILE) && defined(PL_PROFILE)
     static void pl_profile_end(const string& name_of_piece_of_code);
 #else
     static inline void pl_profile_end(const string& name_of_piece_of_code) { } 
+#endif
+
+    //!  call activate() if if PL_PROFILE is set
+#if defined(PROFILE) && defined(PL_PROFILE)
+    static void pl_profile_activate();
+#else
+    static inline void pl_profile_activate() {}
+#endif
+
+    //!  call report() if if PL_PROFILE is set
+#if defined(PROFILE) && defined(PL_PROFILE)
+    static void pl_profile_report(ostream& out);
+#else
+    static inline void pl_profile_report(ostream& out) {}
+#endif
+
+    //!  call reportwall() if if PL_PROFILE is set
+#if defined(PROFILE) && defined(PL_PROFILE)
+    static void pl_profile_reportwall(ostream& out);
+#else
+    static inline void pl_profile_reportwall(ostream& out) {}
 #endif
 
     //! Return the number of clock ticks per second on this computer.
