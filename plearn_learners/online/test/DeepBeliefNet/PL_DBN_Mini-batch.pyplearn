@@ -85,7 +85,8 @@ for batch_size in [ 1, 3 ]:
             layers = [
                 pl.RBMBinomialLayer(
                     learning_rate = rbm_lr,
-                    size = input_size
+                    size = input_size,
+                    use_fast_approximations = False
                 ),
 
                 pl.RBMMultinomialLayer(
