@@ -133,7 +133,6 @@ public:
     // ### initializes all fields to reasonable default values.
     GaussianDBNClassification();
 
-
     //#####  PDistribution Member Functions  ##################################
 
     //! Return probability density p(y | x)

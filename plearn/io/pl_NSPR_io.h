@@ -46,7 +46,7 @@
 #ifndef pl_NSPR_io_INC
 #define pl_NSPR_io_INC
 
-#include <mozilla/nspr/prio.h>
+#include <mozilla-1.7.13/nspr/prio.h>
 
 namespace PLearn {
 using namespace std;

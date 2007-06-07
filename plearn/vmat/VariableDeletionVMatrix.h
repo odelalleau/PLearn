@@ -45,7 +45,7 @@
 #ifndef VariableDeletionVMatrix_INC
 #define VariableDeletionVMatrix_INC
 
-#include "SourceVMatrix.h"
+#include "VMatrix.h"
 #include "SelectColumnsVMatrix.h"
 
 namespace PLearn {
@@ -53,27 +53,23 @@ using namespace std;
 
 //!  provides mean imputation for missing variables
 
-class VariableDeletionVMatrix: public SourceVMatrix
+class VariableDeletionVMatrix: public VMatrix
 {
-    typedef SourceVMatrix inherited;
-
-private:
-
-    bool obtained_inputsize_from_source;
-    bool obtained_targetsize_from_source;
-    bool obtained_weightsize_from_source;
+    typedef VMatrix inherited;
 
 public:
 
     VMat       complete_dataset;
+    VMat       train_set;
+    VMat       source;
     real       deletion_threshold;
     bool       remove_columns_with_constant_value;
     real       number_of_train_samples;
+    int        start_row;
 
 public:
 
     VariableDeletionVMatrix();
-    VariableDeletionVMatrix(VMat the_complete_dataset, real the_threshold, bool the_remove_columns_with_constant_value, real the_number_of_train_samples);
 
     static void declareOptions(OptionList &ol);
 

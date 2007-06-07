@@ -269,15 +269,20 @@ TVec<string> OptimizeOptionOracle::generateNextTrial(const TVec<string>& older_t
 void OptimizeOptionOracle::makeDeepCopyFromShallowCopy(map<const void*, void*>& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("OptimizeOptionOracle::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(option, copies);
+    deepCopyField(max_steps, copies);
+    deepCopyField(start_value, copies);
+    deepCopyField(min_value, copies);
+    deepCopyField(max_value, copies);
+    deepCopyField(relative_precision, copies);
+    deepCopyField(factor, copies);
+    deepCopyField(start_direction, copies);
+    deepCopyField(best, copies);
+    deepCopyField(best_objective, copies);
+    deepCopyField(current_direction, copies);
+    deepCopyField(lower_bound, copies);
+    deepCopyField(n_steps, copies);
+    deepCopyField(upper_bound, copies);
 }
 
 } // end of namespace PLearn

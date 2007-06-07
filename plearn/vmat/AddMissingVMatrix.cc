@@ -50,9 +50,10 @@ using namespace std;
 // AddMissingVMatrix //
 //////////////////
 AddMissingVMatrix::AddMissingVMatrix():
+  random_gen(new PRandom()),
   missing_prop(0),
   only_on_first(-1),
-  random_gen(new PRandom()),
+  on_variables(-1),
   seed(-1)
 {}
 
@@ -72,7 +73,10 @@ void AddMissingVMatrix::declareOptions(OptionList& ol)
       "Percentage of missing values.");
 
   declareOption(ol, "only_on_first", &AddMissingVMatrix::only_on_first, OptionBase::buildoption,
-      "Only add missing values in the first 'only_on_first' samples (ignored if < 0).");
+      "Only insert missing values in the first 'only_on_first' samples (ignored if < 0).");
+
+  declareOption(ol, "on_variables", &AddMissingVMatrix::on_variables, OptionBase::buildoption,
+      "Insert missing values in the first on_variables variables, if > 0.");
 
   declareOption(ol, "seed", &AddMissingVMatrix::seed, OptionBase::buildoption,
       "Random numbers seed.");
@@ -117,6 +121,7 @@ void AddMissingVMatrix::getNewRow(int i, const Vec& v) const
   if (only_on_first >= 0 && i >= only_on_first)
     return;
   int n = v.length();
+  if (on_variables > 0 && on_variables <= n) n = on_variables;
   for (int j = 0; j < n; j++)
     if (random_gen->uniform_sample() < missing_prop)
       v[j] = MISSING_VALUE;

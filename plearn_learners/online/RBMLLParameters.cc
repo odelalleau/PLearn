@@ -266,21 +266,25 @@ void RBMLLParameters::computeUnitActivations
 //! this version allows to obtain the input gradient as well
 void RBMLLParameters::bpropUpdate(const Vec& input, const Vec& output,
                                   Vec& input_gradient,
-                                  const Vec& output_gradient)
+                                  const Vec& output_gradient,
+                                  real fine_tuning_learning_rate)
 {
+    real bprop_learning_rate;
+    if (fine_tuning_learning_rate < 0.00000001) bprop_learning_rate = learning_rate;
+    else bprop_learning_rate = fine_tuning_learning_rate;
     assert( input.size() == down_layer_size );
     assert( output.size() == up_layer_size );
     assert( output_gradient.size() == up_layer_size );
     input_gradient.resize( down_layer_size );
-
-    // weights -= learning_rate * output_gradient * input'
-    externalProductScaleAcc( weights, output_gradient, input, -learning_rate );
-
-    // (up) bias -= learning_rate * output_gradient
-    multiplyAcc( up_units_bias, output_gradient, -learning_rate );
-
+    
     // input_gradient = weights' * output_gradient
     transposeProduct( input_gradient, weights, output_gradient );
+
+    // weights -= learning_rate * output_gradient * input'
+    externalProductScaleAcc( weights, output_gradient, input, -bprop_learning_rate );
+
+    // (up) bias -= learning_rate * output_gradient
+    multiplyAcc( up_units_bias, output_gradient, -bprop_learning_rate );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.

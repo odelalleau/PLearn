@@ -104,6 +104,12 @@ void RBMLayer::build()
     build_();
 }
 
+void RBMLayer::printActivation()
+{
+    cout << "activations: " << activations << endl;
+    cout << "expectation: " << expectation << endl;
+}
+
 
 void RBMLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {

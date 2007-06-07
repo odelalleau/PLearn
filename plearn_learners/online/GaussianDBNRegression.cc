@@ -64,7 +64,8 @@ PLEARN_IMPLEMENT_OBJECT(
 GaussianDBNRegression::GaussianDBNRegression() :
     learning_rate(0.),
     weight_decay(0.),
-    use_sample_rather_than_expectation_in_positive_phase_statistics(false)
+    use_sample_rather_than_expectation_in_positive_phase_statistics(false),
+    skip_backprop_on_model(0)
 {
     random_gen = new PRandom();
 }
@@ -141,6 +142,10 @@ void GaussianDBNRegression::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "In positive phase statistics use output->sample * input\n"
                   "rather than output->expectation * input.\n");
+
+    declareOption(ol, "skip_backprop_on_model", &GaussianDBNRegression::skip_backprop_on_model,
+                  OptionBase::buildoption,
+                  "If > 0, will only do backprop on target layer.");
 
     declareOption(ol, "n_layers", &GaussianDBNRegression::n_layers,
                   OptionBase::learntoption,
@@ -356,7 +361,7 @@ void GaussianDBNRegression::expectation(Vec& mu) const
     target_layer->computeExpectation();
 
     mu << target_layer->expectation;
-
+    
 }
 
 /////////////
@@ -566,7 +571,6 @@ void GaussianDBNRegression::train()
         {
             MODULE_LOG << "Fine-tuning all parameters, using method "
                 << fine_tuning_method << endl;
-
             if( fine_tuning_method == "" ) // do nothing
                 sample += n_samples_to_see;
             else if( fine_tuning_method == "EGD" )
@@ -612,7 +616,14 @@ pout << "-------" << endl
         }
         train_stats->finalize(); // finalize statistics for this epoch
     }
+    checkLearner();
     MODULE_LOG << endl;
+}
+
+void GaussianDBNRegression::checkLearner()
+{
+// We do nothing here.
+// subclass may way to check various things.
 }
 
 void GaussianDBNRegression::greedyStep( const Vec& predictor, int index )
@@ -696,11 +707,26 @@ void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
 {
     // split input in predictor_part and predicted_part
     splitCond(input);
+    
+//    cout << "fineTuneByGradientDescent: input: " << input << endl;
 
     // compute predicted_part expectation, conditioned on predictor_part
     // (forward pass)
     expectation( output_gradient );
 
+    /*    
+    cout << "we have gone up!" << endl;
+    cout << "layers[0]" << endl;
+    layers[0]->printActivation();
+    cout << "input_params" << endl;
+    input_params->printParams();
+    cout << "layers[1]" << endl;
+    layers[1]->printActivation();
+    cout << "target_params" << endl;
+    target_params->printParams();
+    cout << "target_layer" << endl;
+    target_layer->printActivation();
+*/
     int target_size = predicted_part.size() ; 
 
     for(int i=0 ; i < target_size ; ++i) { 
@@ -711,7 +737,7 @@ void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
                                target_layer->expectation,
                                expectation_gradients[n_layers-1],
                                output_gradient );
-
+    if (skip_backprop_on_model > 0) return;
     for( int i=n_layers-2 ; i>1 ; i-- )
     {
         layers[i]->bpropUpdate( layers[i]->activations,
@@ -732,6 +758,20 @@ void GaussianDBNRegression::fineTuneByGradientDescent( const Vec& input )
                                   layers[1]->activations,
                                   expectation_gradients[0],
                                   activation_gradients[1] );
+
+/*    
+    cout << "we have updated params!" << endl;
+    cout << "target_layer" << endl;
+    target_layer->printActivation();
+    cout << "target_params" << endl;
+    target_params->printParams();
+    cout << "layers[1]" << endl;
+    layers[1]->printActivation();
+    cout << "input_params" << endl;
+    input_params->printParams();
+    cout << "layers[0]" << endl;
+    layers[0]->printActivation();
+*/
     
 }
 

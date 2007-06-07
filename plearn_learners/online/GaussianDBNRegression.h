@@ -116,6 +116,8 @@ public:
     string fine_tuning_method;
 
     bool use_sample_rather_than_expectation_in_positive_phase_statistics;
+    
+    int skip_backprop_on_model;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -124,7 +126,8 @@ public:
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
     GaussianDBNRegression();
-
+    
+    virtual void checkLearner();
 
     //#####  PDistribution Member Functions  ##################################
 

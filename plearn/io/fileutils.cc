@@ -65,10 +65,10 @@
 #include <plearn/math/pl_math.h>    //!< For 'real'.
 
 #include <plearn/base/PrUtils.h>
-#include <mozilla/nspr/prio.h>
-#include <mozilla/nspr/prtime.h>
-#include <mozilla/nspr/prerror.h>
-#include <mozilla/nspr/prlong.h>
+#include <mozilla-1.7.13/nspr/prio.h>
+#include <mozilla-1.7.13/nspr/prtime.h>
+#include <mozilla-1.7.13/nspr/prerror.h>
+#include <mozilla-1.7.13/nspr/prlong.h>
 
 namespace PLearn {
 using namespace std;

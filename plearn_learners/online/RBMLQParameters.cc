@@ -163,6 +163,13 @@ void RBMLQParameters::build()
     build_();
 }
 
+void RBMLQParameters::printParams()
+{
+    cout << "weights: " << weights << endl;
+    cout << "down_units_bias: " << down_units_bias << endl;
+    cout << "up_units_params: " << up_units_params << endl;
+}
+
 
 void RBMLQParameters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
@@ -304,8 +311,12 @@ void RBMLQParameters::computeUnitActivations
 //! this version allows to obtain the input gradient as well
 void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
                                   Vec& input_gradient,
-                                  const Vec& output_gradient)
+                                  const Vec& output_gradient,
+                                  real fine_tuning_learning_rate)
 {
+    real bprop_learning_rate;
+    if (fine_tuning_learning_rate < 0.00000001) bprop_learning_rate = learning_rate;
+    else bprop_learning_rate = fine_tuning_learning_rate;
     //TODO: clean up the code a bit
     assert( input.size() == down_layer_size );
     assert( output.size() == up_layer_size );
@@ -317,37 +328,31 @@ void RBMLQParameters::bpropUpdate(const Vec& input, const Vec& output,
 
     Vec scaled_out_grad(up_layer_size) ;  
     
-    Vec prod_w_input( up_layer_size ) ; 
+    Vec prod_w_input( up_layer_size ) ;
+    prod_w_input.clear(); 
+
+    //first, compute input_gradient = weights' * output_gradient.
+    for(int i=0 ; i<up_layer_size ; ++i) 
+    { 
+        scaled_out_grad[i] = -0.5 * output_gradient[i] / (up_units_params[1][i] * up_units_params[1][i]) ;
+    }
+    transposeProduct( input_gradient, weights, scaled_out_grad );
     
+    
+    //now, update parameters
     for(int i=0 ; i<up_layer_size ; ++i) 
     {
-        real a_i_square = up_units_params[1][i] * up_units_params[1][i] ; 
-        
-        scaled_out_grad[i] = -0.5 * output_gradient[i] / a_i_square ; 
-        
-        up_units_params[0][i] -= learning_rate * ( -0.5 / a_i_square ) *
-                                 output_gradient[i] ; 
-
-        
+        real partial_gradient = -0.5 * output_gradient[i] / (up_units_params[1][i] * up_units_params[1][i]);
         for(int j=0 ; j < down_layer_size ; ++j) {             
             prod_w_input[i] += weights[i][j] * input[j] ; 
-            weights[i][j] -= learning_rate * ( - 0.5 * input[j] / a_i_square ) * 
-                             output_gradient[i];
+            weights[i][j] -= bprop_learning_rate * input[j] * partial_gradient;
         }
+
+        up_units_params[1][i] -= bprop_learning_rate * ( up_units_params[0][i] +
+                prod_w_input[i] ) * output_gradient[i] / pow(up_units_params[1][i], 3.0);
+
+        up_units_params[0][i] -= bprop_learning_rate * partial_gradient;
     }
-
-    for(int i=0 ; i<up_layer_size ; ++i) { 
-        up_units_params[1][i] -= learning_rate * ( up_units_params[0][i] +
-                prod_w_input[i] ) * output_gradient[i] ; 
-    }
-
-    // (up) bias -= learning_rate * output_gradient
-//    multiplyAcc( up_units_params[0], output_gradient, -learning_rate );
-    
-
-
-    // input_gradient = weights' * output_gradient
-    transposeProduct( input_gradient, weights, scaled_out_grad );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.

@@ -49,41 +49,29 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     VariableDeletionVMatrix,
     "VMat class to select columns from a source VMat based on a given threshold percentage of non-missing variables.",
-    "This class will scan the VMat provided as the complete dataset and compute the percentage of non-missing values\n"
+    "This class will scan the VMat provided as the train set and compute the percentage of non-missing values\n"
     "of each variables. It then only selects the columns with  a percentage of non-missing higher than the given\n"
-    "threshod parameter.\n"
+    "threshod parameter from the complete dataset.\n"
     "Optionnaly, variable with non-missing constant values will also be removed.\n"
     "Note that the ending targets and weight columns are always kept.\n"
     "The targetsize and weightsize of the underlying matrix are kept.\n"
     );
 
 VariableDeletionVMatrix::VariableDeletionVMatrix()
-    : obtained_inputsize_from_source(false),
-      obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false),
-      deletion_threshold(0),
+    : deletion_threshold(0),
       remove_columns_with_constant_value(0),
-      number_of_train_samples(0.0)
+      number_of_train_samples(0.0),
+      start_row(0)
 {
-}
-
-VariableDeletionVMatrix::VariableDeletionVMatrix(VMat the_complete_dataset, real the_threshold, bool the_remove_columns_with_constant_value, real the_number_of_train_samples)
-    : obtained_inputsize_from_source(false),
-      obtained_targetsize_from_source(false),
-      obtained_weightsize_from_source(false)
-{
-    complete_dataset = the_complete_dataset;
-    deletion_threshold = the_threshold;
-    remove_columns_with_constant_value = the_remove_columns_with_constant_value;
-    number_of_train_samples = the_number_of_train_samples;
-    build();
 }
 
 void VariableDeletionVMatrix::declareOptions(OptionList &ol)
 {
-
     declareOption(ol, "complete_dataset", &VariableDeletionVMatrix::complete_dataset, OptionBase::buildoption,
                   "The data set with all variables to select the columns from.");
+
+    declareOption(ol, "train_set", &VariableDeletionVMatrix::train_set, OptionBase::buildoption,
+                  "The train set in which to compute the percentage of missing values.");
 
     declareOption(ol, "deletion_threshold", &VariableDeletionVMatrix::deletion_threshold, OptionBase::buildoption,
                   "The percentage of non-missing values for a variable above which, the variable will be selected.");
@@ -92,25 +80,21 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
                   "If set to 1, the columns with constant non-missing values will be removed.");
 
     declareOption(ol, "number_of_train_samples", &VariableDeletionVMatrix::number_of_train_samples, OptionBase::buildoption,
-                  "If equal to zero, all the underlying dataset samples are used to calculated the percentages and constant values.\n"
+                  "If equal to zero, all the train samples are used to calculated the percentages and constant values.\n"
                   "If it is a fraction between 0 and 1, this proportion of the samples will be used.\n"
                   "If greater or equal to 1, the integer portion will be interpreted as the number of samples to use.");
 
-    declareOption(ol, "obtained_inputsize_from_source", &VariableDeletionVMatrix::obtained_inputsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the inputsize was obtained from the source matrix.");
+    declareOption(ol, "start_row", &VariableDeletionVMatrix::start_row, OptionBase::buildoption,
+                  "The row at which, to start to calculate the percentages and constant values.");
 
-    declareOption(ol, "obtained_targetsize_from_source", &VariableDeletionVMatrix::obtained_targetsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the targetsize was obtained from the source matrix.");
-
-    declareOption(ol, "obtained_weightsize_from_source", &VariableDeletionVMatrix::obtained_weightsize_from_source, OptionBase::learntoption,
-                  "Set to 1 when the weightsize was obtained from the source matrix.");
+    declareOption(ol, "source", &VariableDeletionVMatrix::source, OptionBase::learntoption,
+                  "The resulting data set.");
 
     inherited::declareOptions(ol);
 }
 
 void VariableDeletionVMatrix::build()
 {
-    buildIndices();
     inherited::build();
     build_();
 }
@@ -119,11 +103,11 @@ void VariableDeletionVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(complete_dataset, copies);
+    deepCopyField(train_set, copies);
     deepCopyField(deletion_threshold, copies);
     deepCopyField(remove_columns_with_constant_value, copies);
-    deepCopyField(obtained_inputsize_from_source, copies);
-    deepCopyField(obtained_targetsize_from_source, copies);
-    deepCopyField(obtained_weightsize_from_source, copies);
+    deepCopyField(number_of_train_samples, copies);
+    deepCopyField(start_row, copies);
 }
 
 void VariableDeletionVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
@@ -163,7 +147,7 @@ void VariableDeletionVMatrix::insertRow(int i, Vec v)
 
 void VariableDeletionVMatrix::getRow(int i, Vec v) const
 {
-    source-> getRow(i, v);
+    source->getRow(i, v);
 }
 
 void VariableDeletionVMatrix::putRow(int i, Vec v)
@@ -173,58 +157,37 @@ void VariableDeletionVMatrix::putRow(int i, Vec v)
 
 void VariableDeletionVMatrix::getColumn(int i, Vec v) const
 {
-    source-> getColumn(i, v);
+    source->getColumn(i, v);
 }
 
 void VariableDeletionVMatrix::build_()
 {
-    if (source) {
-        string error_msg =
-            "In VariableDeletionVMatrix::build_ - For safety reasons, it is forbidden to "
-            "re-use sizes obtained from a previous source VMatrix with a new source "
-            "VMatrix having different sizes";
-        length_ = source->length();
-        width_ = source->width();
-        if(inputsize_<0) {
-            inputsize_ = source->inputsize();
-            obtained_inputsize_from_source = true;
-        } else if (obtained_inputsize_from_source && inputsize_ != source->inputsize())
-            PLERROR(error_msg.c_str());
-        if(targetsize_<0) {
-            targetsize_ = source->targetsize();
-            obtained_targetsize_from_source = true;
-        } else if (obtained_targetsize_from_source && targetsize_ != source->targetsize())
-            PLERROR(error_msg.c_str());
-        if(weightsize_<0) {
-            weightsize_ = source->weightsize();
-            obtained_weightsize_from_source = true;
-        } else if (obtained_weightsize_from_source && weightsize_ != source->weightsize())
-            PLERROR(error_msg.c_str());
-        fieldinfos = source->fieldinfos;
-    } else {
-        // Restore the original undefined sizes if the current one had been obtained
-        // from the source VMatrix.
-        if (obtained_inputsize_from_source) {
-            inputsize_ = -1;
-            obtained_inputsize_from_source = false;
-        }
-        if (obtained_targetsize_from_source) {
-            targetsize_ = -1;
-            obtained_targetsize_from_source = false;
-        }
-        if (obtained_weightsize_from_source) {
-            weightsize_ = -1;
-            obtained_weightsize_from_source = false;
-        }
-    }
+    if (!train_set || !complete_dataset) PLERROR("In VariableDeletionVMatrix::train set and complete_dataset vmat must be supplied");
+    buildIndices();
 }
 
 void VariableDeletionVMatrix::buildIndices()
 {
+    int train_set_length = train_set->length();
+    if(train_set_length < 1) PLERROR("In VariableDeletionVMatrix::length of the number of train samples to use must be at least 1, got: %i", train_set_length);
+    int train_set_width = train_set->width();
+    int train_set_inputsize = train_set->inputsize();
+    if(train_set_inputsize < 1) PLERROR("In VariableDeletionVMatrix::inputsize of the train vmat must be supplied, got : %i", train_set_inputsize);
+    int train_set_targetsize = train_set->targetsize();
+    int train_set_weightsize = train_set->weightsize();
     int complete_dataset_length = complete_dataset->length();
     int complete_dataset_width = complete_dataset->width();
+    int complete_dataset_inputsize = complete_dataset->inputsize();
     int complete_dataset_targetsize = complete_dataset->targetsize();
     int complete_dataset_weightsize = complete_dataset->weightsize();
+    if (train_set_width != complete_dataset_width)
+        PLERROR("In VariableDeletionVMatrix::train set and complete_dataset width must agree, got : %i, %i", train_set_width, complete_dataset_width);
+    if (train_set_inputsize != complete_dataset_inputsize)
+        PLERROR("In VariableDeletionVMatrix::train set and complete_dataset inputsize must agree, got : %i, %i", train_set_inputsize, complete_dataset_inputsize);
+    if (train_set_targetsize != complete_dataset_targetsize)
+        PLERROR("In VariableDeletionVMatrix::train set and complete_dataset targetsize must agree, got : %i, %i", train_set_targetsize, complete_dataset_targetsize);
+    if (train_set_weightsize != complete_dataset_weightsize)
+        PLERROR("In VariableDeletionVMatrix::train set and complete_dataset weightsize must agree, got : %i, %i", train_set_weightsize, complete_dataset_weightsize);
     int row;
     int col;
     TVec<int>  selected_columns_indices;
@@ -235,25 +198,23 @@ void VariableDeletionVMatrix::buildIndices()
     variable_present_count.resize(complete_dataset_width);
     variable_last_value.resize(complete_dataset_width);
     variable_constant.resize(complete_dataset_width);
-    for (col = 0; col < complete_dataset_width; col++)
-    {
-        variable_present_count[col] = 0;
-        variable_constant[col] = true;
-    }
+    variable_present_count.clear();
+    variable_constant.fill(true);
     real variable_value;
-    int scanned_length = complete_dataset_length;
+    int scanned_length = train_set_length;
     if (number_of_train_samples > 0.0)
     {
         if (number_of_train_samples >= 1.0) scanned_length = (int) number_of_train_samples;
-        else scanned_length = (int) ((double) complete_dataset_length * number_of_train_samples);
+        else scanned_length = (int) ((double) train_set_length * number_of_train_samples);
         if (scanned_length < 1) scanned_length = 1;
-        if (scanned_length > complete_dataset_length) scanned_length = complete_dataset_length;
     }
-    for (row = 0; row < scanned_length; row++)
+    if (start_row + scanned_length > train_set_length)        
+        PLERROR("In VariableDeletionVMatrix: start_row + number_of_train_samples must be less or equal to the train set length");
+    for (row = start_row; row < start_row + scanned_length; row++)
     {
-        for (col = 0; col < complete_dataset_width; col++)
+        for (col = 0; col < train_set_width; col++)
         {
-            variable_value = complete_dataset->get(row, col);
+            variable_value = train_set->get(row, col);
             if (!is_missing(variable_value))
             {
                 if (variable_present_count[col] > 0)
@@ -265,18 +226,21 @@ void VariableDeletionVMatrix::buildIndices()
             }
         }
     }
-    real adjusted_threshold = deletion_threshold * (real) complete_dataset_length / 100.0;
-    if (complete_dataset_targetsize < 0) complete_dataset_targetsize = 0;
-    if (complete_dataset_weightsize < 0) complete_dataset_weightsize = 0;
-    int target_and_weight = complete_dataset_targetsize + complete_dataset_weightsize;
+    real adjusted_threshold = deletion_threshold * (real) scanned_length;
+    if (train_set_targetsize < 0) train_set_targetsize = 0;
+    if (train_set_weightsize < 0) train_set_weightsize = 0;
+    int target_and_weight = train_set_targetsize + train_set_weightsize;
     int new_width = target_and_weight;
-    for (col = 0; col < complete_dataset_width - target_and_weight; col++)
+    for (col = 0; col < train_set_width - target_and_weight; col++)
     {
         if ((real) variable_present_count[col] > adjusted_threshold && (!remove_columns_with_constant_value || !variable_constant[col])) new_width += 1;
     }
     selected_columns_indices.resize(new_width);
+    TVec<string> complete_dataset_names(complete_dataset_width);
+    TVec<string> new_names(new_width);
+    complete_dataset_names = complete_dataset->fieldNames();
     int selected_col = 0;
-    for (col = 0; col < complete_dataset_width - target_and_weight; col++)
+    for (col = 0; col < train_set_width - target_and_weight; col++)
     {
         if ((real) variable_present_count[col] > adjusted_threshold && (!remove_columns_with_constant_value || !variable_constant[col]))
         {
@@ -286,14 +250,23 @@ void VariableDeletionVMatrix::buildIndices()
     }
     if (target_and_weight > 0)
     {
-        for (col = complete_dataset_width - target_and_weight; col < complete_dataset_width; col++)
+        for (col = train_set_width - target_and_weight; col < train_set_width; col++)
         {
             selected_columns_indices[selected_col] = col;
             selected_col += 1;
         }
     }
+    for (col = 0; col < new_width; col++)
+    {
+        new_names[col] = complete_dataset_names[selected_columns_indices[col]];
+    }
     source = new SelectColumnsVMatrix(complete_dataset, selected_columns_indices);
-    source->defineSizes(new_width - target_and_weight, complete_dataset_targetsize, complete_dataset_weightsize);
+    length_ = complete_dataset_length;
+    width_ = new_width;
+    inputsize_ = new_width - target_and_weight;
+    targetsize_ = complete_dataset_targetsize;
+    weightsize_ = complete_dataset_weightsize;
+    declareFieldNames(new_names);
 }
 
 } // end of namespace PLearn

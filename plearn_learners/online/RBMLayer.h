@@ -127,6 +127,9 @@ public:
     {
         return units_types;
     }
+    
+    
+    virtual void printActivation();
 
 
     //#####  PLearn::Object Protocol  #########################################

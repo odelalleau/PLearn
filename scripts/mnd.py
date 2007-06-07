@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: mnd.py,v 1.2 2004/12/21 16:23:47 dorionc Exp $"
+__cvs_id__ = "$Id$"
 
 from Numeric import *
 from LinearAlgebra import *

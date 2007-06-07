@@ -1,4 +1,4 @@
-__cvs_id__ = "$Id: appStart.py,v 1.3 2004/12/21 16:23:47 dorionc Exp $"
+__cvs_id__ = "$Id$"
 
 import string, sys, fpformat, os, copy, time
 from popen2 import *

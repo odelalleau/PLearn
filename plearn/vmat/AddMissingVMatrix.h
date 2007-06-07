@@ -72,6 +72,7 @@ public:
 
   real missing_prop;
   int  only_on_first;
+  int  on_variables;
   long seed;
 
   // ****************
