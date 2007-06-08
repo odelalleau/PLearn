@@ -171,7 +171,7 @@ each of the other columns (just like the result of the call to merge_schedules).
         clf()
     colors="bgrcmyk"
     styles=['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's', '+', 'x', 'D']
-    for i in range(n_train-1):
+    for i in range(n_train):
         learner.nstages = int(stages[i])
         options = {}
         for s in range(n_schedules):
