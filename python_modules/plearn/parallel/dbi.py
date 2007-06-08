@@ -63,6 +63,7 @@ class DBIBase:
         self.requirements = ''
         self.test = False
         self.dolog = False
+        self.temp_files = []
         for key in args.keys():
             self.__dict__[key] = args[key]
 
@@ -275,8 +276,6 @@ class DBIbqtools(DBIBase):
         if self.dolog and not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
 
-        self.log_file = os.path.join( self.parent_dir, self.log_file )
-
         # create the information about the tasks
         args['temp_dir'] = self.temp_dir
         for command in commands:
@@ -371,8 +370,6 @@ class DBICondor(DBIBase):
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
             
-#        self.log_file = os.path.join( self.parent_dir, self.log_file )
-
         # create the information about the tasks
 #        args['temp_dir'] = self.temp_dir
         for command in commands:
@@ -440,7 +437,6 @@ class DBICondor(DBIBase):
                                    self.post_tasks,self.dolog,args))
 
             #keeps a list of the temporary files created, so that they can be deleted at will            
-        self.temp_files = []
 
     def run_all_job(self):
         if len(self.tasks)==0:
@@ -577,7 +573,81 @@ class DBICondor(DBIBase):
     def clean(self):
         pass
 
+class DBILocal(DBIBase):
 
+    def __init__( self, commands, **args ):
+        DBIBase.__init__(self, commands, **args)
+
+        # check if log directory exists, if not create it
+        if self.dolog and not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
+
+        for command in commands:
+            pos = string.find(command,' ')
+            if pos>=0:
+                c = command[0:pos]
+                c2 = command[pos:]
+            else:
+                c=command
+                c2=""
+
+        # We use the absolute path so that we don't have corner case as with ./ 
+            c = os.path.normpath(os.path.join(os.getcwd(), c))
+            command = c + c2
+            
+            # We will execute the command on the specified architecture
+            # if it is specified. If the executable exist for both
+            # architecture we execute on both. Otherwise we execute on the
+            # same architecture as the architecture of the launch computer
+            
+            if not os.path.exists(c):
+                raise Exception("The command '"+c+"' do not exist!")
+            elif not os.access(c, os.X_OK):
+                raise Exception("The command '"+c+"' do not have execution permission!")
+            self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
+                                   self.time_format, self.pre_tasks,
+                                   self.post_tasks,self.dolog,args))
+
+            #keeps a list of the temporary files created, so that they can be deleted at will            
+
+    def run_one_job(self,task):
+        launch_file = os.path.join(self.tmp_dir, 'launch.sh')
+
+        # Launch condor
+        output = PIPE
+        error = PIPE
+        if int(self.file_redirect_stdout):
+            output = file(self.log_file + '.out', 'w')
+        if int(self.file_redirect_stderr):
+            error = file(self.log_file + '.err', 'w')
+
+        c = (';'.join(task.commands))
+        if self.test == False:
+            print c
+            os.system(c)
+
+        else:
+            print c
+            
+    def clean(self):
+                
+        sleep(20)
+        for file_name in self.temp_files:
+            try:
+                os.remove(file_name)
+            except os.error:
+                pass
+            pass    
+
+
+    def run(self):
+        if self.test:
+            print "Test mode, we only print the command to be executed, we don't execute them"
+        for task in self.tasks:
+            self.run_one_job(task)
+
+    def clean(self):
+        pass
 
 class SshHost:
     def __init__(self, hostname):
