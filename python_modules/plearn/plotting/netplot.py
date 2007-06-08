@@ -42,7 +42,7 @@ def customColorBar(min, max, (x,y,width,height) = (0.9,0.1,0.1,0.8), nb_ticks = 
     for el in cbarh:
         cbarh_str.append(str(el)[0:5])
     yticks(arange(len(cbarh)),cbarh_str)
-    xticks([],[])                              
+    xticks([],[])
     imshow(cbar, cmap = color_map, vmin=min, vmax=max)
 
 
@@ -119,6 +119,7 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     #THE plotting
     
     x,y = sbi,sbi
+    toReturn = -1
     
     for i in arange(start,length):
     
@@ -128,7 +129,7 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
             row = apply_to_rows(row)
         
 
-        print x,y,plotWidth, plotHeight
+       # print x,y,plotWidth, plotHeight
         
         axes((x, y, plotWidth, plotHeight))
         imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colorMap, vmin = mi, vmax = ma)
@@ -142,10 +143,12 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
             y = y + plotHeight + sbi
         if y + plotHeight > 1:
             # images that follows would be out of the figure...
+            toReturn = i
             break
 
     #custom color bar
-    customColorBar(mi,ma,(1.-cbw-sbi, sbi, sbi, 1.-2.*cbw))    
+    customColorBar(mi,ma,(1.-cbw-sbi, sbi, sbi, 1.-2.*cbw))
+    return toReturn
         
 
         #1 sur 2 -
@@ -163,69 +166,11 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
         # setPlotParams(str(i), False, True)
             
 
-def plotCharOLD(char, layers=[], space_between_layers = 5):
-    '''plots a caracter and hidden layers
-    '''  
-    #some 'plotting' consts
-    nbLayers = len(layers)
-    print 'nbLayers', nbLayers
-    totalLayersWidth = 0
-    for layer in layers:
-        totalLayersWidth += len(layer[0]) + space_between_layers
-    totalLayersWidth += space_between_layers
-    print 'totalLayersWidth', totalLayersWidth
-    
-    unit = .9/totalLayersWidth
-    print 'unit', unit
-    sbl = space_between_layers*unit
-    print 'sbl', sbl
-    plotCharWidth = .099
-    plotCharHeight = plotCharWidth
-    #plotLayerWidth = unit
-    plotCharBottom = (1.-plotCharHeight)/2.
-    
-    #plot of the char
-    axes((sbl,          
-          plotCharBottom,
-          plotCharWidth,
-          plotCharHeight))
-    imshow(char, interpolation="nearest", cmap = defaultColorMap)
-    setPlotParams("", True, True)
-    print 'char ok'
-    #plots of the layers
 
-
-    x,y=sbl,1.-2*len(layers[0])
-    axes((x,y,len(layers[0][0]), len(layers[0])))
-    imshow(layer, interpolation = "nearest", cmap = defaultColorMap)
-    print 'layer[0] ok'
-    
-    k=1
-    x+=len(layers[0][0])
-    
-    while k < nbLayers:
-
-       
-        
-        plotLayerHeight = unit*len(layers[k])
-        plotLayerWidth = unit*len(layers[k][0])
-        if plotLayerHeight > 1:
-            plotLayerHeight = 1.-2.*sbl
-            
-        plotLayerBottom = (1.-plotLayerHeight)/2.
-
-        print 'k',k
-        print 'x',x
-        print 'plotLayerBottom', plotLayerBottom
-        print 'plotLayerWidth', plotLayer
-        axes((x,plotLayerBottom, plotLayerWidth, plotLayerHeight))
-        imshow(layers[k], interpolation="nearest", cmap = defaultColorMap)
-        setPlotParams("",True,True)
-        x += plotLayerWidth
-        k += 1
 
 def plotMatrices(matrices, same_color_bar = False, space_between_matrices = 5):
     '''plot matrices from left to right
+    TODO : same_color_bar does nothing !!
     '''
     colorMap = cm.gray
     nbMatrices = len(matrices)
@@ -244,6 +189,7 @@ def plotMatrices(matrices, same_color_bar = False, space_between_matrices = 5):
     sbm = space_between_matrices*unit
 
     x=sbm
+    the_axes = []
     for matrix in matrices:
         
         h = len(matrix)*unit
@@ -252,10 +198,14 @@ def plotMatrices(matrices, same_color_bar = False, space_between_matrices = 5):
             h = 1.-2*sbm
         bottom = (1.-h)/2.
 
-        axes(( x,bottom, w,h))
+        temp = axes(( x,bottom, w,h))
+        the_axes.append(temp)
         imshow(matrix, interpolation = 'nearest', cmap = colorMap)
         colorbar()
         x += w+sbm
+
+    return the_axes
+
 
 
 def truncate_imshow(mat, max_height_or_width = 200, width_height_ratio = 1, space_between_submatrices=5):
@@ -348,7 +298,7 @@ def toMinusRow(row):
         row2.append(row[i])
     return row2
 
-def rowToMatrix(row, width, validate_size = True, fill_value = 0.):
+def rowToMatrixOld(row, width, validate_size = True, fill_value = 0.):
     '''change a row [1,2,3,4,5,6] into a matrix [[1,2],[3,4],[5,6]] if width = 2
        or [1,2,3,4,5,6] -> [[1,2,3,4],[5,6,fill_value,fill_value]] if width = 4 and validate_size = False
     '''
@@ -371,13 +321,24 @@ def rowToMatrix(row, width, validate_size = True, fill_value = 0.):
     
     return m
 
+def rowToMatrix(row, width, validate_size = True, fill_value = 0.):
+    '''change a row [1,2,3,4,5,6] into a matrix [[1,2],[3,4],[5,6]] if width = 2
+       or [1,2,3,4,5,6] -> [[1,2,3,4],[5,6,fill_value,fill_value]] if width = 4 and validate_size = False
+    '''
+    copy = list(row)
+    if len(copy)%width != 0:
+        if validate_size:
+            raise Exception, "dimensions does not fit ( " + str(width) + " does not divide " + str(len(copy)) + ")"
+        for i in arange(len(copy)%width-1):
+            copy.append(fill_value)
+
+    return reshape(copy, (-1,width))
+
+
 def vecToVerticalMatrix(vec):
     '''ex : [1,2,3,4,5] --> [[1],[2],[3],[4],[5]]
     '''
-    mat = []
-    for elem in vec:
-        mat.append([elem])
-    return mat
+    return reshape(array(vec), (len(vec),-1))
 
 def truncateMatrixOld(mat, maxHeight=10, maxWidth=10):
     

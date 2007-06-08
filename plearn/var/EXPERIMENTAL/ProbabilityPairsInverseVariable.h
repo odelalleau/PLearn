@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// ProbabilityPairsVariable.h
+// ProbabilityPairsInverseVariable.h
 //
 // Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
@@ -32,25 +32,25 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux, Pascal Vincent
+// Authors: Simon Lemieux
 
-/*! \file ProbabilityPairsVariable.h */
+/*! \file ProbabilityPairsInverseVariable.h */
 
 
-#ifndef ProbabilityPairsVariable_INC
-#define ProbabilityPairsVariable_INC
+#ifndef ProbabilityPairsInverseVariable_INC
+#define ProbabilityPairsInverseVariable_INC
 
 #include <plearn/var/UnaryVariable.h>
 
 namespace PLearn {
 using namespace std;
 
-/*! * ProbabilityPairsVariable * */
+/*! * ProbabilityPairsInverseVariable * */
 
 /**
- *  Let define f(x) = (x-min)/(max-min) for min<=x<=max, then this variable is defined by [x1,x2,...,xn]  |->  [ f(x1), 1-f(x1), f(x2), 1-f(x2), ... , f(xn), 1-f(xn) ]
- *  
- *  This can be interpreted  as pairs of probabilities 
+ * [x1,x2,x3,...,xn] -> [f(x1), f(x3), ..., f(xn)] with f(x) = (max-min)*x - min and with n even
+ * It is the inverse of ProbabilityPairsVariable
+ *
  *
  *
  * @todo Write class to-do's here if there are any.
@@ -58,7 +58,7 @@ using namespace std;
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class ProbabilityPairsVariable : public UnaryVariable
+class ProbabilityPairsInverseVariable : public UnaryVariable
 {
     typedef UnaryVariable inherited;
 
@@ -68,25 +68,22 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
-
-    //! the lower bound a value of the input should be
-    //! it will be used to calculate the corresponding probability of each input
+    //! see ProbabilityPairsVariable documentation
     real min;
     
-    //! same as min but for upper bound
+    //! see ProbabilityPairsVariable documentation
     real max;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor, usually does nothing
-    ProbabilityPairsVariable();
+    ProbabilityPairsInverseVariable();
+     
+    ProbabilityPairsInverseVariable(Variable* input, real min, real max);
+    ProbabilityPairsInverseVariable(Variable* input, real max);
+    ProbabilityPairsInverseVariable(Variable* input);
 
-    ProbabilityPairsVariable(Variable* input, real min, real max);
-    ProbabilityPairsVariable(Variable* input, real max);
-    ProbabilityPairsVariable(Variable* input);
-
-    // Your other public member functions go here
 
     //#####  PLearn::Variable methods #########################################
     // (PLEASE IMPLEMENT IN .cc)
@@ -104,7 +101,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_OBJECT(ProbabilityPairsVariable);
+    PLEARN_DECLARE_OBJECT(ProbabilityPairsInverseVariable);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -140,7 +137,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(ProbabilityPairsVariable);
+DECLARE_OBJECT_PTR(ProbabilityPairsInverseVariable);
 
 // ### Put here a convenient method for building your variable.
 // ### e.g., if your class is TotoVariable, with two parameters foo_type foo

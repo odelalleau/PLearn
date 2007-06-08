@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// ProbabilityPairsVariable.cc
+// ProbabilityPairsInverseVariable.cc
 //
 // Copyright (C) 2007 Simon Lemieux, Pascal Vincent
 //
@@ -32,93 +32,89 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux, Pascal Vincent
+// Authors: Simon Lemieux
 
-/*! \file ProbabilityPairsVariable.cc */
+/*! \file ProbabilityPairsInverseVariable.cc */
 
 
-#include "ProbabilityPairsVariable.h"
+#include "ProbabilityPairsInverseVariable.h"
 
 namespace PLearn {
 using namespace std;
 
-/** ProbabilityPairsVariable **/
+/** ProbabilityPairsInverseVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-    ProbabilityPairsVariable,
-    " Let define f(x) = (x-min)/(max-min) for min<=x<=max, then this variable is defined by [x1,x2,...,xn]  |->  [ f(x1), 1-f(x1), f(x2), 1-f(x2), ... , f(xn), 1-f(xn) ]",
+    ProbabilityPairsInverseVariable,
+    "[x1,x2,x3,...,xn] -> [f(x1), f(x3), ..., f(xn)] with f(x) = (max-min)*x - min and with n even",
     "MULTI LINE\nHELP FOR USERS"
     );
 
-ProbabilityPairsVariable::ProbabilityPairsVariable()
+
+ProbabilityPairsInverseVariable::ProbabilityPairsInverseVariable()
     : min(0.), max(1.)
 {}
 
-ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input, real min, real max)
-    : inherited(input, input->length(), input->width()*2),
+ProbabilityPairsInverseVariable::ProbabilityPairsInverseVariable(Variable* input, real min, real max)
+    : inherited(input, input->length(), input->width()/2),
       min(min),max(max)
 {
     build_();
 }
 
-ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input, real max)
-    :inherited(input, input->length(), input->width()*2),
+ProbabilityPairsInverseVariable::ProbabilityPairsInverseVariable(Variable* input, real max)
+    :inherited(input, input->length(), input->width()/2),
      min(0.), max(max)
 {
     build_();
 }
 
-ProbabilityPairsVariable::ProbabilityPairsVariable(Variable* input)
-    :inherited(input, input->length(), input->width()*2),
+ProbabilityPairsInverseVariable::ProbabilityPairsInverseVariable(Variable* input)
+    :inherited(input, input->length(), input->width()/2),
      min(0.), max(1.)
 {
     build_();
 }
 
-void ProbabilityPairsVariable::recomputeSize(int& l, int& w) const
-{   
+void ProbabilityPairsInverseVariable::recomputeSize(int& l, int& w) const
+{
         if (input) {
             l = input->length(); // the computed length of this Var
-            w = input->width()*2; // the computed width
+            w = input->width()/2; // the computed width
         } else
             l = w = 0;
 }
 
 // ### computes value from input's value
-void ProbabilityPairsVariable::fprop()
+void ProbabilityPairsInverseVariable::fprop()
 {
-    real prob;
     for(int n=0; n<input->length(); n++)
-        for(int i=0; i<input->width(); i++)
-        {
-            prob = (input->matValue(n,i)-min)/(max-min);
-            matValue(n,2*i) = prob;
-            matValue(n,2*i+1) = 1.-prob;
-        }
+        for(int i=0; i<input->width()/2; i++)
+            matValue(n,i) = input->matValue(n,i*2)*(max-min) + min;
 }
 
 // ### computes input's gradient from gradient
-void ProbabilityPairsVariable::bprop()
+void ProbabilityPairsInverseVariable::bprop()
 {
-    for(int n=0; n<length(); n++)
-        for(int i=0; i<input->width(); i++)
-            input->matGradient(n,i) += 1./(max-min)*(matGradient(n,2*i) - matGradient(n,2*i+1));
+    for(int n=0; n<input->length(); n++)
+        for(int i=0; i<input->width()/2; i++)
+            input->matGradient(n,i*2) += matGradient(n,i)*(max-min);
 }
 
 // ### You can implement these methods:
-// void ProbabilityPairsVariable::bbprop() {}
-// void ProbabilityPairsVariable::symbolicBprop() {}
-// void ProbabilityPairsVariable::rfprop() {}
+// void ProbabilityPairsInverseVariable::bbprop() {}
+// void ProbabilityPairsInverseVariable::symbolicBprop() {}
+// void ProbabilityPairsInverseVariable::rfprop() {}
 
 
 // ### Nothing to add here, simply calls build_
-void ProbabilityPairsVariable::build()
+void ProbabilityPairsInverseVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void ProbabilityPairsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void ProbabilityPairsInverseVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -132,7 +128,7 @@ void ProbabilityPairsVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // varDeepCopyField(somevariable, copies);
 }
 
-void ProbabilityPairsVariable::declareOptions(OptionList& ol)
+void ProbabilityPairsInverseVariable::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
@@ -142,22 +138,20 @@ void ProbabilityPairsVariable::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    
-    declareOption(ol, "min", &ProbabilityPairsVariable::min,
+  
+    declareOption(ol, "min", &ProbabilityPairsInverseVariable::min,
                   OptionBase::buildoption,
                   "The lower bound a value of the input should be. It will be used to calculate the corresponding probability of each input.");
 
-    declareOption(ol, "max", &ProbabilityPairsVariable::max,
+    declareOption(ol, "max", &ProbabilityPairsInverseVariable::max,
                   OptionBase::buildoption,
                   "analog to min");
-
-    
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-void ProbabilityPairsVariable::build_()
+void ProbabilityPairsInverseVariable::build_()
 {
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation.

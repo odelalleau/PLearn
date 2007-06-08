@@ -107,6 +107,9 @@ public:
 
     PP<Optimizer> fine_tuning_optimizer;
 
+
+    TVec<int> group_sizes;
+
 protected:
     // protected members (not options)
 

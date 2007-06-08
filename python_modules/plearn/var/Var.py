@@ -71,6 +71,9 @@ class Var:
 
     def probabilityPairs(self, min, max, varname=""):
         return Var(pl.ProbabilityPairsVariable(input=self.v, min=min, max=max, varname=varname))
+    
+    def probabilityPairsInverse(self, min, max, varname=""):
+        return Var(pl.ProbabilityPairsInverseVariable(input=self.v, min=min, max=max, varname=varname))
 
     def transpose(self):
         return Var(pl.TransposeVariable(input=self.v))
@@ -150,7 +153,7 @@ class Var:
     
 
 ###################################################    
-# RLayer stands for reconstruciton hidden layer
+# RLayer stands for reconstruction hidden layer
 
 
 def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
@@ -211,10 +214,37 @@ def addMultiSoftMaxDoubleProductRLayer(input, iw, igs, ow, ogs, basename=""):
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, basename=""):
+def addMultiSoftMaxMixedProductRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
+    """iw is the input's width
+    igs is the input's group size
+    ow and ogs analog but for output"""
+    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    Wr = Var(ow, iw, "uniform", -1./ow, 1./ow, varname=basename+'_Wr')
+
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')
+        hidden = input.doubleProduct(W,M).add(b).multiSoftMax(ogs)
+        br = Var(1,iw,"fill",0, varname=basename+'_br')
+        log_reconstructed = hidden.matrixProduct(Wr).add(br).multiLogSoftMax(igs)
+    else:
+        hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
+        log_reconstructed = hidden.matrixProduct(Wr).multiLogSoftMax(igs)
+
+    reconstructed_input = log_reconstructed.exp()
+    cost = log_reconstructed.dot(input).neg()
+    return hidden, cost, reconstructed_input
+
+def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
     W = Var(ow, iw, "uniform", -1./iw, 1./iw, varname=basename+'_W')
-    hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
-    log_reconstructed = hidden.matrixProduct(W).multiLogSoftMax(igs)
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')
+        hidden = input.matrixProduct_A_Bt(W).add(b).multiSoftMax(ogs)
+        br = Var(1,iw,"fill",0, varname=basename+'_br')
+        log_reconstructed = hidden.matrixProduct(W).add(br).multiLogSoftMax(igs)
+    else:        
+        hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
+        log_reconstructed = hidden.matrixProduct(W).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input

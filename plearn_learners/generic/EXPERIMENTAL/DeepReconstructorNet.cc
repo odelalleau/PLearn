@@ -134,6 +134,9 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "");
 
+    declareOption(ol, "group_sizes", &DeepReconstructorNet::group_sizes,
+                  OptionBase::buildoption,
+                  "");
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -267,6 +270,7 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(compute_output, copies);
     deepCopyField(output_and_target_to_cost, copies);
     deepCopyField(outmat, copies);
+    deepCopyField(group_sizes, copies);
 }
 
 int DeepReconstructorNet::outputsize() const
