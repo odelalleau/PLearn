@@ -24,10 +24,12 @@ PTester(
                             visible_layer =
                                 RBMBinomialLayer(
                                     size = ${inputsize}
+                                    use_fast_approximations = 0
                                 )
                             hidden_layer =
                                 RBMBinomialLayer(
                                     size = ${rbm_size_1}
+                                    use_fast_approximations = 0
                                 )
                             connection =
                                 RBMMatrixConnection(
@@ -43,9 +45,11 @@ PTester(
                             visible_layer =
                                 RBMBinomialLayer(
                                     size = ${rbm_size_1}
+                                    use_fast_approximations = 0
                                 )
                             hidden_layer =
                                 RBMBinomialLayer(
+                                    use_fast_approximations = 0
                                     size = ${rbm_size_2}
                                 )
                             connection =

@@ -35,8 +35,8 @@ def rbm(cd_learning_rate, grad_learning_rate, visible_size, hidden_size, name):
             name = name,
             cd_learning_rate = cd_learning_rate,
             grad_learning_rate = grad_learning_rate,
-            visible_layer = pl.RBMBinomialLayer(size = visible_size),
-            hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
+            visible_layer = pl.RBMBinomialLayer(size = visible_size, use_fast_approximations = False),
+            hidden_layer = pl.RBMBinomialLayer(size = hidden_size, use_fast_approximations = False),
             connection = pl.RBMMatrixConnection(
                 down_size = visible_size,
                 up_size = hidden_size))
