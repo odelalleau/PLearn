@@ -26,8 +26,14 @@
             forget_when_training_set_changes = 0,
             grad_learning_rate = 0.1,
             layers = [
-                *3 -> RBMBinomialLayer( size = 2 ),
-                *4 -> RBMBinomialLayer( size = 2 )
+                *3 -> RBMBinomialLayer(
+                    size = 2,
+                    use_fast_approximations = False
+                    ),
+                *4 -> RBMBinomialLayer(
+                    size = 2,
+                    use_fast_approximations = False
+                    )
                 ],
             n_classes = 2,
             nstages = 0,

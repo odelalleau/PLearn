@@ -20,8 +20,8 @@ dataset = pl.MemoryVMatrix(
         )
 
 layers = [
-    pl.RBMBinomialLayer( size = input_size ),
-    pl.RBMBinomialLayer( size = hidden_size )
+    pl.RBMBinomialLayer( size = input_size, use_fast_approximations = False ),
+    pl.RBMBinomialLayer( size = hidden_size, use_fast_approximations = False )
     ]
 
 connections = [
