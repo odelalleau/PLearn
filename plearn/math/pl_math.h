@@ -275,6 +275,10 @@ extern PLMathInitializer pl_math_initializer;
 
 inline real fasttanh(const real& x)
 {
+    if (isnan(x)) return x; // tanh(nan)=nan
+    int is_inf=isinf(x);
+    if (is_inf>0) return 1; // tanh(inf)=1
+    if (is_inf<0) return -1; // tanh(-inf)=-1
     if(x>0)
     {
         if(x>MAXTANHX)
@@ -444,6 +448,10 @@ inline real tabulated_softplus(real x)
     static const real softplus_delta = (n_softplus_values-1)/(max_softplus_arg-min_softplus_arg);
     static real softplus_values[n_softplus_values];
     static bool computed_softplus_table = false;
+    if (isnan(x)) return x; // softplus(nan)=nan
+    int is_inf=isinf(x);
+    if (is_inf>0) return x; // softplus(inf)=inf
+    if (is_inf<0) return 0; // softplus(-inf)=0
     if (!computed_softplus_table)
     {
         real y=min_softplus_arg;
