@@ -214,8 +214,8 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "output_type", 
                   &NatGradNNet::output_type,
                   OptionBase::buildoption,
-                  "type of output cost: 'NLL' for classification problems,\n"
-                  "or 'MSE' for regression.\n");
+                  "type of output cost: 'cross_entropy' for binary classification,\n"
+                  "'NLL' for classification problems, or 'MSE' for regression.\n");
 
     declareOption(ol, "input_size_lrate_normalization_power", 
                   &NatGradNNet::input_size_lrate_normalization_power, 
@@ -340,7 +340,13 @@ void NatGradNNet::build_()
                     "should provide noutputs = number of classes, or possibly\n"
                     "1 when 2 classes\n");
     }
-    else PLERROR("NatGradNNet: output_type should be NLL or MSE\n");
+    else if (output_type=="cross_entropy")
+    {
+        if(noutputs!=1)
+            PLERROR("NatGradNNet: if output_type=cross_entropy, then \n"
+                    "noutputs should be 1.\n");
+    }
+    else PLERROR("NatGradNNet: output_type should be cross_entropy, NLL or MSE\n");
 
     if( output_layer_L1_penalty_factor < 0. )
         PLWARNING("NatGradNNet::build_ - output_layer_L1_penalty_factor is negative!\n");
@@ -985,6 +991,15 @@ void NatGradNNet::fpropNet(int n_examples, bool during_training) const
                 log_softmax(L,L);
                 Profiler::pl_profile_end("activation function");
             }
+        else if (output_type=="cross_entropy")  {
+            for (int k=0;k<n_examples;k++)
+            {
+                Vec L=next_layer(k);
+                Profiler::pl_profile_start("activation function");
+                log_sigmoid(L,L);
+                Profiler::pl_profile_end("activation function");
+            }
+         }
     }
 }
 
@@ -1009,6 +1024,28 @@ void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& ex
             if (example_weight[i]!=1.0)
                 costs(i,0) *= example_weight[i];
         }
+    }
+    else if(output_type=="cross_entropy")   {
+        for (int i=0;i<n_examples;i++)
+        {
+            int target_class = int(round(target(i,0)));
+            Vec outp = output(i);
+            Vec grad = out_grad(i);
+            exp(outp,grad); // map log-prob to prob
+            if( target_class == 1 ) {
+                costs(i,0) = - outp[0];
+                costs(i,1) = (grad[0]>0.5)?0:1;
+            }   else    {
+                costs(i,0) = - pl_log( 1.0 - grad[0] );
+                costs(i,1) = (grad[0]>0.5)?1:0;
+            }
+            grad[0] -= (real)target_class;
+            if (example_weight[i]!=1.0)
+                costs(i,0) *= example_weight[i];
+        }
+//cout << "costs\t" << costs(0) << endl;
+//cout << "gradient\t" << out_grad(0) << endl;
+
     }
     else // if (output_type=="MSE")
     {
@@ -1043,6 +1080,11 @@ TVec<string> NatGradNNet::getTestCostNames() const
     {
         costs.resize(2);
         costs[0]="NLL";
+        costs[1]="class_error";
+    }
+    else if (output_type=="cross_entropy")  {
+        costs.resize(2);
+        costs[0]="cross_entropy";
         costs[1]="class_error";
     }
     else if (output_type=="MSE")
