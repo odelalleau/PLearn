@@ -539,7 +539,11 @@ public:
         resize(length()-1);
     }
 
-    int findSorted(T value)
+    //! Returns an index vector I so that (*this)(I) returns a sorted version
+    //! of this vec in ascending order.
+    TVec<int> sortingPermutation() const;
+    
+    int findSorted(T value) const
     {
         if (isEmpty())
             return 0;

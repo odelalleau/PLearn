@@ -53,6 +53,8 @@
 #include "TMatRowsAsArraysIterator_impl.h"
 #include "TMatColRowsIterator_impl.h"
 
+#include "algo.h"
+
 namespace PLearn {
 using namespace std;
 
@@ -225,6 +227,27 @@ TVec<T> removeElement(const TVec<T>& v, int elemnum)
     else
         return concat(v.subVec(0,elemnum),
                       v.subVec(elemnum+1,v.length()-(elemnum+1)));
+}
+
+// Returns an index vector I so that (*this)(I) returns a sorted version
+// of this vec in ascending order.
+namespace {
+  template <class T>
+  struct index_cmp : public binary_function<int, int, bool>
+  {
+      const TVec<T>& m_values;
+      index_cmp(const Vec& values): m_values(values) { }        
+      bool operator()(int x, int y) { return m_values[x] < m_values[y]; }
+  };
+}
+// Actual body of the method
+template <class T>
+TVec<int> TVec<T>::sortingPermutation() const
+{    
+    TVec<int> indices(length_);
+    for (int i=0; i < length_; i++) indices[i] = i;
+    sort(indices.begin(), indices.end(), index_cmp<T>(*this));
+    return indices;
 }
 
 

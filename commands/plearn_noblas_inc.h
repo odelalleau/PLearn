@@ -172,6 +172,7 @@
 
 // Regressors
 #include <plearn_learners/regressors/ConstantRegressor.h>
+#include <plearn_learners/regressors/CubicSpline.h>
 #include <plearn_learners/regressors/GaussianProcessRegressor.h>
 #include <plearn_learners/regressors/KernelRidgeRegressor.h>
 #include <plearn_learners/regressors/KNNRegressor.h>
