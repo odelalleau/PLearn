@@ -321,7 +321,7 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
     if (neg_count==0)
         productScaleAcc(weights_neg_stats,
                         gibbs_neg_up_values,true,
-                        gibbs_neg_down_values,false,normalize_factor,0);
+                        gibbs_neg_down_values,false,normalize_factor,0.);
     else
         productScaleAcc(weights_neg_stats,
                         gibbs_neg_up_values,true,
@@ -357,7 +357,7 @@ void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
     //               * gibbs_neg_up_values'*gibbs_neg_down_values
     static Mat tmp;
     tmp.resize(weights.length(),weights.width());
-    productScaleAcc(tmp,gibbs_neg_up_values,true,gibbs_neg_down_values,false,1,0);
+    productScaleAcc(tmp,gibbs_neg_up_values,true,gibbs_neg_down_values,false,1.,0.);
     if (neg_count==0)
         multiply(weights_neg_stats,tmp,normalize_factor);
     else
