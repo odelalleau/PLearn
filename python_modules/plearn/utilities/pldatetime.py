@@ -43,6 +43,22 @@ def convertPLDateTime(cyymmdd, hhmnss):
 
     return datetime(yyyy, mm, dd, hh, mn, ss)
 
+__tic = []
+def tic():
+    import time
+    global __tic
+    __tic.append( datetime(*time.localtime()[:6]) )
+
+def toc():
+    import time
+    global __tic
+    now = datetime(*time.localtime()[:6])
+    if len(__tic) == 0:
+        import sys
+        print >>sys.stderr, "Call to toc() corresponding to no tic()..."
+        return -1
+    return now - __tic.pop(-1)
+
 #
 #  Module classes
 #

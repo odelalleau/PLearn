@@ -65,10 +65,10 @@ public:
     //#####  Public Build Options  ############################################
 
     //! The slope to enforce at the leftmost node -- Default: NaN [None]
-    bool m_low_slope;
+    real m_low_slope;
 
     //! The slope to enforce at the rightmost node -- Default: NaN [None]
-    bool m_high_slope;
+    real m_high_slope;
     
 
 public:
