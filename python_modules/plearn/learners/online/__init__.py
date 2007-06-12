@@ -37,12 +37,24 @@ def supervised_classification_mlp(name,input_size,n_hidden,n_classes,
                                            connection('softmax.output','clerr.prediction',False),
                                            connection('target.output','nll.target',False),
                                            connection('target.output','clerr.target',False)],
-                            ports = [ ('in', 'a1.input'),
+                            ports = [ ('input', 'a1.input'),
                                       ('target', 'target.input'),
-                                      ('out', 'softmax.output'),
+                                      ('output', 'softmax.output'),
                                       ('nll', 'nll.cost'),
                                       ('class_err','clerr.cost') ] )
-                            
+
+
+def supervised_classification_mlp_learner(input_size, n_hidden, n_classes,
+        L1wd=0,L2wd=0,lrate=0.01):
+    return (pl.ModuleLearner(
+            module = supervised_classification_mlp(
+                'MLP', input_size, n_hidden, n_classes, L1wd, L2wd, lrate
+                ),
+            target_ports = [ 'target' ],
+            cost_ports = [ 'nll', 'class_err' ]
+            ),
+            [ 'module.modules[%d].start_learning_rate' % i for i in [0,2] ]
+            )
 
 
 def rbm(name,
