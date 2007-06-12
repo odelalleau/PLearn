@@ -93,13 +93,19 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
     PLASSERT( target.size() == target_size );
     cost.resize( output_size );
 
-    PLASSERT_MSG( min(input) >= 0.,
-                  "Elements of \"input\" should be positive" );
-    PLASSERT_MSG( is_equal( sum(input), 1. ),
-                  "Elements of \"input\" should sum to 1" );
+    if( input.hasMissing() )
+        // TODO: should we put something else? infinity?
+        cost[0] = MISSING_VALUE;
+    else
+    {
+        PLASSERT_MSG( min(input) >= 0.,
+                      "Elements of \"input\" should be positive" );
+        PLASSERT_MSG( is_equal( sum(input), 1. ),
+                      "Elements of \"input\" should sum to 1" );
 
-    int the_target = (int) round( target[0] );
-    cost[0] = -pl_log( input[ the_target ] );
+        int the_target = (int) round( target[0] );
+        cost[0] = -pl_log( input[ the_target ] );
+    }
 }
 
 void NLLCostModule::fprop(const Mat& inputs, const Mat& targets, Mat& costs)
@@ -143,26 +149,32 @@ void NLLCostModule::fprop(const TVec<Mat*>& ports_value)
 
         cost->resize(batch_size, port_sizes(2, 1));
 
-        PLASSERT_MSG( min(*prediction) >= 0.,
-                "Elements of \"prediction\" should be positive" );
 
-#ifdef BOUNDCHECK
-        for (int i = 0; i < prediction->length(); i++) {
-            // Ensure the distribution probabilities sum to 1. We relax a bit
-            // the default tolerance as probabilities using exponentials could
-            // suffer numerical imprecisions.
-            if (!is_equal( sum((*prediction)(i)), 1., 1., 1e-5, 1e-5 ))
-                PLERROR("In NLLCostModule::fprop - Elements of \"prediction\" "
-                        "should sum to 1 (found a sum = %f)",
-                        sum((*prediction)(i)));
-        }
-#endif
-
-        for( int k=0; k<batch_size; k++ )
+        for( int i=0; i<batch_size; i++ )
         {
-            int target_k = (int) round( (*target)(k,0) );
-            PLASSERT( is_equal( (*target)(k, 0), target_k ) );
-            (*cost)(k,0) = -pl_log( (*prediction)(k, target_k) );
+            if( (*prediction)(i).hasMissing() )
+            {
+                // TODO: should we put something else? infinity?
+                (*cost)(i,0) = MISSING_VALUE;
+            }
+            else
+            {
+#ifdef BOUNDCHECK
+                PLASSERT_MSG( min((*prediction)(i)) >= 0.,
+                    "Elements of \"prediction\" should be positive" );
+                // Ensure the distribution probabilities sum to 1. We relax a
+                // bit the default tolerance as probabilities using
+                // exponentials could suffer numerical imprecisions.
+                if (!is_equal( sum((*prediction)(i)), 1., 1., 1e-5, 1e-5 ))
+                    PLERROR("In NLLCostModule::fprop - Elements of"
+                            " \"prediction\" should sum to 1"
+                            " (found a sum = %f)",
+                            sum((*prediction)(i)));
+#endif
+                int target_i = (int) round( (*target)(i,0) );
+                PLASSERT( is_equal( (*target)(i, 0), target_i ) );
+                (*cost)(i,0) = -pl_log( (*prediction)(i, target_i) );
+            }
         }
     }
     else if( !prediction && !target && !cost )
