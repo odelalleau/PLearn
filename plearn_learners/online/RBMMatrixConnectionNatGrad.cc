@@ -119,9 +119,9 @@ void RBMMatrixConnectionNatGrad::update( const Mat& pos_down_values, // v_0
         // We use the average gradient over a mini-batch.
         real mbnorm = 1. / pos_down_values.length();
         productScaleAcc(weights_gradient, pos_up_values, true, pos_down_values, false,
-                        mbnorm, 0);
+                        mbnorm, 0.);
         productScaleAcc(weights_gradient, neg_up_values, true, neg_down_values, false,
-                        -mbnorm, 1);
+                        -mbnorm, 1.);
 
         for (int i=0;i<up_size;i++)
         {
@@ -163,7 +163,7 @@ void RBMMatrixConnectionNatGrad::bpropUpdate(const Mat& inputs,
 
     // weights_gradient = 1/n * output_gradients' * inputs
     productScaleAcc(weights_gradient, output_gradients, true, inputs, false,
-                    1. / inputs.length(), 0);
+                    1. / inputs.length(), 0.);
     for (int i=0;i<up_size;i++)
     {
         (*bp_natgrad[i])(pos_count,weights_gradient(i),natural_gradient);
