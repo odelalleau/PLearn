@@ -98,14 +98,14 @@ void ConditionalMeanImputationVMatrix::getExample(int i, Vec& input, Vec& target
   source->getExample(i, input, target, weight);
   for (int source_col = 0; source_col < input->length(); source_col++)
     if (is_missing(input[source_col]) && condmean_col_ref[source_col] >= 0) input[source_col] = condmean(i, condmean_col_ref[source_col]);
-    else if (is_missing(input[source_col])) cout << "getExample : " << i << " " << source_col << endl;
+    else if (is_missing(input[source_col])) PLERROR("In ConditionalMeanImputationVMatrix::getExample() we have a missing value in column %d that haven't been assigned a value",source_col);
 }
 
 real ConditionalMeanImputationVMatrix::get(int i, int j) const
 { 
   real variable_value = source->get(i, j);
   if (!is_missing(variable_value) && condmean_col_ref[j] >= 0) return condmean(i, condmean_col_ref[j]);
-    else if (is_missing(variable_value)) cout << "get : " << i << " " << j << endl;
+  else if (is_missing(variable_value)) PLERROR("In ConditionalMeanImputationVMatrix::getExample(%d,%d) we have a missing value that haven't been assigned a value",i,j);
   return variable_value;
 }
 

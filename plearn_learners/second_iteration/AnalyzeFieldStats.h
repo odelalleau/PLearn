@@ -124,11 +124,7 @@ private:
 
     // The rest of the private stuff goes here
     
-    int main_row;
-    int main_col;
-    int main_length;
     int main_width;
-    Vec main_input;
     TVec<string> main_names;
     StatsCollector  main_stats;
     PPath main_metadata;
@@ -166,7 +162,6 @@ private:
     string train_test_path;
     TVec<int> train_test_variable_src;
     VMat train_test_file;
-    PP<PTester> cond_mean;
     PPath results_file_name;
     VMat results_file;
     int results_length;

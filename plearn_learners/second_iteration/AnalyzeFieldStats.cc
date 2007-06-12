@@ -126,17 +126,16 @@ void AnalyzeFieldStats::build_()
             analyzeVariableStats();
             train();
         }
-        PLERROR("AnalyzeFieldStats: we are done here");
+        PLERROR("AnalyzeFieldStats::build_() we are done here");
     }
 }
 
 void AnalyzeFieldStats::analyzeVariableStats()
 { 
     // initialize primary dataset
-    main_row = 0;
-    main_col = 0;
-    main_length = train_set->length();
+    int main_length = train_set->length();
     main_width = train_set->width();
+    Vec main_input;
     main_input.resize(main_width);
     main_names.resize(main_width);
     main_names << train_set->fieldNames();
@@ -148,11 +147,13 @@ void AnalyzeFieldStats::analyzeVariableStats()
     fields_selected.clear();
     for (fields_col = 0; fields_col < fields_width; fields_col++)
     {
+        int main_col;
         for (main_col = 0; main_col < main_width; main_col++)
         {
             if (fields[fields_col] == main_names[main_col]) break;
         }
-        if (main_col >= main_width) PLERROR("In AnalyzeFieldStats: no field with this name in input dataset: %", (fields[fields_col]).c_str());
+        if (main_col >= main_width) 
+            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in input dataset: %", (fields[fields_col]).c_str());
         fields_selected[main_col] = 1;
     }
     
@@ -178,7 +179,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
     TVec<int> indices;
     to_deal_with_total = 0;
     to_deal_with_next = -1;
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (header_record[main_col] != 2.0) continue;
         to_deal_with_total += 1;
@@ -188,7 +189,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
     {
         train_set->unlockMetaDataDir();
         reviewGlobalStats();
-        PLERROR("AnalyzeFieldStats: we are done here");
+        PLERROR("AnalyzeFieldStats::analyzeVariableStats() we are done here");
     }
     to_deal_with_name = main_names[to_deal_with_next];
     cout << "total number of variable left to deal with: " << to_deal_with_total << endl;
@@ -205,11 +206,12 @@ void AnalyzeFieldStats::analyzeVariableStats()
     indices.resize((int) main_present);
     ind_next = 0;
     pb = new ProgressBar( "Building the indices for " + to_deal_with_name, main_length);
-    for (main_row = 0; main_row < main_length; main_row++)
+    for (int main_row = 0; main_row < main_length; main_row++)
     {
         to_deal_with_value = train_set->get(main_row, to_deal_with_next);
         if (is_missing(to_deal_with_value)) continue;
-        if (ind_next >= indices.length()) PLERROR("AnalyzeFieldStats: There seems to be more present values than indicated by the stats file");
+        if (ind_next >= indices.length()) 
+            PLERROR("AnalyzeFieldStats::analyzeVariableStats() There seems to be more present values than indicated by the stats file");
         indices[ind_next] = main_row;
         ind_next += 1;
         pb->update( main_row );
@@ -224,7 +226,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
     output_length = (int) main_present;
     if (output_length > max_number_of_samples) output_length = max_number_of_samples;
     output_width = 0;
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (header_record[main_col] != 1) output_width += 1;
     }
@@ -235,11 +237,13 @@ void AnalyzeFieldStats::analyzeVariableStats()
     output_col = 0;
     for (fields_col = 0; fields_col < fields_width; fields_col++)
     {
+        int main_col;
         for (main_col = 0; main_col < main_width; main_col++)
         {
             if (fields[fields_col] == main_names[main_col]) break;
         }
-        if (main_col >= main_width) PLERROR("In AnalyzeFieldStats: no field with this name in input dataset: %", (fields[fields_col]).c_str());
+        if (main_col >= main_width) 
+            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in input dataset: %", (fields[fields_col]).c_str());
         if (fields_col != to_deal_with_next && header_record[main_col] != 1)
         {
             output_variable_src[output_col] = main_col;
@@ -255,7 +259,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
     
     //Now, we can build the training file
     pb = new ProgressBar( "Building the training file for " + to_deal_with_name, output_length);
-    for (main_row = 0; main_row < output_length; main_row++)
+    for (int main_row = 0; main_row < output_length; main_row++)
     {
         train_set->getRow(indices[main_row], main_input);
         for (output_col = 0; output_col < output_width; output_col++)
@@ -274,11 +278,13 @@ void AnalyzeFieldStats::analyzeVariableStats()
     output_col = 0;
     for (fields_col = 0; fields_col < fields_width; fields_col++)
     {
+        int main_col;
         for (main_col = 0; main_col < targeted_width; main_col++)
         {
             if (fields[fields_col] == targeted_names[main_col]) break;
         }
-        if (main_col >= targeted_width) PLERROR("In AnalyzeFieldStats: no field with this name in targeted dataset: %", (fields[fields_col]).c_str());
+        if (main_col >= targeted_width) 
+            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in targeted dataset: %", (fields[fields_col]).c_str());
         if (fields_col != to_deal_with_next && header_record[main_col] != 1)
         {
             train_test_variable_src[output_col] = main_col;
@@ -292,7 +298,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
     
     //Now, we can build the targeted file
     pb = new ProgressBar( "Building the targeted file for " + to_deal_with_name, train_test_length);
-    for (main_row = 0; main_row < train_test_length; main_row++)
+    for (int main_row = 0; main_row < train_test_length; main_row++)
     {
         targeted_set->getRow(main_row, targeted_input);
         for (output_col = 0; output_col < output_width; output_col++)
@@ -307,7 +313,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
 
 void AnalyzeFieldStats::createHeaderFile()
 { 
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         targeted_stats = targeted_set->getStats(main_col);
         targeted_missing = targeted_stats.nmissing();
@@ -328,7 +334,7 @@ void AnalyzeFieldStats::getHeaderRecord()
 { 
     header_file = new FileVMatrix(header_file_name, true);
     header_file->getRow(0, header_record);
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (header_record[main_col] == 0) continue;
         if (header_record[main_col] == 2) continue;
@@ -353,7 +359,7 @@ void AnalyzeFieldStats::updateHeaderRecord(int var_col)
 void AnalyzeFieldStats::reviewGlobalStats()
 { 
     cout << "There is no more variable to deal with." << endl;
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (header_record[main_col] == 0)
         { 
@@ -414,7 +420,7 @@ void AnalyzeFieldStats::train()
     explicit_splitter->splitsets.resize(1,2);
     explicit_splitter->splitsets(0,0) = output_file;
     explicit_splitter->splitsets(0,1) = train_test_file;
-    cond_mean = ::PLearn::deepCopy(cond_mean_template);
+    PP<PTester> cond_mean = ::PLearn::deepCopy(cond_mean_template);
     cond_mean->setOption("expdir", targeted_metadata + "/TreeCondMean/dir/" + to_deal_with_name);
     cond_mean->splitter = new ExplicitSplitter();
     cond_mean->splitter = explicit_splitter;

@@ -149,7 +149,7 @@ void Experimentation::build_()
             train();
             ::PLearn::save(header_expdir + "/" + deletion_threshold_str + "/source_names.psave", source_names);
         }
-        PLERROR("In Experimentation: we are done here");
+        PLERROR("In Experimentation::build_() we are done here");
     }
 }
 
@@ -163,7 +163,7 @@ void Experimentation::experimentSetUp()
     main_names.resize(main_width);
     main_names << train_set->fieldNames();
     if (train_set->hasMetaDataDir()) main_metadata = train_set->getMetaDataDir();
-    else if (experiment_directory == "") PLERROR("In Experimentation: we need one of experiment_directory or train_set->metadatadir");
+    else if (experiment_directory == "") PLERROR("In Experimentation::experimentSetUp() we need one of experiment_directory or train_set->metadatadir");
          else main_metadata = experiment_directory;
     if (experiment_without_missing_indicator > 0)
     {
@@ -197,12 +197,12 @@ void Experimentation::experimentSetUp()
     target_width = target_set->width();
     target_names.resize(target_width);
     target_names << target_set->fieldNames();
-    if (target_length != main_length) PLERROR("In Experimentation: target and main train datasets should have equal length");
+    if (target_length != main_length) PLERROR("In Experimentation::experimentSetUp() target and main train datasets should have equal length");
     for (target_col = 0; target_col < target_width; target_col++)
     {
         if (target_field_name == target_names[target_col]) break;
     }
-    if (target_col >= target_width) PLERROR("In Experimentation: no field with this name in target dataset: %", target_field_name.c_str());
+    if (target_col >= target_width) PLERROR("In Experimentation::experimentSetUp() no field with this name in target dataset: %", target_field_name.c_str());
     
     // initialize the header file
     cout << "initialize the header file" << endl;
@@ -237,7 +237,7 @@ void Experimentation::experimentSetUp()
     {
         reference_train_set->unlockMetaDataDir();
         reviewGlobalStats();
-        PLERROR("In Experimentation: we are done here");
+        PLERROR("In Experimentation::experimentSetUp() we are done here");
     }
     deletion_threshold = deletion_thresholds[to_deal_with_next];
     deletion_threshold_str = tostring(deletion_threshold + 0.005).substr(0,4);
@@ -328,11 +328,12 @@ void Experimentation::createHeaderFile()
 void Experimentation::getHeaderRecord()
 { 
     header_file = new FileVMatrix(header_file_name, true);
-    if (header_width != header_file->width()) PLERROR("In Experimentation: the existing header file does not match the deletion_thresholds width)");
+    if (header_width != header_file->width()) 
+        PLERROR("In Experimentation::getHeaderRecord() the existing header file does not match the deletion_thresholds width)");
     header_names = header_file->fieldNames();
     for (header_col = 0; header_col < header_width; header_col++) 
         if (header_names[header_col] != tostring(deletion_thresholds[header_col] + 0.005).substr(0,4))
-            PLERROR("In Experimentation: the existing header file names does not match the deletion_thresholds values)");;
+            PLERROR("In Experimentation::getHeaderRecord() the existing header file names does not match the deletion_thresholds values)");;
     header_file->getRow(0, header_record);
 }
 
