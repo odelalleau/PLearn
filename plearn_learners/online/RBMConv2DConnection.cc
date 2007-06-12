@@ -52,7 +52,15 @@ PLEARN_IMPLEMENT_OBJECT(
     "");
 
 RBMConv2DConnection::RBMConv2DConnection( real the_learning_rate ) :
-    inherited(the_learning_rate)
+    inherited(the_learning_rate),
+    down_image_length(-1),
+    down_image_width(-1),
+    up_image_length(-1),
+    up_image_width(-1),
+    kernel_step1(1),
+    kernel_step2(1),
+    kernel_length(-1),
+    kernel_width(-1)
 {
 }
 
