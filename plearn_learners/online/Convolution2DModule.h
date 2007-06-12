@@ -134,6 +134,9 @@ public:
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
+    //! New version
+    virtual void fprop(const TVec<Mat*>& ports_value);
+
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
     //! called with the same arguments as fprop for the first two arguments
@@ -153,6 +156,10 @@ public:
                              Vec& input_gradient,
                              const Vec& output_gradient,
                              bool accumulate=false);
+
+    //! New version
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
 
     //! Similar to bpropUpdate, but adapt based also on the estimation
     //! of the diagonal of the Hessian matrix, and propagates this
@@ -238,8 +245,12 @@ private:
 
     // Will store gradients wrt kernels
     mutable Mat kernel_gradient;
+    TMat<Mat> kernel_gradients;
+
     // Will store the term-to-term squared kernels (for bbprop)
     mutable Mat squared_kernel;
+
+    TVec<string> ports;
 };
 
 // Declares a few other classes and functions related to this class

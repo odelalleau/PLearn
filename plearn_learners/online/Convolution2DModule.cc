@@ -257,6 +257,16 @@ void Convolution2DModule::build_()
     output_gradients.resize(n_output_images);
     input_diag_hessians.resize(n_input_images);
     output_diag_hessians.resize(n_output_images);
+
+    // port stuff
+    ports.resize(2);
+    ports[0] = "input";
+    ports[1] = "output";
+
+    port_sizes.resize(nPorts(), 2);
+    port_sizes.column(0).fill(-1);
+    port_sizes(0, 1) = input_size;
+    port_sizes(1, 1) = output_size;
 }
 
 void Convolution2DModule::build_kernels()
@@ -296,6 +306,7 @@ void Convolution2DModule::build_kernels()
         forget();
 
     kernel_gradient.resize(kernel_length, kernel_width);
+    kernel_gradients.resize(n_input_images, n_output_images);
     squared_kernel.resize(kernel_length, kernel_width);
 }
 
@@ -355,6 +366,52 @@ void Convolution2DModule::fprop(const Vec& input, Vec& output) const
                             kernel_step1, kernel_step2, true );
         }
     }
+}
+
+void Convolution2DModule::fprop(const TVec<Mat*>& ports_value)
+{
+    PLASSERT( ports_value.length() == nPorts() );
+
+    Mat* input = ports_value[0];
+    Mat* output = ports_value[1];
+
+    if( input && !input->isEmpty() && output && output->isEmpty() )
+    {
+        PLASSERT( input->width() == port_sizes(0,1) );
+
+        int batch_size = input->length();
+        output->resize(batch_size, port_sizes(1,1));
+
+        // TODO: optimize
+        for( int k=0; k<batch_size; k++ )
+        {
+            for( int i=0; i<n_input_images; i++ )
+                input_images[i] = (*input)(k)
+                    .subVec(i*input_images_size, input_images_size)
+                    .toMat(input_images_length, input_images_width);
+
+            for( int j=0; j<n_output_images; j++ )
+                output_images[j] = (*output)(k)
+                    .subVec(j*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+
+            for( int j=0; j<n_output_images; j++ )
+            {
+                output_images[j].fill( bias[j] );
+                for( int i=0; i<n_input_images; i++ )
+                    if( connection_matrix(i,j) != 0 )
+                        convolve2D( input_images[i], kernels(i,j),
+                                    output_images[j], kernel_step1,
+                                    kernel_step2, true );
+            }
+        }
+    }
+    else if (!input && !output)
+    {
+        // Nothing to do
+    }
+    else
+        PLCHECK_MSG( false, "Unknown port configuration" );
 }
 
 /* THIS METHOD IS OPTIONAL
@@ -437,6 +494,102 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
         bias[j] -= learning_rate * sum( output_gradients[j] );
     }
 
+}
+
+void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                         const TVec<Mat*>& ports_gradient)
+{
+    PLASSERT( ports_value.length() == nPorts()
+              && ports_gradient.length() == nPorts() );
+
+    Mat* input = ports_value[0];
+    Mat* output = ports_value[1];
+    Mat* input_grad = ports_gradient[0];
+    Mat* output_grad = ports_gradient[1];
+
+    // If we want input_grad and we have output_grad
+    if( input_grad && input_grad->isEmpty()
+        && output_grad && !output_grad->isEmpty() )
+    {
+        PLASSERT( input );
+        PLASSERT( output );
+
+        PLASSERT( input->width() == port_sizes(0,1) );
+        PLASSERT( output->width() == port_sizes(1,1) );
+        PLASSERT( input_grad->width() == port_sizes(0,1) );
+        PLASSERT( output_grad->width() == port_sizes(1,1) );
+
+        int batch_size = input->length();
+        PLASSERT( output->length() == batch_size );
+        PLASSERT( output_grad->length() == batch_size );
+
+        input_grad->resize(batch_size, port_sizes(0,1));
+        learning_rate = start_learning_rate /
+            (1.+decrease_constant*step_number);
+        real avg_lr = learning_rate / batch_size;
+
+        // clear kernel gradient
+        for( int i=0; i<n_input_images; i++ )
+            for( int j=0; j<n_output_images; j++ )
+                if( connection_matrix(i,j) != 0 )
+                {
+                    kernel_gradients(i,j).resize(kernel_length, kernel_width);
+                    kernel_gradients(i,j).clear();
+                }
+
+        // TODO: optimize
+        for( int k=0; k<batch_size; k++ )
+        {
+            for( int i=0; i<n_input_images; i++ )
+            {
+                input_images[i] = (*input)(k)
+                    .subVec(i*input_images_size, input_images_size)
+                    .toMat(input_images_length, input_images_width);
+                input_gradients[i] = (*input_grad)(k)
+                    .subVec(i*input_images_size, input_images_size)
+                    .toMat(input_images_length, input_images_width);
+            }
+
+            for( int j=0; j<n_output_images; j++ )
+            {
+                output_images[j] = (*output)(k)
+                    .subVec(j*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+                output_gradients[j] = (*output_grad)(k)
+                    .subVec(j*output_images_size, output_images_size)
+                    .toMat(output_images_length, output_images_width);
+            }
+
+            for( int j=0; j<n_output_images; j++ )
+                for( int i=0; i<n_input_images; i++ )
+                    if( connection_matrix(i,j) != 0 )
+                        convolve2Dbackprop( input_images[i],
+                                            kernels(i,j),
+                                            output_gradients[j],
+                                            input_gradients[i],
+                                            kernel_gradients(i,j),
+                                            kernel_step1, kernel_step2,
+                                            true );
+        }
+
+        for( int j=0; j<n_output_images; j++ )
+        {
+            for( int i=0; i<n_input_images; i++ )
+                if( connection_matrix(i,j) != 0 )
+                    multiplyAcc(kernels(i,j), kernel_gradients(i,j), -avg_lr);
+
+            bias[j] -= avg_lr * sum( (*output_grad)
+                .subMatColumns(j*output_images_size, output_images_size) );
+        }
+    }
+    else if( !input_grad )
+    {
+        PLASSERT( !output_grad || !output_grad->isEmpty() );
+        PLASSERT( !input || !input->isEmpty() );
+        PLASSERT( !output || !output->isEmpty() );
+    }
+    else
+        PLCHECK_MSG( false, "Port configuration not implemented" );
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
