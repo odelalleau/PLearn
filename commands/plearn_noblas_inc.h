@@ -223,7 +223,6 @@
 #include <plearn_learners/online/RBMGaussianLayer.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMMatrixConnection.h>
-#include <plearn_learners/online/RBMMatrixConnectionNatGrad.h>
 #include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 #include <plearn_learners/online/RBMMixedConnection.h>
 #include <plearn_learners/online/RBMMixedLayer.h>

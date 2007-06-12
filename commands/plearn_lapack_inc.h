@@ -75,6 +75,9 @@
 #include <plearn_learners_experimental/LinearInductiveTransferClassifier.h>
 #include <plearn_learners_experimental/SurfaceTemplate/SurfaceTemplateLearner.h>
 
+// Online
+#include <plearn_learners/online/RBMMatrixConnectionNatGrad.h>
+
 
 #endif
 
