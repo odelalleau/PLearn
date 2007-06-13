@@ -209,19 +209,19 @@ def get_graph(modules, connections, ports):
     return graph
     
 
-def save_graph( outputname, modules, connections, ports ):
+def save_graph( output_name, modules, connections, ports ):
     graph = get_graph( modules, connections, ports )
-    graph.write_jpeg(outputname, prog='neato') #'dot', 'twopi' and 'neato'
+    graph.write_jpeg(output_name, prog='neato') #'dot', 'twopi' and 'neato'
     #import Image
-    #im=Image.open(outputname,"r")
+    #im=Image.open(output_name,"r")
     #im.show()
-    print "to see the network: kuickview "+outputname
+    print "to see the network: kuickview "+output_name
 
 def show_graph( modules, connections, ports ):
-    outputname='temp.jpeg'
+    output_name='temp.jpeg'
     graph = get_graph( modules, connections, ports )
-    graph.write_jpeg(outputname, prog='dot')
-    im=Image.open(outputname,"r")
+    graph.write_jpeg(output_name, prog='dot')
+    im=Image.open(output_name,"r")
     im.show()
 
 def networkview( myObject ):
@@ -231,57 +231,79 @@ def networkview( myObject ):
        graph = get_graph( myObject.module.modules, myObject.module.connections, myObject.module.ports )
     else:
         raise TypeError, "Please give a ModuleLearner or NetworkModule"
-    outputname = '/tmp/networkview.jpeg'
-    graph.write_jpeg(outputname, prog='dot')
-    os.system('kuickshow '+outputname+' &')
+    output_name = '/tmp/networkview.jpeg'
+    graph.write_jpeg(output_name, prog='dot')
+    os.system('kuickshow '+output_name+' &')
 
 if __name__ == '__main__':
 
     inputname  = sys.argv[1]
-    outputname = inputname+'.network.jpeg'
-    extension = os.path.splitext(inputname)[1]
-    if extension == '.pyplearn' or extension == '.py':
+    output_extension = '.network.jpeg'
+    output_name = os.path.splitext(inputname)[0]
+    input_extension = os.path.splitext(inputname)[1]
+    
+    
+    if input_extension == '.pyplearn':
+       commands_to_discard = []
        types_to_discard = ['HyperLearner', 'PTester', 'MemoryVMatrix', 'AutoVMatrix']
-       if extension == '.py':
-          commands_to_discard = ['.run()', '.test()', '.train()', '.save(',
-	                         'choose_initial_lr', 'train_adapting_lr', 'train_with_schedule']
-          types_to_discard.append('ModuleLearner')
-       else:
-          commands_to_discard = []
        tmp_file = '/tmp/tp.py'
        object_dict = write_objects_from_pyplearn( inputname, types_to_discard ,commands_to_discard, tmp_file)
 #      for debug...
 #       os.system('nedit '+tmp_file+' &')
        execfile(tmp_file)
-       nets=[]
        names=[]
-       print object_dict
+       nets=[]
+#      for debug...
+#       print object_dict
        for variable_name in object_dict['NetworkModule']:
-           names += variable_name
-	   nets += eval(variable_name)
-    elif extension == '.psave':
+           names.append(variable_name)
+	   nets.append(eval(variable_name))
+	   
+    elif  input_extension == '.py':  
+       commands_to_discard = ['.run()', '.test()', '.train()', '.save(',
+                              'choose_initial_lr', 'train_adapting_lr', 'train_with_schedule']
+       types_to_discard = []
+       tmp_file = '/tmp/tp.py'
+       write_objects_from_pyplearn( inputname, types_to_discard ,commands_to_discard, tmp_file)
+#      for debug...
+#       os.system('nedit '+tmp_file+' &')
+       execfile(tmp_file)
+       names=[]
+       nets=[]
+       global_variable=''
+       for global_variable in globals():
+           if 'ModuleLearner' in str(type(globals()[global_variable])):
+              names.append(global_variable+'.module')
+              nets.append(eval(global_variable+'.module'))
+       
+    elif input_extension == '.psave':
        myObject = loadObject(inputname)
        if 'ModuleLearner' in str(type(myObject)):
           net = myObject.module
        else:
           raise TypeError, "Could not recognize the type "+str(type(myObject))
        nets = [net]
+       
+       
     else:
-       raise TypeError, "could not recognize the extension ("+extension+") of "+inputname
+       raise TypeError, "could not recognize the input_extension ("+input_extension+") of "+inputname
+    
+    
+    
     
     for i in range(len(nets)):
         net = nets[i]
         if len(nets)==1:
-	   outputname_i = outputname
+	   output_name_i = output_name + output_extension
 	else:
 	   print "making the graph of " + names[i]
-	   outputname_i = outputname+'_'+str(i)
+	   output_name_i = output_name+'.'+names[i]+output_extension
         graph = get_graph( net.modules, net.connections, net.ports )
-        graph.write_jpeg(outputname_i, prog='dot')
-        if os.path.isfile(outputname_i) == False:
-           print "ERROR: could not write "+outputname_i
+        graph.write_jpeg(output_name_i, prog='dot')
+        if os.path.isfile(output_name_i) == False:
+           print "ERROR: could not write "+output_name_i
            sys.exit(0)
-        print "to see the network: kuickshow "+outputname_i
-        os.system('kuickshow '+outputname_i+' &')
+        print "to see the network: kuickshow "+output_name_i
+        os.system('kuickshow '+output_name_i+' &')
     
 #    show_graph_network( modules, connections, ports )

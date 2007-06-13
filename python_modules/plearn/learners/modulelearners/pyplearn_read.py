@@ -187,13 +187,10 @@ def write_objects_from_pyplearn( fname, types_to_discard, commands_to_discard, f
 	  
        if len(FILE.ctypes) == 0 or FILE.ctypes[0] not in types_to_discard:
           
-	  print FILE.cline
 	  do_not_consider = False
 	  for command in commands_to_discard:
-	      print command
 	      if command in FILE.cline:
 	         do_not_consider = True
-              print do_not_consider
 	  if do_not_consider:
 	     continue
 	  
