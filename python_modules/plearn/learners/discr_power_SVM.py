@@ -68,7 +68,7 @@ class RBF_expert(SVM_expert):
 	  self.parameters_names += ['gamma']
 
       def init_gamma(self, gamma):
-          return [gamma/9., gamma, gamma*9.]
+          return [gamma, gamma/9., gamma*9.]
 	  
       def init_parameters( self, samples ):
           dim = len(samples[0])
@@ -131,7 +131,8 @@ class discr_power_SVM_eval(object):
       __attributes__ = ['accuracy',
                         'valid_accuracy',
 			'best_parameters',
-			'tried_parameters'
+			'tried_parameters',
+			'save_filename'
 			]
        
       def __init__( self ):
@@ -145,6 +146,8 @@ class discr_power_SVM_eval(object):
 	  
 	  self.best_parameters      = None  
 	  self.tried_parameters     = {}
+	  
+	  self.save_filename        = None
 	  
           # For cross-validation
 	  self.nr_fold        = 5
@@ -197,6 +200,16 @@ class discr_power_SVM_eval(object):
 		     train_problem = svm_problem( samples_target_list[0][1] , samples_target_list[0][0] )
 		     model = svm_model(train_problem, param)
 		     accuracy = do_simple_validation(model, samples_target_list[1][0], samples_target_list[1][1], param)
+		     
+		     if self.save_filename != None:
+		        try:
+		           FID=open(self.save_filename,'a')
+		           FID.write('------------\nTry with '+kernel_type+' kernel :\n')
+		           FID.write('parameters : '+str(parameters)+'\n')
+		           FID.write(' --> Accuracy = '+str(accuracy)+'\n')
+		           FID.close()
+		        except:
+		           print "COULD not write in save_filename"   
 		     	     
 		  if accuracy > best_accuracy:
 		         best_parameters = parameters
@@ -232,7 +245,26 @@ class discr_power_SVM_eval(object):
 	     model = svm_model(train_problem, param)
 	     accuracy = do_simple_validation(model, samples_target_list[1][0], samples_target_list[1][1], param)
 	  return accuracy
-    
+
+def normalize(data,mean,std):
+    if mean == None:
+       mean=[]
+       for i in range(len(data[0])):
+           mean.append( get_mean_cmp(data,i) )
+    if std == None:
+       std=[]
+       for i in range(len(data[0])):
+           std_tmp=get_std_cmp(data,i)
+	   if std_tmp == 0.:
+	      print "WARNING : standard deviation is 0 on component "+str(i)
+	      std.append( 1. )
+	   else:
+              std.append( std_tmp )
+    for i in range(len(data[0])):
+        for j in range(len(data)):
+	    data[j][i]=(data[j][i]-mean[i])/std[i]
+    return mean, std
+
 def mean_std(data):
     stds=[get_std_cmp(data,i) for i in range(len(data[0]))]
     return sum(stds)/len(stds)
@@ -242,6 +274,9 @@ def get_std_cmp(data,i):
     avg = tot*1.0/len(values)
     sdsq = sum([(i-avg)**2 for i in values])
     return (sdsq*1.0/(len(values)-1 or 1))**.5
+def get_mean_cmp(data,i):
+    values=[vec[i] for vec in data]
+    return  sum(values)/len(values)
 
 def arithm_mean(data):
     if type(data[0]) == list:
