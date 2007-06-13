@@ -5,18 +5,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -27,11 +27,11 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
+/* *******************************************************
  * $Id: vmatmain.cc 6316 2006-10-16 23:22:54Z lamblin $
  ******************************************************* */
 
@@ -44,8 +44,8 @@
 #include <plearn/db/getDataSet.h>
 
 #if defined(WIN32) && !defined(__CYGWIN__)
-// There does not seem to be a Windows implementation of 'ncurses', thus we use
-// 'pdcurses' instead.
+// There does not seem to be a Windows implementation of 'ncurses', thus we
+// use 'pdcurses' instead.
 #include <pdcurses/curses.h>
 #else
 #include "curses.h"
@@ -68,7 +68,8 @@ using namespace std;
 
 
 // returns false if the input is invalid and write in strReason the reason
-bool getList(char* str, int curj, const VMat& vm, Vec& outList, char* strReason)
+bool getList(char* str, int curj, const VMat& vm, Vec& outList,
+             char* strReason)
 {
     vector<string>columnList;
     if (str[0] == '\0')
@@ -76,7 +77,7 @@ bool getList(char* str, int curj, const VMat& vm, Vec& outList, char* strReason)
         // nothing was inserted, then gets the current column
         char strj[10];
         sprintf(strj, "%d", curj);
-        columnList.push_back(strj);				
+        columnList.push_back(strj);
     }
     else
     {
@@ -97,7 +98,8 @@ bool getList(char* str, int curj, const VMat& vm, Vec& outList, char* strReason)
             if (colVal > toint(*vsIt) && separator == '-')
             {
                 invalidInput = true;
-                strcpy(strReason, "Second element in range smaller than the first");
+                strcpy(strReason,
+                       "Second element in range smaller than the first");
                 break;
             }
             colVal = toint(*vsIt);
@@ -161,22 +163,25 @@ void viewVMat(const VMat& vm, string dataset_spec)
     keypad(stdscr,TRUE);
 
     VMat vm_showed = vm;
-  
+
     int key = 0;
     bool view_strings = true;
-    // If 'indent_strings_left' is set to false, then strings will be indented to the right.
+    // If 'indent_strings_left' is set to false, then strings will be indented
+    // to the right.
     bool indent_strings_left = true;
     //! Can take three values:
     //! 0 - usual display
-    //! 1 - values that are *exactly* the same as the one of the previous vmat line will be replaced by ...
-    //! 2 - values that are *approximately* the same as the one of the previous vmat line will be replaced by ...
+    //! 1 - values that are *exactly* the same as the one of the previous vmat
+    //!     line will be replaced by ...
+    //! 2 - values that are *approximately* the same as the one of the
+    //!     previous vmat line will be replaced by ...
     int hide_sameval = 0;
     bool transposed = false;
-  
+
     int namewidth = 0;
     for(int j=0; j<vm->width(); j++)
         namewidth = max(namewidth, (int) vm->fieldName(j).size());
-    int namewidth_ = namewidth; 
+    int namewidth_ = namewidth;
 
     int valwidth = 15;
     int valstrwidth = valwidth-1;
@@ -189,7 +194,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
     int startj = 0;
 
     int vStartHelp = 0;
-  
+
     bool onError=false;
 
     map<int,Vec> cached_columns;
@@ -199,7 +204,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
         while(key != 'q' && key != 'Q')
         {
             erase();
-      
+
             int leftcolwidth = transposed ?1+namewidth :10;
 
             int nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
@@ -210,7 +215,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
 
             int x=0, y=0; // (curses coordinates are (y,x) )
 
-            // print field names 
+            // print field names
             for(int j=startj; j<endj; j++)
             {
                 string s = vm_showed->fieldName(j);
@@ -224,9 +229,11 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 else
                 {
                     x = 1+leftcolwidth+(j-startj)*valwidth;
-                    mvprintw(0, x, valstrformat, s.substr(0,valstrwidth).c_str() );
+                    mvprintw(0, x, valstrformat,
+                             s.substr(0,valstrwidth).c_str() );
                     if((int)s.length() > valstrwidth)
-                        mvprintw(1, x, valstrformat, s.substr(valstrwidth,valstrwidth).c_str() );
+                        mvprintw(1, x, valstrformat,
+                                 s.substr(valstrwidth,valstrwidth).c_str() );
                 }
                 // attroff(A_REVERSE);
             }
@@ -235,7 +242,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             Vec oldv(vm_showed.width());
 
             for(int i=starti; i<endi; i++)
-            { 
+            {
                 if(transposed)
                 {
                     y = 0;
@@ -248,9 +255,9 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     x = 0;
                     mvprintw(y,x,"%d",i);
                 }
-          
+
                 vm_showed->getRow(i,v);
-          
+
                 for(int j=startj; j<endj; j++)
                 {
                     real val = v[j];
@@ -265,47 +272,51 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         s = tmp;
                     }
                     else {
-                        // This is a string. Maybe we want to indent it to the right.
+                        // This is a string. Maybe we want to indent it to the
+                        // right.
                         // In this case we truncate it to its last characters.
                         if (!indent_strings_left) {
                             if (s.size() >= (size_t) valstrwidth) {
-                                s = s.substr(s.size() - valstrwidth, valstrwidth);
+                                s = s.substr(s.size() - valstrwidth,
+                                             valstrwidth);
                             } else {
                                 string added_spaces((size_t) (valstrwidth - s.size()), ' ');
                                 s = added_spaces + s;
                             }
                         }
                     }
-              
+
                     if(transposed)
                         y = 1+(j-startj);
                     else
                         x = 1+leftcolwidth+(j-startj)*valwidth;
-              
+
                     if( i == curi || (vm_showed.width() > 1 && j == curj) )
                         attron(A_REVERSE);
                     //else if ()
                     //  attron(A_REVERSE);
-              
-                    if(hide_sameval == 2 && i>starti && (is_equal(val,oldv[j])) )
-                        mvprintw(y, x, valstrformat, "...");                
+
+                    if(hide_sameval== 2 && i>starti && (is_equal(val,oldv[j])) )
+                        mvprintw(y, x, valstrformat, "...");
                     else if(fast_exact_is_equal(hide_sameval, 1) && i>starti &&
                             (fast_exact_is_equal(val, oldv[j]) ||
                              is_missing(val) && is_missing(oldv[j])))
-                        mvprintw(y, x, valstrformat, "...");                
+                        mvprintw(y, x, valstrformat, "...");
                     else
-                        mvprintw(y, x, valstrformat, s.substr(0,valstrwidth).c_str());
+                        mvprintw(y, x, valstrformat,
+                                 s.substr(0,valstrwidth).c_str());
 
                     attroff(A_REVERSE);
                 }
-                oldv << v;          
+                oldv << v;
             }
 
             string strval = vm_showed->getString(curi, curj);
             mvprintw(0,0,"Cols[%d-%d]", 0, vm_showed.width()-1);
-            mvprintw(LINES-1,0," %dx%d   line= %d   col= %d     %s = %s (%f)", 
+            mvprintw(LINES-1,0," %dx%d   line= %d   col= %d     %s = %s (%f)",
                      vm_showed->length(), vm_showed->width(),
-                     curi, curj, vm_showed->fieldName(curj).c_str(), strval.c_str(), vm_showed(curi,curj));
+                     curi, curj, vm_showed->fieldName(curj).c_str(),
+                     strval.c_str(), vm_showed(curi,curj));
 
             refresh();
             if (!onError)
@@ -316,7 +327,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             ///////////////////////////////////////////////////////////////
             switch(key)
             {
-            case KEY_LEFT: 
+            case KEY_LEFT:
                 if(transposed)
                 {
                     if(curi>0)
@@ -332,8 +343,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         startj=curj;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_RIGHT: 
+                //////////////////////////////////////////////////////////////
+            case KEY_RIGHT:
                 if(transposed)
                 {
                     if(curi<vm_showed->length()-1)
@@ -349,8 +360,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         ++startj;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_UP: 
+                //////////////////////////////////////////////////////////////
+            case KEY_UP:
                 if(transposed)
                 {
                     if(curj>0)
@@ -366,8 +377,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         starti = curi;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_DOWN: 
+                //////////////////////////////////////////////////////////////
+            case KEY_DOWN:
                 if(transposed)
                 {
                     if(curj<vm_showed->width()-1)
@@ -383,8 +394,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         ++starti;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_PPAGE: 
+                //////////////////////////////////////////////////////////////
+            case KEY_PPAGE:
                 if(transposed)
                 {
                     curj -= nj;
@@ -404,8 +415,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         curi = 0;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_NPAGE: 
+                //////////////////////////////////////////////////////////////
+            case KEY_NPAGE:
                 if(transposed)
                 {
                     curj += nj;
@@ -425,9 +436,10 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         starti = max(0,vm_showed->length()-ni);
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_HOME: 
-                // not working on unix for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
+                //////////////////////////////////////////////////////////////
+            case KEY_HOME:
+                // not working on unix for the moment: see
+                // http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
                 if(transposed)
                 {
                     curi = 0;
@@ -439,9 +451,10 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     startj = 0;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
-            case KEY_END: 
-                // not working on unix for the moment: see http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
+                //////////////////////////////////////////////////////////////
+            case KEY_END:
+                // not working on unix for the moment: see
+                // http://dickey.his.com/xterm/xterm.faq.html#xterm_pc_style
                 if(transposed)
                 {
                     curi = vm_showed->length()-1;
@@ -453,22 +466,22 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     startj = max(curj-nj + 1, 0);
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////
             case '.':
                 if (hide_sameval == 1)
                     hide_sameval = 0;
                 else
                     hide_sameval = 1;
                 break;
-                ///////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////
             case ',':
                 if (hide_sameval == 2)
                     hide_sameval = 0;
                 else
                     hide_sameval = 2;
                 break;
-                ///////////////////////////////////////////////////////////////
-            case 't': case 'T':          
+                //////////////////////////////////////////////////////////////
+            case 't': case 'T':
                 transposed = !transposed;
                 nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
                 ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
@@ -477,7 +490,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 //endj = min(vm_showed->width(), startj+nj);
                 //endi = min(vm_showed->length(), starti+ni);
                 break;
-                ///////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////
             case '/':  // search for value
             {
                 echo();
@@ -491,7 +504,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 string searchme = removeblanks(l);
                 real searchval = vm_showed(curi,curj);
                 if(searchme!="")
-                { 
+                {
                     searchval = vm_showed->getStringVal(curj, searchme);
                     if(is_missing(searchval))
                     {
@@ -512,7 +525,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     clrtoeol();
                     refresh();
                     cached.resize(vm_showed->length());
-                    vm_showed->getColumn(curj,cached);                
+                    vm_showed->getColumn(curj,cached);
                     cached_columns[curj] = cached;
                 }
 
@@ -539,7 +552,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'l': case (int)'L': 
+            case (int)'l': case (int)'L':
             {
                 echo();
                 char strmsg[] = {"Goto line: "};
@@ -567,7 +580,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'c': case (int)'C': 
+            case (int)'c': case (int)'C':
             {
                 echo();
                 char strmsg[] = {"Goto column: "};
@@ -599,7 +612,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'v': case (int)'V': 
+            case (int)'v': case (int)'V':
             {
                 echo();
                 char strmsg[] = {"View dataset ('Enter' = reload last dataset): "};
@@ -637,7 +650,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'i': case (int)'I': 
+            case (int)'i': case (int)'I':
             {
                 echo();
                 char strmsg[] = {"Insert before column ('Enter' = current, '-1' = insert at the end): "};
@@ -685,7 +698,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 }
                 TVec<VMat> vmats;
                 if (ins_col > 0)
-                    vmats.append(new SubVMatrix(vm_showed, 0, 0, vm_showed->length(), ins_col));
+                    vmats.append(new SubVMatrix(vm_showed, 0, 0,
+                                                vm_showed->length(), ins_col));
                 Mat col_mat(vm_showed->length(), 1);
                 VMat col_vmat(col_mat);
                 col_vmat->declareFieldNames(TVec<string>(1, ins_name));
@@ -698,7 +712,9 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 }
                 vmats.append(col_vmat);
                 if (ins_col < vm_showed->width())
-                    vmats.append(new SubVMatrix(vm_showed, 0, ins_col, vm_showed->length(), vm_showed->width() - ins_col));
+                    vmats.append(new SubVMatrix(vm_showed, 0, ins_col,
+                                                vm_showed->length(),
+                                                vm_showed->width() - ins_col));
                 vm_showed = new ConcatColumnsVMatrix(vmats);
                 mvprintw(LINES-1,0,"*** Inserted column '%s' at position %d with default value %s ***",
                          ins_name.c_str(), ins_col, default_val.c_str());
@@ -710,7 +726,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'e': case (int)'E': 
+            case (int)'e': case (int)'E':
             {
                 echo();
                 char strmsg[100];
@@ -724,7 +740,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
 
                 Vec indexs;
                 char strReason[100] = {"\0"};
-                bool invalidInput = getList(strRange, curj, vm_showed, indexs, strReason);
+                bool invalidInput = getList(strRange, curj, vm_showed, indexs,
+                                            strReason);
 
                 if (invalidInput)
                 {
@@ -754,9 +771,11 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     clrtoeol();
                     refresh();
 
-                    // Save the selected columns to the desired file, keeping the string values
-                    // if 'view_strings' is currently true (can be toggled with 's'/'S' keys).
-                    vm_showed.columns(indexs)->saveAMAT(filename, false, false, view_strings);
+                    // Save the selected columns to the desired file, keeping
+                    // the string values if 'view_strings' is currently true
+                    // (can be toggled with 's'/'S' keys).
+                    vm_showed.columns(indexs)->saveAMAT(filename, false,
+                                                        false, view_strings);
 
                     mvprintw(LINES-1,0,"*** Output written on: %s ***", fname);
                     clrtoeol();
@@ -770,7 +789,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'r': case (int)'R': 
+            case (int)'r': case (int)'R':
             {
                 echo();
                 char strmsg[100];
@@ -784,7 +803,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
 
                 Vec indexs;
                 char strReason[100] = {"\0"};
-                bool invalidInput = getList(c, curj, vm_showed, indexs, strReason);
+                bool invalidInput = getList(c, curj, vm_showed, indexs,
+                                            strReason);
 
                 if (invalidInput)
                 {
@@ -809,7 +829,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'x': case (int)'X': 
+            case (int)'x': case (int)'X':
                 // Hide the currently selected row.
             {
                 //echo();
@@ -830,11 +850,11 @@ void viewVMat(const VMat& vm, string dataset_spec)
             }
             break;
             ///////////////////////////////////////////////////////////////
-            case (int)'a': case (int)'A': 
+            case (int)'a': case (int)'A':
                 vm_showed = vm;
                 break;
                 ///////////////////////////////////////////////////////////////
-            case (int)'n': case (int)'N': 
+            case (int)'n': case (int)'N':
                 if ( namewidth != namewidth_ )
                     namewidth = namewidth_;
                 else
@@ -843,7 +863,8 @@ void viewVMat(const VMat& vm, string dataset_spec)
 
                     echo();
                     char strmsg[100];
-                    sprintf(strmsg, "Enter namewidth to use (between 10 and %d -- enter=%d): ", namewidth, def);
+                    sprintf(strmsg, "Enter namewidth to use (between 10 and %d -- enter=%d): ",
+                            namewidth, def);
                     mvprintw(LINES-1,0,strmsg);
                     clrtoeol();
 
@@ -870,19 +891,20 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     noecho();
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////
             case (int)'s':
                 if (indent_strings_left)
                     // Toggle display.
                     view_strings = !view_strings;
                 else {
-                    // Do not remove display if we only asked to change indentation.
+                    // Do not remove display if we only asked to change
+                    // indentation.
                     indent_strings_left = true;
                     if (!view_strings)
                         view_strings = true;
                 }
                 break;
-            case (int)'S': 
+            case (int)'S':
                 // Same as above, except we indent to the right.
                 if (!indent_strings_left)
                     view_strings = !view_strings;
@@ -892,7 +914,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
                         view_strings = true;
                 }
                 break;
-                ///////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////
             case (int)'h': case (int)'H':
                 erase();
 
@@ -924,7 +946,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 mvprintw(vStartHelp++,10," - ','       : toggle displaying of ... for values that do not change (approximate match)");
                 mvprintw(vStartHelp++,10," - '/'       : search for a value of the current field");
                 mvprintw(vStartHelp++,10," - 'h' or 'H': display this screen");
-                mvprintw(vStartHelp++,10," - 'q' or 'Q': quit program");          
+                mvprintw(vStartHelp++,10," - 'q' or 'Q': quit program");
                 mvprintw(vStartHelp++,COLS/2-13,"(press any key to continue)");
 
                 refresh();
@@ -932,10 +954,10 @@ void viewVMat(const VMat& vm, string dataset_spec)
 
                 break;
 
-            case (int)'q': case (int)'Q': 
+            case (int)'q': case (int)'Q':
                 break;
 
-                ///////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////
             default:
                 mvprintw(LINES-1,0,"*** Invalid command (type 'h' for help) ***");
                 // clear the rest of the line
@@ -957,7 +979,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
         endwin();
         throw(e);
     }
-  
+
     // make sure it is clean
     mvprintw(LINES-1,0,"");
     clrtoeol();
@@ -971,9 +993,9 @@ BEGIN_DECLARE_REMOTE_FUNCTIONS
 
     declareFunction("viewVMat", &viewVMat,
                     (BodyDoc("Displays a VMat's contents using curses.\n"),
-                     ArgDoc("vm", 
+                     ArgDoc("vm",
                             "the VMat to display"),
-                     ArgDoc("dataset_spec", 
+                     ArgDoc("dataset_spec",
                             "optional specification of the dataset that will be used to 'reload' it (\"\" works just fine)")));
 
 END_DECLARE_REMOTE_FUNCTIONS
