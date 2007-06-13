@@ -257,15 +257,11 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     string s = vm_showed->getValString(j,val);
                     if (!view_strings || s == "")
                     {
-                        // problem of display, because if val is a double,
-                        // tostring(val) has 18 digits, which is more than the
-                        // 14 we have for display. Cropping the end doesn't
-                        // solve the problem when the last characters are
-                        // "e-6"...
-                        //s = tostring(val);
-                        // TODO: find a better solution
+                        // We only have 14 characters, and have to display
+                        // correctly numbers like "18270326".
+                        // Best compromise found is "%14.8g".
                         char tmp[1000];
-                        sprintf(tmp, "%14.12g", val);
+                        sprintf(tmp, "%14.8g", val);
                         s = tmp;
                     }
                     else {
