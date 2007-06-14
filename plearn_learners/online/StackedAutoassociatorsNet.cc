@@ -116,11 +116,8 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
     declareOption(ol, "training_schedule", 
                   &StackedAutoassociatorsNet::training_schedule,
                   OptionBase::buildoption,
-                  "Number of examples to use during each phase of learning:\n"
-                  "first the greedy phases, and then the gradient descent.\n"
-                  "Unlike for DeepBeliefNet, these numbers should not be\n"
-                  "cumulative. They correspond to the number of seen training\n"
-                  "examples for each phase.\n"
+                  "Number of examples to use during each phase of greedy pre-training.\n"
+                  "The number of fine-tunig steps is defined by nstages.\n"
         );
 
     declareOption(ol, "layers", &StackedAutoassociatorsNet::layers,
@@ -128,7 +125,7 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "The layers of units in the network. The first element\n"
                   "of this vector should be the input layer and the\n"
                   "subsequent elements should be the hidden layers. The\n"
-                  "should not be included in this layer.\n");
+                  "output should not be included in this layer.\n");
 
     declareOption(ol, "connections", &StackedAutoassociatorsNet::connections,
                   OptionBase::buildoption,

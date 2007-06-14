@@ -92,11 +92,8 @@ public:
     //! where h is the value of the neurons.
     real l1_neuron_decay_center;
 
-    //! Number of examples to use during each phase of learning:
-    //! first the greedy phases, and then the gradient descent.
-    //! Unlike for DeepBeliefNet, these numbers should not be
-    //! cumulative. They correspond to the number of seen training
-    //! examples for each phase.
+    //! Number of examples to use during each phase of greedy pre-training.
+    //! The number of fine-tunig steps is defined by nstages.
     TVec<int> training_schedule;
 
     //! The layers of units in the network
