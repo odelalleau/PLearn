@@ -342,48 +342,50 @@ void convolve2D(const Mat& source_image, const Mat& kernel,
                 const Mat& dest_image,
                 int step1, int step2, bool accumulate)
 {
-    int n1k=kernel.length();
-    int n2k=kernel.width();
-    int n1d=dest_image.length();
-    int n2d=dest_image.width();
+    int kl = kernel.length();
+    int kw = kernel.width();
+    int dl = dest_image.length();
+    int dw = dest_image.width();
+
 #ifdef BOUNDCHECK
-    int n1s=source_image.length();
-    int n2s=source_image.width();
+    int sl = source_image.length();
+    int sw = source_image.width();
+
     if (step1<1)
         PLERROR("convolve2D: step1 (%d) should be a positive integer\n",step1);
-    if (n1s!=step1*(n1d-1)+n1k)
+    if (sl != step1*(dl-1)+kl)
         PLERROR("convolve2D: source_image.length() (%d) should equal %d:\n"
                 "step1 (%d) * (dest_image.length() (%d) - 1) + kernel.length()"
                 " (%d)\n",
-                n1s,step1*(n1d-1)+n1k,step1,n1d,n1k);
+                sl, step1*(dl-1)+kl, step1, dl, kl);
 
     if (step2<1)
         PLERROR("convolve2D: step2 (%d) should be a positive integer\n",step2);
-    if (n2s!=step2*(n2d-1)+n2k)
+    if (sw != step2*(dw-1)+kw)
         PLERROR("convolve2D: source_image.width() (%d) should equal %d:\n"
                 "step2 (%d) * (dest_image.width() (%d) - 1) + kernel.width()"
                 " (%d)\n",
-                n2s,step2*(n2d-1)+n2k,step2,n2d,n2k);
+                sw, step2*(dw-1)+kw, step2, dw, kw);
 #endif
     if (!accumulate)
         dest_image.clear();
     int sm = source_image.mod();
     int dm = dest_image.mod();
     int km = kernel.mod();
-    real* s = source_image.data();
-    real* d = dest_image.data();
-    for (int i=0;i<n1d;i++,s+=sm*step1,d+=dm)
+    real* source_i = source_image.data(); // source_image[i*step1]
+    real* dest_i = dest_image.data(); // dest_image[i]
+    for (int i=0; i<dl; i++, source_i+=sm*step1, dest_i+=dm)
     {
-        real* s1 = s; // copy to iterate over columns
-        for (int j=0;j<n2d;j++,s1+=step2)
+        real* source_i_j = source_i; // source_image[i*step1][j*step2]
+        for (int j=0; j<dw; j++, source_i_j+=step2)
         {
-            real somme=0;
-            real* k = kernel.data();
-            real* ss = s1; // copy to iterate over sub-rows
-            for (int l=0;l<n1k;l++,ss+=sm,k+=km)
-                for (int m=0;m<n2k;m++)
-                    somme += ss[m]*k[m];
-            d[j]+=somme;
+            real sum = 0;
+            real* kernel_k = kernel.data(); // kernel[k]
+            real* source_ik_j = source_i_j; // source_image[i*step1+k][j*step2]
+            for (int k=0; k<kl; k++, source_ik_j+=sm, kernel_k+=km)
+                for (int l=0; l<kw; l++)
+                    sum += source_ik_j[l] * kernel_k[l];
+            dest_i[j] += sum;
         }
     }
 }
