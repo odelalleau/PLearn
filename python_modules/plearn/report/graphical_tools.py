@@ -31,6 +31,7 @@
 
 # Author: Christian Dorion
 import pylab, os
+from matplotlib.font_manager import FontProperties
 from plearn.report import GRID_COL, FONTSIZE, LEGEND_FONTPROP, TICK_LABEL_FONTPROP
 
 LEFT,   WIDTH  = 0.125, 0.800
@@ -69,21 +70,29 @@ def same_xlim(*ax_list):
         axes.set_xlim(m, M)
     return m, M
 
-def same_ylim(*ax_list):
+def same_ylim(*ax_list, **kwargs):
     m, M = float('inf'), -float('inf')
     for axes in ax_list:
         ylim = axes.get_ylim()
         m, M = min(m, ylim[0]), max(M, ylim[1]), 
 
+    if 'ymin' in kwargs:
+        m = max(m, kwargs.pop('ymin'))
+    if 'ymax' in kwargs:
+        M = min(M, kwargs.pop('ymax'))
+
     for axes in ax_list:
         axes.set_ylim(m, M)
+
+    assert len(kwargs)==0, "Unexpected keyword arguments: %s"%repr(kwargs.keys())
     return m, M
 
 def setLegend(axes, legend_map, sorted_keys=None, loc=0):
     if not sorted_keys:
         sorted_keys = legend_map.keys(); sorted_keys.sort()
     values = [ legend_map[k] for k in sorted_keys ]
-    legend = axes.legend(values, sorted_keys, loc=loc, shadow=False)
+    legend = axes.legend(values, sorted_keys,
+                         loc=loc, shadow=False, prop = FontProperties(size=13))
     legend.set_zorder(100)
 
 class Struct(dict):
