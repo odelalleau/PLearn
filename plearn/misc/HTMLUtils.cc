@@ -54,15 +54,18 @@ using namespace std;
 
 string HTMLUtils::quote(string s)
 {
+#ifndef __INTEL_COMPILER
     search_replace(s, "&", "&amp;");
     search_replace(s, "<", "&lt;");
     search_replace(s, ">", "&gt;");
     search_replace(s, "\"", "&quot;");
+#endif
     return s;
 }
 
 string HTMLUtils::highlight_known_classes(string typestr)
 {
+#ifndef __INTEL_COMPILER
     vector<string> tokens = split(typestr, " \t\n\r<>,.';:\"");
     set<string> replaced; // Carry out replacements for a given token only once
     const TypeMap& type_map = TypeFactory::instance().getTypeMap();
@@ -80,6 +83,7 @@ string HTMLUtils::highlight_known_classes(string typestr)
             typestr = regex_replace(typestr, e, repl_str, boost::match_default | boost::format_default);
         }
     }
+#endif
     return typestr;
 }
 
@@ -92,6 +96,7 @@ string HTMLUtils::format_free_text(string text)
     bool ul_active = false;
     bool start_paragraph = false;
     string finallines;
+#ifndef __INTEL_COMPILER
     for ( ; curpos != string::npos ;
           curpos = curnl+(curnl!=string::npos), curnl = text.find('\n', curpos) ) {
         string curline = text.substr(curpos, curnl-curpos);
@@ -152,10 +157,13 @@ string HTMLUtils::format_free_text(string text)
         finallines += "</ul>\n";
   
     // Finally join the lines
+#endif
     return make_http_hyperlinks(finallines);
 }
+
 string HTMLUtils::make_http_hyperlinks(string text)
 {
+#ifndef __INTEL_COMPILER
     // Find elements of the form XYZ://x.y.z/a/b/c and make them into
     // hyperlink. An issue is to determine when
     static const char* recognized_protocols[] = 
@@ -176,6 +184,7 @@ string HTMLUtils::make_http_hyperlinks(string text)
                           + tostring(OptionBase::getCurrentOptionLevel())
                           +"\">$1</a>$2");
     text = regex_replace(text, e, repl_str, boost::match_default | boost::format_default);
+#endif
     return text;
 }
 

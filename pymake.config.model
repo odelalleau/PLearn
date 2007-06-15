@@ -267,14 +267,12 @@ if not 'nopython' in optionargs:
             ### NB: The '-lutil' is necessary on i386 LISA computers.
             numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python2.4/site-packages/numarray -lutil'
     elif domain_name.endswith('.ms'):
-        numpy_includedirs = [ '/opt/python2.4/include' ]
-        numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
-        optionargs += [ 'python24' ]
-        python_version = '2.4'
-        python_lib_root = '/opt/python2.4/lib'
-        #linkeroptions_tail += '-lgcc_eh -lunwind -lcprts'
-        linkeroptions_tail += '-lunwind -lcprts'
-
+        numpy_includedirs = []
+        numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
+        optionargs += [ 'python25' ]
+        python_version = '2.5'
+        python_lib_root = '/home/delallea/local/lib'
+        linkeroptions_tail += '-lunwind -lcprts' # -lgcc_eh
     elif domain_name.endswith('.rqchp.qc.ca'):
         numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
         numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
