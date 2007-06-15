@@ -37,7 +37,7 @@
 $ScriptName="lauchdbi.py";
 $ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
 $LongHelp=<<EOUSAGE;
-Usage: cdispatch [--help|-h] [--log|--nolog] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
+Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
 Dispatches jobs on Condor with dbi.py.  
 
 where <command-template> is interpreted as follows: the first argument
@@ -131,6 +131,10 @@ if (substr($ARGV[0],0,7) eq "--file=") {
     $FILE = "";
 }
 
+if (scalar(@ARGV) == 0) {
+    die $ShortHelp;
+}
+
 if(scalar(@ARGV) != 0) {
     if (substr($ARGV[0],0,6) eq "--req=") {
 	$REQ = substr($ARGV[0],6);
@@ -151,9 +155,9 @@ if(scalar(@ARGV) != 0) {
 #    "\tArglist = (", join(",",@{$repl[$i]}),")\n";
 #}
 open(SCRIPT,">$ScriptName");
-    print SCRIPT "#! /usr/bin/env python\n".
-	"from plearn.parallel.dbi import DBI\n".
-	"jobs = DBI([\n";
+print SCRIPT "#! /usr/bin/env python\n".
+    "from plearn.parallel.dbi import DBI\n".
+    "jobs = DBI([\n";
 
 $nbcommand=0;
 
