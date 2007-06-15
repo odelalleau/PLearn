@@ -56,8 +56,8 @@ class DBIBase:
         self.tmp_dir = 'TMP_DBI'
 
         #
-        self.file_redirect_stdout = 0
-        self.file_redirect_stderr = 0
+        self.file_redirect_stdout = False
+        self.file_redirect_stderr = False
 
         # Initialize the namespace
         self.requirements = ''
@@ -66,6 +66,10 @@ class DBIBase:
         self.temp_files = []
         for key in args.keys():
             self.__dict__[key] = args[key]
+
+        # check if log directory exists, if not create it
+        if self.dolog and not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
 
         # If some arguments aren't lists, put them in a list
         if not isinstance(commands, list):
@@ -194,9 +198,6 @@ class DBICluster(DBIBase):
     def __init__(self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
 
-        # check if log directory exists, if not create it
-        if self.dolog and not os.path.exists(self.log_dir):
-            os.mkdir(self.log_dir)
 
         # create the information about the tasks
         for command in commands:
@@ -271,10 +272,6 @@ class DBIbqtools(DBIBase):
         # create the right symlink for parent in self.temp_dir_name
         self.parent_dir = 'parent'
         os.symlink( '..', self.parent_dir )
-
-        # check if log directory exists, if not create it
-        if self.dolog and not os.path.exists(self.log_dir):
-            os.mkdir(self.log_dir)
 
         # create the information about the tasks
         args['temp_dir'] = self.temp_dir
@@ -362,10 +359,6 @@ class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
-
-        # check if log directory exists, if not create it
-        if self.dolog and not os.path.exists(self.log_dir):
-            os.mkdir(self.log_dir)
 
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
@@ -578,10 +571,6 @@ class DBILocal(DBIBase):
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
 
-        # check if log directory exists, if not create it
-        if self.dolog and not os.path.exists(self.log_dir):
-            os.mkdir(self.log_dir)
-
         for command in commands:
             pos = string.find(command,' ')
             if pos>=0:
@@ -705,10 +694,6 @@ class DBISsh(DBIBase):
         print "WARNING: The SSH DBI is not fully implemented!"
         print "Use at your own risk!"
         DBIBase.__init__(self, commands, **args)
-
-        # check if log directory exists, if not create it
-        if self.dolog and not os.path.exists(self.log_dir):
-            os.mkdir(self.log_dir)
 
         # create the information about the tasks
         for command in commands:
