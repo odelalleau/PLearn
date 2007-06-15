@@ -427,14 +427,14 @@ void ModuleTester::build_()
                             int out_idx = module->getPortIndex(out_grad[r]);
                             Mat* out_val = fprop_data[out_idx];
                             Mat* out_prev = fprop_check[out_idx];
-                            Mat* out_grad = bprop_data[out_idx];
-                            PLASSERT( out_val && out_prev && out_grad );
+                            Mat* out_grad_ = bprop_data[out_idx];
+                            PLASSERT( out_val && out_prev && out_grad_ );
                             for (int oi = 0; oi < out_val->length(); oi++)
                                 for (int oj = 0; oj < out_val->width(); oj++) {
                                     real diff = (*out_val)(oi, oj) - 
                                         (*out_prev)(oi, oj);
                                     (*grad)(p, q) +=
-                                        diff * (*out_grad)(oi, oj) / step;
+                                        diff * (*out_grad_)(oi, oj) / step;
                                 }
                         }
                     }
