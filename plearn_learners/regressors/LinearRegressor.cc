@@ -224,6 +224,8 @@ void LinearRegressor::forget()
 
 void LinearRegressor::train()
 {
+    if(targetsize()<=0)
+        PLERROR("In LinearRegressor::train(), we are doing a regression with a trainsize for the train_set of %d(should he higher then 0)",targetsize());
     // Preparatory buffer allocation
     bool recompute_XXXY = (XtX.length()==0);
     extendedinput.resize(effective_inputsize());
