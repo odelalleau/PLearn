@@ -64,7 +64,7 @@ MAX_LOADAVG = { 'inari'     : 4 ,
 
 # Do not perform a new query for the loadavg until recently launched
 # processes are likely to have started. 
-LOADAVG_DELAY = timedelta(seconds=60)
+LOADAVG_DELAY = timedelta(seconds=120)
 BUFSIZE       = 4096
 SLEEP_TIME    = 15
 LOGDIR        = None  # May be set by set_logdir()
