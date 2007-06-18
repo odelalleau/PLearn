@@ -273,7 +273,7 @@ void KNNClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output,
     costs.resize(nTestCosts());
     int sel_class = argmax(output);
     costs[0] = sel_class != int(target[0]);
-    costs[1] = -pl_log(output[int(target[0])]);
+    costs[1] = -pl_log(1e-10+output[int(target[0])]);
 }
 
 TVec<string> KNNClassifier::getTestCostNames() const
