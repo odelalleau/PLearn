@@ -53,7 +53,7 @@
 #include "TMatRowsAsArraysIterator_impl.h"
 #include "TMatColRowsIterator_impl.h"
 
-#include "algo.h"
+//#include "algo.h"
 
 namespace PLearn {
 using namespace std;

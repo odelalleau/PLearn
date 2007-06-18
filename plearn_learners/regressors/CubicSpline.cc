@@ -38,7 +38,7 @@
 
 
 #include "CubicSpline.h"
-#include "algo.h"
+//#include "algo.h"
 
 namespace PLearn {
 using namespace std;
