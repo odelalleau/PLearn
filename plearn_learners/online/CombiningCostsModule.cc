@@ -99,7 +99,7 @@ void CombiningCostsModule::build_()
     n_sub_costs = sub_costs.length();
     if( n_sub_costs == 0 )
     {   
-        PLWARNING("In CombiningCostsModule::build_ - sub_costs is empty (length 0)");
+        //PLWARNING("In CombiningCostsModule::build_ - sub_costs is empty (length 0)");
         return;
     }
 

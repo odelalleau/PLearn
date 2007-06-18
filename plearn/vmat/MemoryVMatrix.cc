@@ -93,7 +93,7 @@ MemoryVMatrix::MemoryVMatrix(VMat the_source)
 void MemoryVMatrix::declareOptions(OptionList& ol)
 {
     declareOption(ol, "data", &MemoryVMatrix::data, OptionBase::buildoption,
-                  "The underlying Mat.");
+                  "The external Mat source");
 
     declareOption(ol, "data_vm", &MemoryVMatrix::source,
                   (OptionBase::learntoption | OptionBase::nosave),
@@ -108,6 +108,9 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
                    OptionBase::buildoption,
                    "If provided, will be used to set this VMatrix's"
                    " fieldnames." );
+
+    declareOption(ol, "memory_data", &MemoryVMatrix::memory_data, OptionBase::learntoption,
+                  "The underlying Mat with the data.");
 
     inherited::declareOptions(ol);
 }

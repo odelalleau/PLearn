@@ -7,7 +7,6 @@ from plearn.bridge import *
 
 from plearn.learners.autolr import deepcopy
 
-from plearn.learners.modulelearners.network_view import *
 
 tmp_file='/tmp/modulelearner.py'
 
@@ -121,10 +120,10 @@ def getModule( myObject, modulename ):
     index = modules_names.index( modulename )
     # Network module
     if 'NetworkModule' in str(type(myObject)):
-       return copy.copy( myObject.modules[index] )
+       return deepcopy( myObject.modules[index] )
     # Module Learner
     elif 'ModuleLearner' in str(type(myObject)):
-       return copy.copy( myObject.module.modules[index] )
+       return deepcopy( myObject.module.modules[index] )
     # List of modules
     elif type(myObject) == list and 'Module' in str(type(myObject[0])):
        return myObject[index]
@@ -546,6 +545,7 @@ def computeOutputsTargets(learner,dataSet):
 if __name__ == '__main__':
 
     from plearn.learners.discr_power_SVM import *
+    from plearn.learners.modulelearners.network_view import *
 
     learner_filename = "/u/louradoj/PRGM/blocksworld/res/textual_v2/BESTdbn/final_learner.psave"
     if os.path.isfile(learner_filename) == False:

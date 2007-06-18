@@ -4,30 +4,32 @@ from plearn.learners.discr_power_SVM import *
 
 if __name__ == '__main__':
 
+    if len(sys.argv) = 1:
+       ports_list = ['split.out1', 'split.out2',  'rbm_3.hidden.state', 'rbm_12.hidden.state']
+    else:
+       ports_list = sys.argv[1:]
 
-    ports_list = sys.argv[1:]
-    # ex: 'split.out1', 'split.out2',  'rbm_3.hidden.state', 'rbm_12.hidden.state'
+    learner_filename = "learner.psave"
+    data_filename = "samples.amat"
+    dataTrain_filename = data_filename
+    dataTest_filename = data_filename
+    dataValid_filename = data_filename
+
+#    learner_filename = "/u/louradoj/PRGM/blocksworld/res/textual_v2/BESTdbn/final_learner.psave"
+#    dataPath='/cluster/opter/data/babyAI/textual_v2/'    
+#    dataTrain_filename = dataPath+'/BABYAI_gray_10000x2obj_32x32.color-size-location-shape.train.3gram.vmat'
+#    dataValid_filename = dataPath+'/BABYAI_gray_5000x2obj_32x32.color-size-location-shape.valid.3gram.vmat'
+#    dataTest_filename = dataPath+'/BABYAI_gray_5000x2obj_32x32.color-size-location-shape.test.3gram.vmat'
 
 
-    learner_filename = "/u/louradoj/PRGM/blocksworld/res/textual_v2/BESTdbn/final_learner.psave"
     if os.path.isfile(learner_filename) == False:
        raise TypeError, "ERROR : Learner file cannot be find\n\tCould not find file "+learner_filename
     learner = loadModuleLearner(learner_filename)
     learner_nickname = 'DBN-2-2-1_'+"_".join(ports_list).replace(".","")
 
-    dataPath='/cluster/opter/data/babyAI/textual_v2/'    
-    dataTrain_filename = dataPath+'/BABYAI_gray_10000x2obj_32x32.color-size-location-shape.train.3gram.vmat'
-    dataValid_filename = dataPath+'/BABYAI_gray_5000x2obj_32x32.color-size-location-shape.valid.3gram.vmat'
-    dataTest_filename = dataPath+'/BABYAI_gray_5000x2obj_32x32.color-size-location-shape.test.3gram.vmat'
 
 
-#
-#    A small dataset for debug...
-#
-#    data_filename = "/cluster/opter/data/babyAI/textual_v2/BABYAI_gray_10x2obj_32x32.color-size-location-shape.3gram.amat"
-#    dataTrain_filename = data_filename
-#    dataTest_filename = data_filename
-#    dataValid_filename = data_filename
+
 
     result_dir = os.path.dirname(learner_filename)
     output_filename = result_dir+'/SVM_results_'+"_"+learner_nickname+"-"+os.path.basename(dataTrain_filename).replace(".vmat","").replace(".amat","")

@@ -748,6 +748,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         else PLERROR("RBMModule: neg_log_likelihood currently computable only of the visible as inputs");
     }
+    
     // REGULAR FPROP
     // we are given the visible units and we want to compute the hidden
     // activation and/or the hidden expectation
@@ -770,11 +771,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         //PLASSERT( !visible_sample && !hidden_sample );
         found_a_valid_configuration = true;
     } 
+    
     // SAMPLING
     if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
         || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
     {
-        PLWARNING("In RBMModule::fprop - sampling in RBMModule has not been tested");
         if (hidden && !hidden->isEmpty()) // sample visible conditionally on hidden
         {
             sampleVisibleGivenHidden(*hidden);
@@ -791,13 +792,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             // the visible_layer->expectations contain the "state" from which we
             // start or continue the chain
-            int min_n = min(Gibbs_step+n_Gibbs_steps_per_generated_sample,
+            int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
             }
+  	    cout << "gibbs " << Gibbs_step << endl;
         }
         if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
         {
@@ -813,6 +815,56 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         found_a_valid_configuration = true;
     }
+    // SAMPLING continuous inputs (computing visible expectation)
+    if (visible && visible->isEmpty()) {
+    
+        if (visible_sample && !visible_sample->isEmpty())
+        {
+            sampleHiddenGivenVisible(*visible_sample);
+            sampleVisibleGivenHidden(hidden_layer->samples);
+	    cout << "init (1)" << endl;
+	}
+	else if ( hidden && !hidden->isEmpty() )
+	{
+	   sampleVisibleGivenHidden(*hidden);
+           Gibbs_step = 0; // that would restart the chain for unconditional sampling
+	   cout << "init" << endl;
+	}
+	else
+	{
+           int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
+                            min_n_Gibbs_steps);
+	   PLASSERT( min_n > 0 );
+           cout << "gibbs " << Gibbs_step;
+	   for (;Gibbs_step<min_n;Gibbs_step++)
+           {
+                sampleHiddenGivenVisible(visible_layer->samples);
+                sampleVisibleGivenHidden(hidden_layer->samples);
+           }
+  	   cout << " -> " << Gibbs_step-1 << endl;
+           if ( hidden )   // fill hidden.state with expectations
+	   {
+	      const Mat& hidden_expect = hidden_layer->getExpectations();
+              hidden->resize(hidden_expect.length(), hidden_expect.width());
+              *hidden << hidden_expect;
+	   }
+	}
+        
+	if ( hidden )   // fill hidden.state with expectations
+        {
+   	      const Mat& hidden_expect = hidden_layer->getExpectations();
+              hidden->resize(hidden_expect.length(), hidden_expect.width());
+              *hidden << hidden_expect;
+        }
+	 
+        const Mat& to_store = visible_layer->getExpectations();
+	cout << to_store.length() << " x " << to_store.width() << endl;
+        visible->resize(to_store.length(), to_store.width());
+        *visible << to_store;
+
+	found_a_valid_configuration = true;
+    }
+
     // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
     if (contrastive_divergence)
     {
@@ -954,6 +1006,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         found_a_valid_configuration = true;
     }
+    
 
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/bin/env python
 
-import os, os.path
 import sys
+import os, os.path
 
 from plearn.pymake.pymake import *
 
@@ -111,7 +111,7 @@ def checkName(ModuleName, ports_dict, modules_dict):
 
 
 def is_SplitModule(module):
-    return 'SplitModule' in str(type(module))
+    return 'SplitModule' in str(type(module)) # type(module)==type(pl.SplitModule())  #
        
 def module_type(module):
     return str(type(module)).upper()
