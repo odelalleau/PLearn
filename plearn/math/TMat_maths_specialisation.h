@@ -306,7 +306,8 @@ inline void externalProductScaleAcc(const TMat<double>& A,
                 "Mat(%d,%d) <- Vec(%d).Vec(%d)'",
                 A.length(), A.width(), x.length(), y.length());
     if(A.mod()<=0 || A.width()<=0)
-        PLERROR("In externalProductScaleAcc, destination matrice hava a width(%d) or a mod(%d) <= 0",A.width(),A.mod());
+        PLERROR("In externalProductScaleAcc, destination matrix has a width "
+                "(%d) or a mod (%d) <= 0", A.width(), A.mod());
 #endif
     int one = 1;
     int lda = A.mod();
