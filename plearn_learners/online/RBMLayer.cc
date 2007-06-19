@@ -336,6 +336,12 @@ void RBMLayer::accumulatePosStats( const Vec& pos_values )
     bias_pos_stats += pos_values;
     pos_count++;
 }
+void RBMLayer::accumulatePosStats( const Mat& pos_values )
+{
+    for (int i=0;i<pos_values.length();i++)
+        bias_pos_stats += pos_values(i);
+    pos_count+=pos_values.length();
+}
 
 ////////////////////////
 // accumulateNegStats //
@@ -344,6 +350,12 @@ void RBMLayer::accumulateNegStats( const Vec& neg_values )
 {
     bias_neg_stats += neg_values;
     neg_count++;
+}
+void RBMLayer::accumulateNegStats( const Mat& neg_values )
+{
+    for (int i=0;i<neg_values.length();i++)
+        bias_neg_stats += neg_values(i);
+    neg_count+=neg_values.length();
 }
 
 ////////////

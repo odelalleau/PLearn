@@ -135,6 +135,16 @@ void RBMMatrixConnection::accumulatePosStats( const Vec& down_values,
     pos_count++;
 }
 
+void RBMMatrixConnection::accumulatePosStats( const Mat& down_values,
+                                              const Mat& up_values )
+{
+    int mbs=down_values.length();
+    PLASSERT(up_values.length()==mbs);
+    // weights_pos_stats += up_values * down_values'
+    productScaleAcc(weights_pos_stats, up_values, true, down_values, false, 1., 1.);
+    pos_count+=mbs;
+}
+
 ////////////////////////
 // accumulateNegStats //
 ////////////////////////
@@ -145,6 +155,16 @@ void RBMMatrixConnection::accumulateNegStats( const Vec& down_values,
     externalProductAcc( weights_neg_stats, up_values, down_values );
 
     neg_count++;
+}
+
+void RBMMatrixConnection::accumulateNegStats( const Mat& down_values,
+                                              const Mat& up_values )
+{
+    int mbs=down_values.length();
+    PLASSERT(up_values.length()==mbs);
+    // weights_neg_stats += up_values * down_values'
+     productScaleAcc(weights_neg_stats, up_values, true, down_values, false, 1., 1.);
+    neg_count+=mbs;
 }
 
 ////////////

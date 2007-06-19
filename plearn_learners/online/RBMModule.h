@@ -83,6 +83,7 @@ public:
     int n_Gibbs_steps_per_generated_sample;
 
     bool compute_log_likelihood;
+    bool minimize_log_likelihood;
 
     //#####  Public Learnt Options  ############################################
     //! used to generate samples from the RBM

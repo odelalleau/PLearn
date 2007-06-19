@@ -98,6 +98,7 @@ RBMModule::RBMModule():
     min_n_Gibbs_steps(1),
     n_Gibbs_steps_per_generated_sample(1),
     compute_log_likelihood(false),
+    minimize_log_likelihood(false),
     Gibbs_step(0),
     log_partition_function(0),
     partition_function_is_stale(true),
@@ -199,9 +200,16 @@ void RBMModule::declareOptions(OptionList& ol)
     declareOption(ol, "compute_log_likelihood",
                   &RBMModule::compute_log_likelihood,
                   OptionBase::buildoption,
-                  "Whether to compute the RBM generative model's log-likelihood\n"
+                  "Whether to compute the exact RBM generative model's log-likelihood\n"
                   "(on the neg_log_likelihood port). If false then the neg_log_likelihood\n"
                   "port just computes the input visible's free energy.\n");
+    
+    declareOption(ol, "minimize_log_likelihood",
+                  &RBMModule::minimize_log_likelihood,
+                  OptionBase::buildoption,
+                  "Whether to minimize the exact RBM generative model's log-likelihood\n"
+                  "i.e. take stochastic gradient steps w.r.t. the log-likelihood instead\n"
+                  "of w.r.t. the contrastive divergence.\n");
 
     declareOption(ol, "Gibbs_step", 
                   &RBMModule::Gibbs_step,
@@ -1020,6 +1028,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                const TVec<Mat*>& ports_gradient)
 {
+    PLASSERT( ports_value.length() == nPorts() );
     PLASSERT( ports_gradient.length() == nPorts() );
     Mat* visible_grad = ports_gradient[getPortIndex("visible")];
     Mat* hidden_grad = ports_gradient[getPortIndex("hidden.state")];
@@ -1130,13 +1139,83 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             partition_function_is_stale = true;
     }
 
-    if (cd_learning_rate > 0) {
+    if (cd_learning_rate > 0 && minimize_log_likelihood) {
+        PLASSERT( visible && !visible->isEmpty() );
+        PLASSERT( hidden && !hidden->isEmpty() );
+        setAllLearningRates(cd_learning_rate);
+
+        // positive phase
+        visible_layer->accumulatePosStats(*visible);
+        hidden_layer->accumulatePosStats(*hidden);
+        connection->accumulatePosStats(*visible,*hidden);
+
+        // negative phase
+        PLASSERT_MSG(hidden_layer->size<32 || visible_layer->size<32,
+                     "To minimize exact log-likelihood of an RBM, hidden_layer->size "
+                     "or visible_layer->size must be <32");
+        // gradient of partition function
+        if (hidden_layer->size > visible_layer->size)
+            // do it by summing over visible configurations
+        {
+            PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
+            // assuming a binary input we sum over all bit configurations
+            int n_configurations = 1 << visible_layer->size; // = 2^{visible_layer->size}
+            energy_inputs.resize(1, visible_layer->size);
+            Vec input = energy_inputs(0);
+            // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
+            // AT ONCE IN A 'MINIBATCH'
+            for (int c=0;c<n_configurations;c++)
+            {
+                // convert integer c into a bit-wise visible representation
+                int x=c;
+                for (int i=0;i<visible_layer->size;i++)
+                {
+                    input[i]= x & 1; // take least significant bit
+                    x >>= 1; // and shift right (divide by 2)
+                }
+                connection->setAsDownInput(input);
+                hidden_layer->getAllActivations(connection,0,false);
+                hidden_layer->computeExpectation();
+                visible_layer->accumulateNegStats(input);
+                hidden_layer->accumulateNegStats(hidden_layer->expectation);
+                connection->accumulateNegStats(input,hidden_layer->expectation);
+            }
+        }
+        else
+        {
+            PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+            // assuming a binary hidden we sum over all bit configurations
+            int n_configurations = 1 << hidden_layer->size; // = 2^{hidden_layer->size}
+            energy_inputs.resize(1, hidden_layer->size);
+            Vec h = energy_inputs(0);
+            for (int c=0;c<n_configurations;c++)
+            {
+                // convert integer c into a bit-wise hidden representation
+                int x=c;
+                for (int i=0;i<hidden_layer->size;i++)
+                {
+                    h[i]= x & 1; // take least significant bit
+                    x >>= 1; // and shift right (divide by 2)
+                }
+                connection->setAsUpInput(h);
+                visible_layer->getAllActivations(connection,0,false);
+                visible_layer->computeExpectation();
+                visible_layer->accumulateNegStats(visible_layer->expectation);
+                hidden_layer->accumulateNegStats(h);
+                connection->accumulateNegStats(visible_layer->expectation,h);
+            }
+        }
+        // update
+        visible_layer->update();
+        hidden_layer->update();
+        connection->update();
+    }
+    if (cd_learning_rate > 0 && !minimize_log_likelihood) {
         EXTREME_MODULE_LOG << "Performing contrastive divergence step in RBM '"
                            << name << "'" << endl;
         // Perform a step of contrastive divergence.
         PLASSERT( visible && !visible->isEmpty() );
         setAllLearningRates(cd_learning_rate);
-        PLASSERT( ports_value.length() == nPorts() );
         Mat* negative_phase_visible_samples = 
             compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
         const Mat* negative_phase_hidden_expectations =
@@ -1330,7 +1409,6 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         setAllLearningRates(grad_learning_rate);
         PLASSERT( reconstruction_connection != 0 );
         // Perform gradient descent on Autoassociator reconstruction cost
-        PLASSERT( ports_value.length() == nPorts() );
         Mat* visible_reconstruction = ports_value[getPortIndex("visible_reconstruction.state")];
         Mat* visible_reconstruction_activations = ports_value[getPortIndex("visible_reconstruction_activations.state")];
         Mat* reconstruction_error = ports_value[getPortIndex("reconstruction_error.state")];

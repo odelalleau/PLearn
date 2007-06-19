@@ -204,9 +204,11 @@ public:
 
     //! Accumulates positive phase statistics
     virtual void accumulatePosStats( const Vec& pos_values );
+    virtual void accumulatePosStats( const Mat& ps_values);
 
     //! Accumulates negative phase statistics
     virtual void accumulateNegStats( const Vec& neg_values );
+    virtual void accumulateNegStats( const Mat& neg_values );
 
     //! Update parameters according to accumulated statistics
     virtual void update();
