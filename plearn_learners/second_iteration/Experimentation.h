@@ -159,7 +159,6 @@ private:
     Vec          target_input;
     TVec<string> target_names;
     
-    int             header_col;
     int             header_width;
     Vec             header_record;
     TVec<string>    header_names;

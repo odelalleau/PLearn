@@ -142,7 +142,7 @@ void Experimentation::build_()
     MODULE_LOG << "build_() called" << endl;
     if (train_set)
     {
-        for (int iteration = 1; iteration <= 50; iteration++)
+        for (int iteration = 1; iteration <= train_set->width(); iteration++)
         {
             cout << "In Experimentation, Iteration # " << iteration << endl;
             experimentSetUp();
@@ -216,7 +216,7 @@ void Experimentation::experimentSetUp()
     if (deletion_thresholds.length() <= 0)
     {
         deletion_thresholds.resize(20);
-        for (header_col = 0; header_col < 20; header_col++) deletion_thresholds[header_col] = (real) to_deal_with_next / 20.0;
+        for (int header_col = 0; header_col < 20; header_col++) deletion_thresholds[header_col] = (real) to_deal_with_next / 20.0;
     } 
     header_width = deletion_thresholds.length();
     header_record.resize(header_width);
@@ -227,7 +227,7 @@ void Experimentation::experimentSetUp()
     cout << "choose deletion threshold to experiment with" << endl;
     to_deal_with_total = 0;
     to_deal_with_next = -1;
-    for (header_col = 0; header_col < header_width; header_col++)
+    for (int header_col = 0; header_col < header_width; header_col++)
     {
         if (header_record[header_col] != 0.0) continue;
         to_deal_with_total += 1;
@@ -319,7 +319,7 @@ void Experimentation::createHeaderFile()
 { 
     header_record.clear();
     header_names.resize(header_width);
-    for (header_col = 0; header_col < header_width; header_col++) 
+    for (int header_col = 0; header_col < header_width; header_col++) 
         header_names[header_col] = tostring(deletion_thresholds[header_col] + 0.005).substr(0,4);
     header_file = new FileVMatrix(header_file_name, 1, header_names);
     header_file->putRow(0, header_record);
@@ -331,7 +331,7 @@ void Experimentation::getHeaderRecord()
     if (header_width != header_file->width()) 
         PLERROR("In Experimentation::getHeaderRecord() the existing header file does not match the deletion_thresholds width)");
     header_names = header_file->fieldNames();
-    for (header_col = 0; header_col < header_width; header_col++) 
+    for (int header_col = 0; header_col < header_width; header_col++) 
         if (header_names[header_col] != tostring(deletion_thresholds[header_col] + 0.005).substr(0,4))
             PLERROR("In Experimentation::getHeaderRecord() the existing header file names does not match the deletion_thresholds values)");;
     header_file->getRow(0, header_record);
@@ -390,7 +390,7 @@ void Experimentation::reviewGlobalStats()
 {
     cout << "There is no more variable to deal with." << endl;
     bool missing_results_file = false;
-    for (header_col = 0; header_col < header_width; header_col++)
+    for (int header_col = 0; header_col < header_width; header_col++)
     {
         deletion_threshold = deletion_thresholds[header_col];
         deletion_threshold_str = tostring(deletion_threshold + 0.005).substr(0,4);
@@ -430,7 +430,7 @@ void Experimentation::reviewGlobalStats()
     cout << fixed << showpoint;
     real best_valid_mse_threshold = -1.0;
     real best_valid_mse_value;
-    for (header_col = 0; header_col < header_width; header_col++)
+    for (int header_col = 0; header_col < header_width; header_col++)
     {
         deletion_threshold = deletion_thresholds[header_col];
         deletion_threshold_str = tostring(deletion_threshold + 0.005).substr(0,4);
