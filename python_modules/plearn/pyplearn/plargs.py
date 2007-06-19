@@ -228,8 +228,12 @@ def list_cast(slist, elem_cast):
     The element cast is made using the I{elem_cast} argument.
     """
     # CSV (with or without brackets)
+    slist = slist.strip()
     if isinstance(slist,str):
-        slist = slist.lstrip(' [').rstrip(' ]')
+        if slist.startswith("["):
+            assert slist.endswith("]")
+            return eval(slist)
+        
         if slist=="":
             return []
         return [ elem_cast(e) for e in slist.split(",") ]
