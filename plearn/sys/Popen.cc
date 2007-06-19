@@ -42,9 +42,9 @@
 
 #include "Popen.h"
 
-#include <mozilla-1.7.13/nspr/prio.h>
-#include <mozilla-1.7.13/nspr/prproces.h>
-#include <mozilla-1.7.13/nspr/prenv.h>
+#include <mozilla/nspr/prio.h>
+#include <mozilla/nspr/prproces.h>
+#include <mozilla/nspr/prenv.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/base/PrUtils.h>
 #include <plearn/io/PrPStreamBuf.h>

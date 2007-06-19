@@ -42,7 +42,7 @@
 
 
 #include "openFile.h"
-#include <mozilla-1.7.13/nspr/prio.h>
+#include <mozilla/nspr/prio.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/io/PrPStreamBuf.h>
 
