@@ -1,4 +1,5 @@
 from pylab import *
+from numarray import *
 
 
 #################
@@ -149,61 +150,65 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     #custom color bar
     customColorBar(mi,ma,(1.-cbw-sbi, sbi, sbi, 1.-2.*cbw))
     return toReturn
-        
-
-        #1 sur 2 -
-        
-        #subplot(subPlotHeight, subPlotWidth, (2+i%2)*subPlotWidth + j + 1)
-        #axes((i*axesWidth, 2*axesHeight, axesWidth, axesHeight))
-        #imshow(rowToMatrix(toMinusRow(row),width), interpolation="nearest", cmap = colorMap)
-        #setPlotParams(str(i), False, True)
-        
-        #1 sur 2 +
-        
-        #subplot(subPlotHeight, subPlotWidth, (4+i%2)*subPlotWidth + i + 1)
-        #axes((i*axesWidth, 4*axesHeight, axesWidth, axesHeight))
-        #imshow(rowToMatrix(toPlusRow(row),width), interpolation="nearest", cmap = colorMap)
-        # setPlotParams(str(i), False, True)
-            
 
 
 
-def plotMatrices(matrices, same_color_bar = False, space_between_matrices = 5):
+
+def plotMatrices(matrices, names = None, ticks = False, same_color_bar = False, space_between_matrices = 5):
     '''plot matrices from left to right
     TODO : same_color_bar does nothing !!
     '''
+    
     colorMap = cm.gray
     nbMatrices = len(matrices)
-    #print 'plotting ' + str(nbMatrices) + ' matrices'
+    print 'plotting ' + str(nbMatrices) + ' matrices'
 
     totalWidth = 0
     maxHeight = 0
     
     for matrix in matrices:
-        if len(matrix) > maxHeight:
-            maxHeight = len(matrix)
-        totalWidth += len(matrix[0])
+        #print matrix.info()
+        if matrix.shape[0] > maxHeight:
+            maxHeight = matrix.shape[0]
+        totalWidth += matrix.shape[1]
+    print maxHeight, totalWidth
+    
 
+    #to prevent a little bug   
+    space_between_matrices = min(space_between_matrices, maxHeight, totalWidth)
 
-    unit = min(1./((nbMatrices+1)*space_between_matrices + totalWidth), 1./(maxHeight-2.*space_between_matrices))
+    unit = min(1./((nbMatrices+1)*space_between_matrices + totalWidth), 1./(maxHeight+2.*space_between_matrices))
     sbm = space_between_matrices*unit
+
 
     x=sbm
     the_axes = []
-    for matrix in matrices:
+    
+    if names != None:
+        if len(names) != len(matrices):
+            raise Exception, "nb of matrices and nb of names must be equals in plotMatrices()"
+    else:
+        names = ['']*len(matrices)
         
-        h = len(matrix)*unit
-        w = len(matrix[0])*unit
+    for matrix,name in zip(matrices,names):
+        
+        h = matrix.shape[0]*unit
+        w = matrix.shape[1]*unit
+
         if h>1 :
             h = 1.-2*sbm
         bottom = (1.-h)/2.
 
+        #print x,bottom, w, h
         temp = axes(( x,bottom, w,h))
         the_axes.append(temp)
         imshow(matrix, interpolation = 'nearest', cmap = colorMap)
+        title(name)       
+        if ticks == False:
+            xticks([],[])
+            yticks([],[])
         colorbar()
         x += w+sbm
-
     return the_axes
 
 

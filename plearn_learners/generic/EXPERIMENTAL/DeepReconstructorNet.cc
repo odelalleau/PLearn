@@ -102,6 +102,10 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]");
 
+    declareOption(ol, "reconstruction_optimizers", &DeepReconstructorNet::reconstruction_optimizers,
+                  OptionBase::buildoption,
+                  "");
+
     declareOption(ol, "reconstruction_optimizer", &DeepReconstructorNet::reconstruction_optimizer,
                   OptionBase::buildoption,
                   "");
@@ -153,6 +157,15 @@ void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
                    ArgDoc("varname", "name of the variable searched for"),
                    RetDoc("Returns the value of the parameter as a Mat")));
 
+    declareMethod(rmm,
+                  "getParameterRow",
+                  &DeepReconstructorNet::getParameterRow,
+                  (BodyDoc("Returns the matValue of the parameter variable with the given name"),
+                   ArgDoc("varname", "name of the variable searched for"),
+                   ArgDoc("n", "row number"),
+                   RetDoc("Returns the nth row of the value of the parameter as a Mat")));
+
+
 
     declareMethod(rmm,
                   "listParameterNames",
@@ -179,6 +192,35 @@ void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
                   (BodyDoc("Compute the reconstructions of the input of each hidden layer"),
                    ArgDoc("input", "the input"),
                    RetDoc("The reconstructions")));
+
+    declareMethod(rmm,
+                   "getMatValue",
+                   &DeepReconstructorNet::getMatValue,
+                   (BodyDoc(""),
+                    ArgDoc("layer", "no of the layer"),
+                    RetDoc("the matValue")));
+
+    declareMethod(rmm,
+                   "setMatValue",
+                   &DeepReconstructorNet::setMatValue,
+                   (BodyDoc(""),
+                    ArgDoc("layer", "no of the layer"),
+                    ArgDoc("values", "the values")));
+
+    declareMethod(rmm,
+                   "fpropOneLayer",
+                   &DeepReconstructorNet::fpropOneLayer,
+                   (BodyDoc(""),
+                    ArgDoc("layer", "no of the layer"),
+                    RetDoc("")));
+
+
+    declareMethod(rmm,
+                   "reconstructOneLayer",
+                   &DeepReconstructorNet::reconstructOneLayer,
+                   (BodyDoc(""),
+                    ArgDoc("layer", "no of the layer"),
+                    RetDoc("")));
 }
 
 void DeepReconstructorNet::build_()
@@ -256,6 +298,7 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(layers, copies);
     deepCopyField(reconstruction_costs, copies);
     deepCopyField(reconstructed_layers, copies);
+    deepCopyField(reconstruction_optimizers, copies);
     deepCopyField(reconstruction_optimizer, copies);
     varDeepCopyField(target, copies);
     deepCopyField(supervised_costs, copies);
@@ -562,8 +605,17 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     //displayFunction(f,false,false, 333, "train_func");
     Var totalcost = sumOf(inputs, f, minibatch_size);
     VarArray params = totalcost->parents();
-    reconstruction_optimizer->setToOptimize(params, totalcost);
-    reconstruction_optimizer->reset();
+    
+    if ( reconstruction_optimizers.size() !=0 )
+    {
+        reconstruction_optimizers[which_input_layer]->setToOptimize(params, totalcost);
+        reconstruction_optimizers[which_input_layer]->reset();    
+    }
+    else 
+    {
+        reconstruction_optimizer->setToOptimize(params, totalcost);
+        reconstruction_optimizer->reset();    
+    }
 
     TVec<string> colnames(4);
     colnames[0] = "nepochs";
@@ -579,8 +631,16 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     for(int n=0; n<nepochs.first || (n<nepochs.second && relative_improvement >= min_improvement); n++)
     {
         st.forget();
-        reconstruction_optimizer->nstages = l/minibatch_size;
-        reconstruction_optimizer->optimizeN(st);
+        if ( reconstruction_optimizers.size() !=0 )
+        {
+            reconstruction_optimizers[which_input_layer]->nstages = l/minibatch_size;
+            reconstruction_optimizers[which_input_layer]->optimizeN(st);
+        }
+        else 
+        {
+            reconstruction_optimizer->nstages = l/minibatch_size;
+            reconstruction_optimizer->optimizeN(st);
+        }        
         const StatsCollector& s = st.getStats(0);
         real m = s.mean();
         real er = s.stderror();
@@ -634,6 +694,16 @@ Mat DeepReconstructorNet::getParameterValue(const string& varname)
     return Mat(0,0);
 }
 
+
+Vec DeepReconstructorNet::getParameterRow(const string& varname, int n)
+{
+    for(int i=0; i<parameters.length(); i++)
+        if(parameters[i]->getName() == varname)
+            return parameters[i]->matValue(n);
+    PLERROR("There is no parameter  named %s", varname.c_str());
+    return Vec(0);
+}
+
 TVec<string> DeepReconstructorNet::listParameterNames()
 {
     TVec<string> nameListe(0);
@@ -649,6 +719,31 @@ TVec<Mat> DeepReconstructorNet::listParameter()
     for (int i=0; i<parameters.length(); i++)
         matList.append(parameters[i]->matValue);
     return matList;
+}
+
+
+Mat DeepReconstructorNet::getMatValue(int layer)
+{
+    return layers[layer]->matValue;
+}
+
+void DeepReconstructorNet::setMatValue(int layer, Mat values)
+{
+    layers[layer]->matValue << values;
+}
+
+Mat DeepReconstructorNet::fpropOneLayer(int layer)
+{
+    VarArray proppath = propagationPath( layers[layer], layers[layer+1] );
+    proppath.fprop();
+    return getMatValue(layer+1);
+}
+
+Mat DeepReconstructorNet::reconstructOneLayer(int layer)
+{
+    VarArray proppath = propagationPath(layers[layer],reconstructed_layers[layer-1]);
+    proppath.fprop();       
+    return reconstructed_layers[layer-1]->matValue;
 }
 
 

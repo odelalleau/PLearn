@@ -86,6 +86,10 @@ public:
     // reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]
     VarArray reconstructed_layers;
 
+    // optimizers if we use different ones for each layer
+    TVec< PP<Optimizer> > reconstruction_optimizers;
+    
+    // if we use always the same optimizer
     PP<Optimizer> reconstruction_optimizer;
 
 
@@ -172,6 +176,9 @@ public:
     //! Returns the matValue of the parameter variable with the given name
     Mat getParameterValue(const string& varname);
 
+    //! Returns the nth row of the matValue of the parameter variable with the given name
+    Vec getParameterRow(const string& varname, int n);
+
     //! Returns a list of the names of the parameters (in the same order as in listParameter)
     TVec<string> listParameterNames();
 
@@ -187,6 +194,12 @@ public:
     TVec<Mat> computeRepresentations(Mat input);
     void reconstructInputFromLayer(int layer);
     TVec<Mat> computeReconstructions(Mat input);
+
+    Mat getMatValue(int layer);
+    void setMatValue(int layer, Mat values);
+    Mat fpropOneLayer(int layer);
+    Mat reconstructOneLayer(int layer);
+       
 
     
 

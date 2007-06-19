@@ -164,7 +164,8 @@ def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
     Then output = sigmoid(input.W^T + b)
     
     Returns a triple (hidden, reconstruciton_cost, reconstructed_input)"""
-    W = Var(ow,iw,"uniform", -1./sqrt(iw), 1./sqrt(iw), varname=basename+'_W')
+    ra = 1./max(iw,ow)
+    W = Var(ow,iw,"uniform", -ra, 1./ra, varname=basename+'_W')
     
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')        
@@ -183,10 +184,12 @@ def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=Fal
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
+    ra = 1./max(iw,ow)
+    sqra = sqrt(ra)
+    M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
     if constrain_mask:
         M = M.sigmoid()
-    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
         hidden = input.doubleProduct(W,M).add(b).multiSoftMax(ogs)
@@ -203,11 +206,13 @@ def addMultiSoftMaxDoubleProductRLayer(input, iw, igs, ow, ogs, basename=""):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
-    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
+    ra = 1./max(iw,ow)
+    sqra = sqrt(ra)
+    M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
     hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
-    Mr = Var(iw/igs, ow, "uniform", -1./ow, 1./ow, False, varname=basename+"_Mr")
-    Wr = Var(igs, ow, "uniform", -1./ow, 1./ow, False, varname=basename+"_Wr")
+    Mr = Var(iw/igs, ow, "uniform", -sqra, sqra, False, varname=basename+"_Mr")
+    Wr = Var(igs, ow, "uniform", -sqra, sqra, False, varname=basename+"_Wr")
     # TODO: a repenser s'il faut un transpose ou non
     log_reconstructed = hidden.doubleProduct(Wr,Mr).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
@@ -218,9 +223,11 @@ def addMultiSoftMaxMixedProductRLayer(input, iw, igs, ow, ogs, add_bias=False, b
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
-    M = Var(ow/ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_M")
-    W = Var(ogs, iw, "uniform", -1./iw, 1./iw, False, varname=basename+"_W")
-    Wr = Var(ow, iw, "uniform", -1./ow, 1./ow, varname=basename+'_Wr')
+    ra = 1./max(iw,ow)
+    sqra = sqrt(ra)
+    M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
+    W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
+    Wr = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_Wr')
 
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
@@ -236,7 +243,8 @@ def addMultiSoftMaxMixedProductRLayer(input, iw, igs, ow, ogs, add_bias=False, b
     return hidden, cost, reconstructed_input
 
 def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
-    W = Var(ow, iw, "uniform", -1./iw, 1./iw, varname=basename+'_W')
+    ra = 1./max(iw,ow)
+    W = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_W')
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
         hidden = input.matrixProduct_A_Bt(W).add(b).multiSoftMax(ogs)
@@ -250,8 +258,9 @@ def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=Fal
     return hidden, cost, reconstructed_input
 
 def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
-    W = Var(ow, iw, "uniform", -1./iw, 1./iw, varname=basename+'_W')
-    Wr = Var(ow, iw, "uniform", -1./ow, 1./ow, varname=basename+'_Wr')
+    ra = 1./max(iw,ow)
+    W = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_W')
+    Wr = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_Wr')
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
         hidden = input.matrixProduct_A_Bt(W).add(b).multiSoftMax(ogs)
