@@ -30,9 +30,10 @@
 #  library, go to the PLearn Web site at www.plearn.org
 import sys, os, os.path, glob, fnmatch, csv, numarray
 
-from plearn.vmat.PMat import PMat
-from plearn.vmat.readAMat import readAMat
-from plearn.utilities.moresh import relative_path
+import os, glob, fnmatch, numarray
+from plearn.vmat.PMat          import PMat
+from plearn.vmat.smartReadMat  import smartReadMat
+from plearn.utilities.moresh   import relative_path
 from plearn.utilities.Bindings import Bindings
 
 #####  ExperimentDirectory  #################################################
@@ -50,6 +51,9 @@ class ExperimentDirectory( object ):
     and if test_raw_costs is not yet loaded, it is at that point, and you
     can access all columns of the underlying file by name.  Note that the
     returned data is a VECTOR (1-D).
+
+    As a special case, passing the string '__all__' returns the whole
+    array.
     """
     def __init__(self, expdir):
         if os.path.isdir(expdir):
@@ -60,7 +64,7 @@ class ExperimentDirectory( object ):
 
         ## Remember files of interest
         self.pmats = self._get_files('pmat')
-        self.csv = self._get_files('csv')
+        self.csv   = self._get_files('csv')
         self.amats = self._get_files('amat')
 
         ## Remember the subdirectories
@@ -88,46 +92,27 @@ class ExperimentDirectory( object ):
                    for f in files if fnmatch.fnmatch(f, pattern) ]
 
     def _add_array(self, name, arr, fieldnames):
-            columns = {}
-            for i, f in enumerate(fieldnames):
-                columns[f] = arr[:,i]
-            setattr(self, name, columns)
-            return columns
+        columns = {'__all__': arr}
+        for i, f in enumerate(fieldnames):
+            columns[f] = arr[:,i]
+        setattr(self, name, columns)
+        return columns
 
     def __getattr__(self, name):
         if name in self.subdirs:
             subdir = ExperimentDirectory(os.path.join(self.expdir, name))
             setattr(self, name, subdir)
             return subdir
-        elif name in self.pmats:
-            pmat = PMat(os.path.join(self.expdir, name+'.pmat'))
-            arr  = pmat.getRows(0, pmat.length)
-            fieldnames = pmat.fieldnames
-            return self._add_array(name, arr, fieldnames)
-        elif name in self.amats:
-            arr, fieldnames = readAMat(os.path.join(self.expdir, name+'.amat'))
-            return self._add_array(name, arr, fieldnames)
-        elif name in self.csv:
-            fname = os.path.join(self.expdir, name+'.csv')
 
-            # Use CSV sniffer to detect presence of header.
-            sniffer = csv.Sniffer()
-            f = open(fname)
-            sample = f.read(1000)
-            has_header = sniffer.has_header(sample)
-            f.seek(0)
+        elif name in self.pmats or name in self.amats or name in self.csv:
+            # minorly ugly, but will do for now...
+            if name in self.pmats: filename = os.path.join(self.expdir, name+'.pmat')
+            if name in self.amats: filename = os.path.join(self.expdir, name+'.amat')
+            if name in self.csv  : filename = os.path.join(self.expdir, name+'.csv' )
 
-            # Load csv into array
-            csv_reader = csv.reader(f)
-            if has_header:
-                fieldnames = csv_reader.next()
-            arr = numarray.array([[float(value) for value in fields] for fields in csv_reader])
-            if not has_header:
-                # Generate fake fieldnames
-                fieldnames = ['field%d' % (i + 1) for i in range(arr.shape[1])]
-                
-            f.close()
+            arr, fieldnames = smartReadMat(filename)
             return self._add_array(name, arr, fieldnames)
+
         else:
             raise ValueError, "ExperimentDirectory '%s' does not contain a component '%s'" \
                   % (self.expdir, name)
