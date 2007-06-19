@@ -229,14 +229,16 @@ def list_cast(slist, elem_cast):
     """
     # CSV (with or without brackets)
     slist = slist.strip()
+    #print >>sys.stderr, repr(slist), type(slist)
     if isinstance(slist,str):
-        if slist.startswith("["):
-            assert slist.endswith("]")
-            return eval(slist)
-        
         if slist=="":
-            return []
-        return [ elem_cast(e) for e in slist.split(",") ]
+            slist = []
+        elif slist.startswith("["):
+            assert slist.endswith("]")
+            slist = eval(slist)
+        else:
+            slist = slist.split(",")
+        return [ elem_cast(e) for e in slist ]
 
     # List of strings
     elif isinstance(slist, list):
