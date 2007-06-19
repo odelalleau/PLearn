@@ -772,21 +772,21 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         found_a_valid_configuration = true;
     } 
     
-    // SAMPLING
+    // SAMPLING inputs
     if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
-        || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
+        && (!visible || !visible->isEmpty() ))
+//        || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
     {
-        if (hidden && !hidden->isEmpty()) // sample visible conditionally on hidden
+        if (hidden_sample && !hidden_sample->isEmpty()) // sample visible conditionally on hidden
         {
-            sampleVisibleGivenHidden(*hidden);
-            visible_sample->resize(visible_layer->samples.length(),visible_layer->samples.width());
-            *visible_sample << visible_layer->samples;
-            Gibbs_step = 0; // that would restart the chain for unconditional sampling
+            sampleVisibleGivenHidden(*hidden_sample);
+	    cout << "(discrete visible) sampling init (from hidden)" << endl;
         }
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
-            sampleHiddenGivenVisible(visible_layer->samples);
-            Gibbs_step = 0; // that would restart the chain for unconditional sampling
+            sampleHiddenGivenVisible(*visible);
+            sampleVisibleGivenHidden(hidden_layer->samples);
+	    cout << "(discrete visible) sampling init (from visible)" << endl;
         }
         else // sample unconditionally: Gibbs sample after k steps
         {
@@ -794,63 +794,45 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             // start or continue the chain
             int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
+            cout << "(discrete visible) gibbs " << Gibbs_step;
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
             }
-  	    cout << "gibbs " << Gibbs_step << endl;
-        }
-        if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
-        {
-            visible_sample->resize(visible_layer->samples.length(),
-                                   visible_layer->samples.width());
-            *visible_sample << visible_layer->samples;
-        }
-        if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
-        {
-            hidden_sample->resize(hidden_layer->samples.length(),
-                                  hidden_layer->samples.width());
-            *hidden_sample << hidden_layer->samples;
+  	    cout << " -> " << Gibbs_step-1 << endl;
         }
         found_a_valid_configuration = true;
     }
     // SAMPLING continuous inputs (computing visible expectation)
-    if (visible && visible->isEmpty()) {
+    if (visible && visible->isEmpty()) { // it is asked the expectations of visible units
     
         if (visible_sample && !visible_sample->isEmpty())
         {
             sampleHiddenGivenVisible(*visible_sample);
             sampleVisibleGivenHidden(hidden_layer->samples);
-	    cout << "init (1)" << endl;
+	    cout << "(continuous visible) sampling init (from visible)" << endl;
 	}
-	else if ( hidden && !hidden->isEmpty() )
+	else if ( hidden_sample && !hidden_sample->isEmpty() )
 	{
-	   sampleVisibleGivenHidden(*hidden);
-           Gibbs_step = 0; // that would restart the chain for unconditional sampling
-	   cout << "init" << endl;
+	   sampleVisibleGivenHidden(*hidden_sample);
+	   cout << "(continuous visible) sampling init (from hidden)" << endl;	   
 	}
 	else
 	{
            int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
 	   PLASSERT( min_n > 0 );
-           cout << "gibbs " << Gibbs_step;
+           cout << "(continuous visible) gibbs " << Gibbs_step;
 	   for (;Gibbs_step<min_n;Gibbs_step++)
            {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
            }
   	   cout << " -> " << Gibbs_step-1 << endl;
-           if ( hidden )   // fill hidden.state with expectations
-	   {
-	      const Mat& hidden_expect = hidden_layer->getExpectations();
-              hidden->resize(hidden_expect.length(), hidden_expect.width());
-              *hidden << hidden_expect;
-	   }
 	}
         
-	if ( hidden )   // fill hidden.state with expectations
+	if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
         {
    	      const Mat& hidden_expect = hidden_layer->getExpectations();
               hidden->resize(hidden_expect.length(), hidden_expect.width());
@@ -858,11 +840,22 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
 	 
         const Mat& to_store = visible_layer->getExpectations();
-	cout << to_store.length() << " x " << to_store.width() << endl;
         visible->resize(to_store.length(), to_store.width());
         *visible << to_store;
 
 	found_a_valid_configuration = true;
+    }
+    if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
+    {
+        visible_sample->resize(visible_layer->samples.length(),
+                               visible_layer->samples.width());
+        *visible_sample << visible_layer->samples;
+    }
+    if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
+    {
+        hidden_sample->resize(hidden_layer->samples.length(),
+                              hidden_layer->samples.width());
+        *hidden_sample << hidden_layer->samples;
     }
 
     // COMPUTE CONTRASTIVE DIVERGENCE CRITERION

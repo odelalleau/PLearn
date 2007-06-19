@@ -302,6 +302,8 @@ void RBMGaussianLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sigma, copies);
 }
 
+
+
 void RBMGaussianLayer::accumulatePosStats( const Vec& pos_values )
 {
     for( int i=0 ; i<size ; i++ )
@@ -401,6 +403,100 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values)
     // update the bias
     inherited::update( pos_values, neg_values );
 }
+
+real RBMGaussianLayer::energy(const Vec& unit_values) const
+{
+    if(unit_values.length()!=quad_coeff.length())
+        PLERROR("InRBMGaussianLayer::unit_values and quadratic_coeff Vecs must have the same length.");
+    real quad_dot=0.;
+    if (unit_values.size() > 0 && quad_coeff.size() > 0) {
+        real* v1 = unit_values.data();
+        real* v2 = quad_coeff.data();
+        for(register int i=0; i<unit_values.length(); i++)
+            quad_dot += v1[i]*v2[i];
+    }
+    return dot(unit_values,bias) + quad_dot;
+}
+
+real RBMGaussianLayer::fpropNLL(const Vec& target)
+{
+    PLASSERT( target.size() == input_size );
+
+    real ret = 0;
+    real target_i, activation_i, a_i;
+    for( int i=0 ; i<size ; i++ )
+    {
+        target_i = target[i];
+        activation_i = activation[i];
+	a_i = quad_coeff[i];
+        if(!fast_exact_is_equal(target_i,0.0))
+            // ret -= target[i] * pl_log(expectations[i]); 
+            ret -= target_i * pl_log( - activation_i / (2 * a_i * a_i) );
+        if(!fast_exact_is_equal(target_i,1.0))
+            // ret -= (1-target_i) * pl_log(1-expectation_i);
+            ret -= (1-target_i) * pl_log( 1 + activation_i / (2 * a_i * a_i) );
+    }
+    return ret;
+}
+
+
+void RBMGaussianLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
+{
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+
+    real nll, a_i;
+    real *activation, *target;
+    
+    for (int k=0;k<batch_size;k++) // loop over minibatch
+    {
+        nll = 0;
+        activation = activations[k];
+        target = targets[k];
+        for( register int i=0 ; i<size ; i++ ) // loop over outputs
+        {
+            a_i = quad_coeff[i];
+	    if(!fast_exact_is_equal(target[i],0.0))
+                // nll -= target[i] * pl_log(expectations[i]); 
+                nll -= target[i] * pl_log( - activation[i] / (2 * a_i * a_i) );
+            if(!fast_exact_is_equal(target[i],1.0))
+                // nll -= (1-target[i]) * pl_log(1-expectations[i]); 
+                nll -= (1 - target[i]) * pl_log( 1 + activation[i] / (2 * a_i * a_i) );
+        }
+        costs_column(k,0) = nll;
+    }
+}
+
+void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
+{
+    computeExpectation();
+
+    PLASSERT( target.size() == input_size );
+    bias_gradient.resize( size );
+
+    for( int i=0 ; i<size ; i++ )
+    {
+        bias_gradient[i] = target[i]-expectation[i];
+    }
+}
+
+void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
+                                Mat& bias_gradients)
+{
+    computeExpectations();
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+    bias_gradients.resize( batch_size, size );
+
+    substract(targets,expectations,bias_gradients);
+}
+
 
 } // end of namespace PLearn
 

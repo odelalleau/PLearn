@@ -128,6 +128,20 @@ public:
     //! forgets everything
     virtual void forget();
 
+    //! compute bias' unit_values + min_quad_coeff.^2' unit_values.^2
+    virtual real energy(const Vec& unit_values) const;
+
+    //! Computes the negative log-likelihood of target given the
+    //! internal activations of the layer
+    virtual real fpropNLL(const Vec& target);
+    virtual void fpropNLL(const Mat& targets, const Mat& costs_column);
+    
+    //! Computes the gradient of the negative log-likelihood of target
+    //! with respect to the layer's bias, given the internal activations
+    virtual void bpropNLL(const Vec& target, real nll, Vec& bias_gradient);
+    virtual void bpropNLL(const Mat& targets, const Mat& costs_column,
+                          Mat& bias_gradients);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
