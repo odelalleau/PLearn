@@ -38,7 +38,7 @@ from fpconst     import NaN
 from numarray.ma import *
 from plearn.math import isNaN
 
-def missingsRobustCovariance(arr):
+def missingsRobustCovariance(arr, unbiased=False, epsilon=1e-8):
     """Compute the covariance matrix in a way that's robust to missing values.
 
     This function computes the covariance matrix between the columns of
@@ -47,8 +47,14 @@ def missingsRobustCovariance(arr):
     it uses as much information as it can, and can be used, for instance,
     when EVERY ROW contains one or more missings.
 
-    If the matrix contains no missings whatsoever, it produces the same
-    results as the standard bias-corrected maximum likelihood estimator.
+    If the matrix contains no missings whatsoever, it makes sense to use
+    the option 'unbiased=True', which produces the same results as the
+    standard bias-corrected maximum likelihood estimator.  Otherwise,
+    numerical problems may ensue with the covariance matrix (e.g. lack of
+    positive-definiteness).
+
+    The option 'epsilon' is used to add a small regularization constant to
+    the diagonal.
     """
     ## Second-order statistics
     mask   = isNaN(arr)
@@ -71,5 +77,8 @@ def missingsRobustCovariance(arr):
     ## and we don't want to divide by zero.  Use masking again.
     masked_count = masked_less_equal(cov_count, 1.0)
     cov_mle *= masked_count / (masked_count-1.)
+
+    for i in range(cov_mle.shape[0]):
+        cov_mle[i,i] += epsilon         # numarray cannot assign to diagonal!!!!
 
     return filled(cov_mle, NaN)
