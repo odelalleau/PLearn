@@ -32,6 +32,7 @@ import sys, os, os.path, glob, fnmatch, csv, numarray
 
 from plearn.vmat.PMat import PMat
 from plearn.vmat.readAMat import readAMat
+from plearn.utilities.moresh import relative_path
 from plearn.utilities.Bindings import Bindings
 
 #####  ExperimentDirectory  #################################################
@@ -66,6 +67,9 @@ class ExperimentDirectory( object ):
         self.subdirs = [ f for f in os.listdir(expdir)
                          if not f.endswith('.metadata')
                             and os.path.isdir(os.path.join(expdir, f)) ]
+
+    def __str__(self):        
+        return "\n    ".join([ self.expdir ] + self.subdirs)
 
     def _get_files(self, extension):
         return [ os.path.splitext(os.path.basename(fname))[0]
@@ -146,10 +150,9 @@ class ExperimentResults( ExperimentDirectory ):
         metainfos_name = os.path.join(expdir, self.metainfos_path)
         if os.path.isfile(metainfos_name):
             self.metainfos = self.parseMetaInfos(metainfos_name)
-
         else:
-            raise RuntimeError, "Cannot construct ExperimentResults because " \
-                  "expdir '%s' does not contain 'metainfos.txt'." % expdir
+            # Experiment is still running
+            self.metainfos = ExpKey()
 
         self.path = expdir
         self.cached.append(self)
@@ -157,6 +160,21 @@ class ExperimentResults( ExperimentDirectory ):
     def __cmp__(self, other):
         raise ExpKey.keycmp(x1, x2, None)
 
+    def __str__( self ):
+        return self.toString()
+
+    def getKey(self, expkey=None):
+        if expkey is None:
+            return self.metainfos
+
+        subset = ExpKey()
+        for key in expkey:
+            if key in self.metainfos:
+                subset[key] = self.metainfos[key]
+            else:
+                subset[key] = None
+        return subset
+        
     def getSubKey(self, keys=None):
         """Returns a subset of the metainfos dict for the given keys."""
         if keys is None:
@@ -201,6 +219,18 @@ class ExperimentResults( ExperimentDirectory ):
         # All key element matched
         return True
 
+    def isRunning(self):
+        return len(self.metainfos) == 0
+
+    def toString(self, expkey=None, short=False):
+        s = '%s\n' % relative_path(self.path)
+        if short and expkey is None:
+            return s
+        
+        for key, value in self.getKey(expkey).iteritems():
+            s += '    %s= %s\n' % (key.ljust(30), value)
+        return s
+
 
     #####  Static Methods  ##############################################
 
@@ -229,7 +259,7 @@ class ExperimentResults( ExperimentDirectory ):
 
     def match(expkey=[]):
         if not ExperimentResults.cached:
-            ExperimentResults.cache_experiments()
+            ExperimentResults.loadResults()
         return [ exp for exp in ExperimentResults.cached if exp.isMatched(expkey) ]
     match = staticmethod(match)
 

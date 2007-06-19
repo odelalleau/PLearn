@@ -72,16 +72,13 @@ def xpathfunction( func ):
             raise ValueError( obj )
     return function
 
-def migrate( path, dest, move=False ):
-    abspath = os.path.abspath( path )
+def migrate(path, dest, move=False):
+    abspath = os.path.abspath(path)
     if move:
-        absdest = os.path.abspath( dest )
-        os.system( 'mv %s %s'
-                   % ( abspath, absdest )
-                   )
-
+        absdest = os.path.abspath(dest)
+        os.system('mv %s %s' % (abspath, absdest))
     else:
-        relative_link( abspath, dest )            
+        relative_link(abspath, dest)            
 migrate = xpathfunction( migrate )
 
 class ExpKey( Bindings ):
