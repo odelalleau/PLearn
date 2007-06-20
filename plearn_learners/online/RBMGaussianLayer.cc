@@ -365,7 +365,7 @@ void RBMGaussianLayer::update()
     inherited::update();
 }
 
-void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values)
+void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values )
 {
     // quad_coeff[i] -= learning_rate * 2 * quad_coeff[i] * (pos_values[i]^2
     //                                                       - neg_values[i]^2)
@@ -401,6 +401,45 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values)
     sigma_is_up_to_date = false;
 
     // update the bias
+    inherited::update( pos_values, neg_values );
+}
+
+void RBMGaussianLayer::update( const Mat& pos_values, const Mat& neg_values )
+{
+    PLASSERT( pos_values.width() == size );
+    PLASSERT( neg_values.width() == size );
+
+    int batch_size = pos_values.length();
+    PLASSERT( neg_values.length() == batch_size );
+
+    // quad_coeff[i] -= learning_rate * 2 * quad_coeff[i] * (pos_values[i]^2
+    //                                                       - neg_values[i]^2)
+
+    real two_lr = 2 * learning_rate;
+    real* a = quad_coeff.data();
+
+    if( momentum == 0. )
+    {
+        for( int k=0; k<batch_size; k++ )
+        {
+            real *pv_k = pos_values[k];
+            real *nv_k = neg_values[k];
+            for( int i=0; i<size; i++ )
+            {
+                a[i] += two_lr * a[i] * (nv_k[i]*nv_k[i] - pv_k[i]*pv_k[i]);
+                if( a[i] < min_quad_coeff )
+                    a[i] = min_quad_coeff;
+            }
+        }
+    }
+    else
+        PLCHECK_MSG( false,
+                     "momentum and minibatch are not compatible yet" );
+
+    // We will need to recompute sigma
+    sigma_is_up_to_date = false;
+
+    // Update the bias
     inherited::update( pos_values, neg_values );
 }
 
