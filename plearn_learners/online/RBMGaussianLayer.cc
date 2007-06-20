@@ -82,7 +82,7 @@ void RBMGaussianLayer::generateSample()
 
     PLCHECK_MSG(expectation_is_up_to_date, "Expectation should be computed "
             "before calling generateSample()");
-    
+
     computeStdDeviation();
     for( int i=0 ; i<size ; i++ )
         sample[i] = random_gen->gaussian_mu_sigma( expectation[i], sigma[i] );
@@ -406,36 +406,40 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values)
 
 real RBMGaussianLayer::energy(const Vec& unit_values) const
 {
-    if(unit_values.length()!=quad_coeff.length())
-        PLERROR("InRBMGaussianLayer::unit_values and quadratic_coeff Vecs must have the same length.");
-    real quad_dot=0.;
-    if (unit_values.size() > 0 && quad_coeff.size() > 0) {
-        real* v1 = unit_values.data();
-        real* v2 = quad_coeff.data();
-        for(register int i=0; i<unit_values.length(); i++)
-            quad_dot += v1[i]*v2[i];
+    PLASSERT( unit_values.length() == size );
+
+    real en = 0.;
+    real tmp;
+    if (size > 0)
+    {
+        real* v = unit_values.data();
+        real* a = quad_coeff.data();
+        real* b = bias.data();
+        for(register int i=0; i<size; i++)
+        {
+            tmp = a[i]*v[i];
+            en += tmp*tmp + b[i]*v[i];
+        }
     }
-    return dot(unit_values,bias) + quad_dot;
+    return en;
 }
 
 real RBMGaussianLayer::fpropNLL(const Vec& target)
 {
     PLASSERT( target.size() == input_size );
+    computeExpectation();
+    computeStdDeviation();
 
     real ret = 0;
-    real target_i, activation_i, a_i;
     for( int i=0 ; i<size ; i++ )
     {
-        target_i = target[i];
-        activation_i = activation[i];
-	a_i = quad_coeff[i];
-        if(!fast_exact_is_equal(target_i,0.0))
-            // ret -= target[i] * pl_log(expectations[i]); 
-            ret -= target_i * pl_log( - activation_i / (2 * a_i * a_i) );
-        if(!fast_exact_is_equal(target_i,1.0))
-            // ret -= (1-target_i) * pl_log(1-expectation_i);
-            ret -= (1-target_i) * pl_log( 1 + activation_i / (2 * a_i * a_i) );
+        // ret += (target[i]-expectation[i])^2/(2 sigma[i]^2)
+        //      + log(sqrt(2*Pi) * sigma[i])
+
+        real r = (target[i] - expectation[i]) * quad_coeff[i];
+        ret += r * r + pl_log(sigma[i]);
     }
+    ret += 0.5*size*Log2Pi;
     return ret;
 }
 
@@ -448,24 +452,25 @@ void RBMGaussianLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
     PLASSERT( costs_column.width() == 1 );
     PLASSERT( costs_column.length() == batch_size );
 
-    real nll, a_i;
-    real *activation, *target;
-    
+    computeExpectations();
+    computeStdDeviation();
+
+    real nll;
+    real *expectation, *target;
+
     for (int k=0;k<batch_size;k++) // loop over minibatch
     {
         nll = 0;
-        activation = activations[k];
+        expectation = expectations[k];
         target = targets[k];
         for( register int i=0 ; i<size ; i++ ) // loop over outputs
         {
-            a_i = quad_coeff[i];
-	    if(!fast_exact_is_equal(target[i],0.0))
-                // nll -= target[i] * pl_log(expectations[i]); 
-                nll -= target[i] * pl_log( - activation[i] / (2 * a_i * a_i) );
-            if(!fast_exact_is_equal(target[i],1.0))
-                // nll -= (1-target[i]) * pl_log(1-expectations[i]); 
-                nll -= (1 - target[i]) * pl_log( 1 + activation[i] / (2 * a_i * a_i) );
+            // nll += (target[i]-expectation[i])^2/(2 sigma[i]^2)
+            //      + log(sqrt(2*Pi) * sigma[i])
+            real r = (target[i] - expectation[i]) * quad_coeff[i];
+            nll += r * r + pl_log(sigma[i]);
         }
+        nll += 0.5*size*Log2Pi;
         costs_column(k,0) = nll;
     }
 }
