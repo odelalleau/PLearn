@@ -95,7 +95,7 @@ void GradNNetLayerModule::fprop(const Mat& inputs, Mat& outputs)
 
     // Add bias.
     resizeOnes(n);
-    externalProductScaleAcc(outputs, ones, bias, 1.); // could be more efficient, but not critical 
+    externalProductAcc(outputs, ones, bias); // could be more efficient, but not critical 
 }
 
 /////////////////
@@ -256,11 +256,11 @@ void GradNNetLayerModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
 
     // Update bias.
     resizeOnes(n);
-    productScaleAcc(bias, output_gradients, true, ones, -avg_lr, 1.);
+    transposeProductScaleAcc(bias, output_gradients, ones, -avg_lr, real(1));
 
     // Update weights.
-    productScaleAcc(weights, output_gradients, true, inputs, false,
-            -avg_lr, l2_scaling);
+    transposeProductScaleAcc(weights, output_gradients, inputs,
+                             -avg_lr, l2_scaling);
 
     // Apply L1 penalty if needed (note: this is not very efficient).
     if (L1_penalty_factor > 0) {
