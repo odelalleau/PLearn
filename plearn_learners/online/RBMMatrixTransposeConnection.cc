@@ -372,18 +372,18 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Mat& inputs, const Mat& out
                       "Cannot resize input_gradients and accumulate into it" );
 
         // input_gradients += output_gradient * weights
-        productScaleAcc(input_gradients, output_gradients, false, weights, true, 1., 1.);
+        productTransposeAcc(input_gradients, output_gradients, weights);
     }
     else
     {
         input_gradients.resize(inputs.length(), down_size);
         // input_gradients = output_gradient * weights
-        productScaleAcc(input_gradients, output_gradients, false, weights, true, 1., 0.);
+        productTranspose(input_gradients, output_gradients, weights);
     }
 
     // weights -= learning_rate/n * output_gradients' * inputs
-    productScaleAcc(weights, inputs, true, output_gradients, false, 
-                    -learning_rate / inputs.length(), 1.);
+    transposeProductScaleAcc(weights, inputs, output_gradients,
+                             -learning_rate / inputs.length(), real(1));
 }
 
 
