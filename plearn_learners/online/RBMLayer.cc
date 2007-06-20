@@ -466,8 +466,8 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
 
     if( momentum == 0. )
     {
-        productScaleAcc(bias, pos_values, true, ones, -avg_lr, 1.);
-        productScaleAcc(bias, neg_values, true, ones,  avg_lr, 1.);
+        transposeProductScaleAcc(bias, pos_values, ones, -avg_lr, real(1));
+        transposeProductScaleAcc(bias, neg_values, ones,  avg_lr, real(1));
     }
     else
     {
