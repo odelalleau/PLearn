@@ -254,6 +254,8 @@
 #include <plearn/vmat/CenteredVMatrix.h>
 #include <plearn/vmat/CompactVMatrix.h>
 #include <plearn/vmat/CompressedVMatrix.h>
+#include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/vmat/ConstantVMatrix.h>
 #include <plearn/vmat/CumVMatrix.h>
 #include <plearn/vmat/DatedJoinVMatrix.h>
 #include <plearn/vmat/DictionaryVMatrix.h>
