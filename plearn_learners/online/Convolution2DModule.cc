@@ -43,6 +43,7 @@
 #include "Convolution2DModule.h"
 #include <plearn/math/convolutions.h>
 #include <plearn/math/TMat_maths.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
@@ -370,6 +371,7 @@ void Convolution2DModule::fprop(const Vec& input, Vec& output) const
 
 void Convolution2DModule::fprop(const TVec<Mat*>& ports_value)
 {
+    Profiler::pl_profile_start( "Convolution2DModule::fprop" );
     PLASSERT( ports_value.length() == nPorts() );
 
     Mat* input = ports_value[0];
@@ -382,6 +384,7 @@ void Convolution2DModule::fprop(const TVec<Mat*>& ports_value)
         int batch_size = input->length();
         output->resize(batch_size, port_sizes(1,1));
 
+        Profiler::pl_profile_start( "convolve2D" );
         // TODO: optimize
         for( int k=0; k<batch_size; k++ )
         {
@@ -405,6 +408,7 @@ void Convolution2DModule::fprop(const TVec<Mat*>& ports_value)
                                     kernel_step2, true );
             }
         }
+        Profiler::pl_profile_end( "convolve2D" );
     }
     else if (!input && !output)
     {
@@ -412,6 +416,8 @@ void Convolution2DModule::fprop(const TVec<Mat*>& ports_value)
     }
     else
         PLCHECK_MSG( false, "Unknown port configuration" );
+
+    Profiler::pl_profile_end( "Convolution2DModule::fprop" );
 }
 
 /* THIS METHOD IS OPTIONAL
@@ -499,6 +505,7 @@ void Convolution2DModule::bpropUpdate(const Vec& input, const Vec& output,
 void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                          const TVec<Mat*>& ports_gradient)
 {
+    Profiler::pl_profile_start("Convolution2DModule::bpropAccUpdate");
     PLASSERT( ports_value.length() == nPorts()
               && ports_gradient.length() == nPorts() );
 
@@ -507,26 +514,33 @@ void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* input_grad = ports_gradient[0];
     Mat* output_grad = ports_gradient[1];
 
-    // If we want input_grad and we have output_grad
-    if( input_grad && input_grad->isEmpty()
-        && output_grad && !output_grad->isEmpty() )
+    // If we have output_grad and we want to update
+    if( output_grad && !output_grad->isEmpty()
+        && (!input_grad || input_grad->isEmpty() ) )
     {
+        // If we have to compute input_grad
+        bool compute_input_grad = false;
+        if( input_grad )
+            compute_input_grad = true;
+
         PLASSERT( input );
         PLASSERT( output );
 
         PLASSERT( input->width() == port_sizes(0,1) );
         PLASSERT( output->width() == port_sizes(1,1) );
-        PLASSERT( input_grad->width() == port_sizes(0,1) );
         PLASSERT( output_grad->width() == port_sizes(1,1) );
+        if( compute_input_grad )
+            PLASSERT( input_grad->width() == port_sizes(0,1) );
 
         int batch_size = input->length();
         PLASSERT( output->length() == batch_size );
         PLASSERT( output_grad->length() == batch_size );
 
-        input_grad->resize(batch_size, port_sizes(0,1));
         learning_rate = start_learning_rate /
             (1.+decrease_constant*step_number);
         real avg_lr = learning_rate / batch_size;
+        if( compute_input_grad )
+            input_grad->resize(batch_size, port_sizes(0,1));
 
         // clear kernel gradient
         for( int i=0; i<n_input_images; i++ )
@@ -538,6 +552,11 @@ void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 }
 
         // TODO: optimize
+        if( compute_input_grad )
+            Profiler::pl_profile_start("convolve2Dbackprop");
+        else
+            Profiler::pl_profile_start("convolve2Dbackprop (update only)");
+
         for( int k=0; k<batch_size; k++ )
         {
             for( int i=0; i<n_input_images; i++ )
@@ -545,9 +564,11 @@ void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 input_images[i] = (*input)(k)
                     .subVec(i*input_images_size, input_images_size)
                     .toMat(input_images_length, input_images_width);
-                input_gradients[i] = (*input_grad)(k)
-                    .subVec(i*input_images_size, input_images_size)
-                    .toMat(input_images_length, input_images_width);
+
+                if( compute_input_grad )
+                    input_gradients[i] = (*input_grad)(k)
+                        .subVec(i*input_images_size, input_images_size)
+                        .toMat(input_images_length, input_images_width);
             }
 
             for( int j=0; j<n_output_images; j++ )
@@ -563,14 +584,28 @@ void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             for( int j=0; j<n_output_images; j++ )
                 for( int i=0; i<n_input_images; i++ )
                     if( connection_matrix(i,j) != 0 )
-                        convolve2Dbackprop( input_images[i],
-                                            kernels(i,j),
-                                            output_gradients[j],
-                                            input_gradients[i],
-                                            kernel_gradients(i,j),
-                                            kernel_step1, kernel_step2,
-                                            true );
+                    {
+                        if( compute_input_grad )
+                            convolve2Dbackprop( input_images[i],
+                                                kernels(i,j),
+                                                output_gradients[j],
+                                                input_gradients[i],
+                                                kernel_gradients(i,j),
+                                                kernel_step1, kernel_step2,
+                                                true );
+                        else
+                            convolve2Dbackprop( input_images[i],
+                                                output_gradients[j],
+                                                kernel_gradients(i,j),
+                                                kernel_step1, kernel_step2,
+                                                true );
+                    }
         }
+
+        if( compute_input_grad )
+            Profiler::pl_profile_end("convolve2Dbackprop");
+        else
+            Profiler::pl_profile_end("convolve2Dbackprop (update only)");
 
         for( int j=0; j<n_output_images; j++ )
         {
@@ -582,14 +617,21 @@ void Convolution2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 .subMatColumns(j*output_images_size, output_images_size) );
         }
     }
-    else if( !input_grad )
+    else if( !input_grad
+             && output_grad && !output_grad->isEmpty() )
     {
-        PLASSERT( !output_grad || !output_grad->isEmpty() );
+        PLASSERT( input && !input->isEmpty() );
+        PLASSERT( output && !output->isEmpty() );
+    }
+    else if( !input_grad && !output_grad )
+    {
         PLASSERT( !input || !input->isEmpty() );
         PLASSERT( !output || !output->isEmpty() );
     }
     else
         PLCHECK_MSG( false, "Port configuration not implemented" );
+
+    Profiler::pl_profile_end("Convolution2DModule::bpropAccUpdate");
 }
 
 //! reset the parameters to the state they would be BEFORE starting training.
