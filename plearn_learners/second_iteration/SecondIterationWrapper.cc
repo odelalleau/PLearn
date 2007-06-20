@@ -49,7 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(SecondIterationWrapper,
                         "A PLearner to wrap around a generic regressor to calculate the predicted class.", 
                         "Algorithm built to wrap around a generic regressor in the context of the second iteration\n"
                         "of the annual sales estimation project.\n"
-                        "It calculates the predicted class and computes the cse error.\n"
+                        "It calculates the predicted class and computes the cse error. It do not work with classifier\n"
     );
 
 SecondIterationWrapper::SecondIterationWrapper()  
