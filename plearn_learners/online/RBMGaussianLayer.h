@@ -113,11 +113,8 @@ public:
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
 
-    //! Not implemented.
-    virtual void update( const Mat& pos_values, const Mat& neg_values )
-    {
-        PLASSERT_MSG(false, "Not implemented");
-    }
+    //! Batch version
+    virtual void update( const Mat& pos_values, const Mat& neg_values );
 
     //! resets activations, sample, expectation and sigma fields
     virtual void reset();
@@ -135,7 +132,7 @@ public:
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
     virtual void fpropNLL(const Mat& targets, const Mat& costs_column);
-    
+
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
     virtual void bpropNLL(const Vec& target, real nll, Vec& bias_gradient);
