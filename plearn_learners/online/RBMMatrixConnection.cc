@@ -141,7 +141,7 @@ void RBMMatrixConnection::accumulatePosStats( const Mat& down_values,
     int mbs=down_values.length();
     PLASSERT(up_values.length()==mbs);
     // weights_pos_stats += up_values * down_values'
-    productScaleAcc(weights_pos_stats, up_values, true, down_values, false, 1., 1.);
+    transposeProductAcc(weights_pos_stats, up_values, down_values);
     pos_count+=mbs;
 }
 
@@ -163,7 +163,7 @@ void RBMMatrixConnection::accumulateNegStats( const Mat& down_values,
     int mbs=down_values.length();
     PLASSERT(up_values.length()==mbs);
     // weights_neg_stats += up_values * down_values'
-     productScaleAcc(weights_neg_stats, up_values, true, down_values, false, 1., 1.);
+    transposeProductAcc(weights_neg_stats, up_values, down_values);
     neg_count+=mbs;
 }
 
@@ -293,11 +293,11 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
         // We use the average gradient over a mini-batch.
         real avg_lr = learning_rate / pos_down_values.length();
 
-        productScaleAcc(weights, pos_up_values, true, pos_down_values, false,
-                -avg_lr, 1.);
+        transposeProductScaleAcc(weights, pos_up_values, pos_down_values,
+                                 -avg_lr, real(1));
 
-        productScaleAcc(weights, neg_up_values, true, neg_down_values, false,
-                avg_lr, 1.);
+        transposeProductScaleAcc(weights, neg_up_values, neg_down_values,
+                                 avg_lr, real(1));
     }
     else
     {
@@ -339,30 +339,28 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
     //              +(1-gibbs_chain_statistics_forgetting_factor)
     //               * gibbs_neg_up_values'*gibbs_neg_down_values/minibatch_size
     if (neg_count==0)
-        productScaleAcc(weights_neg_stats,
-                        gibbs_neg_up_values,true,
-                        gibbs_neg_down_values,false,normalize_factor,0.);
+        transposeProductScaleAcc(weights_neg_stats, gibbs_neg_up_values,
+                                 gibbs_neg_down_values,
+                                 normalize_factor, real(0));
     else
-        productScaleAcc(weights_neg_stats,
-                        gibbs_neg_up_values,true,
-                        gibbs_neg_down_values,false,
-                        normalize_factor*(1-gibbs_ma_coefficient),
-                        gibbs_ma_coefficient);
+        transposeProductScaleAcc(weights_neg_stats,
+                                 gibbs_neg_up_values,
+                                 gibbs_neg_down_values,
+                                 normalize_factor*(1-gibbs_ma_coefficient),
+                                 gibbs_ma_coefficient);
     neg_count++;
 
     // delta w = -lrate * ( pos_up_values'*pos_down_values
     //                   - ( background_gibbs_update_ratio*neg_stats
     //                      +(1-background_gibbs_update_ratio)
     //                       * cd_neg_up_values'*cd_neg_down_values/minibatch_size))
-    productScaleAcc(weights,
-                    pos_up_values, true,
-                    pos_down_values, false,-learning_rate*normalize_factor,1.);
+    transposeProductScaleAcc(weights, pos_up_values, pos_down_values,
+                             -learning_rate*normalize_factor, real(1));
     multiplyAcc(weights, weights_neg_stats,
                 learning_rate*background_gibbs_update_ratio);
-    productScaleAcc(weights,
-                    cd_neg_up_values, true,
-                    cd_neg_down_values, false,
-                    learning_rate*(1-background_gibbs_update_ratio)*normalize_factor,1.);
+    transposeProductScaleAcc(weights, cd_neg_up_values, cd_neg_down_values,
+        learning_rate*(1-background_gibbs_update_ratio)*normalize_factor,
+        real(1));
 }
 
 void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
@@ -377,7 +375,8 @@ void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
     //               * gibbs_neg_up_values'*gibbs_neg_down_values
     static Mat tmp;
     tmp.resize(weights.length(),weights.width());
-    productScaleAcc(tmp,gibbs_neg_up_values,true,gibbs_neg_down_values,false,1.,0.);
+    transposeProduct(tmp, gibbs_neg_up_values, gibbs_neg_down_values);
+
     if (neg_count==0)
         multiply(weights_neg_stats,tmp,normalize_factor);
     else
@@ -401,9 +400,8 @@ void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
     }
 
     // delta w = -lrate * ( pos_up_values'*pos_down_values/minibatch_size - neg_stats )
-    productScaleAcc(weights,
-                    pos_up_values, true,
-                    pos_down_values, false,-learning_rate*normalize_factor,1.);
+    transposeProductScaleAcc(weights, pos_up_values, pos_down_values,
+                             -learning_rate*normalize_factor, real(1));
     multiplyAcc(weights, weights_neg_stats,learning_rate);
 }
 
@@ -579,8 +577,8 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
     }
 
     // weights -= learning_rate/n * output_gradients' * inputs
-    productScaleAcc(weights, output_gradients, true, inputs, false,
-            -learning_rate / inputs.length(), 1.);
+    transposeProductScaleAcc(weights, output_gradients, inputs,
+                             -learning_rate / inputs.length(), real(1));
 }
 
 void RBMMatrixConnection::petiteCulotteOlivierUpdate(
