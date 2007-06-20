@@ -255,6 +255,7 @@ void RBMGaussianLayer::clearStats()
 void RBMGaussianLayer::forget()
 {
     quad_coeff.fill( 2. );
+//    quad_coeff.fill( 1. );
 
     inherited::forget();
 }
@@ -279,8 +280,6 @@ void RBMGaussianLayer::build_()
     sigma_is_up_to_date = false;
 
     quad_coeff.resize( size );
-    quad_coeff.fill( 2. );
-//    quad_coeff.fill( 1. );
     quad_coeff_pos_stats.resize( size );
     quad_coeff_neg_stats.resize( size );
 }
