@@ -67,7 +67,7 @@ ConditionalMeanImputationVMatrix::~ConditionalMeanImputationVMatrix()
 
 void ConditionalMeanImputationVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "source", &ConditionalMeanImputationVMatrix::source, OptionBase::buildoption, 
+  declareOption(ol, "source", &ConditionalMeanImputationVMatrix::source, OptionBase::buildoption,
                 "The source VMatrix with missing values.\n");
   declareOption(ol, "condmean_dir", &ConditionalMeanImputationVMatrix::condmean_dir, OptionBase::buildoption, 
                 "The directory in the source metadatadir housing the variable conditional mean files.\n");
@@ -98,7 +98,7 @@ void ConditionalMeanImputationVMatrix::getExample(int i, Vec& input, Vec& target
   source->getExample(i, input, target, weight);
   for (int source_col = 0; source_col < input->length(); source_col++)
     if (is_missing(input[source_col]) && condmean_col_ref[source_col] >= 0) input[source_col] = condmean(i, condmean_col_ref[source_col]);
-    else if (is_missing(input[source_col])) PLERROR("In ConditionalMeanImputationVMatrix::getExample() we have a missing value in column %d that haven't been assigned a value",source_col);
+    else if (is_missing(input[source_col])) PLERROR("In ConditionalMeanImputationVMatrix::getExample(%d,vec,vec,vec) we have a missing value in column %d that haven't been assigned a value",i,source_col);
 }
 
 real ConditionalMeanImputationVMatrix::get(int i, int j) const
@@ -119,7 +119,7 @@ void ConditionalMeanImputationVMatrix::getSubRow(int i, int j, Vec v) const
   source->getSubRow(i, j, v);
   for (int source_col = 0; source_col < v->length(); source_col++) 
     if (is_missing(v[source_col])) v[source_col] = condmean(i, condmean_col_ref[source_col + j]);
-    else if (is_missing(v[source_col])) cout << "getSubRow : " << i << " " << source_col + j << endl;
+    else if (is_missing(v[source_col])) PLERROR("In ConditionalMeanImputationVMatrix::getSubRow(%d,%d,vec) we have a missing value in colomn %d that haven't been assigned a value",i,j,source_col);
 }
 
 void ConditionalMeanImputationVMatrix::putSubRow(int i, int j, Vec v)
@@ -142,7 +142,7 @@ void ConditionalMeanImputationVMatrix::getRow(int i, Vec v) const
   source-> getRow(i, v);
   for (int source_col = 0; source_col < v->length(); source_col++)
     if (is_missing(v[source_col]) && condmean_col_ref[source_col] >= 0) v[source_col] = condmean(i, condmean_col_ref[source_col]);
-    else if (is_missing(v[source_col])) cout << "getRow : " << i << " " << source_col << endl;
+    else if (is_missing(v[source_col])) PLERROR("In ConditionalMeanImputationVMatrix::getRow(%d,vec) we have a missing value in column %d that haven't been assigned a value",i,source_col);
 }
 
 void ConditionalMeanImputationVMatrix::putRow(int i, Vec v)
@@ -155,7 +155,7 @@ void ConditionalMeanImputationVMatrix::getColumn(int i, Vec v) const
   source-> getColumn(i, v);
   for (int source_row = 0; source_row < v->length(); source_row++)
     if (is_missing(v[source_row]) && condmean_col_ref[i] >= 0) v[source_row] = condmean(source_row, condmean_col_ref[i]);
-    else if (is_missing(v[source_row])) cout << "getColumn : " << source_row << " " << i << endl;
+    else if (is_missing(v[source_row])) PLERROR("In ConditionalMeanImputationVMatrix::getColumn(%d,vec) we have a missing value in row %d that haven't been assigned a value",i,source_row);
 }
 
 
