@@ -57,7 +57,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - 'visible' : expectations of the visible (normally input) layer\n"
     "  - 'hidden.state' : expectations of the hidden (normally output) layer\n"
     "  - 'hidden_activations.state' : activations of hidden units (given visible)\n"
-    "  - 'visible_sample' : random sample obtained on visible units\n"
+    "  - 'visible_sample' : random sample obtained on visible units (input or output port)\n"
+    "  - 'visible_expectation' : expectation of visible units (output port ONLY, for sampling)\n"
     "  - 'hidden_sample' : random sample obtained on hidden units\n"
     "  - 'energy' : energy of the joint (visible,hidden) pair or free-energy\n"
     "               of the visible (if given) or of the hidden (if given).\n"
@@ -279,6 +280,7 @@ void RBMModule::build_()
     addPortName("hidden.state");
     addPortName("hidden_activations.state");
     addPortName("visible_sample");
+    addPortName("visible_expectation");
     addPortName("hidden_sample");
     addPortName("energy");
     addPortName("hidden_bias"); 
@@ -303,6 +305,7 @@ void RBMModule::build_()
     if (visible_layer) {
         port_sizes(getPortIndex("visible"), 1) = visible_layer->size;
         port_sizes(getPortIndex("visible_sample"), 1) = visible_layer->size;
+        port_sizes(getPortIndex("visible_expectation"), 1) = visible_layer->size;
     }
     if (hidden_layer) {
         port_sizes(getPortIndex("hidden.state"), 1) = hidden_layer->size;
@@ -586,6 +589,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* hidden = ports_value[getPortIndex("hidden.state")];
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
     Mat* visible_sample = ports_value[getPortIndex("visible_sample")];
+    Mat* visible_expectation = ports_value[getPortIndex("visible_expectation")];
     Mat* hidden_sample = ports_value[getPortIndex("hidden_sample")];
     Mat* energy = ports_value[getPortIndex("energy")];
     Mat* neg_log_likelihood = ports_value[getPortIndex("neg_log_likelihood")];
@@ -780,29 +784,41 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         found_a_valid_configuration = true;
     } 
     
-    // SAMPLING inputs
-    if ((visible_sample && visible_sample->isEmpty()) // it is asked to sample the visible units
-        && (!visible || !visible->isEmpty() ))
-//        || (hidden_sample && hidden_sample->isEmpty())) // or to sample the hidden units
+    // SAMPLING
+    if ((visible_sample && visible_sample->isEmpty())               // is asked to sample visible units (discrete)
+        || (visible_expectation && visible_expectation->isEmpty())  //              "                   (continous)
+	|| (hidden_sample && hidden_sample->isEmpty()))             // or to sample hidden units
     {
         if (hidden_sample && !hidden_sample->isEmpty()) // sample visible conditionally on hidden
         {
             sampleVisibleGivenHidden(*hidden_sample);
-	    cout << "(discrete visible) sampling init (from hidden)" << endl;
+	    Gibbs_step=0;
+	    cout << "sampling init (from hidden)" << endl;
         }
+        else if (visible_sample && !visible_sample->isEmpty()) // if an input is provided, sample hidden conditionally
+        {
+            sampleHiddenGivenVisible(*visible_sample);
+	    Gibbs_step=0;
+	    cout << "sampling init (from visible)" << endl;
+	}
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
-            sampleHiddenGivenVisible(*visible);
-            sampleVisibleGivenHidden(hidden_layer->samples);
-	    cout << "(discrete visible) sampling init (from visible)" << endl;
+            visible_layer->generateSamples();
+	    sampleHiddenGivenVisible(visible_layer->samples);
+	    Gibbs_step=0;
+	    cout << "sampling init (from visible)" << endl;
         }
+        else if (visible_expectation && !visible_expectation->isEmpty()) 
+        {
+	     PLERROR("In RBMModule::fprop visible_expectation can only be an output port (use visible as input port");
+	}
         else // sample unconditionally: Gibbs sample after k steps
         {
             // the visible_layer->expectations contain the "state" from which we
             // start or continue the chain
             int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
-            cout << "(discrete visible) gibbs " << Gibbs_step;
+            cout << "Gibbs sampling " << Gibbs_step;
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
@@ -810,61 +826,36 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
   	    cout << " -> " << Gibbs_step-1 << endl;
         }
-        found_a_valid_configuration = true;
-    }
-    // SAMPLING continuous inputs (computing visible expectation)
-    if (visible && visible->isEmpty()) { // it is asked the expectations of visible units
-    
-        if (visible_sample && !visible_sample->isEmpty())
-        {
-            sampleHiddenGivenVisible(*visible_sample);
-            sampleVisibleGivenHidden(hidden_layer->samples);
-	    cout << "(continuous visible) sampling init (from visible)" << endl;
-	}
-	else if ( hidden_sample && !hidden_sample->isEmpty() )
-	{
-	   sampleVisibleGivenHidden(*hidden_sample);
-	   cout << "(continuous visible) sampling init (from hidden)" << endl;	   
-	}
-	else
-	{
-           int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
-                            min_n_Gibbs_steps);
-	   PLASSERT( min_n > 0 );
-           cout << "(continuous visible) gibbs " << Gibbs_step;
-	   for (;Gibbs_step<min_n;Gibbs_step++)
-           {
-                sampleHiddenGivenVisible(visible_layer->samples);
-                sampleVisibleGivenHidden(hidden_layer->samples);
-           }
-  	   cout << " -> " << Gibbs_step-1 << endl;
-	}
-        
+
 	if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
         {
    	      const Mat& hidden_expect = hidden_layer->getExpectations();
               hidden->resize(hidden_expect.length(), hidden_expect.width());
               *hidden << hidden_expect;
         }
-	 
-        const Mat& to_store = visible_layer->getExpectations();
-        visible->resize(to_store.length(), to_store.width());
-        *visible << to_store;
+        if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
+        {
+            visible_sample->resize(visible_layer->samples.length(),
+                                   visible_layer->samples.width());
+            *visible_sample << visible_layer->samples;
+        }
+        if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
+        {
+            hidden_sample->resize(hidden_layer->samples.length(),
+                                  hidden_layer->samples.width());
+            *hidden_sample << hidden_layer->samples;
+        }
+        if (visible_expectation && visible_expectation->isEmpty()) // provide expectation of the visible units
+        {
+	    const Mat& to_store = visible_layer->getExpectations();
+            visible_expectation->resize(to_store.length(),
+	                                to_store.width());
+            *visible_expectation << to_store;
+        }
 
 	found_a_valid_configuration = true;
-    }
-    if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
-    {
-        visible_sample->resize(visible_layer->samples.length(),
-                               visible_layer->samples.width());
-        *visible_sample << visible_layer->samples;
-    }
-    if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
-    {
-        hidden_sample->resize(hidden_layer->samples.length(),
-                              hidden_layer->samples.width());
-        *hidden_sample << hidden_layer->samples;
-    }
+    } // END SAMPLING
+
 
     // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
     if (contrastive_divergence)

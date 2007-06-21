@@ -471,7 +471,7 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
     }
     else
     {
-        PLERROR("RBMLayer::update - Not implemented yet");
+        PLERROR("RBMLayer::update - Not implemented yet with momentum");
         /*
         bias_inc.resize( size );
         real* binc = bias_inc.data();
