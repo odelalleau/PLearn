@@ -142,6 +142,7 @@ void TestImputations::build_()
     if (train_set)
     {
         build_ball_tree();
+        output_file_name = train_metadata + "/TestImputation/output.pmat";
         for (int iteration = 1; iteration <= train_set->width(); iteration++)
         {
             cout << "In TestImputations, Iteration # " << iteration << endl;
@@ -152,16 +153,14 @@ void TestImputations::build_()
             computeNeighborhoodStats();
             train();
         }
-        PLERROR("In TestImputations::build_(): we are done here");
+        endtestimputation("In TestImputations::build_(): we are done here");
     }
 }
 
 void TestImputations::build_ball_tree()
-{
-    // initialize primary dataset
+{ 
+   // initialize primary dataset
     cout << "initialize the train set" << endl;
-    train_row = 0;
-    train_col = 0;
     train_length = train_set->length();
     train_width = train_set->width();
     train_input.resize(train_width);
@@ -170,8 +169,9 @@ void TestImputations::build_ball_tree()
     train_metadata = train_set->getMetaDataDir();
     weights.resize(train_width);
     weights.fill(1.0);
-    for (mi_col = 0; mi_col < missing_indicators.length(); mi_col++)
+    for (int mi_col = 0; mi_col < missing_indicators.length(); mi_col++)
     {
+        int train_col;
         for (train_col = 0; train_col < train_width; train_col++)
         {
             if (missing_indicators[mi_col] != train_names[train_col]) continue;
@@ -279,7 +279,22 @@ n_examples = -1  )
 */
 
 }
-
+void TestImputations::endtestimputation(const char* msg, ...){
+    va_list args;
+    va_start(args,msg);
+    getHeaderRecord();
+    for (int train_col = 0; train_col < train_width; train_col++)
+    {
+        if (header_record[train_col] == 1.0) 
+            PLWARNING("No all variable done!!!");
+        else if (header_record[train_col] == 2.0){
+            getOutputRecord(train_col);
+            if(output_record[100]==0.0)
+                PLWARNING("Element %d,%d is at zero in the output file. Meaby this variable was not treated",train_col,100);
+        }
+    }
+    PLERROR(msg,args);
+}
 void TestImputations::initialize()
 {
     
@@ -297,7 +312,7 @@ void TestImputations::initialize()
     to_deal_with_total = 0;
     to_deal_with_next = -1;
 
-    for (train_col = 0; train_col < train_width; train_col++)
+    for (int train_col = 0; train_col < train_width; train_col++)
     {
         if (header_record[train_col] != 1.0) continue;
         to_deal_with_total += 1;
@@ -308,27 +323,27 @@ void TestImputations::initialize()
     {
         train_set->unlockMetaDataDir();
         // reviewGlobalStats();
-        PLERROR("In TestImputations::initialize() we are done here");
+        endtestimputation("In TestImputations::initialize() we are done here");
     }
-    cout << "next variable to deal with: " << train_names[to_deal_with_next] << endl;
+    cout << "next variable to deal with: " << train_names[to_deal_with_next] << "("<<to_deal_with_next<<")"<<endl;
     to_deal_with_name = train_names[to_deal_with_next];
     updateHeaderRecord(to_deal_with_next);
     train_set->unlockMetaDataDir();
     
     // find the available samples with non-missing values for this variable
-    pb = 0;
     train_stats = train_set->getStats(to_deal_with_next);
     train_total = train_stats.n();
     train_missing = train_stats.nmissing();
     train_present = train_total - train_missing;
     indices.resize((int) train_present);
-    ind_next = 0;
-    pb = new ProgressBar( "Building the indices for " + to_deal_with_name, train_length);
-    for (train_row = 0; train_row < train_length; train_row++)
+    int ind_next = 0;
+    ProgressBar* pb = new ProgressBar( "Building the indices for " + to_deal_with_name, train_length);
+    for (int train_row = 0; train_row < train_length; train_row++)
     {
         to_deal_with_value = train_set->get(train_row, to_deal_with_next);
         if (is_missing(to_deal_with_value)) continue;
-        if (ind_next >= indices.length()) PLERROR("In TestImputations::initialize() There seems to be more present values than indicated by the stats file");
+        if (ind_next >= indices.length()) 
+            PLERROR("In TestImputations::initialize() There seems to be more present values than indicated by the stats file");
         indices[ind_next] = train_row;
         ind_next += 1;
         pb->update( train_row );
@@ -341,11 +356,14 @@ void TestImputations::initialize()
     
     // load the test samples for this variable
     if (indices.length() > max_number_of_samples) test_length = max_number_of_samples;
+    else if (indices.length() < min_number_of_samples)
+        PLERROR("TestImputations::initialize() Their is less examples for the variable %s then the min_number_of semples(%d)",
+                to_deal_with_name.c_str(),min_number_of_samples);
     else test_length = indices.length();
     test_width = train_width;
     test_samples_set = new MemoryVMatrix(test_length, test_width);
     pb = new ProgressBar( "Loading the test samples for " + to_deal_with_name, test_length);
-    for (test_row = 0; test_row < test_length; test_row++)
+    for (int test_row = 0; test_row < test_length; test_row++)
     {
         train_set->getRow(indices[test_row], train_input);
         test_samples_set->putRow(test_row, train_input);
@@ -357,19 +375,19 @@ void TestImputations::initialize()
 void TestImputations::computeMeanMedianModeStats()
 {
     if (!isfile(mean_median_mode_file_name)) PLERROR("In TestImputations::computeMeanMedianModeStats() a valid mean_median_mode_file path must be provided.");
-    mmmf_file = new FileVMatrix(mean_median_mode_file_name);
-    mmmf_length = mmmf_file->length();
-    mmmf_width = mmmf_file->width();
+    VMat mmmf_file = new FileVMatrix(mean_median_mode_file_name);
+    int mmmf_length = mmmf_file->length();
+    int mmmf_width = mmmf_file->width();
     if (mmmf_length != 3) PLERROR("In TestImputations::computeMeanMedianModeStats() there should be exactly 3 records in the mmm file, got %i.", mmmf_length);
     if (mmmf_width != train_width) PLERROR("In TestImputations::computeMeanMedianModeStats() train set and mmm width should be the same, got %i.", mmmf_width);
-    mmmf_mean = mmmf_file->get(0, to_deal_with_next);
-    mmmf_median = mmmf_file->get(1, to_deal_with_next);
-    mmmf_mode = mmmf_file->get(2, to_deal_with_next);
+    real mmmf_mean = mmmf_file->get(0, to_deal_with_next);
+    real mmmf_median = mmmf_file->get(1, to_deal_with_next);
+    real mmmf_mode = mmmf_file->get(2, to_deal_with_next);
     mmmf_mean_err = 0.0;
     mmmf_median_err = 0.0;
     mmmf_mode_err = 0.0;
-    pb = new ProgressBar( "computing the mean, median and mode imputation errors for " + to_deal_with_name, test_length);
-    for (test_row = 0; test_row < test_length; test_row++)
+    ProgressBar* pb = new ProgressBar( "computing the mean, median and mode imputation errors for " + to_deal_with_name, test_length);
+    for (int test_row = 0; test_row < test_length; test_row++)
     {
         to_deal_with_value = test_samples_set->get(test_row, to_deal_with_next);
         mmmf_mean_err += pow(to_deal_with_value - mmmf_mean, 2.0);
@@ -389,13 +407,13 @@ void TestImputations::computeTreeCondMeanStats()
     if (!isfile(tcmf_file_name)) 
         PLERROR("In TestImputations::computeTreeCondMeanStats(): The '%s' file was not found in the tcf directory.",tcmf_file_name.c_str());
     tcmf_file = new FileVMatrix(tcmf_file_name);
-    tcmf_length = tcmf_file->length();
-    tcmf_width = tcmf_file->width();
+    int tcmf_length = tcmf_file->length();
+    int tcmf_width = tcmf_file->width();
     if (tcmf_length < train_length) 
         PLERROR("In TestImputations::computeTreeCondMeanStats(): there are only %d records in the tree conditional output file. We need %d.",tcmf_length,train_length);
     tcmf_mean_err = 0.0;
-    pb = new ProgressBar( "computing the tree conditional mean imputation errors for " + to_deal_with_name, test_length);
-    for (test_row = 0; test_row < test_length; test_row++)
+    ProgressBar* pb = new ProgressBar( "computing the tree conditional mean imputation errors for " + to_deal_with_name, test_length);
+    for (int test_row = 0; test_row < test_length; test_row++)
     {
         to_deal_with_value = test_samples_set->get(test_row, to_deal_with_next);
         tcmf_mean_err += pow(to_deal_with_value - tcmf_file->get(indices[test_row], 0), 2.0);
@@ -408,29 +426,30 @@ void TestImputations::computeTreeCondMeanStats()
 void TestImputations::computeCovPresStats()
 {
     if (!isfile(covariance_preservation_file_name)) PLERROR("In TestImputations::computeCovPresStats() a valid covariance_preservation_file path must be provided.");
-    cvpf_file = new FileVMatrix(covariance_preservation_file_name);
-    cvpf_length = cvpf_file->length();
-    cvpf_width = cvpf_file->width();
-    if (cvpf_length != train_width + 1) PLERROR("In TestImputations::computeCovPresStats() there should be %i records in the cvp file, got %i.",
-                                                train_width + 1, cvpf_length);
-    if (cvpf_width != train_width) PLERROR("In TestImputations::computeCovPresStats() train set and cvp width should be the same, got %i.", cvpf_width);
-    cvpf_file = new FileVMatrix(covariance_preservation_file_name);
+    VMat cvpf_file = new FileVMatrix(covariance_preservation_file_name);
+    int cvpf_length = cvpf_file->length();
+    int cvpf_width = cvpf_file->width();
+    if (cvpf_length != train_width + 1)
+        PLERROR("In TestImputations::computeCovPresStats() there should be %i records in the cvp file, got %i.", train_width + 1, cvpf_length);
+    if (cvpf_width != train_width)
+        PLERROR("In TestImputations::computeCovPresStats() train set and cvp width should be the same, got %i.", cvpf_width);
+    //cvpf_file = new FileVMatrix(covariance_preservation_file_name);
     cvpf_cov.resize(train_width, train_width);
     cvpf_mu.resize(train_width);
-    for (cvpf_row = 0; cvpf_row < train_width; cvpf_row++)
+    for (int cvpf_row = 0; cvpf_row < train_width; cvpf_row++)
     {
-        for (cvpf_col = 0; cvpf_col < train_width; cvpf_col++)
+        for (int cvpf_col = 0; cvpf_col < train_width; cvpf_col++)
         {
             cvpf_cov(cvpf_row, cvpf_col) = cvpf_file->get(cvpf_row, cvpf_col);
         }
     }
-    for (cvpf_col = 0; cvpf_col < train_width; cvpf_col++)
+    for (int cvpf_col = 0; cvpf_col < train_width; cvpf_col++)
     {
         cvpf_mu[cvpf_col] = cvpf_file->get(train_width, cvpf_col);
     }
     cvpf_mean_err = 0.0;
-    pb = new ProgressBar( "computing the covariance preservation imputation errors for " + to_deal_with_name, test_length);
-    for (test_row = 0; test_row < test_length; test_row++)
+    ProgressBar* pb = new ProgressBar( "computing the covariance preservation imputation errors for " + to_deal_with_name, test_length);
+    for (int test_row = 0; test_row < test_length; test_row++)
     {
         test_samples_set->getRow(test_row, train_input);
         cvpf_mean_err += pow(to_deal_with_value - covariancePreservationValue(to_deal_with_next), 2.0);
@@ -442,15 +461,16 @@ void TestImputations::computeCovPresStats()
 
 real TestImputations::covariancePreservationValue(int col)
 {
-    cvpf_sum_cov_xl = 0;
-    cvpf_sum_xl_square = 0;
-    for (cvpf_col = 0; cvpf_col < train_width; cvpf_col++)
+    real cvpf_sum_cov_xl = 0;
+    real cvpf_sum_xl_square = 0;
+    for (int cvpf_col = 0; cvpf_col < train_width; cvpf_col++)
     {
         if (cvpf_col == col) continue;
         if (is_missing(train_input[cvpf_col])) continue;
         cvpf_sum_cov_xl += cvpf_cov(cvpf_col, col) * (train_input[cvpf_col] - cvpf_mu[cvpf_col]);
         cvpf_sum_xl_square += (train_input[cvpf_col] - cvpf_mu[cvpf_col]) * (train_input[cvpf_col] - cvpf_mu[cvpf_col]);
     }
+    real cvpf_value;
     if (cvpf_sum_xl_square == 0.0) cvpf_value = cvpf_mu[col];
     else cvpf_value = cvpf_mu[col] + cvpf_sum_cov_xl / cvpf_sum_xl_square;
     return cvpf_value;
@@ -462,23 +482,23 @@ void TestImputations::computeNeighborhoodStats()
     knnf_neighbors.resize(100);
     knnf_mean_err.resize(100);
     knnf_mean_err.clear();
-    pb = new ProgressBar( "computing the neighborhood imputation errors for " + to_deal_with_name, test_length);
-    for (test_row = 0; test_row < test_length; test_row++)
+    ProgressBar* pb = new ProgressBar( "computing the neighborhood imputation errors for " + to_deal_with_name, test_length);
+    for (int test_row = 0; test_row < test_length; test_row++)
     {
         test_samples_set->getRow(test_row, train_input);
-        for (test_col = 0; test_col < train_width; test_col++)
+        for (int test_col = 0; test_col < train_width; test_col++)
         {
             if (test_col == to_deal_with_next) knnf_input[test_col] = covariancePreservationValue(test_col);
             else if (is_missing(train_input[test_col])) knnf_input[test_col] = covariancePreservationValue(test_col);
             else knnf_input[test_col] = train_input[test_col];
         }
         ball_tree->computeOutput(knnf_input, knnf_neighbors);
-        knnf_sum_value = 0.0;
-        knnf_sum_cov = 0.0;
-        knnv_value_count = 0.0;
-        for (knnf_row = 0; knnf_row < knnf_neighbors.size(); knnf_row++)
+        real knnf_sum_value = 0.0;
+        real knnf_sum_cov = 0.0;
+        real knnv_value_count = 0.0;
+        for (int knnf_row = 0; knnf_row < knnf_neighbors.size(); knnf_row++)
         {
-            knnf_value = ref_mis((int) knnf_neighbors[knnf_row], to_deal_with_next);
+            real knnf_value = ref_mis((int) knnf_neighbors[knnf_row], to_deal_with_next);
             if (!is_missing(knnf_value))
             {
                 knnf_sum_value += knnf_value;
@@ -499,20 +519,24 @@ void TestImputations::computeNeighborhoodStats()
         pb->update( test_row );
     }
     delete pb;
-    for (knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++) knnf_mean_err[knnf_row] = knnf_mean_err[knnf_row] /  (real) test_length;
+    for (int knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++) knnf_mean_err[knnf_row] = knnf_mean_err[knnf_row] /  (real) test_length;
 }
 
 void TestImputations::createHeaderFile()
 { 
     cout << "in createHeaderFile()" << endl;
-    for (train_col = 0; train_col < train_width; train_col++)
+    for (int train_col = 0; train_col < train_width; train_col++)
     {
         train_stats = train_set->getStats(train_col);
         train_total = train_stats.n();
         train_missing = train_stats.nmissing();
         train_present = train_total - train_missing;
         if (train_missing <= 0.0) header_record[train_col] = 0.0;                       // no missing, noting to do.
-        else if (train_present < min_number_of_samples) header_record[train_col] = 0.0; // should not happen
+        else if (train_present < min_number_of_samples){
+            header_record[train_col] = -1.0; // should not happen
+            PLERROR("In TestImputations::createHeaderFile: train_present(%d) < min_number_of_samples (%d)",
+                    train_present,min_number_of_samples);
+        }
         else header_record[train_col] = 1.0;                                            // test imputations
     }
     header_file = new FileVMatrix(header_file_name, 1, train_names);
@@ -534,7 +558,6 @@ void TestImputations::updateHeaderRecord(int var_col)
 void TestImputations::train()
 {
     // initialize the output file
-    output_file_name = train_metadata + "/TestImputation/output.pmat";
     cout << "initialize the output file: " << output_file_name << endl;
     train_set->lockMetaDataDir();
     output_record.resize(knnf_mean_err.size()+5);
@@ -545,7 +568,7 @@ void TestImputations::train()
     output_record[2] = mmmf_mode_err;
     output_record[3] = tcmf_mean_err;
     output_record[4] = cvpf_mean_err;
-    for (knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++)
+    for (int knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++)
     {
        output_record[knnf_row + 5] = knnf_mean_err[knnf_row];
     }
@@ -561,19 +584,20 @@ void TestImputations::createOutputFile()
     output_names[2] = "mode";
     output_names[3] = "tree_cond";
     output_names[4] = "cov_pres";
-    for (knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++)
+    for (int knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++)
     {
        output_names[knnf_row + 5] = "KNN_" + tostring(knnf_row);
     }
     output_record.clear();
     output_file = new FileVMatrix(output_file_name, train_width, output_names);
-    for (train_col = 0; train_col < train_width; train_col++)
+    for (int train_col = 0; train_col < train_width; train_col++)
         output_file->putRow(train_col, output_record);
 }
 
 void TestImputations::getOutputRecord(int var_col)
 { 
     output_file = new FileVMatrix(output_file_name, true);
+    output_record.resize(output_file->width());
     output_file->getRow(var_col, output_record);
 }
 

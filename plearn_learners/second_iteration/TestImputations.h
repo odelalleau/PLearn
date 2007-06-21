@@ -40,6 +40,8 @@
 #ifndef TestImputations_INC
 #define TestImputations_INC
 
+#include <cstdarg>
+
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/testers/PTester.h>
 #include <plearn/vmat/FileVMatrix.h>
@@ -142,12 +144,11 @@ private:
     void createOutputFile();
     void getOutputRecord(int var_col);
     void updateOutputRecord(int var_col);
-
+    void endtestimputation(const char* msg, ...);
 private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
-    ProgressBar* pb;
     ExhaustiveNearestNeighbors* ball_tree;
     Mat ref_cov;
     Mat ref_mis;
@@ -160,8 +161,6 @@ private:
     real train_total;
     real train_missing;
     real train_present;
-    int train_row;
-    int train_col;
     PPath header_file_name;
     VMat header_file;
     Vec header_record;
@@ -171,46 +170,21 @@ private:
     real to_deal_with_value;
     VMat test_samples_set;
     TVec<int> indices;
-    int ind_next;
     int test_length;
     int test_width;
-    int test_row;
-    int test_col;
-    VMat mmmf_file;
-    int mmmf_length;
-    int mmmf_width;
-    real mmmf_mean;
-    real mmmf_median;
-    real mmmf_mode;
     real mmmf_mean_err;
     real mmmf_median_err;
     real mmmf_mode_err;
     PPath tcmf_file_name;
     VMat tcmf_file;
-    int tcmf_length;
-    int tcmf_width;
     real tcmf_mean_err;
-    VMat cvpf_file;
-    int cvpf_length;
-    int cvpf_width;
-    int cvpf_row;
-    int cvpf_col;
     Mat cvpf_cov;
     Vec cvpf_mu;
-    real cvpf_sum_cov_xl;
-    real cvpf_sum_xl_square;
-    real cvpf_value;
     real cvpf_mean_err;
     Vec knnf_input;
     Vec knnf_neighbors;
     Vec knnf_mean_err;
-    real knnf_value;
-    real knnf_sum_value;
-    real knnf_sum_cov;
-    real knnv_value_count;
-    int knnf_row;
     Vec weights;
-    int mi_col;
     WeightedDistance* weighted_distance_kernel;
     PPath output_file_name;
     VMat output_file;
