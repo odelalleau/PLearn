@@ -120,7 +120,7 @@ void AnalyzeFieldStats::build_()
     MODULE_LOG << "build_() called" << endl;
     if (train_set)
     {
-        for (int iteration = 1; iteration <= 50; iteration++)
+        for (int iteration = 1; iteration <= train_set->width(); iteration++)
         {
             cout << "In AnalyzeFieldStats, Iteration # " << iteration << endl;
             analyzeVariableStats();
