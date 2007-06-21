@@ -78,9 +78,12 @@ void NeighborhoodConditionalMean::declareOptions(OptionList& ol)
     declareOption(ol, "target_field_names", &NeighborhoodConditionalMean::target_field_names,
                   OptionBase::buildoption,
                   "The vector of names of the field to select from the target_set as target for the built training files.");
-    declareOption(ol, "dir_offset", &NeighborhoodConditionalMean::dir_offset,
+    declareOption(ol, "train_covariance_file_name", &NeighborhoodConditionalMean::train_covariance_file_name,
                   OptionBase::buildoption,
-                  "The directory offset where to find and/or create the various files.");
+                  "The path to the file train set where missing value are imputed by the covariance preservation algo.");
+    declareOption(ol, "test_train_covariance_file_name", &NeighborhoodConditionalMean::test_train_covariance_file_name,
+                  OptionBase::buildoption,
+                  "The path to the file test_train set where missing value are imputed by the covariance preservation algo.");
     declareOption(ol, "various_ks", &NeighborhoodConditionalMean::various_ks,
                   OptionBase::buildoption,
                   "The vector of various Ks to experiment with. Values must be between 1 and 100.");
@@ -110,7 +113,8 @@ void NeighborhoodConditionalMean::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(number_of_test_samples, copies);
     deepCopyField(number_of_train_samples, copies);
     deepCopyField(target_field_names, copies);
-    deepCopyField(dir_offset, copies);
+    deepCopyField(test_train_covariance_file_name, copies);
+    deepCopyField(train_covariance_file_name, copies);
     deepCopyField(various_ks, copies);
     deepCopyField(deletion_thresholds, copies);
     deepCopyField(experiment_name, copies);
@@ -168,13 +172,13 @@ void NeighborhoodConditionalMean::computeNeighborhood()
     cout << "The Covariance PreservationVMatrix creates a covariance_file in the metadata of the  source file" << endl;
     cout << "if it is not already there." << endl;
     cout << "The file is kept in train_imputed_with_covariance_preservation.pmat." << endl;
-    if (dir_offset != "") dir_offset += "/";
-    train_covariance_name = dir_offset + "train_imputed_with_covariance_preservation.pmat";
-    if (isfile(train_covariance_name))
+    if( train_covariance_file_name == "" )
+        PLERROR("In NeighborhoodConditionalMean::computeNeighborhood() train_covariance_file_name must not be empty",train_covariance_file_name.c_str());
+    if (isfile(train_covariance_file_name))
     {
-        train_covariance_file = new FileVMatrix(train_covariance_name);
+        train_covariance_file = new FileVMatrix(train_covariance_file_name);
         train_covariance_file->defineSizes(train_covariance_file->width(), 0, 0);
-        cout << train_covariance_name << " already exist, we are skipping this step." << endl;
+        cout << train_covariance_file_name << " already exist, we are skipping this step." << endl;
     }
     else 
     {
@@ -183,7 +187,7 @@ void NeighborhoodConditionalMean::computeNeighborhood()
         train_covariance_vmatrix->train_set = train_set;
         train_covariance_vmatrix->build();
         train_covariance_vmat = train_covariance_vmatrix;
-        train_covariance_file = new FileVMatrix(train_covariance_name, train_covariance_vmat->length(), train_covariance_vmat->fieldNames());
+        train_covariance_file = new FileVMatrix(train_covariance_file_name, train_covariance_vmat->length(), train_covariance_vmat->fieldNames());
         train_covariance_file->defineSizes(train_covariance_vmat->width(), 0, 0);
         pb = new ProgressBar("Saving the train file imputed with the covariance preservation", train_covariance_vmat->length());
         train_covariance_vector.resize(train_covariance_vmat->width());
@@ -199,7 +203,8 @@ void NeighborhoodConditionalMean::computeNeighborhood()
     cout << "We do the same thing with the test_train dataset" << endl;
     cout << "using the covariance file created at the previous step." << endl;
     cout << "The file is kept in test_train_imputed_with_covariance_preservation.pmat." << endl;
-    test_train_covariance_file_name = dir_offset + "test_train_imputed_with_covariance_preservation.pmat";
+    if( test_train_covariance_file_name == "" )
+        PLERROR("In NeighborhoodConditionalMean::computeNeighborhood() test_train_covariance_file_name must not be empty",test_train_covariance_file_name.c_str());
     if (isfile(test_train_covariance_file_name))
     {
         test_train_covariance_file = new FileVMatrix(test_train_covariance_file_name);
@@ -308,7 +313,7 @@ void NeighborhoodConditionalMean::experimentWithVariousKs()
     cout << "We perform the imputaton with the selected number of neighbors." << endl;
     cout << "The resulting file is loaded in memory to be passed to the experimentation script." << endl;
     test_train_neighbor_imputation_vmatrix = new NeighborhoodImputationVMatrix();
-    test_train_neighbor_imputation_vmatrix->source_with_missing = test_train_input_set;
+    test_train_neighbor_imputation_vmatrix->source = test_train_input_set;
     test_train_neighbor_imputation_vmatrix->reference_index = test_train_neighborhood_file;
     test_train_neighbor_imputation_vmatrix->reference_with_missing = train_set;
     test_train_neighbor_imputation_vmatrix->reference_with_covariance_preserved = train_covariance_file;

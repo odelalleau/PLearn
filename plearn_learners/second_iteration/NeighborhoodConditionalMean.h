@@ -80,8 +80,8 @@ public:
     int number_of_train_samples;
     //! The vector of names of the field to select from the target_set as target for the built training files.
     TVec<string> target_field_names;
-    //! The directory offset where to find and/or create the various files.
-    string dir_offset;
+    PPath train_covariance_file_name;
+    PPath test_train_covariance_file_name;    
     //! The vector of various Ks to experiment with. Values must be between 1 and 100.
     TVec<int> various_ks;
     //! The vector of thresholds to be tested for each of the various Ks.
@@ -144,12 +144,10 @@ private:
 
     // The rest of the private stuff goes here
     ProgressBar*                              pb;
-    PPath                                     train_covariance_name;
     VMat                                      train_covariance_file;
     CovariancePreservationImputationVMatrix*  train_covariance_vmatrix;
     VMat                                      train_covariance_vmat;
     Vec                                       train_covariance_vector;
-    PPath                                     test_train_covariance_file_name;
     VMat                                      test_train_covariance_file;
     CovariancePreservationImputationVMatrix*  test_train_covariance_vmatrix;
     VMat                                      test_train_covariance_vmat;
