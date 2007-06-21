@@ -154,17 +154,14 @@ void Preprocessing::manageTrainTestUnknownSets()
     PPath                                 train_with_class_target_file_name;
     VMat                                  train_with_class_target_file;
     PP<ComputeDond2Target>                compute_target_learner;
-    BootstrapVMatrix*                     train_shufffled_vmatrix;
     VMat                                  train_shuffled_file;
     PPath                                 train_with_binary_fixed_file_name;
     VMat                                  train_with_binary_fixed_file;
     PP<FixDond2BinaryVariables>           fix_binary_variables_learner;
     PPath                                 train_with_ind_file_name;
-    MissingIndicatorVMatrix*              train_with_ind_vmatrix;
     VMat                                  train_with_ind_vmat;
     VMat                                  train_with_ind_file;
     Vec                                   train_with_ind_vector;
-    MeanMedianModeImputationVMatrix*      train_with_imp_vmatrix;
     VMat                                  mean_median_mode_with_ind_file;
     PPath                                 train_with_dichotomies_file_name;
     VMat                                  train_with_dichotomies_file;
@@ -173,9 +170,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     PP<DichotomizeDond2DiscreteVariables> dichotomize_discrete_variables_learner;
     SelectColumnsVMatrix*                 train_with_selected_columns_vmatrix;
     VMat                                  train_with_selected_columns_vmat;
-    SelectColumnsVMatrix*                 mean_median_mode_with_selected_columns_vmatrix;
     VMat                                  mean_median_mode_with_selected_columns_vmat;
-    GaussianizeVMatrix*                   train_gaussianized_vmatrix;
     VMat                                  train_gaussianized_vmat;
     GaussianizeVMatrix*                   mean_median_mode_gaussianized_vmatrix;
     VMat                                  mean_median_mode_gaussianized_vmat;
@@ -199,7 +194,8 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << endl << "****** STEP 1 ******" << endl;
     cout << "The first step groups variables by type, skips untrustworthy variables, and generate class targets" << endl;
     cout << "It uses ComputeDond2Target to transform base_train.pmat into step1_train_with_class_target.pmat" << endl;
-    output_path = "step1_train_with_class_target";
+    output_path = expdir+"step1_train_with_class_target";
+    cout << "output_path" << output_path;
     train_with_class_target_file_name = output_path + ".pmat";
     if (isfile(train_with_class_target_file_name))
     {
@@ -219,7 +215,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step shuffles the training set to get training data in random order." << endl;
     cout << "It uses BootstrapVMatrix to transform step1_train_with_class_target.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 3" << endl;
-    output_path = "step3_train_with_binary_fixed";
+    output_path = expdir+"step3_train_with_binary_fixed";
     train_with_binary_fixed_file_name = output_path + ".pmat";
     if (isfile(train_with_binary_fixed_file_name))
     {
@@ -227,7 +223,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     }
     else 
     {
-        train_shufffled_vmatrix = new BootstrapVMatrix();
+        BootstrapVMatrix* train_shufffled_vmatrix = new BootstrapVMatrix();
         train_shufffled_vmatrix->shuffle = 1;
         train_shufffled_vmatrix->frac = 1.0;
         train_shufffled_vmatrix->own_seed = 123456;
@@ -264,7 +260,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     }
     else 
     {
-        train_with_ind_vmatrix = new MissingIndicatorVMatrix();
+        MissingIndicatorVMatrix* train_with_ind_vmatrix = new MissingIndicatorVMatrix();
         train_with_ind_vmatrix->source = train_with_binary_fixed_file;
         train_with_ind_vmatrix->train_set = train_with_binary_fixed_file;
         train_with_ind_vmatrix->number_of_train_samples_to_use = 30000.0;
@@ -289,17 +285,19 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "The resulting vitual view is not used." << endl;
     cout << "But the mean, median and mode vectors have to go thru the same transformation than the training file" << endl;
     cout << "from here on to the end of the preprocessing steps.." << endl;
-    train_with_imp_vmatrix = new MeanMedianModeImputationVMatrix();
-    train_with_imp_vmatrix->source = train_with_ind_file;
-    train_with_imp_vmatrix->train_set = train_with_ind_file;
-    train_with_imp_vmatrix->number_of_train_samples_to_use = 30000.0;
-    train_with_imp_vmatrix->imputation_spec = imputation_spec;
-    train_with_imp_vmatrix->build();
-    mean_median_mode_with_ind_file = train_with_imp_vmatrix->getMeanMedianModeFile();
+    { 
+        MeanMedianModeImputationVMatrix* train_with_imp_vmatrix = new MeanMedianModeImputationVMatrix();
+        train_with_imp_vmatrix->source = train_with_ind_file;
+        train_with_imp_vmatrix->train_set = train_with_ind_file;
+        train_with_imp_vmatrix->number_of_train_samples_to_use = 30000.0;
+        train_with_imp_vmatrix->imputation_spec = imputation_spec;
+        train_with_imp_vmatrix->build();
+        mean_median_mode_with_ind_file = train_with_imp_vmatrix->getMeanMedianModeFile();
+    }
     cout << endl << "****** STEP 6 ******" << endl;
     cout << "This steps generates as many dichotomized variables as there are significant code values." << endl;
     cout << "It uses DichotomizeDond2DiscreteVariables to transform step4_train_with_ind.pmat into step6_train_with_dichotomies.pmat" << endl;
-    output_path = "step6_train_with_dichotomies";
+    output_path = expdir+"step6_train_with_dichotomies";
     train_with_dichotomies_file_name = output_path + ".pmat";
     if (isfile(train_with_dichotomies_file_name))
     {
@@ -319,7 +317,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This steps does the same thing to the mean, median and mode vectors." << endl;
     cout << "It uses DichotomizeDond2DiscreteVariables to transform step4_train_with_ind.pmat.metadata/mean_median_mode_file.pmat "
          << "into step6_train_with_dichotomies.pmat.metadata/mean_median_mode_file.pmat" << endl;
-    output_path = train_with_dichotomies_file_name + ".metadata/mean_median_mode_file";
+    output_path = expdir+train_with_dichotomies_file_name + ".metadata/mean_median_mode_file";
     mean_median_mode_with_dichotmies_file_name = output_path + ".pmat";
     if (isfile(mean_median_mode_with_dichotmies_file_name))
     {
@@ -339,7 +337,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step select the desired columns from the training set to create the input records." << endl;
     cout << "It uses SelectColumnsVMatrix to transform step6_train_with_dichotomies.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 10" << endl;
-    output_path = "final_train_input_preprocessed";
+    output_path = expdir+"final_train_input_preprocessed";
     train_input_preprocessed_file_name = output_path + ".pmat";
     if (isfile(train_input_preprocessed_file_name))
     {
@@ -360,7 +358,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step does the same thing to the mean, median and mode vectors." << endl;
     cout << "It uses SelectColumnsVMatrix to transform step6_train_with_dichotomies.pmat.metadata/mean_median_mode_file.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 11" << endl;
-    output_path = train_input_preprocessed_file_name + ".metadata/mean_median_mode_file";
+    output_path = expdir+train_input_preprocessed_file_name + ".metadata/mean_median_mode_file";
     mean_median_mode_input_preprocessed_file_name = output_path + ".pmat";
     if (isfile(mean_median_mode_input_preprocessed_file_name))
     {
@@ -368,7 +366,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     }
     else 
     {
-        mean_median_mode_with_selected_columns_vmatrix = new SelectColumnsVMatrix();
+        SelectColumnsVMatrix* mean_median_mode_with_selected_columns_vmatrix = new SelectColumnsVMatrix();
         mean_median_mode_with_selected_columns_vmatrix->source = mean_median_mode_with_dichotmies_file;
         mean_median_mode_with_selected_columns_vmatrix->fields_partial_match = 0;
         mean_median_mode_with_selected_columns_vmatrix->extend_with_missing = 0;
@@ -387,7 +385,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     }
     else 
     {
-        train_gaussianized_vmatrix = new GaussianizeVMatrix();
+        GaussianizeVMatrix* train_gaussianized_vmatrix = new GaussianizeVMatrix();
         train_gaussianized_vmatrix->source = train_with_selected_columns_vmat;
         train_gaussianized_vmatrix->train_source = train_with_selected_columns_vmat;
         train_gaussianized_vmatrix->threshold_ratio = 1;
@@ -469,7 +467,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step select the desired columns from the training set to create the target records." << endl;
     cout << "It uses SelectColumnsVMatrix to transform step6_train_with_dichotomies.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 15" << endl;
-    output_path = "final_train_target_preprocessed";
+    output_path = expdir+"final_train_target_preprocessed";
     train_target_preprocessed_file_name = output_path + ".pmat";
     if (isfile(train_target_preprocessed_file_name))
     {
@@ -563,7 +561,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << endl << "****** STEP 1 ******" << endl;
     cout << "The first step groups variables by type, skips untrustworthy variables, and generate class targets" << endl;
     cout << "It uses ComputeDond2Target to transform base_test.pmat into step1_test_with_class_target.pmat" << endl;
-    output_path = "step1_test_with_class_target";
+    output_path = expdir+"step1_test_with_class_target";
     test_with_class_target_file_name = output_path + ".pmat";
     if (isfile(test_with_class_target_file_name))
     {
@@ -584,7 +582,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << endl << "****** STEP 3 ******" << endl;
     cout << "For strictly binary variables, various situations arise: zero or non-zero, missing or not-missing, a given value or not, etc..." << endl;
     cout << "This step uses FixDond2BinaryVariables to create step3_test_with_binary_fixed.pmat with 0-1 binary variables." << endl;
-    output_path = "step3_test_with_binary_fixed";
+    output_path = expdir+"step3_test_with_binary_fixed";
     test_with_binary_fixed_file_name = output_path + ".pmat";
     if (isfile(test_with_binary_fixed_file_name))
     {
@@ -603,7 +601,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step adds missing indicators variables to each variable with missing values." << endl;
     cout << "It uses MissingIndicatorVMatrix to transform step3_test_with_binary_fixed.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 6" << endl;
-    output_path = "step6_test_with_dichotomies";
+    output_path = expdir+"step6_test_with_dichotomies";
     test_with_dichotomies_file_name = output_path + ".pmat";
     if (isfile(test_with_dichotomies_file_name))
     {
@@ -643,7 +641,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step select the desired columns from the test set to create the input records." << endl;
     cout << "It uses SelectColumnsVMatrix to transform step6_test_with_dichotomies.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 10" << endl;
-    output_path = "final_test_input_preprocessed";
+    output_path = expdir+"final_test_input_preprocessed";
     test_input_preprocessed_file_name = output_path + ".pmat";
     if (isfile(test_input_preprocessed_file_name))
     {
@@ -713,7 +711,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step select the desired columns from the testing set to create the target records." << endl;
     cout << "It uses SelectColumnsVMatrix to transform step6_test_with_dichotomies.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 15" << endl;
-    output_path = "final_test_target_preprocessed";
+    output_path = expdir+"final_test_target_preprocessed";
     test_target_preprocessed_file_name = output_path + ".pmat";
     if (isfile(test_target_preprocessed_file_name))
     {
@@ -800,7 +798,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << endl << "****** STEP 1 ******" << endl;
     cout << "The first step groups variables by type, skips untrustworthy variables, and generate class targets" << endl;
     cout << "It uses ComputeDond2Target to transform base_unknown.pmat into step1_unknown_with_class_target.pmat" << endl;
-    output_path = "step1_unknown_with_class_target";
+    output_path = expdir+"step1_unknown_with_class_target";
     unknown_with_class_target_file_name = output_path + ".pmat";
     if (isfile(unknown_with_class_target_file_name))
     {
@@ -821,7 +819,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << endl << "****** STEP 3 ******" << endl;
     cout << "For strictly binary variables, various situations arise: zero or non-zero, missing or not-missing, a given value or not, etc..." << endl;
     cout << "This step uses FixDond2BinaryVariables to create step3_unknown_with_binary_fixed.pmat with 0-1 binary variables." << endl;
-    output_path = "step3_unknown_with_binary_fixed";
+    output_path = expdir+"step3_unknown_with_binary_fixed";
     unknown_with_binary_fixed_file_name = output_path + ".pmat";
     if (isfile(unknown_with_binary_fixed_file_name))
     {
@@ -840,7 +838,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step adds missing indicators variables to each variable with missing values." << endl;
     cout << "It uses MissingIndicatorVMatrix to transform step3_unknown_with_binary_fixed.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 6" << endl;
-    output_path = "step6_unknown_with_dichotomies";
+    output_path = expdir+"step6_unknown_with_dichotomies";
     unknown_with_dichotomies_file_name = output_path + ".pmat";
     if (isfile(unknown_with_dichotomies_file_name))
     {
@@ -880,7 +878,7 @@ void Preprocessing::manageTrainTestUnknownSets()
     cout << "This step select the desired columns from the unknown set to create the input records." << endl;
     cout << "It uses SelectColumnsVMatrix to transform step6_unknown_with_dichotomies.pmat" << endl;
     cout << "The resulting vitual view is not stored on disk, it is fed as input to step 10" << endl;
-    output_path = "final_unknown_input_preprocessed";
+    output_path = expdir+"final_unknown_input_preprocessed";
     unknown_input_preprocessed_file_name = output_path + ".pmat";
     if (isfile(unknown_input_preprocessed_file_name))
     {
