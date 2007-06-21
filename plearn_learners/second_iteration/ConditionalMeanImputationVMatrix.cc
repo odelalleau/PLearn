@@ -104,7 +104,7 @@ void ConditionalMeanImputationVMatrix::getExample(int i, Vec& input, Vec& target
 real ConditionalMeanImputationVMatrix::get(int i, int j) const
 { 
   real variable_value = source->get(i, j);
-  if (!is_missing(variable_value) && condmean_col_ref[j] >= 0) return condmean(i, condmean_col_ref[j]);
+  if (is_missing(variable_value) && condmean_col_ref[j] >= 0) return condmean(i, condmean_col_ref[j]);
   else if (is_missing(variable_value)) PLERROR("In ConditionalMeanImputationVMatrix::getExample(%d,%d) we have a missing value that haven't been assigned a value",i,j);
   return variable_value;
 }
