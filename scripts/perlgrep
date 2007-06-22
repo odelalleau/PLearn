@@ -102,7 +102,7 @@ sub process_list(@)
             { 
                 my @flist = lsdir($fname);
                 
-                @flist = grep { -d $_ or /Makefile|makefile|
+                @flist = grep { -d $_ or /Makefile|makefile|pytest\.config|
                                     \.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$
                                    |\.plearn$|\.pyplearn$|\.vmat$|\.py$|\.pymat$
                                    |\.txt$|^readme|^Readme|^README/x } @flist;
