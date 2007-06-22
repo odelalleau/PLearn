@@ -18,12 +18,13 @@ if plearn.bridgemode.useserver:
     learner  = serv.new(learner)
     trainset = serv.new(trainset)
     validset = serv.new(validset)
-    testset  = serv.new(testset)
-
+    testset  = serv.new(testset)    
 
 # examples:
 #   isModule(module,'RBM')
 #   isModule(module,'Split')
+#
+# return True OR False (whether the type of the Module match or not)
 #
 def isModule(module,name):
     return name+'Module' in str(type(module))
@@ -90,12 +91,17 @@ def getModules( myObject ):
        return copy.copy( myObject.modules )
     # Module Learner
     elif 'ModuleLearner' in str(type(myObject)):
-       return copy.copy( myObject.module.modules )
+       return getModules( myObject.module )
+    # Hyper Learner
+    elif 'HyperLearner' in str(type(myObject)):
+       if 'module' not in myObject.learner._optionnames:
+          raise TypeError, "The Hyperlearner must have a learner with module"
+       return getModules( myObject.learner.module )
     # List of modules
     elif type(myObject) == list and 'Module' in str(type(myObject[0])):
          return myObject
     else:
-        raise TypeError, "Please give a ModuleLearner or NetworkModule"
+        raise TypeError, "Please give a ModuleLearner or NetworkModule (not a "+str(type(myObject))+")"
 
 def setModules( myObject , new_connections_list):
     if 'NetworkModule' in str(type(myObject)):
@@ -126,9 +132,9 @@ def getModule( myObject, modulename ):
        return deepcopy( myObject.module.modules[index] )
     # List of modules
     elif type(myObject) == list and 'Module' in str(type(myObject[0])):
-       return myObject[index]
+       return deepcopy( myObject[index] )
     else:
-       raise TypeError, "Please give a ModuleLearner or NetworkModule"
+       raise TypeError, "Please give a ModuleLearner or NetworkModule or a List of modules"
     
 def getConnections( myObject ):
     if 'NetworkModule' in str(type(myObject)):
@@ -162,7 +168,8 @@ def setPorts( myObject , new_connections_list):
     else:
         raise TypeError, "Please give a ModuleLearner or NetworkModule"
 
-def get_last_layer_module_name( learner ):
+
+def getPreviousTopModuleName( learner ):
     last_layer = []
     output_layer = getOutputModuleName(learner)
     connections_list = getConnections(learner)
@@ -173,16 +180,36 @@ def get_last_layer_module_name( learner ):
        raise TypeError, "find several layers before output layer\n(" + str(last_layer) + ")"
     return last_layer[0]
 
-def get_last_layer_module( learner ):
-    last_module_name = get_last_layer_module_name(learner)
+def getPreviousTopModule( learner ):
+    last_module_name = getPreviousTopModuleName(learner)
     modules_list = getModules( learner )
     for module in modules_list:
         if module.name == last_module_name:
 	   return module
 
+def getTopRBMModule( learner ):
+    topModule = getOutputModule(learner)
+    if isModule( topModule, 'RBM' ):
+       return topModule
+    previous_connections, previous_modulenames = getAllPrevious( learner, topModule.name )
+    for modulename in previous_modulenames:
+        module = getModule(learner,modulename)
+        if isModule( module , 'RBM' ):
+	   return module
+    return None
+
+def getTopRBMModuleName( learner ):
+    module = getTopRBMModule(learner)
+    if module != None:
+       return module.name
+    return None
+
 def getOutputModuleName( learner ):
     outputPort = getOutputPort(learner)
     return port2moduleName(outputPort[1])
+
+def getOutputModule( learner ):
+    return getModule(learner, getOutputModuleName(learner))
 
 def getOutputPort( learner ):
     ports_list = getPorts(learner)
@@ -593,7 +620,7 @@ if __name__ == '__main__':
 	   learner=learner.learner
         else:
            raise TypeError,  'Sorry, but this code can only be used with ModuleLearner !!!'
-    learner_nickname = 'DBN-2-2-1_'+get_last_layer_module_name( learner ) #os.path.basename(learner_filename)
+    learner_nickname = 'DBN-2-2-1_'+getPreviousTopModuleName( learner ) #os.path.basename(learner_filename)
     
   
     for typeDataSet in ['Train','Valid','Test']:
