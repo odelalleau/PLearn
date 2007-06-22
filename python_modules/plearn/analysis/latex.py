@@ -80,8 +80,8 @@ def formatTable(table, headers=[],
         writer("  ")
         formatTableLine(headers, writer)
         lwriter("\\hline\\hline")
-    else:
-        lwriter("\\hline")
+    # else:
+    #     lwriter("\\hline")
  
     for line in table:
         writer("  ")
@@ -89,7 +89,9 @@ def formatTable(table, headers=[],
             lwriter(line) # Single string is wrote as is...
         else:
             formatTableLine(line, writer)
-    lwriter("\\hline")
+
+    if headers:
+        lwriter("\\hline")
        
     lwriter("\\end{tabular}")
 
