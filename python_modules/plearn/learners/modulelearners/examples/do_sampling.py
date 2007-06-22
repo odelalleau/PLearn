@@ -9,7 +9,7 @@ def basename_withoutExt(name):
 ####################################
 
 
-plarg_defaults.gibbs_step                    = 10
+plarg_defaults.gibbs_step                    = 1
 gibbs_step                                   = plargs.gibbs_step # Number of Gibbs step between each sampling
 
 ##############################
@@ -51,7 +51,7 @@ plarg_defaults.supervised_nStages       = 100  # /!\ see after: supervised_nStag
 plarg_defaults.nStagesStep              = 5
 plarg_defaults.LR_CDiv                  = 0.01
 plarg_defaults.LR_GRAD_UNSUP            = 0.003
-plarg_defaults.LR_SUP                   = 0.03
+plarg_defaults.LR_SUP                   = 0
 plarg_defaults.L2wd_SUP                 = 1e-5
 plarg_defaults.nGibbs                   = 1
 plarg_defaults.Tag                      = 'dbn-'+str(plargs.nRBM)+'RBMimage'
@@ -94,5 +94,23 @@ else:
    print "supervised FINETUNED model"
    learner_filename = finetuning_expdir+"/Split0/final_learner.psave"
 
-#os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample.py '+' '.join([ learner_filename, str(Size*Size), data_filename, 'gibbs_step='+str(gibbs_step) ]))
-os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample_from_hidden.py '+' '.join([ learner_filename, str(Size*Size), 'gibbs_step='+str(gibbs_step) ]))
+
+def check_choice(c):
+    try:
+       if int(c) in [1,2]:
+          return True
+    except: pass
+    return False
+
+
+c=None
+while check_choice(c)==False:
+   print "Type the number corresponding to your choice :"
+   print "1. Sample after having initialized input visible units with (randomly picked) real image"
+   print "2. Sample after having initialized top hidden units with a random binary vector"
+   c = sys.stdin.readline()
+
+if int(c) == 1:
+   os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample.py '+' '.join([ learner_filename, str(Size*Size), data_filename, 'gibbs_step='+str(gibbs_step) ]))
+elif int(c) == 2:
+   os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample_from_hidden.py '+' '.join([ learner_filename, str(Size*Size), 'gibbs_step='+str(gibbs_step) ]))
