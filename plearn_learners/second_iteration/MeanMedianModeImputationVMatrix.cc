@@ -65,9 +65,6 @@ MeanMedianModeImputationVMatrix::~MeanMedianModeImputationVMatrix()
 
 void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "source", &MeanMedianModeImputationVMatrix::source, OptionBase::buildoption, 
-                "The source VMatrix with missing values.\n");
-
   declareOption(ol, "train_set", &MeanMedianModeImputationVMatrix::train_set, OptionBase::buildoption, 
                 "A referenced train set.\n"
                 "The mean, median or mode is computed with the observed values in this data set.\n"
@@ -114,7 +111,6 @@ void MeanMedianModeImputationVMatrix::build()
 
 void MeanMedianModeImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  deepCopyField(source, copies);
   deepCopyField(train_set, copies);
   deepCopyField(number_of_train_samples_to_use, copies);
   deepCopyField(imputation_spec, copies);
@@ -242,7 +238,7 @@ void MeanMedianModeImputationVMatrix::build_()
     variable_mode.resize(train_width);
     variable_imputation_instruction.resize(train_width);
     variable_imputation_instruction.clear();
-    for (spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
+    for (int spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
     {
         for (train_col = 0; train_col < train_width; train_col++)
         {

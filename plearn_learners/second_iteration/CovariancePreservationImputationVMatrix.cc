@@ -64,8 +64,6 @@ CovariancePreservationImputationVMatrix::~CovariancePreservationImputationVMatri
 
 void CovariancePreservationImputationVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "source", &CovariancePreservationImputationVMatrix::source, OptionBase::buildoption, 
-                "The source VMatrix with missing values.\n");
 
   declareOption(ol, "train_set", &CovariancePreservationImputationVMatrix::train_set, OptionBase::buildoption, 
                 "A referenced train set.\n"
@@ -82,7 +80,6 @@ void CovariancePreservationImputationVMatrix::build()
 
 void CovariancePreservationImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  deepCopyField(source, copies);
   deepCopyField(train_set, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
 }

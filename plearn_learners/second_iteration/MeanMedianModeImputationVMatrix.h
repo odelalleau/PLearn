@@ -44,7 +44,7 @@
 #ifndef MeanMedianModeImputationVMatrix_INC
 #define MeanMedianModeImputationVMatrix_INC
 
-#include <plearn/vmat/SourceVMatrix.h>
+#include "ImputationVMatrix.h"
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/io/fileutils.h>                     //!<  For isfile()
 #include <plearn/math/BottomNI.h>
@@ -52,14 +52,12 @@
 namespace PLearn {
 using namespace std;
 
-class MeanMedianModeImputationVMatrix: public VMatrix
+class MeanMedianModeImputationVMatrix: public ImputationVMatrix
 {
-  typedef VMatrix inherited;
+  typedef ImputationVMatrix inherited;
   
 public:
 
-  //! The source VMatrix with missing values.
-  VMat                          source;
   
   //! A referenced train set.
   //! The mean, median or mode is computed with the observed values in this data set.
@@ -136,7 +134,6 @@ private:
   int                  source_targetsize;
   int                  source_weightsize;
   Vec                  variable_vec;
-  int                  spec_col;
   int                  current_value_count;
   real                 current_value;
   PPath                mean_median_mode_file_name;

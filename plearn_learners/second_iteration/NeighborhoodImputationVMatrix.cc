@@ -55,6 +55,7 @@ PLEARN_IMPLEMENT_OBJECT(
   );
 
 NeighborhoodImputationVMatrix::NeighborhoodImputationVMatrix()
+  : count_missing_neighbors(0)
 {
 }
 
@@ -64,12 +65,9 @@ NeighborhoodImputationVMatrix::~NeighborhoodImputationVMatrix()
 
 void NeighborhoodImputationVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "source_with_missing", &NeighborhoodImputationVMatrix::source_with_missing, OptionBase::buildoption, 
-                "The source VMatrix with missing values.\n");
-
   declareOption(ol, "reference_index", &NeighborhoodImputationVMatrix::reference_index, OptionBase::buildoption, 
                 "The set of pre-computed neighbors index.\n"
-                "his can be done with BallTreeNearestNeighbors.\n");
+                "This can be done with BallTreeNearestNeighbors.\n");
 
   declareOption(ol, "reference_with_missing", &NeighborhoodImputationVMatrix::reference_with_missing, OptionBase::buildoption, 
                 "The reference set corresponding to the pre-computed index with missing values.");
@@ -77,10 +75,18 @@ void NeighborhoodImputationVMatrix::declareOptions(OptionList &ol)
   declareOption(ol, "reference_with_covariance_preserved", &NeighborhoodImputationVMatrix::reference_with_covariance_preserved, OptionBase::buildoption, 
                 "The reference set corresponding to the pre-computed index with the initial imputations.");
 
-  declareOption(ol, "number_of_neighbors", &NeighborhoodImputationVMatrix::number_of_neighbors, OptionBase::learntoption,
+  declareOption(ol, "number_of_neighbors", &NeighborhoodImputationVMatrix::number_of_neighbors, OptionBase::buildoption,
                 "This is usually called K, the number of neighbors to consider.\n"   
                 "It must be less or equal than the with of the reference index.");
 
+  declareOption(ol, "count_missing_neighbors", &NeighborhoodImputationVMatrix::count_missing_neighbors, OptionBase::buildoption,
+                "0: (default) We do not count a neighbour with a missing value in the number of neighbors.\n"   
+                "1: We count a neighbour with a missing value in the number of neighbors.\n");
+
+  declareOption(ol, "imputation_spec", &NeighborhoodImputationVMatrix::imputation_spec, OptionBase::buildoption,
+                "A vector that give for each variable the number of neighbors to use.\n"
+                "If a variable don't have a value, we use the value of the varialbe: number_of_neighbors.\n"
+                " Ex: [ varname1 : nbneighbors1, varname2 : nbneighbors2 ]\n");
   inherited::declareOptions(ol);
 }
 
@@ -88,21 +94,23 @@ void NeighborhoodImputationVMatrix::build()
 {
   inherited::build();
   build_();
+  testResultantVMatrix();
 }
 
 void NeighborhoodImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  deepCopyField(source_with_missing, copies);
   deepCopyField(reference_index, copies);
   deepCopyField(reference_with_missing, copies);
   deepCopyField(reference_with_covariance_preserved, copies);
   deepCopyField(number_of_neighbors, copies);
+  deepCopyField(count_missing_neighbors, copies);
+  deepCopyField(imputation_spec, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
 void NeighborhoodImputationVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
 {
-  source_with_missing->getExample(i, input, target, weight);
+  source->getExample(i, input, target, weight);
   for (int source_col = 0; source_col < input->length(); source_col++)
   {
     if (is_missing(input[source_col])) input[source_col] = impute(i, source_col);
@@ -111,7 +119,7 @@ void NeighborhoodImputationVMatrix::getExample(int i, Vec& input, Vec& target, r
 
 real NeighborhoodImputationVMatrix::get(int i, int j) const
 { 
-  real variable_value = source_with_missing->get(i, j);
+  real variable_value = source->get(i, j);
   if (!is_missing(variable_value)) return variable_value;
   return impute(i, j);
 }
@@ -123,7 +131,7 @@ void NeighborhoodImputationVMatrix::put(int i, int j, real value)
 
 void NeighborhoodImputationVMatrix::getSubRow(int i, int j, Vec v) const
 {  
-  source_with_missing->getSubRow(i, j, v);
+  source->getSubRow(i, j, v);
   for (int source_col = 0; source_col < v->length(); source_col++) 
     if (is_missing(v[source_col])) v[source_col] = impute(i, source_col + j);
 }
@@ -145,7 +153,7 @@ void NeighborhoodImputationVMatrix::insertRow(int i, Vec v)
 
 void NeighborhoodImputationVMatrix::getRow(int i, Vec v) const
 {  
-  source_with_missing-> getRow(i, v);
+  source-> getRow(i, v);
   for (int source_col = 0; source_col < v->length(); source_col++)
     if (is_missing(v[source_col])) v[source_col] = impute(i, source_col); 
 }
@@ -157,34 +165,33 @@ void NeighborhoodImputationVMatrix::putRow(int i, Vec v)
 
 void NeighborhoodImputationVMatrix::getColumn(int i, Vec v) const
 {  
-  source_with_missing-> getColumn(i, v);
+  source-> getColumn(i, v);
   for (int source_row = 0; source_row < v->length(); source_row++)
     if (is_missing(v[source_row])) v[source_row] = impute(source_row, i);
 }
 
 void NeighborhoodImputationVMatrix::build_()
 {
-    if (!source_with_missing)                 PLERROR("In NeighborhoodImputationVMatrix::source with missing set must be supplied");
+    if (!source)                 PLERROR("In NeighborhoodImputationVMatrix::source with missing set must be supplied");
     if (!reference_index)                     PLERROR("In NeighborhoodImputationVMatrix::reference index set must be supplied");
     if (!reference_with_missing)              PLERROR("In NeighborhoodImputationVMatrix::reference with missing set must be supplied");
     if (!reference_with_covariance_preserved) PLERROR("In NeighborhoodImputationVMatrix::reference with covariance preserved must be supplied");
-    src_length = source_with_missing->length();
+    src_length = source->length();
     if (src_length != reference_index->length())
         PLERROR("In NeighborhoodImputationVMatrix::length of the source and its index must agree, got: %i - %i", src_length, reference_index->length());
     ref_length = reference_with_missing->length();
     if (ref_length != reference_with_covariance_preserved->length())
         PLERROR("In NeighborhoodImputationVMatrix::length of the reference set with missing and with covariance preserved must agree, got: %i - %i",
                 ref_length, reference_with_covariance_preserved->length());
-    src_width = source_with_missing->width();
+    src_width = source->width();
     if (src_width != reference_with_missing->width())
         PLERROR("In NeighborhoodImputationVMatrix::width of the source and the reference with missing must agree, got: %i - %i",
                 src_width, reference_with_missing->width());
     if (src_width != reference_with_covariance_preserved->width())
-        PLERROR("In NeighborhoodImputationVMatrix::width of the source and the reference with missing must agree, got: %i - %i",
+        PLERROR("In NeighborhoodImputationVMatrix::width of the source and the reference with covariance preserved must agree, got: %i - %i",
                 src_width, reference_with_covariance_preserved->width());
     if (number_of_neighbors < 1)
-        PLERROR("In NeighborhoodImputationVMatrix::the index must contains at least as many reference as the specified number of neighbors, got: %i - %i",
-                number_of_neighbors, reference_index->width());
+      PLERROR("In NeighborhoodImputationVMatrix::there must be at least 1 neighbors, got: %d",number_of_neighbors);
     if (number_of_neighbors > reference_index->width())
         PLERROR("In NeighborhoodImputationVMatrix::the index must contains at least as many reference as the specified number of neighbors, got: %i - %i",
                 number_of_neighbors, reference_index->width());
@@ -194,38 +201,57 @@ void NeighborhoodImputationVMatrix::build_()
     ref_mis = reference_with_missing->toMat();
     ref_cov.resize(reference_with_covariance_preserved->length(), reference_with_covariance_preserved->width());
     ref_cov = reference_with_covariance_preserved->toMat();
+
     length_ = src_length;
     width_ = src_width;
-    inputsize_ = source_with_missing->inputsize();
-    targetsize_ = source_with_missing->targetsize();
-    weightsize_ = source_with_missing->weightsize();
-    declareFieldNames(source_with_missing->fieldNames());
+    inputsize_ = source->inputsize();
+    targetsize_ = source->targetsize();
+    weightsize_ = source->weightsize();
+    declareFieldNames(source->fieldNames());
+
+    nb_neighbors.resize(source->inputsize());
+    nb_neighbors.fill(number_of_neighbors);
+    for (int spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
+      {
+        int source_col = fieldIndex(imputation_spec[spec_col].first);
+        if (source_col < 0) 
+          PLERROR("In NeighborhoodImputationVMatrix::build_() no field with this name in source data set: %s", (imputation_spec[spec_col].first).c_str());
+        nb_neighbors[source_col] = imputation_spec[spec_col].second;
+      }
 }
 real NeighborhoodImputationVMatrix::impute(int i, int j) const
 {
-    int ref_idx_col;
     int ref_row;
     real return_value = 0.0;
-    real value_count = 0.0;
-    for (ref_idx_col = 0; ref_idx_col < number_of_neighbors; ref_idx_col++)
+    int value_count = 0;
+    int neighbors_count = 0;
+    for (int ref_idx_col = 0; ref_idx_col < ref_idx.width() &&
+           neighbors_count < nb_neighbors[j]; ref_idx_col++)
     {
         ref_row = (int) ref_idx(i, ref_idx_col);
         if (ref_row < 0 || ref_row >= ref_length)
             PLERROR("In NeighborhoodImputationVMatrix::invalid index reference, got: %i for sample %i", ref_row, i);
-        if (is_missing(ref_mis(ref_row, j))) continue;
+        if (is_missing(ref_mis(ref_row, j))){
+          if(count_missing_neighbors)
+            neighbors_count++;
+          continue;
+        }
         return_value += ref_mis(ref_row, j);
-        value_count += 1.0;
+        value_count++;
+        neighbors_count++;
     }
     if (value_count > 0) return return_value / value_count;
+    //if all neighbors have missing value we use the inputed version
+    //TODO put a warning
     return_value = 0.0;
-    value_count = 0.0;
-    for (ref_idx_col = 0; ref_idx_col < number_of_neighbors; ref_idx_col++)
+    value_count = 0;
+    for (int ref_idx_col = 0; ref_idx_col < number_of_neighbors; ref_idx_col++)
     {
         ref_row = (int) ref_idx(i, ref_idx_col);
         if (is_missing(ref_cov(ref_row, j)))
             PLERROR("In NeighborhoodImputationVMatrix::missing value found in the reference with covariance preserved at: %i , %i", ref_row, j);
         return_value += ref_cov(ref_row, j);
-        value_count += 1.0;
+        value_count += 1;
     }
     return return_value / value_count;
 }

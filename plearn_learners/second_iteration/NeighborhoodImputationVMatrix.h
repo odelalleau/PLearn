@@ -44,7 +44,7 @@
 #ifndef NeighborhoodImputationVMatrix_INC
 #define NeighborhoodImputationVMatrix_INC
 
-#include <plearn/vmat/SourceVMatrix.h>
+#include "ImputationVMatrix.h"
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/io/fileutils.h>                     //!<  For isfile()
 #include <plearn/math/BottomNI.h>
@@ -52,15 +52,12 @@
 namespace PLearn {
 using namespace std;
 
-class NeighborhoodImputationVMatrix: public VMatrix
+class NeighborhoodImputationVMatrix: public ImputationVMatrix
 {
-  typedef VMatrix inherited;
+  typedef ImputationVMatrix inherited;
   
 public:
 
-  //! The source VMatrix with missing values.
-  VMat                          source_with_missing;
-  
   //! The set of pre-computed neighbors index.
   //! This can be done with BallTreeNearestNeighbors.
   VMat                          reference_index;
@@ -74,7 +71,14 @@ public:
   //! This is usually called K, the number of neighbors to consider.
   //! It must be less or equal than the with of the reference index.
   int                           number_of_neighbors;
-  
+
+  //! A vector that give for each variable the number of neighbors to use
+  //! If a variable is not in the spec, it will use number_of_neighbors
+  TVec< pair<string, int> >  imputation_spec;
+
+  //!0: (default) We do not count a neighbour with a missing value in the number of neighbors
+  //!1: We count a neighbour with a missing value in the number of neighbors
+  int                           count_missing_neighbors;
 
                         NeighborhoodImputationVMatrix();
   virtual               ~NeighborhoodImputationVMatrix();
@@ -103,6 +107,7 @@ private:
           Mat          ref_idx;
           Mat          ref_mis;
           Mat          ref_cov;
+          TVec<int>    nb_neighbors;
 
           void         build_();
           real         impute(int i, int j) const;

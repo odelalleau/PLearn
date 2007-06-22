@@ -44,20 +44,17 @@
 #ifndef ConditionalMeanImputationVMatrix_INC
 #define ConditionalMeanImputationVMatrix_INC
 
-#include <plearn/vmat/SourceVMatrix.h>
+#include "ImputationVMatrix.h"
 #include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {
 using namespace std;
 
-class ConditionalMeanImputationVMatrix: public VMatrix
+class ConditionalMeanImputationVMatrix: public ImputationVMatrix
 {
-  typedef VMatrix inherited;
+  typedef ImputationVMatrix inherited;
   
 public:
-
-  //! The source VMatrix with missing values.
-  VMat                 source;
 
   //! The directory in the source metadatadir housing the variable conditional mean files.
   string               condmean_dir;
@@ -100,9 +97,6 @@ private:
   PPath                source_metadata;
   TVec<string>         source_names;
   StatsCollector       source_stats;
-  PPath                condmean_variable_file_name;
-  VMat                 condmean_variable_file;
-  int                  condmean_col;
         
 
           void         build_();

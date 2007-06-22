@@ -399,6 +399,11 @@ void TestImputations::computeMeanMedianModeStats()
     mmmf_mean_err = mmmf_mean_err / (real) test_length;
     mmmf_median_err = mmmf_median_err / (real) test_length;
     mmmf_mode_err = mmmf_mode_err / (real) test_length;
+    //TODO check the formul
+    //mmmf_mean_stddev = sqrt(mmmf_mean_err);
+    //mmmf_median_stddev = sqrt(mmmf_median_err);
+    //mmmf_mode_stddev = sqrt(mmmf_mode_err);
+
 }
 
 void TestImputations::computeTreeCondMeanStats()
@@ -421,6 +426,8 @@ void TestImputations::computeTreeCondMeanStats()
     }
     delete pb;
     tcmf_mean_err = tcmf_mean_err / (real) test_length;
+    //TODO check the formul
+    //tcmf_mean_stddev = sqrt(tcmf_mean_err);
 }
 
 void TestImputations::computeCovPresStats()
@@ -457,6 +464,9 @@ void TestImputations::computeCovPresStats()
     }
     delete pb;
     cvpf_mean_err = cvpf_mean_err / (real) test_length;
+    //TODO check the formul
+    //cvpf_mean_stddev = sqrt(cvpf_mean_err);
+
 }
 
 real TestImputations::covariancePreservationValue(int col)

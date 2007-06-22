@@ -44,6 +44,7 @@
 #ifndef CovariancePreservationImputationVMatrix_INC
 #define CovariancePreservationImputationVMatrix_INC
 
+#include "ImputationVMatrix.h"
 #include <plearn/vmat/SourceVMatrix.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/io/fileutils.h>                     //!<  For isfile()
@@ -52,14 +53,11 @@
 namespace PLearn {
 using namespace std;
 
-class CovariancePreservationImputationVMatrix: public VMatrix
+class CovariancePreservationImputationVMatrix: public ImputationVMatrix
 {
-  typedef VMatrix inherited;
+  typedef ImputationVMatrix inherited;
   
 public:
-
-  //! The source VMatrix with missing values.
-  VMat                  source;
   
   //! A referenced train set.
   //! The covariance imputation is computed with the observed values in this data set.

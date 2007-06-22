@@ -67,8 +67,6 @@ ConditionalMeanImputationVMatrix::~ConditionalMeanImputationVMatrix()
 
 void ConditionalMeanImputationVMatrix::declareOptions(OptionList &ol)
 {
-  declareOption(ol, "source", &ConditionalMeanImputationVMatrix::source, OptionBase::buildoption,
-                "The source VMatrix with missing values.\n");
   declareOption(ol, "condmean_dir", &ConditionalMeanImputationVMatrix::condmean_dir, OptionBase::buildoption, 
                 "The directory in the source metadatadir housing the variable conditional mean files.\n");
   declareOption(ol, "condmean", &ConditionalMeanImputationVMatrix::condmean, OptionBase::learntoption, 
@@ -86,7 +84,6 @@ void ConditionalMeanImputationVMatrix::build()
 
 void ConditionalMeanImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-  deepCopyField(source, copies);
   deepCopyField(condmean_dir, copies);
   deepCopyField(condmean, copies);
   deepCopyField(condmean_col_ref, copies);
@@ -164,6 +161,7 @@ void ConditionalMeanImputationVMatrix::build_()
 {
     if (!source) PLERROR("In ConditionalMeanImputationVMatrix::source vmat must be supplied");
     loadCondMeanMatrix(); 
+    testResultantVMatrix();
 }
 
 void ConditionalMeanImputationVMatrix::loadCondMeanMatrix()
@@ -215,10 +213,11 @@ Imputation step:
     {
         source_stats = source->getStats(source_col);
         if (source_stats.nmissing() <= 0) continue;
-        condmean_col = condmean_col_ref[source_col];
-        condmean_variable_file_name = source_metadata + "/" + condmean_dir + "/dir/" + source_names[source_col] + "/Split0/test1_outputs.pmat";
-        if (!isfile(condmean_variable_file_name)) PLERROR("In ConditionalMeanImputationVMatrix::A conditional mean file was not found for variable %s", source_names[source_col].c_str());
-        condmean_variable_file = new FileVMatrix(condmean_variable_file_name, false);
+        int condmean_col = condmean_col_ref[source_col];
+        PPath condmean_variable_file_name = source_metadata + "/" + condmean_dir + "/dir/" + source_names[source_col] + "/Split0/test1_outputs.pmat";
+        if (!isfile(condmean_variable_file_name)) PLERROR("In ConditionalMeanImputationVMatrix::A conditional mean file(%s) was not found for variable %s",
+                                                          condmean_variable_file_name.c_str(),source_names[source_col].c_str());
+        VMat condmean_variable_file = new FileVMatrix(condmean_variable_file_name, false);
         if (condmean_variable_file->length() != source_length)
             PLERROR("In ConditionalMeanImputationVMatrix::Source and conditional mean file length are not equal for variable %s", source_names[source_col].c_str());
         for (source_row = 0; source_row < source_length; source_row++)

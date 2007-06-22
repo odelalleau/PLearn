@@ -40,7 +40,7 @@
 #ifndef GaussianizeVMatrix_INC
 #define GaussianizeVMatrix_INC
 
-#include <plearn/vmat/SourceVMatrix.h>
+#include "ImputationVMatrix.h"
 
 namespace PLearn {
 
