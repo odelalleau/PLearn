@@ -552,7 +552,7 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values )
 
 void RBMGaussianLayer::update( const Mat& pos_values, const Mat& neg_values )
 {
-    
+
     PLASSERT( pos_values.width() == size );
     PLASSERT( neg_values.width() == size );
 
@@ -572,16 +572,16 @@ void RBMGaussianLayer::update( const Mat& pos_values, const Mat& neg_values )
             {
                 real *pv_k = pos_values[k];
                 real *nv_k = neg_values[k];
-		real update=0;
+                real update=0;
                 for( int i=0; i<size; i++ )
                 {
                     update += two_lr * a[0] * (nv_k[i]*nv_k[i] - pv_k[i]*pv_k[i]);
                 }
-		a[0] += update/(real)size;
+                a[0] += update/(real)size;
                 if( a[0] < min_quad_coeff )
                     a[0] = min_quad_coeff;
             }
-	else
+        else
             for( int k=0; k<batch_size; k++ )
             {
                 real *pv_k = pos_values[k];
@@ -616,13 +616,13 @@ real RBMGaussianLayer::energy(const Vec& unit_values) const
         real* v = unit_values.data();
         real* a = quad_coeff.data();
         real* b = bias.data();
-	if(share_quad_coeff)
+        if(share_quad_coeff)
             for(register int i=0; i<size; i++)
             {
                 tmp = a[0]*v[i];
                 en += tmp*tmp + b[i]*v[i];
             }
-	else
+        else
             for(register int i=0; i<size; i++)
             {
                 tmp = a[i]*v[i];

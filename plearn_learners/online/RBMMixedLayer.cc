@@ -395,6 +395,30 @@ void RBMMixedLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     }
 }
 
+void RBMMixedLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
+                             Mat& bias_gradients)
+{
+    computeExpectations();
+
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+    bias_gradients.resize( batch_size, size );
+
+    for( int i=0 ; i<n_layers ; i++ )
+    {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+
+        Mat sub_targets = targets.subMatColumns(begin, size_i);
+        Mat sub_bias_gradients = bias_gradients.subMatColumns(begin, size_i);
+        // TODO: something else than store mat_nlls...
+        sub_layers[i]->bpropNLL( sub_targets, mat_nlls.column(i),
+                                 sub_bias_gradients );
+    }
+}
+
 void RBMMixedLayer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "sub_layers", &RBMMixedLayer::sub_layers,
