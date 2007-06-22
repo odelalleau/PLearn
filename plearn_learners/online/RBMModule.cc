@@ -581,10 +581,12 @@ void RBMModule::fprop(const Vec& input, Vec& output) const
 
 void RBMModule::fprop(const TVec<Mat*>& ports_value)
 {
+
     PLASSERT( ports_value.length() == nPorts() );
     PLASSERT( visible_layer );
     PLASSERT( hidden_layer );
     PLASSERT( connection );
+        
     Mat* visible = ports_value[getPortIndex("visible")]; 
     Mat* hidden = ports_value[getPortIndex("hidden.state")];
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
@@ -787,49 +789,49 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     // SAMPLING
     if ((visible_sample && visible_sample->isEmpty())               // is asked to sample visible units (discrete)
         || (visible_expectation && visible_expectation->isEmpty())  //              "                   (continous)
-	|| (hidden_sample && hidden_sample->isEmpty()))             // or to sample hidden units
+        || (hidden_sample && hidden_sample->isEmpty()))             // or to sample hidden units
     {
         if (hidden_sample && !hidden_sample->isEmpty()) // sample visible conditionally on hidden
         {
             sampleVisibleGivenHidden(*hidden_sample);
-	    Gibbs_step=0;
-	    cout << "sampling init (from hidden)" << endl;
+            Gibbs_step=0;
+            cout << "sampling visible from hidden" << endl;
         }
         else if (visible_sample && !visible_sample->isEmpty()) // if an input is provided, sample hidden conditionally
         {
             sampleHiddenGivenVisible(*visible_sample);
-	    Gibbs_step=0;
-	    cout << "sampling init (from visible)" << endl;
-	}
+            Gibbs_step=0;
+            cout << "sampling hidden from (discrete) visible" << endl;
+        }
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
             visible_layer->generateSamples();
-	    sampleHiddenGivenVisible(visible_layer->samples);
-	    Gibbs_step=0;
-	    cout << "sampling init (from visible)" << endl;
+            sampleHiddenGivenVisible(visible_layer->samples);
+            Gibbs_step=0;
+            cout << "sampling hidden from visible expectation" << endl;
         }
         else if (visible_expectation && !visible_expectation->isEmpty()) 
         {
-	     PLERROR("In RBMModule::fprop visible_expectation can only be an output port (use visible as input port");
-	}
+             PLERROR("In RBMModule::fprop visible_expectation can only be an output port (use visible as input port");
+        }
         else // sample unconditionally: Gibbs sample after k steps
         {
             // the visible_layer->expectations contain the "state" from which we
             // start or continue the chain
             int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
-            cout << "Gibbs sampling " << Gibbs_step;
+            cout << "Gibbs sampling " << Gibbs_step+1;
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
             }
-  	    cout << " -> " << Gibbs_step-1 << endl;
+              cout << " -> " << Gibbs_step << endl;
         }
 
-	if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
+        if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
         {
-   	      const Mat& hidden_expect = hidden_layer->getExpectations();
+              const Mat& hidden_expect = hidden_layer->getExpectations();
               hidden->resize(hidden_expect.length(), hidden_expect.width());
               *hidden << hidden_expect;
         }
@@ -847,16 +849,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         if (visible_expectation && visible_expectation->isEmpty()) // provide expectation of the visible units
         {
-	    const Mat& to_store = visible_layer->getExpectations();
+            const Mat& to_store = visible_layer->getExpectations();
             visible_expectation->resize(to_store.length(),
-	                                to_store.width());
+                                        to_store.width());
             *visible_expectation << to_store;
         }
-
-	found_a_valid_configuration = true;
-    } // END SAMPLING
-
-
+        found_a_valid_configuration = true;
+    }
+    
     // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
     if (contrastive_divergence)
     {
@@ -949,7 +949,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
                     "only possible if only visible are provided in input).\n");
         found_a_valid_configuration = true;
-    }
+    }// END SAMPLING
+    
+
+    
+    
     // COMPUTE AUTOASSOCIATOR RECONSTRUCTION ERROR
     if ( visible && !visible->isEmpty() && 
          ( ( visible_reconstruction && visible_reconstruction->isEmpty() ) || 
@@ -1000,14 +1004,29 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     }
     
 
+	
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;
     hidden_bias = NULL;
     weights = NULL;
     hidden_activations_are_computed = false;
 
+
+
     if (!found_a_valid_configuration)
-        PLERROR("In RBMModule::fprop - Unknown port configuration");
+    {
+        if (visible)
+        cout << "visible_empty : "<< (bool) visible->isEmpty() << endl;
+        if (hidden)
+        cout << "hidden_empty : "<< (bool) hidden->isEmpty() << endl;
+        if (visible_sample)
+        cout << "visible_sample_empty : "<< (bool) visible_sample->isEmpty() << endl;
+        if (hidden_sample)
+        cout << "hidden_sample_empty : "<< (bool) hidden_sample->isEmpty() << endl;
+        if (visible_expectation)
+        cout << "visible_expectation_empty : "<< (bool) visible_expectation->isEmpty() << endl;
+        PLERROR("In RBMModule::fprop - Unknown port configuration for module %s", name.c_str());
+    }
 
     checkProp(ports_value);
 
