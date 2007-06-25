@@ -38,7 +38,10 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gobject
-import scintilla
+try:
+    import scintilla
+except ImportError:
+    pass                                # Ignore scintilla problems
 
 from plearn.pl_pygtk  import MessageBox
 from plearn.vmat.PMat import PMat
