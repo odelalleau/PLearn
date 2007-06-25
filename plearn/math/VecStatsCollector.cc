@@ -379,8 +379,11 @@ void VecStatsCollector::update(const Vec& x, real weight)
 
         // If m_num_incremental==0, we just re-updated the StatsCollectors from
         // scratch.  In this case, don't call remove_observation.
-        if(obs.isNotEmpty() && m_window > 0 && m_num_incremental > 0)
+        if(obs.isNotEmpty() && m_window > 0 &&
+           (m_full_update_frequency <= 0 || m_num_incremental > 0))
+        {
             remove_observation(obs, w);
+        }
     }
 }
 
