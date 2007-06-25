@@ -49,6 +49,12 @@
 namespace PLearn {
 using namespace std;
 
+/**
+ *  Used by StatsCollector to keep a finite-size window of observations
+ *
+ *  This allows StatsCollector to compute finite-horizon moving averages, for
+ *  instance.
+ */
 class ObservationWindow: public Object
 {
     typedef Object inherited;

@@ -41,8 +41,9 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     ObservationWindow,
-    "ONE LINE USER DESCRIPTION",
-    "MULTI LINE\nHELP FOR USERS"
+    "Used by StatsCollector to keep a finite-size window of observations",
+    "This allows StatsCollector to compute finite-horizon moving averages, for\n"
+    "instance."
     );
 
 

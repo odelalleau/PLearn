@@ -76,37 +76,57 @@ public:
     double epsilon;
 
     /**
-     * If positive, the window restricts the stats computed by this
-     * FinVecStatsCollector to the last 'window' observations. This uses the
-     * VecStatsCollector::remove_observation mechanism.
+     *  If positive, the window restricts the stats computed by this
+     *  FinVecStatsCollector to the last 'window' observations. This uses the
+     *  VecStatsCollector::remove_observation mechanism; but see
+     *  'full_update_frequency' below.
      *
-     * Default: -1 (all observations are considered).
+     *  Default: -1 (all observations are considered).
      */
     int m_window;
 
     /**
-     * How to deal with update vectors containing NaNs with respect to the
-     * window mechanism.
+     *  If the window mechanism is used, number of updates at which a full
+     *  update of the underlying StatsCollector is performed.  A 'full update'
+     *  is defined as:
      *
-     *  0 - Do not check for NaNs (all updates are accounted in the window)
-     *  1 - If *all* entries of the update vector are NaNs, do not account for
-     *      that observation in the window.
-     *  2 - If *any* entries of the update vector are NaNs, do not account for
-     *      that observation in the window.
+     *  - 1. Calling forget()
+     *  - 2. Updating the StatsCollector from all observations in the window.
+     *
+     *  This is useful for two reasons: 1) when performing a remove-observation
+     *  on a StatsCollector that contains a wide range of values, the
+     *  accumulators for the fourth power may become negative, yielding
+     *  inconsistent estimation.  2) without this option, the statistics
+     *  'FIRST', 'LAST', 'MIN', 'MAX' are not updated properly in the presence
+     *  of a window.  To get proper estimation of these statistics, you must
+     *  use the setting 'full_update_frequency=1'.
+     *
+     *  Default value: -1 (never re-update the StatsCollector from scratch).
+     */
+    int m_full_update_frequency;
+    
+    /**
+     *  How to deal with update vectors containing NaNs with respect to the
+     *  window mechanism.
+     *
+     *  - 0: Do not check for NaNs (all updates are accounted in the window)
+     *  - 1: If *all* entries of the update vector are NaNs, do not account for
+     *       that observation in the window.
+     *  - 2: If *any* entries of the update vector are NaNs, do not account for
+     *       that observation in the window.
      *
      *  Default: 0
      */
     int m_window_nan_code;
     
     /**
-     * If the remove_observation mecanism is used and the removed
-     * value is equal to one of first_, last_, min_ or max_, the default
-     * behavior is to warn the user.
+     *  If the remove_observation mechanism is used (without
+     *  'full_update_frequency=1') and the removed value is equal to one of
+     *  first_, last_, min_ or max_, the default behavior is to warn the user.
      * 
-     * If one want to disable this feature, he may set
-     * no_removal_warnings to true.
+     *  To disable this feature, set 'no_removal_warnings' to true.
      *
-     * Default: false (0).
+     *  Default: false (0).
      */
     bool no_removal_warnings;
 
@@ -280,6 +300,10 @@ protected:
 
     //! Window mechanism
     PP<ObservationWindow> m_observation_window;
+
+    //! (Window mechanism) Number of incremental updates since the last
+    //! update from scratch of the underlying statscollectors
+    int m_num_incremental;
     
 protected: 
     //! Declares this class' options

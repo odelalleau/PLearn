@@ -53,10 +53,12 @@ VecStatsCollector::VecStatsCollector()
       compute_covariance(false),
       epsilon(0.0),
       m_window(-1),
+      m_full_update_frequency(-1),
       m_window_nan_code(0),
       no_removal_warnings(false), // Window mechanism
       sum_non_missing_weights(0),
-      sum_non_missing_square_weights(0)
+      sum_non_missing_square_weights(0),
+      m_num_incremental(0)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -100,6 +102,26 @@ void VecStatsCollector::declareOptions(OptionList& ol)
         "VecStatsCollector::remove_observation mechanism.\n"
         "Default: -1 (all observations are considered);\n"
         " -2 means all observations kept in an ObservationWindow\n");
+
+    declareOption(
+        ol, "full_update_frequency", &VecStatsCollector::m_full_update_frequency,
+        OptionBase::buildoption,
+        "If the window mechanism is used, number of updates at which a full\n"
+        "update of the underlying StatsCollector is performed.  A 'full update'\n"
+        "is defined as:\n"
+        "\n"
+        "- 1. Calling forget()\n"
+        "- 2. Updating the StatsCollector from all observations in the window.\n"
+        "\n"
+        "This is useful for two reasons: 1) when performing a remove-observation\n"
+        "on a StatsCollector that contains a wide range of values, the\n"
+        "accumulators for the fourth power may become negative, yielding\n"
+        "inconsistent estimation.  2) without this option, the statistics\n"
+        "'FIRST', 'LAST', 'MIN', 'MAX' are not updated properly in the presence\n"
+        "of a window.  To get proper estimation of these statistics, you must\n"
+        "use the setting 'full_update_frequency=1'.\n"
+        "\n"
+        "Default value: -1 (never re-update the StatsCollector from scratch).\n");
     
     declareOption(
         ol, "window_nan_code", &VecStatsCollector::m_window_nan_code,
@@ -107,10 +129,10 @@ void VecStatsCollector::declareOptions(OptionList& ol)
         "How to deal with update vectors containing NaNs with respect to the\n"
         "window mechanism.\n"
         "\n"
-        " 0 - Do not check for NaNs (all updates are accounted in the window)\n"
-        " 1 - If *all* entries of the update vector are NaNs, do not account for\n"
+        "- 0: Do not check for NaNs (all updates are accounted in the window)\n"
+        "- 1: If *all* entries of the update vector are NaNs, do not account for\n"
         "     that observation in the window.\n"
-        " 2 - If *any* entries of the update vector are NaNs, do not account for\n"
+        "- 2: If *any* entries of the update vector are NaNs, do not account for\n"
         "     that observation in the window.\n"
         "\n"
         " Default: 0" );
@@ -118,12 +140,11 @@ void VecStatsCollector::declareOptions(OptionList& ol)
     declareOption(
         ol, "no_removal_warnings", &VecStatsCollector::no_removal_warnings,
         OptionBase::buildoption,
-        "If the remove_observation mecanism is used and the removed\n"
-        "value is equal to one of last_, min_ or max_, the default\n"
-        "behavior is to warn the user.\n"
+        "If the remove_observation mechanism is used (without\n"
+        "'full_update_frequency=1') and the removed value is equal to one of\n"
+        "first_, last_, min_ or max_, the default behavior is to warn the user.\n"
         "\n"
-        "If one want to disable this feature, he may set\n"
-        "no_removal_warnings to true.\n"
+        "To disable this feature, set 'no_removal_warnings' to true.\n"
         "\n"
         "Default: false (0)." );
   
@@ -294,9 +315,31 @@ void VecStatsCollector::update(const Vec& x, real weight)
                 "%d, while size of stats (and most likely previously seen vector) is "
                 "%d", n, stats.size());
 
-    for(int k=0; k<n; k++)
+    // Update the underlying StatsCollectors.  If we use the window mechanism
+    // and we are at a boundary given by m_full_update_frequency, perform a
+    // full re-update of the StatsCollectors from the saved observations in the
+    // window.
+    if ((m_window > 0 || m_window == -2) && m_full_update_frequency > 0 &&
+        ++m_num_incremental >= m_full_update_frequency)
+    {
+        for (int k=0 ; k<n ; ++k)
+            stats[k].forget();
+        // Drop oldest observation in window to make room for new observation:
+        // start at t=1
+        for (int t=1 ; t<m_observation_window->length() ; ++t) {
+            Vec obs = m_observation_window->getObs(t);
+            real w  = m_observation_window->getWeight(t);
+            for (int k=0 ; k<n ; ++k)
+                stats[k].update(obs[k], w);
+        }
+        m_num_incremental = 0;
+    }
+
+    // Incremental update with current observation, as usual
+    for(int k=0; k<n; ++k)
         stats[k].update(x[k], weight);
 
+    // Compute covariance if required
     if(compute_covariance) {
         if (x.hasMissing()) {
             // Slower version to handle missing values.
@@ -333,7 +376,10 @@ void VecStatsCollector::update(const Vec& x, real weight)
         tuple<Vec, real> outdated = m_observation_window->update(x, weight);
         Vec& obs = get<0>(outdated);
         real w = get<1>(outdated);
-        if(obs.isNotEmpty() && m_window > 0)
+
+        // If m_num_incremental==0, we just re-updated the StatsCollectors from
+        // scratch.  In this case, don't call remove_observation.
+        if(obs.isNotEmpty() && m_window > 0 && m_num_incremental > 0)
             remove_observation(obs, w);
     }
 }
