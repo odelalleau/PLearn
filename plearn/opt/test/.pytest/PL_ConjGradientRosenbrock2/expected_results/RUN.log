@@ -45,6 +45,7 @@ fieldnames = []
 compute_covariance = 0;
 epsilon = 0;
 window = -1;
+full_update_frequency = -1;
 window_nan_code = 0;
 no_removal_warnings = 0;
 stats = # samples: 12
