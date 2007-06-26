@@ -298,6 +298,17 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Current experiment directory")));
 
     declareMethod(
+        rmm, "setTrainStatsCollector", &PLearner::setTrainStatsCollector,
+        (BodyDoc("Sets the statistics collector whose update() method will be called\n"
+                 "during training.\n."),
+         ArgDoc ("statscol", "The tatistics collector to set")));
+
+    declareMethod(
+        rmm, "getTrainStatsCollector", &PLearner::getTrainStatsCollector,
+        (BodyDoc("Returns the statistics collector that was used during training.\n"),
+         RetDoc ("Current training statistics collector")));
+
+    declareMethod(
         rmm, "forget", &PLearner::forget,
         (BodyDoc("(Re-)initializes the PLearner in its fresh state (that state may depend\n"
                  "on the 'seed' option) and sets 'stage' back to 0 (this is the stage of\n"
