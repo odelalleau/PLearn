@@ -175,7 +175,7 @@ void Experimentation::experimentSetUp()
             {
                 if (missing_indicator_field_names[fields_col] == main_names[main_col]) break;
             }
-            if (main_col >= main_width) PLERROR("In Experimentation: no field with this name in input dataset: %", (missing_indicator_field_names[fields_col]).c_str());
+            if (main_col >= main_width) PLERROR("In Experimentation::experimentSetUp() no field with this name in input dataset: %", (missing_indicator_field_names[fields_col]).c_str());
         }
         main_fields_selected_col = 0;
         for (main_col = 0; main_col < main_width; main_col++)
@@ -312,7 +312,7 @@ void Experimentation::experimentSetUp()
         pb->update( main_row );
     }
     delete pb;
-    PLERROR("In Experimentation: we are done here");
+    PLERROR("In Experimentation::experimentSetUp() we are done here");
 }
 
 void Experimentation::createHeaderFile()
