@@ -48,9 +48,9 @@
 #include <plearn/io/fileutils.h>              //!<  For isfile()
 #include <plearn/math/random.h>               //!<  For the seed stuff.
 #include <plearn/vmat/ExplicitSplitter.h>     //!<  For the splitter stuff.
+#include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
 #include <plearn_learners/second_iteration/CovariancePreservationImputationVMatrix.h>
 #include <plearn_learners/second_iteration/NeighborhoodImputationVMatrix.h>
-#include <plearn_learners/second_iteration/BallTreeNearestNeighbors.h>
 #include <plearn_learners/second_iteration/Experimentation.h>
 
 namespace PLearn {
