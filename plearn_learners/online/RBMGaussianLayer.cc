@@ -54,6 +54,7 @@ RBMGaussianLayer::RBMGaussianLayer( real the_learning_rate ) :
     inherited( the_learning_rate ),
     min_quad_coeff( 0. ),
     share_quad_coeff( false ),
+    size_quad_coeff( 0 ),
     sigma_is_up_to_date( false )
 {
 }
@@ -62,6 +63,7 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate ) :
     inherited( the_learning_rate ),
     min_quad_coeff( 0. ),
     share_quad_coeff( false ),
+    size_quad_coeff( 0 ),
     quad_coeff( the_size, 1. ), // or 1./M_SQRT2 ?
     quad_coeff_pos_stats( the_size ),
     quad_coeff_neg_stats( the_size ),
@@ -77,12 +79,13 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate ) :
     bias_neg_stats.resize( the_size );
 }
 
-RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate, bool do_share_quad_coeff ) :
+RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate,
+                                    bool do_share_quad_coeff ) :
     inherited( the_learning_rate ),
     min_quad_coeff( 0. ),
-    sigma_is_up_to_date( false ),
     quad_coeff_pos_stats( the_size ),
-    quad_coeff_neg_stats( the_size )
+    quad_coeff_neg_stats( the_size ),
+    sigma_is_up_to_date( false )
 {
     size = the_size;
     activation.resize( the_size );
@@ -197,7 +200,7 @@ void RBMGaussianLayer::computeStdDeviation()
     if( sigma_is_up_to_date )
         return;
 
-    // sigma = 1 / (sqrt(2) * quad_coeff[i])    
+    // sigma = 1 / (sqrt(2) * quad_coeff[i])
     if(share_quad_coeff)
         sigma[0] = 1 / (M_SQRT2 * quad_coeff[0]);
     else
@@ -337,8 +340,8 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
     declareOption(ol, "share_quad_coeff", &RBMGaussianLayer::share_quad_coeff,
                   OptionBase::buildoption,
                   "Should all the units share the same quadratic coefficients?\n"
-		  "Suitable to avoid unstability (overfitting)  in cases where\n"
-		  "all the units have the same 'meaning'  (pixels of an image)");
+                  "Suitable to avoid unstability (overfitting)  in cases where\n"
+                  "all the units have the same 'meaning'  (pixels of an image)");
 
 
     // Now call the parent class' declareOptions
@@ -428,17 +431,17 @@ void RBMGaussianLayer::update()
     if( momentum == 0. )
     {
         if(share_quad_coeff)
-	{
-	    real update=0;
+        {
+            real update=0;
             for( int i=0 ; i<size ; i++ )
             {
                 update += pos_factor * aps[i] + neg_factor * ans[i];
             }
-	    a[0] += update/(real)size;
+            a[0] += update/(real)size;
             if( a[0] < min_quad_coeff )
                 a[0] = min_quad_coeff;
         }
-	else
+        else
             for( int i=0 ; i<size ; i++ )
             {
                 a[i] += pos_factor * aps[i] + neg_factor * ans[i];
@@ -449,20 +452,20 @@ void RBMGaussianLayer::update()
     else
     {
         if(share_quad_coeff)
-	{
+        {
             quad_coeff_inc.resize( 1 );
             real* ainc = quad_coeff_inc.data();
             for( int i=0 ; i<size ; i++ )
             {
                 ainc[0] = momentum*ainc[0] + pos_factor*aps[i] + neg_factor*ans[i];
-		ainc[0] /= (real)size;
+                ainc[0] /= (real)size;
                 a[0] += ainc[0];
             }
             if( a[0] < min_quad_coeff )
                 a[0] = min_quad_coeff;
         }
-	else
-	{
+        else
+        {
             quad_coeff_inc.resize( size );
             real* ainc = quad_coeff_inc.data();
             for( int i=0 ; i<size ; i++ )
@@ -494,52 +497,51 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values )
     if( momentum == 0. )
     {
         if (share_quad_coeff)
-	{
-	    real update=0;
+        {
+            real update=0;
             for( int i=0 ; i<size ; i++ )
             {
                 update += two_lr * a[0] * (nv[i]*nv[i] - pv[i]*pv[i]);
             }
-	    a[0] += update/(real)size;
+            a[0] += update/(real)size;
             if( a[0] < min_quad_coeff )
                 a[0] = min_quad_coeff;
         }
-	else
+        else
             for( int i=0 ; i<size ; i++ )
             {
                 a[i] += two_lr * a[i] * (nv[i]*nv[i] - pv[i]*pv[i]);
                 if( a[i] < min_quad_coeff )
                     a[i] = min_quad_coeff;
-            }	
+            }
     }
     else
     {
-        
         real* ainc = quad_coeff_inc.data();
         if(share_quad_coeff)
         {
-	   quad_coeff_inc.resize( 1 );
-           for( int i=0 ; i<size ; i++ )
-           {
+            quad_coeff_inc.resize( 1 );
+            for( int i=0 ; i<size ; i++ )
+            {
                 ainc[0] = momentum*ainc[0]
                     + two_lr * a[0] * (nv[i]*nv[i] - pv[i]*pv[i]);
-		ainc[0] /= (real)size;
+                ainc[0] /= (real)size;
                 a[0] += ainc[0];
-           }
-           if( a[0] < min_quad_coeff )
-               a[0] = min_quad_coeff;
+            }
+            if( a[0] < min_quad_coeff )
+                a[0] = min_quad_coeff;
         }
         else
-	{
-	   quad_coeff_inc.resize( size );
-           for( int i=0 ; i<size ; i++ )
-           {
+        {
+            quad_coeff_inc.resize( size );
+            for( int i=0 ; i<size ; i++ )
+            {
                 ainc[i] = momentum*ainc[i]
                     + two_lr * a[i] * (nv[i]*nv[i] - pv[i]*pv[i]);
                 a[i] += ainc[i];
                 if( a[i] < min_quad_coeff )
                     a[i] = min_quad_coeff;
-           }
+            }
         }
     }
 
