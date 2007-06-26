@@ -858,18 +858,15 @@ T minabs(const TVec<T>& vec)
     if(vec.length()==0)
         PLERROR("IN T minabs(const TVec<T>& vec) vec has zero length");
 #endif
-    if (vec.size() == 0)
-        return std::numeric_limits<T>::max();
+    int n = vec.length();
+    PLASSERT( n >= 1 );
     T* v = vec.data();
     T minval = fabs(v[0]);
-    for(int i=1; i<vec.length(); i++)
+    for(int i=1; i<n; i++)
     {
         T a=fabs(v[i]);
         if(a<minval)
-        {
-            index = i;
             minval = a;
-        }
     }
 
     return minval;
@@ -890,7 +887,7 @@ T minabs(const TVec<T>& vec, int& argmin)
     T* pv = vec.data();
     T minval = fabs(*pv++);
     argmin = 0;
-    for (int i=1; i<vec.length(); i++,pv++)
+    for (int i=1; i<n; i++,pv++)
     {
         T a = fabs(*pv);
         if (a<minval)
