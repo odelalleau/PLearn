@@ -250,6 +250,7 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(network,            copies);
     deepCopyField(null_pointers,      copies);
     deepCopyField(all_ones,           copies);
+    deepCopyField(tmp_costs,          copies);
 }
 
 ////////////////
@@ -306,6 +307,9 @@ void ModuleLearner::train()
     Vec weights;
     PP<ProgressBar> pb = NULL;
 
+    // clear statistics of previous calls
+    train_stats->forget();
+
     int stage_init = stage;
     if (report_progress)
         pb = new ProgressBar( "Training " + classname(), nstages - stage);
@@ -327,13 +331,16 @@ void ModuleLearner::train()
                 "only %d stages (instead of nstages = %d, which is not a "
                 "multiple of batch_size = %d", stage, nstages, batch_size);
     OnlineLearningModule::during_training=false;
+
+    // finalize statistics for this call
+    train_stats->finalize();
 }
 
 //////////////////
 // trainingStep //
 //////////////////
 void ModuleLearner::trainingStep(const Mat& inputs, const Mat& targets,
-                      const Vec& weights)
+                                 const Vec& weights)
 {
     // Fill in the provided batch values (only if they are actually used by the
     // network).
@@ -346,6 +353,24 @@ void ModuleLearner::trainingStep(const Mat& inputs, const Mat& targets,
 
     // Forward propagation.
     network->fprop(null_pointers);
+
+    // Copy the costs into a single matrix.
+    // First compute total size.
+    int cost_size = 0;
+    for (int i = 0; i < store_costs.length(); i++)
+        cost_size += store_costs[i]->getData().width();
+    // Then resize the 'tmp_costs' matrix and fill it.
+    tmp_costs.resize(inputs.length(), cost_size);
+    int cost_idx = 0;
+    for (int i = 0; i < store_costs.length(); i++) {
+        const Mat& cost_i = store_costs[i]->getData();
+        PLASSERT( cost_i.length() == tmp_costs.length() );
+        tmp_costs.subMatColumns(cost_idx, cost_i.width()) << cost_i;
+        cost_idx += cost_i.width();
+    }
+
+    // Then update the training statistics.
+    train_stats->update(tmp_costs);
 
     // Initialize cost gradients to 1.
     // Note that we may not need to re-do it at every iteration, but this is so
@@ -484,8 +509,7 @@ TVec<string> ModuleLearner::getTestCostNames() const
 ///////////////////////
 TVec<string> ModuleLearner::getTrainCostNames() const
 {
-    // No training cost is currently computed.
-    return TVec<string>();
+    return cost_ports;
 }
 
 } // end of namespace PLearn
