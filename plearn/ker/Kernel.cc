@@ -488,7 +488,7 @@ void Kernel::computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
 
     // Finalize computation
     KD -= KDminus;
-    KD /= 2.*epsilon;
+    KD /= real(2.*epsilon);
 
     This->changeOption(kernel_param, cur_param_str);
     This->build();                           //!< Temporarily necessary
