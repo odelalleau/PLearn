@@ -508,7 +508,7 @@ void computeInputCovar(const VMat& d, const Vec& mu, Mat& covarmat, real epsilon
         externalProductScaleAcc(covarmat, input, input, weight);
         weightsum += weight;
     }
-    covarmat *= 1./weightsum;
+    covarmat *= real(1./weightsum);
     addToDiagonal(covarmat, epsilon);
 }
 
