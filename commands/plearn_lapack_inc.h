@@ -48,6 +48,10 @@
 #ifndef plearn_lapack_inc_INC
 #define plearn_lapack_inc_INC
 
+// Do not include if USE_BLAS_SPECIALISATIONS is undefined
+// (compiling with -noblas)
+#ifdef USE_BLAS_SPECIALISATIONS
+
 // Regressors
 #include <plearn_learners/regressors/LinearRegressor.h>
 #include <plearn_learners/regressors/PLS.h>
@@ -79,7 +83,9 @@
 #include <plearn_learners/online/RBMMatrixConnectionNatGrad.h>
 
 
-#endif
+#endif // USE_BLAS_SPECIALISATIONS
+
+#endif // plearn_lapack_inc_INC
 
 
 /*

@@ -47,6 +47,9 @@
 #ifndef plearn_python_inc_INC
 #define plearn_python_inc_INC
 
+// Do not include if PL_PYTHON_VERSION is undefined (compiling with -nopython)
+#ifdef PL_PYTHON_VERSION
+
 /******************************************************
  * Python includes must come FIRST, as per Python doc *
  ******************************************************/
@@ -57,7 +60,9 @@
 #include <plearn/vmat/DictionaryVMatrix.h>
 #include <commands/PLearnCommands/VMatDictionaryCommand.h>
 
-#endif
+#endif // PL_PYTHON_VERSION
+
+#endif // plearn_python_inc_INC
 
 
 /*
