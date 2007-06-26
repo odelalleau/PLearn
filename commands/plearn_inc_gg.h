@@ -185,7 +185,7 @@
 #include <plearn_learners/distributions/UniformDistribution.h>
 
 // Nearest-Neighbors
-//gg#include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
+#include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
 //gg#include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 //gg#include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
 

@@ -66,7 +66,7 @@
 #include <plearn_learners/second_iteration/ConditionalMeanImputationVMatrix.h>
 #include <plearn_learners/second_iteration/CovariancePreservationImputationVMatrix.h>
 #include <plearn_learners/second_iteration/NeighborhoodImputationVMatrix.h>
-#include <plearn_learners/second_iteration/BallTreeNearestNeighbors.h>
+//#include <plearn_learners/second_iteration/BallTreeNearestNeighbors.h>
 #include <plearn_learners/second_iteration/WeightedDistance.h>
 #include <plearn_learners/regressors/RegressionTree.h>
 #include <plearn/vmat/VariableDeletionVMatrix.h>
