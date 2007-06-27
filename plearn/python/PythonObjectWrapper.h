@@ -789,8 +789,8 @@ PyObject* ConvertToPyObject<TVec<T> >::newPyObject(const TVec<T>& data)
 template <class T>
 PyObject* ConvertToPyObject<TMat<T> >::newPyObject(const TMat<T>& data)
 {
-    PyObject* newlist = PyList_New(data.size());
-    for (int i=0, n=data.size() ; i<n ; ++i) 
+    PyObject* newlist = PyList_New(data.length());
+    for (int i=0, n=data.length() ; i<n ; ++i) 
     {
         // Since PyList_SET_ITEM steals the reference to the item being set,
         // one does not need to Py_XDECREF the inserted string as was required
