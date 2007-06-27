@@ -235,6 +235,8 @@ class discr_power_SVM_eval(object):
 	  #self.clerror  = 100 - self.accuracy
 
       def compute_accuracy(self, samples_target_list):
+	  check_samples_target_list(samples_target_list)
+
 	  best_expert = eval( 'self.'+self.best_parameters[0]+'_expert' )
 	  best_parameters = best_expert.best_parameters
 	  param = best_expert.get_svm_parameter( best_parameters )
