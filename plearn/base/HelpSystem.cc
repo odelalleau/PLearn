@@ -178,8 +178,13 @@ string HelpSystem::helpFunctionsHTML()
             + helpOnFunctionHTML(it->first, it->second)
             + "</tr>\n";
 
-    if(index == 0)
+        PLERROR("In HelpSystem::helpFunctionsHTML - Error thrown because of "
+            "commented code (see code for details)");
+    /* TODO The code below was commented because the 'index' variable was not
+     * defined. It should probably be fixed and uncommented.
+     if(index == 0)
         s+= "<tr><td>No Remote-Callable Functions.</td></tr>\n";
+     */
            
     s+= "</table></div>\n";
 
@@ -793,9 +798,14 @@ string HelpSystem::helpMethodsHTML(const string& classname)
             + helpOnMethodHTML(definingclass[*it], it->first, it->second)
             + "</tr>\n";
 
+    PLERROR("In HelpSystem::helpMethodsHTML - Error thrown because of "
+            "commented code (see code for details)");
+    /* TODO The code below was commented because the 'index' variable was not
+     * defined. It should probably be fixed and uncommented.
     if(index == 0)
         s+= "<tr><td>This class does not define any remote-callable methods.</td></tr>\n";
            
+        */
     s+= "</table></div>\n";
 
     return s;
