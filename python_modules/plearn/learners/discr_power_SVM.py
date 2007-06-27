@@ -236,7 +236,7 @@ class discr_power_SVM_eval(object):
 
       def compute_accuracy(self, samples_target_list):
 	  best_expert = eval( 'self.'+self.best_parameters[0]+'_expert' )
-	  best_parameters = best_expert.best_parameters[1:]
+	  best_parameters = best_expert.best_parameters
 	  param = best_expert.get_svm_parameter( best_parameters )
 	  if len(samples_target_list) == 1: # cross-validation
 	     accuracy = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)
