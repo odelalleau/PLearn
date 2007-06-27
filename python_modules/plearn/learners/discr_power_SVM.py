@@ -352,6 +352,10 @@ def check_samples_target_list(samples_target_list):
 	     for samples_target in samples_target_list:
 	         if len(samples_target) != 2:
 	            raise TypeError, "ERROR: samples_target_list has an element with length "+str(len(samples_target))+" (instead of 2)"
+                 if len(samples_target[0]) == 0 or len(samples_target[1]) == 0:
+                    raise ValueError, "ERROR: samples_target_list has an element that has an element with an empty length"
+                 if len(samples_target[0]) != len(samples_target[1]):
+                    raise ValueError, "ERROR: samples_target_list has an element that has an elements with different len. Len are: " + len(samples_target[0])+" and " + len(samples_target[1])
 	  if len(samples_target_list) == 1:
 	     print "cross-validation"
 	     return
