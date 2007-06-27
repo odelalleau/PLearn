@@ -48,6 +48,10 @@
 #include <plearn/io/fileutils.h>
 #include <plearn/base/tostring.h>
 
+#ifdef WIN32
+#include <plearn/base/stringutils.h>   // For 'search_replace'.
+#endif
+
 
 namespace PLearn {
 using namespace std;
