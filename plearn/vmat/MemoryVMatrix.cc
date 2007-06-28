@@ -109,8 +109,14 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
                    "If provided, will be used to set this VMatrix's"
                    " fieldnames." );
 
+    /* This field was declared as an option, but the author does not remember
+     * why. The problem is that we do not want it to be a learnt option, since
+     * it may save the whole dataset pointed by 'source', which could waste a
+     * lot of disk space.
+     * As a result, the two lines below are now commented out.
     declareOption(ol, "memory_data", &MemoryVMatrix::memory_data, OptionBase::learntoption,
                   "The underlying Mat with the data.");
+    */
 
     inherited::declareOptions(ol);
 }
