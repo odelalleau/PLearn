@@ -1,6 +1,6 @@
 import sys
 from plearn.learners.modulelearners  import *
-from plearn.learners.discr_power_SVM import *
+from plearn.learners.SVM import *
 
 if __name__ == '__main__':
 
@@ -15,21 +15,10 @@ if __name__ == '__main__':
     dataTest_filename = data_filename
     dataValid_filename = data_filename
 
-#    learner_filename = "/u/louradoj/PRGM/blocksworld/res/textual_v2/BESTdbn/final_learner.psave"
-#    dataPath='/cluster/opter/data/babyAI/textual_v2/'    
-#    dataTrain_filename = dataPath+'/BABYAI_gray_10000x2obj_32x32.color-size-location-shape.train.3gram.vmat'
-#    dataValid_filename = dataPath+'/BABYAI_gray_5000x2obj_32x32.color-size-location-shape.valid.3gram.vmat'
-#    dataTest_filename = dataPath+'/BABYAI_gray_5000x2obj_32x32.color-size-location-shape.test.3gram.vmat'
-
-
     if os.path.isfile(learner_filename) == False:
        raise TypeError, "ERROR : Learner file cannot be find\n\tCould not find file "+learner_filename
     learner = loadModuleLearner(learner_filename)
     learner_nickname = 'DBN-2-2-1_'+"_".join(ports_list).replace(".","")
-
-
-
-
 
     result_dir = os.path.dirname(learner_filename)
     output_filename = result_dir+'/SVM_results_'+"_"+learner_nickname+"-"+os.path.basename(dataTrain_filename).replace(".vmat","").replace(".amat","")
@@ -60,7 +49,7 @@ if __name__ == '__main__':
 	else:
 	   normalize(globals()[typeDataSet+'_outputs'],mean,std)
 
-    E=discr_power_SVM_eval()
+    E=SVM()
     
     print "Writing results in "+output_filename
     if os.path.isfile(output_filename):
@@ -83,19 +72,19 @@ if __name__ == '__main__':
     FID.write('--------\n')
 
     E.save_filename = output_filename
-    E.valid_and_compute_accuracy( 'LINEAR' ,     [[Train_outputs,Train_targets], [Valid_outputs,Valid_targets], [Test_outputs,Test_targets]])
+    E.train_and_tune( 'LINEAR' ,     [[Train_outputs,Train_targets], [Valid_outputs,Valid_targets], [Test_outputs,Test_targets]])
     FID = open(output_filename, 'a')
     FID.write("Tried parameters : "+str(E.tried_parameters)+'\n')
-    FID.write('BEST ACCURACY: '+str(E.valid_accuracy)+' (valid) - '+str(E.accuracy)+' (test) for '+str(E.best_parameters)+'\n')
+    FID.write('BEST ERROR RATE: '+str(E.valid_error_rate)+' (valid) - '+str(E.error_rate)+' (test) for '+str(E.best_parameters)+'\n')
     FID.close()
-    E.valid_and_compute_accuracy( 'RBF' ,     [[Train_outputs,Train_targets], [Valid_outputs,Valid_targets], [Test_outputs,Test_targets]])
+    E.train_and_tune( 'RBF' ,     [[Train_outputs,Train_targets], [Valid_outputs,Valid_targets], [Test_outputs,Test_targets]])
     FID = open(output_filename, 'a')
     FID.write("Tried parameters : "+str(E.tried_parameters)+'\n')
-    FID.write('BEST ACCURACY: '+str(E.valid_accuracy)+' (valid) - '+str(E.accuracy)+' (test) for '+str(E.best_parameters)+'\n')
+    FID.write('BEST ERROR RATE: '+str(E.valid_error_rate)+' (valid) - '+str(E.error_rate)+' (test) for '+str(E.best_parameters)+'\n')
     FID.close()
-    E.valid_and_compute_accuracy( 'RBF' ,     [[Train_outputs,Train_targets], [Valid_outputs,Valid_targets], [Test_outputs,Test_targets]])
+    E.train_and_tune( 'RBF' ,     [[Train_outputs,Train_targets], [Valid_outputs,Valid_targets], [Test_outputs,Test_targets]])
     FID = open(output_filename, 'a')
     FID.write("Tried parameters : "+str(E.tried_parameters)+'\n')
-    FID.write('BEST ACCURACY: '+str(E.valid_accuracy)+' (valid) - '+str(E.accuracy)+' (test) for '+str(E.best_parameters)+'\n')
+    FID.write('BEST ERROR RATE: '+str(E.valid_error_rate)+' (valid) - '+str(E.error_rate)+' (test) for '+str(E.best_parameters)+'\n')
     FID.close()
     print "Results written in "+output_filename
