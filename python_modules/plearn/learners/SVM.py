@@ -483,10 +483,21 @@ if __name__ == '__main__':
 
     my_svm.reset()
    
-    NEW_DATA = #[..]
+    # Cross-validation
+    NEW_DATA =  [ [train_samples , train_targets] ]
+    #
+    # or
+    #
+    # Simple validation
+    NEW_DATA =  [ [train_samples , train_targets], [valid_samples , valid_targets]  ]
    
-    # Simple Validation
+    # If you want to tune again on the new data
     my_svm.train_and_tune( 'RBF' , NEW_DATA )
+    #
+    # or
+    #
+    # If you want to try what give the best parameters (retrain the model on new train data)
+    my_svm.train_and_test( NEW_DATA )
     
     valid_error_rate = my_svm.error_rate
 
