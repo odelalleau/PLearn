@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 import sys
 import os, os.path
@@ -49,7 +49,7 @@ modules_dict = {}
 def countModules(mynetwork):
     n=0
     for module in mynetwork.modules:
-        if is_SplitModule(module) == False:
+        if isModule(module,'Split') == False:
 	   n += 1
     return n
 
@@ -110,9 +110,9 @@ def checkName(ModuleName, ports_dict, modules_dict):
     return formatModulesNames(ModuleName,modules_dict)
 
 
-def is_SplitModule(module):
-    return 'SplitModule' in str(type(module)) # type(module)==type(pl.SplitModule())  #
-       
+def isModule(module,name):
+    return name+'Module' in str(type(module))
+     
 def module_type(module):
     return str(type(module)).upper()
 
@@ -148,20 +148,23 @@ def getInputOutput(connection):
 def get_graph(modules, connections, ports):
     edges=[]
     edges_toAdd={}
-    globals()['modules_dict'] = Modules2dict(modules)
+    tmp_dict = Modules2dict(modules)
+    for key in tmp_dict:
+        if globals()['modules_dict'].has_key(key) == False:
+	   globals()['modules_dict'][key] = tmp_dict[key]
     ports_dict = getPortDict(ports)
     for connection in connections:
         inputModuleName , outputModuleName, inputModulePort = getInputOutput(connection)
 	inputModuleNameToplot = checkName(inputModuleName,ports_dict,modules_dict)
 	outputModuleNameToplot = checkName(outputModuleName,ports_dict,modules_dict)
 	
-	if is_SplitModule(modules_dict[inputModuleName]):
+	if isModule(modules_dict[inputModuleName],'Split'):
 	   if edges_toAdd.has_key(inputModuleName):
 	      edges_toAdd[inputModuleName][1].append(outputModuleNameToplot)
 	   else:
 	      edges_toAdd[inputModuleName]=[[],[]]
 	      edges_toAdd[inputModuleName][1]=[outputModuleNameToplot]
-	elif is_SplitModule(modules_dict[outputModuleName]):
+	elif isModule(modules_dict[outputModuleName],'Split'):
 	   if edges_toAdd.has_key(outputModuleName):
 	      edges_toAdd[outputModuleName][0].append(inputModuleNameToplot)
 	   else:
@@ -188,6 +191,11 @@ def get_graph(modules, connections, ports):
         myedge=pydot.Edge(edge[0],edge[1])
 	myedge.set_label(edge[2])
         graph.add_edge(myedge)
+    
+    for module in modules:
+        if isModule(module,'Network'):
+	   for edge in get_graph(module.modules, module.connections, module.ports).get_edge_list():
+	       graph.add_edge(edge)
 
 
     for port in port_list:
@@ -237,7 +245,10 @@ def networkview( myObject ):
 
 if __name__ == '__main__':
 
-    inputname  = sys.argv[1]
+    if len(sys.argv) == 2:
+       inputname  = sys.argv[1]
+    else:
+       inputname  =  '/u/louradoj/PRGM/babyAI/dbn/convNet.py'
     output_extension = '.network.jpeg'
     output_name = os.path.splitext(inputname)[0]
     input_extension = os.path.splitext(inputname)[1]

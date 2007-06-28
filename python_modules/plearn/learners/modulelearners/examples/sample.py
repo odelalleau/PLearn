@@ -47,7 +47,7 @@ def pause():
 
 if __name__ == "__main__":
 
-  if len(sys.argv) < 2:
+  if len(sys.argv) < 4:
      print "Usage:\n\t" + sys.argv[0] + " <ModuleLearner_filename> <Image_size> <dataSet_filename> [gibbs_step=<gibbs_step>]\n"
      print "Purpose:\n\tSee consecutive Gibbs sample"
      print "\twhen input visible units are initalized with real images"
