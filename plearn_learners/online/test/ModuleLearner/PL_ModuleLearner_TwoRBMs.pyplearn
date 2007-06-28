@@ -1,0 +1,171 @@
+# Network architecture consisting in two RBMs stacked together, followed by an
+# affine transformation for classification.
+
+expdir = 'expdir-tester'
+
+rbm_size_1 = 10
+rbm_size_2 = 100
+
+inputsize = 5
+targetsize = 1
+n_classes = 2
+
+grad_lr=1e-2
+cd_lr=1e-3
+batch_size=11
+nstages=1001
+
+
+def rbm(name, size_1, size_2, grad_lr, cd_lr, type):
+    if type == 'binomial':
+        visible_layer = pl.RBMBinomialLayer(
+                size = size_1,
+                use_fast_approximations = 0)
+        hidden_layer = pl.RBMBinomialLayer(
+                size = size_2,
+                use_fast_approximations = 0)
+    elif type == 'gaussian':
+        visible_layer = pl.RBMGaussianLayer(
+                size = size_1,
+                use_fast_approximations = 0)
+        hidden_layer = pl.RBMGaussianLayer(
+                size = size_2,
+                use_fast_approximations = 0)
+    
+    return pl.RBMModule(
+            name = name,
+            visible_layer = visible_layer,
+            hidden_layer = hidden_layer,
+            connection = pl.RBMMatrixConnection(
+                down_size = size_1,
+                up_size = size_2),
+            grad_learning_rate = grad_lr,
+            cd_learning_rate = cd_lr)
+
+data = pl.AutoVMatrix(
+        filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y_binary_class.vmat",
+        inputsize = inputsize,
+        targetsize = targetsize,
+        weightsize = 0)
+
+tester = pl.PTester( 
+    expdir = expdir,
+    learner =
+        pl.ModuleLearner(
+            module =
+                pl.NetworkModule(
+                    modules = [ \
+                        rbm('rbm_1', inputsize, rbm_size_1, grad_lr, cd_lr, 'binomial'),
+                        rbm('rbm_2', rbm_size_1, rbm_size_2, grad_lr, cd_lr, 'binomial'),
+
+                        pl.GradNNetLayerModule( 
+                            name = "affine_net",
+                            input_size = rbm_size_2,
+                            output_size = n_classes,
+                            start_learning_rate = grad_lr
+                        ),
+
+                        pl.SoftmaxModule(
+                            name = "softmax",
+                            input_size = n_classes,
+                            output_size = n_classes
+                        ),
+
+                        pl.NLLCostModule( 
+                            name = "nll",
+                            input_size = n_classes
+                        ),
+
+                        pl.ClassErrorCostModule(
+                            name = "class_error",
+                            input_size = n_classes
+                        ),
+
+                        pl.ArgmaxModule(
+                            name = "argmax_class"
+                        ),
+
+                        pl.SquaredErrorCostModule(
+                            name = "mse",
+                            input_size = 1 # The predicted class index.
+                        )
+                    ],
+
+                    connections = [
+                        pl.NetworkConnection( 
+                            source = "rbm_1.hidden.state",
+                            destination = "rbm_2.visible"
+                        ),
+
+                        pl.NetworkConnection( 
+                            source = "rbm_2.hidden.state",
+                            destination = "affine_net.input"
+                        ),
+                       
+                        pl.NetworkConnection( 
+                            source = "affine_net.output",
+                            destination = "softmax.input"
+                        ),
+
+                        pl.NetworkConnection( 
+                            source = "softmax.output",
+                            destination = "nll.prediction"
+                        ),
+
+                        pl.NetworkConnection( 
+                            source = "softmax.output",
+                            destination = "class_error.prediction",
+                            propagate_gradient = 0
+                        ),
+
+                        pl.NetworkConnection( 
+                            source = "affine_net.output",
+                            destination = "argmax_class.input",
+                            propagate_gradient = 0
+                        ),
+
+                        pl.NetworkConnection( 
+                            source = "argmax_class.output",
+                            destination = "mse.prediction",
+                            propagate_gradient = 0
+                        )
+                    ],
+
+                    ports = [
+                        ("input","rbm_1.visible"),
+                        ("","nll.target"),
+                        ("","class_error.target"),
+                        ("","mse.target"),
+                        ("output","affine_net.output"),
+                        ("NLL","nll.cost"),
+                        ("class_error","class_error.cost"),
+                        ("mse","mse.cost")
+                    ]
+                ),
+
+                cost_ports = [ "NLL", "class_error", "mse" ],
+                target_ports = [ "nll.target", "class_error.target", "mse.target" ],
+
+                batch_size = batch_size,
+                nstages = nstages
+        ),
+
+    report_stats = 1,
+    save_initial_tester = 0,
+    save_learners = 1,
+    save_stat_collectors = 0,
+    save_test_outputs = 0,
+    splitter =
+        pl.ExplicitSplitter( 
+            splitsets = TMat(1, 2, [ data, data ])
+        ),
+    statnames = [ \
+        "E[test1.E[NLL]]",
+        "E[test1.E[class_error]]",
+        "E[test1.E[mse]]"
+    ]
+
+)
+
+def main():
+    return tester
