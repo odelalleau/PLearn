@@ -795,20 +795,20 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             sampleVisibleGivenHidden(*hidden_sample);
             Gibbs_step=0;
-            cout << "sampling visible from hidden" << endl;
+            //cout << "sampling visible from hidden" << endl;
         }
         else if (visible_sample && !visible_sample->isEmpty()) // if an input is provided, sample hidden conditionally
         {
             sampleHiddenGivenVisible(*visible_sample);
             Gibbs_step=0;
-            cout << "sampling hidden from (discrete) visible" << endl;
+            //cout << "sampling hidden from (discrete) visible" << endl;
         }
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
             visible_layer->generateSamples();
             sampleHiddenGivenVisible(visible_layer->samples);
             Gibbs_step=0;
-            cout << "sampling hidden from visible expectation" << endl;
+            //cout << "sampling hidden from visible expectation" << endl;
         }
         else if (visible_expectation && !visible_expectation->isEmpty()) 
         {
@@ -820,13 +820,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             // start or continue the chain
             int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
-            cout << "Gibbs sampling " << Gibbs_step+1;
+            //cout << "Gibbs sampling " << Gibbs_step+1;
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
             }
-              cout << " -> " << Gibbs_step << endl;
+              //cout << " -> " << Gibbs_step << endl;
         }
 
         if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
@@ -1015,6 +1015,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
     if (!found_a_valid_configuration)
     {
+        /*
         if (visible)
         cout << "visible_empty : "<< (bool) visible->isEmpty() << endl;
         if (hidden)
@@ -1025,6 +1026,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         cout << "hidden_sample_empty : "<< (bool) hidden_sample->isEmpty() << endl;
         if (visible_expectation)
         cout << "visible_expectation_empty : "<< (bool) visible_expectation->isEmpty() << endl;
+        */
         PLERROR("In RBMModule::fprop - Unknown port configuration for module %s", name.c_str());
     }
 
