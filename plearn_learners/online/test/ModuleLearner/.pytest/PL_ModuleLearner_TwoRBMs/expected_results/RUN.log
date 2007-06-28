@@ -1,3 +1,6 @@
  WARNING: RBMMatrixConnection: cannot forget() without random_gen
  WARNING: RBMMatrixConnection: cannot forget() without random_gen
  WARNING: GradNNetLayerModule: cannot forget() without random_gen
+ WARNING: RBMMatrixConnection: cannot forget() without random_gen
+ WARNING: RBMMatrixConnection: cannot forget() without random_gen
+ WARNING: GradNNetLayerModule: cannot forget() without random_gen

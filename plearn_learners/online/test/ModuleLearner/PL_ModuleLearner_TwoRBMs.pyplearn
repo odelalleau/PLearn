@@ -1,7 +1,7 @@
 # Network architecture consisting in two RBMs stacked together, followed by an
 # affine transformation for classification.
 
-expdir = 'expdir-tester'
+expdirs = [ 'expdir-tester', 'expdir-tester2' ]
 
 rbm_size_1 = 10
 rbm_size_2 = 100
@@ -21,17 +21,13 @@ def rbm(name, size_1, size_2, grad_lr, cd_lr, type):
         visible_layer = pl.RBMBinomialLayer(
                 size = size_1,
                 use_fast_approximations = 0)
-        hidden_layer = pl.RBMBinomialLayer(
-                size = size_2,
-                use_fast_approximations = 0)
     elif type == 'gaussian':
         visible_layer = pl.RBMGaussianLayer(
                 size = size_1,
                 use_fast_approximations = 0)
-        hidden_layer = pl.RBMGaussianLayer(
-                size = size_2,
-                use_fast_approximations = 0)
-    
+    hidden_layer = pl.RBMBinomialLayer(
+            size = size_2,
+            use_fast_approximations = 0)
     return pl.RBMModule(
             name = name,
             visible_layer = visible_layer,
@@ -48,15 +44,21 @@ data = pl.AutoVMatrix(
         targetsize = targetsize,
         weightsize = 0)
 
-tester = pl.PTester( 
+testers = []
+
+i = 0
+for type in [ 'binomial', 'gaussian' ]:
+    expdir = expdirs[i]
+    i += 1
+    tester = pl.PTester( 
     expdir = expdir,
     learner =
         pl.ModuleLearner(
             module =
                 pl.NetworkModule(
                     modules = [ \
-                        rbm('rbm_1', inputsize, rbm_size_1, grad_lr, cd_lr, 'binomial'),
-                        rbm('rbm_2', rbm_size_1, rbm_size_2, grad_lr, cd_lr, 'binomial'),
+                        rbm('rbm_1', inputsize, rbm_size_1, grad_lr, cd_lr, type),
+                        rbm('rbm_2', rbm_size_1, rbm_size_2, grad_lr, cd_lr, type),
 
                         pl.GradNNetLayerModule( 
                             name = "affine_net",
@@ -165,7 +167,10 @@ tester = pl.PTester(
         "E[test1.E[mse]]"
     ]
 
-)
+    )
+    testers.append(tester)
 
 def main():
-    return tester
+    return pl.RunObject(
+            objects = testers,
+            run_objects = True)
