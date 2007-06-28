@@ -62,7 +62,8 @@ PLEARN_IMPLEMENT_OBJECT(
 DistanceKernel::DistanceKernel(real the_Ln, bool pd)
     : n(the_Ln),
       optimized(false),
-      pow_distance(pd)
+      pow_distance(pd),
+      ignore_missing(false)
 {}
 
 ////////////////////
@@ -81,6 +82,11 @@ void DistanceKernel::declareOptions(OptionList& ol)
                   "If set to 1, the evaluate_i_j method will be faster, at the cost of potential\n"
                   "approximations in the result.");
 
+    declareOption(ol, "ignore_missing", &DistanceKernel::ignore_missing, OptionBase::buildoption, 
+                  "If set to false, nan will be propagated.\n"
+                  "If set to true, if a value is missing in the matrix of some examples, we will ignore this value for the distance\n"
+                  "If set to true, work only if pow_distance is set to 1.");
+
     inherited::declareOptions(ol);
 }
 
@@ -88,8 +94,11 @@ void DistanceKernel::declareOptions(OptionList& ol)
 // evaluate //
 //////////////
 real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
+    if (!ignore_missing && !pow_distance)
+        PLERROR("DistanceKernel::evaluate(int i, int j) ignore_missing implemented only if pow_distance is set");
+
     if (pow_distance) {
-        return powdistance(x1, x2, n);
+        return powdistance(x1, x2, n, ignore_missing);
     } else {
         return dist(x1, x2, n);
     }
@@ -100,6 +109,9 @@ real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
 //////////////////
 real DistanceKernel::evaluate_i_j(int i, int j) const {
     static real d;
+    if (ignore_missing)
+        PLERROR("DistanceKernel::evaluate_i_j(int i, int j) not implemented for ignore_missing");
+
     if (optimized && fast_exact_is_equal(n, 2.0)) {
         if (i == j)
             // The case 'i == j' can cause precision issues because of the optimized
@@ -130,6 +142,9 @@ real DistanceKernel::evaluate_i_j(int i, int j) const {
 ////////////////////////////
 void DistanceKernel::setDataForKernelMatrix(VMat the_data)
 {
+    if (ignore_missing)
+        PLWARNING("DistanceKernel::setDataForKernelMatrix(VMat the_data) not tested for ignore_missing");
+
     inherited::setDataForKernelMatrix(the_data);
     if (fast_exact_is_equal(n, 2.0)) {
         squarednorms.resize(data.length());

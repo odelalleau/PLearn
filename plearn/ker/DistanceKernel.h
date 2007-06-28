@@ -67,6 +67,7 @@ public:
 
     bool optimized;
     bool pow_distance;
+    bool ignore_missing;
 
     DistanceKernel(real the_Ln=2, bool powdist=false);
     
