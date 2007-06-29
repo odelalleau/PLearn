@@ -529,10 +529,13 @@ void Object::newread(PStream &in)
             if (it!=options.end() && (*it)->shouldBeSkipped() ) {
                 // Create a dummy object that will read this option.
                 if (!dummy_obj) {
-                    dummy_obj = new Object();
-                    string dummy_string = this->classname() + "()";
-                    PStream dummy_in = openString(dummy_string, PStream::plearn_ascii);
-                    dummy_in >> dummy_obj;
+                    // Note that we do not call build on 'dummy_obj'. This is
+                    // because some classes may crash when build is called
+                    // before setting options (though this is not a desired
+                    // behaviour, it can be hard to figure out what is going on
+                    // when it crashes here).
+                    dummy_obj =
+                        TypeFactory::instance().newObject(this->classname());
                 }
                 dummy_obj->readOptionVal(in, optionname);
             }
