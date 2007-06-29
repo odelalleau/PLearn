@@ -284,10 +284,8 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     This->activation << input;
     This->activation += bias;
     This->expectation_is_up_to_date = false;
-    This->expectations_are_up_to_date = false;
 
-    PLERROR("In RBMLayer::fprop - The code seems buggy (no expectation seems"
-            " to be computed), someone should check this out");
+    This->computeExpectation();
 
     output << This->expectation;
 }
@@ -363,10 +361,10 @@ void RBMLayer::accumulateNegStats( const Mat& neg_values )
 ////////////
 void RBMLayer::update()
 {
-    // bias -= learning_rate * (bias_pos_stats/pos_count
+    // bias += learning_rate * (bias_pos_stats/pos_count
     //                          - bias_neg_stats/neg_count)
-    real pos_factor = -learning_rate / pos_count;
-    real neg_factor = learning_rate / neg_count;
+    real pos_factor = learning_rate / pos_count;
+    real neg_factor = -learning_rate / neg_count;
 
     real* b = bias.data();
     real* bps = bias_pos_stats.data();
@@ -385,7 +383,7 @@ void RBMLayer::update()
 
         // The update rule becomes:
         // bias_inc = momentum * bias_inc
-        //              - learning_rate * (bias_pos_stats/pos_count
+        //              + learning_rate * (bias_pos_stats/pos_count
         //                                  - bias_neg_stats/neg_count)
         // bias += bias_inc
         real* binc = bias_inc.data();
@@ -425,7 +423,7 @@ void RBMLayer::update( const Vec& grad )
 
 void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
 {
-    // bias -= learning_rate * (pos_values - neg_values)
+    // bias += learning_rate * (pos_values - neg_values)
     real* b = bias.data();
     real* pv = pos_values.data();
     real* nv = neg_values.data();
@@ -433,7 +431,7 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
     if( momentum == 0. )
     {
         for( int i=0 ; i<size ; i++ )
-            b[i] += learning_rate * ( nv[i] - pv[i] );
+            b[i] += learning_rate * ( pv[i] - nv[i] );
     }
     else
     {
@@ -441,7 +439,7 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
         real* binc = bias_inc.data();
         for( int i=0 ; i<size ; i++ )
         {
-            binc[i] = momentum*binc[i] + learning_rate*( nv[i] - pv[i] );
+            binc[i] = momentum*binc[i] + learning_rate*( pv[i] - nv[i] );
             b[i] += binc[i];
         }
     }
@@ -449,7 +447,7 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
 
 void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
 {
-    // bias -= learning_rate * (pos_values - neg_values)
+    // bias += learning_rate * (pos_values - neg_values)
 
     int n = pos_values.length();
     PLASSERT( neg_values.length() == n );
@@ -466,8 +464,8 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
 
     if( momentum == 0. )
     {
-        transposeProductScaleAcc(bias, pos_values, ones, -avg_lr, real(1));
-        transposeProductScaleAcc(bias, neg_values, ones,  avg_lr, real(1));
+        transposeProductScaleAcc(bias, pos_values, ones,  avg_lr, real(1));
+        transposeProductScaleAcc(bias, neg_values, ones, -avg_lr, real(1));
     }
     else
     {
@@ -477,7 +475,7 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
         real* binc = bias_inc.data();
         for( int i=0 ; i<size ; i++ )
         {
-            binc[i] = momentum*binc[i] + learning_rate*( nv[i] - pv[i] );
+            binc[i] = momentum*binc[i] + learning_rate*( pv[i] - nv[i] );
             b[i] += binc[i];
         }
         */
@@ -513,15 +511,17 @@ void RBMLayer::updateCDandGibbs( const Mat& pos_values,
                           bias_neg_stats);
     neg_count++;
 
-    // delta w = -lrate * ( sumoverrows(pos_values)
+    // delta w = lrate * ( sumoverrows(pos_values)
     //                   - ( background_gibbs_update_ratio*neg_stats
     //                      +(1-background_gibbs_update_ratio)
     //                       * sumoverrows(cd_neg_values) ) )
     columnSum(pos_values,tmp);
-    multiplyAcc(bias, tmp, -learning_rate*normalize_factor);
-    multiplyAcc(bias,bias_neg_stats,learning_rate*background_gibbs_update_ratio);
+    multiplyAcc(bias, tmp, learning_rate*normalize_factor);
+    multiplyAcc(bias, bias_neg_stats,
+                -learning_rate*background_gibbs_update_ratio);
     columnSum(cd_neg_values, tmp);
-    multiplyAcc(bias, tmp, learning_rate*(1-background_gibbs_update_ratio)*normalize_factor);
+    multiplyAcc(bias, tmp,
+                -learning_rate*(1-background_gibbs_update_ratio)*normalize_factor);
 }
 
 /////////////////
@@ -541,7 +541,7 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
     real normalize_factor=1.0/minibatch_size;
     columnSum(gibbs_neg_values,tmp);
     if (neg_count==0)
-        multiply(tmp,normalize_factor,bias_neg_stats);
+        multiply(tmp, normalize_factor, bias_neg_stats);
     else // bias_neg_stats <-- tmp*(1-gibbs_chain_statistics_forgetting_factor)/minibatch_size 
         //                    +gibbs_chain_statistics_forgetting_factor*bias_neg_stats
         multiplyScaledAdd(tmp,gibbs_ma_coefficient,
@@ -560,10 +560,10 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
         gibbs_ma_coefficient = sigmoid(gibbs_ma_increment + inverse_sigmoid(gibbs_ma_coefficient));
 
 
-    // delta w = -lrate * ( meanoverrows(pos_values) - neg_stats ) 
+    // delta w = lrate * ( meanoverrows(pos_values) - neg_stats ) 
     columnSum(pos_values,tmp);
-    multiplyAcc(bias, tmp, -learning_rate*normalize_factor);
-    multiplyAcc(bias,bias_neg_stats,learning_rate);
+    multiplyAcc(bias, tmp, learning_rate*normalize_factor);
+    multiplyAcc(bias, bias_neg_stats, -learning_rate);
 }
 
 ////////////////
@@ -602,27 +602,27 @@ void RBMLayer::setExpectationsByRef(const Mat& the_expectations)
 /////////////
 void RBMLayer::bpropCD(Vec& bias_gradient)
 {
-    // grad = bias_pos_stats/pos_count - bias_neg_stats/neg_count
+    // grad = -bias_pos_stats/pos_count + bias_neg_stats/neg_count
 
     real* bg = bias_gradient.data();
     real* bps = bias_pos_stats.data();
     real* bns = bias_neg_stats.data();
 
     for( int i=0 ; i<size ; i++ )
-        bg[i] = bps[i]/pos_count - bns[i]/neg_count;
+        bg[i] = -bps[i]/pos_count + bns[i]/neg_count;
 }
 
 void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
                        Vec& bias_gradient)
 {
-    // grad = bias_pos_stats/pos_count - bias_neg_stats/neg_count
+    // grad = -bias_pos_stats/pos_count + bias_neg_stats/neg_count
 
     real* bg = bias_gradient.data();
     real* bps = pos_values.data();
     real* bns = neg_values.data();
 
     for( int i=0 ; i<size ; i++ )
-        bg[i] = bps[i] - bns[i];
+        bg[i] = -bps[i] + bns[i];
 }
 
 real RBMLayer::energy(const Vec& unit_values) const

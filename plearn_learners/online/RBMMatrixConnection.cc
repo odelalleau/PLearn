@@ -173,10 +173,10 @@ void RBMMatrixConnection::accumulateNegStats( const Mat& down_values,
 void RBMMatrixConnection::update()
 {
     // updates parameters
-    //weights -= learning_rate * (weights_pos_stats/pos_count
+    //weights += learning_rate * (weights_pos_stats/pos_count
     //                              - weights_neg_stats/neg_count)
-    real pos_factor = -learning_rate / pos_count;
-    real neg_factor = learning_rate / neg_count;
+    real pos_factor = learning_rate / pos_count;
+    real neg_factor = -learning_rate / neg_count;
 
     int l = weights.length();
     int w = weights.width();
@@ -227,9 +227,9 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
                                   const Vec& neg_down_values, // v_1
                                   const Vec& neg_up_values )  // h_1
 {
-    // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
+    // weights += learning_rate * ( h_0 v_0' - h_1 v_1' );
     // or:
-    // weights[i][j] += learning_rate * (h_1[i] v_1[j] - h_0[i] v_0[j]);
+    // weights[i][j] += learning_rate * (h_0[i] v_0[j] - h_1[i] v_1[j]);
 
     int l = weights.length();
     int w = weights.width();
@@ -249,7 +249,7 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
     {
         for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
             for( int j=0 ; j<w ; j++ )
-                w_i[j] += learning_rate * (*nuv_i * ndv[j] - *puv_i * pdv[j]);
+                w_i[j] += learning_rate * (*puv_i * pdv[j] - *nuv_i * ndv[j]);
     }
     else
     {
@@ -268,7 +268,7 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
             for( int j=0 ; j<w ; j++ )
             {
                 winc_i[j] = momentum * winc_i[j]
-                    + learning_rate * (*nuv_i * ndv[j] - *puv_i * pdv[j]);
+                    + learning_rate * (*puv_i * pdv[j] - *nuv_i * ndv[j]);
                 w_i[j] += winc_i[j];
             }
     }
@@ -279,9 +279,9 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
                                   const Mat& neg_down_values, // v_1
                                   const Mat& neg_up_values )  // h_1
 {
-    // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
+    // weights += learning_rate * ( h_0 v_0' - h_1 v_1' );
     // or:
-    // weights[i][j] += learning_rate * (h_1[i] v_1[j] - h_0[i] v_0[j]);
+    // weights[i][j] += learning_rate * (h_0[i] v_0[j] - h_1[i] v_1[j]);
 
     PLASSERT( pos_up_values.width() == weights.length() );
     PLASSERT( neg_up_values.width() == weights.length() );
@@ -294,10 +294,10 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
         real avg_lr = learning_rate / pos_down_values.length();
 
         transposeProductScaleAcc(weights, pos_up_values, pos_down_values,
-                                 -avg_lr, real(1));
+                                 avg_lr, real(1));
 
         transposeProductScaleAcc(weights, neg_up_values, neg_down_values,
-                                 avg_lr, real(1));
+                                 -avg_lr, real(1));
     }
     else
     {
@@ -308,7 +308,7 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
 
         // The update rule becomes:
         // weights_inc = momentum * weights_inc
-        //               - learning_rate * ( h_0 v_0' - h_1 v_1' );
+        //               + learning_rate * ( h_0 v_0' - h_1 v_1' );
         // weights += weights_inc;
 
         real* winc_i = weights_inc.data();
@@ -318,7 +318,7 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
             for( int j=0 ; j<w ; j++ )
             {
                 winc_i[j] = momentum * winc_i[j]
-                    + learning_rate * (*nuv_i * ndv[j] - *puv_i * pdv[j]);
+                    + learning_rate * (*puv_i * pdv[j] - *nuv_i * ndv[j]);
                 w_i[j] += winc_i[j];
             }
          */
@@ -350,16 +350,16 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
                                  gibbs_ma_coefficient);
     neg_count++;
 
-    // delta w = -lrate * ( pos_up_values'*pos_down_values
+    // delta w = lrate * ( pos_up_values'*pos_down_values
     //                   - ( background_gibbs_update_ratio*neg_stats
     //                      +(1-background_gibbs_update_ratio)
     //                       * cd_neg_up_values'*cd_neg_down_values/minibatch_size))
     transposeProductScaleAcc(weights, pos_up_values, pos_down_values,
-                             -learning_rate*normalize_factor, real(1));
+                             learning_rate*normalize_factor, real(1));
     multiplyAcc(weights, weights_neg_stats,
-                learning_rate*background_gibbs_update_ratio);
+                -learning_rate*background_gibbs_update_ratio);
     transposeProductScaleAcc(weights, cd_neg_up_values, cd_neg_down_values,
-        learning_rate*(1-background_gibbs_update_ratio)*normalize_factor,
+        -learning_rate*(1-background_gibbs_update_ratio)*normalize_factor,
         real(1));
 }
 
@@ -399,10 +399,10 @@ void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
         cout << "new coefficient = " << gibbs_ma_coefficient << " at example " << neg_count*minibatch_size << endl;
     }
 
-    // delta w = -lrate * ( pos_up_values'*pos_down_values/minibatch_size - neg_stats )
+    // delta w = lrate * ( pos_up_values'*pos_down_values/minibatch_size - neg_stats )
     transposeProductScaleAcc(weights, pos_up_values, pos_down_values,
-                             -learning_rate*normalize_factor, real(1));
-    multiplyAcc(weights, weights_neg_stats,learning_rate);
+                             learning_rate*normalize_factor, real(1));
+    multiplyAcc(weights, weights_neg_stats, -learning_rate);
 }
 
 ////////////////
@@ -552,9 +552,9 @@ void RBMMatrixConnection::bpropUpdate(const Vec& input, const Vec& output,
 }
 
 void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
-                             Mat& input_gradients,
-                             const Mat& output_gradients,
-                             bool accumulate)
+                                      Mat& input_gradients,
+                                      const Mat& output_gradients,
+                                      bool accumulate)
 {
     PLASSERT( inputs.width() == down_size );
     PLASSERT( outputs.width() == up_size );
@@ -641,13 +641,13 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
     {
         for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
             for( int j=0 ; j<w ; j++ )
-                w_i[j] += wps_i[j]/pos_count - wns_i[j]/neg_count;
+                w_i[j] += wns_i[j]/pos_count - wps_i[j]/neg_count;
     }
     else
     {
         for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
             for( int j=0 ; j<w ; j++ )
-                w_i[j] = wps_i[j]/pos_count - wns_i[j]/neg_count;
+                w_i[j] = wns_i[j]/pos_count - wps_i[j]/neg_count;
     }
 }
 
@@ -679,13 +679,13 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(
     {
         for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
             for( int j=0 ; j<w ; j++ )
-                w_i[j] +=  *puv_i * pdv[j] - *nuv_i * ndv[j] ;
+                w_i[j] +=  *nuv_i * ndv[j] - *puv_i * pdv[j] ;
     }
     else
     {
         for( int i=0 ; i<l ; i++, w_i += w_mod, puv_i++, nuv_i++ )
             for( int j=0 ; j<w ; j++ )
-                w_i[j] =  *puv_i * pdv[j] - *nuv_i * ndv[j] ;
+                w_i[j] =  *nuv_i * ndv[j] - *puv_i * pdv[j] ;
     }
 }
 

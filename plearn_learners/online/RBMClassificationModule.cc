@@ -197,7 +197,7 @@ void RBMClassificationModule::fprop(const Vec& input, Vec& output) const
     last_layer->getAllActivations( previous_to_last );
 
     // target_layer->activation =
-    //      bias - sum_j softplus(-(W_ji + last_layer->activation[j]))
+    //      bias + sum_j softplus(W_ji + last_layer->activation[j])
     Vec target_act = target_layer->activation;
     for( int i=0 ; i<output_size ; i++ )
     {
@@ -210,7 +210,7 @@ void RBMClassificationModule::fprop(const Vec& input, Vec& output) const
         for( int j=0 ; j<last_size ; j++, w+=m )
         {
             // *w = weights(j,i)
-            target_act[i] -= softplus( -(*w + last_act[j]) );
+            target_act[i] += softplus(*w + last_act[j]);
         }
     }
 
@@ -268,7 +268,7 @@ void RBMClassificationModule::bpropUpdate(const Vec& input, const Vec& output,
         for( int k=0 ; k<output_size ; k++ )
         {
             // dC/d( w_ik + target_act_i )
-            real d_z = d_target_act[k]*(sigmoid(-w[k] - last_act[i]));
+            real d_z = d_target_act[k]*(sigmoid(w[k] + last_act[i]));
             w[k] -= last_to_target->learning_rate * d_z;
 
             d_last_act[i] += d_z;

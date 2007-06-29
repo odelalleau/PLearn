@@ -1,4 +1,4 @@
-
+// -*- C++ -*-
 
 // RBMMultinomialLayer.cc
 //
@@ -67,24 +67,6 @@ RBMMultinomialLayer::RBMMultinomialLayer( int the_size,
     bias_pos_stats.resize( the_size );
     bias_neg_stats.resize( the_size );
 }
-/*
-//! Uses "rbmp" to obtain the activations of unit "i" of this layer.
-//! This activation vector is computed by the "i+offset"-th unit of "rbmp"
-void RBMMultinomialLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
-                                              int offset )
-{
-    Vec activation = activations.subVec( i, 1 );
-    rbmp->computeUnitActivations( i+offset, 1, activation );
-    expectation_is_up_to_date = false;
-}
-
-void RBMMultinomialLayer::getAllActivations( PP<RBMParameters> rbmp,
-                                             int offset )
-{
-    rbmp->computeUnitActivations( offset, size, activations );
-    expectation_is_up_to_date = false;
-}
-*/
 
 void RBMMultinomialLayer::generateSample()
 {
@@ -121,7 +103,7 @@ void RBMMultinomialLayer::computeExpectation()
         return;
 
     // expectation = softmax(-activation)
-    softmaxMinus(activation, expectation);
+    softmax(activation, expectation);
     expectation_is_up_to_date = true;
 }
 
@@ -135,7 +117,7 @@ void RBMMultinomialLayer::computeExpectations()
 
     // expectation = softmax(-activation)
     for (int k = 0; k < batch_size; k++)
-        softmaxMinus(activations(k), expectations(k));
+        softmax(activations(k), expectations(k));
 
     expectations_are_up_to_date = true;
 }
@@ -147,7 +129,7 @@ void RBMMultinomialLayer::fprop( const Vec& input, Vec& output ) const
     output.resize( output_size );
 
     // inefficient
-    softmaxMinus( input+bias, output );
+    softmax( input+bias, output );
 }
 
 ///////////
@@ -161,7 +143,7 @@ void RBMMultinomialLayer::fprop( const Vec& input, const Vec& rbm_bias,
     output.resize( output_size );
 
     // inefficient
-    softmaxMinus( input+rbm_bias, output );
+    softmax( input+rbm_bias, output );
 }
 
 /////////////////
@@ -191,7 +173,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
         bias_inc.resize( size );
 
     // input_gradient[i] =
-    //      (output_gradient . output - output_gradient[i] ) output[i]
+    //      (output_gradient[i] - output_gradient . output) output[i]
     real outg_dot_out = dot( output_gradient, output );
     real* out = output.data();
     real* outg = output_gradient.data();
@@ -201,7 +183,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
 
     for( int i=0 ; i<size ; i++ )
     {
-        real ing_i = (outg_dot_out - outg[i]) * out[i];
+        real ing_i = (outg[i] - outg_dot_out) * out[i];
         ing[i] += ing_i;
 
         if( momentum == 0. )
@@ -252,7 +234,7 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
     // TODO see if we can have a speed-up by reorganizing the different steps
 
     // input_gradients[k][i] =
-    //   (output_gradients[k].outputs[k]-output_gradients[k][i]) outputs[k][i]
+    //   (output_gradients[k][i]-output_gradients[k].outputs[k]) outputs[k][i]
     for( int k=0; k<mbatch_size; k++ )
     {
         real outg_dot_out = dot( output_gradients(k), outputs(k) );
@@ -264,7 +246,7 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
 
         for( int i=0 ; i<size ; i++ )
         {
-            real ing_ki = (outg_dot_out - outg[i]) * out[i];
+            real ing_ki = (outg[i] - outg_dot_out) * out[i];
             ing[i] += ing_ki;
 
             if( momentum == 0. )
@@ -305,7 +287,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
     real* outg = output_gradient.data();
     real* ing = input_gradient.data();
     for( int i=0 ; i<size ; i++ )
-        ing[i] = (outg_dot_out - outg[i]) * out[i];
+        ing[i] = (outg[i] - outg_dot_out) * out[i];
 
     rbm_bias_gradient << input_gradient;
 }
@@ -319,17 +301,31 @@ real RBMMultinomialLayer::fpropNLL(const Vec& target)
 
     PLASSERT( target.size() == input_size );
 
-    real ret = 0;
+#ifdef BOUNDCHECK
+    if (!target.hasMissing())
+    {
+        PLASSERT_MSG( min(target) >= 0.,
+                      "Elements of \"target\" should be positive" );
+        // Ensure the distribution probabilities sum to 1. We relax a
+        // bit the default tolerance as probabilities using
+        // exponentials could suffer numerical imprecisions.
+        if (!is_equal( sum(target), 1., 1., 1e-5, 1e-5 ))
+            PLERROR("In RBMMultinomialLayer::fpropNLL - Elements of \"target\""
+                    " should sum to 1 (found a sum = %f)",
+                    sum(target));
+    }
+#endif
 
+    real nll = 0;
     real target_i, expectation_i;
-    for( int i=0 ; i<size ; i++ )
+    for (int i=0; i<size; i++)
     {
         target_i = target[i];
         expectation_i = expectation[i];
-        if(!fast_exact_is_equal(target_i,0.0))
-            ret -= target_i * pl_log(expectation_i);
+        if(!fast_exact_is_equal(target_i, 0.0))
+            nll -= target_i * pl_log(expectation_i);
     }
-    return ret;
+    return nll;
 }
 
 void RBMMultinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
@@ -342,20 +338,34 @@ void RBMMultinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
     PLASSERT( costs_column.length() == batch_size );
 
     real target_i, expectation_i;
-    for (int k=0;k<batch_size;k++) // loop over minibatch
+    for (int k=0; k<batch_size; k++) // loop over minibatch
     {
+#ifdef BOUNDCHECK
+        if (!targets(k).hasMissing())
+        {
+            PLASSERT_MSG( min(targets(k)) >= 0.,
+                          "Elements of \"targets\" should be positive" );
+            // Ensure the distribution probabilities sum to 1. We relax a
+            // bit the default tolerance as probabilities using
+            // exponentials could suffer numerical imprecisions.
+            if (!is_equal( sum(targets(k)), 1., 1., 1e-5, 1e-5 ))
+                PLERROR("In RBMMultinomialLayer::fpropNLL - Elements of"
+                        " \"target\" should sum to 1 (found a sum = %f at row"
+                        " %d)",
+                        sum(targets(k)), k);
+        }
+#endif
         real nll = 0;
-        //real* activation = activations[k];
         real* expectation = expectations[k];
         real* target = targets[k];
-        for( int i=0 ; i<size ; i++ )
+        for(int i=0; i<size; i++)
         {
             target_i = target[i];
             expectation_i = expectation[i];
-            if(!fast_exact_is_equal(target_i,0.0))
+            if(!fast_exact_is_equal(target_i, 0.0))
                 nll -= target_i * pl_log(expectation_i);
         }
-        costs_column(k,0) = nll;
+        costs_column(k, 0) = nll;
     }
 }
 
@@ -367,16 +377,11 @@ void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll,
     PLASSERT( target.size() == input_size );
     bias_gradient.resize( size );
 
-    real sum_tar = sum( target );
-    real* exp = expectation.data();
-    real* tar = target.data();
-    real* biasg = bias_gradient.data();
-    for( int i=0 ; i<size ; i++ )
-        biasg[i] = tar[i] - sum_tar * exp[i];
+    substract(target, expectation, bias_gradient);
 }
 
 void RBMMultinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
-                                Mat& bias_gradients)
+                                   Mat& bias_gradients)
 {
     computeExpectations();
 
@@ -386,15 +391,7 @@ void RBMMultinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
     PLASSERT( costs_column.length() == batch_size );
     bias_gradients.resize( batch_size, size );
 
-    for (int k=0;k<batch_size;k++) // loop over minibatch
-    {        
-        real sum_tar = sum( targets(k) );
-        real* exp = expectations[k];
-        real* tar = targets[k];
-        real* biasg = bias_gradients[k];
-        for( int i=0 ; i<size ; i++ )
-            biasg[i] = tar[i] - sum_tar * exp[i];
-    }
+    substract(targets, expectations, bias_gradients);
 }
 
 void RBMMultinomialLayer::declareOptions(OptionList& ol)

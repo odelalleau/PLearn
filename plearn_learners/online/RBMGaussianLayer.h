@@ -48,7 +48,6 @@ using namespace std;
 /**
  * Layer in an RBM formed with Gaussian units
  *
- * @todo: yes
  */
 class RBMGaussianLayer: public RBMLayer
 {
@@ -58,9 +57,9 @@ public:
     //#####  Public Build Options  ############################################
 
     real min_quad_coeff;
-    
+
     bool share_quad_coeff;
-    
+
     //! Number of units when share_quad_coeff is False
     //! or 1 when share_quad_coeff is True
     int size_quad_coeff;
@@ -75,8 +74,10 @@ public:
     //! Constructor from the number of units in the multinomial
     RBMGaussianLayer( int the_size, real the_learning_rate=0. );
 
-    //! Constructor from the number of units in the multinomial, with an aditional option
-    RBMGaussianLayer( int the_size, real the_learning_rate=0., bool do_share_quad_coeff=false );
+    //! Constructor from the number of units in the multinomial,
+    //! with an aditional option
+    RBMGaussianLayer( int the_size, real the_learning_rate=0.,
+                      bool do_share_quad_coeff=false );
 
     //! compute a sample, and update the sample field
     virtual void generateSample() ;

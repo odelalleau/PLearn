@@ -52,7 +52,6 @@ class RBMConnection;
 /**
  * Virtual class for a layer in an RBM.
  *
- * @todo: yes
  */
 class RBMLayer: public OnlineLearningModule
 {
@@ -262,10 +261,10 @@ public:
     //! (or activations, which is equivalent), given the positive and
     //! negative phase values.
     virtual void bpropCD(const Vec& pos_values, const Vec& neg_values,
-                    Vec& bias_gradient);
+                         Vec& bias_gradient);
 
     virtual real energy(const Vec& unit_values) const;
-    
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

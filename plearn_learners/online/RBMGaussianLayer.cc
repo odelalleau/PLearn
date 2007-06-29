@@ -154,14 +154,14 @@ void RBMGaussianLayer::computeExpectation()
         real a_i = quad_coeff[0];
         for( int i=0 ; i<size ; i++ )
         {
-            expectation[i] = - activation[i] / (2 * a_i * a_i);
+            expectation[i] = activation[i] / (2 * a_i * a_i);
         }
     }
     else
         for( int i=0 ; i<size ; i++ )
         {
             real a_i = quad_coeff[i];
-            expectation[i] = - activation[i] / (2 * a_i * a_i);
+            expectation[i] = activation[i] / (2 * a_i * a_i);
         }
 
     expectation_is_up_to_date = true;
@@ -181,7 +181,7 @@ void RBMGaussianLayer::computeExpectations()
         for (int k = 0; k < batch_size; k++)
             for (int i = 0 ; i < size ; i++)
                 {
-                    expectations(k, i) = -activations(k, i) / (2 * a_i * a_i) ;
+                    expectations(k, i) = activations(k, i) / (2 * a_i * a_i) ;
                 }
     }
     else
@@ -189,7 +189,7 @@ void RBMGaussianLayer::computeExpectations()
             for (int i = 0 ; i < size ; i++)
                 {
                     real a_i = quad_coeff[i];
-                    expectations(k, i) = -activations(k, i) / (2 * a_i * a_i) ;
+                    expectations(k, i) = activations(k, i) / (2 * a_i * a_i) ;
                 }
     expectations_are_up_to_date = true;
 }
@@ -220,14 +220,14 @@ void RBMGaussianLayer::fprop( const Vec& input, Vec& output ) const
         real a_i = quad_coeff[0];
         for( int i=0 ; i<size ; i++ )
         {
-            output[i] = - (input[i] + bias[i]) / (2 * a_i * a_i);
+            output[i] = (input[i] + bias[i]) / (2 * a_i * a_i);
         }
     }
     else
         for( int i=0 ; i<size ; i++ )
         {
             real a_i = quad_coeff[i];
-            output[i] = - (input[i] + bias[i]) / (2 * a_i * a_i);
+            output[i] = (input[i] + bias[i]) / (2 * a_i * a_i);
         }
 }
 
@@ -263,7 +263,7 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
     {
         if(!share_quad_coeff)
             a_i = quad_coeff[i];
-        real in_grad_i = - output_gradient[i] / (2 * a_i * a_i);
+        real in_grad_i = output_gradient[i] / (2 * a_i * a_i);
         input_gradient[i] += in_grad_i;
 
         if( momentum == 0. )
@@ -275,9 +275,9 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
                coefficient during the gradient descent phase.
 
             // update the quadratic coefficient:
-            // a_i += learning_rate * out_grad_i * (b_i + input_i) / a_i^3
-            // (or a_i += 2 * learning_rate * in_grad_i * (b_i + input_i) / a_i
-            a_i += two_lr * in_grad_i * (bias[i] + input[i])
+            // a_i -= learning_rate * out_grad_i * (b_i + input_i) / a_i^3
+            // (or a_i -= 2 * learning_rate * in_grad_i * (b_i + input_i) / a_i
+            a_i -= two_lr * in_grad_i * (bias[i] + input[i])
                                                     / a_i;
             if( a_i < min_quad_coeff )
                 a_i = min_quad_coeff;
@@ -292,11 +292,11 @@ void RBMGaussianLayer::bpropUpdate(const Vec& input, const Vec& output,
 
             /*
             // The update rule becomes:
-            // a_inc_i = momentum * a_i_inc + learning_rate * out_grad_i
+            // a_inc_i = momentum * a_i_inc - learning_rate * out_grad_i
             //                                  * (b_i + input_i) / a_i^3
             // a_i += a_inc_i
-            quad_coeff_inc[i] += momentum * quad_coeff_inc[i]
-                + two_lr * in_grad_i * (bias[i] + input[i])
+            quad_coeff_inc[i] = momentum * quad_coeff_inc[i]
+                - two_lr * in_grad_i * (bias[i] + input[i])
                                          / a_i;
             a_i += quad_coeff_inc[i];
             if( a_i < min_quad_coeff )
@@ -622,13 +622,13 @@ real RBMGaussianLayer::energy(const Vec& unit_values) const
             for(register int i=0; i<size; i++)
             {
                 tmp = a[0]*v[i];
-                en += tmp*tmp + b[i]*v[i];
+                en += tmp*tmp - b[i]*v[i];
             }
         else
             for(register int i=0; i<size; i++)
             {
                 tmp = a[i]*v[i];
-                en += tmp*tmp + b[i]*v[i];
+                en += tmp*tmp - b[i]*v[i];
             }
     }
     return en;
@@ -713,10 +713,8 @@ void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     PLASSERT( target.size() == input_size );
     bias_gradient.resize( size );
 
-    for( int i=0 ; i<size ; i++ )
-    {
-        bias_gradient[i] = target[i]-expectation[i];
-    }
+    // bias_gradient = target - expectation
+    substract(target, expectation, bias_gradient);
 }
 
 void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
@@ -730,7 +728,8 @@ void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
     PLASSERT( costs_column.length() == batch_size );
     bias_gradients.resize( batch_size, size );
 
-    substract(targets,expectations,bias_gradients);
+    // bias_gradients = targets - expectations
+    substract(targets, expectations, bias_gradients);
 }
 
 

@@ -67,38 +67,18 @@ RBMTruncExpLayer::RBMTruncExpLayer( int the_size, real the_learning_rate ) :
     bias_neg_stats.resize( the_size );
 }
 
-/*
-//! Uses "rbmp" to obtain the activations of unit "i" of this layer.
-//! This activation vector is computed by the "i+offset"-th unit of "rbmp"
-void RBMTruncExpLayer::getUnitActivations( int i, PP<RBMParameters> rbmp,
-                                           int offset )
-{
-    Vec activation = activations.subVec( i, 1 );
-    rbmp->computeUnitActivations( i+offset, 1, activation );
-    expectation_is_up_to_date = false;
-}
-
-//! Uses "rbmp" to obtain the activations of all units in this layer.
-//! Unit 0 of this layer corresponds to unit "offset" of "rbmp".
-void RBMTruncExpLayer::getAllActivations( PP<RBMParameters> rbmp, int offset )
-{
-    rbmp->computeUnitActivations( offset, size, activations );
-    expectation_is_up_to_date = false;
-}
-*/
-
 void RBMTruncExpLayer::generateSample()
 {
     PLASSERT_MSG(random_gen,
                  "random_gen should be initialized before generating samples");
 
     /* The cumulative is :
-     * C(U) = P(u<U | x) = (1 - exp(-U a)) / (1 - exp(-a)) if 0 < U < 1,
+     * C(U) = P(u<U | x) = (1 - exp(U a)) / (1 - exp(a)) if 0 < U < 1,
      *        0 if U <= 0 and
      *        1 if 1 <= U
      *
      * And the inverse, if 0 <= s <=1:
-     * C^{-1}(s) = - log(1 - s*(1 - exp(-a)) / a
+     * C^{-1}(s) = log(1 - s*(1 - exp(a)) / a
      */
 
     for( int i=0 ; i<size ; i++ )
@@ -107,11 +87,11 @@ void RBMTruncExpLayer::generateSample()
         real a_i = activation[i];
 
         // Polynomial approximation to avoid numerical instability if a ~ 0
-        // C^{-1}(s) ~ s + (-s + s^2)/2 * a + O(a^2)
+        // C^{-1}(s) ~ s + (s - s^2)/2 * a + O(a^2)
         if( fabs( a_i ) <= 1e-5 )
-            sample[i] = s + a_i*( s*(-1 + s)/2 );
+            sample[i] = s + a_i*( s*(1 - s)/2 );
         else
-            sample[i] = - logadd( pl_log( 1-s ), pl_log(s) - a_i ) / a_i;
+            sample[i] = logadd( pl_log( 1-s ), pl_log(s) + a_i ) / a_i;
     }
 }
 
@@ -121,7 +101,7 @@ void RBMTruncExpLayer::computeExpectation()
         return;
 
     /* Conditional expectation:
-     * E[u|x] = 1/(1-exp(a)) + 1/a
+     * E[u|x] = 1/(1-exp(-a)) - 1/a
      */
 
     for( int i=0 ; i<size ; i++ )
@@ -129,11 +109,11 @@ void RBMTruncExpLayer::computeExpectation()
         real a_i = activation[i];
 
         // Polynomial approximation to avoid numerical instability
-        // f(a) = 1/2 - a/12 + a^3/720 + O(a^5)
+        // f(a) = 1/2 + a/12 - a^3/720 + O(a^5)
         if( fabs( a_i ) <= 0.01 )
-            expectation[i] = 0.5 - a_i*(1./12. + a_i*a_i/720.);
+            expectation[i] = 0.5 + a_i*(1./12. - a_i*a_i/720.);
         else
-            expectation[i] = 1/(1-exp(a_i)) + 1/a_i;
+            expectation[i] = 1/(1-exp(-a_i)) - 1/a_i;
     }
 
     expectation_is_up_to_date = true;
@@ -150,12 +130,12 @@ void RBMTruncExpLayer::fprop( const Vec& input, Vec& output ) const
         real a_i = input[i] + bias[i];
 
         // Polynomial approximation to avoid numerical instability
-        // f(a) = 1/(1-exp(a) + 1/a
-        // f(a) = 1/2 - a/12 + a^3/720 + O(a^5)
+        // f(a) = 1/(1-exp(-a) - 1/a
+        // f(a) = 1/2 + a/12 - a^3/720 + O(a^5)
         if( fabs( a_i ) <= 0.01 )
-            output[i] = 0.5 - a_i*(1./12. +a_i*a_i/720.);
+            output[i] = 0.5 + a_i*(1./12. - a_i*a_i/720.);
         else
-            output[i] = 1/(1-exp(a_i)) + 1/a_i;
+            output[i] = 1/(1-exp(-a_i)) - 1/a_i;
     }
 }
 

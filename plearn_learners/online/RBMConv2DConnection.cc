@@ -218,10 +218,10 @@ void RBMConv2DConnection::accumulateNegStats( const Vec& down_values,
 void RBMConv2DConnection::update()
 {
     // updates parameters
-    // kernel -= learning_rate * (kernel_pos_stats/pos_count
+    // kernel += learning_rate * (kernel_pos_stats/pos_count
     //                              - kernel_neg_stats/neg_count)
-    real pos_factor = -learning_rate / pos_count;
-    real neg_factor = learning_rate / neg_count;
+    real pos_factor = learning_rate / pos_count;
+    real neg_factor = -learning_rate / neg_count;
 
     real* k_i = kernel.data();
     real* kps_i = kernel_pos_stats.data();
@@ -279,7 +279,7 @@ void RBMConv2DConnection::update( const Vec& pos_down_values, // v_0
      *   for j=0 to up_image_width:
      *     for l=0 to kernel_length:
      *       for m=0 to kernel_width:
-     *         kernel_neg_stats(l,m) -= learning_rate *
+     *         kernel_neg_stats(l,m) += learning_rate *
      *           ( pos_down_image(step1*i+l,step2*j+m) * pos_up_image(i,j)
      *             - neg_down_image(step1*i+l,step2*j+m) * neg_up_image(i,j) )
      */
@@ -315,7 +315,7 @@ void RBMConv2DConnection::update( const Vec& pos_down_values, // v_0
                                                ndv2+=down_image_width )
                     for( int m=0; m<kernel_width; m++ )
                         k[m] += learning_rate *
-                            (ndv2[m] * nuv_ij - pdv2[m] * puv_ij);
+                            (pdv2[m] * puv_ij - ndv2[m] * nuv_ij);
             }
         }
     }
@@ -348,7 +348,7 @@ void RBMConv2DConnection::update( const Vec& pos_down_values, // v_0
                                                pdv2+=down_image_width,
                                                ndv2+=down_image_width )
                     for( int m=0; m<kernel_width; m++ )
-                        kinc[m] += ndv2[m] * nuv_ij - pdv2[m] * puv_ij;
+                        kinc[m] += pdv2[m] * puv_ij - ndv2[m] * nuv_ij;
             }
         }
         multiplyAcc( kernel, kernel_inc, learning_rate );
@@ -376,7 +376,7 @@ void RBMConv2DConnection::update( const Mat& pos_down_values, // v_0
      *   for j=0 to up_image_width:
      *     for l=0 to kernel_length:
      *       for m=0 to kernel_width:
-     *         kernel_neg_stats(l,m) -= learning_rate *
+     *         kernel_neg_stats(l,m) += learning_rate *
      *           ( pos_down_image(step1*i+l,step2*j+m) * pos_up_image(i,j)
      *             - neg_down_image(step1*i+l,step2*j+m) * neg_up_image(i,j) )
      */
@@ -415,7 +415,7 @@ void RBMConv2DConnection::update( const Mat& pos_down_values, // v_0
                                                    ndv2+=down_image_width )
                         for( int m=0; m<kernel_width; m++ )
                             k[m] += norm_lr *
-                                (ndv2[m] * nuv_ij - pdv2[m] * puv_ij);
+                                (pdv2[m] * puv_ij - ndv2[m] * nuv_ij);
                 }
             }
         }

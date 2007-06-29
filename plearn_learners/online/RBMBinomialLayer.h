@@ -117,7 +117,7 @@ public:
     virtual void bpropNLL(const Mat& targets, const Mat& costs_column,
                           Mat& bias_gradients);
 
-    //! compute bias' unit_values
+    //! compute -bias' unit_values
     virtual real energy(const Vec& unit_values) const;
 
     //#####  PLearn::Object Protocol  #########################################

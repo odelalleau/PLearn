@@ -368,6 +368,12 @@ void RBMModule::addPortName(const string& name)
 ///////////////////
 // computeEnergy //
 ///////////////////
+// FULLY OBSERVED CASE
+// we know x and h:
+// energy(h,x) = -b'x - c'h - h'Wx
+//  = visible_layer->energy(x) + hidden_layer->energy(h)
+//      - dot(h, hidden_layer->activation-c)
+//  = visible_layer->energy(x) - dot(h, hidden_layer->activation)
 void RBMModule::computeEnergy(const Mat& visible, const Mat& hidden,
                               Mat& energy, bool positive_phase)
 {
@@ -383,13 +389,20 @@ void RBMModule::computeEnergy(const Mat& visible, const Mat& hidden,
     }
     PLASSERT( hidden_activations );
     for (int i=0;i<mbs;i++)
-        energy(i,0) = visible_layer->energy(visible(i)) + 
-            dot(hidden(i), (*hidden_activations)(i));
+        energy(i,0) = visible_layer->energy(visible(i))
+            - dot(hidden(i), (*hidden_activations)(i));
+            // Why not: + hidden_layer->energy(hidden(i)) ?
 }
 
 ///////////////////////////////
 // computeFreeEnergyOfHidden //
 ///////////////////////////////
+// FREE-ENERGY(hidden) CASE
+// we know h:
+// free energy = -log sum_x e^{-energy(h,x)}
+//  = -c'h - sum_i log sigmoid(b_i + W_{.i}'h) .... FOR BINOMIAL INPUT LAYER
+// or more robustly,
+//  = hidden_layer->energy(h) - sum_i softplus(visible_layer->activation[i])
 void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
 {
     int mbs=hidden.length();
@@ -405,16 +418,22 @@ void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
         energy(i,0) = hidden_layer->energy(hidden(i));
         if (use_fast_approximations)
             for (int j=0;j<visible_layer->size;j++)
-                energy(i,0) -= tabulated_softplus(-visible_layer->activations(i,j));
+                energy(i,0) -= tabulated_softplus(visible_layer->activations(i,j));
         else
             for (int j=0;j<visible_layer->size;j++)
-                energy(i,0) -= softplus(-visible_layer->activations(i,j));
+                energy(i,0) -= softplus(visible_layer->activations(i,j));
     }
 }
 
 ////////////////////////////////
 // computeFreeEnergyOfVisible //
 ////////////////////////////////
+// FREE-ENERGY(visible) CASE
+// we know x:
+// free energy = -log sum_h e^{-energy(h,x)}
+//  = -b'x - sum_i log sigmoid(c_i + W_i'x) .... FOR BINOMIAL HIDDEN LAYER
+// or more robustly,
+//  = visible_layer->energy(x) - sum_i softplus(hidden_layer->activation[i])
 void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
                                            bool positive_phase)
 {
@@ -441,10 +460,10 @@ void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
         energy(i,0) = visible_layer->energy(visible(i));
         if (use_fast_approximations)
             for (int j=0;j<hidden_layer->size;j++)
-                energy(i,0) -= tabulated_softplus(-(*hidden_activations)(i,j));
+                energy(i,0) -= tabulated_softplus((*hidden_activations)(i,j));
         else
             for (int j=0;j<hidden_layer->size;j++)
-                energy(i,0) -= softplus(-(*hidden_activations)(i,j));
+                energy(i,0) -= softplus((*hidden_activations)(i,j));
     }
 }
 
@@ -586,7 +605,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     PLASSERT( visible_layer );
     PLASSERT( hidden_layer );
     PLASSERT( connection );
-        
+
     Mat* visible = ports_value[getPortIndex("visible")]; 
     Mat* hidden = ports_value[getPortIndex("hidden.state")];
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
@@ -647,32 +666,23 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         PLASSERT_MSG( energy->isEmpty(), 
                       "RBMModule: the energy port can only be an output port\n" );
         if (visible && !visible->isEmpty()
-            && hidden && !hidden->isEmpty()) 
+            && hidden && !hidden->isEmpty())
         {
-            // FULLY OBSERVED CASE
-            // we know x and h: energy(h,x) = b'x + c'h + h'Wx
-            //  = visible_layer->energy(x) + hidden_layer->energy(h) + dot(h,hidden_layer->activation-c)
-            //  = visible_layer->energy(x) + dot(h,hidden_layer->activation)
-            computeEnergy(*visible,*hidden,*energy);
-        } else if (visible && !visible->isEmpty())
+            computeEnergy(*visible, *hidden, *energy);
+        }
+        else if (visible && !visible->isEmpty())
         {
-            // FREE-ENERGY(visible) CASE
-            // we know x: free energy = -log sum_h e^{-energy(h,x)}
-            //                        = b'x + sum_i log sigmoid(c_i + W_i'x) .... FOR BINOMIAL HIDDEN LAYER
-            // or more robustly,      = visible_layer->energy(x) - sum_i softplus(-hidden_layer->activation[i])
             computeFreeEnergyOfVisible(*visible,*energy);
         }
         else if (hidden && !hidden->isEmpty())
-            // FREE-ENERGY(hidden) CASE
-            // we know h: free energy = -log sum_x e^{-energy(h,x)}
-            //                        = c'h + sum_i log sigmoid(b_i + W_{.i}'h) .... FOR BINOMIAL INPUT LAYER
-            // or more robustly,      = hidden_layer->energy(h) - sum_i softplus(-visible_layer->activation[i])
         {
             computeFreeEnergyOfHidden(*hidden,*energy);
         }
-        else 
+        else
+        {
             PLERROR("RBMModule: unknown configuration to compute energy (currently\n"
                     "only possible if at least visible or hidden are provided).\n");
+        }
         found_a_valid_configuration = true;
     }
     if (neg_log_likelihood && neg_log_likelihood->isEmpty() && compute_log_likelihood)
@@ -937,12 +947,12 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 (*contrastive_divergence)(i,0) = 
                     // positive phase energy
                     visible_layer->energy((*visible)(i))
-                    + dot((*h)(i),(*h_act)(i))
+                    - dot((*h)(i),(*h_act)(i))
                     // minus
                     - 
                     // negative phase energy
                     (visible_layer->energy(visible_layer->samples(i))
-                     + dot(hidden_expectations(i),hidden_layer->activations(i)));
+                     - dot(hidden_expectations(i),hidden_layer->activations(i)));
             }
         }
         else
@@ -1004,7 +1014,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     }
     
 
-	
+
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;
     hidden_bias = NULL;
@@ -1017,15 +1027,16 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         /*
         if (visible)
-        cout << "visible_empty : "<< (bool) visible->isEmpty() << endl;
+            cout << "visible_empty : "<< (bool) visible->isEmpty() << endl;
         if (hidden)
-        cout << "hidden_empty : "<< (bool) hidden->isEmpty() << endl;
+            cout << "hidden_empty : "<< (bool) hidden->isEmpty() << endl;
         if (visible_sample)
-        cout << "visible_sample_empty : "<< (bool) visible_sample->isEmpty() << endl;
+            cout << "visible_sample_empty : "<< (bool) visible_sample->isEmpty() << endl;
         if (hidden_sample)
-        cout << "hidden_sample_empty : "<< (bool) hidden_sample->isEmpty() << endl;
+            cout << "hidden_sample_empty : "<< (bool) hidden_sample->isEmpty() << endl;
         if (visible_expectation)
-        cout << "visible_expectation_empty : "<< (bool) visible_expectation->isEmpty() << endl;
+            cout << "visible_expectation_empty : "<< (bool) visible_expectation->isEmpty() << endl;
+
         */
         PLERROR("In RBMModule::fprop - Unknown port configuration for module %s", name.c_str());
     }
@@ -1314,46 +1325,47 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 store_weights_grad.clear();
                 weights_g = & store_weights_grad;
             }
-                PLASSERT( connection->classname() == "RBMMatrixConnection" &&
-                          visible_layer->classname() == "RBMBinomialLayer" &&
-                          hidden_layer->classname() == "RBMBinomialLayer" );
+            PLASSERT( connection->classname() == "RBMMatrixConnection" &&
+                      visible_layer->classname() == "RBMBinomialLayer" &&
+                      hidden_layer->classname() == "RBMBinomialLayer" );
 
+            for (int k = 0; k < mbs; k++) {
+                int idx = 0;
+                for (int i = 0; i < up; i++) {
+                    real p_i_p = (*hidden)(k, i);
+                    real a_i_p = (*hidden_act)(k, i);
+                    real p_i_n =
+                        (*negative_phase_hidden_expectations)(k, i);
+                    real a_i_n =
+                        (*negative_phase_hidden_activations)(k, i);
+
+                    real scale_p = 1 + (1 - p_i_p) * a_i_p;
+                    real scale_n = 1 + (1 - p_i_n) * a_i_n;
+                    for (int j = 0; j < down; j++, idx++) {
+                        // Weight 'idx' is the (i,j)-th element in the
+                        // 'weights' matrix.
+                        real v_j_p = (*visible)(k, j);
+                        real v_j_n =
+                            (*negative_phase_visible_samples)(k, j);
+                        (*weights_g)(k, idx) +=
+                            p_i_n * v_j_n * scale_n     // Negative phase.
+                            -(p_i_p * v_j_p * scale_p); // Positive phase.
+                    }
+                }
+            }
+            if (!standard_cd_grad) {
+                // Update connection manually.
+                Mat& weights = ((RBMMatrixConnection*)
+                                get_pointer(connection))->weights;
+                real lr = cd_learning_rate / mbs;
                 for (int k = 0; k < mbs; k++) {
                     int idx = 0;
-                    for (int i = 0; i < up; i++) {
-                        real p_i_p = (*hidden)(k, i);
-                        real a_i_p = (*hidden_act)(k, i);
-                        real p_i_n =
-                            (*negative_phase_hidden_expectations)(k, i);
-                        real a_i_n =
-                            (*negative_phase_hidden_activations)(k, i);
-                        real scale_p = 1 - (1 - p_i_p) * a_i_p;
-                        real scale_n = 1 - (1 - p_i_n) * a_i_n;
-                        for (int j = 0; j < down; j++, idx++) {
-                            // Weight 'idx' is the (i,j)-th element in the
-                            // 'weights' matrix.
-                            real v_j_p = (*visible)(k, j);
-                            real v_j_n =
-                                (*negative_phase_visible_samples)(k, j);
-                            (*weights_g)(k, idx) +=
-                                p_i_p * v_j_p * scale_p   // Positive phase.
-                             - (p_i_n * v_j_n * scale_n); // Negative phase.
-                        }
-                    }
+                    for (int i = 0; i < up; i++)
+                        for (int j = 0; j < down; j++, idx++)
+                            weights(i, j) -= lr * (*weights_g)(k, idx);
                 }
-                if (!standard_cd_grad) {
-                    // Update connection manually.
-                    Mat& weights = ((RBMMatrixConnection*)
-                            get_pointer(connection))->weights;
-                    real lr = cd_learning_rate / mbs;
-                    for (int k = 0; k < mbs; k++) {
-                        int idx = 0;
-                        for (int i = 0; i < up; i++)
-                            for (int j = 0; j < down; j++, idx++)
-                                weights(i, j) -= lr * (*weights_g)(k, idx);
-                    }
-                    connection_update_is_done = true;
-                }
+                connection_update_is_done = true;
+            }
         }
         if (!connection_update_is_done)
             // Perform standard update of the connection.
@@ -1388,9 +1400,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     real p_i_n = (*negative_phase_hidden_expectations)(k, i);
                     real a_i_n = (*negative_phase_hidden_activations)(k, i);
                     (*hidden_bias_g)(k, i) +=
-                        standard_cd_bias_grad ? p_i_p - p_i_n :
-                        - p_i_p * (1 - p_i_p) * a_i_p + p_i_p    // Pos. phase
-                     -( - p_i_n * (1 - p_i_n) * a_i_n + p_i_n ); // Neg. phase
+                        standard_cd_bias_grad ? p_i_n - p_i_p :
+                        p_i_n * (1 - p_i_n) * a_i_n + p_i_n     // Neg. phase
+                     -( p_i_p * (1 - p_i_p) * a_i_p + p_i_p );  // Pos. phase
 
                 }
             }

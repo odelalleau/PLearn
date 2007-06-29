@@ -94,7 +94,6 @@ void NLLCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
     cost.resize( output_size );
 
     if( input.hasMissing() )
-        // TODO: should we put something else? infinity?
         cost[0] = MISSING_VALUE;
     else
     {
@@ -153,10 +152,7 @@ void NLLCostModule::fprop(const TVec<Mat*>& ports_value)
         for( int i=0; i<batch_size; i++ )
         {
             if( (*prediction)(i).hasMissing() )
-            {
-                // TODO: should we put something else? infinity?
                 (*cost)(i,0) = MISSING_VALUE;
-            }
             else
             {
 #ifdef BOUNDCHECK
@@ -168,8 +164,8 @@ void NLLCostModule::fprop(const TVec<Mat*>& ports_value)
                 if (!is_equal( sum((*prediction)(i)), 1., 1., 1e-5, 1e-5 ))
                     PLERROR("In NLLCostModule::fprop - Elements of"
                             " \"prediction\" should sum to 1"
-                            " (found a sum = %f)",
-                            sum((*prediction)(i)));
+                            " (found a sum = %f at row %d)",
+                            sum((*prediction)(i)), i);
 #endif
                 int target_i = (int) round( (*target)(i,0) );
                 PLASSERT( is_equal( (*target)(i, 0), target_i ) );
