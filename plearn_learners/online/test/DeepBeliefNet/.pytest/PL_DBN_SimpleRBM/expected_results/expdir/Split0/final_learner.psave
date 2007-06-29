@@ -46,7 +46,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.0299999999999999989 0 ] ;
+bias = 2 [ 0.0299999999999999989 0 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
@@ -65,7 +65,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ 0.00746183420346146695 0.00401358957022956986 ] ;
+bias = 2 [ -0.0041988074813960885 0.00291521845148070419 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
@@ -76,8 +76,8 @@ random_gen = *7   )
 ] ;
 connections = 1 [ *9 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.247752783231626306 	0.590442976497255634 	
-0.489552741554161064 	-0.317583248355345904 	
+-0.222066209664342068 	0.582925561708350082 	
+0.516883916989072545 	-0.316272804129796303 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -102,8 +102,8 @@ previous_to_last = *9  ;
 last_layer = *8  ;
 last_to_target = *11 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.58309332149676929 	0.362149014836746996 	
-0.117267655399388715 	-0.687182627254732004 	
+-0.603392333131359426 	0.370787384786479657 	
+0.09708625652197031 	-0.668099599496062679 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -131,7 +131,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ 0.0324754185935069578 -0.032475418593506937 ] ;
+bias = 2 [ -0.00487910443291659449 0.00487910443291660317 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMMultinomialLayer" ;
