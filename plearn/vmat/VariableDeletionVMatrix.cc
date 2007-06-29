@@ -128,6 +128,10 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
         "DEPRECATED (use 'source' instead) - The data set with all variables\n"
         "to select the columns from.");
 
+    declareOption(ol, "train_set", &VariableDeletionVMatrix::train_set, OptionBase::buildoption,
+                  "The train set in which to compute the percentage of missing values.\n"
+                  "If null, will use the source to compute the percentage of missing values.");
+
     declareOption(ol, "deletion_threshold",
                   &VariableDeletionVMatrix::deletion_threshold,
                   OptionBase::learntoption,
@@ -196,6 +200,7 @@ void VariableDeletionVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(complete_dataset, copies);
+    deepCopyField(train_set, copies);
 }
 
 ////////////
@@ -223,11 +228,14 @@ void VariableDeletionVMatrix::build_()
                      "you should instead use 'max_constant_threshold'");
         max_constant_threshold = remove_columns_with_constant_value == 0 ? 0:1;
     }
-
-    VMat the_train_source = source;
+    if(!source)
+        PLERROR("In VariableDeletionVMatrix::build_ - The source VMat do not exist!");
+    if(!train_set)
+        train_set = source;
+    VMat the_train_source = train_set;
     if (number_of_train_samples > 0 &&
-        number_of_train_samples < source->length())
-        the_train_source = new SubVMatrix(source, 0, 0,
+        number_of_train_samples < train_set->length())
+        the_train_source = new SubVMatrix(train_set, 0, 0,
                                           number_of_train_samples,
                                           source->width());
         
