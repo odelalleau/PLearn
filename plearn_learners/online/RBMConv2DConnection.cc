@@ -370,6 +370,8 @@ void RBMConv2DConnection::update( const Mat& pos_down_values, // v_0
     PLASSERT( neg_down_values.length() == batch_size );
     PLASSERT( neg_up_values.length() == batch_size );
 
+    real norm_lr = learning_rate / batch_size;
+
     /*  for i=0 to up_image_length:
      *   for j=0 to up_image_width:
      *     for l=0 to kernel_length:
@@ -412,7 +414,7 @@ void RBMConv2DConnection::update( const Mat& pos_down_values, // v_0
                                                    pdv2+=down_image_width,
                                                    ndv2+=down_image_width )
                         for( int m=0; m<kernel_width; m++ )
-                            k[m] += learning_rate *
+                            k[m] += norm_lr *
                                 (ndv2[m] * nuv_ij - pdv2[m] * puv_ij);
                 }
             }
