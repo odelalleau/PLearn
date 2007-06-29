@@ -59,6 +59,7 @@ public:
     real    min_non_missing_threshold;
     real    max_constant_threshold;
     int     number_of_train_samples;
+    VMat    train_set;
 
     // Deprecated.
     VMat       complete_dataset;
