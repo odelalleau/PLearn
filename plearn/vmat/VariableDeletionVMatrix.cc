@@ -230,14 +230,12 @@ void VariableDeletionVMatrix::build_()
     }
     if(!source)
         PLERROR("In VariableDeletionVMatrix::build_ - The source VMat do not exist!");
-    if(!train_set)
-        train_set = source;
-    VMat the_train_source = train_set;
+    VMat the_train_source = train_set ? train_set : source;
     if (number_of_train_samples > 0 &&
-        number_of_train_samples < train_set->length())
-        the_train_source = new SubVMatrix(train_set, 0, 0,
+        number_of_train_samples < the_train_source->length())
+        the_train_source = new SubVMatrix(the_train_source, 0, 0,
                                           number_of_train_samples,
-                                          source->width());
+                                          the_train_source->width());
         
     TVec<StatsCollector> stats =
         PLearn::computeStats(the_train_source, -1, false);
