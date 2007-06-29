@@ -302,12 +302,7 @@ def test_model(model, samples, targets):
 def do_simple_validation(train_samples, train_targets, test_samples, test_targets, param):
     train_problem = svm_problem( train_targets, train_samples )
     model = svm_model(train_problem, param)
-    N = len(test_samples)
-    total_correct = 0
-    for i in range(N):
-        if model.predict(test_samples[i]) == test_targets[i]:
-           total_correct = total_correct + 1
-    return ( ( N - total_correct )*1. / N)
+    test_model(model,test_samples,test_targets)
 
 
 
