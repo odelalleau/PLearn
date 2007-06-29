@@ -94,8 +94,9 @@ void DistanceKernel::declareOptions(OptionList& ol)
 // evaluate //
 //////////////
 real DistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
-    if (!ignore_missing && !pow_distance)
-        PLERROR("DistanceKernel::evaluate(int i, int j) ignore_missing implemented only if pow_distance is set");
+    if (ignore_missing && !pow_distance)
+        PLERROR("In DistanceKernel::evaluate(int i, int j) - 'ignore_missing' "
+                "implemented only if pow_distance is set");
 
     if (pow_distance) {
         return powdistance(x1, x2, n, ignore_missing);
