@@ -648,7 +648,7 @@ void RBMConv2DConnection::forget()
             return;
         }
 
-        real d = 1. / max( down_size, up_size );
+        real d = 1. / max( kernel_length, kernel_width );
         if( initialization_method == "uniform_sqrt" )
             d = sqrt( d );
 
