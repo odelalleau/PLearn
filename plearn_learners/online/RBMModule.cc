@@ -865,7 +865,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             *visible_expectation << to_store;
         }
         found_a_valid_configuration = true;
-    }
+    }// END SAMPLING
     
     // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
     if (contrastive_divergence)
@@ -959,7 +959,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
                     "only possible if only visible are provided in input).\n");
         found_a_valid_configuration = true;
-    }// END SAMPLING
+    }
     
 
     
@@ -1012,8 +1012,30 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         found_a_valid_configuration = true;
     }
-    
-
+    // COMPUTE VISIBLE GIVEN HIDDEN
+    else if ( visible_reconstruction && visible_reconstruction->isEmpty() 
+         && hidden && !hidden->isEmpty())
+           
+    {        
+        // Don't need to verify if they are asked in a port, this was done previously
+        
+	computeVisibleActivations(*hidden,true);
+        if(visible_reconstruction_activations)
+        {
+            PLASSERT( visible_reconstruction_activations->isEmpty() );
+            const Mat& to_store = visible_layer->activations;
+            visible_reconstruction_activations->resize(to_store.length(), 
+                                                       to_store.width());
+            *visible_reconstruction_activations << to_store;
+        }      
+        visible_layer->computeExpectations();
+        PLASSERT( visible_reconstruction->isEmpty() );
+        const Mat& to_store = visible_layer->getExpectations();
+        visible_reconstruction->resize(to_store.length(), 
+                                       to_store.width());
+        *visible_reconstruction << to_store;
+        found_a_valid_configuration = true;
+    }
 
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;
