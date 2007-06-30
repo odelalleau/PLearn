@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
-import sys
-import os, os.path
-
-from plearn.pymake.pymake import *
-
 try:
   from plearn.pyext import *
 except:
+  from plearn.pymake.pymake import *
   PLEARNDIR = os.environ.get('PLEARNDIR', os.getcwd())
   PLEARNDIRpyext = os.path.join(PLEARNDIR,'python_modules','plearn','pyext')
   PLEARNDIRpyextOBJ =  os.path.join(PLEARNDIRpyext,'OBJS')
@@ -244,11 +240,16 @@ def networkview( myObject ):
     os.system('kuickshow '+output_name+' &')
 
 if __name__ == '__main__':
+    import sys
+    import os, os.path
 
-    if len(sys.argv) == 2:
-       inputname  = sys.argv[1]
-    else:
-       inputname  =  '/u/louradoj/PRGM/babyAI/dbn/convNet.py'
+
+    if len(sys.argv) <> 2:
+       print "Usage:\n\tpython "+sys.argv[0]+" mylearner.ext"
+       print "Purpose:\n\tDraw the graph of a network implemented/saved in a file mylearner.ext\n\twith extension (.ext) .py .pyplearn or .psave"
+       sys.exit(0)
+    
+    inputname  = sys.argv[1]
     output_extension = '.network.jpeg'
     output_name = os.path.splitext(inputname)[0]
     input_extension = os.path.splitext(inputname)[1]
