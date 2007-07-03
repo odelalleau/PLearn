@@ -93,7 +93,7 @@ AddCostToLearner::AddCostToLearner()
       rescale_target(0),
       to_max(1),
       to_min(0),
-      nb_class(-1)
+      n_classes(-1)
 {}
 
 ////////////////////
@@ -167,8 +167,8 @@ void AddCostToLearner::declareOptions(OptionList& ol)
     declareOption(ol, "to_min", &AddCostToLearner::to_min, OptionBase::buildoption,
                   "Lower bound of the destination interval [to_min, to_max] (used in rescaling).");
     
-    declareOption(ol, "nb_class", &AddCostToLearner::nb_class, OptionBase::buildoption,
-                  "The number of class. Used by the confusion_matrix cost");
+    declareOption(ol, "n_classes", &AddCostToLearner::n_classes, OptionBase::buildoption,
+        "The number of classes. Only needed for the 'confusion_matrix' cost.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -241,8 +241,8 @@ void AddCostToLearner::build_()
         } else if (c == "linear_class_error") {
         } else if (c == "square_class_error") {
         } else if (c == "confusion_matrix") {
-            if(nb_class<=0)
-                PLERROR("In AddCostToLearner::build_ there must be a positive number of class. nb_class ="+nb_class);
+            if(n_classes<=0)
+                PLERROR("In AddCostToLearner::build_ there must be a positive number of class. n_classes ="+n_classes);
         } else if (c == "NLL") {
             // Output should be in [0,1].
             output_min = max(output_min, real(0));
@@ -519,12 +519,12 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             }
             costs[ind_cost] = diff;
         } else if (c == "confusion_matrix") {
-            for(int local_ind = ind_cost ; local_ind < (nb_class*nb_class+ind_cost); local_ind++){
+            for(int local_ind = ind_cost ; local_ind < (n_classes*n_classes+ind_cost); local_ind++){
                 costs[local_ind] = 0;
             }
-            int local_ind = ind_cost + argmax(sub_learner_output) + int(round(desired_target[0]))*nb_class;
+            int local_ind = ind_cost + argmax(sub_learner_output) + int(round(desired_target[0]))*n_classes;
             costs[local_ind] = 1;
-            ind_cost += nb_class*nb_class - 1;//less one as the loop add one
+            ind_cost += n_classes*n_classes - 1;//less one as the loop add one
         } else if (c == "mse") {
             costs[ind_cost] = powdistance(desired_target, sub_learner_output);
         } else if (c == "squared_norm_reconstruction_error") {
@@ -563,8 +563,8 @@ TVec<string> AddCostToLearner::getTestCostNames() const
     TVec<string> sub_costs = learner_->getTestCostNames();
     for (int i = 0; i < this->costs.length(); i++) {
         if(costs[i] == "confusion_matrix")
-            for(int conf_i=0; conf_i< nb_class;conf_i++)
-                for(int conf_j=0; conf_j<nb_class;conf_j++){
+            for(int conf_i=0; conf_i< n_classes;conf_i++)
+                for(int conf_j=0; conf_j<n_classes;conf_j++){
                     string s = "confusion_matrix_i"+tostring(conf_i)+"_j"+tostring(conf_j);
                     sub_costs.append(s);
                 }

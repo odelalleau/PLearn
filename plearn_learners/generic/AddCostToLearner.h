@@ -121,7 +121,7 @@ public:
     bool rescale_target;
     real to_max;
     real to_min;
-    int nb_class;
+    int n_classes;
 
     // ****************
     // * Constructors *
