@@ -628,7 +628,7 @@ def _process_distcc_hosts(host_list):
             i = token.find('/')
             if i == -1:
                 num = 1
-                host = host[1:]
+                host = token[1:]
             else:
                 num = int(token[i+1:])
                 host = token[1:i]
@@ -640,7 +640,7 @@ def _process_distcc_hosts(host_list):
     # For distcc, localhost is usually not added when the list of hosts is
     # long because localhost is busy doing the preprocessing. This does not
     # hold for pymake, so add localhost if it is not present.
-    if 'localhost' not in hosts:
+    if 'localhost' not in hosts and myhostname not in hosts:
         hosts.extend(['localhost'] * smallest_num)
 
     return hosts
@@ -692,9 +692,39 @@ def get_distcc_hosts():
     else:
         return _process_distcc_hosts(contents)
 
+def process_hostspath_list(hostspath_list):
+    list_of_hosts = []
+    for hostspath in hostspath_list:
+        f = open(hostspath,'r')
+        for line in f:
+            line = line.strip()
+            # Remove comments
+            i = line.find('#')
+            if i != -1:
+                line = line[:i]
+
+            # Get number of processors to use (syntax: host/n_proc)
+            i = line.find('/')
+            if i == -1:
+                host = line
+                n_proc = 1
+            else:
+                host = line[:i]
+                n_proc = int(line[i+1:])
+
+            # Remove ''
+            if host:
+                list_of_hosts.extend([host] * n_proc)
+
+        f.close()
+
+    if 'localhost' not in list_of_hosts and myhostname not in list_of_hosts:
+        list_of_hosts.extend(['localhost'] * nprocesses_on_localhost)
+
+    return list_of_hosts
+
 
 def get_list_of_hosts():
-    list_of_hosts = []
     distcc_list_of_hosts = get_distcc_hosts()
 
     if force_32bits:
@@ -711,16 +741,12 @@ def get_list_of_hosts():
         if distcc_list_of_hosts is not None:
             print '*** Overriding distcc settings. (Remove pymake *.hosts file to use distcc settings.)'
         print '*** Parallel compilation using list of hosts from file(s): ' + string.join( hostspath_list, ', ' )
-        for hostspath in hostspath_list:
-            f = open(hostspath,'r')
-            list_of_hosts = list_of_hosts + filter(lambda s: s and s[0]!='#', map(string.strip,f.readlines()))
-            f.close()
-        list_of_hosts = nprocesses_per_processor * list_of_hosts
+        list_of_hosts = process_hostspath_list(hostspath_list)
     elif distcc_list_of_hosts is not None:
         print '*** Parallel compilation using distcc list of hosts (%d)' % len(distcc_list_of_hosts)
         list_of_hosts = distcc_list_of_hosts
     else:
-        list_of_hosts = nprocesses_per_processor * ['localhost']
+        list_of_hosts = nprocesses_on_localhost * ['localhost']
         print '*** No hosts file found: no parallel compilation, using localhost'
         print '    (create a '+platform + '.hosts file in your .pymake directory to list hosts for parallel compilation.)'
 
@@ -1990,12 +2016,22 @@ class FileInfo:
         # message to distinguish that case from the case of (say) a
         # single error message for a syntax error, etc.
         if not hasattr(self,"compilation_status"):
-            if warningmsgs and warningmsgs[0].startswith('ssh: '):
-                # The hostname has a problem, so we remove it from the list
-                # and retry on another machine
-                list_of_hosts.remove(self.hostname)
-                self.hostname = ''
-                self.retry_compilation = True
+            if warningmsgs:
+                if warningmsgs[0].startswith('ssh: '):
+                    # The hostname has a problem, so we remove it from the list
+                    # and retry on another machine
+                    list_of_hosts.remove(self.hostname)
+                    self.hostname = ''
+                    self.retry_compilation = True
+                elif warningmsgs[0].startswith('ssh_exchange_identification :'):
+                    # It happens sometimes when logging multiple times onto the
+                    # same machine. No need to remove it from the list, we will
+                    # try again.
+                    self.retry_compilation = True
+                else:
+                    # Warning messages were uninformative, abort
+                    self.compilation_status = -2
+                    self.retry_compilation = False
             else:
                 # There was an undefined problem,
                 # we consider the compilation has failed
@@ -2324,7 +2360,7 @@ def main( args ):
             useqt, qtdir, \
             default_compiler, default_linker, \
             sourcedirs, mandatory_includedirs, linkeroptions_tail, \
-            options_choices, nprocesses_per_processor, rshcommand, \
+            options_choices, nprocesses_on_localhost, rshcommand, \
             compileflags, cpp_variables, cpp_definitions, \
             objspolicy, objsdir, \
             default_wrapper, dllwrap_basic_options, \
@@ -2369,7 +2405,7 @@ def main( args ):
     mandatory_includedirs = []
     linkeroptions_tail = '-lstdc++ -lm'
     options_choices = []
-    nprocesses_per_processor = 1
+    nprocesses_on_localhost = 1
     rshcommand = 'rsh '
     compileflags = ''
     # List of all C preprocessor variables possibly initialized at compilation
@@ -2527,9 +2563,10 @@ def main( args ):
                 if (option[5] != '='):
                     print 'Syntax for \'-local\' option is \'-local=<nb_proc>\', but' \
                           ' read \'' + option + '\': one processor will be used'
-                    nprocesses_per_processor=1
+                    # Keep default value (defined in config file or above
+                    # nprocesses_on_localhost=1
                 else:
-                    nprocesses_per_processor=int(option[6:])
+                    nprocesses_on_localhost=int(option[6:])
 
     local_ofiles_base_path= '/tmp/.pymake/local_ofiles/' # could add an option for that...
 
@@ -2654,7 +2691,7 @@ def main( args ):
     ####  Get the list of hosts on which to compile
     # (Will be obsoleted when the batch job interface will come out)
     if local_compilation:
-        list_of_hosts = nprocesses_per_processor * ['localhost']
+        list_of_hosts = nprocesses_on_localhost * ['localhost']
     else:
         list_of_hosts = get_list_of_hosts()
 
