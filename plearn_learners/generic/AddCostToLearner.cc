@@ -93,7 +93,8 @@ AddCostToLearner::AddCostToLearner()
       rescale_target(0),
       to_max(1),
       to_min(0),
-      n_classes(-1)
+      n_classes(-1),
+      confusion_matrix_target(0)
 {}
 
 ////////////////////
@@ -132,7 +133,7 @@ void AddCostToLearner::declareOptions(OptionList& ol)
         "   difference between the class values\n"
         " - 'square_class_error': as class_error execpt that the output is the\n"
         "   square of the difference between the class values\n"
-        " - 'confusion_matrix': give the confusion matrix,\n"
+        " - 'confusion_matrix': give the confusion matrix of the target confusion_matrix_target,\n"
         "   the row is the predicted class, the column is the targeted class\n"
         " - 'lift_output': to compute the lift cost (for the positive class)\n"
         " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
@@ -169,6 +170,9 @@ void AddCostToLearner::declareOptions(OptionList& ol)
     
     declareOption(ol, "n_classes", &AddCostToLearner::n_classes, OptionBase::buildoption,
         "The number of classes. Only needed for the 'confusion_matrix' cost.");
+
+    declareOption(ol, "confusion_matrix_target", &AddCostToLearner::confusion_matrix_target, OptionBase::buildoption,
+                  "The target number for witch we calculate the confusion matrix. Default to 0.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -519,10 +523,31 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             }
             costs[ind_cost] = diff;
         } else if (c == "confusion_matrix") {
+
+#ifdef BOUNDCHECK
+            if (confusion_matrix_target >= target_length)
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - confusion_matrix_target(%d) "
+                        "not in the range of target_length(%d)", confusion_matrix_target, target_length);            
+            if (sub_learner_output[confusion_matrix_target] >= n_classes
+                || desired_target[confusion_matrix_target] >= n_classes)
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - confusion_matrix sub_learner_output[i](%f) "
+                        "or desired_target[i](%d) higher or egual to n_classes (%d)", sub_learner_output[confusion_matrix_target],
+                        desired_target[confusion_matrix_target], n_classes);
+#endif
             for(int local_ind = ind_cost ; local_ind < (n_classes*n_classes+ind_cost); local_ind++){
                 costs[local_ind] = 0;
             }
-            int local_ind = ind_cost + argmax(sub_learner_output) + int(round(desired_target[0]))*n_classes;
+            int output_length = sub_learner_output.length();
+            int local_ind = 0;
+            if (output_length == target_length) {
+                local_ind = ind_cost + int(round(sub_learner_output[confusion_matrix_target]))
+                    + int(round(desired_target[confusion_matrix_target]))*n_classes;
+            } else if (target_length == 1){
+                local_ind = ind_cost + argmax(sub_learner_output) + int(round(desired_target[confusion_matrix_target]))*n_classes;
+            } else {
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - Wrong "
+                        "output and/or target for the 'confusion_matrix' cost");
+            }
             costs[local_ind] = 1;
             ind_cost += n_classes*n_classes - 1;//less one as the loop add one
         } else if (c == "mse") {

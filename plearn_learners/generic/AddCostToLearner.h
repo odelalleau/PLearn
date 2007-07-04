@@ -122,6 +122,7 @@ public:
     real to_max;
     real to_min;
     int n_classes;
+    int confusion_matrix_target;
 
     // ****************
     // * Constructors *
