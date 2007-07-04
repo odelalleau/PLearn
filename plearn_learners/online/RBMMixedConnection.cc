@@ -863,6 +863,141 @@ void RBMMixedConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
     }
 }
 
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void RBMMixedConnection::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                        const TVec<Mat*>& ports_gradient)
+{
+    PLASSERT( ports_value.length() == nPorts()
+              && ports_gradient.length() == nPorts() );
+
+    Mat* down = ports_value[0];
+    Mat* up = ports_value[1];
+    Mat* down_grad = ports_gradient[0];
+    Mat* up_grad = ports_gradient[1];
+
+    PLASSERT( down && !down->isEmpty() );
+    PLASSERT( up && !up->isEmpty() );
+
+    int batch_size = down->length();
+    PLASSERT( up->length() == batch_size );
+
+    // If we have up_grad
+    if( up_grad && !up_grad->isEmpty() )
+    {
+        // down_grad should not be provided
+        PLASSERT( !down_grad || down_grad->isEmpty() );
+        PLASSERT( up_grad->length() == batch_size );
+        PLASSERT( up_grad->width() == up_size );
+
+        // If we want down_grad
+        bool compute_down_grad = false;
+        if( down_grad && down_grad->isEmpty() )
+        {
+            PLASSERT( down_grad->width() == down_size );
+            down_grad->resize(batch_size, down_size);
+            compute_down_grad = true;
+        }
+
+        for (int j=0; j<n_down_blocks; j++)
+        {
+            int init_j = down_init_positions[j];
+            int down_size_j = down_block_sizes[j];
+            Mat sub_down = down->subMatColumns(init_j, down_size_j);
+            Mat sub_down_grad;
+            Mat* p_sub_down_grad = NULL;
+            if( compute_down_grad )
+            {
+                sub_down_grad = down_grad->subMatColumns(init_j, down_size_j);
+                p_sub_down_grad = &sub_down_grad;
+            }
+
+            for (int i=0; i<n_up_blocks; i++)
+            {
+                if(sub_connections(i,j))
+                {
+                    int init_i = up_init_positions[i];
+                    int up_size_i = up_block_sizes[i];
+                    Mat sub_up = up->subMatColumns(init_i, up_size_i);
+                    Mat sub_up_grad =
+                        up_grad->subMatColumns(init_i, up_size_i);
+
+                    TVec<Mat*> sub_ports_value(2);
+                    sub_ports_value[0] = &sub_down;
+                    sub_ports_value[1] = &sub_up;
+                    TVec<Mat*> sub_ports_gradient(2);
+                    // NOT &sub_down_grad because we may want a NULL pointer
+                    sub_ports_gradient[0] = p_sub_down_grad;
+                    sub_ports_gradient[1] = &sub_up_grad;
+
+                    if( compute_down_grad )
+                        sub_down_grad.resize(0, down_size_j);
+
+                    sub_connections(i,j)->bpropAccUpdate( sub_ports_value,
+                                                          sub_ports_gradient );
+                }
+            }
+        }
+    }
+    else if( down_grad && !down_grad->isEmpty() )
+    {
+        PLASSERT( down_grad->length() == batch_size );
+        PLASSERT( down_grad->width() == down_size );
+
+        // If we wand up_grad
+        bool compute_up_grad = false;
+        if( up_grad && up_grad->isEmpty() )
+        {
+            PLASSERT( up_grad->width() == up_size );
+            up_grad->resize(batch_size, up_size);
+            compute_up_grad = true;
+        }
+
+        for (int i=0; i<n_up_blocks; i++)
+        {
+            int init_i = up_init_positions[i];
+            int up_size_i = up_block_sizes[i];
+            Mat sub_up = up->subMatColumns(init_i, up_size_i);
+            Mat sub_up_grad;
+            Mat* p_sub_up_grad = NULL;
+            if( compute_up_grad )
+            {
+                sub_up_grad = up_grad->subMatColumns(init_i, up_size_i);
+                p_sub_up_grad = &sub_up_grad;
+            }
+
+            for (int j=0; j<n_down_blocks; j++)
+            {
+                int init_j = down_init_positions[j];
+                int down_size_j = down_block_sizes[j];
+                Mat sub_down = down->subMatColumns(init_j, down_size_j);
+                Mat sub_down_grad =
+                    down_grad->subMatColumns(init_j, down_size_j);
+
+                TVec<Mat*> sub_ports_value(2);
+                sub_ports_value[0] = &sub_down;
+                sub_ports_value[1] = &sub_up;
+                TVec<Mat*> sub_ports_gradient(2);
+                sub_ports_gradient[0] = &sub_down_grad;
+                // NOT &sub_up_grad because we may want a NULL pointer
+                sub_ports_gradient[1] = p_sub_up_grad;
+
+                if( compute_up_grad )
+                    sub_up_grad.resize(0, up_size_i);
+
+                sub_connections(i,j)->bpropAccUpdate( sub_ports_value,
+                                                      sub_ports_gradient );
+            }
+        }
+    }
+    else
+        PLCHECK_MSG( false,
+                     "Unknown port configuration" );
+
+}
+
+
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void RBMMixedConnection::forget()

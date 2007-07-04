@@ -133,7 +133,7 @@ void RBMModule::declareOptions(OptionList& ol)
     declareOption(ol, "reconstruction_connection",
                   &RBMModule::reconstruction_connection,
                   OptionBase::buildoption,
-        "Reconstuction connection between the hidden and visible layers.");
+        "Reconstruction connection between the hidden and visible layers.");
 
     declareOption(ol, "grad_learning_rate", &RBMModule::grad_learning_rate,
                   OptionBase::buildoption,
@@ -531,13 +531,14 @@ void RBMModule::computeVisibleActivations(const Mat& hidden,
     if (using_reconstruction_connection)
     {
         PLASSERT( reconstruction_connection );
-        reconstruction_connection->setAsDownInputs(hidden);
+        reconstruction_connection->setAsUpInputs(hidden);
         visible_layer->getAllActivations(reconstruction_connection, 0, true);
     }
     else
     {
         if(weights && !weights->isEmpty())
         {
+            PLASSERT( connection->classname() == "RBMMatrixConnection" );
             Mat old_weights;
             Vec old_activation;
             connection->getAllWeights(old_weights);
@@ -983,7 +984,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
         // Don't need to verify if they are asked in a port, this was done previously
 
-        computeVisibleActivations(hidden_layer->getExpectations(),true);
+        computeVisibleActivations(hidden_layer->getExpectations(), true);
         if(visible_reconstruction_activations)
         {
             PLASSERT( visible_reconstruction_activations->isEmpty() );
@@ -1000,7 +1001,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 PLASSERT( visible_reconstruction->isEmpty() );
                 const Mat& to_store = visible_layer->getExpectations();
                 visible_reconstruction->resize(to_store.length(),
-                                                           to_store.width());
+                                               to_store.width());
                 *visible_reconstruction << to_store;
             }
             if(reconstruction_error)
@@ -1120,67 +1121,67 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         // Note: we need to perform the following steps even if the gradient
         // learning rate is equal to 0. This is because we must propagate the
         // gradient to the visible layer, even though no update is required.
-            setAllLearningRates(grad_learning_rate);
-            PLASSERT( hidden && hidden_act );
-            // Compute gradient w.r.t. activations of the hidden layer.
-            hidden_layer->bpropUpdate(
-                    *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
-                    false);
-            if (hidden_bias_grad)
-            {
-                PLASSERT( hidden_bias_grad->isEmpty() &&
-                          hidden_bias_grad->width() == hidden_layer->size );
-                hidden_bias_grad->resize(mbs,hidden_layer->size);
-                *hidden_bias_grad += hidden_act_grad;
-            }
-            // Compute gradient w.r.t. expectations of the visible layer (=
-            // inputs).
-            Mat* store_visible_grad = NULL;
-            if (compute_visible_grad) {
-                PLASSERT( visible_grad->width() == visible_layer->size );
-                store_visible_grad = visible_grad;
-            } else {
-                // We do not actually need to store the gradient, but since it
-                // is required in bpropUpdate, we provide a dummy matrix to
-                // store it.
-                store_visible_grad = &visible_exp_grad;
-            }
-            store_visible_grad->resize(mbs,visible_layer->size);
+        setAllLearningRates(grad_learning_rate);
+        PLASSERT( hidden && hidden_act );
+        // Compute gradient w.r.t. activations of the hidden layer.
+        hidden_layer->bpropUpdate(
+                *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
+                false);
+        if (hidden_bias_grad)
+        {
+            PLASSERT( hidden_bias_grad->isEmpty() &&
+                      hidden_bias_grad->width() == hidden_layer->size );
+            hidden_bias_grad->resize(mbs,hidden_layer->size);
+            *hidden_bias_grad += hidden_act_grad;
+        }
+        // Compute gradient w.r.t. expectations of the visible layer (=
+        // inputs).
+        Mat* store_visible_grad = NULL;
+        if (compute_visible_grad) {
+            PLASSERT( visible_grad->width() == visible_layer->size );
+            store_visible_grad = visible_grad;
+        } else {
+            // We do not actually need to store the gradient, but since it
+            // is required in bpropUpdate, we provide a dummy matrix to
+            // store it.
+            store_visible_grad = &visible_exp_grad;
+        }
+        store_visible_grad->resize(mbs,visible_layer->size);
 
-            if (weights)
+        if (weights)
+        {
+            int up = connection->up_size;
+            int down = connection->down_size;
+            PLASSERT( !weights->isEmpty() &&
+                      weights_grad && weights_grad->isEmpty() &&
+                      weights_grad->width() == up * down );
+            weights_grad->resize(mbs, up * down);
+            Mat w, wg;
+            Vec v,h,vg,hg;
+            for(int i=0; i<mbs; i++)
             {
-                int up = connection->up_size;
-                int down = connection->down_size;
-                PLASSERT( !weights->isEmpty() &&
-                          weights_grad && weights_grad->isEmpty() &&
-                          weights_grad->width() == up * down );
-                weights_grad->resize(mbs, up * down);
-                Mat w, wg;
-                Vec v,h,vg,hg;
-                for(int i=0; i<mbs; i++)
-                {
-                    w = Mat(up, down,(*weights)(i));
-                    wg = Mat(up, down,(*weights_grad)(i));
-                    v = (*visible)(i);
-                    h = (*hidden_act)(i);
-                    vg = (*store_visible_grad)(i);
-                    hg = hidden_act_grad(i);
-                    connection->petiteCulotteOlivierUpdate(
-                        v,
-                        w,
-                        h,
-                        vg,
-                        wg,
-                        hg,true);
-                }
+                w = Mat(up, down,(*weights)(i));
+                wg = Mat(up, down,(*weights_grad)(i));
+                v = (*visible)(i);
+                h = (*hidden_act)(i);
+                vg = (*store_visible_grad)(i);
+                hg = hidden_act_grad(i);
+                connection->petiteCulotteOlivierUpdate(
+                    v,
+                    w,
+                    h,
+                    vg,
+                    wg,
+                    hg,true);
             }
-            else
-            {
-                connection->bpropUpdate(
-                    *visible, *hidden_act, *store_visible_grad,
-                    hidden_act_grad, true);
-            }
-            partition_function_is_stale = true;
+        }
+        else
+        {
+            connection->bpropUpdate(
+                *visible, *hidden_act, *store_visible_grad,
+                hidden_act_grad, true);
+        }
+        partition_function_is_stale = true;
     }
 
     if (cd_learning_rate > 0 && minimize_log_likelihood) {
@@ -1479,13 +1480,23 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             visible_act_grad(t) *= (*reconstruction_error_grad)(t,0);
 
         // Visible bias update
-        columnSum(visible_act_grad,visible_bias_grad);
+        columnMean(visible_act_grad, visible_bias_grad);
         visible_layer->update(visible_bias_grad);
 
         // Reconstruction connection update
-        reconstruction_connection->bpropUpdate(
-            *hidden, *visible_reconstruction_activations,
-            hidden_exp_grad, visible_act_grad, false);
+        hidden_exp_grad.resize(mbs, hidden_layer->size);
+        hidden_exp_grad.clear();
+        hidden_exp_grad.resize(0, hidden_layer->size);
+
+        TVec<Mat*> rec_ports_value(2);
+        rec_ports_value[0] = visible_reconstruction_activations;
+        rec_ports_value[1] = hidden;
+        TVec<Mat*> rec_ports_gradient(2);
+        rec_ports_gradient[0] = &visible_act_grad;
+        rec_ports_gradient[1] = &hidden_exp_grad;
+
+        reconstruction_connection->bpropAccUpdate( rec_ports_value,
+                                                   rec_ports_gradient );
 
         // Hidden layer bias update
         hidden_layer->bpropUpdate(*hidden_act,

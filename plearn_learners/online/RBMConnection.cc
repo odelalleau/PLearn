@@ -136,6 +136,17 @@ void RBMConnection::build_()
         up_size = output_size;
     else
         output_size = up_size;
+
+    ports.resize(2);
+    ports[0] = "down";
+    ports[1] = "up";
+    // NOT weights here, because it only makes sense with an
+    // RBMMatrixConnection
+
+    port_sizes.resize(nPorts(), 2);
+    port_sizes.column(0).fill(-1);
+    port_sizes(0, 1) = down_size;
+    port_sizes(1, 1) = up_size;
 }
 
 ///////////
@@ -286,7 +297,7 @@ void RBMConnection::getAllWeights(Mat& rbm_weights) const
     PLERROR("In RBMConnection::getAllWeights(): not implemented");
 }
 
-void RBMConnection::setAllWeights(const Mat& rbm_weights) 
+void RBMConnection::setAllWeights(const Mat& rbm_weights)
 {
     PLERROR("In RBMConnection::setAllWeights(): not implemented");
 }
@@ -294,7 +305,7 @@ void RBMConnection::setAllWeights(const Mat& rbm_weights)
 void RBMConnection::petiteCulotteOlivierUpdate(
     const Vec& input, const Mat& rbm_weights,
     const Vec& output,
-    Vec& input_gradient, 
+    Vec& input_gradient,
     Mat& rbm_weights_gradient,
     const Vec& output_gradient,
     bool accumulate)
@@ -302,7 +313,7 @@ void RBMConnection::petiteCulotteOlivierUpdate(
     PLERROR("In RBMConnection::bpropUpdate(): not implemented");
 }
 
- 
+
 /////////////
 // bpropCD //
 /////////////
@@ -312,16 +323,31 @@ void RBMConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
     PLERROR("In RBMConnection::petiteCulotteOlivierCD(): not implemented");
 }
 
-void RBMConnection::petiteCulotteOlivierCD( const Vec& pos_down_values, 
-                                            const Vec& pos_up_values,   
-                                            const Vec& neg_down_values, 
-                                            const Vec& neg_up_values, 
+void RBMConnection::petiteCulotteOlivierCD( const Vec& pos_down_values,
+                                            const Vec& pos_up_values,
+                                            const Vec& neg_down_values,
+                                            const Vec& neg_up_values,
                                             Mat& weights_gradient,
                                             bool accumulate)
 {
     PLERROR("In RBMConnection::petiteCulotteOlivierCD(): not implemented");
 }
 
+//////////////
+// getPorts //
+//////////////
+const TVec<string>& RBMConnection::getPorts()
+{
+    return ports;
+}
+
+//////////////////
+// getPortSizes //
+//////////////////
+const TMat<int>& RBMConnection::getPortSizes()
+{
+    return port_sizes;
+}
 
 } // end of namespace PLearn
 

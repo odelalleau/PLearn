@@ -180,6 +180,9 @@ public:
                              const Mat& output_gradients,
                              bool accumulate=false);
 
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
     //! build().

@@ -202,12 +202,12 @@ public:
         Vec& input_gradient, Mat& rbm_weights_gradient,
         const Vec& output_gradient,
         bool accumulate = false);
-    
+
     //! Computes the contrastive divergence gradient with respect to the weights
     //! It should be noted that bpropCD does not call clearstats().
-    virtual void petiteCulotteOlivierCD(Mat& weights_gradient, 
+    virtual void petiteCulotteOlivierCD(Mat& weights_gradient,
                                         bool accumulate = false);
-    
+
     //! Computes the contrastive divergence gradient with respect to the weights
     //! given the positive and negative phase values.
     virtual void petiteCulotteOlivierCD(const Vec& pos_down_values,
@@ -216,7 +216,13 @@ public:
                                         const Vec& neg_up_values,
                                         Mat& weights_gradient,
                                         bool accumulate = false);
-    
+
+    //! Return the list of ports in the module.
+    virtual const TVec<string>& getPorts();
+
+    //! Return the size of all ports
+    virtual const TMat<int>& getPortSizes();
+
     //! return the number of parameters
     virtual int nParameters() const = 0;
 
@@ -255,6 +261,9 @@ protected:
 
     //! Number of examples accumulated in *_neg_stats
     int neg_count;
+
+    //! Port names
+    TVec<string> ports;
 
 protected:
     //#####  Protected Member Functions  ######################################

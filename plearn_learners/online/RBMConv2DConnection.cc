@@ -632,6 +632,113 @@ void RBMConv2DConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
     // kernel -= learning_rate/n * kernel_gradient
     multiplyAcc( kernel, kernel_gradient, -learning_rate/batch_size );
 }
+
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void RBMConv2DConnection::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                         const TVec<Mat*>& ports_gradient)
+{
+    PLASSERT( ports_value.length() == nPorts()
+              && ports_gradient.length() == nPorts() );
+
+    Mat* down = ports_value[0];
+    Mat* up = ports_value[1];
+    Mat* down_grad = ports_gradient[0];
+    Mat* up_grad = ports_gradient[1];
+
+    PLASSERT( down && !down->isEmpty() );
+    PLASSERT( up && !up->isEmpty() );
+
+    int batch_size = down->length();
+    PLASSERT( up->length() == batch_size );
+
+    // If we have up_grad
+    if( up_grad && !up_grad->isEmpty() )
+    {
+        // down_grad should not be provided
+        PLASSERT( !down_grad || down_grad->isEmpty() );
+        PLASSERT( up_grad->length() == batch_size );
+        PLASSERT( up_grad->width() == up_size );
+
+        // If we want down_grad
+        bool compute_down_grad = false;
+        if( down_grad && down_grad->isEmpty() )
+        {
+            PLASSERT( down_grad->width() == down_size );
+            down_grad->resize(batch_size, down_size);
+            compute_down_grad = true;
+        }
+
+        kernel_gradient.clear();
+        for (int k=0; k<batch_size; k++)
+        {
+            down_image = (*down)(k).toMat(down_image_length, down_image_width);
+            up_image = (*up)(k).toMat(up_image_length, up_image_width);
+            up_image_gradient = (*up_grad)(k)
+                .toMat(up_image_length, up_image_width);
+
+            if( compute_down_grad )
+            {
+                down_image_gradient = (*down_grad)(k)
+                    .toMat(down_image_length, down_image_width);
+                convolve2Dbackprop(down_image, kernel,
+                                   up_image_gradient, down_image_gradient,
+                                   kernel_gradient,
+                                   kernel_step1, kernel_step2, true);
+            }
+            else
+                convolve2Dbackprop(down_image, up_image_gradient,
+                                   kernel_gradient,
+                                   kernel_step1, kernel_step2, true);
+        }
+        // kernel -= learning_rate/n * kernel_gradient
+        multiplyAcc(kernel, kernel_gradient, -learning_rate/batch_size);
+    }
+    else if( down_grad && !down_grad->isEmpty() )
+    {
+        PLASSERT( down_grad->length() == batch_size );
+        PLASSERT( down_grad->width() == down_size );
+
+        // If we want up_grad
+        bool compute_up_grad = false;
+        if( up_grad && up_grad->isEmpty() )
+        {
+            PLASSERT( up_grad->width() == up_size );
+            up_grad->resize(batch_size, up_size);
+            compute_up_grad = true;
+        }
+
+        kernel_gradient.clear();
+        for (int k=0; k<batch_size; k++)
+        {
+            down_image = (*down)(k).toMat(down_image_length, down_image_width);
+            up_image = (*up)(k).toMat(up_image_length, up_image_width);
+            down_image_gradient = (*down_grad)(k)
+                .toMat(down_image_length, down_image_width);
+
+            if( compute_up_grad )
+            {
+                up_image_gradient = (*up_grad)(k)
+                    .toMat(up_image_length, up_image_width);
+                backConvolve2Dbackprop(kernel, up_image, up_image_gradient,
+                                       down_image_gradient, kernel_gradient,
+                                       kernel_step1, kernel_step2, true);
+            }
+            else
+                backConvolve2Dbackprop(up_image, down_image_gradient,
+                                       kernel_gradient,
+                                       kernel_step1, kernel_step2, true);
+        }
+        // kernel -= learning_rate/n * kernel_gradient
+        multiplyAcc(kernel, kernel_gradient, -learning_rate/batch_size);
+    }
+    else
+        PLCHECK_MSG( false,
+                     "Unknown port configuration" );
+}
+
+
 //! reset the parameters to the state they would be BEFORE starting training.
 //! Note that this method is necessarily called from build().
 void RBMConv2DConnection::forget()

@@ -230,16 +230,14 @@ void MaxSubsampling2DModule::fprop(const TVec<Mat*>& ports_value)
         PLCHECK_MSG( false, "Unknown port configuration" );
 }
 
-/////////////////
-// bpropUpdate //
-/////////////////
-
-
+////////////////////
+// bpropAccUpdate //
+////////////////////
 void MaxSubsampling2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                             const TVec<Mat*>& ports_gradient)
 {
     PLASSERT( ports_value.length() == nPorts()
-              && ports_gradient.length() == nPorts());
+              && ports_gradient.length() == nPorts() );
     // check which ports are input
     // (ports_value[i] && !ports_value[i]->isEmpty())
     // which ports are output (ports_value[i] && ports_value[i]->isEmpty())

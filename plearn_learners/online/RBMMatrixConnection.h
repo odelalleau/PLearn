@@ -68,11 +68,11 @@ public:
 
     //#####  Learned Options  #################################################
 
-    //! Matrix containing unit-to-unit weights (output_size Ã input_size)
+    //! Matrix containing unit-to-unit weights (output_size × input_size)
     Mat weights;
 
     //! used for Gibbs chain methods only
-    real gibbs_ma_coefficient; 
+    real gibbs_ma_coefficient;
 
 
     //#####  Not Options  #####################################################
@@ -177,7 +177,7 @@ public:
     // virtual void bpropUpdate(const Vec& input, const Vec& output,
     //                          const Vec& output_gradient);
 
-    //! given the input and the conneciton weights, 
+    //! given the input and the connection weights,
     //! compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, const Mat& rbm_weights,
                        Vec& output) const;
@@ -200,6 +200,9 @@ public:
                              const Mat& output_gradients,
                              bool accumulate = false);
 
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
+
     //! back-propagates the output gradient to the input and the weights
     //! (the weights are not updated)
     virtual void petiteCulotteOlivierUpdate(
@@ -208,12 +211,12 @@ public:
         Vec& input_gradient, Mat& rbm_weights_gradient,
         const Vec& output_gradient,
         bool accumulate = false);
-    
+
     //! Computes the contrastive divergence gradient with respect to the weights
     //! It should be noted that bpropCD does not call clearstats().
     virtual void petiteCulotteOlivierCD(Mat& weights_gradient,
                                         bool accumulate = false);
-    
+
     //! Computes the contrastive divergence gradient with respect to the weights
     //! given the positive and negative phase values.
     virtual void petiteCulotteOlivierCD(const Vec& pos_down_values,

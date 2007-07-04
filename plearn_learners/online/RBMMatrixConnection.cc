@@ -497,7 +497,7 @@ void RBMMatrixConnection::computeProducts(int start, int length,
 ///////////
 // fprop //
 ///////////
-void RBMMatrixConnection::fprop(const Vec& input, const Mat& rbm_weights, 
+void RBMMatrixConnection::fprop(const Vec& input, const Mat& rbm_weights,
                           Vec& output) const
 {
     product( output, rbm_weights, input );
@@ -584,7 +584,7 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
 void RBMMatrixConnection::petiteCulotteOlivierUpdate(
     const Vec& input, const Mat& rbm_weights,
     const Vec& output,
-    Vec& input_gradient, 
+    Vec& input_gradient,
     Mat& rbm_weights_gradient,
     const Vec& output_gradient,
     bool accumulate)
@@ -602,7 +602,7 @@ void RBMMatrixConnection::petiteCulotteOlivierUpdate(
         transposeProductAcc( input_gradient, rbm_weights, output_gradient );
 
         // rbm_weights_gradient += output_gradient' * input
-        externalProductAcc( rbm_weights_gradient, output_gradient, 
+        externalProductAcc( rbm_weights_gradient, output_gradient,
                             input);
 
     }
@@ -614,13 +614,81 @@ void RBMMatrixConnection::petiteCulotteOlivierUpdate(
         transposeProduct( input_gradient, rbm_weights, output_gradient );
 
         // rbm_weights_gradient = output_gradient' * input
-        externalProduct( rbm_weights_gradient, output_gradient, 
+        externalProduct( rbm_weights_gradient, output_gradient,
                          input);
     }
 
 }
 
- 
+
+////////////////////
+// bpropAccUpdate //
+////////////////////
+void RBMMatrixConnection::bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                         const TVec<Mat*>& ports_gradient)
+{
+    //TODO: add weights as port?
+    PLASSERT( ports_value.length() == nPorts()
+              && ports_gradient.length() == nPorts() );
+
+    Mat* down = ports_value[0];
+    Mat* up = ports_value[1];
+    Mat* down_grad = ports_gradient[0];
+    Mat* up_grad = ports_gradient[1];
+
+    PLASSERT( down && !down->isEmpty() );
+    PLASSERT( up && !up->isEmpty() );
+
+    int batch_size = down->length();
+    PLASSERT( up->length() == batch_size );
+
+    // If we have up_grad
+    if( up_grad && !up_grad->isEmpty() )
+    {
+        // down_grad should not be provided
+        PLASSERT( !down_grad || down_grad->isEmpty() );
+        PLASSERT( up_grad->length() == batch_size );
+        PLASSERT( up_grad->width() == up_size );
+
+        // If we want down_grad
+        if( down_grad && down_grad->isEmpty() )
+        {
+            PLASSERT( down_grad->width() == down_size );
+            down_grad->resize(batch_size, down_size);
+
+            // down_grad = up_grad * weights
+            product(*down_grad, *up_grad, weights);
+        }
+
+        // weights -= learning_rate/n * up_grad' * down
+        transposeProductScaleAcc(weights, *up_grad, *down,
+                                 -learning_rate/batch_size, real(1));
+    }
+    else if( down_grad && !down_grad->isEmpty() )
+    {
+        PLASSERT( down_grad->length() == batch_size );
+        PLASSERT( down_grad->width() == down_size );
+
+        // If we wand up_grad
+        if( up_grad && up_grad->isEmpty() )
+        {
+            PLASSERT( up_grad->width() == up_size );
+            up_grad->resize(batch_size, up_size);
+
+            // up_grad = down_grad * weights'
+            productTranspose(*up_grad, *down_grad, weights);
+        }
+
+        // weights = -learning_rate/n * up' * down_grad
+        transposeProductScaleAcc(weights, *up, *down_grad,
+                                 -learning_rate/batch_size, real(1));
+    }
+    else
+        PLCHECK_MSG( false,
+                     "Unknown port configuration" );
+}
+
+
 /////////////
 // bpropCD //
 /////////////
@@ -636,7 +704,7 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
     int w_mod = weights_gradient.mod();
     int wps_mod = weights_pos_stats.mod();
     int wns_mod = weights_neg_stats.mod();
-    
+
     if(accumulate)
     {
         for( int i=0 ; i<l ; i++, w_i+=w_mod, wps_i+=wps_mod, wns_i+=wns_mod )
@@ -653,13 +721,13 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
 
 // Instead of using the statistics, we assume we have only one markov chain
 // runned and we update the parameters from the first 4 values of the chain
-void RBMMatrixConnection::petiteCulotteOlivierCD( 
+void RBMMatrixConnection::petiteCulotteOlivierCD(
     const Vec& pos_down_values, // v_0
     const Vec& pos_up_values,   // h_0
     const Vec& neg_down_values, // v_1
     const Vec& neg_up_values, // h_1
     Mat& weights_gradient,
-    bool accumulate) 
+    bool accumulate)
 {
     int l = weights.length();
     int w = weights.width();
