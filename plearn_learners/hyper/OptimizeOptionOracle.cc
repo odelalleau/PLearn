@@ -241,7 +241,7 @@ TVec<string> OptimizeOptionOracle::generateNextTrial(const TVec<string>& older_t
         best = last;
     }
 
-    real next; // The next value we are going to try.
+    real next = 0; // The next value we are going to try.
     if (current_direction == "up") {
         if (best * factor < upper_bound*0.99) {
             // We can try much higher (the 0.99 is there to ensure we do not indefinitely

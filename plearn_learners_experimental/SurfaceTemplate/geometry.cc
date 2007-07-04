@@ -200,7 +200,7 @@ Mat rotationFromWeightedMatchedPoints( const Mat& template_points,
     if( theta !=0 )
     {
         Vec axis = eigen_vecs.subMat( 3, 0, 1, 3 ).toVecCopy();
-        axis /= sin( theta/2.0 );
+        axis /= real(sin( theta/2.0 ));
         rot << rotationFromAxisAngle( axis, theta );
     }
     else
