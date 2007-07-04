@@ -694,13 +694,22 @@ def get_distcc_hosts():
 
 def process_hostspath_list(hostspath_list):
     list_of_hosts = []
+    nice_values = {} # dictionary containing hostname:nice_value
     for hostspath in hostspath_list:
         f = open(hostspath,'r')
         for line in f:
+            nice_value = default_nice_value
             line = line.strip()
+
             # Remove comments
             i = line.find('#')
             if i != -1:
+                line = line[:i].strip()
+
+            # Get nice value to use (a number, preceded by a space)
+            i = line.find(' ')
+            if i != -1:
+                nice_value = int(line[i+1:])
                 line = line[:i]
 
             # Get number of processors to use (syntax: host/n_proc)
@@ -712,19 +721,21 @@ def process_hostspath_list(hostspath_list):
                 host = line[:i]
                 n_proc = int(line[i+1:])
 
-            # Remove ''
+            # Remove empty strings
             if host:
                 list_of_hosts.extend([host] * n_proc)
+                nice_values[host] = nice_value
 
         f.close()
 
     if 'localhost' not in list_of_hosts and myhostname not in list_of_hosts:
         list_of_hosts.extend(['localhost'] * nprocesses_on_localhost)
 
-    return list_of_hosts
+    return (list_of_hosts, nice_values)
 
 
 def get_list_of_hosts():
+    nice_values = {}
     distcc_list_of_hosts = get_distcc_hosts()
 
     if force_32bits:
@@ -741,7 +752,7 @@ def get_list_of_hosts():
         if distcc_list_of_hosts is not None:
             print '*** Overriding distcc settings. (Remove pymake *.hosts file to use distcc settings.)'
         print '*** Parallel compilation using list of hosts from file(s): ' + string.join( hostspath_list, ', ' )
-        list_of_hosts = process_hostspath_list(hostspath_list)
+        (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list)
     elif distcc_list_of_hosts is not None:
         print '*** Parallel compilation using distcc list of hosts (%d)' % len(distcc_list_of_hosts)
         list_of_hosts = distcc_list_of_hosts
@@ -752,7 +763,7 @@ def get_list_of_hosts():
 
     # randomize order of list_of_hosts
     shuffle(list_of_hosts)
-    return list_of_hosts
+    return (list_of_hosts, nice_values)
 
 
 ###  For text processing of the source files
@@ -911,7 +922,8 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
 
 ###  File compilation and linking
 
-def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
+def parallel_compile(files_to_compile, list_of_hosts, nice_values={},
+        num_retries=3, ofiles_to_copy=[]):
     """files_to_compile is a list of FileInfo of .cc files"""
 
     def wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check):
@@ -931,7 +943,13 @@ def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
             info = outs[f]
         del errs[info.launched.childerr]
         del outs[info.launched.fromchild]
-        info.finished_compilation() # print error messages, warnings, and get failure/success status
+
+        # print error messages, warnings, and get failure/success status
+        info.finished_compilation()
+        if info.remove_hostname:
+            list_of_hosts.remove(info.hostname)
+            info.hostname = ''
+
         # check for new ofiles to copy
         if local_ofiles:
             for f in files_to_check:
@@ -963,19 +981,21 @@ def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
                 hostname = 'localhost'
             else:
                 hostname = list_of_hosts[hostnum]
-            ccfile.launch_compilation(hostname)
+            nice_value = nice_values.get(hostname, default_nice_value)
+            ccfile.launch_compilation(hostname, nice_value)
             outs[ccfile.launched.fromchild] = ccfile
             errs[ccfile.launched.childerr] = ccfile
             hostnum = hostnum + 1
         else: # all processes are busy, wait for something to finish...
             hostname = ''
             while hostname == '':
-                hostname= wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check)
+                hostname = wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check)
                 # This should not happen unless localhost is unable to compile
                 if not list_of_hosts:
                     raise "Couldn't access ANY of the listed hosts for compilation"
             else:
-                ccfile.launch_compilation(hostname)
+                nice_value = nice_values.get(hostname, default_nice_value)
+                ccfile.launch_compilation(hostname, nice_value)
                 outs[ccfile.launched.fromchild] = ccfile
                 errs[ccfile.launched.childerr] = ccfile
 
@@ -992,7 +1012,8 @@ def parallel_compile(files_to_compile, num_retries=3, ofiles_to_copy=[]):
         if num_retries > 0:
             if verbose >= 2:
                 print '[ RETRYING COMPILATION FOR %d FILES ]' % len(ccfiles_to_retry)
-            parallel_compile(ccfiles_to_retry, num_retries-1, ofiles_to_copy)
+            parallel_compile(ccfiles_to_retry, list_of_hosts, nice_values,
+                    num_retries-1, ofiles_to_copy)
         else:
             if verbose >= 2:
                 print '[ %d FILES TO RETRY, BUT NO MORE TRIES AVAILABLE ]' % len(ccfiles_to_retry)
@@ -1002,7 +1023,7 @@ def win32_parallel_compile(files_to_compile):
 
     for ccfile in files_to_compile:
         ccfile.make_objs_dir() # make sure the OBJS dir exists, otherwise the command will fail
-        ccfile.launch_compilation('localhost')
+        ccfile.launch_compilation('localhost', default_nice_value)
         ccfile.finished_compilation() # print error messages, warnings, and get failure/success status
 
 def sequential_link(executables_to_link, linkname):
@@ -1492,6 +1513,7 @@ class FileInfo:
     - errormsgs: a list of error messages taken from the launched process' stdout
     - warningmsgs: a list of warning messages taken from the launched process' stderr
     - retry_compilation: whether to retry the compilation because the current failure was caused by an out of memory error, etc.
+    - remove_hostname: whether to remove hostname from list_of_hosts, because the current failure was caused by this machine
     """
 
     # static patterns useful for parsing the file
@@ -1823,7 +1845,7 @@ class FileInfo:
         the symbolic link, is specified then the symbolic link will have
         this path and name, and the object files will be placed in the OBJS
         subdirectory of the directory where the source file is.
-        
+
         If the third argument is given, it overrides the target of the link,
         i.e. the location of the executable object."""
 
@@ -1896,7 +1918,7 @@ class FileInfo:
 
         return compileroptions
 
-    def compile_command(self):
+    def compile_command(self, nice_value):
         """returns the command line necessary to compile this .cc file"""
 
         compiler = default_compiler
@@ -1907,10 +1929,10 @@ class FileInfo:
                 compiler = optdef.compiler
 
 
-        if platform == 'win32' or nice_value == '0':
-          nice = ''
+        if platform == 'win32' or nice_value == 0:
+            nice = ''
         else:
-          nice = nice_command + nice_value + ' '
+            nice = nice_command + str(nice_value) + ' '
 
         command = nice + compiler + ' ' + self.compiler_options() + \
                   ' -o ' + self.corresponding_ofile + ' -c ' + self.filepath
@@ -1930,9 +1952,9 @@ class FileInfo:
 
 
 
-    def launch_compilation(self,hostname):
+    def launch_compilation(self, hostname, nice_value):
         """Launches the compilation of this .cc file on given host using rsh
-        (or ssh if the -ssh option is given).
+        (or ssh if the -ssh option is given), with given nice value.
         The call returns the pid of the launched process.
         This will create a field 'launched', which is a Popen3 object,
         and 'hostname' to remember on which host it has been launched.
@@ -1945,7 +1967,7 @@ class FileInfo:
             pass
 
         # We do an 'echo $?'  at the end because rsh doesn't transmit the status byte correctly.
-        quotedcommand = "'cd " + self.filedir + "; " + self.compile_command() + "; echo $?'"
+        quotedcommand = "'cd " + self.filedir + "; " + self.compile_command(nice_value) + "; echo $?'"
         self.hostname = hostname
         if hostname=='localhost' or hostname==myhostname:
             if platform=='win32':
@@ -1997,6 +2019,7 @@ class FileInfo:
             del errormsgs[-1]
 
         msg = warningmsgs + errormsgs
+        self.remove_hostname = False
 
         # Somewhat dumb heuristic to figure out why compilation failed.
         #
@@ -2020,10 +2043,9 @@ class FileInfo:
                 if warningmsgs[0].startswith('ssh: '):
                     # The hostname has a problem, so we remove it from the list
                     # and retry on another machine
-                    list_of_hosts.remove(self.hostname)
-                    self.hostname = ''
+                    self.remove_hostname = True
                     self.retry_compilation = True
-                elif warningmsgs[0].startswith('ssh_exchange_identification :'):
+                elif warningmsgs[0].startswith('ssh_exchange_identification: '):
                     # It happens sometimes when logging multiple times onto the
                     # same machine. No need to remove it from the list, we will
                     # try again.
@@ -2245,12 +2267,12 @@ digraph G
                 os.remove(corresponding_output)
             except OSError:
                 pass
-            
+
             if local_ofiles:
                 copyfile_verbose(self.corresponding_output, new_corresponding_output)
-                    
+
             os.rename(new_corresponding_output, corresponding_output)
-                   
+
             if verbose>=2:
                 print "Successfully created " + new_corresponding_output + " and renamed it to " + corresponding_output
 
@@ -2364,7 +2386,7 @@ def main( args ):
             compileflags, cpp_variables, cpp_definitions, \
             objspolicy, objsdir, \
             default_wrapper, dllwrap_basic_options, \
-            nice_command, nice_value, verbose
+            nice_command, default_nice_value, verbose
 
     # Variables that can be useful to have read access to in the config file
     global optionargs, otherargs, linkname, link_target_override, \
@@ -2377,7 +2399,7 @@ def main( args ):
     # TODO: fix it
     global cpp_exts, h_exts, \
             undefined_cpp_vars, defined_cpp_vars, cpp_vars_values, \
-            list_of_hosts, options
+            options
 
     # initialize a few variables from the environment
     platform = get_platform()
@@ -2430,7 +2452,7 @@ def main( args ):
 
     # nice default command and value
     nice_command = 'env nice -n'
-    nice_value = '10'
+    default_nice_value = 10
     verbose=3
 
     ######## Regular pymake processing
@@ -2664,7 +2686,7 @@ def main( args ):
     if 'help' in optionargs:
         printusage()
         sys.exit()
-        
+
     if 'getoptions' in optionargs:
         if len(otherargs)==0:
             print 'Usage of "-getoptions" is: pymake -getoptions <list of targets, files or directories>'
@@ -2674,7 +2696,7 @@ def main( args ):
             configpath = get_config_path(target)
             execfile( configpath, globals() )
             printusage()
-            
+
         sys.exit()
 
     if 'vcproj' in optionargs:
@@ -2688,12 +2710,13 @@ def main( args ):
     else:
         vcproj = 0
 
-    ####  Get the list of hosts on which to compile
+    ####  Get the list of hosts on which to compile, and nice values
     # (Will be obsoleted when the batch job interface will come out)
+    nice_values = {}
     if local_compilation:
         list_of_hosts = nprocesses_on_localhost * ['localhost']
     else:
-        list_of_hosts = get_list_of_hosts()
+        (list_of_hosts, nice_values) = get_list_of_hosts()
 
 
     ######  The compilation and linking
@@ -2738,9 +2761,10 @@ def main( args ):
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
             else:
-                ofiles_to_copy= get_ofiles_to_copy(executables_to_link.keys())
-                ofiles_to_copy= [x for x in ofiles_to_copy if x not in [y.corresponding_ofile for y in ccfiles_to_compile.keys()]]
-                parallel_compile(ccfiles_to_compile.keys(), ofiles_to_copy= ofiles_to_copy)
+                ofiles_to_copy = get_ofiles_to_copy(executables_to_link.keys())
+                ofiles_to_copy = [x for x in ofiles_to_copy if x not in [y.corresponding_ofile for y in ccfiles_to_compile.keys()]]
+                parallel_compile(ccfiles_to_compile.keys(), list_of_hosts, nice_values,
+                        ofiles_to_copy = ofiles_to_copy)
 
             if force_link or (executables_to_link.keys() and not create_dll):
                 print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))

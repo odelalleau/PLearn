@@ -65,7 +65,7 @@ domain_name = socket.getfqdn();
 if domain_name.endswith('apstat.com') or domain_name.endswith('iro.umontreal.ca') or domain_name.endswith('public'):
     rshcommand= 'ssh -x'
 
-nice_value = '1'
+default_nice_value = 1
 
 # List of directories in which to look for .h includes and corresponding
 # .cc files to compile and link with your program (no need to include
@@ -753,7 +753,7 @@ cpp_variables += ['PL_LOG_VERBOSITY', 'PL_PROFILE']
 
 #####  Network Setup  #######################################################
 
-# nprocesses_per_processor = 1
+# nprocesses_on_localhost = 1
 
 # ###
 # # Declaration of other options
