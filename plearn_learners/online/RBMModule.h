@@ -74,12 +74,12 @@ public:
 
     bool compute_contrastive_divergence;
 
-    //! Number of Gibbs sampling steps in negative phase 
+    //! Number of Gibbs sampling steps in negative phase
     //! of contrastive divergence.
     int n_Gibbs_steps_CD;
 
     //! used to generate samples from the RBM
-    int min_n_Gibbs_steps; 
+    int min_n_Gibbs_steps;
     int n_Gibbs_steps_per_generated_sample;
 
     bool compute_log_likelihood;
@@ -94,7 +94,7 @@ public:
     bool standard_cd_grad;
     bool standard_cd_bias_grad;
     bool standard_cd_weights_grad;
-    
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -242,7 +242,7 @@ protected:
     Mat hidden_exp_store;
     Mat hidden_act_store;
     Mat* hidden_act;
-    bool hidden_activations_are_computed;    
+    bool hidden_activations_are_computed;
 
     //! Used to store the contrastive divergence gradient w.r.t. weights.
     Mat store_weights_grad;
@@ -312,7 +312,7 @@ protected:
     //! it in the 'energy' matrix.
     //! The 'positive_phase' boolean is used to save computations when we know
     //! we are in the positive phase of fprop.
-    void computeEnergy(const Mat& visible, const Mat& hidden, Mat& energy, 
+    void computeEnergy(const Mat& visible, const Mat& hidden, Mat& energy,
                        bool positive_phase = true);
 
 private:
