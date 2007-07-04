@@ -72,7 +72,6 @@ NatGradNNet::NatGradNNet()
       self_adjusted_scaling_and_bias(false),
       target_mean_activation(-4), // 
       target_stdev_activation(3), // 2.5% of the time we are above 1
-      verbosity(0),
       //corr_profiling_start(0), 
       //corr_profiling_end(0),
       use_pvgrad(false),
@@ -93,10 +92,6 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "noutputs", &NatGradNNet::noutputs,
                   OptionBase::buildoption,
                   "Number of outputs of the neural network, which can be derived from  output_type and targetsize_\n");
-
-    declareOption(ol, "verbosity", &NatGradNNet::verbosity,
-                  OptionBase::buildoption,
-                  "Verbosity level\n");
 
     declareOption(ol, "n_layers", &NatGradNNet::n_layers,
                   OptionBase::learntoption,
@@ -1015,6 +1010,11 @@ void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& ex
         for (int i=0;i<n_examples;i++)
         {
             int target_class = int(round(target(i,0)));
+#ifdef BOUNDCHECK
+            if(target_class>=noutputs)
+                PLERROR("In NatGradNNet::fbpropLoss one target value %d is higher then allowed by nout %d",
+                        target_class, noutputs);
+#endif          
             Vec outp = output(i);
             Vec grad = out_grad(i);
             exp(outp,grad); // map log-prob to prob

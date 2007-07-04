@@ -140,8 +140,6 @@ public:
     // average with this coefficient (near 0 for very slow averaging)
     real activation_statistics_moving_average_coefficient;
 
-    int verbosity;
-
     //! Stages for profiling the correlation between the gradients' elements
     //int corr_profiling_start, corr_profiling_end;
 
