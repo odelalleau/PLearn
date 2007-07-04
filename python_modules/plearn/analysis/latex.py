@@ -205,6 +205,7 @@ TEX_BEGIN = r"""
 
 \documentclass[11pt]{article}
 \usepackage{apstat_article_style}
+\usepackage{apstat_cover_classical}
 \usepackage{lscape}
 
 %%%%%  My caption settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -293,9 +294,13 @@ def createPDF(file_name, content, landscape=False):
     tex_file.write(TEX_END)
     tex_file.close()
 
-    #TBA: pdf_name = file_name.replace(".tex", '.pdf')
-    #TBA: os.system("rm -f %s"%pdf_name)
-    #TBA: os.system("pdflatex -interaction=nonstopmode %s >& /dev/null"%file_name)
-    #TBA: assert os.path.exists(pdf_name), "PDF could not be created!"
-    #TBA: os.system("pdflatex %s >& /dev/null"%file_name)
-    #TBA: os.system("pdflatex %s >& /dev/null"%file_name)
+    pdf_name = file_name.replace(".tex", '.pdf')
+    os.system("rm -f %s"%pdf_name)
+    assert not os.path.exists(pdf_name)
+    print "Creating %s from %s..."%(pdf_name, file_name)
+    
+    os.system("pdflatex -interaction=nonstopmode %s >& /dev/null"%file_name)
+    assert os.path.exists(pdf_name), "PDF could not be created!"
+    os.system("pdflatex %s -interaction=nonstopmode >& /dev/null"%file_name)
+    os.system("pdflatex %s -interaction=nonstopmode >& /dev/null"%file_name)
+    print "%s created."%pdf_name
