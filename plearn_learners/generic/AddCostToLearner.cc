@@ -133,8 +133,9 @@ void AddCostToLearner::declareOptions(OptionList& ol)
         "   difference between the class values\n"
         " - 'square_class_error': as class_error execpt that the output is the\n"
         "   square of the difference between the class values\n"
-        " - 'confusion_matrix': give the confusion matrix of the target confusion_matrix_target,\n"
-        "   the row is the predicted class, the column is the targeted class\n"
+        " - 'confusion_matrix': give the confusion matrix for the target\n"
+        "   'confusion_matrix_target', where the row is the predicted class\n"
+        "    and the column is the target class\n"
         " - 'lift_output': to compute the lift cost (for the positive class)\n"
         " - 'opposite_lift_output': to compute the lift cost (for the negative) class\n"
         " - 'cross_entropy': -t*log(o) - (1-t)*log(1-o)\n"
@@ -171,8 +172,10 @@ void AddCostToLearner::declareOptions(OptionList& ol)
     declareOption(ol, "n_classes", &AddCostToLearner::n_classes, OptionBase::buildoption,
         "The number of classes. Only needed for the 'confusion_matrix' cost.");
 
-    declareOption(ol, "confusion_matrix_target", &AddCostToLearner::confusion_matrix_target, OptionBase::buildoption,
-                  "The target number for witch we calculate the confusion matrix. Default to 0.");
+    declareOption(ol, "confusion_matrix_target",
+                  &AddCostToLearner::confusion_matrix_target,
+                  OptionBase::buildoption,
+        "Index of the target for which the confusion matrix is computed.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
