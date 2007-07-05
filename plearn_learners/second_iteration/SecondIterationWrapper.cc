@@ -141,7 +141,7 @@ void SecondIterationWrapper::computeClassStatistics()
     Vec sample_target(train_set->targetsize());
     real sample_weight;
     Vec sample_output(base_regressor->outputsize());
-    Vec sample_costs(3);
+    Vec sample_costs(4);
     ProgressBar* pb = NULL;
     if (report_progress)
     {
@@ -168,7 +168,7 @@ void SecondIterationWrapper::computeSalesStatistics()
     Vec reference_vector(ref_train->width());
     real sample_weight;
     Vec sample_output(base_regressor->outputsize());
-    Vec sample_costs(3);
+    Vec sample_costs(4);
     Vec train_mean(3);
     Vec train_std_error(3);
     Vec valid_mean(3);
@@ -319,15 +319,16 @@ void SecondIterationWrapper::forget()
 
 int SecondIterationWrapper::outputsize() const
 {
-    return base_regressor->outputsize();
+    return base_regressor?base_regressor->outputsize():-1;
 }
 
 TVec<string> SecondIterationWrapper::getTrainCostNames() const
 {
-    TVec<string> return_msg(3);
+    TVec<string> return_msg(4);
     return_msg[0] = "mse";
-    return_msg[1] = "cse";
-    return_msg[2] = "cle";
+    return_msg[1] = "square_class_error";
+    return_msg[2] = "linear_class_error";
+    return_msg[3] = "class_error";
     return return_msg;
 }
 
@@ -353,16 +354,18 @@ void SecondIterationWrapper::computeCostsFromOutputs(const Vec& inputv, const Ve
     if (class_prediction == 1)
     {
         real class_pred;
-        if (outputv[0] <= 1.5) class_pred = 1.0;
+        if (outputv[0] <= 0.5) class_pred = 0.;
+        else if (outputv[0] <= 1.5) class_pred = 1.0;
         else if (outputv[0] <= 2.5) class_pred = 2.0;
         else class_pred = 3.0;
         costsv[1] = pow((class_pred - targetv[0]), 2.0);
-        if (class_pred == targetv[0]) costsv[2] = 0.0;
-        else costsv[2] = 1.0;
+        costsv[2] = fabs(class_pred - targetv[0]);
+        costsv[3] = class_pred == targetv[0]?0:1;
         return;
     }
     costsv[1] = 0.0;
     costsv[2] = 0.0;
+    costsv[3] = 0.0;
 }
 
 } // end of namespace PLearn
