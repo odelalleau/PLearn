@@ -140,7 +140,8 @@ if(scalar(@ARGV) != 0) {
 	$REQ = substr($ARGV[0],6);
 	shift;
     } elsif (substr($ARGV[0],0,1) eq '-'){
-	die "Unknow parameter ($ARGV[0]) or wrong parameter order\n";
+	print "Unknow parameter ($ARGV[0]) or wrong parameter order\n";
+	die $ShortHelp
     } else {
 	$REQ = "";
     }
