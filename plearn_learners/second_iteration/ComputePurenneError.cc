@@ -84,7 +84,7 @@ void ComputePurenneError::train()
     Vec sample_target(train_set->targetsize());
     real sample_weight;
     Vec sample_output(2);
-    Vec sample_costs(3);
+    Vec sample_costs(4);
     ProgressBar* pb = NULL;
     if (report_progress)
     {
@@ -114,10 +114,11 @@ int ComputePurenneError::outputsize() const
 
 TVec<string> ComputePurenneError::getTrainCostNames() const
 {
-    TVec<string> return_msg(3);
+    TVec<string> return_msg(4);
     return_msg[0] = "mse";
-    return_msg[1] = "cse";
-    return_msg[2] = "cle";
+    return_msg[1] = "class_error";
+    return_msg[2] = "linear_class_error";
+    return_msg[3] = "square_class_error";
     return return_msg;
 }
 
@@ -141,9 +142,9 @@ void ComputePurenneError::computeOutputAndCosts(const Vec& inputv, const Vec& ta
 void ComputePurenneError::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
     costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
-    costsv[1] = pow((outputv[1] - targetv[1]), 2.0);
-    if (outputv[1] == targetv[1]) costsv[2] = 0.0;
-    else costsv[2] = 1.0;
+    costsv[1] = outputv[1] == targetv[1] ? 0 : 1;
+    costsv[2] = int(round(fabs(outputv[1] - targetv[1])));
+    costsv[3] = pow((outputv[1] - targetv[1]), 2.0);
 }
 
 } // end of namespace PLearn
