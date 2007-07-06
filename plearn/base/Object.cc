@@ -740,6 +740,10 @@ void Object::declareMethods(RemoteMethodMap& rmm)
     declareMethod(rmm, "build", &Object::build,
                   (BodyDoc("Build newly created object (after setting options).\n")));
 
+    declareMethod(rmm, "classname", &Object::classname,
+                  (BodyDoc("Returns the name of the class"),
+                   RetDoc ("Class name as string")));
+
 
 #ifdef PL_PYTHON_VERSION 
     declareMethod(rmm, "setOptionFromPython", &Object::setOptionFromPython,
