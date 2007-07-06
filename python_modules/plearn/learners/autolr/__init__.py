@@ -10,7 +10,7 @@ from threading import *
 if plearn.bridgemode.useserver:
     servers_lock = Lock() # Lock on the servers list so we don't have race conditions
     servers = [[serv, 0, Lock()]] # List of [server, amount_of_jobs_server_is_running, lock_on_the_server] lists
-    servers_max = 1e10 # Maximal amount of servers we are willing to run
+    servers_max = 1e10 # Default maximal number of servers we are willing to run
 
 def execute(object, tasks, use_threads = False):
     def job(object):
