@@ -97,7 +97,7 @@ RBMModule::RBMModule():
     compute_contrastive_divergence(false),
     n_Gibbs_steps_CD(1),
     min_n_Gibbs_steps(1),
-    n_Gibbs_steps_per_generated_sample(1),
+    n_Gibbs_steps_per_generated_sample(-1),
     compute_log_likelihood(false),
     minimize_log_likelihood(false),
     Gibbs_step(0),
@@ -344,6 +344,10 @@ void RBMModule::build_()
     PLCHECK_MSG(!(!standard_cd_grad && standard_cd_bias_grad), "You cannot "
             "compute the standard CD gradient w.r.t. external hidden bias and "
             "use the 'true' CD gradient w.r.t. internal hidden bias");
+
+    if (n_Gibbs_steps_per_generated_sample<0)
+        n_Gibbs_steps_per_generated_sample = min_n_Gibbs_steps;
+
 }
 
 ///////////
@@ -817,7 +821,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
-            visible_layer->generateSamples();
             sampleHiddenGivenVisible(visible_layer->samples);
             Gibbs_step=0;
             //cout << "sampling hidden from visible expectation" << endl;

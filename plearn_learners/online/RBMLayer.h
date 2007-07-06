@@ -276,14 +276,14 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
-protected:
 
     //#####  Not Options  #####################################################
-
+public:
     //! Accumulates positive contribution to the gradient of bias
     Vec bias_pos_stats;
     //! Accumulates negative contribution to the gradient of bias
     Vec bias_neg_stats;
+protected:
     //! Stores the momentum of the gradient
     Vec bias_inc;
 
