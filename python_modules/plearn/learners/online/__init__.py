@@ -82,7 +82,7 @@ def rbm(name,
             hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
             connection = conx,
             reconstruction_connection = ifthenelse(have_reconstruction,
-                                                   pl.RBMMatrixTransposeConnection(rbm_matrix_connection = conx),
+                                                   conx,
                                                    None))
 
 
