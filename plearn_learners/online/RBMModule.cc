@@ -817,13 +817,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             sampleHiddenGivenVisible(*visible_sample);
             Gibbs_step=0;
-            //cout << "sampling hidden from (discrete) visible" << endl;
+            //cout << "sampling hidden from visible" << endl;
         }
         else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
         {
-            sampleHiddenGivenVisible(visible_layer->samples);
+	    sampleHiddenGivenVisible(*visible);
             Gibbs_step=0;
-            //cout << "sampling hidden from visible expectation" << endl;
+            //cout << "sampling hidden from visible" << endl;
         }
         else if (visible_expectation && !visible_expectation->isEmpty())
         {
