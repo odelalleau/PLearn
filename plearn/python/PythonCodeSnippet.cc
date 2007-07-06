@@ -322,7 +322,10 @@ PythonCodeSnippet::invoke(const char* function_name) const
     }
 
     if(instance_method) Py_DECREF(pFunc);
-    return PythonObjectWrapper(return_value);
+    //return PythonObjectWrapper(return_value);
+    PythonObjectWrapper r(return_value);
+    Py_DECREF(return_value);
+    return r;
 }
 
 
@@ -388,7 +391,10 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     if(instance_method) 
         Py_DECREF(pFunc);
-    return PythonObjectWrapper(return_value);
+    //return PythonObjectWrapper(return_value);
+    PythonObjectWrapper r(return_value);
+    Py_DECREF(return_value);
+    return r;
 }
 
 
