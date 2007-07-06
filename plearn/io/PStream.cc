@@ -1160,8 +1160,7 @@ PStream& PStream::operator>>(unsigned int &x)
     }
     return *this;
 }
-
-/* Commented out because "long" has not the same size on every platform
+  
 PStream& PStream::operator>>(long &x)
 {
     switch(inmode)
@@ -1206,56 +1205,7 @@ PStream& PStream::operator>>(long &x)
     }
     return *this;
 }
-*/
-
-PStream& PStream::operator>>(int64_t &x)
-{
-    switch(inmode)
-    {
-    case raw_ascii:
-    case pretty_ascii:
-        skipBlanks();
-        readAsciiNum(x);
-        break;
-    case raw_binary:
-        read(reinterpret_cast<char *>(&x), sizeof(int64_t));
-        break;
-    case plearn_ascii:
-    case plearn_binary:
-    {
-        skipBlanksAndCommentsAndSeparators();
-        int c = get();
-        if(c==0x07 || c==0x08)  // plearn_binary 32 bits integer
-        {
-            int32_t y;
-            read(reinterpret_cast<char*>(&y),sizeof(int32_t));
-            if( (c==0x07 && byte_order()==BIG_ENDIAN_ORDER) 
-                || (c==0x08 && byte_order()==LITTLE_ENDIAN_ORDER) )
-                endianswap(&y);
-            x = y;
-        }
-        else if(c==0x16 || c==0x17)  // plearn_binary 64 bits integer
-        {
-            read(reinterpret_cast<char*>(&x),sizeof(int64_t));
-            if( (c==0x16 && byte_order()==BIG_ENDIAN_ORDER) 
-                || (c==0x17 && byte_order()==LITTLE_ENDIAN_ORDER) )
-                endianswap(&x);
-        }
-        else  // plearn_ascii
-        {
-            unget();
-            readAsciiNum(x);
-        }
-        break;
-    }
-    default:
-        PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-        break;
-    }
-    return *this;
-}
-
-/*
+  
 PStream& PStream::operator>>(unsigned long &x)
 {
     switch(inmode)
@@ -1293,56 +1243,8 @@ PStream& PStream::operator>>(unsigned long &x)
     }
     return *this;
 }
-*/
 
-PStream& PStream::operator>>(uint64_t &x)
-{
-    switch(inmode)
-    {
-    case raw_ascii:
-    case pretty_ascii:
-        skipBlanks();
-        readAsciiNum(x);
-        break;
-    case raw_binary:
-        read(reinterpret_cast<char *>(&x), sizeof(uint64_t));
-        break;
-    case plearn_ascii:
-    case plearn_binary:
-    {
-        skipBlanksAndCommentsAndSeparators();
-        int c = get();
-        if(c==0x0B || c==0x0C)  // plearn_binary 32 bits unsigned integer
-        {
-            uint32_t y;
-            read(reinterpret_cast<char*>(&y),sizeof(uint32_t));
-            if( (c==0x0B && byte_order()==BIG_ENDIAN_ORDER) 
-                || (c==0x0C && byte_order()==LITTLE_ENDIAN_ORDER) )
-                endianswap(&y);
-            x = y;
-        }
-        else if(c==0x18 || c==0x19) // plearn_binary 64 bits unsigned integer
-        {
-            read(reinterpret_cast<char*>(&x), sizeof(uint64_t));
-            if( (c==0x18 && byte_order()==BIG_ENDIAN_ORDER)
-                || (c==0x19 && byte_order()==LITTLE_ENDIAN_ORDER) )
-                endianswap(&x);
-        }
-        else  // plearn_ascii
-        {
-            unget();
-            readAsciiNum(x);
-        }
-        break;
-    }
-    default:
-        PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
-        break;
-    }
-    return *this;
-}
 
-/*
 PStream& PStream::operator>>(long long &x)
 {
     switch(inmode)
@@ -1418,8 +1320,8 @@ PStream& PStream::operator>>(unsigned long long &x)
     }
     return *this;
 }
-*/
 
+  
 PStream& PStream::operator>>(short &x)
 {
     switch(inmode)
@@ -1842,7 +1744,6 @@ PStream& PStream::operator<<(unsigned int x)
     return *this;
 }
 
-/* Commented out because "long" has not the same size on every platform
 PStream& PStream::operator<<(long x) 
 { 
     switch(outmode)
@@ -1883,39 +1784,7 @@ PStream& PStream::operator<<(long x)
     }
     return *this;
 }
-*/
 
-PStream& PStream::operator<<(int64_t x)
-{
-    switch(outmode)
-    {
-    case raw_binary:
-        write(reinterpret_cast<char *>(&x), sizeof(int64_t));
-        break;
-    case raw_ascii:
-    case pretty_ascii:
-        writeAsciiNum(x);
-        break;
-    case plearn_ascii:
-        writeAsciiNum(x);
-        put(' ');
-        break;
-    case plearn_binary:
-#ifdef BIGENDIAN
-        put((char)0x17);
-#else
-        put((char)0x16);
-#endif
-        write((char*)&x, sizeof(int64_t));
-        break;
-    default:
-        PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-        break;
-    }
-    return *this;
-}
-
-/*
 PStream& PStream::operator<<(unsigned long x) 
 { 
     switch(outmode)
@@ -1945,39 +1814,7 @@ PStream& PStream::operator<<(unsigned long x)
     }
     return *this;
 }
-*/
 
-PStream& PStream::operator<<(uint64_t x)
-{
-    switch(outmode)
-    {
-    case raw_binary:
-        write(reinterpret_cast<char *>(&x), sizeof(uint64_t));
-        break;
-    case raw_ascii:
-    case pretty_ascii:
-        writeAsciiNum(x);
-        break;
-    case plearn_ascii:
-        writeAsciiNum(x);
-        put(' ');
-        break;
-    case plearn_binary:
-#ifdef BIGENDIAN
-        put((char)0x19);
-#else
-        put((char)0x18);
-#endif
-        write((char*)&x, sizeof(uint64_t));
-        break;
-    default:
-        PLERROR("In PStream::operator<<  unknown outmode!!!!!!!!!");
-        break;
-    }
-    return *this;
-}
-
-/*
 PStream& PStream::operator<<(long long x) 
 { 
     switch(outmode)
@@ -2037,7 +1874,7 @@ PStream& PStream::operator<<(unsigned long long x)
     }
     return *this;
 }
-*/
+
 
 PStream& PStream::operator<<(short x) 
 { 
@@ -2206,10 +2043,8 @@ IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(short)
     IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned short)
     IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(int)
     IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned int)
-    //IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(long)
-    //IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned long)
-    IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(int64_t)
-    IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(uint64_t)
+    IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(long)
+    IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned long)
 
 //! The binread_ for float and double are special
 

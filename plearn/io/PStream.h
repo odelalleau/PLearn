@@ -460,15 +460,13 @@ public:
     PStream& operator>>(signed char &x);
     PStream& operator>>(unsigned char &x);
     PStream& operator>>(int &x);
-    PStream& operator>>(unsigned int &x);
-    //PStream& operator>>(long &x);
-    //PStream& operator>>(unsigned long &x);
-    PStream& operator>>(int64_t &x);
-    PStream& operator>>(uint64_t &x);
+    PStream& operator>>(unsigned int &x);  
+    PStream& operator>>(long &x);  
+    PStream& operator>>(unsigned long &x);
     PStream& operator>>(short &x);
     PStream& operator>>(unsigned short &x);
-    //PStream& operator>>(long long &x);
-    //PStream& operator>>(unsigned long long &x);
+    PStream& operator>>(long long &x);
+    PStream& operator>>(unsigned long long &x);
     PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
 
     // operator<<'s for base types
@@ -496,12 +494,10 @@ public:
     PStream& operator<<(bool x);  
     PStream& operator<<(int x);
     PStream& operator<<(unsigned int x);
-    //PStream& operator<<(long x);
-    //PStream& operator<<(unsigned long x);
-    PStream& operator<<(int64_t x);
-    PStream& operator<<(uint64_t x);
-    //PStream& operator<<(long long x);
-    //PStream& operator<<(unsigned long long x);
+    PStream& operator<<(long x);
+    PStream& operator<<(unsigned long x);
+    PStream& operator<<(long long x);
+    PStream& operator<<(unsigned long long x);
     PStream& operator<<(short x);
     PStream& operator<<(unsigned short x);
     PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
@@ -880,7 +876,6 @@ inline void binwrite_(PStream& out, const unsigned int* x, unsigned int n)
 inline void binwrite_(PStream& out, unsigned int* x, unsigned int n) 
 { out.write((char*)x, streamsize(n*sizeof(unsigned int))); }
 
-/*
 inline void binwrite_(PStream& out, const long* x, unsigned int n) 
 { out.write((char*)x, streamsize(n*sizeof(long))); }
 inline void binwrite_(PStream& out, long* x, unsigned int n) 
@@ -890,17 +885,6 @@ inline void binwrite_(PStream& out, const unsigned long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
 inline void binwrite_(PStream& out, unsigned long* x, unsigned int n) 
 { out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
-*/
-
-inline void binwrite_(PStream& out, const int64_t* x, unsigned int n) 
-{ out.write((char*)x, streamsize(n*sizeof(int64_t))); }
-inline void binwrite_(PStream& out, int64_t* x, unsigned int n) 
-{ out.write((char*)x, streamsize(n*sizeof(int64_t))); }
-
-inline void binwrite_(PStream& out, const uint64_t* x, unsigned int n) 
-{ out.write((char*)x, streamsize(n*sizeof(uint64_t))); }
-inline void binwrite_(PStream& out, uint64_t* x, unsigned int n) 
-{ out.write((char*)x, streamsize(n*sizeof(uint64_t))); }
 
 inline void binwrite_(PStream& out, const float* x, unsigned int n) 
 { out.write((char*)x, streamsize(n*sizeof(float))); }
@@ -952,10 +936,8 @@ void binread_(PStream& in, short* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, unsigned short* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, int* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, unsigned int* x, unsigned int n, unsigned char typecode);
-//void binread_(PStream& in, long* x, unsigned int n, unsigned char typecode);
-//void binread_(PStream& in, unsigned long* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, int64_t* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, uint64_t* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned long* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode);
 
