@@ -1977,6 +1977,7 @@ PStream& PStream::operator<<(uint64_t x)
     return *this;
 }
 
+/*
 PStream& PStream::operator<<(long long x) 
 { 
     switch(outmode)
@@ -2007,7 +2008,6 @@ PStream& PStream::operator<<(long long x)
     return *this;
 }
 
-/*
 PStream& PStream::operator<<(unsigned long long x) 
 { 
     switch(outmode)
