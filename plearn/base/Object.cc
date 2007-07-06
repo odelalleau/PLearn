@@ -1000,6 +1000,12 @@ Object* newObjectFromClassname(const string& classname)
     return TypeFactory::instance().newObject(classname);
 }
 
+Object* remote_deepCopy(Object* source)
+{
+    CopiesMap copies;
+    return source->deepCopy(copies);
+}
+
 BEGIN_DECLARE_REMOTE_FUNCTIONS
 
     declareFunction("newObject", &newObject,
@@ -1019,6 +1025,12 @@ BEGIN_DECLARE_REMOTE_FUNCTIONS
                      ArgDoc("filename", 
                             "file containing the object to load"),
                      RetDoc ("newly created object")));
+
+    declareFunction("deepCopy", &remote_deepCopy,
+                    (BodyDoc("Returns deep copy of a PLearn object.\n"),
+                     ArgDoc ("source", "object to be deep-copied"),
+                     RetDoc ("deep copy of the object")));
+
 
 END_DECLARE_REMOTE_FUNCTIONS
 

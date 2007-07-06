@@ -1095,6 +1095,7 @@ inline Object* newObject(const string& representation)
 
 Object* newObjectFromClassname(const string& classname);
 
+Object* remote_deepCopy(Object* source);
 
 inline PStream &operator>>(PStream &in, Object &o)
 {
