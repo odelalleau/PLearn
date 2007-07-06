@@ -139,6 +139,10 @@ void PLearner::declareOptions(OptionList& ol)
         "at the learner's. \n");
 
     declareOption(
+        ol, "random_gen", &PLearner::random_gen, OptionBase::learntoption, 
+        "The random number generator used in this learner. Constructed from the seed.\n");
+
+    declareOption(
         ol, "seed", &PLearner::seed_, OptionBase::buildoption, 
         "The initial seed for the random number generator used in this\n"
         "learner, for instance for parameter initialization.\n"

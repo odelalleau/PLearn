@@ -95,7 +95,7 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 KNNClassifier::KNNClassifier()
-    : knn(new ExhaustiveNearestNeighbors(new GaussianKernel(), false)),
+    : 
       nclasses(-1),
       kmin(5),
       kmult(0.0),
@@ -149,7 +149,7 @@ void KNNClassifier::declareOptions(OptionList& ol)
 void KNNClassifier::build_()
 {
     if (!knn)
-        PLERROR("KNNClassifier::build_: the 'knn' option must be specified");
+        knn=new ExhaustiveNearestNeighbors(new GaussianKernel(), false);
 
     if (nclasses <= 1)
         PLERROR("KNNClassifier::build_: the 'nclasses' option must be specified and >= 2");

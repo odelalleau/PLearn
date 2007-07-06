@@ -114,7 +114,7 @@ public:
      *  learner (see forget() method).  Default value=1827 for experiment
      *  reproducibility.
      */
-    long seed_;
+    int seed_;
 
     /**
      *  The current training stage, since last fresh initialization (forget()):
