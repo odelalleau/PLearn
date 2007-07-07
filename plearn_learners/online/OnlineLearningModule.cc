@@ -398,6 +398,9 @@ const TMat<int>& OnlineLearningModule::getPortSizes() {
 ///////////////////
 int OnlineLearningModule::getPortLength(const string& port)
 {
+    if (getPortIndex(port)<0)
+        PLERROR("Port named %s not known by module %s of class %s\n",
+                port.c_str(),name.c_str(),classname().c_str());
     PLASSERT( getPortIndex(port) >= 0 );
     return getPortSizes()(getPortIndex(port), 0);
 }
