@@ -505,12 +505,6 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
 
              private:
 
-                 //! The map storing the bindings metaprotocol <-> metapath.
-                 //! It should never be manipulated directly: instead, use the
-                 //! metaprotocolToMetapath() and addMetaprotocolToMetapath()
-                 //! functions.
-                 static map<string, PPath> metaprotocol_to_metapath;
-
                  //! Whether or not to display the canonical path in
                  //! errorDisplay(). Default value is 'false', and it can be
                  //! modified through the setCanonicalInErrors(..) function.

@@ -232,11 +232,17 @@ PPath PPath::getenv(const string& var, const PPath& default_)
     return default_;
 }
 
-
 ////////////////////////////
 // metaprotocolToMetapath //
 ////////////////////////////
-map<string, PPath> PPath::metaprotocol_to_metapath;
+
+// Static map that stores the binding metaprotocol <-> metapath.
+// It is embedded within a function to prevent potential compiler issues during
+// static initialization (e.g. under Windows with gcc 3.4.4).
+map<string, PPath>& metaprotocol_to_metapath() {
+    static map<string, PPath> metaprotocol_to_metapath;
+    return metaprotocol_to_metapath;
+}
 
 const map<string, PPath>& PPath::metaprotocolToMetapath()
 {
@@ -292,14 +298,14 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
             {
                 // Default PPath settings. Defined only if the HOME environment
                 // variable exists.
-                metaprotocol_to_metapath["HOME"] = "${HOME}";
-                metaprotocol_to_metapath["PLEARNDIR"] = "HOME:PLearn";
-                metaprotocol_to_metapath["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
+                metaprotocol_to_metapath()["HOME"] = "${HOME}";
+                metaprotocol_to_metapath()["PLEARNDIR"] = "HOME:PLearn";
+                metaprotocol_to_metapath()["PLEARN_LIBDIR"] = "PLEARNDIR:external_libs";
             }
         }
     }
 
-    return metaprotocol_to_metapath;
+    return metaprotocol_to_metapath();
 }
 
 ////////////////////////////
@@ -312,7 +318,7 @@ bool PPath::addMetaprotocolBinding(const string& metaprotocol,
     const map<string, PPath>& bindings = metaprotocolToMetapath();
     bool already_here = bindings.find(metaprotocol) != bindings.end();
     if (!already_here || force)
-        metaprotocol_to_metapath[metaprotocol] = metapath;
+        metaprotocol_to_metapath()[metaprotocol] = metapath;
     return !already_here;
 }
 
@@ -404,19 +410,22 @@ PPath::PPath(const string& path_)
         new_path = string(buf);
 #elif defined(_MINGW_)
         // We need to convert the path by ourselves.
-        if (!startsWith(*the_path, "/cygdrive/"))
-            pout << "SHIT: " << *the_path << endl;
-        PLASSERT( startsWith(*the_path, "/cygdrive/") );
-        // Remove '/cygdrive'.
-        new_path = the_path->substr(9);
-        // Copy drive letter from second to first position.
-        new_path[0] = new_path[1];
-        // Add ':' after drive letter.
-        new_path[1] = ':';
-        // Replace '/' by '\'.
-        for (string::size_type i = 0; i < new_path.size(); i++)
-            if (new_path[i] == '/')
-                new_path[i] = '\\';
+        if (!startsWith(*the_path, "/cygdrive/")) {
+            PLWARNING("Path '%s' is expected to start with '/cygdrive/'",
+                    the_path->c_str());
+            new_path = *the_path;
+        } else {
+            // Remove '/cygdrive'.
+            new_path = the_path->substr(9);
+            // Copy drive letter from second to first position.
+            new_path[0] = new_path[1];
+            // Add ':' after drive letter.
+            new_path[1] = ':';
+            // Replace '/' by '\'.
+            for (string::size_type i = 0; i < new_path.size(); i++)
+                if (new_path[i] == '/')
+                    new_path[i] = '\\';
+        }
 #endif
         the_path = &new_path;
     }
@@ -487,8 +496,8 @@ void PPath::expandMetaprotocols()
         if ( it != metaprotocolToMetapath().end() )
             metapath = it->second;
         else
-            metapath = getenv(meta);            
-        
+            metapath = getenv(meta);
+
         if ( !metapath.isEmpty() )
         {      
             string after_colon = endmeta == length()-1 ? "" : substr(endmeta+1);
