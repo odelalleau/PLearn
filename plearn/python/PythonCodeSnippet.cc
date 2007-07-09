@@ -43,6 +43,7 @@
 // Python stuff must be included first
 #include "PythonCodeSnippet.h"
 #include "PythonEmbedder.h"
+#include "PythonExtension.h"
 
 // From PLearn
 #include <plearn/io/fileutils.h>
@@ -517,7 +518,8 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
 
     //always include EmbeddedCodeSnippet to check for an object to instantiate
     string extracode= "\nfrom plearn.pybridge.embedded_code_snippet "
-        "import EmbeddedCodeSnippet\n";
+        "import EmbeddedCodeSnippet\n"
+        "from plearn.pybridge import pl_global_funcs\n";
 
     if (code != "") {
 #ifdef WIN32
@@ -541,12 +543,21 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
         }
     }
 
-    //try to find an EmbeddedCodeSnippet to instantiate
+    //get the global env. as an stl map
     PythonObjectWrapper wrapped_globals(globals);
     Py_XDECREF(globals);
     map<string, PyObject*> global_map= 
         wrapped_globals.as<map<string, PyObject*> >();
 
+    //inject global funcs
+    map<string, PyObject*>::iterator it_gf= 
+        global_map.find("pl_global_funcs");
+    if(it_gf == global_map.end())
+        PLERROR("in PythonCodeSnippet::compileGlobalCode : "
+                "plearn.pybridge.pl_global_funcs not present in global env!");
+    injectPLearnGlobalFunctions(it_gf->second);//inject in global_funcs module
+
+    //try to find an EmbeddedCodeSnippet to instantiate
     PyObject* snippet_found= 0;
     map<string, PyObject*>::iterator it_id= 
         global_map.find("pl_embedded_code_snippet_type");
