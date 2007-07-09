@@ -75,13 +75,9 @@ PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args)
 static PObjectPool<PyMethodDef> pyfuncs(50);
 static TVec<string> funcs_help;
 
-// Init func for python module.
-// init module, then inject global funcs
-void initPythonExtensionModule(char* module_name)
-{
-    PythonObjectWrapper::initializePython();
-    PyObject* plext= Py_InitModule(module_name, NULL);
 
+void injectPLearnGlobalFunctions(PyObject* env)
+{
     const RemoteMethodMap::MethodMap& global_funcs= 
         getGlobalFunctionMap().getMap();
 
@@ -102,11 +98,18 @@ void initPythonExtensionModule(char* module_name)
                                        it->first.second));
         py_method->ml_doc= const_cast<char*>(funcs_help.last().c_str());
     
+        /* module= env if env is a module; NULL otherwise */
+        PyObject* module= 0;
+        if(PyModule_Check(env))
+            module= env;
+
+        // N.B.: module == NULL works on python2.3, 2.4 and 2.5, but is not
+        // documented
         PyObject* pyfunc= 
-            PyCFunction_NewEx(py_method, self, plext);
+            PyCFunction_NewEx(py_method, self, module);
 	    
         if(pyfunc) 
-            PyObject_SetAttrString(plext, 
+            PyObject_SetAttrString(env, 
                                    py_method->ml_name, 
                                    pyfunc);
         else
@@ -114,6 +117,16 @@ void initPythonExtensionModule(char* module_name)
                     "'%s' into python.",
                     py_method->ml_name);
     }
+}
+
+
+// Init func for python module.
+// init module, then inject global funcs
+void initPythonExtensionModule(char* module_name)
+{
+    PythonObjectWrapper::initializePython();
+    PyObject* plext= Py_InitModule(module_name, NULL);
+    injectPLearnGlobalFunctions(plext);
 }
 
 } // end of namespace PLearn
