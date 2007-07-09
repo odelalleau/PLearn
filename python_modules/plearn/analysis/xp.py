@@ -146,7 +146,7 @@ class duplicates( ExpKeyMode ):
             duplicates = []
             for x in experiments:
                 if ExpKey.keycmp(x, exp, expkey) == 0:
-                    duplicates.append( x.path )
+                    duplicates.append( x.expdir )
             if duplicates:
                 if options.sh:
                     shfile.write( 'rm -rf ' + "\nrm -rf ".join(duplicates) + '\n' )
@@ -205,30 +205,29 @@ class group( ExpKeyMode ):
     option_groups = classmethod( option_groups )
     
     def routine( self, expkey, options, experiments ):    
-        reffunc = os.symlink
+        reffunc = relative_link #os.symlink
         if options.move:
             reffunc = lambda src,dest: os.system("mv %s %s"%(src,dest))        
 
+        print >>sys.stderr, "N:", len(experiments)
         for exp in experiments:
             subkey = exp.getKey( expkey )
+            print >>sys.stderr, exp.expdir
             if options.name is None:
                 dirname = "_".join([ "%s=%s" % (lhs, str(rhs))
                                      for (lhs, rhs) in subkey.iteritems() ])
             else:
                 dirname = options.name
 
-            if not exp.path.startswith("expdir"):
-                dirname = os.path.join( os.path.dirname(exp.path), dirname )
-
             if not os.path.exists( dirname ):
                 os.mkdir( dirname )
 
             pushd( dirname )
-            if not os.path.exists( exp.path ):
-                expdir = os.path.basename( exp.path )
+            expdir = os.path.basename( exp.expdir )
+            if not os.path.exists( expdir ):
                 assert expdir.startswith("expdir"), expdir
                 try:
-                    reffunc( os.path.join('..',expdir), expdir )
+                    reffunc( exp.expdir, expdir )
                 except OSError, err:
                     raise OSError( '%s\n in %s\n with expdir=%s'
                                    % (str(err), os.getcwd(), expdir)
@@ -267,7 +266,7 @@ def inexistence_predicate(arguments, forget=False):
 def xpathfunction( func ):
     def function( obj, *args, **kwargs ):
         if isinstance( obj, Experiment ):
-            func( obj.path, *args, **kwargs )
+            func( obj.expdir, *args, **kwargs )
         elif len(args) and isinstance( obj, str ):
             func( obj, *args, **kwargs )
         else:

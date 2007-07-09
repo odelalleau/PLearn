@@ -208,7 +208,7 @@ class ExperimentResults( ExperimentDirectory ):
         return len(self.metainfos) == 0
 
     def toString(self, expkey=None, short=False):
-        s = '%s\n' % relative_path(self.path)
+        s = '%s\n' % relative_path(self.expdir)
         if short and expkey is None:
             return s
         
@@ -308,7 +308,7 @@ class ExpKey( Bindings ):
 
     def keycmp(exp, other, expkey):
         """Compare two experiments along a given key"""
-        if exp.path == other.path:
+        if exp.expdir == other.expdir:
             return 0
         
         exp_subkey   = exp.getSubKey(expkey)
