@@ -209,10 +209,8 @@ class group( ExpKeyMode ):
         if options.move:
             reffunc = lambda src,dest: os.system("mv %s %s"%(src,dest))        
 
-        print >>sys.stderr, "N:", len(experiments)
         for exp in experiments:
             subkey = exp.getKey( expkey )
-            print >>sys.stderr, exp.expdir
             if options.name is None:
                 dirname = "_".join([ "%s=%s" % (lhs, str(rhs))
                                      for (lhs, rhs) in subkey.iteritems() ])
