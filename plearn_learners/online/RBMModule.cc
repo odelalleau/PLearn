@@ -662,7 +662,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         // When an input is provided, that would restart the chain for
         // unconditional sampling, from that example.
         Gibbs_step = 0;
-        visible_layer->setExpectations(*visible);
+        visible_layer->samples.resize(visible->length(),visible->width());
+        visible_layer->samples << *visible;
     }
 
     // COMPUTE ENERGY
@@ -802,173 +803,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         found_a_valid_configuration = true;
     }
 
-    // SAMPLING
-    if ((visible_sample && visible_sample->isEmpty())               // is asked to sample visible units (discrete)
-        || (visible_expectation && visible_expectation->isEmpty())  //              "                   (continous)
-        || (hidden_sample && hidden_sample->isEmpty()))             // or to sample hidden units
-    {
-        if (hidden_sample && !hidden_sample->isEmpty()) // sample visible conditionally on hidden
-        {
-            sampleVisibleGivenHidden(*hidden_sample);
-            Gibbs_step=0;
-            //cout << "sampling visible from hidden" << endl;
-        }
-        else if (visible_sample && !visible_sample->isEmpty()) // if an input is provided, sample hidden conditionally
-        {
-            sampleHiddenGivenVisible(*visible_sample);
-            Gibbs_step=0;
-            //cout << "sampling hidden from visible" << endl;
-        }
-        else if (visible && !visible->isEmpty()) // if an input is provided, sample hidden conditionally
-        {
-	    sampleHiddenGivenVisible(*visible);
-            Gibbs_step=0;
-            //cout << "sampling hidden from visible" << endl;
-        }
-        else if (visible_expectation && !visible_expectation->isEmpty())
-        {
-             PLERROR("In RBMModule::fprop visible_expectation can only be an output port (use visible as input port");
-        }
-        else // sample unconditionally: Gibbs sample after k steps
-        {
-            // the visible_layer->expectations contain the "state" from which we
-            // start or continue the chain
-            int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
-                            min_n_Gibbs_steps);
-            //cout << "Gibbs sampling " << Gibbs_step+1;
-            for (;Gibbs_step<min_n;Gibbs_step++)
-            {
-                sampleHiddenGivenVisible(visible_layer->samples);
-                sampleVisibleGivenHidden(hidden_layer->samples);
-            }
-              //cout << " -> " << Gibbs_step << endl;
-        }
-
-        if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
-        {
-              const Mat& hidden_expect = hidden_layer->getExpectations();
-              hidden->resize(hidden_expect.length(), hidden_expect.width());
-              *hidden << hidden_expect;
-        }
-        if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
-        {
-            visible_sample->resize(visible_layer->samples.length(),
-                                   visible_layer->samples.width());
-            *visible_sample << visible_layer->samples;
-        }
-        if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
-        {
-            hidden_sample->resize(hidden_layer->samples.length(),
-                                  hidden_layer->samples.width());
-            *hidden_sample << hidden_layer->samples;
-        }
-        if (visible_expectation && visible_expectation->isEmpty()) // provide expectation of the visible units
-        {
-            const Mat& to_store = visible_layer->getExpectations();
-            visible_expectation->resize(to_store.length(),
-                                        to_store.width());
-            *visible_expectation << to_store;
-        }
-        found_a_valid_configuration = true;
-    }// END SAMPLING
-
-    // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
-    if (contrastive_divergence)
-    {
-        PLASSERT_MSG( contrastive_divergence->isEmpty(),
-                      "RBMModule: the contrastive_divergence port can only be an output port\n" );
-        if (visible && !visible->isEmpty())
-        {
-            int mbs = visible->length();
-            const Mat& hidden_expectations = hidden_layer->getExpectations();
-            Mat* h=0;
-            Mat* h_act=0;
-            if (!hidden_activations_are_computed) // it must be because neither hidden nor hidden_act were asked
-            {
-                PLASSERT(!hidden_act);
-                computePositivePhaseHiddenActivations(*visible);
-
-                // we need to save the hidden activations somewhere
-                hidden_act_store.resize(mbs,hidden_layer->size);
-                hidden_act_store << hidden_layer->activations;
-                h_act = &hidden_act_store;
-            }
-            else
-            {
-                // hidden_act must have been computed above if they were requested on port
-                PLASSERT(hidden_act && !hidden_act->isEmpty());
-                h_act = hidden_act;
-            }
-            if (!hidden_expectations_are_computed) // it must be because hidden outputs were not asked
-            {
-                PLASSERT(!hidden);
-                hidden_layer->computeExpectations();
-                hidden_expectations_are_computed=true;
-                // we need to save the hidden expectations somewhere
-                hidden_exp_store.resize(mbs,hidden_layer->size);
-                hidden_exp_store << hidden_expectations;
-                h = &hidden_exp_store;
-            }
-            else
-            {
-                // hidden exp. must have been computed above if they were requested on port
-                PLASSERT(hidden && !hidden->isEmpty());
-                h = hidden;
-            }
-            // perform negative phase
-            for( int i=0; i<n_Gibbs_steps_CD; i++)
-            {
-                hidden_layer->generateSamples();
-                // (Negative phase) Generate visible samples.
-                sampleVisibleGivenHidden(hidden_layer->samples);
-                // compute corresponding hidden expectations.
-                computeHiddenActivations(visible_layer->samples);
-                hidden_layer->computeExpectations();
-            }
-            PLASSERT(negative_phase_visible_samples);
-            PLASSERT(negative_phase_hidden_expectations &&
-                     negative_phase_hidden_expectations->isEmpty());
-            PLASSERT(negative_phase_hidden_activations &&
-                     negative_phase_hidden_activations->isEmpty());
-            negative_phase_visible_samples->resize(mbs,visible_layer->size);
-            *negative_phase_visible_samples << visible_layer->samples;
-            negative_phase_hidden_expectations->resize(hidden_expectations.length(),
-                                                       hidden_expectations.width());
-            *negative_phase_hidden_expectations << hidden_expectations;
-            const Mat& neg_hidden_act = hidden_layer->activations;
-            negative_phase_hidden_activations->resize(neg_hidden_act.length(),
-                                                      neg_hidden_act.width());
-            *negative_phase_hidden_activations << neg_hidden_act;
-
-            // compute the energy (again for now only in the binomial case)
-            PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
-
-            // note that h_act and h may point to hidden_act_store and hidden_exp_store
-            PLASSERT(h_act && !h_act->isEmpty());
-            PLASSERT(h && !h->isEmpty());
-
-            contrastive_divergence->resize(hidden_expectations.length(),1);
-            // compute contrastive divergence itself
-            for (int i=0;i<mbs;i++)
-            {
-                (*contrastive_divergence)(i,0) =
-                    // positive phase energy
-                    visible_layer->energy((*visible)(i))
-                    - dot((*h)(i),(*h_act)(i))
-                    // minus
-                    -
-                    // negative phase energy
-                    (visible_layer->energy(visible_layer->samples(i))
-                     - dot(hidden_expectations(i),hidden_layer->activations(i)));
-            }
-        }
-        else
-            PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
-                    "only possible if only visible are provided in input).\n");
-        found_a_valid_configuration = true;
-    }
-
-
     // COMPUTE AUTOASSOCIATOR RECONSTRUCTION ERROR
     if ( visible && !visible->isEmpty() &&
          ( ( visible_reconstruction && visible_reconstruction->isEmpty() ) ||
@@ -978,9 +812,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         // Autoassociator reconstruction cost
         PLASSERT( ports_value.length() == nPorts() );
-        computePositivePhaseHiddenActivations(*visible);
         if(!hidden_expectations_are_computed)
         {
+            computePositivePhaseHiddenActivations(*visible);
             hidden_layer->computeExpectations();
             hidden_expectations_are_computed=true;
         }
@@ -1039,6 +873,193 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         *visible_reconstruction << to_store;
         found_a_valid_configuration = true;
     }
+
+    // SAMPLING
+    if ((visible_sample && visible_sample->isEmpty())               // is asked to sample visible units (discrete)
+        || (visible_expectation && visible_expectation->isEmpty())  //              "                   (continous)
+        || (hidden_sample && hidden_sample->isEmpty()))             // or to sample hidden units
+    {
+        if (hidden_sample && !hidden_sample->isEmpty()) // sample visible conditionally on hidden
+        {
+            sampleVisibleGivenHidden(*hidden_sample);
+            Gibbs_step=0;
+            //cout << "sampling visible from hidden" << endl;
+        }
+        else if (visible_sample && !visible_sample->isEmpty()) // if an input is provided, sample hidden conditionally
+        {
+            sampleHiddenGivenVisible(*visible_sample);
+            hidden_activations_are_computed = false;
+            Gibbs_step=0;
+            //cout << "sampling hidden from visible" << endl;
+        }
+        else if (visible_expectation && !visible_expectation->isEmpty())
+        {
+             PLERROR("In RBMModule::fprop visible_expectation can only be an output port (use visible as input port");
+        }
+        else // sample unconditionally: Gibbs sample after k steps
+        {
+            // the visible_layer->expectations contain the "state" from which we
+            // start or continue the chain
+            if (visible_layer->samples.isEmpty())
+            {
+                if (visible && !visible->isEmpty())
+                    visible_layer->samples << *visible;
+                else if (!visible_layer->getExpectations().isEmpty())
+                    visible_layer->samples << visible_layer->getExpectations();
+                else if (!hidden_layer->samples.isEmpty())
+                    sampleVisibleGivenHidden(hidden_layer->samples);    
+                else if (!hidden_layer->getExpectations().isEmpty())
+                    sampleVisibleGivenHidden(hidden_layer->getExpectations());    
+            }
+            int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
+                            min_n_Gibbs_steps);
+            //cout << "Gibbs sampling " << Gibbs_step+1;
+            for (;Gibbs_step<min_n;Gibbs_step++)
+            {
+                sampleHiddenGivenVisible(visible_layer->samples);
+                sampleVisibleGivenHidden(hidden_layer->samples);
+            }
+            hidden_activations_are_computed = false;
+            //cout << " -> " << Gibbs_step << endl;
+        }
+
+        if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
+        {
+              const Mat& hidden_expect = hidden_layer->getExpectations();
+              hidden->resize(hidden_expect.length(), hidden_expect.width());
+              *hidden << hidden_expect;
+        }
+        if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
+        {
+            visible_sample->resize(visible_layer->samples.length(),
+                                   visible_layer->samples.width());
+            *visible_sample << visible_layer->samples;
+        }
+        if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
+        {
+            hidden_sample->resize(hidden_layer->samples.length(),
+                                  hidden_layer->samples.width());
+            *hidden_sample << hidden_layer->samples;
+        }
+        if (visible_expectation && visible_expectation->isEmpty()) // provide expectation of the visible units
+        {
+            const Mat& to_store = visible_layer->getExpectations();
+            visible_expectation->resize(to_store.length(),
+                                        to_store.width());
+            *visible_expectation << to_store;
+        }
+        if (hidden && hidden->isEmpty())
+        {
+            hidden->resize(hidden_layer->samples.length(),
+                           hidden_layer->samples.width());
+            *hidden << hidden_layer->samples;
+        }
+        if (hidden_act && hidden_act->isEmpty())
+        {
+            hidden_act->resize(hidden_layer->samples.length(),
+                               hidden_layer->samples.width());
+            *hidden_act << hidden_layer->getExpectations();
+        }
+        found_a_valid_configuration = true;
+    }// END SAMPLING
+
+    // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
+    if (contrastive_divergence)
+    {
+        PLASSERT_MSG( contrastive_divergence->isEmpty(),
+                      "RBMModule: the contrastive_divergence port can only be an output port\n" );
+        if (visible && !visible->isEmpty())
+        {
+            int mbs = visible->length();
+            const Mat& hidden_expectations = hidden_layer->getExpectations();
+            Mat* h=0;
+            Mat* h_act=0;
+            if (!hidden_activations_are_computed) // it must be because neither hidden nor hidden_act were asked
+            {
+                PLASSERT(!hidden_act);
+                computePositivePhaseHiddenActivations(*visible);
+
+                // we need to save the hidden activations somewhere
+                hidden_act_store.resize(mbs,hidden_layer->size);
+                hidden_act_store << hidden_layer->activations;
+                h_act = &hidden_act_store;
+            }
+            else
+            {
+                // hidden_act must have been computed above if they were requested on port
+                PLASSERT(hidden_act && !hidden_act->isEmpty());
+                h_act = hidden_act;
+            }
+            if (!hidden_expectations_are_computed) // it must be because hidden outputs were not asked
+            {
+                PLASSERT(!hidden);
+                hidden_layer->computeExpectations();
+                hidden_expectations_are_computed=true;
+                // we need to save the hidden expectations somewhere
+                hidden_exp_store.resize(mbs,hidden_layer->size);
+                hidden_exp_store << hidden_expectations;
+                h = &hidden_exp_store;
+            }
+            else
+            {
+                // hidden exp. must have been computed above if they were requested on port
+                PLASSERT(hidden && !hidden->isEmpty());
+                h = hidden;
+            }
+            // perform negative phase
+            for( int i=0; i<n_Gibbs_steps_CD; i++)
+            {
+                hidden_layer->generateSamples();
+                // (Negative phase) Generate visible samples.
+                sampleVisibleGivenHidden(hidden_layer->samples);
+                // compute corresponding hidden expectations.
+                computeHiddenActivations(visible_layer->samples);
+                hidden_activations_are_computed = false;
+                hidden_layer->computeExpectations();
+            }
+            PLASSERT(negative_phase_visible_samples);
+            PLASSERT(negative_phase_hidden_expectations &&
+                     negative_phase_hidden_expectations->isEmpty());
+            PLASSERT(negative_phase_hidden_activations &&
+                     negative_phase_hidden_activations->isEmpty());
+            negative_phase_visible_samples->resize(mbs,visible_layer->size);
+            *negative_phase_visible_samples << visible_layer->samples;
+            negative_phase_hidden_expectations->resize(hidden_expectations.length(),
+                                                       hidden_expectations.width());
+            *negative_phase_hidden_expectations << hidden_expectations;
+            const Mat& neg_hidden_act = hidden_layer->activations;
+            negative_phase_hidden_activations->resize(neg_hidden_act.length(),
+                                                      neg_hidden_act.width());
+            *negative_phase_hidden_activations << neg_hidden_act;
+
+            // compute the energy (again for now only in the binomial case)
+            PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+
+            // note that h_act and h may point to hidden_act_store and hidden_exp_store
+            PLASSERT(h_act && !h_act->isEmpty());
+            PLASSERT(h && !h->isEmpty());
+
+            contrastive_divergence->resize(hidden_expectations.length(),1);
+            // compute contrastive divergence itself
+            for (int i=0;i<mbs;i++)
+            {
+                (*contrastive_divergence)(i,0) =
+                    // positive phase energy
+                    visible_layer->energy((*visible)(i))
+                    - dot((*h)(i),(*h_act)(i))
+                    // minus
+                    -
+                    // negative phase energy
+                    (visible_layer->energy(visible_layer->samples(i))
+                     - dot(hidden_expectations(i),hidden_layer->activations(i)));
+            }
+        }
+        else
+            PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
+                    "only possible if only visible are provided in input).\n");
+        found_a_valid_configuration = true;
+    }
+
 
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;
