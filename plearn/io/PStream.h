@@ -41,7 +41,7 @@
 #include <set>
 #include <sstream>
 #include <fstream>
-#include <plearn/base/pstdint.h>
+#include <stdint.h>
 #include <plearn/base/byte_order.h>
 #include <plearn/base/pl_hash_fun.h>
 #include <plearn/base/plerror.h>
