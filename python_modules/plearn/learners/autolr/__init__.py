@@ -300,6 +300,10 @@ def train_adapting_lr(learner,
 
     def error_curve(active,start_t,current_t):
         delta_t = current_t+1-start_t
+        # in all_results, column 0 is stage, column 1 is option value (learning rate)
+        # and column 2+test*n_costs+cost is the cost value for cost number 'cost'
+        # (index in the selected_costnames list), in testset 'test'.
+        # And testset 0 is the one used for selection.
         return all_results[active][start_t:current_t+1,2+cost_to_select_best]
         
     def error_curve_dominates(c1,c2,t):
@@ -429,7 +433,7 @@ def train_adapting_lr(learner,
                 if logfile:
                     print >>logfile, " test" + str(j+1),": ",
                 for k in range(0,n_costs):
-                    err = ts.getStat("E["+str(k)+"]")
+                    err = ts.getStat("E["+str(cost_indices[k])+"]")
                     results[t,j*n_costs+k+2]=err
                     costname = costnames[cost_indices[k]]
                     if logfile:
