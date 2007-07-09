@@ -19,4 +19,16 @@ else:
 
 if plearn.bridgemode.interactive:
     from pylab import *
-    
+
+
+def deepcopy(plearnobject, use_threads = False):
+    # actually not a deep-copy, only copy options
+    if plearn.bridgemode.useserver:
+        o = assign(plearnobject.getObject(), use_threads)
+    else:
+        o = deepCopy(plearnobject)
+    if o==None:
+        print "deepcopy failed"
+        raise NotImplementedError
+    return o
+

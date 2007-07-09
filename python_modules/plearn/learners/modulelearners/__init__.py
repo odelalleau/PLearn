@@ -10,10 +10,6 @@ from plearn.learners.autolr import deepcopy
 
 tmp_file='/tmp/modulelearner.py'
 
-def dirtydeepcopy( myObject ):
-    myObject.save(tmp_file,'plearn_ascii')
-    return loadObject(tmp_file)
-
 if plearn.bridgemode.useserver:
     learner  = serv.new(learner)
     trainset = serv.new(trainset)
@@ -408,7 +404,7 @@ def removeModuleFromNetwork( network , modulename ):
 #    new_network.setOptionFromPython('connections',new_connections_list)
 #    new_network.setOptionFromPython('ports',new_ports_list)
 #    new_network.setOptionFromPython('modules',new_modules_list)
-    return dirtydeepcopy( new_network )
+    return deepcopy( new_network )
     return new_network
     
 
@@ -430,7 +426,7 @@ def removeModuleFromLearner( learner , modulename ):
         new_learner.setOptionFromPython(port_option_name, new_output_ports_list)
     new_learner.setOptionFromPython('module',new_network)
 
-    return dirtydeepcopy( new_learner )
+    return deepcopy( new_learner )
     return new_learner
 
 
@@ -447,7 +443,7 @@ def plug2output(myObject, portslist):
     if len(portslist) == 1:
        new_ports_list.append((output_port_tuple[0],portslist[0]))
        setPorts(mynewObject, new_ports_list)
-       return dirtydeepcopy( mynewObject )
+       return deepcopy( mynewObject )
        return mynewObject
     new_modules_list = getModules(myObject)
     new_connections_list = getConnections(myObject)
@@ -482,7 +478,7 @@ def plug2output(myObject, portslist):
     setConnections(mynewObject, new_connections_list)
     setPorts(mynewObject, new_ports_list)
     setModules(mynewObject, new_modules_list)
-    return dirtydeepcopy( mynewObject )
+    return deepcopy( mynewObject )
     return mynewObject
 
 

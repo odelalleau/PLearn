@@ -79,19 +79,6 @@ def assign(object, use_threads = False):
     return o
 
 
-# ugly way to copy until done properly with PLearn's deepcopy
-def deepcopy(plearnobject, use_threads = False):
-    # actually not a deep-copy, only copy options
-    if plearn.bridgemode.useserver:
-        o = assign(plearnobject.getObject(), use_threads)
-    else:
-        o = newObject(str(plearnobject))
-    if o==None:
-        print "deepcopy failed"
-        raise NotImplementedError
-    return o
-
-
 def merge_schedules(schedules):
     """Merge several learning rate schedules into a kind of multi-schedule
     with one column per schedule but a unified sequence of stages.
