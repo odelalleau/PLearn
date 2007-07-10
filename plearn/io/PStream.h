@@ -1,5 +1,5 @@
 // -*- C++ -*-
- 
+
 // PStream.h
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
@@ -8,18 +8,18 @@
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-//   
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -30,7 +30,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
@@ -93,7 +93,7 @@ public:
      *  format to write stuff.  On input however, they are equivalent, as the
      *  right format is automatically detected.
      */
-    enum mode_t 
+    enum mode_t
     {
         plearn_ascii,    //!< PLearn ascii serialization format (can be mixed with plearn_binary)
         plearn_binary,   //!< PLearn binary serialization format (can be mixed with plearn_ascii)
@@ -101,18 +101,18 @@ public:
         raw_binary,      //!< Simply writes the bytes as they are in memory.
         pretty_ascii     //!< Ascii pretty print (in particular for Vec and Mat, formatted output without size info)
     };
-  
+
 
     //! Compression mode (mostly used by binary serialization of sequences of floats or doubles, such as TMat<real>)
     //! (Used on output only; autodetect on read).
-    enum compr_mode_t { 
+    enum compr_mode_t {
         compr_none,            //!< No compression.
         compr_double_as_float, //!< In plearn_binary mode, store doubles as float
-        compr_sparse,          //!< PLearn 
-        compr_lossy_sparse     //!< Also stores double as float 
+        compr_sparse,          //!< PLearn
+        compr_lossy_sparse     //!< Also stores double as float
     };
 
-public:  
+public:
     mode_t inmode;              //!< mode for input formatting
     // bitset<32> pl_stream_flags_in;  //!< format flags for input
     map<unsigned int, void *> copies_map_in; //!< copies map for input
@@ -135,7 +135,7 @@ private:
 
     //! Default format string for doubles
     static const char* format_double_default;
-    
+
 public:
     //! If true, then Mat and Vec will be serialized with their elements in place,
     //! If false, they will have an explicit pointer to a storage
@@ -144,12 +144,12 @@ public:
     //! Determines the way data is compressed, if any.
     compr_mode_t compression_mode;
 
-    //! Should be true if this stream is used to communicate 
+    //! Should be true if this stream is used to communicate
     //! with a remote PLearn host.  Will serialize options
     //! accordingly.
     bool remote_plearn_comm;
 
-public:  
+public:
 
     PStream();
 
@@ -186,7 +186,7 @@ public:
 
     //! if outmode is raw_ascii or raw_binary t will be switched to
     //! corresponding plearn_ascii, resp. plearn_binary.
-    //! The old mode will be returned, so that you can call setOutMode 
+    //! The old mode will be returned, so that you can call setOutMode
     //! to revert to the old mode when finished
     mode_t switchToPLearnOutMode();
 
@@ -235,7 +235,7 @@ public:
     //! Writes the corresponding 2 hex digits (ex: 0A )
     void writeAsciiHexNum(unsigned char x);
 
-    inline bool eof() const 
+    inline bool eof() const
     { return ptr->eof(); }
 
     bool good() const
@@ -260,23 +260,23 @@ public:
     const char* getDoubleFormat() const { return format_double; }
     void setFloatFormat(const char* f)  { format_float = f;  }
     void setDoubleFormat(const char* f) { format_double = f; }
-    
+
     /**
      * The folowing methods are 'forwarded' from {i|o}stream.
      */
-    inline int get() 
+    inline int get()
     { return ptr->get(); }
 
     //! The folowing methods are 'forwarded' from {i|o}stream.
-    inline PStream& get(char& c) 
-    { 
+    inline PStream& get(char& c)
+    {
         c = (char)ptr->get();
-        return *this; 
+        return *this;
     }
 
-    //! Delimitor is read from stream but not appended to string. 
+    //! Delimitor is read from stream but not appended to string.
     inline PStream& getline(string& line, char delimitor='\n')
-    { 
+    {
         line.clear();
         int c = get();
         while (c != EOF && c != delimitor)
@@ -284,7 +284,7 @@ public:
             line += (char)c;
             c = get();
         }
-        return *this; 
+        return *this;
     }
 
     inline string getline()
@@ -293,20 +293,20 @@ public:
     //! The folowing methods are 'forwarded' from {i|o}stream.
     //! It read from the stream without advancing in it.
     //! I.E. Multiple successive peek() will return the same data.
-    inline int peek() 
+    inline int peek()
     { return ptr->peek(); }
-  
+
     //! If you put back the result of a call to get(), make sure it is not EOF.
-    inline PStream& putback(char c) 
-    { 
+    inline PStream& putback(char c)
+    {
         ptr->putback(c);
-        return *this; 
+        return *this;
     }
 
     //! Put back the last character read by the get() or read() methods.
     //! You can only call this method once (use the unread() method if you want
     //! to put back more than one character).
-    inline PStream& unget() 
+    inline PStream& unget()
     {
         ptr->unget();
         return *this;
@@ -325,13 +325,13 @@ public:
     { return unread(s.data(), streamsize(s.length())); }
 
 
-    inline PStream& read(char* s, streamsize n) 
-    { 
+    inline PStream& read(char* s, streamsize n)
+    {
         ptr->read(s,n);
         return *this;
     }
 
-    inline PStream& read(string& s, streamsize n) 
+    inline PStream& read(string& s, streamsize n)
     {
         char* buf = new char[n];
         string::size_type nread = ptr->read(buf, n);
@@ -372,14 +372,14 @@ public:
     //! The stopping character met is not extracted from the stream.
     streamsize readUntil(char* buf, streamsize n, const char* stop_chars);
 
-    inline PStream& write(const char* s, streamsize n) 
-    { 
+    inline PStream& write(const char* s, streamsize n)
+    {
         ptr->write(s,n);
-        return *this; 
+        return *this;
     }
 
-    inline PStream& put(char c) 
-    { 
+    inline PStream& put(char c)
+    {
         ptr->put(c);
         return *this;
     }
@@ -391,10 +391,10 @@ public:
     }
     inline PStream& put(int x) { return put((char)x); }
 
-    inline PStream& flush() 
-    { 
+    inline PStream& flush()
+    {
         ptr->flush();
-        return *this; 
+        return *this;
     }
 
     inline PStream& endl()
@@ -405,16 +405,16 @@ public:
     }
 
     // These are convenient method for writing raw strings (whatever the outmode):
-    inline PStream& write(const char* s) 
-    { 
+    inline PStream& write(const char* s)
+    {
         write(s, streamsize(strlen(s)));
-        return *this; 
+        return *this;
     }
 
-    inline PStream& write(const string& s) 
-    { 
+    inline PStream& write(const string& s)
+    {
         write(s.data(), streamsize(s.length()));
-        return *this; 
+        return *this;
     }
 
     // Useful skip functions
@@ -435,10 +435,10 @@ public:
     void skipAll(const char* chars_to_skip);
 
     //! Reads characters from stream, until we meet one of the stopping symbols at the current "level".
-    //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll 
-    //! be back to the current level only *after* we meet the corresponding closing parenthesis, 
+    //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll
+    //! be back to the current level only *after* we meet the corresponding closing parenthesis,
     //! bracket, brace or quote.
-    //! All characters read, except the stoppingsymbol, will be *appended* to characters_read 
+    //! All characters read, except the stoppingsymbol, will be *appended* to characters_read
     //! The stoppingsymbol is read and returned, but not appended to characters_read.
     //! Comments starting with # until the end of line may be skipped (as if they were not part of the stream)
     int smartReadUntilNext(const string& stoppingsymbols, string& characters_read,
@@ -453,7 +453,7 @@ public:
     PStream& operator>>(double &x);
     PStream& operator>>(string &x);
     PStream& operator>>(char* x); // read string in already allocated char[]
-    PStream& operator>>(char &x); 
+    PStream& operator>>(char &x);
     PStream& operator>>(signed char &x);
     PStream& operator>>(unsigned char &x);
     PStream& operator>>(int &x);
@@ -484,13 +484,13 @@ public:
     //! (unless you're in raw_ascii or raw_binary mode!)
     PStream& operator<<(const string &x);
 
-    PStream& operator<<(char x); 
+    PStream& operator<<(char x);
     PStream& operator<<(signed char x);
     PStream& operator<<(unsigned char x);
 
     // Note: If you get mysterious mesages of problems with const bool resolutions,
     // then a workaround might be to not declare <<(bool) as a method, but as an inline function
-    PStream& operator<<(bool x);  
+    PStream& operator<<(bool x);
     PStream& operator<<(int x);
     PStream& operator<<(unsigned int x);
     //PStream& operator<<(long x);
@@ -502,7 +502,7 @@ public:
     PStream& operator<<(short x);
     PStream& operator<<(unsigned short x);
     PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
- 
+
 };
 
 /*! PStream objects to replace the standard cout, cin, ... */
@@ -534,12 +534,12 @@ using std::ws;
 //!  after removing any trailing '\r' and/or '\n'
 string pgetline(PStream& in);
 
-  
+
 /*****
  * op>> & op<< for generic pointers
  */
 
-template <class T> 
+template <class T>
 inline PStream& operator>>(PStream& in, T*& x)
 {
 
@@ -556,7 +556,7 @@ inline PStream& operator>>(PStream& in, T*& x)
         else
         {
             in.skipBlanksAndCommentsAndSeparators();
-            if (in.peek() == '-') 
+            if (in.peek() == '-')
             {
                 in.get(); // Eat '-'
                 char cc = in.get();
@@ -571,8 +571,8 @@ inline PStream& operator>>(PStream& in, T*& x)
                 //don't skip blanks before we need to read something else (read might block).
                 //in.skipBlanksAndCommentsAndSeparators();
                 in.copies_map_in[id]= x;
-            } 
-            else 
+            }
+            else
             {
                 // Find it in map and return ptr;
                 map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
@@ -582,25 +582,25 @@ inline PStream& operator>>(PStream& in, T*& x)
                 x= static_cast<T *>(it->second);
             }
         }
-    } 
+    }
     else
     {
         in >> *x;
         //don't skip blanks before we need to read something else (read might block).
         //in.skipBlanksAndCommentsAndSeparators();
     }
-    
+
     return in;
 }
 
 
-template <class T> 
+template <class T>
 inline PStream& operator<<(PStream& out, T const * const & x)
 {
     if(x)
     {
         map<void *, unsigned int>::iterator it = out.copies_map_out.find(const_cast<T*&>(x));
-        if (it == out.copies_map_out.end()) 
+        if (it == out.copies_map_out.end())
         {
             int id = (int)out.copies_map_out.size()+1;
             out.put('*');
@@ -609,7 +609,7 @@ inline PStream& operator<<(PStream& out, T const * const & x)
             out.copies_map_out[const_cast<T*&>(x)] = id;
             out << *x;
         }
-        else 
+        else
         {
             out.put('*');
             out << it->second;
@@ -621,7 +621,7 @@ inline PStream& operator<<(PStream& out, T const * const & x)
     return out;
 }
 
-template <class T> 
+template <class T>
 inline PStream& operator>>(PStream& in, PP<T> &o)
 {
     T *ptr;
@@ -634,7 +634,7 @@ inline PStream& operator>>(PStream& in, PP<T> &o)
     return in;
 }
 
-template <class T> 
+template <class T>
 inline PStream& operator<<(PStream& out, const PP<T> &o)
 {
     T *ptr = static_cast<T *>(o);
@@ -642,20 +642,20 @@ inline PStream& operator<<(PStream& out, const PP<T> &o)
     return out;
 }
 
-template <class T> 
+template <class T>
 inline PStream& operator<<(PStream& out, T*& ptr)
 {
     out << const_cast<T const * const &>(ptr);
     return out;
-}  
+}
 
 
-// Serialization of pairs in the form:   
+// Serialization of pairs in the form:
 // first : second
 
 template<class A,class B>
-inline PStream& operator<<(PStream& out, const pair<A,B>& x) 
-{ 
+inline PStream& operator<<(PStream& out, const pair<A,B>& x)
+{
     // new format (same as for tuple)
     out.put('(');
     out << x.first;
@@ -687,9 +687,9 @@ inline PStream& operator<<(PStream& out, const pair<A,B>& x)
     return out;
 }
 
-template <typename S, typename T> 
-inline PStream& operator>>(PStream& in, pair<S, T> &x) 
-{ 
+template <typename S, typename T>
+inline PStream& operator>>(PStream& in, pair<S, T> &x)
+{
     in.skipBlanksAndCommentsAndSeparators();
     int c = in.peek();
     if(c==0x16) // binary pair
@@ -724,7 +724,7 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
 
 template<class MapT>
 void writeMap(PStream& out, const MapT& m)
-{  
+{
     typename MapT::const_iterator it = m.begin();
     typename MapT::const_iterator itend = m.end();
 
@@ -776,7 +776,7 @@ void readMap(PStream& in, MapT& m)
         in.skipBlanksAndCommentsAndSeparators();
         c = in.peek(); // do we have a '}' ?
     }
-    in.get(); // eat the '}'  
+    in.get(); // eat the '}'
 }
 
 template<class Key, class Value, class Compare, class Alloc>
@@ -828,7 +828,7 @@ void binwrite_(PStream& out, Iterator& it, unsigned int n)
         out << *it;
         ++it;
     }
-    out.outmode = outmode; // restore previous outmode 
+    out.outmode = outmode; // restore previous outmode
 }
 
 inline void binwrite_(PStream& out, const bool* x, unsigned int n)
@@ -842,71 +842,71 @@ inline void binwrite_(PStream& out, const bool* x, unsigned int n)
     }
 }
 
-inline void binwrite_(PStream& out, const char* x, unsigned int n) 
+inline void binwrite_(PStream& out, const char* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(char))); }
-inline void binwrite_(PStream& out, char* x, unsigned int n) 
+inline void binwrite_(PStream& out, char* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(char))); }
 
-inline void binwrite_(PStream& out, const signed char* x, unsigned int n) 
+inline void binwrite_(PStream& out, const signed char* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(signed char))); }
-inline void binwrite_(PStream& out, signed char* x, unsigned int n) 
+inline void binwrite_(PStream& out, signed char* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(signed char))); }
 
-inline void binwrite_(PStream& out, const unsigned char* x, unsigned int n) 
+inline void binwrite_(PStream& out, const unsigned char* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned char))); }
-inline void binwrite_(PStream& out, unsigned char* x, unsigned int n) 
+inline void binwrite_(PStream& out, unsigned char* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned char))); }
 
-inline void binwrite_(PStream& out, const short* x, unsigned int n) 
+inline void binwrite_(PStream& out, const short* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(short))); }
-inline void binwrite_(PStream& out, short* x, unsigned int n) 
+inline void binwrite_(PStream& out, short* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(short))); }
 
-inline void binwrite_(PStream& out, const unsigned short* x, unsigned int n) 
+inline void binwrite_(PStream& out, const unsigned short* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned short))); }
-inline void binwrite_(PStream& out, unsigned short* x, unsigned int n) 
+inline void binwrite_(PStream& out, unsigned short* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned short))); }
 
-inline void binwrite_(PStream& out, const int* x, unsigned int n) 
+inline void binwrite_(PStream& out, const int* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(int))); }
-inline void binwrite_(PStream& out, int* x, unsigned int n) 
+inline void binwrite_(PStream& out, int* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(int))); }
 
-inline void binwrite_(PStream& out, const unsigned int* x, unsigned int n) 
+inline void binwrite_(PStream& out, const unsigned int* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned int))); }
-inline void binwrite_(PStream& out, unsigned int* x, unsigned int n) 
+inline void binwrite_(PStream& out, unsigned int* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned int))); }
 
 /*
-inline void binwrite_(PStream& out, const long* x, unsigned int n) 
+inline void binwrite_(PStream& out, const long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(long))); }
-inline void binwrite_(PStream& out, long* x, unsigned int n) 
+inline void binwrite_(PStream& out, long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(long))); }
 
-inline void binwrite_(PStream& out, const unsigned long* x, unsigned int n) 
+inline void binwrite_(PStream& out, const unsigned long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
-inline void binwrite_(PStream& out, unsigned long* x, unsigned int n) 
+inline void binwrite_(PStream& out, unsigned long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
 */
 
-inline void binwrite_(PStream& out, const int64_t* x, unsigned int n) 
+inline void binwrite_(PStream& out, const int64_t* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(int64_t))); }
-inline void binwrite_(PStream& out, int64_t* x, unsigned int n) 
+inline void binwrite_(PStream& out, int64_t* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(int64_t))); }
 
-inline void binwrite_(PStream& out, const uint64_t* x, unsigned int n) 
+inline void binwrite_(PStream& out, const uint64_t* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(uint64_t))); }
-inline void binwrite_(PStream& out, uint64_t* x, unsigned int n) 
+inline void binwrite_(PStream& out, uint64_t* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(uint64_t))); }
 
-inline void binwrite_(PStream& out, const float* x, unsigned int n) 
+inline void binwrite_(PStream& out, const float* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(float))); }
-inline void binwrite_(PStream& out, float* x, unsigned int n) 
+inline void binwrite_(PStream& out, float* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(float))); }
 
-inline void binwrite_(PStream& out, const double* x, unsigned int n) 
+inline void binwrite_(PStream& out, const double* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(double))); }
-inline void binwrite_(PStream& out, double* x, unsigned int n) 
+inline void binwrite_(PStream& out, double* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(double))); }
 
 // The typecode indicates the type and format of the elements in the stream
@@ -927,14 +927,14 @@ void binread_(PStream& in, Iterator it, unsigned int n, unsigned char typecode)
 void binread_(PStream& in, bool* x, unsigned int n, unsigned char typecode);
 
 inline void binread_(PStream& in, char* x,
-                     unsigned int n, unsigned char typecode)  
-{                                                      
+                     unsigned int n, unsigned char typecode)
+{
     // big endian and little endian have the same typecodes
     // so we need to check only one for consistency
 
     if(typecode!=TypeTraits<char>::little_endian_typecode()
-       && typecode!=TypeTraits<unsigned char>::little_endian_typecode()) 
-        PLERROR("In binread_ incompatible typecode");      
+       && typecode!=TypeTraits<unsigned char>::little_endian_typecode())
+        PLERROR("In binread_ incompatible typecode");
 
     in.read((char*)x, n);
 }
@@ -963,10 +963,10 @@ void writeSequence(PStream& out, const SequenceType& seq)
     // norman: added explicit cast
     unsigned int n = (unsigned int)seq.size();
     typename SequenceType::const_iterator it = seq.begin();
-  
+
     switch(out.outmode)
     {
-    case PStream::raw_ascii:      
+    case PStream::raw_ascii:
         while(n--)
         {
             out << *it;
@@ -974,7 +974,7 @@ void writeSequence(PStream& out, const SequenceType& seq)
             ++it;
         }
         break;
-      
+
     case PStream::pretty_ascii:
         out.write("[ ");
         while(n--)
@@ -987,7 +987,7 @@ void writeSequence(PStream& out, const SequenceType& seq)
         out.write(" ] ");
         break;
 
-    case PStream::raw_binary: 
+    case PStream::raw_binary:
         binwrite_(out, it, n);
         break;
 
@@ -1007,7 +1007,7 @@ void writeSequence(PStream& out, const SequenceType& seq)
         unsigned char typecode;
         if(byte_order()==LITTLE_ENDIAN_ORDER)
         {
-            out.put((char)0x12); // 1D little-endian 
+            out.put((char)0x12); // 1D little-endian
             typecode = TypeTraits<typename SequenceType::value_type>::little_endian_typecode();
         }
         else
@@ -1018,15 +1018,15 @@ void writeSequence(PStream& out, const SequenceType& seq)
 
         // write typecode
         out.put(typecode);
-        
-        // write length in raw_binary 
+
+        // write length in raw_binary
         out.write((char*)&n, sizeof(n));
-        
+
         // write the data
         binwrite_(out, it, n);
     }
     break;
-      
+
     default:
         PLERROR("In PStream::writeSequence(Iterator& it, int n)  unknown outmode!!!!!!!!!");
         break;
@@ -1036,7 +1036,7 @@ void writeSequence(PStream& out, const SequenceType& seq)
 
 //! Reads in a sequence type from a PStream.
 /*! For this to work with the current implementation, the SequenceType must have:
-  - typedefs defining (SequenceType::...) value_type, size_type, iterator 
+  - typedefs defining (SequenceType::...) value_type, size_type, iterator
   - a begin() method that returns a proper iterator,
   - a size_type size() method returning the size of the current container
   - a resize(size_type n) method that allows to change the size of the container
@@ -1056,7 +1056,7 @@ void readSequence(PStream& in, SequenceType& seq)
         while(n--)
         {
             in.skipBlanks();
-            in >> *it; 
+            in >> *it;
             //don't skip blanks before we need to read something else (read might block).
             //in.skipBlanks();
             ++it;
@@ -1069,7 +1069,7 @@ void readSequence(PStream& in, SequenceType& seq)
         typename SequenceType::iterator it = seq.begin();
         while(n--)
         {
-            in >> *it; 
+            in >> *it;
             ++it;
         }
     }
@@ -1130,11 +1130,11 @@ void readSequence(PStream& in, SequenceType& seq)
         else if(c==0x12 || c==0x13) // it's a generic binary 1D sequence
         {
             in.get(); // eat c
-            unsigned char typecode = in.get(); 
+            unsigned char typecode = in.get();
             unsigned int l;
             in.read((char*)&l,sizeof(l));
 
-            bool inverted_byte_order = (    (c==0x12 && byte_order()==BIG_ENDIAN_ORDER) 
+            bool inverted_byte_order = (    (c==0x12 && byte_order()==BIG_ENDIAN_ORDER)
                                             || (c==0x13 && byte_order()==LITTLE_ENDIAN_ORDER) );
 
             if(inverted_byte_order)
@@ -1151,28 +1151,28 @@ void readSequence(PStream& in, SequenceType& seq)
         PLERROR("In PStream::operator>>  unknown inmode!!!!!!!!!");
         break;
     }
-    
+
 }
 
 // Default behavior for write() and read() is
 // to call corresponding operator<<() or operator>>()
 // on PStream.
 
-template<class T> 
+template<class T>
 inline void write(ostream& out_, const T& o)
 {
     PStream out(&out_);
     out << o;
 }
 
-template<class T> 
+template<class T>
 inline void read(istream& in_, T& o)
 {
     PStream in(&in_);
     in >> o;
 }
 
-template<class T> 
+template<class T>
 inline void read(const string& stringval, T& x)
 {
     istringstream in_(stringval);
@@ -1195,7 +1195,7 @@ operator<<(PStream &out, const vector<T> &v)
 
 template<class SetT>
 void writeSet(PStream& out, const SetT& s)
-{  
+{
     typename SetT::const_iterator it = s.begin();
     typename SetT::const_iterator itend = s.end();
 
@@ -1245,7 +1245,7 @@ class PIFStream: public PStream
 {
 public:
     PIFStream(const string& fname, ios_base::openmode m = ios_base::in)
-        :PStream(new ifstream(fname.c_str()),true) 
+        :PStream(new ifstream(fname.c_str()),true)
     {
         PLDEPRECATED("PIFStream is deprecated. Use the openFile function instead.");
     }
@@ -1256,7 +1256,7 @@ class POFStream: public PStream
 {
 public:
     POFStream(const string& fname, ios_base::openmode m = ios_base::out | ios_base::trunc)
-        :PStream(new ofstream(fname.c_str()),true) 
+        :PStream(new ofstream(fname.c_str()),true)
     {
         PLDEPRECATED("POFStream is deprecated. Use the openFile function instead.");
     }
@@ -1268,7 +1268,7 @@ class PIStringStream: public PStream
 {
 public:
     PIStringStream(const string& s)
-        :PStream(new istringstream(s), true /* own it */) 
+        :PStream(new istringstream(s), true /* own it */)
     {
         PLDEPRECATED("PIStringStream is deprecated. Use the openString function instead.");
     }
