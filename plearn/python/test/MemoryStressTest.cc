@@ -190,10 +190,10 @@ void MemoryStressTest::nullary(const PythonCodeSnippet* python)
 
 void MemoryStressTest::unary(const PythonCodeSnippet* python)
 {
-    int i    = python->invoke("unary_int", 42).as<int>();
-    long l   = python->invoke("unary_long", 42L).as<long>();
-    double d = python->invoke("unary_float", 42.01).as<double>();
-    string s = python->invoke("unary_str", "Hello").as<string>();
+    int i       = python->invoke("unary_int", 42).as<int>();
+    int32_t l   = python->invoke("unary_long", 42L).as<int32_t>();
+    double d    = python->invoke("unary_float", 42.01).as<double>();
+    string s    = python->invoke("unary_str", "Hello").as<string>();
 
     i = i;
     l = l;
@@ -218,12 +218,12 @@ void MemoryStressTest::unary(const PythonCodeSnippet* python)
     TVec<string> py_tvs    = python->invoke("unary_list_str", tvs).as< TVec<string> >();
     vector<string> py_vecs = python->invoke("unary_list_str", vecs).as< vector<string> >();
 
-    map<string,long> mapsd;
+    map<string,int32_t> mapsd;
     string str_mapsd = "{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }";
     PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
     is_mapsd >> mapsd;
 
-    map<string,long> py_mapsd = python->invoke("unary_dict", mapsd).as< map<string,long> >();
+    map<string,int32_t> py_mapsd = python->invoke("unary_dict", mapsd).as< map<string,int32_t> >();
 }
 
 void MemoryStressTest::binary(const PythonCodeSnippet* python)

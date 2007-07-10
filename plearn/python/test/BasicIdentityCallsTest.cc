@@ -198,7 +198,7 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
          << python->invoke("unary_int", 42).as<int>() << endl;
 
     cout << "Calling unary_long(42L)     : "
-         << python->invoke("unary_long", 42L).as<long>() << endl;
+         << python->invoke("unary_long", 42L).as<int32_t>() << endl;
 
     cout << "Calling unary_float(42.01)  : "
          << python->invoke("unary_float", 42.01).as<double>() << endl;
@@ -241,13 +241,13 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
                                    .as< vector<string> >() ))
          << endl;
 
-    map<string,long> mapsd;
+    map<string,int32_t> mapsd;
     string str_mapsd = "{ Oui:16 il:32 est:64 juste:128 et:256 bon:512 }";
     PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
     is_mapsd >> mapsd;
 
     cout << "Calling unary_dict(mapsd)   : "
-         << tostring( python->invoke("unary_dict", mapsd).as< map<string,long> >() )
+         << tostring( python->invoke("unary_dict", mapsd).as< map<string,int32_t> >() )
          << endl;
 }
 
