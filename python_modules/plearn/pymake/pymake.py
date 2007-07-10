@@ -478,7 +478,7 @@ def locateconfigfile(file,configdir,config_text=''):
 pymake_options_defs = {}
 
 class PymakeOption:
-    def __init__(self, name, description, compiler, compileroptions, cpp_definitions, linker, linkeroptions):
+    def __init__(self, name, description, compiler, compileroptions, cpp_definitions, linker, linkeroptions, in_output_dirname):
         self.name = name
         self.description = description
         self.compiler = compiler
@@ -486,12 +486,17 @@ class PymakeOption:
         self.cpp_definitions = cpp_definitions
         self.linker = linker
         self.linkeroptions = linkeroptions
+        self.in_output_dirname = in_output_dirname
 
 # adds a possible option to the pymake_options_defs
-def pymakeOption( name, description, compiler='', compileroptions='', cpp_definitions=[], linker='', linkeroptions='' ):
-    pymake_options_defs[name] = PymakeOption(name, description, compiler, compileroptions, cpp_definitions, linker, linkeroptions)
+def pymakeOption( name, description, compiler='', compileroptions='', cpp_definitions=[], linker='', linkeroptions='', in_output_dirname=True):
+    pymake_options_defs[name] = PymakeOption(name, description, compiler, compileroptions, cpp_definitions, linker, linkeroptions, in_output_dirname)
 
 
+# adds a possible option to the pymake_options_defs that modify only the linker step
+def pymakeLinkOption( name, description, triggers='', linker='', linkeroptions='' ):
+    pymakeOption(name=name, description=description, linker=linker, linkeroptions=linkeroptions, in_output_dirname=False)
+    
 optional_libraries_defs = []
 
 # It is now possible to use lists in the linker and compiler options of an optional library.
@@ -1637,6 +1642,12 @@ class FileInfo:
 
             elif self.hasmain:
                 self.corresponding_output = join(self.filedir, objsdir, self.filebase)
+                # We append options to the file name if they are not appended to the objsdir name
+                for opt in options:
+                    pyopt = pymake_options_defs[opt]
+                    if not pyopt.in_output_dirname:
+                    #if objsdir.find('_' + opt) == -1: # if not found
+                        self.corresponding_output = self.corresponding_output + '_' + opt
 
         else:
             raise 'Attempting to build a FileInfo from a file that is not a .cc or .h or similar file ('+self.filepath+')'
@@ -1861,7 +1872,7 @@ class FileInfo:
         if symlink_source_basename is not None:
             symlink_to_base = symlink_source_basename
         else:
-            symlink_to_base = self.filebase
+            symlink_to_base = self.corresponding_output
 
         if not symlink_to:
             symlink_to = join(objsdir, symlink_to_base)
@@ -2739,9 +2750,15 @@ def main( args ):
 
         # Building name of object subdirectory
         if  objspolicy== 1:
-            objsdir = join('OBJS', target_platform + '__' + string.join(options,'_'))
+            objsdir = join('OBJS', target_platform + '__')
         elif objspolicy == 2:
-            objsdir = join(objsdir, target_platform + '__' + string.join(options,'_'))
+            objsdir = join(objsdir, target_platform + '__')
+        # We append options name to the objsdir name if they modify the compiled objects file
+        # Otherwise we append them to the target_name
+        for opt in options:
+            pyopt = pymake_options_defs[opt]
+            if pyopt.in_output_dirname:
+                objsdir = objsdir + '_' + opt
 
         print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
         print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))

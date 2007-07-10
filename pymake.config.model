@@ -423,8 +423,9 @@ options_choices = [
   # [ 'throwerrors', 'exiterrors' ],
   [ 'python23', 'python24', 'python25', 'nopython' ],
   
-  [ 'blas', 'p3blas','p4blas','athlonblas','pentiumblas', 'mammouthblas',
-    'noblas', 'veclib', 'scs', 'goto', 'lisa' ],
+  [ 'blas', 'noblas' ],
+  [ 'defblas', 'nolibblas', 'p3blas','p4blas','athlonblas','pentiumblas',
+    'mammouthblas', 'veclib', 'scs', 'goto', 'lisa' ],
   
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
     'logging=extreme', 'logging=dbg-profile' ]
@@ -655,66 +656,67 @@ if platform=='darwin':
     lapack_linkeroptions = ''
 
 pymakeOption( name = 'noblas',
-              description = 'compilation and linking without BLAS',
+              description = 'compilation without BLAS',
               )
 
 pymakeOption( name = 'blas',
-              description = 'compilation and linking basic BLAS',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+              description = 'compilation with BLAS',
+              cpp_definitions = ['USE_BLAS_SPECIALISATIONS']
+              )
+
+cpp_variables += ['USE_BLAS_SPECIALISATIONS']
+
+pymakeLinkOption( name = 'defblas',
+              description = 'linking with default BLAS',
               linkeroptions = lapack_linkeroptions + ' ' + blas_linkeroptions
               )
 
-pymakeOption( name = 'pentiumblas',
-              description = 'compilation and linking BLAS for Intel Pentium processor',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+pymakeLinkOption( name = 'nolibblas',
+              description = 'linking without BLAS',
+              )
+
+pymakeLinkOption( name = 'pentiumblas',
+              description = 'linking BLAS for Intel Pentium processor',
               linkeroptions = '-L' + libdir +'/intelmkl/lib/32 -lmkl -lvml -lpthread -lg2c' )
 
-pymakeOption( name = 'p3blas',
-              description = 'compilation and linking BLAS for Intel Pentium 3 processor',
+pymakeLinkOption( name = 'p3blas',
+              description = 'linking BLAS for Intel Pentium 3 processor',
               linkeroptions = '-L'+ libdir + '/intelmkl/lib/32 -lmkl_p3 -lmkl_vml_p3 -lpthread -lg2c' )
 
-pymakeOption( name = 'athlonblas',
-              description = 'compilation and linking atlas BLAS for AMD Athlon processor',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+pymakeLinkOption( name = 'athlonblas',
+              description = 'linking atlas BLAS for AMD Athlon processor',
               linkeroptions = '-L' + libdir + '/atlas_athlon256 -lcblas -lf77blas -latlas -lg2c' )
 
-pymakeOption( name = 'p4blas',
-              description = 'compilation and linking BLAS for Intel Pentium 4 processor',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+pymakeLinkOption( name = 'p4blas',
+              description = 'linking BLAS for Intel Pentium 4 processor',
               linkeroptions = '-L' + libdir + '/intelmkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lg2c' )
 
-pymakeOption( name = 'mammouthblas',
-              description = 'compilation and linking BLAS for P4 Mammouth-Serie cluster',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+pymakeLinkOption( name = 'mammouthblas',
+              description = 'linking BLAS for P4 Mammouth-Serie cluster',
               linkeroptions = '-L/opt/mkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lmkl_lapack' )
 
-pymakeOption( name = 'veclib',
+pymakeLinkOption( name = 'veclib',
               description = "Apple's vecLib library, a version of the BLAS library for the G4 and G5 under OS X",
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
               linkeroptions = '-framework vecLib' )
 
-pymakeOption( name = 'scs',
+pymakeLinkOption( name = 'scs',
               description = "BLAS and lapack intel super optimized library",
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
               linkeroptions = '-lscs -lpthread' )
 
-pymakeOption( name = 'goto',
-              description = 'compilation and linking using GOTO for BLAS',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+pymakeLinkOption( name = 'goto',
+              description = 'linking using GOTO lib for BLAS',
               linkeroptions = '-L' + libdir +'goto -llapack -lgoto -lgfortran'
               )
 
 ## We must link again the static version of lapack as the dynamic version is linked again the default version of blas
 ## and we don't want to link again it. Also, we must remove fonction from lapack as some of them are also in GOTO
-pymakeOption( name = 'lisa',
-              description = 'compilation and linking using GOTO for BLAS',
-              cpp_definitions = ['USE_BLAS_SPECIALISATIONS'],
+pymakeLinkOption( name = 'lisa',
+              description = 'linking using recommended BLAS at LISA laboratory',
               linkeroptions = '-L' + libdir +'goto -llapack -lgoto -lgfortran'
               #lapack_for_goto.a is currently bugged
               #linkeroptions = '-L' + libdir +'goto /u/lisa/local/'+target_platform+'/lib/lapack_for_goto.a  -lgoto -lpthread -lgfortran -lg2c'
               )
 
-cpp_variables += ['USE_BLAS_SPECIALISATIONS']
 
 
 #####  Logging Behavior  ####################################################
