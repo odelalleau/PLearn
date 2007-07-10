@@ -478,7 +478,7 @@ public:
 
     //! Overload to print out raw pointers in the form 0x????????
     PStream& operator<<(const void *x);
-    
+
     //! Warning: string output will be formatted according to outmode
     //! (if you want to output a raw string use the write method instead)
     //! (unless you're in raw_ascii or raw_binary mode!)
@@ -493,8 +493,8 @@ public:
     PStream& operator<<(bool x);  
     PStream& operator<<(int x);
     PStream& operator<<(unsigned int x);
-    //PStream& operator<<(long x);
-    //PStream& operator<<(unsigned long x);
+    PStream& operator<<(long x);
+    PStream& operator<<(unsigned long x);
     PStream& operator<<(int64_t x);
     PStream& operator<<(uint64_t x);
     //PStream& operator<<(long long x);
