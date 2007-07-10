@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// StackedAutoassociatorsNet.h
+// StackedSVDNet.h
 //
 // Copyright (C) 2007 Hugo Larochelle
 //
@@ -32,16 +32,17 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Hugo Larochelle
 
-/*! \file StackedAutoassociatorsNet.h */
+/*! \file StackedSVDNet.h */
 
 
-#ifndef StackedAutoassociatorsNet_INC
-#define StackedAutoassociatorsNet_INC
+#ifndef StackedSVDNet_INC
+#define StackedSVDNet_INC
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
+#include <plearn_learners/online/CostModule.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
 #include <plearn_learners/online/RBMMatrixConnection.h>
@@ -52,7 +53,7 @@ namespace PLearn {
 /**
  * Neural net, initialized with SVDs of logistic auto-regressions.
  */
-class StackedAutoassociatorsNet : public PLearner
+class StackedSVDNet : public PLearner
 {
     typedef PLearner inherited;
 
@@ -100,6 +101,10 @@ public:
     //! The weights of the connections between the layers
     TVec< PP<RBMMatrixConnection> > connections;
 
+    //! View of connections as RBMConnection pointers (for compatibility
+    //! with RBM function calls)
+    TVec< PP<RBMConnection> > rbm_connections;
+
     //! Number of layers
     int n_layers;
 
@@ -107,7 +112,7 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    StackedAutoassociatorsNet();
+    StackedSVDNet();
 
 
     //#####  PLearner Member Functions  #######################################
@@ -142,10 +147,10 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
-    void greedyStep( const Vec& input, const Vec& target, int index, 
+    void greedyStep( const Mat& inputs, const Mat& targets, int index, 
                      Vec train_costs );
 
-    void fineTuningStep( const Vec& input, const Vec& target,
+    void fineTuningStep( const Mat& inputs, const Mat& targets,
                          Vec& train_costs );
 
     //#####  PLearn::Object Protocol  #########################################
@@ -153,7 +158,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
-    PLEARN_DECLARE_OBJECT(StackedAutoassociatorsNet);
+    PLEARN_DECLARE_OBJECT(StackedSVDNet);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -165,14 +170,6 @@ public:
 protected:
     //#####  Not Options  #####################################################
 
-    //! Stores the activations of the input and hidden layers
-    //! (at the input of the layers)
-    mutable TVec<Mat> activations;
-
-    //! Stores the expectations of the input and hidden layers
-    //! (at the output of the layers)
-    mutable TVec<Mat> expectations;
-
     //! Stores the gradient of the cost wrt the activations of 
     //! the input and hidden layers
     //! (at the input of the layers)
@@ -183,37 +180,36 @@ protected:
     //! (at the output of the layers)
     mutable TVec<Mat> expectation_gradients;
 
-    //! Reconstruction activations
-    mutable Mat reconstruction_activations;
+    //! Reconstruction layer
+    mutable PP<RBMLayer> reconstruction_layer;
     
-    //! Reconstruction expectations
-    mutable Mat reconstruction_expectations;
-    
-    //! Reconstruction activations
+    //! Reconstruction target
+    mutable Mat reconstruction_targets;
+
+    //! Reconstruction costs
+    mutable Mat reconstruction_costs;
+
+    //! Reconstruction activation gradient
+    mutable Vec reconstruction_activation_gradient;
+
+    //! Reconstruction activation gradients
     mutable Mat reconstruction_activation_gradients;
     
-    //! Reconstruction expectations
-    mutable Mat reconstruction_expectation_gradients;
+    //! Reconstruction activations
+    mutable Mat reconstruction_input_gradients;
 
-    //! Input of the final_cost
-    mutable Vec final_cost_input;
+    //! Inputs of the final_cost
+    mutable Mat final_cost_inputs;
 
     //! Cost value of final_cost
     mutable Vec final_cost_value;
 
-    //! Stores the gradient of the cost at the input of final_cost
-    mutable Vec final_cost_gradient;
+    //! Cost values of final_cost
+    mutable Mat final_cost_values;
 
-    //! Currently trained layer (1 means the first hidden layer,
-    //! n_layers means the output layer)
-    int currently_trained_layer;
+    //! Stores the gradients of the cost at the inputs of final_cost
+    mutable Mat final_cost_gradients;
 
-    //! Indication whether final_module has learning rate
-    bool final_module_has_learning_rate;
-    
-    //! Indication whether final_cost has learning rate
-    bool final_cost_has_learning_rate;
-    
 protected:
     //#####  Protected Member Functions  ######################################
 
@@ -241,7 +237,7 @@ private:
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(StackedAutoassociatorsNet);
+DECLARE_OBJECT_PTR(StackedSVDNet);
 
 } // end of namespace PLearn
 
