@@ -674,6 +674,8 @@ pymakeLinkOption( name = 'defblas',
 pymakeLinkOption( name = 'nolibblas',
               description = 'linking without BLAS',
               )
+if 'noblas' in optionargs and not 'nolibblas' in optionargs:
+    optionargs.append('nolibblas')
 
 pymakeLinkOption( name = 'pentiumblas',
               description = 'linking BLAS for Intel Pentium processor',
