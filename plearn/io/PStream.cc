@@ -1842,7 +1842,7 @@ PStream& PStream::operator<<(unsigned int x)
     return *this;
 }
 
-/* Commented out because "long" has not the same size on every platform
+//* Commented out because "long" has not the same size on every platform
 PStream& PStream::operator<<(long x) 
 { 
     switch(outmode)
@@ -1883,7 +1883,7 @@ PStream& PStream::operator<<(long x)
     }
     return *this;
 }
-*/
+//*/
 
 PStream& PStream::operator<<(int64_t x)
 {
