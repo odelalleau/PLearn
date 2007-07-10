@@ -72,7 +72,7 @@ public:
     bool do_not_shuffle_first;
     real force_proportion;
     int n;
-    long seed;
+    int32_t seed;
     int shuffle;
     PP<Splitter> to_repeat;
 

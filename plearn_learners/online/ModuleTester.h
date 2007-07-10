@@ -66,7 +66,7 @@ public:
     TVec< map<string, TVec<string> > > configurations;
     map< string, PP<VMatrix> > sampling_data;
 
-    TVec<long> seeds;
+    TVec<int32_t> seeds;
 
     int default_length;
     int default_width;

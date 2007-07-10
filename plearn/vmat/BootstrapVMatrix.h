@@ -61,8 +61,8 @@ public:
 
     real frac;
     int n_elems;
-    long own_seed;
-    long seed;
+    int32_t own_seed;
+    int32_t seed;
     bool shuffle;
     bool allow_repetitions;
 
@@ -73,7 +73,7 @@ public:
 
     //! Construct a boostrap of another VMatrix.
     BootstrapVMatrix(VMat m, real frac, bool shuffle = false,
-                     long the_seed = 1827,
+                     int32_t the_seed = 1827,
                      bool allow_rep= false);
 
     //! Constructor which takes directly a PRandom object instead of a seed.

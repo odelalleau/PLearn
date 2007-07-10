@@ -73,7 +73,7 @@ public:
   bool add_missing_target;
   real missing_prop;
   int  only_on_first;
-  long seed;
+  int32_t seed;
   //! Columns which will be filled with missing values
   TVec<int> missing_values_columns;
 

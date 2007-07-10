@@ -57,7 +57,7 @@ protected:
     // *********************
 
     // ### declare protected option fields (such as learnt parameters) here
-    
+
     TVec<int> train_indices, test_indices;
 
 public:
@@ -70,7 +70,7 @@ public:
     real test_fraction; // the fraction of the dataset to be used as test (hese will be the last few samples of the dataset)
     bool calc_with_pct;
     int test_fraction_abs;
-    long shuffle_seed;
+    int32_t shuffle_seed;
 
     // ****************
     // * Constructors *

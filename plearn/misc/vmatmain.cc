@@ -627,14 +627,14 @@ int vmatmain(int argc, char** argv)
         if(vvm!=NULL)
         {
             pout<< "Last modification (including dependencies of .vmat): "
-                << long(vvm->getMtime()) << endl;
+                << int32_t(vvm->getMtime()) << endl;
             bool ispre=vvm->isPrecomputedAndUpToDate();
             pout<<"precomputed && uptodate : ";
             if(ispre)
             {
                 pout <<"yes : " << vvm->getPrecomputedDataName()<<endl;
                 pout<< "timestamp of precom. data : "
-                    << long(getDataSetDate(vvm->getPrecomputedDataName()))
+                    << int32_t(getDataSetDate(vvm->getPrecomputedDataName()))
                     << endl;
             }
             else pout <<"no"<<endl;

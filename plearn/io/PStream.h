@@ -493,8 +493,8 @@ public:
     PStream& operator<<(bool x);  
     PStream& operator<<(int x);
     PStream& operator<<(unsigned int x);
-    PStream& operator<<(long x);
-    PStream& operator<<(unsigned long x);
+    //PStream& operator<<(long x);
+    //PStream& operator<<(unsigned long x);
     PStream& operator<<(int64_t x);
     PStream& operator<<(uint64_t x);
     //PStream& operator<<(long long x);

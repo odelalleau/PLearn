@@ -67,7 +67,7 @@ public:
     // ************************
 
     //! Random number generator seed
-    long seed;
+    int32_t seed;
 
     // ****************
     // * Constructors *

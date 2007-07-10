@@ -52,8 +52,8 @@ using namespace std;
     The static data to store the seed used by the random number generators.
 */
 
-static long  the_seed=0;
-static int   iset=0;
+static int32_t  the_seed=0;
+static int      iset=0;
 static real gset;
 
 /*  
@@ -182,7 +182,7 @@ real student_t_cdf(real t, int nb_degrees_of_freedom)
     Rem: - The stored value is negative.
 */
 
-void  manual_seed(long x)
+void  manual_seed(int32_t x)
 {
     the_seed = - labs(x);
     iset     = 0;
@@ -198,7 +198,7 @@ void  seed()
     struct  tm *today;
     time(&ltime);
     today = localtime(&ltime);
-    manual_seed((long)today->tm_sec+
+    manual_seed((int32_t)today->tm_sec+
                 60*today->tm_min+
                 60*60*today->tm_hour+
                 60*60*24*today->tm_mday);
@@ -208,9 +208,9 @@ void  seed()
     get_seed(): returns the current value of the 'seed'.
 */
 
-long  get_seed()
+int32_t get_seed()
 {
-    long seed = the_seed;
+    int32_t seed = the_seed;
     return seed;
 }
 
@@ -248,10 +248,10 @@ long  get_seed()
 real uniform_sample()  
 {
     int j;
-    long k;
-    static long idum2=123456789;
-    static long iy=0;
-    static long iv[NTAB];
+    int32_t k;
+    static int32_t idum2=123456789;
+    static int32_t iy=0;
+    static int32_t iv[NTAB];
     real temp;
 
     if (the_seed <= 0) {

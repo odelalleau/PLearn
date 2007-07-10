@@ -64,7 +64,7 @@ public:
     //! If provided, will overwrite length by flength * source->length()
     real flength;
     //! Random number generator's seed
-    long seed;
+    int32_t seed;
 
 public:
     //#####  Public Member Functions  #########################################

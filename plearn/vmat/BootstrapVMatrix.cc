@@ -66,7 +66,7 @@ BootstrapVMatrix::BootstrapVMatrix():
 {}
 
 BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
-                                   long the_seed, bool allow_rep):
+                                   int32_t the_seed, bool allow_rep):
     rgen(new PRandom()),
     frac(the_frac),
     n_elems(-1),
@@ -94,7 +94,7 @@ BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac,
     // We obtain the seed value that was actually used to initialize the Boost
     // random number generator, to ensure this VMat is always the same after
     // consecutive builds.
-    seed = long(the_rgen->get_the_seed());
+    seed = int32_t(the_rgen->get_the_seed());
     this->source = m;
     build();
 }

@@ -69,7 +69,7 @@ public:
     // ************************
 
     bool only_shuffle_inputs;
-    long seed;
+    int32_t seed;
 
     // ****************
     // * Constructors *

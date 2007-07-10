@@ -69,7 +69,7 @@ public:
     string mode; // one of "sample" "density" "log_density"
 
     // for "sample" mode
-    long generator_seed; // the generator_seed to initialize the generator
+    int32_t generator_seed; // the generator_seed to initialize the generator
     int nsamples; // number of samples to draw
 
     // for density mode:

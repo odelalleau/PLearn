@@ -53,7 +53,7 @@ using namespace std;
 /////////////
 // PRandom //
 /////////////
-PRandom::PRandom(long seed):
+PRandom::PRandom(int32_t seed):
     exponential_distribution(0),
     normal_distribution(0),
     uniform_01(0),
@@ -174,7 +174,7 @@ void PRandom::build_()
         this->manual_seed_(seed_);
     else
         PLERROR("In PRandom::build_ - The only value allowed for the seed are "
-                "-1, 0 or a strictly positive long integer");
+                "-1, 0 or a strictly positive int32_t integer");
 }
 
 ////////////
@@ -279,7 +279,7 @@ void PRandom::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////////////
 // manual_seed //
 /////////////////
-void PRandom::manual_seed(long x)
+void PRandom::manual_seed(int32_t x)
 {
     if (fixed_seed)
         PLERROR("In PRandom::manual_seed - You are not allowed to change the seed "
@@ -291,9 +291,9 @@ void PRandom::manual_seed(long x)
 //////////////////
 // manual_seed_ //
 //////////////////
-void PRandom::manual_seed_(long x)
+void PRandom::manual_seed_(int32_t x)
 {
-    the_seed = boost::uint32_t(x);
+    the_seed = uint32_t(x);
     rgen.seed(the_seed);
     if (uniform_01) {
         // The boost::uniform_01 object must be re-constructed from the updated
@@ -349,7 +349,7 @@ void PRandom::time_seed_()
     struct tm *today;
     time(&ltime);
     today = localtime(&ltime);
-    manual_seed_((long)today->tm_sec+
+    manual_seed_((int32_t)today->tm_sec+
                  60*today->tm_min+
                  60*60*today->tm_hour+
                  60*60*24*today->tm_mday);

@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(
 );
 
 ModuleTester::ModuleTester():
-    seeds(TVec<long>(1, long(1827))),
+    seeds(TVec<int32_t>(1, int32_t(1827))),
     default_length(10),
     default_width(5),
     max_in(1),
@@ -191,7 +191,7 @@ void ModuleTester::build_()
     TVec<Mat> mats(max_mats_size);
 
     PP<PRandom> sub_rng = NULL;
-    long default_seed = 1827;
+    int32_t default_seed = 1827;
     if (!module->random_gen) {
         // The module needs to be provided a random generator.
         sub_rng = new PRandom();

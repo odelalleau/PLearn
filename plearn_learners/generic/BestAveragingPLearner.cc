@@ -186,7 +186,7 @@ void BestAveragingPLearner::build_()
                     __FUNCTION__);
 
         const int N = m_total_learner_num;
-        long cur_seed = m_initial_seed;
+        int32_t cur_seed = m_initial_seed;
         m_learner_set.resize(N);
         for (int i=0 ; i<N ; ++i) {
             PP<PLearner> new_learner = PLearn::deepCopy(m_learner_template);

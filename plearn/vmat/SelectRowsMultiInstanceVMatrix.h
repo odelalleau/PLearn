@@ -69,7 +69,7 @@ public:
     //! Start your comments with Doxygen-compatible comments such as //!
 
     //! random number generator seed
-    long seed;
+    int32_t seed;
     TVec<int> indices; // indices of the kept rows
     TVec<int> mi_info; // bag info for the reduced lookup set.
     PP<PLearner> multi_nnet;

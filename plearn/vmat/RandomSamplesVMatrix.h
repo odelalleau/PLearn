@@ -64,7 +64,7 @@ public:
 
     string is_preserved;
     int n_non_preserved;
-    long seed;
+    int32_t seed;
 
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!

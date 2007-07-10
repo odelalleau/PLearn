@@ -71,7 +71,7 @@ public:
     virtual ~ProgressBarPlugin() {}
     virtual void addProgressBar(ProgressBar * pb){};
     virtual void killProgressBar(ProgressBar * pb){};
-    virtual void update(ProgressBar * pb, unsigned long newpos){};
+    virtual void update(ProgressBar * pb, uint32_t newpos){};
 };
 
 
@@ -82,7 +82,7 @@ protected:
     PStream out;
 public:
     virtual void addProgressBar(ProgressBar * pb);
-    virtual void update(ProgressBar * pb, unsigned long newpos);
+    virtual void update(ProgressBar * pb, uint32_t newpos);
 
     TextProgressBarPlugin(ostream& _out);
     TextProgressBarPlugin(PStream& _out);
@@ -97,7 +97,7 @@ class RemoteProgressBarPlugin : public TextProgressBarPlugin
 {
 public:
     virtual void addProgressBar(ProgressBar* pb);
-    virtual void update(ProgressBar* pb, unsigned long newpos);
+    virtual void update(ProgressBar* pb, uint32_t newpos);
 
     RemoteProgressBarPlugin(ostream& _out, unsigned int nticks_= 20);
     RemoteProgressBarPlugin(PStream& _out, unsigned int nticks_= 20);
@@ -119,7 +119,7 @@ class LineOutputProgressBarPlugin : public TextProgressBarPlugin
 {
 public:
     virtual void addProgressBar(ProgressBar* pb);
-    virtual void update(ProgressBar* pb, unsigned long newpos);
+    virtual void update(ProgressBar* pb, uint32_t newpos);
 
     LineOutputProgressBarPlugin(ostream& _out, unsigned int nticks_= 100);
     LineOutputProgressBarPlugin(PStream& _out, unsigned int nticks_= 100);
@@ -154,20 +154,20 @@ class ProgressBar : public PPointable
 {
 public:
     string title;
-    unsigned long currentpos; // current position
-    unsigned long maxpos;
+    uint32_t currentpos; // current position
+    uint32_t maxpos;
 
     // creates a new progressbar with the given title and maxpos
     // *** Note, for now, ignore the stream (someday, remove this argument for 
     // every progressBar creation in PLearn)
-    ProgressBar(string _title, unsigned long the_maxpos);
-    ProgressBar(ostream& _out,string _title, unsigned long the_maxpos);
-    ProgressBar(PStream& _out,string _title, unsigned long the_maxpos);
+    ProgressBar(string _title, uint32_t the_maxpos);
+    ProgressBar(ostream& _out,string _title, uint32_t the_maxpos);
+    ProgressBar(PStream& _out,string _title, uint32_t the_maxpos);
 
     // moves the progressbar up to position newpos
-    void operator()(unsigned long newpos){plugin->update(this,newpos);}
+    void operator()(uint32_t newpos){plugin->update(this,newpos);}
 
-    void update(unsigned long newpos){plugin->update(this,newpos);}
+    void update(uint32_t newpos){plugin->update(this,newpos);}
 
     // this function assumes plugin is always a valid object (it is created statically in the .cc)
     static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }

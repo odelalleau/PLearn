@@ -72,10 +72,10 @@ real student_t_cdf(real t, int nb_degrees_of_freedom);
 
 /*!   initializes the random number generator with the cpu time   */
 void  seed();
-/*!   initialzes the random number generator with the given long "x"   */
-void  manual_seed(long x);
+/*!   initialzes the random number generator with the given int32_t "x"   */
+void  manual_seed(int32_t x);
 /*!   returns the current seed used by the random number generator   */
-long  get_seed();
+int32_t  get_seed();
 
 /*!   returns a random number uniformly distributed between 0 and 1   */
 real  uniform_sample();

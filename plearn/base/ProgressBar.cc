@@ -67,7 +67,7 @@ PP<ProgressBarPlugin> ProgressBar::getCurrentPlugin()
     return plugin;
 }
 
-ProgressBar::ProgressBar(string _title, unsigned long the_maxpos)
+ProgressBar::ProgressBar(string _title, uint32_t the_maxpos)
     :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
     if (plugin == NULL)
@@ -76,7 +76,7 @@ ProgressBar::ProgressBar(string _title, unsigned long the_maxpos)
     plugin->addProgressBar(this);
 }
 
-ProgressBar::ProgressBar(ostream& _out, string _title, unsigned long the_maxpos)
+ProgressBar::ProgressBar(ostream& _out, string _title, uint32_t the_maxpos)
     :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
     if (plugin == NULL)
@@ -84,7 +84,7 @@ ProgressBar::ProgressBar(ostream& _out, string _title, unsigned long the_maxpos)
 
     plugin->addProgressBar(this);
 }
-ProgressBar::ProgressBar(PStream& _out, string _title, unsigned long the_maxpos)
+ProgressBar::ProgressBar(PStream& _out, string _title, uint32_t the_maxpos)
     :title(_title),currentpos(0), maxpos(the_maxpos),closed(false)
 {
     if (plugin == NULL)
@@ -137,7 +137,7 @@ void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
 #endif
 }
 
-void TextProgressBarPlugin::update(ProgressBar * pb,unsigned long newpos)
+void TextProgressBarPlugin::update(ProgressBar * pb, uint32_t newpos)
 {
 #if USING_MPI
     if(PLMPI::rank==0)
@@ -198,7 +198,7 @@ unsigned int RemoteProgressBarPlugin::getPBarID(ProgressBar* pb)
 }
 
 
-void RemoteProgressBarPlugin::update(ProgressBar* pb, unsigned long newpos)
+void RemoteProgressBarPlugin::update(ProgressBar* pb, uint32_t newpos)
 {
     // this handles the case where we reuse the same progress bar
     if(newpos < pb->currentpos)
@@ -242,7 +242,7 @@ LineOutputProgressBarPlugin::LineOutputProgressBarPlugin(PStream& _out, unsigned
 void LineOutputProgressBarPlugin::addProgressBar(ProgressBar* pb)
 { out << "In progress: " << pbInfo(pb) << endl; }
 
-void LineOutputProgressBarPlugin::update(ProgressBar* pb, unsigned long newpos)
+void LineOutputProgressBarPlugin::update(ProgressBar* pb, uint32_t newpos)
 {
     // this handles the case where we reuse the same progress bar
     if(newpos < pb->currentpos)

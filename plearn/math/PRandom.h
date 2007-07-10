@@ -83,14 +83,13 @@ protected:
     boost::uniform_01<boost::mt19937>* uniform_01;
 
     //! The actual seed used by the random number generator.
-    boost::uint32_t the_seed;
-    
+    uint32_t the_seed;
+
     // *********************
     // * protected options *
     // *********************
 
-    //long fixed_seed;
-    int fixed_seed;
+    int32_t fixed_seed;
 
 public:
 
@@ -98,15 +97,14 @@ public:
     // * public build options *
     // ************************
 
-    //long seed_; // CAUSES PROBLEMS WITH PYTHON SERVER INTERFACE
-    int seed_;
+    int32_t seed_;
 
     // ****************
     // * Constructors *
     // ****************
 
     //! Constructor from a given seed.
-    PRandom(long seed = -1);
+    PRandom(int32_t seed = -1);
 
     //! Copy constructor.
     //! This constructor ensures that no deep-copy is needed. All fields are
@@ -133,17 +131,17 @@ public:
     { return normal_distribution; }
     boost::uniform_01<boost::mt19937>*        get_uniform_01()               const
     { return uniform_01; }
-	
-    boost::uint32_t get_the_seed()   const { return the_seed; }
-    long            get_fixed_seed() const { return fixed_seed; }
-    long            get_seed()       const { return seed_; }
 
-private: 
+    uint32_t get_the_seed()   const { return the_seed; }
+    int32_t  get_fixed_seed() const { return fixed_seed; }
+    int32_t  get_seed()       const { return seed_; }
+
+private:
 
     //! This does the actual building. 
     void build_();
 
-protected: 
+protected:
 
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
@@ -152,9 +150,9 @@ protected:
     //! This is an internal method that does not update the 'seed' option.
     void time_seed_();
 
-    //! Initialize the random number generator with the given long 'x'.
+    //! Initialize the random number generator with the given int32_t 'x'.
     //! This is an internal method that does not update the 'seed' option.
-    void manual_seed_(long x);
+    void manual_seed_(int32_t x);
 
     //! Ensure the 'uniform_01' member is correctly initialized.
     //! This method is called in build(), so it should not be needed to call it
@@ -199,7 +197,7 @@ public:
     //! accordingly.
     //! 'x' may be -1 to initialize from the current CPU time, or 0 to make
     //! no initialization.
-    void manual_seed(long x);
+    void manual_seed(int32_t x);
 
     //! Initialize the random number generator with the CPU time.
     inline void time_seed() { manual_seed(-1); }

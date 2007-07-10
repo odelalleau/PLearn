@@ -98,7 +98,7 @@ public:
      *  that is being instantiated.  If this value is <= 0, it is used as-is
      *  without being incremented.
      */
-    long m_initial_seed;
+    int32_t m_initial_seed;
 
     /**
      *  Use in conjunction with 'initial_seed'; option name pointing to the
