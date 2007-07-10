@@ -116,7 +116,7 @@ def getres(loc_specs,filenames):
                            load_pmat_as_array(filename))
       all_results.append([file_res,filename])
     except ValueError,v:
-      print >>sys.stderr, "caught ValueError exception!"
+      print >>sys.stderr, "caught ValueError exception in", filename
       print >>sys.stderr, v
   return all_results
 
