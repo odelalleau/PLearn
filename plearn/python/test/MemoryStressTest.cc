@@ -191,7 +191,7 @@ void MemoryStressTest::nullary(const PythonCodeSnippet* python)
 void MemoryStressTest::unary(const PythonCodeSnippet* python)
 {
     int i       = python->invoke("unary_int", 42).as<int>();
-    int64_t l   = python->invoke("unary_long", 42L).as<int64_t>();
+    int64_t l   = python->invoke("unary_long", int64_t(42)).as<int64_t>();
     double d    = python->invoke("unary_float", 42.01).as<double>();
     string s    = python->invoke("unary_str", "Hello").as<string>();
 

@@ -187,23 +187,23 @@ string BasicIdentityCallsTest::python_code =
 
 void BasicIdentityCallsTest::nullary(const PythonCodeSnippet* python)
 {
-    cout << "isInvokable(nullary)        : " << python->isInvokable("nullary") << endl;
-    cout << "Calling nullary             : " << flush;
+    cout << "isInvokable(nullary)           : " << python->isInvokable("nullary") << endl;
+    cout << "Calling nullary                : " << flush;
     python->invoke("nullary");
 }
 
 void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
 {
-    cout << "Calling unary_int(42)       : "
+    cout << "Calling unary_int(42)          : "
          << python->invoke("unary_int", 42).as<int>() << endl;
 
-    cout << "Calling unary_long(42L)     : "
-         << python->invoke("unary_long", 42L).as<int64_t>() << endl;
+    cout << "Calling unary_long(int64_t(42)): "
+         << python->invoke("unary_long", int64_t(42)).as<int64_t>() << endl;
 
-    cout << "Calling unary_float(42.01)  : "
+    cout << "Calling unary_float(42.01)     : "
          << python->invoke("unary_float", 42.01).as<double>() << endl;
 
-    cout << "Calling unary_str('Hello')  : "
+    cout << "Calling unary_str('Hello')     : "
          << python->invoke("unary_str", "Hello").as<string>() << endl;
 
     Vec v;
@@ -213,17 +213,17 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
     Mat m(3,3);
     m.toVec() << v;
 
-    cout << "Calling unary_vec(v)        : "
+    cout << "Calling unary_vec(v)           : "
          << tostring( python->invoke("unary_vec", v).as<Vec>() )
          << endl;
 
     // Test full matrix (mod == width)
-    cout << "Calling unary_mat(m)        : " << endl;
+    cout << "Calling unary_mat(m)           : " << endl;
     cout << tostring( python->invoke("unary_mat", m).as<Mat>() )
          << endl;
 
     // Test sliced matrix (mod > width)
-    cout << "Calling unary_mat(m)        : " << endl;
+    cout << "Calling unary_mat(m)           : " << endl;
     cout << tostring( python->invoke("unary_mat", m.subMatColumns(1,2)).as<Mat>() )
          << endl;
 
@@ -233,10 +233,10 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
     is_tvs >> tvs;
     vector<string> vecs(tvs.begin(), tvs.end());
 
-    cout << "Calling unary_list_str(tvs) : "
+    cout << "Calling unary_list_str(tvs)    : "
          << tostring( python->invoke("unary_list_str", tvs).as< TVec<string> >() )
          << endl;
-    cout << "Calling unary_list_str(vecs): "
+    cout << "Calling unary_list_str(vecs)   : "
          << tostring( TVec<string>(python->invoke("unary_list_str", vecs)
                                    .as< vector<string> >() ))
          << endl;
@@ -246,28 +246,28 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
     PStream is_mapsd = openString(str_mapsd, PStream::plearn_ascii);
     is_mapsd >> mapsd;
 
-    cout << "Calling unary_dict(mapsd)   : "
+    cout << "Calling unary_dict(mapsd)      : "
          << tostring( python->invoke("unary_dict", mapsd).as< map<string,int32_t> >() )
          << endl;
 }
 
 void BasicIdentityCallsTest::binary(const PythonCodeSnippet* python)
 {
-    cout << "Calling binary(2,4)         : "
+    cout << "Calling binary(2,4)            : "
          << tostring( python->invoke("binary",2,4).as< TVec<int> >())
          << endl;
 }
 
 void BasicIdentityCallsTest::ternary(const PythonCodeSnippet* python)
 {
-    cout << "Calling ternary(2,4,8)      : "
+    cout << "Calling ternary(2,4,8)         : "
          << tostring( python->invoke("ternary",2,4,8).as< TVec<int> >())
          << endl;
 }
 
 void BasicIdentityCallsTest::quaternary(const PythonCodeSnippet* python)
 {
-    cout << "Calling quaternary(2,4,8,16): "
+    cout << "Calling quaternary(2,4,8,16)   : "
          << tostring( python->invoke("quaternary",2,4,8,16).as< TVec<int> >())
          << endl;
 }
