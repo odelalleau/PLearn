@@ -131,6 +131,7 @@ struct ConvertFromPyObject<unsigned int>
     static unsigned int convert(PyObject*, bool print_traceback);
 };
 
+/*
 template <>
 struct ConvertFromPyObject<long>
 {
@@ -141,6 +142,19 @@ template <>
 struct ConvertFromPyObject<unsigned long>
 {
     static unsigned long convert(PyObject*, bool print_traceback);
+};
+*/
+
+template <>
+struct ConvertFromPyObject<int64_t>
+{
+    static int64_t convert(PyObject*, bool print_traceback);
+};
+
+template <>
+struct ConvertFromPyObject<uint64_t>
+{
+    static uint64_t convert(PyObject*, bool print_traceback);
 };
 
 
@@ -268,17 +282,24 @@ template<> struct ConvertToPyObject<Object*>
 
 template<> struct ConvertToPyObject<bool>
 { static PyObject* newPyObject(const bool& x); };
-    
+
 template<> struct ConvertToPyObject<int>
 { static PyObject* newPyObject(const int& x); };
 template<> struct ConvertToPyObject<unsigned int>
 { static PyObject* newPyObject(const unsigned int& x); };
-    
+
+template<> struct ConvertToPyObject<int64_t>
+{ static PyObject* newPyObject(const int64_t& x); };
+template<> struct ConvertToPyObject<uint64_t>
+{ static PyObject* newPyObject(const uint64_t& x); };
+
+/*
 template<> struct ConvertToPyObject<long>
 { static PyObject* newPyObject(const long& x); };
 template<> struct ConvertToPyObject<unsigned long>
 { static PyObject* newPyObject(const unsigned long& x); };
-    
+*/
+
 template<> struct ConvertToPyObject<double>
 { static PyObject* newPyObject(const double& x); };
 
@@ -290,13 +311,13 @@ template<> struct ConvertToPyObject<char*>
 
 template<size_t N> struct ConvertToPyObject<char[N]>
 { static PyObject* newPyObject(const char x[N]); };
-    
+
 template<> struct ConvertToPyObject<string>
 { static PyObject* newPyObject(const string& x); };
 
 template<> struct ConvertToPyObject<PPath>
 { static PyObject* newPyObject(const PPath& x); };
-  
+
 //! PLearn Vec: use numarray
 template<> struct ConvertToPyObject<Vec>
 { static PyObject* newPyObject(const Vec&); };

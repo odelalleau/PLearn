@@ -198,7 +198,7 @@ void BasicIdentityCallsTest::unary(const PythonCodeSnippet* python)
          << python->invoke("unary_int", 42).as<int>() << endl;
 
     cout << "Calling unary_long(42L)     : "
-         << python->invoke("unary_long", 42L).as<int32_t>() << endl;
+         << python->invoke("unary_long", 42L).as<int64_t>() << endl;
 
     cout << "Calling unary_float(42.01)  : "
          << python->invoke("unary_float", 42.01).as<double>() << endl;
