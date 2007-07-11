@@ -713,8 +713,8 @@ void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     PLASSERT( target.size() == input_size );
     bias_gradient.resize( size );
 
-    // bias_gradient = target - expectation
-    substract(target, expectation, bias_gradient);
+    // bias_gradient = expectation - target
+    substract(expectation, target, bias_gradient);
 }
 
 void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
@@ -728,8 +728,8 @@ void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
     PLASSERT( costs_column.length() == batch_size );
     bias_gradients.resize( batch_size, size );
 
-    // bias_gradients = targets - expectations
-    substract(targets, expectations, bias_gradients);
+    // bias_gradients = expectations - targets
+    substract(expectations, targets, bias_gradients);
 }
 
 
