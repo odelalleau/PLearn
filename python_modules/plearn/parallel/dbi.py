@@ -359,7 +359,8 @@ class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
-
+        os.mkdir(self.log_dir) # condor log are always generated
+        
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
             
@@ -471,10 +472,13 @@ class DBICondor(DBIBase):
                 executable     = %s/launch.sh
                 universe       = vanilla
                 requirements   = %s
-                output         = main.%s.%s.$(Process).out
-                error          = main.%s.%s.$(Process).error
-                log            = main.%s.log
-                ''' % (self.tmp_dir,req,self.targetcondorplatform,task.unique_id,self.targetcondorplatform,task.unique_id,self.targetcondorplatform)))
+                output         = %s/condor.%s.%s.$(Process).out
+                error          = %s/condor.%s.%s.$(Process).error
+                log            = %s/condor.%s.log
+                ''' % (self.tmp_dir,req,
+                       self.log_dir,self.targetcondorplatform,task.unique_id,
+                       self.log_dir,self.targetcondorplatform,task.unique_id,
+                       self.log_dir,self.targetcondorplatform)))
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
 
