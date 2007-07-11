@@ -2228,7 +2228,7 @@ digraph G
             if optdef.linker:
                 linker = optdef.linker
 
-        command = linker + so_options + ' -o ' + self.corresponding_output + ' ' + string.join(self.objsfilelist,' ') + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
+        command = linker + ' ' + string.join(self.objsfilelist,' ') + so_options + ' -o ' + self.corresponding_output + ' ' + self.get_optional_libraries_linkeroptions() + ' ' + linkeroptions + ' ' + linkeroptions_tail
 
         return command
 
