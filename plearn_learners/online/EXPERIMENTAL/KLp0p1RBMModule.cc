@@ -883,7 +883,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
         // compute all P(hidden_i=1|x^k) for all x^k in training set
         hidden_layer->setBatchSize(n);
         visible_layer->setBatchSize(n);
-        const Mat& ph=hidden_layer->getExpectations();
+        const Mat& ha=hidden_layer->activations;
         const Mat& X=visible_layer->getExpectations();
         training_set->getMat(0,0,X);
         connection->setAsDownInputs(visible_layer->getExpectations());
@@ -911,7 +911,6 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
         // compute all P(visible_i=1|h) for each h configuration
         connection->setAsUpInputs(conf_hidden_layer->samples);
         conf_visible_layer->getAllActivations(connection,0,true);
-        conf_visible_layer->computeExpectations();
 
         for (int c=0;c<n_configurations;c++)
         {
@@ -923,7 +922,12 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
             {
                 real lp=0;
                 for (int i=0;i<hidden_layer->size;i++)
-                    lp += h[i]==1?safelog(ph(k,i)):safelog(1-ph(k,i)); 
+                {
+                    real act=ha(k,i);
+                    // note that log sigmoid(act) = -softplus(-act)
+                    // and       log(1 - sigmoid(act)) = -act -softplus(-act)
+                    lp += h[i]==1?-softplus(-act):-act-softplus(-act); 
+                }
                 // now lp = log P(h|x^k)
                 if (k==0)
                     log_sum_ph_given_xk = lp;
@@ -931,6 +935,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     log_sum_ph_given_xk = logadd(log_sum_ph_given_xk,lp);
             }
             // now log_sum_ph_given_xk = log sum_k P(h|x^k)
+            conf_visible_layer->activation << conf_visible_layer->activations(c);
             for (int t=0;t<mbs;t++)
                 if (c==0)
                     (*KLp0p1)(t,0) = conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk;
@@ -1628,7 +1633,7 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         partition_function_is_stale = true;
     }
 
-    // compute KLp0p1 cost, given visible input
+    // compute gradient of KLp0p1 cost, given visible input
     if (klp0p1_learning_rate>0 && visible && !visible->isEmpty())
     {
         // WE ASSUME THAT THIS BPROP IS CALLED JUST AFTER THE CORRESPONDING FPROP!!!
@@ -1653,34 +1658,46 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         Mat& W = matrix_connection->weights;
         Vec& hidden_bias = hidden_layer->bias;
         Vec& visible_bias = visible_layer->bias;
-        const Mat& ph_given_Xk=hidden_layer->getExpectations();
-        const Mat& pvisible_given_H=conf_visible_layer->getExpectations();
         const Mat& X=visible_layer->getExpectations();
         int n_configurations = 1 << hidden_layer->size; // = 2^{hidden_layer->size}
         real logn=safelog(n);
+        // we only computed the activations in the fprop
+        conf_visible_layer->computeExpectations(); 
+        const Mat& pvisible_given_H = conf_visible_layer->getExpectations();
+        const Mat& ph_given_X = hidden_layer->getExpectations();
         for (int t=0;t<mbs;t++)
         {
             Vec xt = (*visible)(t);
             for (int k=0;k<n;k++)
             {
-                Vec ph_given_xk = ph_given_Xk(k);
+                Vec ah_given_xk = hidden_layer->activations(k);
+                Vec ph_given_xk = ph_given_X(k);
                 Vec xk = X(k);
                 for (int c=0;c<n_configurations;c++)
                 {
                     Vec h = conf_hidden_layer->samples(c);
-                    Vec pvisible_given_h=pvisible_given_H(c);
+                    Vec avisible_given_h=conf_visible_layer->activations(c);
                     real lp = (*KLp0p1)(t,0) - logn; // lp = log (1/(n P1(x^t)))
                     // compute and multiply by P(h|x^k)
                     for (int i=0;i<hidden_layer->size;i++)
-                        lp += (h[i]==1?safelog(ph_given_xk[i]):safelog(1-ph_given_xk[i])); 
+                    {
+                        real act=ah_given_xk[i];
+                        // note that log sigmoid(act) = -softplus(-act)
+                        // and       log(1 - sigmoid(act)) = -act -softplus(-act)
+                        // so h*log(sigmoid(act))+(1-h)*log(sigmoid(act)) = act*h-act-softplus(act)
+                        lp += h[i]*act-act-softplus(-act);
+                    }
                     // now lp = log ( (1/(n P1(x^t))) P(h|x^k) )
 
                     // compute and multiply by P(x^t|h)
                     for (int j=0;j<visible_layer->size;j++)
-                        lp += (xt[j]*safelog(pvisible_given_h[j])+
-                                               (1-xt[j])*safelog(1-pvisible_given_h[j]));
+                    {
+                        real act=avisible_given_h[j];
+                        lp += act*xt[j] - act - softplus(-act);
+                    }
                     // now lp = log ( (1/(n P1(x^t))) P(h|x^k)  P(x^t|h) )
                     real coeff = exp(lp);
+                    Vec pvisible_given_h=pvisible_given_H(c);
                     for (int j=0;j<visible_layer->size;j++)
                         visible_bias[j] -=
                             klp0p1_learning_rate*coeff*(xt[j]-pvisible_given_h[j]);
