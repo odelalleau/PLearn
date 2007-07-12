@@ -1026,6 +1026,15 @@ BEGIN_DECLARE_REMOTE_FUNCTIONS
                             "file containing the object to load"),
                      RetDoc ("newly created object")));
 
+    declareFunction("macroLoadObject", static_cast<Object* (*)(const PPath&,map<string,string>&)>(&macroLoadObject),
+                    (BodyDoc("Returns PLearn object from a file describing it,"
+                             " after macro-processing.\n"),
+                     ArgDoc("filename", 
+                            "file containing the object to load"),
+                     ArgDoc("vars", 
+                            "map of vars to values."),
+                     RetDoc ("newly created object")));
+
     declareFunction("deepCopy", &remote_deepCopy,
                     (BodyDoc("Returns deep copy of a PLearn object.\n"),
                      ArgDoc ("source", "object to be deep-copied"),
