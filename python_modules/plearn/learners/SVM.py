@@ -132,6 +132,7 @@ class SVM(object):
                         'valid_error_rate',
                         'best_parameters',
                         'tried_parameters',
+                        'result_list',
                         'save_filename'
                         ]
        
@@ -147,6 +148,7 @@ class SVM(object):
           self.best_parameters      = None  
           self.best_model           = None
           self.tried_parameters     = {}
+          self.result_list          = {}
           
           self.save_filename        = None
           
@@ -159,6 +161,7 @@ class SVM(object):
           self.POLY_expert.reset()
           
           self.tried_parameters = {}
+          self.result_list          = {}
           #if self.best_parameters != None:
           #   self.add_parameter_to_tried_list(self.best_parameters[0], self.best_parameters[1:])
           self.error_rate       = 1.
@@ -168,8 +171,14 @@ class SVM(object):
           if self.tried_parameters.has_key(kernel):
              self.tried_parameters[kernel]+=[kernel_parameters]
           else:
-             self.tried_parameters[kernel] =[kernel_parameters] 
+             self.tried_parameters[kernel] =[kernel_parameters]
 
+      def add_result_to_result_list(self, kernel, kernel_parameters, error_rate):
+          if self.result_list.has_key(kernel):
+             self.result_list[kernel]+= kernel_parameters, error_rate
+          else:
+             self.result_list[kernel] = kernel_parameters, error_rate
+             
       def train_and_test(self, samples_target_list):
           check_samples_target_list(samples_target_list)
 
@@ -177,17 +186,16 @@ class SVM(object):
           best_parameters = best_expert.best_parameters
           param = best_expert.get_svm_parameter( best_parameters )
           if len(samples_target_list) == 1: # cross-validation
-             error_rate = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)
+             costs = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)
           else:
-             error_rate = do_simple_validation(samples_target_list[0][0] , samples_target_list[0][1] , samples_target_list[1][0] , samples_target_list[1][1], param)
-          return error_rate
+             costs = do_simple_validation(samples_target_list[0][0] , samples_target_list[0][1] , samples_target_list[1][0] , samples_target_list[1][1], param)
+          return costs
 
       def test(self, samples_target_list):
           check_samples_target_list(samples_target_list)
           if len(samples_target_list) <> 1:
-             raise TypeError, "in SVM::test(), samples_target_list must be [[samples],[targets]] (list of list)"
-          error_rate = test_model(model, samples_target_list[0][0], samples_target_list[0][1])
-          return error_rate
+             raise TypeError, "in SVM::test(), samples_target_list must be [[samples],[targets]] (list of list)"          
+          return test_model(self.best_model, samples_target_list[0][0], samples_target_list[0][1])
 
 
       def train_and_tune(self, kernel_type, samples_target_list):
@@ -219,7 +227,7 @@ class SVM(object):
                   else:
                      train_problem = svm_problem( samples_target_list[0][1] , samples_target_list[0][0] )
                      model = svm_model(train_problem, param)
-                     error_rate = test_model(model, samples_target_list[1][0], samples_target_list[1][1])
+                     error_rate = test_model(model, samples_target_list[1][0], samples_target_list[1][1])['error_rate']
                      
                      if self.save_filename != None:
                         try:
@@ -229,8 +237,9 @@ class SVM(object):
                            FID.write(' --> Error rate = '+str(error_rate)+'\n')
                            FID.close()
                         except:
-                           print "COULD not write in save_filename"   
-                                  
+                           print "COULD not write in save_filename"
+
+                  self.add_result_to_result_list(kernel_type, parameters, error_rate)
                   if error_rate < best_error_rate:
                      best_parameters = parameters
                      best_error_rate = error_rate
@@ -244,7 +253,7 @@ class SVM(object):
                 self.best_parameters = [kernel_type, best_parameters]
                 self.valid_error_rate = best_error_rate
                 if len(samples_target_list) == 3: # train-valid-test
-                   self.error_rate = test_model(self.best_model, samples_target_list[2][0], samples_target_list[2][1])
+                   self.error_rate = test_model(self.best_model, samples_target_list[2][0], samples_target_list[2][1])['error_rate']
                 else:
                    self.error_rate = self.valid_error_rate
           
@@ -288,21 +297,37 @@ def do_cross_validation(samples, targets, param, nr_fold):
         for j in range(0,i)+range(i+1,nr_fold):
             train_samples += samples_subsets[j]
             train_targets += targets_subsets[j]
-        cum_error_rate += do_simple_validation(train_samples, train_targets, test_samples, test_targets, param)
-    return cum_error_rate / nr_fold
+        cum_error_rate += do_simple_validation(train_samples, train_targets, test_samples, test_targets, param)['error_rate']
+    ret = cum_error_rate / nr_fold
+    return {'error_rate':err}
         
 def test_model(model, samples, targets):
     N = len(samples)
-    total_correct = 0
+    diffs = {}
     for i in range(N):
-        if model.predict(samples[i]) == targets[i]:
-           total_correct = total_correct + 1
-    return ( ( N - total_correct )*1. / N)
+          diff = abs(model.predict(samples[i]) - targets[i])
+          if diffs.has_key(diff):
+                diffs[diff] += 1
+          else:
+                diffs[diff] = 1
+    error_rate = 0
+    linear_class_error = 0
+    square_class_error = 0
+    for diff, nbdiff in diffs.iteritems():
+          if not diff == 0:
+                error_rate += 1*nbdiff
+          linear_class_error += diff*nbdiff
+          square_class_error += (diff*diff)*nbdiff
+    error_rate = float(error_rate) / N
+    linear_class_error = float(linear_class_error) / N
+    square_class_error = float(square_class_error) / N
+    
+    return {'error_rate':error_rate, 'linear_class_error':linear_class_error, 'square_class_error':square_class_error }
 
 def do_simple_validation(train_samples, train_targets, test_samples, test_targets, param):
     train_problem = svm_problem( train_targets, train_samples )
     model = svm_model(train_problem, param)
-    test_model(model,test_samples,test_targets)
+    return test_model(model,test_samples,test_targets)
 
 
 
