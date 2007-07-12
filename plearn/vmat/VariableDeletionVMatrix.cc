@@ -230,6 +230,12 @@ void VariableDeletionVMatrix::build_()
     }
     if(!source)
         PLERROR("In VariableDeletionVMatrix::build_ - The source VMat do not exist!");
+
+    int is = source->inputsize();
+    if (is < 0)
+        PLERROR("In VariableDeletionVMatrix::build_ - The source VMat must "
+                "have an inputsize defined");
+
     VMat the_train_source = train_set ? train_set : source;
     if (number_of_train_samples > 0 &&
         number_of_train_samples < the_train_source->length())
@@ -237,44 +243,45 @@ void VariableDeletionVMatrix::build_()
                                           number_of_train_samples,
                                           the_train_source->width());
         
-    TVec<StatsCollector> stats =
-        PLearn::computeStats(the_train_source, -1, false);
-    PLASSERT( stats.length() == source->width() );
-    int is = source->inputsize();
-    if (is < 0)
-        PLERROR("In VariableDeletionVMatrix::build_ - The source VMat must "
-                "have an inputsize defined");
+    TVec<StatsCollector> stats;
+    if(min_non_missing_threshold > 0 || max_constant_threshold > 0){
+        stats = PLearn::computeStats(the_train_source, -1, false);
+        PLASSERT( stats.length() == source->width() );
+    }
 
     indices.resize(0);
 
     // First remove columns that have too many missing values.
-    int min_non_missing =
-        int(round(min_non_missing_threshold * the_train_source->length()));
-    for (int i = 0; i < is; i++)
-        if (stats[i].nnonmissing() >= min_non_missing)
+    if (min_non_missing_threshold > 0){
+        int min_non_missing =
+            int(round(min_non_missing_threshold * the_train_source->length()));
+        for (int i = 0; i < is; i++)
+            if (stats[i].nnonmissing() >= min_non_missing)
+                indices.append(i);
+    } else
+        for (int i = 0; i < is; i++)
             indices.append(i);
-
     // Then remove columns that are too constant.
     TVec<int> final_indices;
-    for (int k = 0; k < indices.length(); k++) {
-        int i = indices[k];
-        int max_constant_absolute =
-            int(round(max_constant_threshold * stats[i].nnonmissing()));
-        map<real, StatsCollectorCounts>* counts = stats[i].getCounts();
-        map<real, StatsCollectorCounts>::const_iterator it;
-        bool ok = true;
-        if (max_constant_threshold > 0)
+    if (max_constant_threshold > 0){
+        for (int k = 0; k < indices.length(); k++) {
+            int i = indices[k];
+            int max_constant_absolute =
+                int(round(max_constant_threshold * stats[i].nnonmissing()));
+            map<real, StatsCollectorCounts>* counts = stats[i].getCounts();
+            map<real, StatsCollectorCounts>::const_iterator it;
+            bool ok = true;
             for (it = counts->begin(); ok && it != counts->end(); it++) {
                 int n = int(round(it->second.n));
                 if (n >= max_constant_absolute)
                     ok = false;
             }
-        if (ok)
-            final_indices.append(i);
+            if (ok)
+                final_indices.append(i);
+        }
+        indices.resize(final_indices.length());
+        indices << final_indices;
     }
-    indices.resize(final_indices.length());
-    indices << final_indices;
-
     // Define sizes.
     inputsize_  = indices.length();
     targetsize_ = source->targetsize();
