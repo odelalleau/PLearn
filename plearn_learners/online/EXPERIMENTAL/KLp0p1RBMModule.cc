@@ -62,7 +62,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "layer RBMs here."
     "The gradient on the weight Wij is"
     "  dC(x)/dWij = (1/(n P1(x))) "
-    "       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j|h)) + x_j^k(h_i - P(h_i|x^k)))"
+    "       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j=1|h)) + x_j^k(h_i - P(h_i=1|x^k)))"
     "Apart from the KLp0p1 output port, and the fact that CD learning is replaced by minimization"
     "of KLp0p1, this module acts like a regular RBMModule."
 );
@@ -1641,7 +1641,7 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         //
         // We want to compute
         //   dC(x)/dWij = (1/(n P1(x))) 
-        //       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j|h)) + x_j^k(h_i - P(h_i|x^k)))
+        //       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j=1|h)) + x_j^k(h_i - P(h_i=1|x^k)))
         //
         PLASSERT_MSG(KLp0p1 && !KLp0p1->isEmpty(), "Must compute KLp0p1 in order to compute its gradient, connect that port!");
         int mbs=visible->length();
@@ -1653,8 +1653,6 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         Mat& W = matrix_connection->weights;
         Vec& hidden_bias = hidden_layer->bias;
         Vec& visible_bias = visible_layer->bias;
-        Vec pxtj_given_h(visible_layer->size);
-        Vec phi_given_xk(hidden_layer->size);
         const Mat& ph_given_Xk=hidden_layer->getExpectations();
         const Mat& pvisible_given_H=conf_visible_layer->getExpectations();
         const Mat& X=visible_layer->getExpectations();
@@ -1674,23 +1672,24 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     real lp = (*KLp0p1)(t,0) - logn; // lp = log (1/(n P1(x^t)))
                     // compute and multiply by P(h|x^k)
                     for (int i=0;i<hidden_layer->size;i++)
-                        lp += (phi_given_xk[i]=(h[i]==1?safelog(ph_given_xk[i]):safelog(1-ph_given_xk[i]))); 
+                        lp += (h[i]==1?safelog(ph_given_xk[i]):safelog(1-ph_given_xk[i])); 
                     // now lp = log ( (1/(n P1(x^t))) P(h|x^k) )
 
                     // compute and multiply by P(x^t|h)
                     for (int j=0;j<visible_layer->size;j++)
-                        lp += pxtj_given_h[j]=(xt[j]*safelog(pvisible_given_h[j])+
+                        lp += (xt[j]*safelog(pvisible_given_h[j])+
                                                (1-xt[j])*safelog(1-pvisible_given_h[j]));
                     // now lp = log ( (1/(n P1(x^t))) P(h|x^k)  P(x^t|h) )
                     real coeff = exp(lp);
                     for (int j=0;j<visible_layer->size;j++)
-                        visible_bias[j] -= klp0p1_learning_rate*coeff*(xt[j]-pxtj_given_h[j]);
+                        visible_bias[j] -=
+                            klp0p1_learning_rate*coeff*(xt[j]-pvisible_given_h[j]);
                     for (int i=0;i<hidden_layer->size;i++)
                     {
-                        hidden_bias[i] -= klp0p1_learning_rate*coeff*(h[i]-phi_given_xk[i]);
+                        hidden_bias[i] -= klp0p1_learning_rate*coeff*(h[i]-ph_given_xk[i]);
                         for (int j=0;j<visible_layer->size;j++)
                             W(i,j) -= klp0p1_learning_rate*coeff*
-                                (h[i]*(xt[j]-pxtj_given_h[j])-xk[j]*(h[i]-phi_given_xk[i]));
+                                (h[i]*(xt[j]-pvisible_given_h[j])-xk[j]*(h[i]-ph_given_xk[i]));
                     }
                 }
             }
