@@ -206,6 +206,11 @@ public:
     //! Computes the output from the input.
     // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutputs(const Mat& input, Mat& output) const;
+
+    virtual void computeOutputsAndCosts(const Mat& input, const Mat& target, 
+                                        Mat& output, Mat& costs) const;
+
 
     //! Computes the costs from already computed output.
     // (PLEASE IMPLEMENT IN .cc)

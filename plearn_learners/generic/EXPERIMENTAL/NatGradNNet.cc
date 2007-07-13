@@ -164,7 +164,8 @@ void NatGradNNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "minibatch_size", &NatGradNNet::minibatch_size,
                   OptionBase::buildoption,
-                  "Update the parameters only so often (number of examples).\n");
+                  "Update the parameters only so often (number of examples).\n"
+                  "Must be greater or equal to test_minibatch_size\n");
 
     declareOption(ol, "neurons_natgrad_template", &NatGradNNet::neurons_natgrad_template,
                   OptionBase::buildoption,
@@ -625,9 +626,9 @@ void NatGradNNet::train()
         int b = stage % minibatch_size;
         Vec input = neuron_outputs_per_layer[0](b);
         Vec target = targets(b);
-        Profiler::pl_profile_start("getting_data");
+        Profiler::pl_profile_start("NatGradNNet::getting_data");
         train_set->getExample(sample, input, target, example_weights[b]);
-        Profiler::pl_profile_end("getting_data");
+        Profiler::pl_profile_end("NatGradNNet::getting_data");
         if (b+1==minibatch_size) // do also special end-case || stage+1==nstages)
         {
             onlineStep(stage, targets, train_costs, example_weights );
@@ -876,11 +877,11 @@ void NatGradNNet::pvGradUpdate()
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
 {
-    Profiler::pl_profile_start("computeOutput");
+    Profiler::pl_profile_start("NatGradNNet::computeOutput");
     neuron_outputs_per_layer[0](0) << input;
     fpropNet(1,false);
     output << neuron_outputs_per_layer[n_layers-1](0);
-    Profiler::pl_profile_end("computeOutput");
+    Profiler::pl_profile_end("NatGradNNet::computeOutput");
 }
 
 //! compute (pre-final-non-linearity) network top-layer output given input
@@ -1072,7 +1073,48 @@ void NatGradNNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
     Mat costsM = costs.toMat(1,costs.length());
     fbpropLoss(outputM,targetM,w,costsM);
 }
+/*
+void NatGradNNet::computeOutput(const Vec& input, Vec& output)
+{
+    Profiler::pl_profile_start("computeOutput");
+    neuron_outputs_per_layer[0](0) << input;
+    fpropNet(1,false);
+    output << neuron_outputs_per_layer[n_layers-1](0);
+    Profiler::pl_profile_end("computeOutput");
+    }
+void PLearner::computeOutputAndCosts(const Vec& input, const Vec& target, 
+                                     Vec& output, Vec& costs) const
+{
+    computeOutput(input, output);
+    computeCostsFromOutputs(input, output, target, costs);
+}
+*/
 
+void NatGradNNet::computeOutputs(const Mat& input, Mat& output) const
+{
+    Profiler::pl_profile_start("NatGradNNet::computeOutputs");
+    PLASSERT(test_minibatch_size<=minibatch_size);
+    neuron_outputs_per_layer[0].subMat(0,0,input.length(),input.width()) << input;
+    fpropNet(input.length(),false);
+    output << neuron_outputs_per_layer[n_layers-1].subMat(0,0,output.length(),output.width());
+    Profiler::pl_profile_end("NatGradNNet::computeOutputs");
+}
+void NatGradNNet::computeOutputsAndCosts(const Mat& input, const Mat& target, 
+                                      Mat& output, Mat& costs) const
+{//TODO
+    Profiler::pl_profile_start("NatGradNNet::computeOutputsAndCosts");
+
+    int n=input.length();
+    PLASSERT(target.length()==n);
+    output.resize(n,outputsize());
+    costs.resize(n,nTestCosts());
+    computeOutputs(input,output);
+
+    Vec w(n);
+    w.fill(1);
+    fbpropLoss(output,target,w,costs);
+    Profiler::pl_profile_end("NatGradNNet::computeOutputsAndCosts");
+    }
 TVec<string> NatGradNNet::getTestCostNames() const
 {
     TVec<string> costs;
