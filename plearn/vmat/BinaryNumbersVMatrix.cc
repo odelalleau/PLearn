@@ -137,7 +137,7 @@ void BinaryNumbersVMatrix::declareOptions(OptionList& ol)
 
 void BinaryNumbersVMatrix::build_()
 {
-    if (!f)
+    if (f)
         PR_Close(f);
     f = PR_Open(filename.c_str(), PR_RDONLY, 0666);
     if (width_>0)
@@ -166,7 +166,8 @@ BinaryNumbersVMatrix::~BinaryNumbersVMatrix()
 {
     if (buffer) delete[] (char*)buffer;
     buffer=0;
-    if (f) PR_Close(f);
+    if (f) 
+        PR_Close(f);
     f=0;
 }
 
