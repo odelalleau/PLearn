@@ -48,6 +48,7 @@
 #include <plearn/var/SumOverBagsVariable.h>   //!< For the bag signal constants.
 #include <plearn/var/VarArray.h>
 #include <plearn/var/VecElementVariable.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
