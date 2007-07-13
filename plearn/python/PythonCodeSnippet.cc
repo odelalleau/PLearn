@@ -549,13 +549,18 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
     map<string, PyObject*> global_map= 
         wrapped_globals.as<map<string, PyObject*> >();
 
-    //inject global funcs
-    map<string, PyObject*>::iterator it_gf= 
-        global_map.find("pl_global_funcs");
-    if(it_gf == global_map.end())
-        PLERROR("in PythonCodeSnippet::compileGlobalCode : "
-                "plearn.pybridge.pl_global_funcs not present in global env!");
-    injectPLearnGlobalFunctions(it_gf->second);//inject in global_funcs module
+    //inject global funcs, if not already done
+    static bool global_funcs_injected= false;
+    if(!global_funcs_injected)
+    {
+        map<string, PyObject*>::iterator it= 
+            global_map.find("pl_global_funcs");
+        if(it == global_map.end())
+            PLERROR("in PythonCodeSnippet::compileGlobalCode : "
+                    "plearn.pybridge.pl_global_funcs not present in global env!");
+        injectPLearnGlobalFunctions(it->second);//inject in pl_global_funcs module
+        global_funcs_injected= true;
+    }
 
     //try to find an EmbeddedCodeSnippet to instantiate
     PyObject* snippet_found= 0;
