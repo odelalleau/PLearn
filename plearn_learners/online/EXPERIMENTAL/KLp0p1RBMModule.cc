@@ -915,8 +915,10 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
 
         for (int c=0;c<n_configurations;c++)
         {
-            //  C(x) = - log P1(x) =  (1-1/n)log n - log sum_{k=1}^n sum_h P(x|h) P(h|x^k)
-            //                     =  (1-1/n)log n - log sum_h P(x|h) (sum_k P(h|x^k))/n
+            //  C(x) =  -log p1(x) -(1/n)logn
+            //       =  (1-1/n)log n - log sum_{k=1}^n sum_h P(x|h) P(h|x^k)
+            //       =  (1-1/n)log n - log sum_h P(x|h) (sum_k P(h|x^k))/n
+
             real log_sum_ph_given_xk = 0;
             Vec h = conf_hidden_layer->samples(c);
             for (int k=0;k<n;k++)
@@ -1679,7 +1681,8 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 {
                     Vec h = conf_hidden_layer->samples(c);
                     Vec avisible_given_h=conf_visible_layer->activations(c);
-                    real lp = (*KLp0p1)(t,0) - logn; // lp = log (1/(n P1(x^t)))
+                    // KLp0p1(x) = -log p1(x) -(1/n)logn
+                    real lp = -(*KLp0p1)(t,0) - (1+1/(real)n)*logn; // lp = log (1/(n P1(x^t)))
                     // compute and multiply by P(h|x^k)
                     for (int i=0;i<hidden_layer->size;i++)
                     {
