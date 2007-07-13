@@ -54,14 +54,15 @@ PLEARN_IMPLEMENT_OBJECT(
     "This criterion is described and justified in the paper by Le Roux and Bengio entitled"
     "'Representational Power of Restricted Boltzmann Machines and Deep Belief Networks'."
     "The exact and very inefficient implementation of this criterion is done here."
+    "  KL(p0||p1) = sum_x p0(x) log p0(x)/p1(x) = - sum_i (1/n) log p1(x_i) + sum_i (1/n) log(1/n)"
     "For an example x the cost is:"
-    "  C(x) = - log P1(x) = - log (1/n)sum_{k=1}^n sum_h P(x|h) P(h|x^k)"
+    "  C(x) = - log p1(x) -(1/n) log n = - log (1/n)sum_{k=1}^n sum_h P(x|h) P(h|x^k) -(1/n)log n"
     "where {x^1, ... x^n} is the training set of examples x^k, h is a hidden layer bit vector,"
     "P(x|h) is the hidden-to-visible conditional distribution and P(h|x) is the"
     "input-to-hidden conditional distribution. Both are the usual found in Binomial"
     "layer RBMs here."
     "The gradient on the weight Wij is"
-    "  dC(x)/dWij = (-1/(n P1(x))) "
+    "  dC(x)/dWij = (-1/(n p1(x))) "
     "       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j=1|h)) + x_j^k(h_i - P(h_i=1|x^k)))"
     "Apart from the KLp0p1 output port, and the fact that CD learning is replaced by minimization"
     "of KLp0p1, this module acts like a regular RBMModule."
@@ -892,7 +893,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
 
         PLASSERT_MSG(hidden_layer->size<32,"To compute KLp0p1 of an RBM, hidden_layer->size must be <32");
         PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
-        real logn=safelog(n);
+        real logn=safelog((real)n);
         // assuming a binary hidden we sum over all bit configurations
         int n_configurations = 1 << hidden_layer->size; // = 2^{hidden_layer->size}
         // put all h configurations in the hidden_layer->samples
@@ -944,7 +945,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
         }
         *KLp0p1 *= -1;
-        *KLp0p1 += 2*logn;
+        *KLp0p1 += logn*((real)1.0 - (real)1.0/(real)n);
         // reset sizes as before
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
