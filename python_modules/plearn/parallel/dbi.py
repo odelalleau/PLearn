@@ -359,7 +359,8 @@ class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
-        os.mkdir(self.log_dir) # condor log are always generated
+        if not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir) # condor log are always generated
         
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
