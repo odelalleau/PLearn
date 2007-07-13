@@ -915,8 +915,8 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
 
         for (int c=0;c<n_configurations;c++)
         {
-            //  C(x) = - log P1(x) = - log (1/n)sum_{k=1}^n sum_h P(x|h) P(h|x^k)
-            //                     = - log sum_h P(x|h) (sum_k P(h|x^k))/n
+            //  C(x) = - log P1(x) =  (1-1/n)log n - log sum_{k=1}^n sum_h P(x|h) P(h|x^k)
+            //                     =  (1-1/n)log n - log sum_h P(x|h) (sum_k P(h|x^k))/n
             real log_sum_ph_given_xk = 0;
             Vec h = conf_hidden_layer->samples(c);
             for (int k=0;k<n;k++)
@@ -940,13 +940,13 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
             conf_visible_layer->activation << conf_visible_layer->activations(c);
             for (int t=0;t<mbs;t++)
                 if (c==0)
-                    (*KLp0p1)(t,0) = conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk;
+                    (*KLp0p1)(t,0) = -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk;
                 else
-                    (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
+                    (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
         }
         *KLp0p1 *= -1;
         *KLp0p1 += logn*((real)1.0 - (real)1.0/(real)n);
-        // reset sizes as before
+        // going in the other direction just for the fun of it:
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
     }
