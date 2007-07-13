@@ -288,6 +288,7 @@
 #include <plearn/vmat/DatedJoinVMatrix.h>
 // #include <plearn/vmat/DictionaryVMatrix.h>
 #include <plearn/vmat/DisregardRowsVMatrix.h>
+#include <plearn/vmat/BinaryNumbersVMatrix.h>
 #include <plearn/vmat/ExtractNNetParamsVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/vmat/FinancePreprocVMatrix.h>
