@@ -944,7 +944,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
         }
         *KLp0p1 *= -1;
-        *KLp0p1 += logn;
+        *KLp0p1 += 2*logn;
         // reset sizes as before
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
@@ -1700,14 +1700,14 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     real coeff = exp(lp);
                     Vec pvisible_given_h=pvisible_given_H(c);
                     for (int j=0;j<visible_layer->size;j++)
-                        visible_bias[j] -=
+                        visible_bias[j] +=
                             klp0p1_learning_rate*coeff*(xt[j]-pvisible_given_h[j]);
                     for (int i=0;i<hidden_layer->size;i++)
                     {
-                        hidden_bias[i] -= klp0p1_learning_rate*coeff*(h[i]-ph_given_xk[i]);
+                        hidden_bias[i] += klp0p1_learning_rate*coeff*(h[i]-ph_given_xk[i]);
                         for (int j=0;j<visible_layer->size;j++)
-                            W(i,j) -= klp0p1_learning_rate*coeff*
-                                (h[i]*(xt[j]-pvisible_given_h[j])-xk[j]*(h[i]-ph_given_xk[i]));
+                            W(i,j) += klp0p1_learning_rate*coeff*
+                                (h[i]*(xt[j]-pvisible_given_h[j])+xk[j]*(h[i]-ph_given_xk[i]));
                     }
                 }
             }
