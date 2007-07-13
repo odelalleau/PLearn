@@ -61,7 +61,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "input-to-hidden conditional distribution. Both are the usual found in Binomial"
     "layer RBMs here."
     "The gradient on the weight Wij is"
-    "  dC(x)/dWij = (1/(n P1(x))) "
+    "  dC(x)/dWij = (-1/(n P1(x))) "
     "       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j=1|h)) + x_j^k(h_i - P(h_i=1|x^k)))"
     "Apart from the KLp0p1 output port, and the fact that CD learning is replaced by minimization"
     "of KLp0p1, this module acts like a regular RBMModule."
@@ -1646,7 +1646,7 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         //   * -log P1(x^t) for each input visible(t) in KLp0p1(t,0)
         //
         // We want to compute
-        //   dC(x)/dWij = (1/(n P1(x))) 
+        //   dC(x)/dWij = (-1/(n P1(x))) 
         //       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j=1|h)) + x_j^k(h_i - P(h_i=1|x^k)))
         //
         PLASSERT_MSG(KLp0p1 && !KLp0p1->isEmpty(), "Must compute KLp0p1 in order to compute its gradient, connect that port!");
