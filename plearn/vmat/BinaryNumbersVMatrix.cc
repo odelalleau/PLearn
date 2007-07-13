@@ -61,7 +61,10 @@ BinaryNumbersVMatrix::BinaryNumbersVMatrix()
 void BinaryNumbersVMatrix::getNewRow(int i, const Vec& v) const
 {
     PLASSERT_MSG(v.length()==width_,"BinaryNumbersVMatrix::getNewRow(i,v) with v.length!= vmatrix width");
-    PR_Seek64(f,header_size+i*row_size,PR_SEEK_SET);
+    PRInt64 offset = i;
+    offset *= row_size;
+    offset += header_size;
+    PR_Seek64(f,offset,PR_SEEK_SET);
     PR_Read(f,buffer,row_size);
     bool swap_endian=false;
 #ifdef LITTLEENDIAN
