@@ -81,10 +81,17 @@ class Program(core.PyTestObject):
     #######  Options  #############################################################
 
     name = PLOption(None)
+    
     compiler = PLOption(None)
-    compile_options = PLOption(None)
-    no_plearn_options = PLOption(False)
 
+    compile_options = PLOption(None)
+
+    no_plearn_options = PLOption(False,
+        doc="PLearn commands usually receive the --no-progess and --no-version options. "
+            "If that option is False though, this won't be the case for this Program instance.")
+
+    dependencies = PLOption([], doc="A list of programs on which this one depends.")
+    
 
     #######  Class Variables  #####################################################
 
@@ -162,6 +169,8 @@ class Program(core.PyTestObject):
             return ""
         elif optname=="no_plearn_options" and not val:
             return "" # Don't print the default value
+        elif optname=="dependencies" and not val:
+            return "" # Don't print the default value
         else:
             return super(Program, self)._optionFormat(option_pair, indent_level, inner_repr)
 
@@ -173,8 +182,12 @@ class Program(core.PyTestObject):
             raise core.PyTestUsageError(
                 "Called PyTest with --no-compile option but %s "
                 "was not previously compiled." % self.getInternalExecPath())
-            
-        return no_need_to_compile or (self.__attempted_to_compile and exec_exists)
+
+        # Account for dependencies
+        success = no_need_to_compile or (self.__attempted_to_compile and exec_exists)
+        for dep in self.dependencies:
+            success = (success and dep.compilationSucceeded())
+        return success
 
     def compile(self, publish_dirpath=""):
         # Remove old compile log if any
@@ -194,13 +207,18 @@ class Program(core.PyTestObject):
 
         # First compilation attempt
         else:
-            succeeded = self.__first_compilation_attempt()       
+            succeeded = self.__first_compilation_attempt()               
 
         # Publish the compile log
         if succeeded and publish_dirpath:
             logging.debug("Publishing the compile log %s"%self.__log_file_path)
             toolkit.symlink(self.__log_file_path,
                             moresh.relative_path(publish_target))
+
+        # Account for dependencies
+        for dep in self.dependencies:
+            succeeded = (succeeded and dep.compile(publish_dirpath))
+        
         return succeeded
         
     def __first_compilation_attempt(self):
@@ -347,6 +365,10 @@ class Program(core.PyTestObject):
             # Otherwise assumed to be non-compilable
             else:
                 self.__is_compilable = False
+                for dep in dependencies:
+                    if dep.isCompilable():
+                        self.__is_compilable = True
+                        break
 
             # It is now cached... 
             return self.__is_compilable

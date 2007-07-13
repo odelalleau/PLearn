@@ -210,6 +210,10 @@ def isNotNaN(f):
 def replace_nans(a, repl_with=0.0):
     return choose(isNotNaN(a), (repl_with, a))
 
+def stripMissings(vec):    
+    nan_filter = isNotNaN(vec)
+    return vec[nan_filter]
+
 def average(x, axis=0):
     arrx = array(x)
     return sum(arrx,axis) / arrx.shape[axis]

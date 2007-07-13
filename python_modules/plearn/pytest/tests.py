@@ -691,7 +691,7 @@ class Routine( PyTestObject ):
         PyTestObject.__init__(self, **overrides) 
         os.chdir( self.test.directory() )
         
-    def compile_program(self):
+    def compileProgram(self):
         if not self.test.program.isCompilable():
             return True
 
@@ -712,7 +712,7 @@ class Routine( PyTestObject ):
 class CompilationRoutine(Routine):
     """Launches the compilation of target tests' compilable files."""    
     def start(self):
-        if self.compile_program():
+        if self.compileProgram():
             self.test.setStatus("PASSED")
 
 
@@ -735,7 +735,7 @@ class ResultsRelatedRoutine(Routine):
                 os.remove( fname )
 
     def run_test(self, results):
-        if not self.compile_program():
+        if not self.compileProgram():
             logging.debug("%s bails out." % self.classname())
             return 
 
