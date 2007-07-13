@@ -104,6 +104,9 @@ protected:
     //! Its value is desired_target[0].
     Var target_var;
 
+    //! The threshold between class
+    Vec class_threshold;
+
 public:
 
     // ************************
@@ -123,6 +126,7 @@ public:
     real to_min;
     int n_classes;
     int confusion_matrix_target;
+    int find_class_threshold;
 
     // ****************
     // * Constructors *
@@ -159,22 +163,34 @@ public:
     // Declares other standard object methods.
     PLEARN_DECLARE_OBJECT(AddCostToLearner);
 
-
     // **************************
     // **** PLearner methods ****
     // **************************
+
+    virtual void train();
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
     //! And sets 'stage' back to 0   (this is the stage of a fresh learner!).
     virtual void forget();
 
-    //! Computes the costs from already computed output. 
+    //! Computes our and from the sub_learner costs from already computed output. 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                         const Vec& target, Vec& costs) const;
+                                         const Vec& target, Vec& costs,
+                                         const bool add_sub_learner_costs) const;
+
+    //! Computes our and from the sub_learner costs from already computed output. 
+    void computeCostsFromOutputs(const Vec& input, const Vec& output, 
+                                         const Vec& target, Vec& costs) const{
+        computeCostsFromOutputs(input,output,target,costs,true);
+    }
 
     //! Overridden to use default PLearner behavior.
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs) const;
+
+    //! Overridden to use the sublearner version and complete it
+    virtual void computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                       Mat& output, Mat& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and thus the test method).
     virtual TVec<string> getTestCostNames() const;

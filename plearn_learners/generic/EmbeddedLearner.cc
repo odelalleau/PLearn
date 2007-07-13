@@ -208,6 +208,13 @@ void EmbeddedLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
     learner_->computeOutputAndCosts(input, target, output, costs); 
 }
 
+void EmbeddedLearner::computeOutputsAndCosts(const Mat& input, const Mat& target, 
+                                            Mat& output, Mat& costs) const
+{ 
+    PLASSERT( learner_ );
+    learner_->computeOutputsAndCosts(input, target, output, costs); 
+}
+
 bool EmbeddedLearner::computeConfidenceFromOutput(
     const Vec& input, const Vec& output,
     real probability, TVec< pair<real,real> >& intervals) const

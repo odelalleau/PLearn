@@ -137,6 +137,10 @@ public:
                                        Vec& output, Vec& costs) const;
 
     //! Forwarded to inner learner
+    virtual void computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                       Mat& output, Mat& costs) const;
+
+    //! Forwarded to inner learner
     virtual
     bool computeConfidenceFromOutput(const Vec& input, const Vec& output,
                                      real probability,

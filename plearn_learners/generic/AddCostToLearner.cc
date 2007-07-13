@@ -94,7 +94,8 @@ AddCostToLearner::AddCostToLearner()
       to_max(1),
       to_min(0),
       n_classes(-1),
-      confusion_matrix_target(0)
+      confusion_matrix_target(0),
+      find_class_threshold(0)
 {}
 
 ////////////////////
@@ -177,6 +178,11 @@ void AddCostToLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Index of the target for which the confusion matrix is computed.");
 
+    declareOption(ol, "find_class_threshold",
+                  &AddCostToLearner::find_class_threshold,
+                  OptionBase::buildoption,
+        "0 if we don't find the best threshold between classes.\n"
+        "Otherwise we find the best threshold between classes");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -267,18 +273,20 @@ void AddCostToLearner::build_()
 // computeCostsFromOutputs //
 /////////////////////////////
 void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& output, 
-                                               const Vec& target, Vec& costs) const
+                                                const Vec& target, Vec& costs,
+                                                const bool add_sub_learner_costs) const
 {
     int n_original_costs = learner_->nTestCosts();
     // We give only costs.subVec to the sub-learner because it may want to resize it.
     costs.resize(nTestCosts());
     Vec sub_costs = costs.subVec(0, n_original_costs);
     int target_length = target.length();
-    if (compute_costs_on_bags) {
-        learner_->computeCostsFromOutputs(input, output, target.subVec(0, target_length - 1), sub_costs);
-    } else {
-        learner_->computeCostsFromOutputs(input, output, target, sub_costs);
-    }
+    if(add_sub_learner_costs)
+        if (compute_costs_on_bags) {
+            learner_->computeCostsFromOutputs(input, output, target.subVec(0, target_length - 1), sub_costs);
+        } else {
+            learner_->computeCostsFromOutputs(input, output, target, sub_costs);
+        }
 
     if (compute_costs_on_bags) {
         // We only need to compute the costs when the whole bag has been seen,
@@ -327,7 +335,8 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
                 PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown value for 'combine_bag_outputs_method'");
             }
             // We re-compute the sub-learner's costs with the brand new combined bag output.
-            learner_->computeCostsFromOutputs(input, combined_output, target.subVec(0, target_length - 1), sub_costs);
+            if(add_sub_learner_costs)
+                learner_->computeCostsFromOutputs(input, combined_output, target.subVec(0, target_length - 1), sub_costs);
         } else {
             costs.fill(MISSING_VALUE);
             return;
@@ -543,7 +552,10 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             int output_length = sub_learner_output.length();
             int local_ind = 0;
             if (output_length == target_length) {
-                local_ind = ind_cost + int(round(sub_learner_output[confusion_matrix_target]))
+                int sub_learner_out = int(round(sub_learner_output[confusion_matrix_target]));
+//if outside allowd range, will access the wrong element in the cost vector
+                PLASSERT(sub_learner_out>=n_classes || sub_learner_out<0);
+                local_ind = ind_cost + sub_learner_out
                     + int(round(desired_target[confusion_matrix_target]))*n_classes;
             } else if (target_length == 1){
                 local_ind = ind_cost + argmax(sub_learner_output) + int(round(desired_target[confusion_matrix_target]))*n_classes;
@@ -563,7 +575,88 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown cost");
         }
     }
-}                                
+}
+
+///////////
+// train //
+///////////
+void AddCostToLearner::train()
+{
+    Profiler::pl_profile_start("AddCostToLearner::train");
+
+    int find_threshold = -1;
+    if(find_class_threshold){
+        for (int i = 0; i < this->costs.length(); i++) {
+            if(costs[i]=="square_class_error" || costs[i]=="linear_class_error" || costs[i]=="class_error" )
+                find_threshold = i;
+            break;
+        }
+    }
+    if(find_class_threshold != 0)
+        PLASSERT_MSG(-1 != find_threshold , "We where asked to find the threashold and no *class_error costs are selected.\n"
+                     "We use the first *class_error cost to select the threshold");
+
+    PLASSERT( learner_ );
+    learner_->nstages = nstages;
+    learner_->train();
+    stage = learner_->stage;
+
+    if(-1 != find_threshold){
+        
+        Vec input;
+        Vec target;
+        Vec output;
+        Vec outcosts;
+        real weight;
+        output.resize(learner_->outputsize());
+        outcosts.resize(learner_->nTestCosts());
+        class_threshold.resize(n_classes);
+        Vec test_threshold;
+        Vec best_threshold;
+        test_threshold.resize(n_classes);
+        best_threshold.resize(n_classes);
+        double best_class_error = -1;
+        int costs_index = -1;
+        TVec<string> costsnames=getTestCostNames();
+        Vec paramtotry;
+        for(float f=0;f<3;f+=0.1)
+            paramtotry.append(f);
+
+        //find the index of the costs to use.
+        for(int i=0;i<costsnames.size();i++){
+            string str1 = costsnames[i];
+            string str2 = costs[find_threshold];
+            if( str1 == str2){
+                costs_index = i;
+                break;
+            }
+        }
+
+        for(int a=0;a<paramtotry.size();a++){
+            for(int b=a+1;b<paramtotry.size();b++){
+                test_threshold[0] = paramtotry[a];
+                test_threshold[1]  = paramtotry[b];
+                double cum_class_error = 0;
+                for(int i=0;i<train_set->length();i++){
+                    learner_->getTrainingSet().getExample(i, input, target, weight);
+                    computeOutputAndCosts(input, target, output, outcosts);
+                    cum_class_error += outcosts[costs_index];
+                }
+                if(best_class_error == -1 || best_class_error > cum_class_error){
+                    best_threshold << test_threshold;
+                    best_class_error = cum_class_error;
+                }
+            }
+        }
+        class_threshold << best_threshold;
+        if(verbosity >=2)
+            for(int i=0;i<class_threshold.size();i++)
+                cout << "class_threshold[" << i << "] = " <<class_threshold[i] << endl;
+
+    }
+    Profiler::pl_profile_end("AddCostToLearner::train");
+
+}
 
 ///////////////////////////
 // computeOutputAndCosts //
@@ -573,7 +666,24 @@ void AddCostToLearner::computeOutputAndCosts(const Vec& input, const Vec& target
     PLearner::computeOutputAndCosts(input, target, output, costs);
 }
 
-
+///////////////////////////
+// computeOutputsAndCosts //
+///////////////////////////
+void AddCostToLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                             Mat& output, Mat& costs) const {
+    PLASSERT( learner_ );
+    Mat sub_costs = costs.subMatColumns(0, learner_->nTestCosts());
+    learner_->computeOutputsAndCosts(input, target, output, sub_costs);
+    for (int i=0;i<input.length();i++)
+    {
+        Vec in_i = input(i);
+        Vec out_i = output(i); 
+        Vec target_i = target(i);
+        Vec c_i = costs(i);
+        computeCostsFromOutputs(in_i,out_i,target_i,c_i,false);
+    }
+    
+}
 ////////////
 // forget //
 ////////////
