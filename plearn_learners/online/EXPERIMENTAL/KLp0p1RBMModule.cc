@@ -926,7 +926,8 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     real act=ha(k,i);
                     // note that log sigmoid(act) = -softplus(-act)
                     // and       log(1 - sigmoid(act)) = -act -softplus(-act)
-                    lp += h[i]==1?-softplus(-act):-act-softplus(-act); 
+                    // and  h log(sigm(act))+(1-h)log(1-sigm(act)) = act*h-softplus(act)
+                    lp += h[i]*act-softplus(act); 
                 }
                 // now lp = log P(h|x^k)
                 if (k==0)
@@ -1684,8 +1685,8 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         real act=ah_given_xk[i];
                         // note that log sigmoid(act) = -softplus(-act)
                         // and       log(1 - sigmoid(act)) = -act -softplus(-act)
-                        // so h*log(sigmoid(act))+(1-h)*log(sigmoid(act)) = act*h-act-softplus(act)
-                        lp += h[i]*act-act-softplus(-act);
+                        // so h*log(sigmoid(act))+(1-h)*log(sigmoid(act)) = act*h-softplus(act)
+                        lp += h[i]*act-softplus(act);
                     }
                     // now lp = log ( (1/(n P1(x^t))) P(h|x^k) )
 
@@ -1693,7 +1694,7 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     for (int j=0;j<visible_layer->size;j++)
                     {
                         real act=avisible_given_h[j];
-                        lp += act*xt[j] - act - softplus(-act);
+                        lp += act*xt[j] - softplus(act);
                     }
                     // now lp = log ( (1/(n P1(x^t))) P(h|x^k)  P(x^t|h) )
                     real coeff = exp(lp);
