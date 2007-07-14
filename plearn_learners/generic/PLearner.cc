@@ -567,7 +567,10 @@ void PLearner::setValidationSet(VMat validset)
 
 
 void PLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
-{ train_stats = statscol; }
+{
+    train_stats = statscol;
+    train_stats->setFieldNames(getTrainCostNames());
+}
 
 
 int PLearner::inputsize() const

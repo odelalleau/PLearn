@@ -220,7 +220,7 @@ void LinearRegressor::forget()
     resetAccumulators();
     resid_variance.resize(0);
 }
-  
+
 
 void LinearRegressor::train()
 {
@@ -245,7 +245,8 @@ void LinearRegressor::train()
     if(!train_stats)  // make a default stats collector, in case there's none
         train_stats = new VecStatsCollector();
 
-    train_stats->forget(); 
+    train_stats->setFieldNames(getTrainCostNames());
+    train_stats->forget();
 
     // Compute training inputs and targets; take into account optional bias
     real squared_error=0;
