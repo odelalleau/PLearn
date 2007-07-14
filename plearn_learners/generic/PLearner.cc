@@ -869,7 +869,7 @@ void PLearner::useOnTrain(Mat& outputs) const {
 //////////
 // test //
 //////////
-void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats, 
+void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     VMat testoutputs, VMat testcosts) const
 {
     int len = testset.length();
@@ -886,9 +886,12 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         test_stats->update(costs);
     }
 
+    if (test_stats)
+        // Set names of test_stats costs
+        test_stats->setFieldNames(getTestCostNames());
 
     PP<ProgressBar> pb;
-    if (report_progress) 
+    if (report_progress)
         pb = new ProgressBar("Testing learner", len);
 
     PP<PRandom> copy_random_gen=0;
@@ -905,7 +908,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     const int chunksize= 2500;//nb. rows in each chunk sent to a remote server
     const int chunks_per_server= 3;//ideal nb. chunks per server
     int nservers= min(len/(chunks_per_server*chunksize), service.availableServers());
-    
+
     if(nservers > 1 && parallelize_here && !isStatefulLearner())
     {// parallel test
         CopiesMap copies;
@@ -1144,7 +1147,7 @@ bool PLearner::initTrain()
 {
     string warn_msg = "In PLearner::initTrain (called by '" +
         this->classname() + "') - ";
-    
+
     // Check 'nstages' is valid.
     if (nstages < 0) {
         PLWARNING((warn_msg + "Option nstages (set to " + tostring(nstages)
@@ -1180,6 +1183,9 @@ bool PLearner::initTrain()
     // Initialize train_stats if needed.
     if (!train_stats)
         train_stats = new VecStatsCollector();
+
+    // Set names of train_stats costs
+    train_stats->setFieldNames(getTrainCostNames());
 
     // Everything is fine.
     return true;
@@ -1274,7 +1280,7 @@ Mat PLearner::remote_use2(VMat inputs) const
     use(inputs,outputs);
     return outputs;
 }
-    
+
 //! Version of computeOutputAndCosts that's called by RMI
 
 tuple<Vec,Vec> PLearner::remote_computeOutputAndCosts(const Vec& input, const Vec& target) const
