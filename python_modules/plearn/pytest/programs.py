@@ -365,7 +365,7 @@ class Program(core.PyTestObject):
             # Otherwise assumed to be non-compilable
             else:
                 self.__is_compilable = False
-                for dep in dependencies:
+                for dep in self.dependencies:
                     if dep.isCompilable():
                         self.__is_compilable = True
                         break
