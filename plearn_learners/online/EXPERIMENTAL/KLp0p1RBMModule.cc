@@ -238,8 +238,14 @@ void KLp0p1RBMModule::build_()
     if(visible_layer)
         visible_bias_grad.resize(visible_layer->size);
 
+    // copy layers to allow different storage of activations and samples
+    // but keep the same parameters 
     conf_visible_layer = PLearn::deepCopy(visible_layer);
+    // (this pointing of bias would not suffice with RBMGaussianLayer, which has other params)
+    conf_visible_layer->bias = visible_layer->bias;
     conf_hidden_layer = PLearn::deepCopy(hidden_layer);
+    conf_hidden_layer->bias = hidden_layer->bias;
+
 
     // Forward random generator to underlying modules.
     if (random_gen) {
@@ -943,15 +949,18 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
             // now log_sum_ph_given_xk = log sum_k P(h|x^k)
             conf_visible_layer->activation << conf_visible_layer->activations(c);
             for (int t=0;t<mbs;t++)
-                if (c==0)
+                if (c==0) // at this point we accumulate log sum_h P(x_t|h) P(h|x_k) in KLp0p1
                     (*KLp0p1)(t,0) = -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk;
-                else
+                else {
                     (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
+                    //if ((*KLp0p1)(t,0) > 0)
+                    // PLWARNING("KLp0p1: training example %d is getting mass > 1/n! KL=%g after getting to configuration %d",t,(double)(*KLp0p1)(t,0),c);
+                }
         }
         *KLp0p1 *= -1;
-        for (int t=0;t<mbs;t++)
-            if ((*KLp0p1)(t,0) < 0)
-                PLWARNING("KLp0p1: training example %d is getting mass > 1/n!",t);
+        //for (int t=0;t<mbs;t++)
+        //    if ((*KLp0p1)(t,0) < 0)
+        //        PLWARNING("KLp0p1: training example %d is getting mass > 1/n! KL=%g",t,(double)(*KLp0p1)(t,0));
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
     }
