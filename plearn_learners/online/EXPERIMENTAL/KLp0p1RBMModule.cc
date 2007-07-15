@@ -949,6 +949,9 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
         }
         *KLp0p1 *= -1;
+        for (int t=0;t<mbs;t++)
+            if ((*KLp0p1)(t,0) < 0)
+                PLWARNING("KLp0p1: training example %d is getting mass > 1/n!",t);
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
     }
