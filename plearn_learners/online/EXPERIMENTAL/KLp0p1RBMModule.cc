@@ -56,7 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "The exact and very inefficient implementation of this criterion is done here."
     "  KL(p0||p1) = sum_x p0(x) log p0(x)/p1(x) = - sum_i (1/n) log p1(x_i) + sum_i (1/n) log(1/n)"
     "For an example x the cost is:"
-    "  C(x) = - log p1(x) -(1/n) log n = - log (1/n)sum_{k=1}^n sum_h P(x|h) P(h|x^k) -(1/n)log n"
+    "  C(x) = - log p1(x) - log n = - log sum_{k=1}^n sum_h P(x|h) P(h|x^k)"
     "where {x^1, ... x^n} is the training set of examples x^k, h is a hidden layer bit vector,"
     "P(x|h) is the hidden-to-visible conditional distribution and P(h|x) is the"
     "input-to-hidden conditional distribution. Both are the usual found in Binomial"
@@ -915,9 +915,11 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
 
         for (int c=0;c<n_configurations;c++)
         {
-            //  C(x) =  -log p1(x) -(1/n)logn
-            //       =  (1-1/n)log n - log sum_{k=1}^n sum_h P(x|h) P(h|x^k)
-            //       =  (1-1/n)log n - log sum_h P(x|h) (sum_k P(h|x^k))/n
+            // KL(p0|p1) = sum_t (1/n) log ((1/n) / p1(x_t)) = (1/n) sum_t C(x_t)
+            //  p1(x) = sum_k (1/n) sum_h P(x|h) P(h|x_k)
+            //  C(x) =  -log p1(x) - log n
+            //       =  log n - log sum_{k=1}^n sum_h P(x|h) P(h|x^k)  - log n
+            //       =  - log sum_h P(x|h) sum_k P(h|x^k)
 
             real log_sum_ph_given_xk = 0;
             Vec h = conf_hidden_layer->samples(c);
@@ -947,8 +949,6 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
         }
         *KLp0p1 *= -1;
-        *KLp0p1 += logn*((real)1.0 - (real)1.0/(real)n);
-        // going in the other direction just for the fun of it:
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
     }
@@ -1648,8 +1648,9 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         //   * x^t for every t in the input visible, in *visible
         //   * -log P1(x^t) for each input visible(t) in KLp0p1(t,0)
         //
+        // Since C(x) = - log sum_h P(x|h) sum_k P(h|x^k), dC/dsum = -1/sum = -1/exp(-C)=-exp(C)
         // We want to compute
-        //   dC(x)/dWij = (-1/(n P1(x))) 
+        //   dC(x)/dWij = (-exp(C(x)))
         //       sum_{k=1}^n sum_h P(x|h) P(h|x^k) (h_i(x_j - P(x_j=1|h)) + x_j^k(h_i - P(h_i=1|x^k)))
         //
         PLASSERT_MSG(KLp0p1 && !KLp0p1->isEmpty(), "Must compute KLp0p1 in order to compute its gradient, connect that port!");
@@ -1681,9 +1682,8 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 {
                     Vec h = conf_hidden_layer->samples(c);
                     Vec avisible_given_h=conf_visible_layer->activations(c);
-                    // KLp0p1(x) = -log p1(x) -(1/n)logn
-                    real lp = -(*KLp0p1)(t,0) - (1+1/(real)n)*logn; // lp = log (1/(n P1(x^t)))
-                    // compute and multiply by P(h|x^k)
+                    real lp = (*KLp0p1)(t,0); // lp = log (exp(C(x^t)))
+                    // compute and multiply exp(lp) by P(h|x^k)
                     for (int i=0;i<hidden_layer->size;i++)
                     {
                         real act=ah_given_xk[i];
@@ -1692,7 +1692,7 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         // so h*log(sigmoid(act))+(1-h)*log(sigmoid(act)) = act*h-softplus(act)
                         lp += h[i]*act-softplus(act);
                     }
-                    // now lp = log ( (1/(n P1(x^t))) P(h|x^k) )
+                    // now lp = log ( exp(C(x^t)) P(h|x^k) )
 
                     // compute and multiply by P(x^t|h)
                     for (int j=0;j<visible_layer->size;j++)
@@ -1700,7 +1700,7 @@ void KLp0p1RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         real act=avisible_given_h[j];
                         lp += act*xt[j] - softplus(act);
                     }
-                    // now lp = log ( (1/(n P1(x^t))) P(h|x^k)  P(x^t|h) )
+                    // now lp = log ( exp(C(x^t)) P(h|x^k)  P(x^t|h) )
                     real coeff = exp(lp);
                     Vec pvisible_given_h=pvisible_given_H(c);
                     for (int j=0;j<visible_layer->size;j++)
