@@ -919,6 +919,8 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
         connection->setAsUpInputs(conf_hidden_layer->samples);
         conf_visible_layer->getAllActivations(connection,0,true);
 
+        //Vec check_sum_to_one(n);
+
         for (int c=0;c<n_configurations;c++)
         {
             // KL(p0|p1) = sum_t (1/n) log ((1/n) / p1(x_t)) = (1/n) sum_t C(x_t)
@@ -940,6 +942,12 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
                     // and  h log(sigm(act))+(1-h)log(1-sigm(act)) = act*h-softplus(act)
                     lp += h[i]*act-softplus(act); 
                 }
+#if 0
+                if (c==0)
+                    check_sum_to_one[k]=lp;
+                else
+                    check_sum_to_one[k]=logadd(check_sum_to_one[k],lp);
+#endif
                 // now lp = log P(h|x^k)
                 if (k==0)
                     log_sum_ph_given_xk = lp;
@@ -948,19 +956,45 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
             // now log_sum_ph_given_xk = log sum_k P(h|x^k)
             conf_visible_layer->activation << conf_visible_layer->activations(c);
+            real log_sum_p_xt = 0;
             for (int t=0;t<mbs;t++)
-                if (c==0) // at this point we accumulate log sum_h P(x_t|h) P(h|x_k) in KLp0p1
-                    (*KLp0p1)(t,0) = -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk;
+            {
+                real log_p_xt = -conf_visible_layer->fpropNLL((*visible)(t));
+                //if (t==0) // check if sum_xt p(xt|h) = 1 (when testing with the full set of possible inputs)
+                //    log_sum_p_xt = log_p_xt;
+                //else
+                //    log_sum_p_xt = logadd(log_sum_p_xt,log_p_xt);
+                if (c==0) // at this point we accumulate log sum_h P(x_t|h) sum_k P(h|x_k) in KLp0p1
+                    (*KLp0p1)(t,0) = log_p_xt + log_sum_ph_given_xk;
                 else {
-                    (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), -conf_visible_layer->fpropNLL((*visible)(t)) + log_sum_ph_given_xk);
+                    (*KLp0p1)(t,0) = logadd((*KLp0p1)(t,0), log_p_xt + log_sum_ph_given_xk);
                     //if ((*KLp0p1)(t,0) > 0)
                     // PLWARNING("KLp0p1: training example %d is getting mass > 1/n! KL=%g after getting to configuration %d",t,(double)(*KLp0p1)(t,0),c);
                 }
+            }
+            //if (!during_training)
+            //    cout << "sum_t(p(x_t|h)) = " << exp(log_sum_p_xt) << endl;
         }
+#if 0 
+        for (int k=0;k<n;k++)
+        {
+            real p_k=exp(check_sum_to_one[k]);
+            if (fabs(p_k-1)>1e-6)
+                PLWARNING("Probabilities that do not sum to 1!");
+        }
+#endif
         *KLp0p1 *= -1;
-        //for (int t=0;t<mbs;t++)
-        //    if ((*KLp0p1)(t,0) < 0)
-        //        PLWARNING("KLp0p1: training example %d is getting mass > 1/n! KL=%g",t,(double)(*KLp0p1)(t,0));
+        if (!during_training)
+        {
+            real sum_pxt=0;
+            for (int t=0;t<mbs;t++)
+            {
+                sum_pxt += exp(-(*KLp0p1)(t,0) -logn);
+                if ((*KLp0p1)(t,0) < 0)
+                    PLWARNING("KLp0p1: training example %d is getting mass = %g > 1/n!",t,(double)exp(-(*KLp0p1)(t,0)-logn));
+            }
+            cout << "sum_t p1(x_t) = " << sum_pxt << endl;
+        }
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
     }
