@@ -984,6 +984,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
 #endif
         *KLp0p1 *= -1;
+#if 0 
         if (!during_training)
         {
             real sum_pxt=0;
@@ -995,6 +996,7 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
             cout << "sum_t p1(x_t) = " << sum_pxt << endl;
         }
+#endif
         hidden_layer->setBatchSize(mbs);
         visible_layer->setBatchSize(mbs);
     }
