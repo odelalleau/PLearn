@@ -33,7 +33,13 @@
 # Author: Pascal Vincent
 
 import numarray, sys, os, os.path
-from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
+pyplearn_import_failed = False
+try:
+    from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
+except ImportError:
+    pyplearn_import_failed = True
+    
+                             
 
 def array_columns( a, cols ):
     indices = None
@@ -400,25 +406,26 @@ class PMat( VMat ):
     def __len__(self):
         return self.length
 
-    def __str__( self ):
-        return plearn_repr(self, indent_level=0)
+    if not pyplearn_import_failed:
+        def __str__( self ):
+            return plearn_repr(self, indent_level=0)
     
-    def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
-        # asking for plearn_repr could be to send specification over
-        # to another prg so that will open the .pmat
-        # So we make sure data is flushed to disk.
-        self.flush()
-
-        def elem_format( elem ):
-            k, v = elem
-            return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
-
-        options = [ ( 'filename',   self.fname      ),
-                    ( 'inputsize',  self.inputsize  ), 
-                    ( 'targetsize', self.targetsize ),
-                    ( 'weightsize', self.weightsize ) ]
-        return 'FileVMatrix(%s)' % format_list_elements( options, elem_format, indent_level+1 )
-        
+        def plearn_repr( self, indent_level=0, inner_repr=plearn_repr ):
+            # asking for plearn_repr could be to send specification over
+            # to another prg so that will open the .pmat
+            # So we make sure data is flushed to disk.
+            self.flush()
+    
+            def elem_format( elem ):
+                k, v = elem
+                return '%s = %s' % ( k, inner_repr(v, indent_level+1) )
+    
+            options = [ ( 'filename',   self.fname      ),
+                        ( 'inputsize',  self.inputsize  ), 
+                        ( 'targetsize', self.targetsize ),
+                        ( 'weightsize', self.weightsize ) ]
+            return 'FileVMatrix(%s)' % format_list_elements( options, elem_format, indent_level+1 )
+            
 if __name__ == '__main__':
     pmat = PMat( 'tmp.pmat', 'w', fieldnames=['F1', 'F2'] )
     pmat.append( [1, 2] )
