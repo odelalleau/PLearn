@@ -68,6 +68,12 @@ public:
 
     //#####  Learned Options  #################################################
 
+    //! Optional (default=0) factor of L1 regularization term
+    real L1_penalty_factor;
+
+    //! Optional (default=0) factor of L2 regularization term
+    real L2_penalty_factor;
+
     //! Matrix containing unit-to-unit weights (output_size × input_size)
     Mat weights;
 
@@ -225,6 +231,12 @@ public:
                                         const Vec& neg_up_values,
                                         Mat& weights_gradient,
                                         bool accumulate = false);
+
+    //! Applies penalty (decay) on weights
+    virtual void applyWeightPenalty();
+
+    //! Adds penalty (decay) gradient
+    virtual void addWeightPenalty(Mat weights, Mat weight_gradients);
 
     //! reset the parameters to the state they would be BEFORE starting
     //! training.  Note that this method is necessarily called from
