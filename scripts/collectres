@@ -118,6 +118,7 @@ def getres(loc_specs,filenames):
     except ValueError,v:
       print >>sys.stderr, "caught ValueError exception in", filename
       print >>sys.stderr, v
+      print >>sys.stderr, ""
   return all_results
 
 def compare_res(x,y):
@@ -214,7 +215,7 @@ def outputres(f,mode,speclist,results):
 
 if __name__=='__main__':
   args = sys.argv[:]
-  if len(args)==1:
+  if len(args)<=3:
     print "Usage: collectres <outputfile> <spec> <file1.pmat> <file2.pmat> ..."
     print 
     print "The <spec> can be the following (note how the <spec> has to be surrounded by quotes):"
