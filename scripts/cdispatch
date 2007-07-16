@@ -73,9 +73,9 @@ The optional parameter '--test' make that cdispatch generate the file $ScriptNam
 
 The optional parameter '--req="CONDOR_REQUIREMENT"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '"' must be escaped 3 times! So the requirement (Machine == "computer.example.com") must be writed like that:
 
-cdispatch "--req=Machine\\\\\\"computer.example.com\\\\\\""
+cdispatch "--req=Machine==\\\\\\"computer.example.com\\\\\\""
 or
-cdispatch '--req=Machine\\"computer.example.com\\"'
+cdispatch '--req=Machine==\\"computer.example.com\\"'
 
 It the the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
 
