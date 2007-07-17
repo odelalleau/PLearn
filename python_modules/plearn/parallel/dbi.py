@@ -438,24 +438,24 @@ class DBICondor(DBIBase):
             return #no task to run
         # create the bqsubmit.dat, with
         condor_datas = []
-        for task in self.tasks:
-            condor_data = os.path.join(self.tmp_dir, task.unique_id + '.data')
-            condor_datas.append(condor_data)
-            self.temp_files.append(condor_data)
-            param_dat = open(condor_data, 'w')
-            
-            param_dat.write( dedent('''\
-            #!/bin/bash
-            %s''' %('\n'.join(task.commands))))
-            param_dat.close()
+         if len(self.tasks)>1:
+             for task in self.tasks:
+                 condor_data = os.path.join(self.tmp_dir,self.unique_id +'.'+ task.unique_id + '.data')
+                 condor_datas.append(condor_data)
+                 self.temp_files.append(condor_data)
+                 param_dat = open(condor_data, 'w')
+                
+                 param_dat.write( dedent('''\
+                 #!/bin/bash
+                 %s''' %('\n'.join(task.commands))))
+                 param_dat.close()
         
 
-        condor_file = os.path.join(self.tmp_dir, task.unique_id + ".condor")
+        condor_file = os.path.join(self.tmp_dir, self.unique_id + ".condor")
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
         
         req=""
-        u=get_username()
         if self.targetcondorplatform == 'BOTH':
             req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         elif self.targetcondorplatform == 'INTEL':
@@ -477,14 +477,18 @@ class DBICondor(DBIBase):
                 error          = %s/condor.%s.%s.$(Process).error
                 log            = %s/condor.%s.log
                 ''' % (self.tmp_dir,req,
-                       self.log_dir,self.targetcondorplatform,task.unique_id,
-                       self.log_dir,self.targetcondorplatform,task.unique_id,
+                       self.log_dir,self.targetcondorplatform,self.unique_id,
+                       self.log_dir,self.targetcondorplatform,self.unique_id,
                        self.log_dir,self.targetcondorplatform)))
 #                preBatch = ''' + pre_batch_command + '''
 #                postBatch = ''' + post_batch_command +'''
 
-        for i in condor_datas:
-            condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
+        if len(condor_datas)==0:
+            for i in condor_datas:
+                condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
+        else:
+            for task in self.tasks:
+                condor_dat.write("arguments      = %s \nqueue\n" %(' ; '.join(task.commands)))
         condor_dat.close()
 
         launch_file = os.path.join(self.tmp_dir, 'launch.sh')
@@ -514,13 +518,13 @@ class DBICondor(DBIBase):
                     echo "PATH: $PATH" 1>&2
                     echo "PYTHONPATH: $PYTHONPATH" 1>&2
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-                    which python 1>&2
-                    echo -n python version: 1>&2
-                    python -V 1>&2
-                    echo -n /usr/bin/python version: 1>&2
-                    /usr/bin/python -V 1>&2
+                    #which python 1>&2
+                    #echo -n python version: 1>&2
+                    #python -V 1>&2
+                    #echo -n /usr/bin/python version: 1>&2
+                    #/usr/bin/python -V 1>&2
                     echo ${PROGRAM} $@ 1>&2
-                    $PROGRAM $@'''))
+                    ${PROGRAM} "$@"'''))
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
