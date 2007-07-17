@@ -120,6 +120,10 @@ public:
     //! compute -bias' unit_values
     virtual real energy(const Vec& unit_values) const;
 
+    virtual int getConfigurationCount();
+
+    virtual void getConfiguration(int conf_index, Vec& output);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

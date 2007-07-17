@@ -631,6 +631,17 @@ real RBMLayer::energy(const Vec& unit_values) const
     return 0;
 }
 
+int RBMLayer::getConfigurationCount()
+{
+    PLERROR("RBMLayer::getConfigurationCount() not implemented in subclass %s\n",classname().c_str());
+    return 0;
+}
+
+void RBMLayer::getConfiguration(int conf_index, Vec& output)
+{
+    PLERROR("RBMLayer::getConfiguration(int, Vec) not implemented in subclass %s\n",classname().c_str());
+}
+
 } // end of namespace PLearn
 
 

@@ -113,6 +113,8 @@ public:
     //! computed values of activations.
     bool expectations_are_up_to_date;
 
+    static const int INFINITE_CONFIGURATIONS = 0x7fffffff;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -264,6 +266,12 @@ public:
                          Vec& bias_gradient);
 
     virtual real energy(const Vec& unit_values) const;
+
+    //! Returns a number of different configurations the layer can be in.
+    virtual int getConfigurationCount();
+
+    //! Computes the conf_index configuration of the layer.
+    virtual void getConfiguration(int conf_index, Vec& output);
 
     //#####  PLearn::Object Protocol  #########################################
 

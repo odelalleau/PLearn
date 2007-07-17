@@ -315,6 +315,8 @@ protected:
     void computeEnergy(const Mat& visible, const Mat& hidden, Mat& energy,
                        bool positive_phase = true);
 
+	void computePartitionFunction();
+
 private:
     //#####  Private Member Functions  ########################################
 

@@ -603,6 +603,59 @@ void RBMModule::fprop(const Vec& input, Vec& output) const
     PLERROR("In RBMModule::fprop - Not implemented");
 }
 
+void RBMModule::computePartitionFunction()
+{
+	int hidden_configurations = hidden_layer->getConfigurationCount();
+	int visible_configurations = visible_layer->getConfigurationCount();
+	cout << "vc: " << visible_configurations << endl;
+	cout << "hc: " << hidden_configurations << endl;
+	const int MAX_CONFIGURATIONS = 1<<30;
+	
+	PLASSERT_MSG(hidden_configurations < MAX_CONFIGURATIONS || visible_configurations < MAX_CONFIGURATIONS,
+		"To compute exact log-likelihood of an RBM maximum configurations of hidden "
+				"or visible layer must be less than 2^30.");
+	
+	// Compute partition function
+	if (hidden_configurations > visible_configurations)
+		// do it by log-summing minus-free-energy of visible configurations
+	{
+		energy_inputs.resize(1, visible_layer->size);
+		Vec input = energy_inputs(0);
+		// COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
+		// AT ONCE IN A 'MINIBATCH'
+		Mat free_energy(1, 1);
+		log_partition_function = 0;
+		for (int c = 0; c < visible_configurations; c++)
+		{
+			visible_layer->getConfiguration(c, input);
+			computeFreeEnergyOfVisible(energy_inputs, free_energy, false);
+			if (c==0)
+				log_partition_function = -free_energy(0,0);
+			else
+				log_partition_function = logadd(log_partition_function,-free_energy(0,0));
+		}
+	}
+	else
+		// do it by summing free-energy of hidden configurations
+	{
+		energy_inputs.resize(1, hidden_layer->size);
+		Vec input = energy_inputs(0);
+		// COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
+		// AT ONCE IN A 'MINIBATCH'
+		Mat free_energy(1, 1);
+		log_partition_function = 0;
+		for (int c = 0; c < hidden_configurations; c++)
+		{
+			hidden_layer->getConfiguration(c, input);
+			computeFreeEnergyOfHidden(energy_inputs, free_energy);
+			if (c==0)
+				log_partition_function = -free_energy(0,0);
+			else
+				log_partition_function = logadd(log_partition_function,-free_energy(0,0));
+		}
+	}
+}
+
 void RBMModule::fprop(const TVec<Mat*>& ports_value)
 {
 
@@ -696,7 +749,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         if (partition_function_is_stale && !during_training)
         {
-            PLASSERT_MSG(hidden_layer->size<32 || visible_layer->size<32,
+		
+            /*PLASSERT_MSG(hidden_layer->size<32 || visible_layer->size<32,
                          "To compute exact log-likelihood of an RBM, hidden_layer->size "
                          "or visible_layer->size must be <32");
             // recompute partition function
@@ -755,7 +809,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     else
                         log_partition_function = logadd(log_partition_function,-free_energy(0,0));
                 }
-            }
+	    }*/
+	    computePartitionFunction();
             partition_function_is_stale=false;
         }
         if (visible && !visible->isEmpty()

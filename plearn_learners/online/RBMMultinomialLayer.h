@@ -116,6 +116,13 @@ public:
     virtual void bpropNLL(const Mat& targets, const Mat& costs_column,
                           Mat& bias_gradients);
 
+    // Compute -bias' unit_values
+    virtual real energy(const Vec& unit_values) const;
+
+    virtual int getConfigurationCount();
+
+    virtual void getConfiguration(int conf_index, Vec& output);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

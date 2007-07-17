@@ -423,6 +423,26 @@ void RBMMultinomialLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
+real RBMMultinomialLayer::energy(const Vec& unit_values) const
+{
+    return -dot(unit_values, bias);
+}
+
+int RBMMultinomialLayer::getConfigurationCount()
+{
+    return size;
+}
+
+void RBMMultinomialLayer::getConfiguration(int conf_index, Vec& output)
+{
+    PLASSERT( output.length() == size );
+    PLASSERT( conf_index >= 0 && conf_index < getConfigurationCount() );
+
+    for ( int i = 0; i < size; ++i ) {
+        output[i] = i == conf_index ? 1 : 0;
+    }    
+}
+
 
 } // end of namespace PLearn
 

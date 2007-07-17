@@ -476,6 +476,22 @@ real RBMBinomialLayer::energy(const Vec& unit_values) const
     return -dot(unit_values, bias);
 }
 
+int RBMBinomialLayer::getConfigurationCount()
+{
+    return size < 31 ? 1<<size : INFINITE_CONFIGURATIONS;
+}
+
+void RBMBinomialLayer::getConfiguration(int conf_index, Vec& output)
+{
+    PLASSERT( output.length() == size );
+    PLASSERT( conf_index >= 0 && conf_index < getConfigurationCount() );
+
+    for ( int i = 0; i < size; ++i ) {
+        output[i] = conf_index & 1;
+        conf_index >>= 1;
+    }    
+}
+
 } // end of namespace PLearn
 
 

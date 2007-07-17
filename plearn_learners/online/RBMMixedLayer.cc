@@ -374,6 +374,8 @@ void RBMMixedLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
         int size_i = sub_layers[i]->size;
         sub_layers[i]->fpropNLL( targets.subMatColumns(begin, size_i),
                                  mat_nlls.column(i) );
+        for( int j=0; j < batch_size; ++j )
+            costs_column(j,0) += mat_nlls(j, i);
     }
 }
 
@@ -629,6 +631,50 @@ void RBMMixedLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(mat_nlls,         copies);
 }
 
+real RBMMixedLayer::energy(const Vec& unit_values) const
+{
+    real energy = 0;
+
+    for ( int i = 0; i < n_layers; ++i ) {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        Vec values = unit_values.subVec( begin, size_i );
+        energy += sub_layers[i]->energy(values);
+    }
+
+    return energy;
+}
+
+int RBMMixedLayer::getConfigurationCount()
+{
+    int count = 1;
+
+    for ( int i = 0; i < n_layers; ++i ) {
+        int cc_layer_i = sub_layers[i]->getConfigurationCount();
+        // Avoiding overflow
+        if ( INFINITE_CONFIGURATIONS/cc_layer_i <= count )
+            return INFINITE_CONFIGURATIONS;
+        count *= cc_layer_i;
+    }
+
+    return count;
+}
+
+void RBMMixedLayer::getConfiguration(int conf_index, Vec& output)
+{
+    PLASSERT( output.length() == size );
+    PLASSERT( conf_index >= 0 && conf_index < getConfigurationCount() );
+
+    int conf_i = conf_index;
+    for ( int i = 0; i < n_layers; ++i ) {
+        int conf_layer_i = sub_layers[i]->getConfigurationCount();
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        Vec output_i = output.subVec( begin, size_i );
+        sub_layers[i]->getConfiguration(conf_i % conf_layer_i, output_i);
+        conf_i /= conf_layer_i;
+    }    
+}
 
 } // end of namespace PLearn
 
