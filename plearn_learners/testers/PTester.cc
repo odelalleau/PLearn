@@ -436,6 +436,13 @@ Vec PTester::oldperform(bool call_forget)
         if (pathexists(expdir) && enforce_clean_expdir)
             PLERROR("Directory (or file) %s already exists.\n"
                     "First move it out of the way.", expdir.c_str());
+        // This code looks like it's guaranteeing that we get an expdir that we
+        // create when enforce_clean_expdir is True, but this is not the case. 
+        // Let's say some other process (from a parallel dispatch of many
+        // PLearn processes, say) is trying to create an expdir with the same
+        // name, and that other process succeeds in creating it when we are
+        // here. Then, given that force_mkdir() returns true if the directory
+        // already exists, this is a textbook example of a race condition.
         if (!force_mkdir(expdir))
             PLERROR("In PTester Could not create experiment directory %s",expdir.c_str());
         expdir = expdir.absolute() / "";
