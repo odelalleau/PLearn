@@ -532,6 +532,11 @@ int vmatmain(int argc, char** argv)
     {
         string source = argv[2];
         string destination = argv[3];
+        if(argc<4)
+        {
+            cerr<<"usage vmat convert <source> <destination> [--cols=col1,col2,col3,...]\n";
+            exit(1);
+        }
         VMat vm = getVMat(source, indexf);
 
         /**
