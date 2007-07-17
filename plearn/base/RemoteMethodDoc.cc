@@ -43,7 +43,8 @@ void RemoteMethodDoc::checkConsistency() const
     int argdocsize = m_args_doc.size();
     int argtypesize = m_args_type.size();
     if(argdocsize != argtypesize)
-        PLERROR("Number of ArgDoc (%d) inconsistent with number of arguments (%d)",argdocsize,argtypesize);
+        PLERROR("For function '%s', number of ArgDoc (%d) inconsistent with number of arguments (%d)",
+                m_name.c_str(), argdocsize, argtypesize);
 }
     
 //! Returns a string repretenting the "prototype" (signature) of the function in the doc.
