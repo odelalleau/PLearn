@@ -61,6 +61,11 @@
 #include <plearn/base/TypeTraits.h>
 #include <plearn/base/tuple.h>
 
+// from boost
+#include <boost/static_assert.hpp>
+#include <boost/type_traits.hpp>
+
+
 #ifdef USEFLOAT
 #define tReal tFloat32
 #else
@@ -71,7 +76,7 @@ namespace PLearn {
 
 class PythonObjectWrapper;                   // Forward-declare
 class Object;
-class VMat;
+class VMatrix;
 
 //! Used for error reporting.  If 'print_traceback' is true, a full
 //! Python traceback is printed to stderr.  Otherwise, raise PLERROR.
@@ -97,13 +102,7 @@ void PLPythonConversionError(const char* function_name, PyObject* pyobj,
 template <class T>
 struct ConvertFromPyObject
 { 
-    static T convert(PyObject*, bool print_traceback)
-    {
-        PLERROR("Cannot convert this object by value from python (type=%s).",
-                TypeTraits<T>::name().c_str());
-        return T();//to silence compiler
-    }
-
+    static T convert(PyObject* x, bool print_traceback);
 };
 
 template <>
@@ -190,6 +189,32 @@ struct ConvertFromPyObject<Object*>
     static Object* convert(PyObject*, bool print_traceback);
 };
 
+
+///***///***
+// PARTIAL specialisation from T*.  Assume Object*.
+// TODO: fix this assumption
+template <class T>
+struct ConvertFromPyObject<T*>
+{
+    static T* convert(PyObject* pyobj, bool print_traceback)
+    {
+        // Compile-time assertion:
+        BOOST_STATIC_ASSERT((boost::is_base_of<Object, T>::value));
+        //N.B.: If this assertion fails, it probably means that you are trying
+        //      to retrieve a pointer to something that is not an Object from
+        //      python.  Only Object pointers are supported.
+
+        Object* obj = ConvertFromPyObject<Object*>::convert(pyobj, print_traceback);
+        if (T* tobj = dynamic_cast<T*>(obj))
+            return tobj;
+        else
+            PLERROR("Cannot convert object from python (type='%s').",
+                    TypeTraits<T*>::name().c_str());
+        return 0;                            // Silence compiler
+    }
+};
+///***///***
+
 template <>
 struct ConvertFromPyObject<Vec>
 {
@@ -213,10 +238,10 @@ struct ConvertFromPyObject<Mat>
 };
 
 template <>
-struct ConvertFromPyObject<VMat>
+struct ConvertFromPyObject<PP<VMatrix> >
 {
     // Return new MemoryVMatrix
-    static VMat convert(PyObject*, bool print_traceback);
+    static PP<VMatrix> convert(PyObject*, bool print_traceback);
 };
 
 template <>
@@ -271,14 +296,39 @@ struct ConvertToPyObject
 {
     static PyObject* newPyObject(const T& x)
     {
-        PLERROR("Cannot convert type %s by value to python",
+        PLERROR("Cannot convert type %s by value to python.",
                 TypeTraits<T>::name().c_str());
         return 0;//shut up compiler
     }
 };
 
+// Specialization for Object*
 template<> struct ConvertToPyObject<Object*>
 { static PyObject* newPyObject(const Object* x); };
+
+///***///***
+// Specialization for General T*.  Attempt to cast into Object*.  If that works
+// we're all set; for specific pointer types (e.g.  map<U,V>* and vector<T>*,
+// below, since they are more specialized they should kick in before this one.
+template <typename T>
+struct ConvertToPyObject<T*>
+{
+    static PyObject* newPyObject(const T* x)
+    {
+        if(!x) // null ptr. becomes None
+            return PythonObjectWrapper::newPyObject();
+
+        if (const Object* objx = dynamic_cast<const Object*>(x))
+            return ConvertToPyObject<Object*>::newPyObject(objx);
+
+        PLERROR("Cannot convert type %s by value to python",
+                TypeTraits<T*>::name().c_str());
+        return 0;//shut up compiler
+    }
+};
+
+// Other specializations
+///***///***
 
 template<> struct ConvertToPyObject<bool>
 { static PyObject* newPyObject(const bool& x); };
@@ -331,8 +381,8 @@ template<> struct ConvertToPyObject<Mat>
 //! are lost when converting to Python.
 //!
 //! @TODO  Must provide a complete Python wrapper over VMatrix objects
-template<> struct ConvertToPyObject<VMat>
-{ static PyObject* newPyObject(const VMat& vm); };
+template<> struct ConvertToPyObject<PP<VMatrix> >
+{ static PyObject* newPyObject(const PP<VMatrix>& vm); };
     
 //! Generic PP: wrap pointed object
 template<class T> struct ConvertToPyObject<PP<T> >
@@ -623,6 +673,43 @@ protected:
 
 
 //#####  ConvertFromPyObject Implementations  #################################
+
+template<class U, bool is_enum> 
+struct StaticConvertEnumFromPyObject 
+{
+    static U convert(PyObject* x, bool print_traceback)
+    {
+        PLERROR("Cannot convert this object by value from python (type=%s).",
+                TypeTraits<U>::name().c_str());
+        return U();//to silence compiler
+    }
+};
+    
+template<class U>
+struct StaticConvertEnumFromPyObject<U, true>
+{
+    static U convert(PyObject* x, bool print_traceback)
+    {
+        return static_cast<U>(
+            ConvertFromPyObject<int>::convert(x, print_traceback));
+    }
+};
+
+template <class T>
+T ConvertFromPyObject<T>::convert(PyObject* x, bool print_traceback)
+{
+    return StaticConvertEnumFromPyObject<T, boost::is_enum<T>::value>
+        ::convert(x, print_traceback);
+    /*
+    if(boost::is_enum<T>::value)
+        return ConvertFromPyObject<int>::convert(x, print_traceback);
+    
+    PLERROR("Cannot convert this object by value from python (type=%s).",
+            TypeTraits<T>::name().c_str());
+    return T();//to silence compiler
+    */
+}
+
 
 template <class T>
 PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj, bool print_traceback)

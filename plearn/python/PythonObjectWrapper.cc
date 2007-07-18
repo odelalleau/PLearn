@@ -260,7 +260,8 @@ Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj, bool print_traceback)
     return m;
 }
 
-VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
+//VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
+PP<VMatrix> ConvertFromPyObject<PP<VMatrix> >::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT(pyobj);
     if(PyObject_HasAttrString(pyobj, "_cptr"))
@@ -268,7 +269,7 @@ VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
             ConvertFromPyObject<Object*>::convert(pyobj, print_traceback));
     Mat m;
     ConvertFromPyObject<Mat>::convert(pyobj, m, print_traceback);
-    return m;
+    return VMat(m);
 }
 
 PythonObjectWrapper ConvertFromPyObject<PythonObjectWrapper>::convert(PyObject* pyobj, bool print_traceback)
@@ -802,12 +803,13 @@ PyObject* ConvertToPyObject<Mat>::newPyObject(const Mat& data)
     return (PyObject*)pyarr;
 }
 
-PyObject* ConvertToPyObject<VMat>::newPyObject(const VMat& vm)
+//PyObject* ConvertToPyObject<VMat>::newPyObject(const VMat& vm)
+PyObject* ConvertToPyObject<PP<VMatrix> >::newPyObject(const PP<VMatrix>& vm)
 {
     if (vm.isNull())
         return ConvertToPyObject<Mat>::newPyObject(Mat());
     else
-        return ConvertToPyObject<Mat>::newPyObject(vm.toMat());
+        return ConvertToPyObject<Mat>::newPyObject(vm->toMat());
     //return ConvertToPyObject<Object*>::newPyObject(static_cast<Object*>(vm));
 }
 

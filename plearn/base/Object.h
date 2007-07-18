@@ -48,7 +48,10 @@
 #define Object_INC
 
 // Python stuff must be included first
-#include <plearn/python/PythonIncludes.h>
+#ifdef PL_PYTHON_VERSION 
+#  include <plearn/python/PythonIncludes.h>
+#  include <plearn/python/PythonObjectWrapper.h>
+#endif //ifdef PL_PYTHON_VERSION 
 
 #include <map>
 #include <string>
@@ -504,7 +507,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
  *  used to serialize the new smart pointer type
  */
 
-#define DECLARE_OBJECT_PP(PPCLASSTYPE, CLASSTYPE)                       \
+#define DECLARE_OBJECT_PP_SERIALIZE(PPCLASSTYPE, CLASSTYPE)             \
         inline PStream &operator>>(PStream &in, PPCLASSTYPE &o)         \
           { Object *ptr = 0;                                            \
             in >> ptr;                                                  \
@@ -513,6 +516,26 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         inline PStream &operator<<(PStream &out, const PPCLASSTYPE &o)  \
           { out << static_cast<const PP<CLASSTYPE> &>(o); return out; } \
         DECLARE_TYPE_TRAITS(PPCLASSTYPE)
+
+#ifdef PL_PYTHON_VERSION 
+#define DECLARE_OBJECT_PP(PPCLASSTYPE, CLASSTYPE)                       \
+        struct ConvertFromPyObject<PPCLASSTYPE>                         \
+        {                                                               \
+            static PPCLASSTYPE convert(PyObject* o,                     \
+                                       bool print_traceback)            \
+            { return PPCLASSTYPE(ConvertFromPyObject<PP<CLASSTYPE> >    \
+                                  ::convert(o, print_traceback)); }     \
+        };                                                              \
+        template<> struct ConvertToPyObject<PPCLASSTYPE>                \
+        {                                                               \
+            static PyObject* newPyObject(const PPCLASSTYPE& x)          \
+            {return ConvertToPyObject<PP<CLASSTYPE> >::newPyObject(x);} \
+        };                                                              \
+        DECLARE_OBJECT_PP_SERIALIZE(PPCLASSTYPE, CLASSTYPE)
+#else //def PL_PYTHON_VERSION 
+#define DECLARE_OBJECT_PP(PPCLASSTYPE, CLASSTYPE)                       \
+        DECLARE_OBJECT_PP_SERIALIZE(PPCLASSTYPE, CLASSTYPE)
+#endif //def PL_PYTHON_VERSION 
 
 
 //#####  PLearn::Object  ######################################################
