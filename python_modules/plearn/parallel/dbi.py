@@ -438,17 +438,17 @@ class DBICondor(DBIBase):
             return #no task to run
         # create the bqsubmit.dat, with
         condor_datas = []
-         if len(self.tasks)>1:
-             for task in self.tasks:
-                 condor_data = os.path.join(self.tmp_dir,self.unique_id +'.'+ task.unique_id + '.data')
-                 condor_datas.append(condor_data)
-                 self.temp_files.append(condor_data)
-                 param_dat = open(condor_data, 'w')
+        if len(self.tasks)>1:
+            for task in self.tasks:
+                condor_data = os.path.join(self.tmp_dir,self.unique_id +'.'+ task.unique_id + '.data')
+                condor_datas.append(condor_data)
+                self.temp_files.append(condor_data)
+                param_dat = open(condor_data, 'w')
                 
-                 param_dat.write( dedent('''\
-                 #!/bin/bash
-                 %s''' %('\n'.join(task.commands))))
-                 param_dat.close()
+                param_dat.write( dedent('''\
+                #!/bin/bash
+                %s''' %('\n'.join(task.commands))))
+                param_dat.close()
         
 
         condor_file = os.path.join(self.tmp_dir, self.unique_id + ".condor")
