@@ -607,13 +607,11 @@ void RBMModule::computePartitionFunction()
 {
 	int hidden_configurations = hidden_layer->getConfigurationCount();
 	int visible_configurations = visible_layer->getConfigurationCount();
-	cout << "vc: " << visible_configurations << endl;
-	cout << "hc: " << hidden_configurations << endl;
-	const int MAX_CONFIGURATIONS = 1<<30;
 	
-	PLASSERT_MSG(hidden_configurations < MAX_CONFIGURATIONS || visible_configurations < MAX_CONFIGURATIONS,
+	PLASSERT_MSG(hidden_configurations != RBMLayer::INFINITE_CONFIGURATIONS ||
+                    visible_configurations != RBMLayer::INFINITE_CONFIGURATIONS,
 		"To compute exact log-likelihood of an RBM maximum configurations of hidden "
-				"or visible layer must be less than 2^30.");
+				"or visible layer must be less than 2^31.");
 	
 	// Compute partition function
 	if (hidden_configurations > visible_configurations)
@@ -749,67 +747,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         if (partition_function_is_stale && !during_training)
         {
-		
-            /*PLASSERT_MSG(hidden_layer->size<32 || visible_layer->size<32,
-                         "To compute exact log-likelihood of an RBM, hidden_layer->size "
-                         "or visible_layer->size must be <32");
-            // recompute partition function
-            if (hidden_layer->size > visible_layer->size)
-                // do it by log-summing minus-free-energy of visible configurations
-            {
-                PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
-                // assuming a binary input we sum over all bit configurations
-                int n_configurations = 1 << visible_layer->size; // = 2^{visible_layer->size}
-                energy_inputs.resize(1, visible_layer->size);
-                Vec input = energy_inputs(0);
-                // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
-                // AT ONCE IN A 'MINIBATCH'
-                Mat free_energy(1, 1);
-                log_partition_function = 0;
-                for (int c=0;c<n_configurations;c++)
-                {
-                    // convert integer c into a bit-wise visible representation
-                    int x=c;
-                    for (int i=0;i<visible_layer->size;i++)
-                    {
-                        input[i]= x & 1; // take least significant bit
-                        x >>= 1; // and shift right (divide by 2)
-                    }
-                    computeFreeEnergyOfVisible(energy_inputs,free_energy,false);
-                    if (c==0)
-                        log_partition_function = -free_energy(0,0);
-                    else
-                        log_partition_function = logadd(log_partition_function,-free_energy(0,0));
-                }
-            }
-            else
-                // do it by summing free-energy of hidden configurations
-            {
-                PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
-                // assuming a binary hidden we sum over all bit configurations
-                int n_configurations = 1 << hidden_layer->size; // = 2^{hidden_layer->size}
-                energy_inputs.resize(1, hidden_layer->size);
-                Vec input = energy_inputs(0);
-                // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
-                // AT ONCE IN A 'MINIBATCH'
-                Mat free_energy(1,1);
-                log_partition_function = 0;
-                for (int c=0;c<n_configurations;c++)
-                {
-                    // convert integer c into a bit-wise hidden representation
-                    int x=c;
-                    for (int i=0;i<hidden_layer->size;i++)
-                    {
-                        input[i]= x & 1; // take least significant bit
-                        x >>= 1; // and shift right (divide by 2)
-                    }
-                    computeFreeEnergyOfHidden(energy_inputs, free_energy);
-                    if (c==0)
-                        log_partition_function = -free_energy(0,0);
-                    else
-                        log_partition_function = logadd(log_partition_function,-free_energy(0,0));
-                }
-	    }*/
 	    computePartitionFunction();
             partition_function_is_stale=false;
         }
