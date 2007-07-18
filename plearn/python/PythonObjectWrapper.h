@@ -199,7 +199,8 @@ struct ConvertFromPyObject<T*>
     static T* convert(PyObject* pyobj, bool print_traceback)
     {
         // Compile-time assertion:
-        BOOST_STATIC_ASSERT((boost::is_base_of<Object, T>::value));
+        BOOST_STATIC_ASSERT((boost::is_base_of<Object, typename boost::remove_cv<T>::type>::value)
+                            || (boost::is_same<Object, typename boost::remove_cv<T>::type>::value));
         //N.B.: If this assertion fails, it probably means that you are trying
         //      to retrieve a pointer to something that is not an Object from
         //      python.  Only Object pointers are supported.

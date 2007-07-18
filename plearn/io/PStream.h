@@ -633,6 +633,13 @@ inline PStream& operator<<(PStream& out, T const * const & x)
 }
 
 template <class T>
+inline PStream& operator>>(PStream& in, const T*& x)
+{
+    PLERROR("operator>>(PStream&, const T*&) should never be used! (object pointed is const)");
+    return in;
+}
+
+template <class T>
 inline PStream& operator>>(PStream& in, PP<T> &o)
 {
     T *ptr;
