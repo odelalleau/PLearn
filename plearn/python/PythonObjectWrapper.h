@@ -308,26 +308,6 @@ template<> struct ConvertToPyObject<Object*>
 { static PyObject* newPyObject(const Object* x); };
 
 ///***///***
-// Specialization for General T*.  Attempt to cast into Object*.  If that works
-// we're all set; for specific pointer types (e.g.  map<U,V>* and vector<T>*,
-// below, since they are more specialized they should kick in before this one.
-template <typename T>
-struct ConvertToPyObject<T*>
-{
-    static PyObject* newPyObject(const T* x)
-    {
-        if(!x) // null ptr. becomes None
-            return PythonObjectWrapper::newPyObject();
-
-        if (const Object* objx = dynamic_cast<const Object*>(x))
-            return ConvertToPyObject<Object*>::newPyObject(objx);
-
-        PLERROR("Cannot convert type %s by value to python",
-                TypeTraits<T*>::name().c_str());
-        return 0;//shut up compiler
-    }
-};
-
 // Other specializations
 ///***///***
 
@@ -670,6 +650,30 @@ protected:
     static wrapped_objects_t m_wrapped_objects; //!< for wrapped PLearn Objects
 
     template<class T> friend class ConvertToPyObject;
+};
+
+// Specialization for General T*.  Attempt to cast into Object*.  If that works
+// we're all set; for specific pointer types (e.g.  map<U,V>* and vector<T>*),
+// above, since they are more specialized they should kick in before this one.
+// This specialization is not grouped with other specializations because it
+// makes explicit use of the 'newPyObject' method in the PythonObjectWrapper
+// class, and gcc 4.0.2 does not allow this until that class is properly
+// declared.
+template <typename T>
+struct ConvertToPyObject<T*>
+{
+    static PyObject* newPyObject(const T* x)
+    {
+        if(!x) // null ptr. becomes None
+            return PythonObjectWrapper::newPyObject();
+
+        if (const Object* objx = dynamic_cast<const Object*>(x))
+            return ConvertToPyObject<Object*>::newPyObject(objx);
+
+        PLERROR("Cannot convert type %s by value to python",
+                TypeTraits<T*>::name().c_str());
+        return 0;//shut up compiler
+    }
 };
 
 
