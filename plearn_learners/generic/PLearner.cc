@@ -883,15 +883,16 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     Vec output(outputsize());
     Vec costs(nTestCosts());
 
-    if (len == 0) {
-        // Empty test set: we give -1 cost arbitrarily.
-        costs.fill(-1);
-        test_stats->update(costs);
-    }
-
-    if (test_stats)
+    if (test_stats) {
         // Set names of test_stats costs
         test_stats->setFieldNames(getTestCostNames());
+
+        if (len == 0) {
+            // Empty test set: we give -1 cost arbitrarily.
+            costs.fill(-1);
+            test_stats->update(costs);
+        }
+    }
 
     PP<ProgressBar> pb;
     if (report_progress)
