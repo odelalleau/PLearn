@@ -1,8 +1,7 @@
-// -*- C++ -*-
+    // -*- C++ -*-
 
 // TransformationLearner.cc
 //
-//version 5
 // Copyright (C) 2007 Lysiane Bouchard
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,51 +39,52 @@
 
 #include "TransformationLearner.h"
 
-//C++ 
-#include <math.h>
-
-
-//Plearn
-#include <plearn/math/TMat_maths.h>
-#include <plearn/math/PRandom.h>
-#include <plearn/math/plapack.h>
-
-
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     TransformationLearner,
-    "ONE LINE DESCRIPTION",
-    "MULTI-LINE \nHELP");
+    "ONE LINE DESCR",
+    "NO HELP"
+);
 
-//TO TEST : OK
+//////////////////
+// TransformationLearner //
+//////////////////
 TransformationLearner::TransformationLearner():
-/* ### Initialize all fields to their default value here */
-    seed(1827),
-    transformFamily(TRANSFORM_FAMILY_LINEAR),
-    noiseVariance(1.0),
-    transformsVariance(0.5),
-    nbTransforms(5),
-    nbNeighbors(5),
-    epsilonInitWeight(0.01)
+    behavior(BEHAVIOR_LEARNER),
+    minimumProba(0.0001),
+    transformFamily(TRANSFORM_FAMILY_LINEAR_INCREMENT),
+    withBias(false),
+    learnNoiseVariance(false),
+    regOnNoiseVariance(false),
+    learnTransformDistribution(false),
+    regOnTransformDistribution(false),
+    initializationMode(INIT_MODE_DEFAULT),
+    largeEStepAPeriod(UNDEFINED),
+    largeEStepAOffset(UNDEFINED),
+    largeEStepBPeriod(UNDEFINED),
+    largeEStepBOffset(UNDEFINED),
+    noiseVariancePeriod(UNDEFINED),
+    noiseVarianceOffset(UNDEFINED),
+    noiseAlpha(NOISE_ALPHA_NO_REG),
+    noiseBeta(NOISE_BETA_NO_REG),
+    transformDistributionPeriod(UNDEFINED),
+    transformDistributionOffset(UNDEFINED),
+    transformDistributionAlpha(TRANSFORM_DISTRIBUTION_ALPHA_NO_REG),
+    transformsPeriod(1),
+    transformsOffset(0),
+    noiseVariance(UNDEFINED),
+    transformsVariance(1.0),
+    nbTransforms(2),
+    nbNeighbors(2)
 {
-    // ...
-    //pout << "TransformationLearner()" << endl;
-    random_gen = new PRandom();
-    
-
-    // ### You may (or not) want to call build_() to finish building the object
-    // ### (doing so assumes the parent classes' build_() have been called too
-    // ### in the parent classes' constructors, something that you must ensure)
-
-    // ### If this learner needs to generate random numbers, uncomment the
-    // ### line below to enable the use of the inherited PRandom object.
-    // random_gen = new PRandom();
+    pout << "hello\n";
 }
 
-
-//TO TEST
+////////////////////
+// declareOptions //
+////////////////////
 void TransformationLearner::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
@@ -100,300 +100,454 @@ void TransformationLearner::declareOptions(OptionList& ol)
     //               OptionBase::buildoption,
     //               "Help text describing this option");
     // ...
-    
-    declareOption(ol, 
-                  "seed", 
-                  &TransformationLearner::seed, 
-                  OptionBase::buildoption,
-                  "seed of the random generator");
-    declareOption(ol, 
-                  "transformFamily", 
-                  &TransformationLearner::transformFamily, 
-                  OptionBase::buildoption,
-                  "transformation function Family");
-    declareOption(ol, 
-                  "noiseVariance", 
-                  &TransformationLearner::noiseVariance, 
-                  OptionBase::buildoption,
-                  "variance on the noise r.v. (normaly distributed with mean 0)");
-    declareOption(ol,
-                  "transformsVariance", 
-                  &TransformationLearner::transformsVariance, 
-                  OptionBase::buildoption,
-                  "variance on the transformation parameters r.vs"
-                  "(normaly distributed with mean 0)");
-    declareOption(ol,
-                  "nbTransforms", 
-                  &TransformationLearner::nbTransforms, 
-                  OptionBase::buildoption,
-                  "number of transformations");
-    declareOption(ol,
-                  "nbNeighbors", 
-                  &TransformationLearner::nbNeighbors, 
-                  OptionBase::buildoption,
-                  "number of neighbors");
-    declareOption(ol,
-                  "epsilonInitWeight", 
-                  &TransformationLearner::epsilonInitWeight, 
-                  OptionBase::buildoption,
-                  "smallest amount of weight we can give to a choosen \n"
-                  "generation candidate at initialization of the \n "
-                  "generation set");
+
+
+    //buildoption
+    pout << "declare options\n";
 
     declareOption(ol,
-                  "transformDistribution", 
-                  &TransformationLearner::transformDistribution, 
+                  "behavior",
+                  &TransformationLearner::behavior,
                   OptionBase::buildoption,
-                  "a multinomial distribution for the transformations\n"
-                  "i.e. p(kth transformation) = transformDistribution[k] \n ");
-
+                  "a transformationLearner might behave as a learner or as a generator");
     declareOption(ol,
-                  "inputSpaceDim", 
-                  &TransformationLearner::inputSpaceDim, 
-                  OptionBase::learntoption,
-                  "dimension of the training set input space");
+                  "minimumProba",
+                  &TransformationLearner::minimumProba,
+                  OptionBase::buildoption,
+                  "initial weight that will be needed sometimes");
     declareOption(ol,
-                  "nbGenerationCandidatesPerTarget", 
-                  &TransformationLearner::nbGenerationCandidatesPerTarget, 
-                  OptionBase::learntoption,
-                  "number of generation candidates per target"); 
+                  "transformFamily",
+                  &TransformationLearner::transformFamily,
+                  OptionBase::buildoption,
+                  "global form of the transformation functions");
     declareOption(ol,
-                  "nbGenerationCandidates", 
-                  &TransformationLearner::nbGenerationCandidates, 
-                  OptionBase::learntoption,
-                  "number of generation candidates in the generation set");
+                  "withBias",
+                  &TransformationLearner::withBias,
+                  OptionBase::buildoption,
+                  "yes/no: add a bias to the transformation function ?");
     declareOption(ol,
-                  "nbTrainingInput", 
-                  &TransformationLearner::nbTrainingInput, 
-                  OptionBase::learntoption,
-                  "number of input given in the training set");  
+                  "learnNoiseVariance",
+                  &TransformationLearner::learnNoiseVariance,
+                  OptionBase::buildoption,
+                  "the noise variance is ...fixed/learned ?");
     declareOption(ol,
-                  "trainsformsSet", 
-                  &TransformationLearner::transformsSet, 
-                  OptionBase::learntoption,
-                  "set of transformations");
+                  "regOnNoiseVariance",
+                  &TransformationLearner::regOnNoiseVariance,
+                  OptionBase::buildoption,
+                  "yes/no: prior assumptions on the noise variance?");
     declareOption(ol,
-                  "transforms", 
-                  &TransformationLearner::transforms, 
-                  OptionBase::learntoption,
-                  "views on the transformation set");
+                  "learnTransformDistribution",
+                  &TransformationLearner::learnTransformDistribution,
+                  OptionBase::buildoption,
+                  "the transformation distribution is ... fixed/learned ?");
+    declareOption(ol,
+                  "regOnTransformDistribution",
+                  &TransformationLearner::regOnTransformDistribution,
+                  OptionBase::buildoption,
+                  "yes/no: prior assumptions on the transformation distribution ?");
     
     declareOption(ol,
-                  "generationSet", 
-                  &TransformationLearner::generationSet, 
-                  OptionBase::learntoption,
-                  "set of generation candidates"
-                  "i.e. triples (target, neighbor, transformation)");
-    declareOption(ol,
-                  "lambda", 
-                  &TransformationLearner::lambda, 
-                  OptionBase::learntoption,
-                  "weight decay");
-
-    declareOption(ol,
-                  "noiseVarianceFactor", 
-                  &TransformationLearner::noiseVarianceFactor, 
-                  OptionBase::learntoption,
-                  "factor used in computation of generation weights"
-                  " 1/(2*noise variance)");
-
-    declareOption(ol,
-                  "noiseStDev", 
-                  &TransformationLearner::noiseStDev, 
-                  OptionBase::learntoption,
-                  "standard deviation on noise distribution");
-    declareOption(ol,
-                  "transformsStDev", 
-                  &TransformationLearner::transformsStDev, 
-                  OptionBase::learntoption,
-                  "standard deviation on transformation parameters");
-
-    // Now call the parent class' declareOptions
+                  "initializationMode",
+                  &TransformationLearner::initializationMode,
+                  OptionBase::buildoption,
+                  "how the initial values of the parameters to learn are choosen?");
     
+    declareOption(ol,
+                  "largeEStepAPeriod",
+                  &TransformationLearner::largeEStepAPeriod,
+                  OptionBase::buildoption,
+                  "time interval between two updates of the reconstruction set\n"
+                  "(version A, method largeEStepA())");
+    declareOption(ol,
+                  "largeEStepAOffset",
+                  &TransformationLearner::largeEStepAOffset,
+                  OptionBase::buildoption,
+                  "time of the first update of the reconstruction set"
+                  "(version A, method largeEStepA())");
+    declareOption(ol,
+                  "largeEStepBPeriod",
+                  &TransformationLearner::largeEStepBPeriod,
+                  OptionBase::buildoption,
+                  "time interval between two updates of the reconstruction set\n"
+                  "(version  B, method largeEStepB())"); 
+    declareOption(ol,
+                  "noiseVariancePeriod",
+                  &TransformationLearner::noiseVariancePeriod,
+                  OptionBase::buildoption,
+                  "time interval between two updates of the noise variance");
+    declareOption(ol,
+                  "noiseVarianceOffset",
+                  &TransformationLearner::noiseVarianceOffset,
+                  OptionBase::buildoption,
+                  "time of the first update of the noise variance");
+    declareOption(ol,
+                  "noiseAlpha",
+                  &TransformationLearner::noiseAlpha,
+                  OptionBase::buildoption,
+                  "parameter of the prior distribution of the noise variance");
+   declareOption(ol,
+                 "noiseBeta",
+                 &TransformationLearner::noiseBeta,
+                 OptionBase::buildoption,
+                 "parameter of the prior distribution of the noise variance");
+   declareOption(ol,
+                 "transformDistributionPeriod",
+                 &TransformationLearner::transformDistributionPeriod,
+                 OptionBase::buildoption,
+                 "time interval between two updates of the transformation distribution");
+   declareOption(ol, 
+                 "transformDistributionOffset",
+                 &TransformationLearner::transformDistributionOffset,
+                 OptionBase::buildoption,
+                 "time of the first update of the transformation distribution");
+   declareOption(ol, 
+                 "transformDistributionAlpha",
+                 &TransformationLearner::transformDistributionAlpha,
+                 OptionBase::buildoption,
+                 "parameter of the prior distribution of the transformation distribution");
+   declareOption(ol,
+                 "transformsPeriod",
+                 &TransformationLearner::transformsPeriod,
+                 OptionBase::buildoption,
+                 "time interval between two updates of the transformations parameters");
+   declareOption(ol,
+                 "transformsOffset",
+                 &TransformationLearner::transformsOffset,
+                 OptionBase::buildoption,
+                 "time of the first update of the transformations parameters");
 
+   declareOption(ol, 
+                 "noiseVariance",
+                 &TransformationLearner::noiseVariance,
+                 OptionBase::buildoption,
+                 "noise variance (noise = random variable normally distributed)");
+   declareOption(ol, 
+                 "transformsVariance",
+                 &TransformationLearner::transformsVariance,
+                 OptionBase::buildoption,
+                 "variance on the transformation parameters (normally distributed)");
+   declareOption(ol, 
+                 "nbTransforms",
+                 &TransformationLearner::nbTransforms,
+                 OptionBase::buildoption,
+                 "how many transformations?");
+   declareOption(ol, 
+                 "nbNeighbors",
+                 &TransformationLearner::nbNeighbors,
+                 OptionBase::buildoption,
+                 "how many neighbors?");
+   declareOption(ol, 
+                 "transformDistribution",
+                 &TransformationLearner::transformDistribution,
+                 OptionBase::buildoption,
+                 "transformation distribution");
+   
+   //learntoption
+   declareOption(ol,
+                 "transformsSet",
+                 &TransformationLearner::transformsSet,
+                 OptionBase::learntoption,
+                 "set of transformations \n)"
+                 "implemented as a mdXd matrix,\n"
+                 "     where m is the number of transformations\n"
+                 "           and d is dimensionality of the input space");
+   declareOption(ol,
+                 "transforms",
+                 &TransformationLearner::transforms,
+                 OptionBase::learntoption,
+                 "set of transformations\n"
+                 "vector form of the previous set:\n)"
+                 "    kth element of the vector = view on the kth sub-matrix");
+   declareOption(ol,
+                 "biasSet",
+                 &TransformationLearner::biasSet,
+                 OptionBase::learntoption,
+                 "set of bias (one by transformation)");
+   declareOption(ol,
+                 "inputSpaceDim",
+                 &TransformationLearner::inputSpaceDim,
+                 OptionBase::learntoption,
+                 "dimensionality of the input space");
+   declareOption(ol,
+                 "nbTargetReconstructions",
+                 &TransformationLearner::nbTargetReconstructions,
+                 OptionBase::learntoption,
+                 "number of reconstructions of the same target");
+   declareOption(ol,
+                 "nbReconstructions",
+                 &TransformationLearner::nbReconstructions,
+                 OptionBase::learntoption,
+                 "total number of reconstructions");
+   declareOption(ol,
+                 "trainingSetLength",
+                 &TransformationLearner::trainingSetLength,
+                 OptionBase::learntoption,
+                 "number of samples in the training" );
+   declareOption(ol,
+                 "transformsSD",
+                 &TransformationLearner::transformsSD,
+                 OptionBase::learntoption,
+                 "standard deviation of the transformations parameters");
+   declareOption(ol,
+                 "targetReconstructionSet",
+                 &TransformationLearner::targetReconstructionSet,
+                 OptionBase::learntoption,
+                 "will be used to store a view on the reconstructions of a same target");
+   declareOption(ol,
+                 "B_C",
+                 &TransformationLearner::B_C,
+                 OptionBase::learntoption,
+                 "storage space needed in the maximization step (to update transformations parameters)\n"
+                 " - 2mdXd matrix, m=number of transformations, d = dimensionality of the input space");
+   declareOption(ol,
+                 "B",
+                 &TransformationLearner::B,
+                 OptionBase::learntoption,
+                 "views on m first dxd submatrices of B_C \n"
+                 "(vector form)");
+   declareOption(ol,
+                 "C",
+                 &TransformationLearner::C,
+                 OptionBase::learntoption,
+                 "views on m last dxd submatrices of B_C \n"
+                 "(vector form)");
+   declareOption(ol,
+                 "target",
+                 &TransformationLearner::target,
+                 OptionBase::learntoption,
+                 "to store a view on a training sample");
+   declareOption(ol,
+                 "neighbor",
+                 &TransformationLearner::neighbor,
+                 OptionBase::learntoption,
+                 "to store a view on a training sample");
 
-    inherited::declareOptions(ol);
+   // Now call the parent class' declareOptions().
+   inherited::declareOptions(ol);
 }
 
+void TransformationLearner::declareMethods(RemoteMethodMap& rmm){
 
-//TO TEST
-void TransformationLearner::declareMethods(RemoteMethodMap& rmm)
-{
-    declareMethod(rmm, "largeEStepA", &TransformationLearner::largeEStepA,
-                  (BodyDoc("Performs a large update of the generation set (expectation step)"  
-                           "For each target, we take the best generation candidates among all the possibilities \n")));
+
+    pout << "declare methods\n";
+    rmm.inherited(inherited::_getRemoteMethodMap_());
     
-    declareMethod(rmm, "initEStep", &TransformationLearner::initEStep,
-                  (BodyDoc("Initialization of the generation set (expectation step)\n" 
-                           "For each possible couple (target,neighbor), we take the best transformations to form \n" 
-                           "the generation candidates")));
-    
-    declareMethod(rmm, "smallEStep",&TransformationLearner::smallEStep,
-                  (BodyDoc("Update of the generation set (expectation step) \n"
-                           "we update the weights of the generation candidates while keeping them fixed")));
-    
-    declareMethod(rmm, "MStep", &TransformationLearner::MStep,
-                  (BodyDoc("Updating the transformation parameters (maximization step)\n")));
-
-    declareMethod(rmm, "largeEStepB", &TransformationLearner::largeEStepB,
-                  (BodyDoc("Performs a large update of the")));
- 
-    declareMethod(rmm, "returnReproductionSources", &TransformationLearner::returnReproductionSources,
-                  (BodyDoc("Returns the generation candidates associated to a specific target "),
-                   ArgDoc ("targetIdx", "Index of the target data point in the training set"),
-                   RetDoc ("A vector of tuples (target index, neighbor index, transformation index, weight )")));
-
-    declareMethod(rmm, "returnReproductions", &TransformationLearner::returnReproductions,
-                  (BodyDoc("Computes the reproductions of the target from his generation candidates "),
-                   ArgDoc("targetIdx","Index of the target data point in the training set"),
-                   RetDoc("A matrix of data points (reproductions of the target)")));
-
-    declareMethod(rmm, "returnTransform", &TransformationLearner::returnTransform,
-                  (BodyDoc("Returns the parameters of a transformation"),
-                   ArgDoc("transformIdx"," Index of the transformation"),
-                   RetDoc("a dXd matrix, d = dimension of input space")));
-    declareMethod(rmm, "returnAllTransforms",&TransformationLearner::returnAllTransforms,
-                  (BodyDoc("Returns all the transformation parameters"),
-                   RetDoc("a kdXd matrix,  k = nb transformations \n" 
-                          "                d = dimension of input space")));
     declareMethod(rmm, 
-                  "returnGeneratedSamplesFrom", 
+                  "initTransformsParameters",
+                  &TransformationLearner::initTransformsParameters,
+                  (BodyDoc("initializes the transformation parameters randomly \n"
+                           "  (all parameters are a priori independent and normally distributed)")));
+   
+    declareMethod(rmm, 
+                  "setTransformsParameters",
+                  &TransformationLearner::setTransformsParameters,
+                  (BodyDoc("initializes the transformation parameters with the given values"),
+                   ArgDoc("TVec<Mat> transforms", "initial transformation matrices"),
+                   ArgDoc("Mat  biasSet","initial bias (one by transformation) (optional)")));
+    declareMethod(rmm, 
+                  "initNoiseVariance",
+                  &TransformationLearner::initNoiseVariance,
+                  (BodyDoc("initializes the noise variance randomly (gamma distribution)")));
+    declareMethod(rmm, 
+                  "setNoiseVariance",
+                  &TransformationLearner::setNoiseVariance,
+                  (BodyDoc("initializes the noise variance to the given value"),
+                   ArgDoc("real nv","noise variance")));
+    declareMethod(rmm, 
+                  "initTransformDistribution",
+                  &TransformationLearner::initTransformDistribution,
+                  (BodyDoc("initializes the transformation distribution randomly \n"
+                           "-we use a dirichlet distribution \n"
+                           "-we store log-probabilities instead probabilities")));
+    declareMethod(rmm, 
+                  "setTransformDistribution",
+                  &TransformationLearner::setTransformDistribution,
+                  (BodyDoc("initializes the transformation distribution with the given values \n"
+                           " -the given values might represent log-probabilities"),
+                   ArgDoc("Vec td","initial values of the transformation distribution")));
+    
+    declareMethod(rmm,
+                  "returnPredictedFrom",
+                  &TransformationLearner::returnPredictedFrom,
+                  (BodyDoc("generates a sample data point from a source data point and returns it \n"
+                           " - a specific transformation is used"),
+                   ArgDoc("const Vec source","source data point"),
+                   ArgDoc("int transformIdx","index of the transformation (optional)"),
+                   RetDoc("Vec")));
+
+    declareMethod(rmm,
+                  "returnGeneratedSamplesFrom",
                   &TransformationLearner::returnGeneratedSamplesFrom,
-                  (BodyDoc("returns samples data point generated from\n"
-                           "a center data point"),
-                   ArgDoc("Vec center, int n"," center data point"),
-                   ArgDoc("int n", " number of sample data points to generate"),
-                   RetDoc("a nXd matrix, the center is included in the dataset")));
+                  (BodyDoc("generates samples data points form a source data point and return them \n"
+                           "    -we use a specific transformation"),
+                   ArgDoc("Vec source","source data point"),
+                   ArgDoc("int n","number of samples"),
+                   ArgDoc("int transformIdx", "index of the transformation (optional)"),
+                   RetDoc("nXd matrix (one row = one sample)")));
     declareMethod(rmm,
-                  "returnGeneratedDataSet",
-                  &TransformationLearner::returnGeneratedDataSet,
-                  (BodyDoc("returns a data set with respect to the current\n"
-                           "distribution paramaters\n"
-                           "We use a tree generation process (see createDataSet)\n"
-                           "i.e.: each new data point is used to generate a fix number of data points "),
-                   ArgDoc("Vec root","initial data point"),
-                   ArgDoc("int nbGenerations","deepness of the tree"),
-                   ArgDoc("int GenerationLen","number of child for interior nodes"),
-                   RetDoc("a nXd matrix, where n = number of nodes in the tree (root = part of the dataSet)")));
-    
+                  "pickTransformIdx",
+                  &TransformationLearner::pickTransformIdx,
+                  (BodyDoc("select a transformation ramdomly"),
+                   RetDoc("int (index of the choosen transformation)")));
+               
     declareMethod(rmm,
-                  "returnSequentiallyGeneratedDataSet",
-                  &TransformationLearner::returnSequentiallyGeneratedDataSet,
-                  (BodyDoc("returns a data set with respect to the current\n"
-                           "distribution parameters\n"
-                           "We use a sequential generation process\n"
-                           "i.e: each new data point is used to generate the next data point"),
-                   ArgDoc("Vec root","initial data point"),
-                   ArgDoc("int n","number of data points to generate"),  
-                   RetDoc("a nXd matrix (the root is included in the data set)")));
-    
-    inherited::declareMethods(rmm);
+                  "pickNeighborIdx",
+                  &TransformationLearner::pickNeighborIdx,
+                  (BodyDoc("select a neighbor among the data points in the training set"),
+                   RetDoc("int (index of the data point in the training set)")));
+    declareMethod(rmm,
+                  "returnTreeDataSet",
+                  &TransformationLearner::returnTreeDataSet,
+                  (BodyDoc("creates and returns a data set using a 'tree generation process'\n"
+                           " see 'treeDataSet()' implantation for more details"),
+                   ArgDoc("Vec root","data point from which all the other data points will derive (directly or indirectly)"),
+                   ArgDoc("int deepness","deepness of the tree reprenting the samples created"),
+                   ArgDoc("int branchingFactor","branching factor of the tree representing the samples created"),
+                   RetDoc("Mat (one row = one sample)")));
+    declareMethod(rmm,
+                  "returnSequenceDataSet",
+                  &TransformationLearner::returnSequenceDataSet,
+                  (BodyDoc("creates and returns a data set using a 'sequential procedure' \n"
+                           "see 'sequenceDataSet()' implantation for more details"),
+                   ArgDoc("const Vec start","data point from which all the other data points will derice (directly or indirectly)"),
+                   ArgDoc("int n","number of sample data points to generate"),
+                   RetDoc("nXd matrix (one row = one sample)")));
+    declareMethod(rmm,
+                  "returnTrainingPoint",
+                  &TransformationLearner::returnTrainingPoint,
+                  (BodyDoc("returns the 'idx'th data point in the training set"),
+                   ArgDoc("int idx","index of the data point in the training set"),
+                   RetDoc("Vec")));
+    declareMethod(rmm,
+                  "returnReconstructionCandidates",
+                  &TransformationLearner::returnReconstructionCandidates,
+                  (BodyDoc("return all the reconstructions candidates associated to a given target"),
+                   ArgDoc("int targetIdx","index of the target data point in the training set"),
+                   RetDoc("TVec<ReconstructionCandidate>")));
+    declareMethod(rmm,
+                  "returnReconstructions",
+                  &TransformationLearner::returnReconstructions,
+                  (BodyDoc("returns the reconstructions of the 'targetIdx'th data point in the training set \n"
+                           "(one reconstruction per reconstruction candidate)"),
+                   ArgDoc("int targetIdx","index of the target data point in the training set"),
+                   RetDoc("Mat (ith row = reconstruction associated to the ith reconstruction candidate)")));
+    declareMethod(rmm,
+                  "returnNeighbors",
+                  &TransformationLearner::returnNeighbors,
+                  (BodyDoc("returns the choosen neighbors of the target\n"
+                           "  (one neighbor per reconstruction candidate)"),
+                   ArgDoc("int targetIdx","index of the target in the training set"),
+                   RetDoc("Mat (ith row = neighbor associated to the ith reconstruction candidate)")));
+    declareMethod(rmm,
+                  "returnTransform",
+                  &TransformationLearner::returnTransform,
+                  (BodyDoc("returns the parameters of the 'transformIdx'th transformation"),
+                   ArgDoc("int transformIdx","index of the transformation"),
+                   RetDoc("Mat")));
+    declareMethod(rmm,
+                  "returnAllTransforms",
+                  &TransformationLearner::returnAllTransforms,
+                  (BodyDoc("returns the parameters of each transformation"),
+                   RetDoc("mdXd matrix, m = number of transformations \n"
+                          "             d = dimensionality of the input space")));
+    declareMethod(rmm,
+                  "trainBuild",
+                  &TransformationLearner::trainBuild,
+                  (BodyDoc("training specific initialization operations")));
+    declareMethod(rmm,
+                  "generatorBuild",
+                  &TransformationLearner::generatorBuild,
+                  (BodyDoc("generator specific initialization operations"),
+                   ArgDoc("int inputSpaceDim","dimensionality of the input space"),
+                   ArgDoc("TVec<Mat> transforms_", "transformations matrices"),
+                   ArgDoc("Mat biasSet_","transformations bias"),
+                   ArgDoc("real noiseVariance_","noise variance"),
+                   ArgDoc("transformDistribution_", "transformation distribution")));
+    declareMethod(rmm,
+                  "gamma_sample",
+                  &TransformationLearner::gamma_sample,
+                  (BodyDoc("returns a pseudo-random positive real value using the distribution p(x)=Gamma(x |alpha,beta)"),
+                   ArgDoc("real alpha",">=1"),
+                   ArgDoc("real beta",">= 0 (optional: default value==1)"),
+                   RetDoc("real >=0")));
+    declareMethod(rmm,
+                  "return_dirichlet_sample",
+                  &TransformationLearner::return_dirichlet_sample,
+                  (BodyDoc("returns a pseudo-random positive real vector using the distribution p(x)=Dirichlet(x|alpha)"),
+                   ArgDoc("real alpha","all the parameters of the distribution are equal to 'alpha'"),
+                   RetDoc("Vec (each element is between 0 and 1 , the elements sum to one)")));
+/* declareMethod(rmm,
+   "return_dirichlet_sample",
+   &TransformationLearner::return_dirichlet_sample,
+   (BodyDoc("returns a pseudo-random positive real vector using the distribution p(x)=Dirichlet(x|alphas)"),
+   ArgDoc("Vec alphas","parameters of the distribution"),
+   RetDoc("Vec (each element is between 0 and 1, the elements sum to one )"))); */
+    declareMethod(rmm,
+                  "initEStep",
+                  &TransformationLearner::initEStep,
+                  (BodyDoc("initial expectation step")));
+    declareMethod(rmm,
+                  "EStep",
+                  &TransformationLearner::EStep,
+                  (BodyDoc("coordination of the different kinds of expectation steps")));
+    declareMethod(rmm,
+                  "largeEStepA",
+                  &TransformationLearner::largeEStepA,
+                  (BodyDoc("update the reconstruction set \n"
+                           "for each target, keeps the most probable <neighbor, transformation> pairs")));
+    declareMethod(rmm,
+                  "largeEStepB",
+                  &TransformationLearner::largeEStepB,
+                  (BodyDoc("update the reconstruction set \n"
+                           "for each <target,transformation> pairs,choose the most probable neighbors ")));
+    declareMethod(rmm,
+                  "smallEStep",
+                  &TransformationLearner::smallEStep,
+                  (BodyDoc("update the weights of the reconstruction candidates")));
+    declareMethod(rmm,
+                  "MStep",
+                  &TransformationLearner::MStep,
+                  (BodyDoc("coordination of the different kinds of maximization step")));
+    declareMethod(rmm,
+                  "MStepTransformDistribution",
+                  &TransformationLearner::MStepTransformDistribution,
+                  (BodyDoc("maximization step with respect to transformation distribution parameters")));
+    declareMethod(rmm,
+                  "MStepTransformations",
+                  &TransformationLearner::MStepTransformations,
+                  (BodyDoc("maximization step with respect to transformation parameters (MAP version)")));
+    declareMethod(rmm,
+                  "MStepNoiseVariance",
+                  &TransformationLearner::MStepNoiseVariance,
+                  (BodyDoc("maximization step with respect to noise variance")));
+    declareMethod(rmm,
+                  "stoppingCriterionReached",
+                  &TransformationLearner::stoppingCriterionReached,
+                  (BodyDoc("stages == nstages?")));
+    declareMethod(rmm,
+                  "nextStage",
+                  &TransformationLearner::nextStage,
+                  (BodyDoc("increment 'stage' by one")));
+
 }
 
 
-
-//TO TEST
-//do the building operations related to the generation process
-//warning: we suppose the transformation parameters are set 
-void TransformationLearner::generatorInit(){
-    
-    inputSpaceDim = transformsSet.width();
-    
-
+///////////
+// build //
+///////////
+void TransformationLearner::build()
+{
+    pout << "build\n";
+    // ### Nothing to add here, simply calls build_().
+    inherited::build();
+    build_();
 }
 
-
-//TO TEST
-//do the building operations related to training
-//warning: we suppose the training set has been transmitted
-//         before calling the method
-void TransformationLearner::trainInit(){
-   
-    //DIMENSION VARIABLES
-    
-    //dimension of the input space
-    inputSpaceDim = train_set->inputsize();
-      
-    //number of samples given in the training set
-    nbTrainingInput = train_set->length();
-
-    
-    //number of generation candidates related to a specific target in the 
-    //generation set.   
-    nbGenerationCandidatesPerTarget = nbNeighbors * nbTransforms;
-
-   //total number of generation candidates in the generation set
-    nbGenerationCandidates = nbTrainingInput * nbGenerationCandidatesPerTarget;
-
-    
-    //LEARNED MODEL PARAMETERS
-    
-    //set of transformations (represented as a single matrix)
-    transformsSet = Mat(nbTransforms * inputSpaceDim, inputSpaceDim);
-    
-    //view on the set of transformations (vector)
-    //    each transformation = one matrix 
-    transforms.resize(nbTransforms);
-    for(int k = 0; k< nbTransforms; k++){
-        transforms[k] = transformsSet.subMatRows(k * inputSpaceDim, inputSpaceDim);       
-    }
-    
-     //generation set and weights of the entries in the generation set
-    generationSet.resize(nbGenerationCandidates);
-
-    //OTHER VARIABLES
-    
-    //weight decay
-    lambda = noiseVariance/transformsVariance;
-   
-    
-
-    //factor used in the computation of the generation weights
-    noiseVarianceFactor = 1/(2*noiseVariance);
-    
-
-    //to store a view on the generation set 
-    //   (entries related to a specific target)
-    targetGenerationSet.resize(nbGenerationCandidatesPerTarget);
-
-    //Storage space used in the update of the transformation parameters
-    B_C = Mat(2 * nbTransforms * inputSpaceDim , inputSpaceDim);
-
-    B.resize(nbTransforms);
-    C.resize(nbTransforms);
-    for(int k=0; k<nbTransforms; k++){
-        B[k]= B_C.subMatRows(k*inputSpaceDim, inputSpaceDim);
-    }
-    for(int k= nbTransforms ; k<2*nbTransforms ; k++){
-        C[(k % nbTransforms)] = B_C.subMatRows(k*inputSpaceDim, inputSpaceDim);
-    }
-    
-    
-    target.resize(inputSpaceDim);
-    neighbor.resize(inputSpaceDim);
-
-}
-
-
-//TO TEST 
-void TransformationLearner::build_(){
-
-  
-    if(transformDistribution.length() == 0){
-        transformDistribution.resize(nbTransforms);
-        transformDistribution.fill(1.0/nbTransforms);
-    }
-    else{
-        PLASSERT(transformDistribution.length() == nbTransforms);
-        real sum =0;
-        for(int i=0; i<nbTransforms; i++){
-            sum += transformDistribution[i];
-        }
-        PLASSERT(sum == 1);  
-    }
-    
-   
-
+////////////
+// build_ //
+////////////
+void TransformationLearner::build_()
+{
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation.
     // ### Typical situations include:
@@ -404,19 +558,119 @@ void TransformationLearner::build_(){
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+
+    // ### In general, you will want to call this class' specific methods for
+    // ### conditional distributions.
+    // TransformationLearner::setPredictorPredictedSizes(predictor_size,
+    //                                          predicted_size,
+    //                                          false);
+    // TransformationLearner::setPredictor(predictor_part, false);
+
+    pout << "build_\n";
+    if(behavior == BEHAVIOR_LEARNER){
+        trainBuild();
+    }
+   
+    else{
+        generatorBuild(); //initialization of the parameters with all the default values
+    }
+    
+ 
 }
 
-//TO TEST
-// ### Nothing to add here, simply calls build_
-void TransformationLearner::build()
+/////////
+// cdf //
+/////////
+real TransformationLearner::cdf(const Vec& y) const
 {
-
-    // pout << "build()" << endl;
-    inherited::build();
-    build_(); 
+    PLERROR("cdf not implemented for TransformationLearner"); return 0;
 }
 
+/////////////////
+// expectation //
+/////////////////
+void TransformationLearner::expectation(Vec& mu) const
+{
+    PLERROR("expectation not implemented for TransformationLearner");
+}
 
+// ### Remove this method if your distribution does not implement it.
+////////////
+// forget //
+////////////
+void TransformationLearner::forget()
+{
+    
+    /*!
+      A typical forget() method should do the following:
+      - initialize a random number generator with the seed option
+      - initialize the learner's parameters, using this random generator
+      - stage = 0
+    */    
+    //PLERROR("forget method not implemented for TransformationLearner");
+    
+    inherited::forget();
+    stage = 0;
+    trainBuild();
+    
+}
+
+//////////////
+// generate //
+//////////////
+
+//!generate a point using the training set: 
+//! - choose ramdomly a neighbor among data points in the training set
+//! - choose randomly a transformation 
+//! - apply the transformation on the choosen neighbor
+//! - add some noise 
+void TransformationLearner::generate(Vec & y) //const
+{
+    //PLERROR("generate not implemented for TransformationLearner");
+    PLASSERT(y.length() == inputSpaceDim);
+    int neighborIdx ;
+    neighborIdx=pickNeighborIdx();
+    seeNeighbor(neighborIdx);
+    generatePredictedFrom(neighbor, y);
+}
+
+// ### Default version of inputsize returns learner->inputsize()
+// ### If this is not appropriate, you should uncomment this and define
+// ### it properly here:
+int TransformationLearner::inputsize() const {
+    return inputSpaceDim;
+}
+
+/////////////////
+// log_density //
+/////////////////
+real TransformationLearner::log_density(const Vec& y) //const
+{
+    PLASSERT(y.length() == inputSpaceDim);
+    real weight;
+    real totalWeight = INIT_weight(0);
+    real scalingFactor = -1*(pl_log(pow(2*Pi*noiseVariance, inputSpaceDim/2.0)) 
+                             +
+                             pl_log(trainingSetLength));
+    for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
+        for(int transformIdx=0 ; transformIdx<nbTransforms ; transformIdx++){
+            weight = computeReconstructionWeight(y,
+                                                 neighborIdx,
+                                                 transformIdx);
+            weight = MULT_weights(weight,
+                                  transformDistribution[transformIdx]);
+            totalWeight = SUM_weights(weight,totalWeight);
+        }  
+    }
+    totalWeight = MULT_weights(totalWeight, scalingFactor);
+    return totalWeight;
+    
+    /*PLERROR("density not implemented for TransformationLearner"); return 0;*/
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void TransformationLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -431,40 +685,60 @@ void TransformationLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     PLERROR("TransformationLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
-/******** LEARNING MODULE ******************************************************/
-
-
-//TO DO
-int TransformationLearner::outputsize() const
+////////////////////
+// resetGenerator //
+////////////////////
+/*void TransformationLearner::resetGenerator(long g_seed) const
 {
-    return 0;
-    // Compute and return the size of this learner's output (which typically
-    // may depend on its inputsize(), targetsize() and set options).
+    PLERROR("resetGenerator not implemented for TransformationLearner");
+}
+*/
+
+//////////////////
+// setPredictor //
+//////////////////
+void TransformationLearner::setPredictor(const Vec& predictor, bool call_parent) const
+{
+    if (call_parent)
+        inherited::setPredictor(predictor, true);
+    // ### Add here any specific code required by your subclass.
 }
 
-
-//TO DO
-void TransformationLearner::forget()
+////////////////////////////////
+// setPredictorPredictedSizes //
+////////////////////////////////
+bool TransformationLearner::setPredictorPredictedSizes(int the_predictor_size,
+                                               int the_predicted_size,
+                                               bool call_parent)
 {
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
-    //! a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
-    inherited::forget();
+    bool sizes_have_changed = false;
+    if (call_parent)
+        sizes_have_changed = inherited::setPredictorPredictedSizes(
+                the_predictor_size, the_predicted_size, true);
+
+    // ### Add here any specific code required by your subclass.
+
+    // Returned value.
+    return sizes_have_changed;
 }
 
-//TO DO
+/////////////////
+// survival_fn //
+/////////////////
+real TransformationLearner::survival_fn(const Vec& y) const
+{
+    PLERROR("survival_fn not implemented for TransformationLearner"); return 0;
+}
+
+// ### Remove this method, if your distribution does not implement it.
+///////////
+// train //
+///////////
 void TransformationLearner::train()
 {
-
-    trainInit();
-
+    
+  
+    //PLERROR("train method not implemented for TransformationLearner");
     // The role of the train method is to bring the learner up to
     // stage==nstages, updating train_stats with training costs measured
     // on-line in the process.
@@ -496,126 +770,488 @@ void TransformationLearner::train()
         train_stats->finalize(); // finalize statistics for this epoch
     }
     */
-}
 
-//TO DO
-void TransformationLearner::computeOutput(const Vec& input, Vec& output) const
-{
-    // Compute the output from the input.
-    // int nout = outputsize();
-    // output.resize(nout);
-    // ...
-}
-
-//TO DO
-void TransformationLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
-                                           const Vec& target, Vec& costs) const
-{
-// Compute the costs from *already* computed output.
-// ...
-}
-
-//TO DO
-TVec<string> TransformationLearner::getTestCostNames() const
-{
-    // Return the names of the costs computed by computeCostsFromOutputs
-    // (these may or may not be exactly the same as what's returned by
-    // getTrainCostNames).
-    // ..
+    initEStep();
+    while(!stoppingCriterionReached()){
+        MStep();
+        EStep();
+        stage ++;
+    }
     
-    return TVec<string>();
 }
 
-//TO DO
-TVec<string> TransformationLearner::getTrainCostNames() const
+//////////////
+// variance //
+//////////////
+void TransformationLearner::variance(Mat& covar) const
 {
-    // Return the names of the objective costs that the train method computes
-    // and for which it updates the VecStatsCollector train_stats
-    // (these may or may not be exactly the same as what's returned by
-    // getTestCostNames).
-    // ...
-    return TVec<string>();
+    PLERROR("variance not implemented for TransformationLearner");
 }
 
- /*********GENERATION MODULE *****************************************/
-
-    //The object is the representation of a learned distribution
-    //Are are methods to ensure the "generative behavior" of the object
-    //(Once the distribution is learned, we might be able to generate
-    // samples from it)
 
 
+//INITIALIZATION METHODS 
 
-// TO TEST
-//Chooses the transformation parameters using a 
-//normal distribution with mean 0 and variance "transformsVariance"
-//(call generatorBuild() after)
-void TransformationLearner::buildTransformationParametersNormal(){
-    transformsSet.resize(nbTransforms*inputSpaceDim, inputSpaceDim);
+
+//! initialization operations that have to be done before the training
+//!WARNING: the trainset ("train_set") must be given
+void TransformationLearner::trainBuild(){
+    
+    
+    transformsSD = sqrt(transformsVariance);
+    
+    //DIMENSION VARIABLES
+    
+    //dimension of the input space
+    inputSpaceDim = train_set->inputsize();
+      
+    //number of samples given in the training set
+    trainingSetLength = train_set->length();
+    
+    
+    //number of reconstruction candidates related to a specific target in the 
+    //reconstruction set.   
+    nbTargetReconstructions = nbNeighbors * nbTransforms;
+
+    //total number of reconstruction candidates in the reconstruction set
+    nbReconstructions = trainingSetLength * nbTargetReconstructions;
+    
+    
+    //LEARNED MODEL PARAMETERS
+    
+    //set of transformations (represented as a single matrix)
+    transformsSet = Mat(nbTransforms * inputSpaceDim, inputSpaceDim);
+    
+    //view on the set of transformations (vector)
+    //    each transformation = one matrix 
     transforms.resize(nbTransforms);
-    for(int t=0; t<nbTransforms ; t++){
-        random_gen->fill_random_normal(transforms[t], 0 , transformsStDev);
+    for(int k = 0; k< nbTransforms; k++){
+        transforms[k] = transformsSet.subMatRows(k * inputSpaceDim, inputSpaceDim);       
+    }
+    
+    if(withBias){
+        biasSet = Mat(nbTransforms,inputSpaceDim);
+    }
+    
+    initTransformsParameters();
+
+   
+    if(transformsPeriod == UNDEFINED || transformsOffset == UNDEFINED){
+        if(learnNoiseVariance){
+            transformsPeriod = 2;
+            transformsOffset = 1;
+        }
+        else{
+            transformsPeriod = 1;
+            transformsOffset = 0;
+        }
+    }
+
+    //training parameters for noise variance
+    if(learnNoiseVariance){
+        if(noiseVariancePeriod == UNDEFINED || noiseVarianceOffset == UNDEFINED){
+            noiseVariancePeriod = 2;
+            noiseVarianceOffset = 1;
+        }
+        if(regOnNoiseVariance){
+            if(noiseAlpha < 1)
+                noiseAlpha = 1;
+            if(noiseBeta <= 0){
+                noiseBeta = 1;
+            }
+        }
+        else{
+            noiseAlpha = NOISE_ALPHA_NO_REG;
+            noiseBeta = NOISE_BETA_NO_REG;
+        }
+    }
+    
+    //initialize the noise variance
+     if(noiseVariance == UNDEFINED){
+        if(learnNoiseVariance && regOnNoiseVariance){
+            initNoiseVariance();
+        }
+        else{
+            noiseVariance = 1.0;
+        }
+     }
+    
+     //training parameters for transformation distribution
+     if(learnTransformDistribution){
+         if(transformDistributionPeriod == UNDEFINED || transformDistributionOffset == UNDEFINED){
+             transformDistributionPeriod = 1;
+             transformDistributionOffset = 0;
+         }
+         if(regOnTransformDistribution){
+             if(transformDistributionAlpha<=0){
+                 transformDistributionAlpha =10;
+             }
+             else{
+                 transformDistributionAlpha = TRANSFORM_DISTRIBUTION_ALPHA_NO_REG;
+             }
+         }
+     }
+
+
+    //transformDistribution
+    if(transformDistribution.length() == 0){
+        if(learnTransformDistribution && regOnTransformDistribution)
+            initTransformDistribution();
+        else{
+            transformDistribution.resize(nbTransforms);
+            real w = INIT_weight(1.0/nbTransforms);
+            for(int k=0; k<nbTransforms ; k++){
+                transformDistribution[k] = w;
+            }
+        }       
+    }
+    else{
+        PLASSERT(transformDistribution.length() == nbTransforms);
+        PLASSERT(isWellDefined(transformDistribution));
+    }
+
+    //reconstruction set 
+    reconstructionSet.resize(nbReconstructions);
+    
+    
+
+    //OTHER VARIABLES
+    
+    
+    //to store a view on the generation set 
+    //   (entries related to a specific target)
+    targetReconstructionSet.resize(nbTargetReconstructions);
+    
+    //Storage space used in the update of the transformation parameters
+    B_C = Mat(2 * nbTransforms * inputSpaceDim , inputSpaceDim);
+    
+    B.resize(nbTransforms);
+    C.resize(nbTransforms);
+    for(int k=0; k<nbTransforms; k++){
+        B[k]= B_C.subMatRows(k*inputSpaceDim, inputSpaceDim);
+    }
+    for(int k= nbTransforms ; k<2*nbTransforms ; k++){
+        C[(k % nbTransforms)] = B_C.subMatRows(k*inputSpaceDim, inputSpaceDim);
+    }
+    
+    
+    target.resize(inputSpaceDim);
+    neighbor.resize(inputSpaceDim);
+}
+
+
+//! initialization operations that have to be done before a generation process
+//! (all the undefined parameters will be initialized  randomly)
+void TransformationLearner::generatorBuild( int inputSpaceDim_,
+                                            TVec<Mat> transforms_,
+                                            Mat biasSet_,
+                                            real noiseVariance_,
+                                            Vec transformDistribution_){
+    
+    inputSpaceDim = inputSpaceDim_;
+    transformsSD = sqrt(transformsVariance);
+    
+
+    //transformations parameters
+
+    
+    transformsSet = Mat(nbTransforms * inputSpaceDim, inputSpaceDim);
+    transforms.resize(nbTransforms);
+    for(int k = 0; k< nbTransforms; k++){
+        transforms[k] = transformsSet.subMatRows(k * inputSpaceDim, inputSpaceDim);       
+    }
+    
+    if(withBias){
+        biasSet = Mat(nbTransforms,inputSpaceDim);
+    }
+
+    if(transforms_.length() == 0){
+        initTransformsParameters();
+    }
+    else{
+        setTransformsParameters(transforms_,biasSet_);
+    }
+    
+
+    //noise variance
+    if(noiseAlpha < 1){
+            noiseAlpha = 1;
+        }
+    if(noiseBeta <= 0){
+        noiseBeta = 1;
+    }
+    if(noiseVariance_ == UNDEFINED){
+        initNoiseVariance();
+    }
+    else{
+        setNoiseVariance(noiseVariance_);
+    }
+    //transformation distribution
+    if(transformDistributionAlpha <=0)
+        transformDistributionAlpha = 10;
+    if(transformDistribution_.length()==0){
+        initTransformDistribution();
+    }
+    else{
+        setTransformDistribution(transformDistribution_);
     }
 }
 
 
-//TO TEST
-//set the transformation parameters to the specified values
-//(call generatorBuild() after)
-void TransformationLearner::setTransformationParameters(TVec<Mat> & transforms_){
-     
+//!initializes the transformation parameters randomly 
+//!(prior distribution= Normal(0,transformsVariance))
+void TransformationLearner::initTransformsParameters()
+{
+    
+    transformsSet.resize(nbTransforms*inputSpaceDim, inputSpaceDim);
+    transforms.resize(nbTransforms);
+    for(int k = 0; k< nbTransforms; k++){
+        transforms[k] = transformsSet.subMatRows(k * inputSpaceDim, inputSpaceDim);       
+    }
+    int idx = 0;
+    for(int t=0; t<nbTransforms ; t++){
+        transforms[t] = transformsSet.subMatRows(idx,inputSpaceDim);
+        idx += inputSpaceDim;
+        random_gen->fill_random_normal(transforms[t], 0 , transformsSD);
+    }
+    if(withBias){
+        biasSet = Mat(nbTransforms,inputSpaceDim);
+        random_gen->fill_random_normal(biasSet, 0,transformsSD);
+    }
+    if(transformFamily == TRANSFORM_FAMILY_LINEAR){
+        for(int t=0; t<nbTransforms;t++){
+            addToDiagonal(transforms[t],1.0);
+        }
+    }
+}
+
+//!initializes the transformation parameters to the given values
+//!(bias are set to 0)
+void TransformationLearner::setTransformsParameters(TVec<Mat> transforms_,
+                                                    Mat biasSet_)
+{
     PLASSERT(transforms_.length() == nbTransforms);
-    inputSpaceDim = transforms_[0].width();
     
     int nbRows = inputSpaceDim*nbTransforms;
-    transformsSet = Mat(nbRows,inputSpaceDim);
+    transformsSet.resize(nbRows,inputSpaceDim);
     transforms.resize(nbTransforms);
-  
+    for(int k = 0; k< nbTransforms; k++){
+        transforms[k] = transformsSet.subMatRows(k * inputSpaceDim, inputSpaceDim);       
+    }
+
+
     int rowIdx = 0;
     for(int t=0; t<nbTransforms; t++){
+        PLASSERT(transforms_[t].width() == inputSpaceDim);
+        PLASSERT(transforms_[t].length() == inputSpaceDim);
         transformsSet.subMatRows(rowIdx,inputSpaceDim) << transforms_[t];
         transforms[t]= transformsSet.subMatRows(rowIdx,inputSpaceDim);
         rowIdx += inputSpaceDim;
     }
+    if(withBias){    
+        PLASSERT(biasSet_.length() == nbTransforms);
+        PLASSERT(biasSet_.width() == inputSpaceDim);
+        biasSet = Mat(nbTransforms, inputSpaceDim);
+        biasSet << biasSet_;
+    }
+    
+
 }
 
-//TO TEST
-//creates a data set
-//
-//     Consists in building a tree of deepness d = "nbGenerations" and
-//     constant branch factor n = "generationLength"
-//
-//            0      1        2     ...         
-//  
-//            r - child1  - child1  ...       
-//                        - child2  ...
-//                            ...   ...
-//                        - childn  ...
-//
-//              - child2  - child1  ...
-//                        - child2  ...
-//                            ...   ...
-//                        - childn  ...
-//                     ...
-//             - childn   - child1  ...
-//                        - child2  ...
-//                            ...   ...
-//                        - childn  ... 
-//
+//!initializes the noise variance randomly
+//!(gamma distribution)
+void TransformationLearner::initNoiseVariance()
+{
+    real noisePrecision = gamma_sample(noiseAlpha, noiseBeta);
+    PLASSERT(noisePrecision != 0);
+    noiseVariance = 1.0/noisePrecision;
+}
 
-// all the childs are choosen following the same process:
-// 1) choose a transformation  
-// 2) apply the transformation to the parent
-// 3) add noise to the result 
-void TransformationLearner::createDataSet(Vec & root,
-                                          int nbGenerations,
-                                          int generationLength,
-                                          Mat & dataPoints){
-   
+//!initializes the noise variance with the given value
+void TransformationLearner::setNoiseVariance(real nv)
+{
+    PLASSERT(nv > 0);
+    noiseVariance = nv;
+}
+
+
+//!initializes the transformation distribution randomly
+//!(dirichlet distribution)
+void TransformationLearner::initTransformDistribution()
+{
+    
+    transformDistribution.resize(nbTransforms);
+    dirichlet_sample(transformDistributionAlpha, transformDistribution);
+    for(int i=0; i<nbTransforms ;i++){
+        transformDistribution[i] = INIT_weight(transformDistribution[i]);
+    } 
+}
+
+//!initializes the transformation distribution with the given values
+void TransformationLearner::setTransformDistribution(Vec td)
+{
+    PLASSERT(td.length() == nbTransforms);
+    PLASSERT(isWellDefined(td));
+    transformDistribution.resize(nbTransforms);
+    transformDistribution << td;
+}
+
+
+//GENERATION
+
+//!generates a sample data point from a source data point
+void TransformationLearner::generatePredictedFrom(const Vec & source,
+                                                  Vec & sample)const
+{
+    
+    int transformIdx = pickTransformIdx();
+    generatePredictedFrom(source, sample, transformIdx);
+}
+
+//!generates a sample data point from a source data point with a specific transformation
+void TransformationLearner::generatePredictedFrom(const Vec & source,
+                                                  Vec & sample,
+                                                  int transformIdx)const
+{
+    //TODO
+    real noiseSD = pow(noiseVariance,0.5);
+    int d = source.length();
+    PLASSERT(d == inputSpaceDim);
+    PLASSERT(sample.length() == inputSpaceDim);
+    PLASSERT(0<=transformIdx<nbTransforms);
+    
+    //apply the transformation
+    applyTransformationOn(transformIdx,source,sample);
+    
+    //add noise
+    for(int i=0; i<d; i++){
+        sample[i] += random_gen->gaussian_mu_sigma(0, noiseSD);
+    } 
+}
+
+//!generates a sample data point from a source data point and returns it
+//! (if transformIdx >= 0 , we use the corresponding transformation )
+Vec TransformationLearner::returnPredictedFrom(Vec source,
+                                               int transformIdx)
+{
+    Vec sample;
+    sample.resize(inputSpaceDim);
+    if(transformIdx <0)
+        generatePredictedFrom(source,sample);
+    else
+        generatePredictedFrom(source,sample,transformIdx);
+    return sample;
+}
+
+//!fill the matrix "samples" with data points obtained from a given center data point
+void TransformationLearner::batchGeneratePredictedFrom(const Vec & center,
+                                                        Mat & samples)const
+{
+    PLASSERT(center.length() ==inputSpaceDim);
+    PLASSERT(samples.width() ==inputSpaceDim);
+    int l = samples.length();
+    for(int i=0; i<l; i++)
+    {
+        Vec v = samples(i);
+        generatePredictedFrom(center, v);
+    }
+}
+
+//!fill the matrix "samples" with data points obtained form a given center data point
+//!    - we use a specific transformation
+void TransformationLearner::batchGeneratePredictedFrom(const Vec & center,
+                                                        Mat & samples,
+                                                        int transformIdx)const
+{
+    PLASSERT(center.length() ==inputSpaceDim);
+    PLASSERT(samples.width() ==inputSpaceDim);
+    int l = samples.length();
+    for(int i=0; i<l; i++)
+    {
+        Vec v = samples(i);
+        generatePredictedFrom(center, v,transformIdx);
+    }  
+}
+
+//Generates n samples from center and returns them stored in a matrix
+//    (generation process = 1) choose a transformation (*),
+//                          2) apply it on center
+//                          3) add noise)
+// - (*) if transformIdx>=0, we always use the corresponding transformation
+Mat TransformationLearner::returnGeneratedSamplesFrom(Vec center,
+                                                      int n,
+                                                      int transformIdx)
+{
+    Mat samples = Mat(n,inputSpaceDim);
+    if(transformIdx<0)
+        batchGeneratePredictedFrom(center,samples);
+    else
+        batchGeneratePredictedFrom(center,samples,transformIdx);
+    return samples;
+}
+
+//!select a transformation randomly (with respect to our multinomial distribution)
+int TransformationLearner::pickTransformIdx() const
+{
+    
+    Vec probaTransformDistribution ;
+    probaTransformDistribution.resize(nbTransforms);
+    for(int i=0; i<nbTransforms; i++){
+        probaTransformDistribution[i]=PROBA_weight(transformDistribution[i]);
+    }
+    return random_gen->multinomial_sample(probaTransformDistribution);
+}
+
+//!Select a neighbor in the training set randomly
+//!(return his index in the training set)
+//!We suppose all data points in the training set are equiprobables
+int TransformationLearner::pickNeighborIdx() const
+{
+    
+    return random_gen->uniform_multinomial_sample(trainingSetLength);
+}
+
+
+ //!creates a data set:
+//!     equivalent in building a tree with fixed deepness and constant branching factor
+//!
+//!            0      1        2     ...         
+//!  
+//!            r -> child1  -> child1  ...       
+//!                         -> child2  ...
+//!                             ...    ...
+//!                         -> childn  ...
+//!
+//!              -> child2  -> child1  ...
+//!                         -> child2  ...
+//!                              ...   ...
+//!                         -> childn  ...
+//!                      ...
+//!              -> childn  -> child1  ...
+//!                         -> child2  ...
+//!                              ...   ...
+//!                         -> childn  ... 
+//!
+//!(where "a -> b" stands for "a generate b")
+//!all the child are generated by the same following process:
+//! 1) choose a transformation  
+//! 2) apply the transformation to the parent
+//! 3) add noise to the result 
+void TransformationLearner::treeDataSet(const Vec & root,
+                                        int deepness,
+                                        int branchingFactor,
+                                        Mat & dataPoints)
+{
+
     PLASSERT(root.length() == inputSpaceDim);
- 
-    //we look at the length of the given matrix dataPoint ;.  
-    int nbDataPoints = int(pow(1.0*nbGenerations,1.0*generationLength)) + 1;
+
+    //we look at the length of the given matrix dataPoint ;
+    int nbDataPoints;
+    if(branchingFactor == 1)
+        nbDataPoints = deepness + 1;  
+    else nbDataPoints = int((1- pow(1.0*branchingFactor,deepness + 1.0))
+                            /
+                            (1 - branchingFactor));
     dataPoints.resize(nbDataPoints,inputSpaceDim);
     
     //root = first element in the matrix dataPoints
@@ -623,319 +1259,433 @@ void TransformationLearner::createDataSet(Vec & root,
   
     //generate the other data points 
     int centerIdx=0 ;
-    for(int dataIdx=1; dataIdx < nbDataPoints ; dataIdx+=generationLength){
-
+    for(int dataIdx=1; dataIdx < nbDataPoints ; dataIdx+=branchingFactor){
+        
         Vec v = dataPoints(centerIdx);
-        Mat m = dataPoints.subMatRows(dataIdx, generationLength);
-        batchGenerateFrom(v,m); 
+        Mat m = dataPoints.subMatRows(dataIdx, branchingFactor);
+        batchGeneratePredictedFrom(v,m); 
         centerIdx ++ ;
-    }
+    }  
+}
+
+Mat TransformationLearner::returnTreeDataSet(Vec root,
+                                             int deepness,
+                                             int branchingFactor)
+{
+    Mat dataPoints;
+    treeDataSet(root,deepness,branchingFactor, dataPoints);
+    return dataPoints;
 }
 
 
-//TO TEST
-//create a dataset using the same tree generation process as
-//createDataSet, except the number of child per parent is fixed to 1,
-//   root -> 1st point -> 2nd point ... -> nth point 
-void TransformationLearner::createDataSetSequentially(Vec & root,
-                                                      int n,
-                                                      Mat & dataPoints){
-    createDataSet(root, n-1, 1, dataPoints);
+//!create a "sequential" dataset:
+//!  start -> second point -> third point ... ->nth point
+//! (where "->" stands for : "generate the")
+void TransformationLearner::sequenceDataSet(const Vec & start,
+                                            int n,
+                                            Mat & dataPoints)
+{
+    treeDataSet(start,n-1,1,dataPoints);
+}
+
+Mat TransformationLearner::returnSequenceDataSet(Vec start,
+                                                 int n)
+{
+    Mat dataPoints;
+    sequenceDataSet(start,n,dataPoints);
+    return dataPoints;
 }
 
 
-//TO TEST
-//Select a transformation randomly (with respect ot our transformation
-//distribution)
-int TransformationLearner::pickTransformIdx(){
-     return random_gen->multinomial_sample(transformDistribution);
-}
+//! COPIES OF THE STRUCTURES
 
-  
-//here is the generation process for a given center data point 
-//  1) choose a transformation
-//  2) apply it on the center data point
-//  3) add noise
 
-//TO TEST
-//generates a sample data point  from a  given center data point 
-void  TransformationLearner::generateFrom(Vec & center, Vec & sample){
-    int transformIdx = pickTransformIdx();
-    generateFrom(center, sample, transformIdx);
-}
-
-//TO TEST
-//generates a sample data point from a given center data point
-void TransformationLearner::generateFrom(Vec & center,
-                                         Vec & sample, 
-                                         int transformIdx){
-    int d = center.length();
-    PLASSERT(d == inputSpaceDim);
+//!returns the "idx"th data point in the training set
+Vec TransformationLearner::returnTrainingPoint(int idx)
+{
     
-    sample.resize(inputSpaceDim);
+    Vec v,temp;
+    real w;
+    v.resize(inputSpaceDim);
+    train_set->getExample(idx, v, temp, w);
+    return v;
     
-    //apply the transformation
-    applyTransformationOn(transformIdx,center,sample);
-    
-    //add noise
-    for(int i=0; i<d; i++){
-        sample[i] += random_gen->gaussian_mu_sigma(0, noiseStDev);
-    } 
 }
+ 
 
-//TO TEST
-//fill the matrix "samples" with sample data points obtained from
-// a given center data point.
-void TransformationLearner::batchGenerateFrom(Vec & center, Mat & samples){
-
-    PLASSERT(center.length() ==inputSpaceDim);
-    PLASSERT(samples.width()==inputSpaceDim);
-    int l = samples.length();
-    for(int i=0; i<l; i++)
-    {
-        Vec v = samples(i);
-        generateFrom(center, v);
-    }
+//!returns all the reconstructions candidates associated to a given target
+TVec<ReconstructionCandidate> TransformationLearner::returnReconstructionCandidates(int targetIdx)
+{
+   
+    int startIdx = targetIdx * nbTargetReconstructions;  
+    return reconstructionSet.subVec(startIdx, 
+                                    nbTargetReconstructions).copy();
 }
 
 
-
-//-------------EXTERNAL ACCESS ---------------------------
-
-//TO TEST
-//Returns a copy of the generation candidates associated to a given target
-TVec<GenerationCandidate> TransformationLearner::returnReproductionSources
-(int targetIdx){
-    int startIdx = targetIdx * nbGenerationCandidatesPerTarget;
-    int endIdx = startIdx + nbGenerationCandidatesPerTarget;
-    return generationSet.subVec(startIdx, endIdx).copy();
-}
-
-//TO TEST
-//Returns the parameters of a given transformation
-Mat TransformationLearner::returnTransform(int transformIdx){
-    return transforms[transformIdx].copy();   
-}
-
-//TO TEST
-//Returns all the transformation parameters
-Mat TransformationLearner::returnAllTransforms(){
-    return transformsSet;
-}
-
-
-//TO TEST
-//From the subset ofgeneration candidate associated to the target,
-//builds and returns the corresponding subset of generated data points . 
-Mat TransformationLearner::returnReproductions(int targetIdx){
-    Mat reproductions = Mat(nbGenerationCandidatesPerTarget,inputSpaceDim);
-    int candidateIdx = targetIdx*nbGenerationCandidatesPerTarget;
+//!returns the reconstructions of the "targetIdx"th data point value in the training set
+//!(one reconstruction for each reconstruction candidate)
+Mat TransformationLearner::returnReconstructions(int targetIdx)
+{
+    Mat reconstructions = Mat(nbTargetReconstructions,inputSpaceDim);
+    int candidateIdx = targetIdx*nbTargetReconstructions;
     int neighborIdx, transformIdx;
-    for(int i=0; i<nbGenerationCandidatesPerTarget; i++){
-        neighborIdx = generationSet[candidateIdx].neighborIdx;
-        transformIdx= generationSet[candidateIdx].transformIdx;
-        getNeighborFromTrainingSet(neighborIdx);
-        Vec v = reproductions(i);
+    for(int i=0; i<nbTargetReconstructions; i++){
+        neighborIdx = reconstructionSet[candidateIdx].neighborIdx;
+        transformIdx= reconstructionSet[candidateIdx].transformIdx;
+        seeNeighbor(neighborIdx);
+        Vec v = reconstructions(i);
         applyTransformationOn(transformIdx, neighbor, v);
         candidateIdx ++;
     }
-    return reproductions;
+    return reconstructions; 
+}
+
+//!returns the neighbors choosen to reconstruct the target
+//!(one choosen neighbor for each reconstruction candidate associated to the target)
+Mat TransformationLearner::returnNeighbors(int targetIdx)
+{
+    int candidateIdx = targetIdx*nbTargetReconstructions;
+    int neighborIdx;
+    Mat neighbors = Mat(nbTargetReconstructions, inputSpaceDim);
+    for(int i=0; i<nbTargetReconstructions; i++){
+        neighborIdx = reconstructionSet[candidateIdx].neighborIdx;
+        seeNeighbor(neighborIdx);
+        neighbors(i) << neighbor;
+        candidateIdx++;
+    }
+    return neighbors;
 }
 
 
-//TO TEST
-//Generates n samples from center and returns them
-//    (generation process = 1) choose a transformation,
-//                          2) apply it on center
-//                          3) add noise)
-Mat TransformationLearner::returnGeneratedSamplesFrom(Vec center, int n){
-    int d = center.length();
-    PLASSERT(d == inputSpaceDim);
-    Mat m = Mat(n,d);
-    batchGenerateFrom(center, m);
-    return m;
+//!returns the parameters of the "transformIdx"th transformation
+Mat TransformationLearner::returnTransform(int transformIdx)
+{
+    return transforms[transformIdx].copy();    
 }
 
-//TO TEST
-//Generates a data set and returns it
-//(tree generation process: see createDataSet for more details)
-Mat TransformationLearner::returnGeneratedDataSet(Vec root,
-                                                  int nbGenerations,
-                                                  int generationLength){
- 
-    int n = int(pow(1.0*nbGenerations, 1.0*generationLength)) + 1;
-    int d = root.length();
-    PLASSERT(d == inputSpaceDim);
-
-    Mat dataSet = Mat(n,d);
-    createDataSet(root,nbGenerations,generationLength,dataSet);
-    return dataSet;
-}
-
-//TO TEST
-//Generates a data set and returns it
-//(sequential generation process: see createDataSetSequentially for more details)
-Mat TransformationLearner::returnSequentiallyGeneratedDataSet(Vec root,int n){ 
-    return returnGeneratedDataSet(root, n-1,1);
+//!returns the parameters of each transformation
+//!(as an KdXd matrix, K = number of transformations,
+//!                    d = dimension of input space)
+Mat TransformationLearner::returnAllTransforms()
+{
+    return transformsSet.copy();    
 }
 
 
-// ----------GENERAL USE--------------------------------------------------
+//! VIEWS ON RECONSTRUCTION SET AND TRAINING SET
 
 
 
-//REFERENCE OPERATIONS ON GENERATION SET AND TRAINING SET  
-
-
-//TO TEST
-// stores a view on the subset of generation set related to the specified
-// target (into the variable "targetGenerationSet" )
-void TransformationLearner::getViewOnTargetGenerationCandidates(int targetIdx){
-    int startIdx = targetIdx * nbGenerationCandidatesPerTarget;
-    int endIdx = startIdx + nbGenerationCandidatesPerTarget;
-    targetGenerationSet = generationSet.subVec(startIdx, 
-                                               endIdx);
-    
+//! stores a VIEW on the reconstruction candidates related to the specified
+//! target (into the variable "targetReconstructionSet" )
+void TransformationLearner::seeTargetReconstructionSet(int targetIdx)
+{
+    int startIdx = targetIdx *nbTargetReconstructions;
+    targetReconstructionSet = reconstructionSet.subVec(startIdx, 
+                                                       nbTargetReconstructions); 
 }
 
-
-
-
-
-// stores the "targetIdx"th input in the training set into the variable
+// stores the "targetIdx"th point in the training set into the variable
 // "target"
-void TransformationLearner::getTargetFromTrainingSet(int targetIdx){
+void TransformationLearner::seeTarget(const int targetIdx)
+{
     Vec v;
     real w;
     train_set->getExample(targetIdx,target,v,w);
-
-    //TO TEST : OK
+    
 }
 
 // stores the "neighborIdx"th input in the training set into the variable
 // "neighbor" 
-void TransformationLearner::getNeighborFromTrainingSet(int neighborIdx){
+void TransformationLearner::seeNeighbor(const int neighborIdx)
+{
     Vec v;
     real w;
-    train_set->getExample(neighborIdx,neighbor,v,w);
-    
-    //TO TEST : OK
+    train_set->getExample(neighborIdx, neighbor,v,w);
 }
 
 
-//OPERATIONS RELATED TO GENERATION WEIGHTS
+//! GENERATE GAMMA RANDOM VARIABLES
 
-//normalizes the generation weights related to a given target. 
-void TransformationLearner::normalizeTargetGenerationWeights(int targetIdx, 
-                                                             real totalWeight){
-    real w;
-    int startIdx = targetIdx * nbGenerationCandidatesPerTarget;
-    int endIdx = startIdx + nbGenerationCandidatesPerTarget;
-    for(int candidateIdx =startIdx; candidateIdx<endIdx; candidateIdx++){
-        w = generationSet[candidateIdx].weight;
-        generationSet[candidateIdx].weight =  DIV_weights(w,totalWeight);
+//!source of the algorithm: http://oldmill.uchicago.edu/~wilder/Code/random/Papers/Marsaglia_00_SMGGV.pdf
+    
+
+//!returns a pseudo-random positive real number x  
+//!using the distribution p(x)=Gamma(alpha,beta)
+real TransformationLearner::gamma_sample(real alpha, real beta)
+{
+  real c,x,u,d,v;
+  do{
+      c = 1.0/3.0;
+      x = random_gen->gaussian_01();
+      u = random_gen->uniform_sample();
+      d = alpha - c ;
+      v = pow((1 + x/(pow(9*d , 0.5)))  ,3.0);
+  }
+  while(pl_log(u) < 0.5*pow(x,2) + d - d*v + d*pl_log(v));
+  return d*v/beta;   
+}
+
+
+
+
+//! GENERATE DIRICHLET RANDOM VARIABLES
+
+
+ //!source of the algorithm: WIKIPEDIA
+    
+
+//!returns a pseudo-random positive real vector x 
+//!using the distribution p(x) = Dirichlet(x| all the parameters = alpha)
+//!-all the element of the vector are between 0 and 1,
+//!-the elements of the vector sum to 1
+void TransformationLearner::dirichlet_sample(real alpha, Vec & sample){
+    int d = sample.length();
+    real sum = 0;
+    for(int i=0;i<d;i++){
+        sample[i]=gamma_sample(alpha);
+        sum += sample[i];
     }
-
-    //TO TEST : OK
+    for(int i=0;i<d;i++){
+        sample[i]/=sum;
+    }
 }
+Vec TransformationLearner::return_dirichlet_sample(real alpha)
+{
+    Vec sample ;
+    sample.resize(inputSpaceDim);
+    dirichlet_sample(alpha, sample);
+    return sample;
+}
+
+
+
+/*void TransformationLearner::dirichlet_sample(const Vec & alphas,
+                                        Vec & samples)
+{
+    //TODO
+}
+Vec TransformationLearner::return_dirichlet_sample(Vec alphas)
+{
+    //TODO
+    return Vec();
+}
+*/
+
+
+
+//! OPERATIONS ON WEIGHTS
+
+
+//!normalizes the reconstruction weights related to a given target.
+void TransformationLearner::normalizeTargetWeights(int targetIdx,
+                                                   real totalWeight)const
+{
+    real w;
+    int startIdx = targetIdx * nbTargetReconstructions;
+    int endIdx = startIdx + nbTargetReconstructions;
+    for(int candidateIdx =startIdx; candidateIdx<endIdx; candidateIdx++){
+        w = reconstructionSet[candidateIdx].weight;
+        reconstructionSet[candidateIdx].weight =  DIV_weights(w,totalWeight);
+    }
+}
+
+//!returns a random weight 
+real TransformationLearner::randomWeight()const
+{  
+    real w = random_gen->uniform_sample();
+    return INIT_weight((w + minimumProba)/(1.0 + minimumProba));
+}
+
+//!arithmetic operations on  reconstruction weights : CONSTRUCTOR
+//!proba->weight
+real TransformationLearner::INIT_weight(real initValue)const
+{
+    return pl_log(initValue);
+}
+
+//!arithmetic operations on  reconstruction weights :GET CORRESPONDING PROBABILITY 
+//! weight->proba
+real TransformationLearner::PROBA_weight(real weight)const
+{
+    return exp(weight); 
+}
+
+//!arithmetic operations on  reconstruction weights : DIVISION
+//! In our particular case:
+//!  numWeight = log(w1)
+//!  denomWeight = log(w2)
+//! and we want weight = log(w1/w2) = log(w1) - log(w2) 
+//!                             = numweight - denomWeight
+real TransformationLearner::DIV_weights(real numWeight,
+                                        real denomWeight)const
+{
+    return numWeight - denomWeight;
+}
+
+
+//!arithmetic operations on  reconstruction weights :MULTIPLICATIVE INVERSE
+//! weight = log(p)
+//!we want : weight' = log(1/p) = log(1) - log(p)
+//!                             =     0 -  log(p)
+//!                             = -weight
+real TransformationLearner::MULT_INVERSE_weight(real weight)const
+{
     
-//returns a random positive weight 
-real TransformationLearner::randomPositiveGenerationWeight(){
-    return  random_gen->uniform_sample() + epsilonInitWeight;
-
-    //TO TEST : OK
+    return -1*weight;
 }
-  
 
-//arithmetic operations on  generation weights
-real TransformationLearner::DIV_weights(real numWeight,    //DIVISION
-                                        real denomWeight){ 
-    return numWeight/denomWeight;
-
-    //TO TEST : OK
-}
-real TransformationLearner::MULT_INVERSE_weight(real weight){//MULTIPLICATIVE INVERSE
-    return -weight;
-
-    //TO TEST : OK
-}
-real TransformationLearner::MULT_weights(real weight1, real weight2){ //MULTIPLICATION
-    return weight1*weight2;
+//!arithmetic operations on  reconstruction weights: MULTIPLICATION
+//! weight1 = log(p1)
+//! weight2 = log(p2)
+//! we want weight3 = log(p1*p2) = log(p1) + log(p2)
+//!                              = weight1 + weight2
+real TransformationLearner::MULT_weights(real weight1,real weight2)const
+{
     
-    //TO TEST : OK
+    return weight1 + weight2 ;
 }
-real TransformationLearner::SUM_weights(real weight1, real weight2){ //SUM
-    return weight1 + weight2;
 
-    //TO TEST : OK
-} 
-
-//TO TEST
-//update/compute the weight of a generation candidate with
-//the actual transformation parameters
-real TransformationLearner::updateGenerationWeight(int candidateIdx){
+//!arithmetic operations on  reconstruction weights : SUM 
+//! weight1 = log(p1)
+//! weight2 = log(p2)
+//! we want : weight3 = log(p1 + p2) = logAdd(weight1, weight2)
+real TransformationLearner::SUM_weights(real weight1,
+                                        real weight2)const
+{
     
-    GenerationCandidate * gc = & generationSet[candidateIdx];
+    return logadd(weight1,weight2);
+}
+
+
+
+//!update/compute the weight of a reconstruction candidate with
+//!the actual transformation parameters
+real TransformationLearner::updateReconstructionWeight(int candidateIdx)
+{
+    int targetIdx = reconstructionSet[candidateIdx].targetIdx;
+    int neighborIdx = reconstructionSet[candidateIdx].neighborIdx;
+    int transformIdx = reconstructionSet[candidateIdx].transformIdx;
     
-    real w = computeGenerationWeight(gc->targetIdx,
-                                     gc->neighborIdx,
-                                     gc->transformIdx);
-    pout << "weigth:"<< w <<endl;
-    gc->weight = w;
-    return w;
+    real w = computeReconstructionWeight(targetIdx,
+                                         neighborIdx,
+                                         transformIdx);
+    reconstructionSet[candidateIdx].weight = w;
+    return w; 
 }
-
-//TO TEST
-real TransformationLearner::computeGenerationWeight(GenerationCandidate & gc){
-    return computeGenerationWeight(gc.targetIdx,
-                                   gc.neighborIdx,
-                                   gc.transformIdx);
-
-   
+real TransformationLearner::computeReconstructionWeight(const ReconstructionCandidate & gc)
+{
+    return computeReconstructionWeight(gc.targetIdx,
+                                       gc.neighborIdx,
+                                       gc.transformIdx);
 }
-
-//TO TEST
-real TransformationLearner::computeGenerationWeight(int targetIdx, 
-                                                    int neighborIdx, 
-                                                    int transformIdx){
-  
-
-    getTargetFromTrainingSet(targetIdx);
-    getNeighborFromTrainingSet(neighborIdx);
+real TransformationLearner::computeReconstructionWeight(int targetIdx,
+                                                        int neighborIdx,
+                                                        int transformIdx)
+{
+    seeTarget(targetIdx);
+    return computeReconstructionWeight(target,
+                                       neighborIdx,
+                                       transformIdx);
+}
+real TransformationLearner::computeReconstructionWeight(const Vec & target_,
+                                                        int neighborIdx,
+                                                        int transformIdx)
+{
+    seeNeighbor(neighborIdx);
     Vec predictedTarget ;
     predictedTarget.resize(inputSpaceDim);
     applyTransformationOn(transformIdx, neighbor, predictedTarget);
-    return exp(noiseVarianceFactor * powdistance(target, predictedTarget));
-
-    
+    real factor = -1/(2*noiseVariance);
+    real w = factor*powdistance(target_, predictedTarget);
+    return MULT_weights(w, transformDistribution[transformIdx]); 
 }
 
-
-//applies "transformIdx"th transformation on data point "src"
-void TransformationLearner::applyTransformationOn(int transformIdx, Vec & src, Vec &  dst){
-    if(transformFamily == TRANSFORM_FAMILY_LINEAR){
+//!applies "transformIdx"th transformation on data point "src"
+void TransformationLearner::applyTransformationOn(int transformIdx,
+                                                 const Vec & src,
+                                                 Vec & dst)const
+{
+    if(transformFamily==TRANSFORM_FAMILY_LINEAR){
         Mat m  = transforms[transformIdx];
-        product(dst,m,src);
+        transposeProduct(dst,m,src); 
+        if(withBias){
+            dst += biasSet(transformIdx);
+        }
     }
-    else{
+    else{ //transformFamily == TRANSFORM_FAMILY_LINEAR_INCREMENT
         Mat m = transforms[transformIdx];
-        product(dst, m, src);
+        transposeProduct(dst,m,src);
         dst += src;
+        if(withBias){
+            dst += biasSet(transformIdx);
+        }
     }
 }
 
-//-------- INITIAL E STEP --------------------------------------------
+//! verify if the multinomial distribution given is well-defined
+//! i.e. verify that the weights represent probabilities, and that 
+//! those probabilities sum to 1 . 
+//!(typical case: the distribution is represented as a set of weights, which are typically
+//! log-probabilities)
+bool  TransformationLearner::isWellDefined(Vec & distribution)
+{  
+    if(nbTransforms != distribution.length()){
+        return false;
+    }
+    real sum = 0;
+    real proba;
+    for(int i=0; i<nbTransforms;i++){
+        proba = PROBA_weight(distribution[i]);
+        if(proba < 0 || proba > 1){
+            return false;
+        }
+        sum += proba;
+    }
+    return sum == 1;    
+}
 
-//initialization of the generation set 
+
+//! INITIAL E STEP
+
+//!initialization of the reconstruction set
 void TransformationLearner::initEStep(){
+    if(initializationMode == INIT_MODE_DEFAULT){
+        initEStepA();
+    }
+    else
+        initEStepB();
+}
+
+//!initialization of the reconstruction set, version B
+//!we suppose that all the parameters to learn are already initialized to some value
+//1)for each target,
+//  a)find the neighbors
+//  b)for each neighbor, consider all the possible transformations
+//2)compute the weights of all the reconstruction candidates using 
+//  the current value of the parameters to learn 
+void TransformationLearner::initEStepB(){
+    initEStepA();
+    smallEStep();    
+}
+
+
+//!initialization of the reconstruction set, version A
+//for each target:
+//1)find the neighbors (we use euclidean distance as an heuristic)
+//2)for each neighbor, assign a random weight to each possible transformation
+void TransformationLearner::initEStepA()
+{
+   
     priority_queue< pair< real,int > > pq = priority_queue< pair< real,int > >();
     
     real totalWeight;
     int candidateIdx=0,targetStartIdx, neighborIdx;
     
     //for each point in the training set i.e. for each target point,
-    for(int targetIdx = 0; targetIdx < nbTrainingInput ;targetIdx++){
-    
+    for(int targetIdx = 0; targetIdx < trainingSetLength ;targetIdx++){
+        
         //finds the nearest neighbors and keep them in a priority queue 
         findNearestNeighbors(targetIdx, pq);
         
@@ -943,67 +1693,70 @@ void TransformationLearner::initEStep(){
         //(i.e. for each neighbor, creates one entry per transformation and 
         //assignsit a positive random weight)
         
-        totalWeight =0;
+        totalWeight = INIT_weight(0);
         targetStartIdx = candidateIdx;
         for(int k = 0; k < nbNeighbors; k++){
             neighborIdx = pq.top().second;
             pq.pop();
-            totalWeight =SUM_weights(expandTargetNeighborPairInGenerationSet(targetIdx, 
-                                                                             neighborIdx,
-                                                                             candidateIdx),
-                                     totalWeight);
+            totalWeight =
+                SUM_weights(totalWeight,
+                            expandTargetNeighborPairInReconstructionSet(targetIdx, 
+                                                                        neighborIdx,
+                                                                        candidateIdx));
             candidateIdx += nbTransforms;
         }
         //normalizes the  weights of all the entries created for the target 
         //point
-        normalizeTargetGenerationWeights(targetIdx,totalWeight);
+        normalizeTargetWeights(targetIdx,totalWeight);
     }
 
-    //TO TEST
 }
-    
-//auxialiary function of "initEStep" . 
-//    for a given pair (target, neighbor), creates all the associated 
-//    generation candidates (entries) in the data set. 
-//returns the total weight of the generation candidates created
-real TransformationLearner::expandTargetNeighborPairInGenerationSet(int targetIdx,
-                                                                    int neighborIdx,
-                                                                    int candidateIdx){
-    real weight, totalWeight = 0;  
+
+
+//!auxialiary function of "initEStep" . 
+//!    for a given pair (target, neighbor), creates all the  
+//!    possible reconstruction candidates. 
+//!returns the total weight of the reconstruction candidates created
+real TransformationLearner::expandTargetNeighborPairInReconstructionSet(int targetIdx,
+                                                                        int neighborIdx,
+                                                                        int candidateStartIdx)
+{
+    int candidateIdx = candidateStartIdx;
+    real weight, totalWeight = INIT_weight(0);  
     for(int transformIdx=0; transformIdx<nbTransforms; transformIdx ++){
-        //choose a random positive weight
-        weight = randomPositiveGenerationWeight(); 
-        totalWeight = SUM_weights(weight,totalWeight);
-        generationSet[candidateIdx] = GenerationCandidate(targetIdx, 
-                                                          neighborIdx,
-                                                          transformIdx,
-                                                          weight);
+       
+        weight = randomWeight(); 
+        totalWeight = SUM_weights(totalWeight,weight);
+        reconstructionSet[candidateIdx] = ReconstructionCandidate(targetIdx, 
+                                                                  neighborIdx,
+                                                                  transformIdx,
+                                                                  weight);
     
         candidateIdx ++;
     }
     return totalWeight;    
-
-    //TO TEST
 }
 
-//auxiliary function of initEStep
-//    keeps the nearest neighbors for a given target point in a priority
-//    queue.
-void TransformationLearner::findNearestNeighbors (int targetIdx,
-                                                  priority_queue< pair< real, int > > & pq){
+
+//!auxiliary function of initEStep
+//!    stores the nearest neighbors for a given target point in a priority
+//!    queue.
+void TransformationLearner::findNearestNeighbors(int targetIdx,
+                                                 priority_queue< pair< real, int > > & pq)
+{
     
     //we want an empty queue
     PLASSERT(pq.empty()); 
   
     //capture the target from his index in the training set
-    getTargetFromTrainingSet(targetIdx);
+    seeTarget(targetIdx);
      
     //for each potential neighbor,
     real dist;    
-    for(int i=0; i<nbTrainingInput; i++){
+    for(int i=0; i<trainingSetLength; i++){
         if(i != targetIdx){ //(the target cannot be his own neighbor)
             //computes the distance to the target
-            getNeighborFromTrainingSet(i);
+            seeNeighbor(i);
             dist = powdistance(target, neighbor); 
             //if the distance is among "nbNeighbors" smallest distances seen,
             //keep it until to see a closer neighbor. 
@@ -1014,34 +1767,53 @@ void TransformationLearner::findNearestNeighbors (int targetIdx,
                 pq.pop();
                 pq.push(pair<real,int>(dist,i));
             }
+            else if(dist == pq.top().first){
+                if(random_gen->uniform_sample() >0.5){
+                    pq.pop();
+                    pq.push(pair<real,int>(dist,i));
+                }
+            }
         }
     }    
+}
 
-    //TO TEST
+//! ESTEP 
+
+//!coordination of the different kinds of expectation steps
+//!  -which are : largeEStepA, largeEStepB, smallEStep
+void TransformationLearner::EStep()
+{
+    if(largeEStepAPeriod > 0  && stage % largeEStepAPeriod == largeEStepAOffset){
+        largeEStepA();
+    }
+    if(largeEStepBPeriod>0 && stage % largeEStepBPeriod == largeEStepBOffset){
+        largeEStepB();
+    }
+    smallEStep(); 
 }
 
 
-//-------- LARGE E STEP : VERSION A --------------------------------
+//! LARGE E STEP : VERSION A (expectation step)
 
-//full update of the generation set
-//for each target, keeps the top km most probable <neighbor, transformation> 
-//pairs (k = nb neighbors, m= nb transformations)
-void TransformationLearner::largeEStepA(){
-    
-    priority_queue< GenerationCandidate > pq =  priority_queue< GenerationCandidate >();
-    real totalWeight=0;
+//!full update of the reconstruction set
+//!for each target, keeps the km most probable <neighbor, transformation> 
+//!pairs (k = nb neighbors, m= nb transformations)
+void TransformationLearner::largeEStepA()
+{
+    priority_queue< ReconstructionCandidate > pq =  
+        priority_queue< ReconstructionCandidate >();
+    real totalWeight= INIT_weight(0);
     int candidateIdx=0;
     
     //for each point in the training set i.e. for each target point,
-    for(int targetIdx = 0; targetIdx < nbTrainingInput ; targetIdx++){
+    for(int targetIdx = 0; targetIdx < trainingSetLength ; targetIdx++){
         
         //finds the best weighted triples and keep them in a priority queue 
-        findBestTargetCandidates(targetIdx, pq);
-        
+        findBestTargetReconstructionCandidates(targetIdx, pq);
         //store those triples in the dataset:
-        totalWeight = 0;
-        for(int k=0; k < nbGenerationCandidatesPerTarget; k++){
-            generationSet[candidateIdx] = pq.top(); 
+        totalWeight = INIT_weight(0);
+        for(int k=0; k < nbTargetReconstructions; k++){
+            reconstructionSet[candidateIdx] = pq.top(); 
             totalWeight = SUM_weights(pq.top().weight, totalWeight);
             pq.pop();         
             candidateIdx ++;
@@ -1049,200 +1821,325 @@ void TransformationLearner::largeEStepA(){
         
         //normalizes the  weights of all the entries created for the 
         //target point;
-        normalizeTargetGenerationWeights(targetIdx,totalWeight);
-    }
-
-    //TO TEST
+        normalizeTargetWeights(targetIdx,totalWeight);
+    } 
 }
 
-//auxiliary function of largeEStepA()
-//   for a given target, keeps the top km most probable neighbors,
-//   transformation pairs in a priority queue 
-//   (k = nb neighbors, m = nb transformations)
-void  TransformationLearner::findBestTargetCandidates
-(int targetIdx,
- priority_queue< GenerationCandidate > & pq){
-    
+
+//!auxiliary function of largeEStepA()
+//!   for a given target, stores the km most probable (neighbors,
+//!   transformation) pairs in a priority queue 
+//!   (k = nb neighbors, m = nb transformations)
+void TransformationLearner::findBestTargetReconstructionCandidates(int targetIdx,
+                                                                   priority_queue< ReconstructionCandidate > & pq)
+{
     //we want an empty queue
     PLASSERT(pq.empty()); 
+    
     real weight;
 
     //for each potential neighbor
-    for(int neighborIdx=0; neighborIdx<nbTrainingInput; neighborIdx++){
+    for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
         if(neighborIdx != targetIdx){
             for(int transformIdx=0; transformIdx<nbTransforms; transformIdx++){
-                weight = computeGenerationWeight(targetIdx, 
-                                                 neighborIdx, 
-                                                 transformIdx);
+                weight = computeReconstructionWeight(targetIdx, 
+                                                     neighborIdx, 
+                                                     transformIdx);
                 
                 //if the weight is among "nbEntries" biggest weight seen,
                 //keep it until to see a bigger neighbor. 
-                if(int(pq.size()) < nbGenerationCandidatesPerTarget){
-                    pq.push(GenerationCandidate(targetIdx,
-                                                neighborIdx,
-                                                transformIdx,
-                                                weight));  
+                if(int(pq.size()) < nbTargetReconstructions){
+                    pq.push(ReconstructionCandidate(targetIdx,
+                                                    neighborIdx,
+                                                    transformIdx,
+                                                    weight));  
                 }
-                else if (weight > pq.top().weight){
+                else if (weight > pq.top().weight){ 
                     pq.pop();
-                    pq.push(GenerationCandidate(targetIdx,
-                                                neighborIdx,
-                                                transformIdx,
-                                                weight));
+                    pq.push(ReconstructionCandidate(targetIdx,
+                                                    neighborIdx,
+                                                    transformIdx,
+                                                    weight));
+                }
+                else if (weight == pq.top().weight){
+                    if(random_gen->uniform_sample()>0.5){
+                        pq.pop();
+                        pq.push(ReconstructionCandidate(targetIdx,
+                                                        neighborIdx,
+                                                        transformIdx,
+                                                        weight));
+                    }
                 }
             }
         }     
     }
-
-    //TO TEST
 }
 
 
-//-------- LARGE E STEP : VERSION B --------------------------------
 
-//full update of the generation set
-//   for each given pair (target, transformation), find the best
-//   weighted neighbors  
-void  TransformationLearner::largeEStepB(){
-    priority_queue< GenerationCandidate > pq;
+//! LARGE E STEP : VERSION B (expectation step)
+
+
+//!full update of the reconstruction set
+//!   for each given pair (target, transformation), find the best
+//!   weighted neighbors  
+void TransformationLearner::largeEStepB()
+{
+    priority_queue< ReconstructionCandidate > pq;
     
-  real totalWeight=0 , weight;
-  int candidateIdx=0 ;
-  
-  //for each point in the training set i.e. for each target point,
-  for(int targetIdx =0; targetIdx<nbTrainingInput ;targetIdx++){
-  
-      totalWeight = 0;
-      for(int transformIdx=0; transformIdx < nbTransforms; transformIdx ++){
-          //finds the best weighted triples   them in a priority queue 
-          findBestWeightedNeighbors(targetIdx,transformIdx, pq);
-          
-          //store those neighbors in the dataset
-          for(int k=0; k<nbNeighbors; k++){
-              generationSet[candidateIdx] = pq.top();
-              weight = pq.top().weight;
-              totalWeight = SUM_weights( weight, totalWeight);
-              pq.pop();
-              candidateIdx ++;
-          }
-      }
+    real totalWeight , weight;
+    int candidateIdx=0 ;
+    
+    //for each point in the training set i.e. for each target point,
+    for(int targetIdx =0; targetIdx<trainingSetLength ;targetIdx++){
+        
+        totalWeight = INIT_weight(0);
+        for(int transformIdx=0; transformIdx < nbTransforms; transformIdx ++){
+            //finds the best weighted triples   them in a priority queue 
+            findBestWeightedNeighbors(targetIdx,transformIdx, pq);
+            //store those neighbors in the dataset
+            for(int k=0; k<nbNeighbors; k++){
+                reconstructionSet[candidateIdx] = pq.top();
+                weight = pq.top().weight;
+                totalWeight = SUM_weights( weight, totalWeight);
+                pq.pop();
+                candidateIdx ++;
+            }
+        }
       //normalizes the  weights of all the entries created for the target 
       //point;
-      normalizeTargetGenerationWeights(targetIdx,totalWeight);
-  }
-
-  // TO TEST
+        normalizeTargetWeights(targetIdx,totalWeight);
+    }
 }
+   
 
-    
-//auxiliary function of largeEStepB()
-//   for a given target x and a given transformationt , keeps the best
-//   weighted triples (x, neighbor, t) in a priority queue .
-void  TransformationLearner::findBestWeightedNeighbors
-(int targetIdx,
- int transformIdx,
- priority_queue< GenerationCandidate > & pq){
- 
+//!auxiliary function of largeEStepB()
+//!   for a given target x and a given transformation t , stores the best
+//!    weighted triples (x, neighbor, t) in a priority queue .
+void TransformationLearner::findBestWeightedNeighbors(int targetIdx,
+                                                      int transformIdx,
+                                                      priority_queue< ReconstructionCandidate > & pq)
+{
     //we want an empty queue
     PLASSERT(pq.empty()); 
-
+    
     real weight; 
     
     //for each potential neighbor
-    for(int neighborIdx=0; neighborIdx<nbTrainingInput; neighborIdx++){
+    for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
         if(neighborIdx != targetIdx){ //(the target cannot be his own neighbor)
-            
-	  weight=  computeGenerationWeight(targetIdx, 
-                                           neighborIdx, 
-                                           transformIdx);
-	  //if the weight of the triple is among the "nbNeighbors" biggest 
-	  //seen,keep it until see a bigger weight. 
+          
+            weight = computeReconstructionWeight(targetIdx, 
+                                                 neighborIdx, 
+                                                 transformIdx);
+            //if the weight of the triple is among the "nbNeighbors" biggest 
+            //seen,keep it until see a bigger weight. 
             if(int(pq.size()) < nbNeighbors){
-                pq.push(GenerationCandidate(targetIdx,
-                                            neighborIdx, 
-                                            transformIdx,
-                                            weight));
+                pq.push(ReconstructionCandidate(targetIdx,
+                                                neighborIdx, 
+                                                transformIdx,
+                                                weight));
             }
-            else if (weight >  pq.top().weight){
+            else if (weight > pq.top().weight){
                 pq.pop();
-                pq.push(GenerationCandidate(targetIdx,
-                                            neighborIdx,
-                                            transformIdx,
-                                            weight));
+                pq.push(ReconstructionCandidate(targetIdx,
+                                                neighborIdx,
+                                                transformIdx,
+                                                weight));
+            }
+            else if (weight == pq.top().weight){
+                if(random_gen->uniform_sample() > 0.5){
+                    pq.pop();
+                    pq.push(ReconstructionCandidate(targetIdx,
+                                                    neighborIdx,
+                                                    transformIdx,
+                                                    weight));
+                }
             }
         }
-    } 
-
-    //TO TEST
+    }   
 }
 
 
-//-------- SMALL E STEP --------------------------------------------- 
+
+//! SMALL E STEP (expectation step)
 
 
-//updating the weights while keeping the candidate neighbor set fixed
-void TransformationLearner::smallEStep(){
+//!updating the weights while keeping the candidate neighbor set fixed
+void TransformationLearner::smallEStep()
+{
+    int candidateIdx =0;
+    int  targetIdx = reconstructionSet[candidateIdx].targetIdx;
+    real totalWeight = INIT_weight(0);
     
-    int candidateIdx =0, startCandidateIdx=0;
-    int startTargetIdx = generationSet[startCandidateIdx].targetIdx;
-    int  targetIdx;
-    real totalWeight = 0;
-  
-    while(candidateIdx < nbGenerationCandidates){
-    
-        totalWeight = SUM_weights(updateGenerationWeight(candidateIdx),
-                                  totalWeight);
+    while(candidateIdx < nbReconstructions){
+        
+        totalWeight = SUM_weights(totalWeight,
+                                  updateReconstructionWeight(candidateIdx));
         candidateIdx ++;
     
-        targetIdx = generationSet[candidateIdx].targetIdx; 
-    
-        if(candidateIdx > nbGenerationCandidates || targetIdx != startTargetIdx){
-            normalizeTargetGenerationWeights(startTargetIdx, totalWeight);
-            totalWeight = 0;
-            startTargetIdx = targetIdx;
+        if(candidateIdx == nbReconstructions)
+            normalizeTargetWeights(targetIdx,totalWeight);
+        else if(targetIdx != reconstructionSet[candidateIdx].targetIdx){
+            normalizeTargetWeights(targetIdx, totalWeight);
+            totalWeight = INIT_weight(0);
+            targetIdx = reconstructionSet[candidateIdx].targetIdx;
         }
     }    
-
-    //TO TEST
 }
-    
 
-//-------- M STEP ---------------------------------------------   
-    
+// M STEP
 
-//updating the transformation parameters
-void TransformationLearner::MStep(){
+
+//!coordination of the different kinds of maximization step
+//!(i.e.: we optimize with respect to which parameter?)
+void TransformationLearner::MStep()
+{
+    if(noiseVariancePeriod > 0 && stage%noiseVariancePeriod == noiseVarianceOffset)
+        MStepNoiseVariance();
+    if(transformDistributionPeriod > 0 && 
+       stage % transformDistributionPeriod == transformDistributionOffset)
+        MStepTransformDistribution();
+    if(stage % transformsPeriod == transformsOffset)
+        MStepTransformations();
+    
+}
+
+//!maximization step  with respect to  transformation distribution
+//!parameters
+void TransformationLearner::MStepTransformDistribution()
+{
+    MStepTransformDistributionMAP(transformDistributionAlpha);
+}
+
+//!maximization step  with respect to transformation distribution
+//!parameters
+//!(MAP version, alpha = dirichlet prior distribution parameter)
+//!NOTE :  alpha =1 ->  no regularization
+void TransformationLearner::MStepTransformDistributionMAP(real alpha)
+{
+   
+    Vec newDistribution ;
+    newDistribution.resize(nbTransforms);
+    
+    for(int k=0; k<nbTransforms ; k++){
+        newDistribution[k] = INIT_weight(0);
+    }
+    
+    int transformIdx;
+    real weight;
+    for(int idx =0 ;idx < nbReconstructions ; idx ++){
+        transformIdx = reconstructionSet[idx].transformIdx;
+        weight = reconstructionSet[idx].weight;
+        newDistribution[transformIdx] = 
+            SUM_weights(newDistribution[transformIdx],
+                        weight);
+    }
+
+    real addFactor = INIT_weight(alpha - 1);
+    real divisionFactor = INIT_weight(nbTransforms*(alpha - 1) + trainingSetLength); 
+
+    for(int k=0; k<nbTransforms ; k++){
+        newDistribution[k]= DIV_weights(SUM_weights(addFactor,
+                                                    newDistribution[k]),
+                                        divisionFactor);
+    }
+    transformDistribution << newDistribution ;
+}
+
+//!maximization step with respect to transformation parameters
+//!(MAP version)
+void TransformationLearner::MStepTransformations()
+{
+    
     //set the m dXd matrices Ck and Bk , k in{1, ...,m} to 0.
     B_C.clear();
-  
-    for(int idx=0 ; idx<nbGenerationCandidates ; idx++){
     
+    real lambda = 1.0*noiseVariance/transformsVariance;
+    Vec v;
+    for(int idx=0 ; idx<nbReconstructions ; idx++){
+        
         //catch a view on the next entry of our dataset, that is, a  triple:
         //(target_idx, neighbor_idx, transformation_idx)
-        GenerationCandidate * gc = &generationSet[idx];
         
-        real w = gc->weight;
+        real p = PROBA_weight(reconstructionSet[idx].weight);
   
         //catch the target and neighbor points from the training set
-        getTargetFromTrainingSet(gc->targetIdx);
-        getNeighborFromTrainingSet(gc->neighborIdx);
+        seeTarget(reconstructionSet[idx].targetIdx);
+        seeNeighbor(reconstructionSet[idx].neighborIdx);
         
-        int t = gc->transformIdx;
+        int t = reconstructionSet[idx].transformIdx;
         
-        externalProductScaleAcc(C[t], target, target, w);
-        if(transformFamily == TRANSFORM_FAMILY_LINEAR){
-            externalProductScaleAcc(B[t], target, neighbor,w);
+        v.resize(inputSpaceDim);
+        v << target;
+        if(transformFamily == TRANSFORM_FAMILY_LINEAR_INCREMENT){
+            v = v - neighbor;
         }
-        else
-            externalProductScaleAcc(B[t], target, (target - neighbor), w); 
+        if(withBias){
+            v = v - biasSet(t);
+        }
+        externalProductScaleAcc(C[t], neighbor, neighbor, p);
+        
+        externalProductScaleAcc(B[t], neighbor, v,p); 
     }
     for(int t=0; t<nbTransforms; t++){
         addToDiagonal(C[t],lambda);
-        transforms[t] << solveLinearSystem(C[t], B[t]);
+        transforms[t] << solveLinearSystem(C[t], B[t]);  
+    }  
+}
+ 
+
+//!maximization step with respect to noise variance
+void TransformationLearner::MStepNoiseVariance()
+{
+    MStepNoiseVarianceMAP(noiseAlpha,noiseBeta);
+}
+
+//!maximization step with respect to noise variance
+//!(MAP version, alpha and beta = gamma prior distribution parameters)
+//!NOTE : alpha=1, beta=0 -> no regularization
+void TransformationLearner::MStepNoiseVarianceMAP(real alpha, real beta)
+{
+    
+    Vec total_k;
+    total_k.resize(nbTransforms);
+    int transformIdx;
+    real proba;
+    for(int idx=0; idx < nbReconstructions; idx++){
+        transformIdx = reconstructionSet[idx].transformIdx;
+        proba = PROBA_weight(reconstructionSet[idx].weight);
+        total_k[transformIdx]+=(proba * reconstructionEuclideanDistance(idx));
     }
+    noiseVariance = (2*beta + sum(total_k))/(2*alpha - 2 + trainingSetLength*inputSpaceDim);  
+}
+ 
+//!returns the distance between the reconstruction and the target
+//!for the 'candidateIdx'th reconstruction candidate
+real TransformationLearner::reconstructionEuclideanDistance(int candidateIdx){
+    seeTarget(reconstructionSet[candidateIdx].targetIdx);
+    seeNeighbor(reconstructionSet[candidateIdx].neighborIdx);
+    Vec reconstruction;
+    reconstruction.resize(inputSpaceDim);
+    applyTransformationOn(reconstructionSet[candidateIdx].transformIdx,
+                          neighbor,
+                          reconstruction);
+    return powdistance(target, reconstruction);
+}
 
-    //TO TEST
 
+//!STOPPING CRITERION
+
+
+//!stages == nstages?
+bool TransformationLearner::stoppingCriterionReached()
+{
+   
+    return stage==nstages;
+}
+
+//!increments the variable 'stage' of 1 
+void TransformationLearner::nextStage(){
+    stage ++;
 }
 
 
