@@ -597,11 +597,8 @@ void AddCostToLearner::train()
         PLASSERT_MSG(-1 != find_threshold , "We where asked to find the threashold and no *class_error costs are selected.\n"
                      "We use the first *class_error cost to select the threshold");
 
-    PLASSERT( learner_ );
-    learner_->nstages = nstages;
-    learner_->train();
-    stage = learner_->stage;
-
+    inherited::train();
+    
     if(-1 != find_threshold){
         
         Vec input;
