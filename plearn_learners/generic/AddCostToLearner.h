@@ -126,7 +126,7 @@ public:
     real to_min;
     int n_classes;
     int confusion_matrix_target;
-    int find_class_threshold;
+    bool find_class_threshold;
 
     // ****************
     // * Constructors *

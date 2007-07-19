@@ -96,7 +96,7 @@ AddCostToLearner::AddCostToLearner()
       to_min(0),
       n_classes(-1),
       confusion_matrix_target(0),
-      find_class_threshold(0)
+      find_class_threshold(false)
 {}
 
 ////////////////////
@@ -182,8 +182,8 @@ void AddCostToLearner::declareOptions(OptionList& ol)
     declareOption(ol, "find_class_threshold",
                   &AddCostToLearner::find_class_threshold,
                   OptionBase::buildoption,
-        "0 if we don't find the best threshold between classes.\n"
-        "Otherwise we find the best threshold between classes");
+        "If true, then during training we find the best threshold between\n"
+        "classes.");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -592,10 +592,10 @@ void AddCostToLearner::train()
                 find_threshold = i;
             break;
         }
+        PLASSERT_MSG(-1 != find_threshold , "We where asked to find the "
+                "threshold and no *class_error costs are selected.\n"
+                "We use the first *class_error cost to select the threshold");
     }
-    if(find_class_threshold != 0)
-        PLASSERT_MSG(-1 != find_threshold , "We where asked to find the threashold and no *class_error costs are selected.\n"
-                     "We use the first *class_error cost to select the threshold");
 
     inherited::train();
     
@@ -734,16 +734,17 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 void AddCostToLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(combined_output, copies);
-    deepCopyField(bag_outputs, copies);
-    deepCopyField(cross_entropy_prop, copies);
+    deepCopyField(combined_output,      copies);
+    deepCopyField(bag_outputs,          copies);
+    deepCopyField(cross_entropy_prop,   copies);
     varDeepCopyField(cross_entropy_var, copies);
-    deepCopyField(desired_target, copies);
-    varDeepCopyField(output_var, copies);
-    deepCopyField(sub_learner_output, copies);
-    deepCopyField(sub_input, copies);
-    varDeepCopyField(target_var, copies);
-    deepCopyField(costs, copies);
+    deepCopyField(desired_target,       copies);
+    varDeepCopyField(output_var,        copies);
+    deepCopyField(sub_learner_output,   copies);
+    deepCopyField(sub_input,            copies);
+    varDeepCopyField(target_var,        copies);
+    deepCopyField(class_threshold,      copies);
+    deepCopyField(costs,                copies);
 }
 
 ////////////////////
