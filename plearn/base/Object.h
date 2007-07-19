@@ -519,7 +519,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
 
 #ifdef PL_PYTHON_VERSION 
 #define DECLARE_OBJECT_PP(PPCLASSTYPE, CLASSTYPE)                       \
-        struct ConvertFromPyObject<PPCLASSTYPE>                         \
+        template<> struct ConvertFromPyObject<PPCLASSTYPE>              \
         {                                                               \
             static PPCLASSTYPE convert(PyObject* o,                     \
                                        bool print_traceback)            \
