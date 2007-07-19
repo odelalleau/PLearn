@@ -66,8 +66,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "parameters gradients (separately for each neuron).\n"
     );
 
-NatGradSMPNNet::NatGradSMPNNet()
-    : noutputs(-1),
+NatGradSMPNNet::NatGradSMPNNet():
+      delayed_update(true),
+      noutputs(-1),
       params_averaging_coeff(1.0),
       params_averaging_freq(5),
       init_lrate(0.01),
@@ -105,6 +106,12 @@ NatGradSMPNNet::NatGradSMPNNet()
 
 void NatGradSMPNNet::declareOptions(OptionList& ol)
 {
+    declareOption(ol, "delayed_update", &NatGradSMPNNet::delayed_update,
+                  OptionBase::buildoption,
+        "If true, then each CPU's update will be delayed until it is its own\n"
+        "turn to update. This ensures no two CPUs are modifying parameters\n"
+        "at the same time.");
+
     declareOption(ol, "noutputs", &NatGradSMPNNet::noutputs,
                   OptionBase::buildoption,
                   "Number of outputs of the neural network, which can be derived from  output_type and targetsize_\n");
@@ -379,6 +386,7 @@ void NatGradSMPNNet::build_()
     layer_mparams.resize(n_layers-1);
     layer_params_delta.resize(n_layers-1);
     layer_params_gradient.resize(n_layers-1);
+    layer_params_update.resize(n_layers - 1);
     biases.resize(n_layers-1);
     activations_scaling.resize(n_layers-1);
     weights.resize(n_layers-1);
@@ -412,6 +420,7 @@ void NatGradSMPNNet::build_()
     all_mparams.resize(n_params);
     all_params_gradient.resize(n_params);
     all_params_delta.resize(n_params);
+    params_update.resize(n_params);
 
     // depending on how parameters are grouped on the first layer
     int n_groups = params_natgrad_per_input_template ? (n_neurons-layer_sizes[1]+layer_sizes[0]+1) : n_neurons;
@@ -427,6 +436,8 @@ void NatGradSMPNNet::build_()
         if( i==0 && params_natgrad_per_input_template ) {
             PLERROR("This should not be executed");
             layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i]+1,layer_sizes[i+1]);
+            layer_params_update[i] = params_update.subVec(p,np).toMat(
+                    layer_sizes[i] + 1, layer_sizes[i+1]);
             layer_mparams[i]=all_mparams.subVec(p,np).toMat(layer_sizes[i]+1,layer_sizes[i+1]);
             biases[i]=layer_params[i].subMatRows(0,1);
             weights[i]=layer_params[i].subMatRows(1,layer_sizes[i]); //weights[0] from layer 0 to layer 1
@@ -443,6 +454,8 @@ void NatGradSMPNNet::build_()
         // Usual parameter storage
         }   else    {
             layer_params[i]=all_params.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+            layer_params_update[i] = params_update.subVec(p, np).toMat(
+                    layer_sizes[i+1], layer_sizes[i] + 1);
             layer_mparams[i]=all_mparams.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
             biases[i]=layer_params[i].subMatColumns(0,1);
             weights[i]=layer_params[i].subMatColumns(1,layer_sizes[i]); // weights[0] from layer 0 to layer 1
@@ -578,6 +591,8 @@ void NatGradSMPNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(pv_stepsizes, copies);
     deepCopyField(pv_stepsigns, copies);
 
+    PLCHECK_MSG(false, "Not fully implemented");
+
     if (params_ptr)
         PLERROR("In NatGradSMPNNet::makeDeepCopyFromShallowCopy - Deep copy of"
                 " 'params_ptr' not implemented");
@@ -625,6 +640,7 @@ void NatGradSMPNNet::forget()
     }
 
     nsteps = 0;
+    params_update.fill(0);
 }
 
 void NatGradSMPNNet::train()
@@ -740,7 +756,11 @@ void NatGradSMPNNet::train()
             // Update weights if it is this cpu's turn.
             int sem_value = semctl(semaphore_id, 0, GETVAL);
             if (sem_value == iam) {
-                printf("CPU %d updating (nsteps =%d)\n", iam, nsteps);
+                //printf("CPU %d updating (nsteps =%d)\n", iam, nsteps);
+                if (delayed_update) {
+                    all_params += params_update;
+                    params_update.clear();
+                }
                 sem_value = (sem_value + 1) % ncpus;
                 semun_v.val = sem_value;
                 semctl(semaphore_id, 0, SETVAL, semun_v);
@@ -775,8 +795,11 @@ void NatGradSMPNNet::train()
         if (sem_value == iam || iam == 0) {
             if (sem_value == iam) {
                 if (nsteps >  0) {
-                    // TODO Update weights at the end of training.
-                    printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
+                    //printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
+                    if (delayed_update) {
+                        all_params += params_update;
+                        params_update.clear();
+                    }
                     nsteps = 0;
                 }
                 // Indicate this CPU is done.
@@ -784,12 +807,10 @@ void NatGradSMPNNet::train()
                 semctl(semaphore_id, iam + 1, SETVAL, semun_v);
                 if (iam != 0) {
                     // Exit additional processes after training.
-                    printf("CPU %d exiting\n", iam);
+                    //printf("CPU %d exiting\n", iam);
                     exit(0);
                 }
             }
-            // The master process is controlling the counter, to ensure all
-            // processes will correctly exit.
             if (semctl(semaphore_id, sem_value + 1, GETVAL) == 0) {
                 // The next process is not done yet: we need to wait.
 #if 0
@@ -803,14 +824,16 @@ void NatGradSMPNNet::train()
             bool finished = true;
             for (int i = 0; i < ncpus; i++) {
                 if (semctl(semaphore_id, i + 1, GETVAL) == 0) {
+                    /*
                     printf("Main CPU still waiting on CPU %d (GETVAL => %d)\n",
                             i, semctl(semaphore_id, i + 1, GETVAL));
+                            */
                     finished = false;
                     break;
                 }
             }
             if (finished) {
-                printf("Main CPU ready to finish (all ready!)\n");
+                //printf("Main CPU ready to finish (all ready!)\n");
                 break;
             }
 
@@ -956,9 +979,18 @@ void NatGradSMPNNet::onlineStep(int tutu, const Mat& targets,
             // compute gradient on weights and update them in one go (more efficient)
             // mean gradient has less variance, can afford larger learning rate
             //Profiler::pl_profile_start("ProducScaleAccOnlineStep");
-            productScaleAcc(layer_params[i-1],next_neurons_gradient,true,
-                            neuron_extended_outputs_per_layer[i-1],false,
-                            -layer_lrate_factor*lrate /* /minibatch_size */, 1);
+            if (delayed_update) {
+                // Store updates in 'layer_params_update'.
+                productScaleAcc(layer_params_update[i - 1],
+                        next_neurons_gradient, true,
+                        neuron_extended_outputs_per_layer[i-1], false,
+                        -layer_lrate_factor*lrate /* /minibatch_size */, 1);
+            } else {
+                // Directly update the parameters.
+                productScaleAcc(layer_params[i-1],next_neurons_gradient,true,
+                        neuron_extended_outputs_per_layer[i-1],false,
+                        -layer_lrate_factor*lrate /* /minibatch_size */, 1);
+            }
             //Profiler::pl_profile_end("ProducScaleAccOnlineStep");
         }
     }

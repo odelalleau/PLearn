@@ -57,6 +57,8 @@ class NatGradSMPNNet : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
+    bool delayed_update;
+
     int noutputs;
 
     //! sizes of hidden layers, provided by the user.
@@ -334,6 +336,14 @@ private:
 
     //! Semaphore used to control which CPU must perform an update.
     int semaphore_id;
+
+    //! Used to store the cumulative updates to the parameters, when the
+    //! 'delayed_update' option is set.
+    Vec params_update;
+
+    //! Used to store updates to the parameters of each layer (points into the
+    //! 'params_update' vector).
+    TVec<Mat> layer_params_update;
 
     //PP<CorrelationProfiler> g_corrprof, ng_corrprof;    // for optional gradient correlation profiling
 };
