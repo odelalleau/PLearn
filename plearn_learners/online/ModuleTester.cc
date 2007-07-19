@@ -390,6 +390,7 @@ void ModuleTester::build_()
             // Continue only if accumulation test passed.
             if (!ok)
                 return;
+            DBG_MODULE_LOG << "Accumulation test successful" << endl;
             // Verify gradient is coherent with the input, through a subtle
             // perturbation of said input.
             // Save result of fprop.
@@ -400,6 +401,8 @@ void ModuleTester::build_()
                 PLASSERT( val && check );
                 check->resize(val->length(), val->width());
                 *check << *val;
+                DBG_MODULE_LOG << "Reference fprop data (" << all_out[k] << ")"
+                    << ":" << endl << *check << endl;
             }
             for (int k = 0; ok && k < in_grad.length(); k++) {
                 int idx = module->getPortIndex(in_grad[k]);
@@ -435,6 +438,11 @@ void ModuleTester::build_()
                                         (*out_prev)(oi, oj);
                                     (*grad)(p, q) +=
                                         diff * (*out_grad_)(oi, oj) / step;
+                                    DBG_MODULE_LOG << "  diff = " << diff <<
+                                        endl << "  step = " << step << endl <<
+                                        "  out_grad = " << (*out_grad_)(oi, oj)
+                                        << endl << "  grad = " << (*grad)(p, q)
+                                        << endl;
                                 }
                         }
                     }
@@ -450,8 +458,13 @@ void ModuleTester::build_()
                                 (*grad)(p,q) << ") != computed (" <<
                                 (*b_check)(p,q) << ")" << endl;
                             ok = false;
+                        } else {
+                            DBG_MODULE_LOG << "Gradient for port '" <<
+                                module->getPortName(idx) << "' was " <<
+                                "properly computed: finite difference (" <<
+                                (*grad)(p,q) << ") == computed (" <<
+                                (*b_check)(p,q) << ")" << endl;
                         }
-
             }
         }
     }
