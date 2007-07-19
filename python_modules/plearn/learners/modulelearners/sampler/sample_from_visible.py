@@ -7,28 +7,19 @@ import random
 
 def view_sample_from_visible(learner, Nim, dataSet, init_gibbs_step):
 
-  print "\nChoose betweem these options:"
-  print "1.[default] Gibbs sampling in the top RBM + mean field"
-  print "2.                   ''                   + sample hidden<->visible"
-  c = pause()
-  while c not in [0,1,2,EXITCODE]:
-        c = pause()
-  MeanField = False
-  if c==1:
-     MeanField = True
-  elif c==EXITCODE:
-     return
-
   print "analyzing learner..."
   #
   # Getting the RBMmodule which sees the image (looking at size of the down layer)
   #
+  nRBM=0 # The number of RBMs
   modules=getModules(learner)
   for i in range(len(modules)):
      module = modules[i]
-     if isModule(module,'RBM') and module.connection.down_size == Nim:
-        image_RBM=learner.module.modules[i]
-        break
+     if isModule(module,'RBM'):
+        nRBM += 1
+        if module.connection.down_size == Nim:
+           image_RBM=learner.module.modules[i]
+           break
   image_RBM_name=image_RBM.name
   #
   # Getting the top RBMmodule
@@ -39,7 +30,20 @@ def view_sample_from_visible(learner, Nim, dataSet, init_gibbs_step):
   
   NH=top_RBM.connection.up_size
 
-
+  if nRBM == 1: MeanField=False
+  else:
+    print "\nChoose betweem these options:"
+    print "1.[default] Gibbs sampling in the top RBM + mean field"
+    print "2.                   ''                   + sample hidden<->visible"
+    c = pause()
+    while c not in [0,1,2,EXITCODE]:
+        c = pause()
+    MeanField = False
+    if c==1:
+       MeanField = True
+    elif c==EXITCODE:
+       return
+  
   if MeanField:
      init_ports = [ ('input',  image_RBM_name+'.visible'),
                     ('output', top_RBM_name+'.hidden.state')

@@ -5,8 +5,6 @@ plearn.bridgemode.useserver= False
 from plearn.bridge import *
 #from plearn.pyplearn import *
 
-from plearn.learners.autolr import deepcopy
-
 
 tmp_file='/tmp/modulelearner.py'
 
@@ -478,7 +476,7 @@ def plug2output(myObject, portslist):
     setConnections(mynewObject, new_connections_list)
     setPorts(mynewObject, new_ports_list)
     setModules(mynewObject, new_modules_list)
-    return deepcopy( mynewObject )
+    mynewObject.build()
     return mynewObject
 
 

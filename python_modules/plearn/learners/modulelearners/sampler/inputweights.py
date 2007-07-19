@@ -19,25 +19,52 @@ def view_inputweights(learner, Nim):
         image_RBM=learner.module.modules[i]
         break
   image_RBM_name=image_RBM.name
-
-  screen=init_screen(Nim,zoom_factor)
   
+  zoom_factor = globals()['zoom_factor']
   
-#  if 'RBMMatrixConnection' in str(type(image_RBM.connection)):
+  if 'RBMMatrixConnection' in str(type(image_RBM.connection)):
 
-  for i in range(len(image_RBM.connection.weights)):
-    weights=image_RBM.connection.weights[i]
-    print str(i+1)+"/"+str(len(image_RBM.connection.weights))
-    c = draw_normalized_image( weights, screen, zoom_factor )
-    if c==EXITCODE:
-       return
+    screen=init_screen(Nim,zoom_factor)
+    for i in range(len(image_RBM.connection.weights)):
+        weights=image_RBM.connection.weights[i]
+        print str(i+1)+"/"+str(len(image_RBM.connection.weights))
+        c = draw_normalized_image( weights, screen, zoom_factor )
+        if c==EXITCODE:
+           return
        
-#  elif 'RBMMixedConnection' in str(type(image_RBM.connection)):
+  elif 'RBMMixedConnection' in str(type(image_RBM.connection)):
+
+    N_filter = len(image_RBM.connection.sub_connections)
+    N_inputim = len(image_RBM.connection.sub_connections[0])
+    size_filter = image_RBM.connection.sub_connections[0][0].kernel.shape
+    zoom_factor **= 2
+
+    screen=init_screen( (size_filter[0]*N_inputim+(N_inputim-1) , size_filter[1]) , zoom_factor)
+    for i in range(N_filter):
+	weights = image_RBM.connection.sub_connections[i][0].kernel
+        print str(i+1)+"/"+str(N_filter)
+        for j in range(1,N_inputim):
+	   weights.resize( size_filter[0]*(j+1)+j, size_filter[1] )
+	   weights[size_filter[0]*j]=[0]*size_filter[1]
+	   weights[size_filter[0]*j+1:]=image_RBM.connection.sub_connections[i][j].kernel
+        c = draw_normalized_image( weights, screen, zoom_factor )
+        if c==EXITCODE:
+           return
+	   
+  else:
+     raise TypeError, "sampler::view_inputweights() not yet implemented for RBM connection of type "+str(type(image_RBM.connection))
+
 
 def inputweights_man():
      print "\nPlease type:"
      print ":    <ENTER>   : to continue Gibbs Sampling (same gibbs step)"
      print ":      q       : (quit) when you are fed up\n"
+     print "Meaning of gray levels (g):"
+     print "\tg = 127  <->  w = 0"
+     print "\tg > 127  <->  w > 0"
+     print "\tg < 127  <->  w < 0"
+     print "\tg = 255  <->  w = +max{ -min(w), max(w) }"
+     print "\tg = 0    <->  w = -max{ -min(w), max(w) }\n"
 
 if __name__ == "__main__":
 

@@ -1,30 +1,37 @@
 #!/usr/bin/env python
 
-try:
-  from plearn.pyext import *
-except:
-  from plearn.pymake.pymake import *
-  PLEARNDIR = os.environ.get('PLEARNDIR', os.getcwd())
-  PLEARNDIRpyext = os.path.join(PLEARNDIR,'python_modules','plearn','pyext')
-  PLEARNDIRpyextOBJ =  os.path.join(PLEARNDIRpyext,'OBJS')
-  DIRS=os.listdir(PLEARNDIRpyextOBJ)
-  l=len(DIRS)
-  for dirname in DIRS:
-      l -= 1
-      if l>0 and 'double' in dirname:
-         DIRS.append(dirname)
-         continue
-      elif l>0 and 'dbg' in dirname:
-         DIRS.append(dirname)
-         continue
-      dirname = os.path.join(PLEARNDIRpyextOBJ, dirname)      
-      if 'libplext.so' in os.listdir(dirname):
-         linux_command = 'ln -sf '+ os.path.join(dirname,'libplext.so') + ' ' + os.path.join(PLEARNDIRpyext, 'libplext.so') 
-         os.system(linux_command)
-      try :
-           from plearn.pyext import *
-	   break
-      except: pass
+import sys, os, os.path
+
+from plearn.pyplearn import *
+from plearn.learners.modulelearners import *
+import pydot
+
+
+#try:
+#  from plearn.pyext import *
+#except:
+#  from plearn.pymake.pymake import *
+#  PLEARNDIR = os.environ.get('PLEARNDIR', os.getcwd())
+#  PLEARNDIRpyext = os.path.join(PLEARNDIR,'python_modules','plearn','pyext')
+#  PLEARNDIRpyextOBJ =  os.path.join(PLEARNDIRpyext,'OBJS')
+#  DIRS=os.listdir(PLEARNDIRpyextOBJ)
+#  l=len(DIRS)
+#  for dirname in DIRS:
+#      l -= 1
+#      if l>0 and 'double' in dirname:
+#         DIRS.append(dirname)
+#         continue
+#      elif l>0 and '_dbg_' in dirname:
+#         DIRS.append(dirname)
+#         continue
+#      dirname = os.path.join(PLEARNDIRpyextOBJ, dirname)      
+#      if 'libplext.so' in os.listdir(dirname):
+#         linux_command = 'ln -sf '+ os.path.join(dirname,'libplext.so') + ' ' + os.path.join(PLEARNDIRpyext, 'libplext.so') 
+#         os.system(linux_command)
+#      try :
+#           from plearn.pyext import *
+#	   break
+#      except: pass
   
   
 
@@ -32,10 +39,6 @@ except:
 
 printAllPorts=False
 
-
-from pyplearn_read import *
-
-import pydot
 
 # global variables:
 modules_dict = {}
@@ -89,22 +92,21 @@ def formatModulesNames(name,modules_dict):
     return name
 
 def formatPortNames(name,portname,modules_dict,printAllPorts):
-    if portname in ['input','target','cost','weight']:
-       return '*'+portname.lower()+'*'
-    elif portname in ['output']:
-       return formatModulesNames(name,modules_dict)
-    else:
-       if printAllPorts:
-          return '-*'+portname.lower()+'*'
-       else:
-          return formatModulesNames(name,modules_dict)
-       
+#    if portname in ['input','target','cost','weight']:
+#       return '*'+portname.lower()+'*'
+#    elif portname in ['output']:
+#       return formatModulesNames(name,modules_dict)
+#    else:
+#       if printAllPorts:
+#          return '-*'+portname.lower()+'*'
+#       else:
+#          return formatModulesNames(name,modules_dict)
+    return '*'+portname.lower()+'*'
 
 def checkName(ModuleName, ports_dict, modules_dict):
     if ports_dict.has_key(ModuleName):
        return formatPortNames(ModuleName,ports_dict[ModuleName],modules_dict,False)
     return formatModulesNames(ModuleName,modules_dict)
-
 
 def isModule(module,name):
     return name+'Module' in str(type(module))
@@ -240,9 +242,6 @@ def networkview( myObject ):
     os.system('kuickshow '+output_name+' &')
 
 if __name__ == '__main__':
-    import sys
-    import os, os.path
-
 
     if len(sys.argv) <> 2:
        print "Usage:\n\tpython "+sys.argv[0]+" mylearner.ext"

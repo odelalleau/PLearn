@@ -349,7 +349,7 @@ def train_adapting_lr(learner,
                       min_epochs_to_delete = 2,
                       # Scaling coefficient when modifying learning rates
                       lr_steps=exp(log(10)/2),
-                      logfile=False,
+                      logfile=None,
                       # do not try to go below this learning rate
                       min_lr=1e-6,
                       # Learning rate interval for heuristic

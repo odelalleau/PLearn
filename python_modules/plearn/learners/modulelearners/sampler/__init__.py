@@ -1,4 +1,5 @@
 from pygame import *
+from numarray import *
 import math
 import sys
 
@@ -15,14 +16,23 @@ def pause():
    try: return int(c.strip())
    except: return 0
 
-def init_screen(Nim,zoom_factor):
+def init_screen(input_size,zoom_factor):
     init()
-    width = int(math.sqrt(Nim*1.0))
-    if width**2 != Nim:
-       width = int(math.sqrt(Nim*1.0))+1
-#       raise TypeError, "This code only deals with square images\n(and image size "+str(Nim)+" is not the square of an integer)"
-    width *= zoom_factor
-    return display.set_mode([width, width])
+    if type(input_size)==int:
+      width = int(math.sqrt(input_size*1.0))
+      if width**2 != input_size:
+         width = math.ceil(math.sqrt(input_size*1.0))
+#       raise TypeError, "This code only deals with square images\n(and image size "+str(input_size)+" is not the square of an integer)"
+      width *= zoom_factor
+      height = width
+    elif type(input_size)==tuple or type(input_size)==list:
+      if len(input_size) <> 2:
+         raise ValueError, "the first argment of sampler::init_screen() must be of length 2 (if not an <int>)"
+      height = input_size[0]*zoom_factor
+      width  = input_size[1]*zoom_factor
+    else:
+       raise TypeError, "the first argument of sampler::init_screen() must be of type <int>, <tuple> or <list> (not "+str(type(input_size))+")"
+    return display.set_mode([height, width])
 
 def draw_image(values_in_01,screen,zoom_factor):
     """ Draw a 2D image where the gray level corresponds to a value scaled in [0,1]
@@ -33,17 +43,17 @@ def draw_image(values_in_01,screen,zoom_factor):
     """
     GiveWarning=True
     
-    Nim=len(values_in_01)
-    width = int(math.sqrt(Nim*1.0))
-    if width**2 != Nim:
-       width += 1
-#       raise TypeError, "This code only deals with square images\n(and image size "+str(Nim)+" is not the square of an integer)"
-    width *= zoom_factor
+    width = screen.get_width()
+    height = screen.get_height()
+
     surface = Surface((width, width),0,8)
     surface.set_palette([(i,i,i) for i in range(2**8)])
     for x in range(width/zoom_factor):
-       for y in range(width/zoom_factor):
-           value = values_in_01[x*width/zoom_factor+y]
+       for y in range(height/zoom_factor):
+           if 'numarray' in str(type(values_in_01)) and len(values_in_01.shape)==2:
+              value = values_in_01[x,y]
+	   else:
+              value = values_in_01[x*width/zoom_factor+y]
 	   if value < 0. or value > 1.:
 	      if GiveWarning:
 	         GiveWarning=False
@@ -71,8 +81,12 @@ def draw_normalized_image(weights,screen,zoom_factor):
 	- zoom_factor : int > 0
     """
 
-    MAX=max(weights)
-    MIN=min(weights)
+    if 'numarray' in str(type(weights)):
+       MAX=weights.max()
+       MIN=weights.min()
+    else:
+       MAX=max(weights)
+       MIN=min(weights)
     MAX=2*max(MAX,-MIN)
 
     for i in range(len(weights)):
@@ -80,7 +94,6 @@ def draw_normalized_image(weights,screen,zoom_factor):
     return draw_image(weights,screen,zoom_factor)
 
 def max_matrix(array):
-    print array[0]
     raise SystemExit
     MAX = max(array[0])
     for vec in array:

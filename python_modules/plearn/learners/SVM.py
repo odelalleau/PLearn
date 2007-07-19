@@ -132,8 +132,10 @@ class SVM(object):
                         'valid_error_rate',
                         'best_parameters',
                         'tried_parameters',
+                        'save_filename',
+			'best_model',
+			'nr_fold'
                         'result_list',
-                        'save_filename'
                         ]
        
       def __init__( self ):
@@ -192,10 +194,8 @@ class SVM(object):
           return costs
 
       def test(self, samples_target_list):
-          check_samples_target_list(samples_target_list)
-          if len(samples_target_list) <> 1:
-             raise TypeError, "in SVM::test(), samples_target_list must be [[samples],[targets]] (list of list)"          
-          return test_model(self.best_model, samples_target_list[0][0], samples_target_list[0][1])
+          check_samples_target_list([samples_target_list])
+          return test_model(self.best_model, samples_target_list[0], samples_target_list[1])
 
 
       def train_and_tune(self, kernel_type, samples_target_list):
@@ -232,8 +232,7 @@ class SVM(object):
                      if self.save_filename != None:
                         try:
                            FID=open(self.save_filename,'a')
-                           FID.write('------------\nTry with '+kernel_type+' kernel :\n')
-                           FID.write('parameters : '+str(parameters)+'\n')
+                           FID.write('------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)+' )\n')
                            FID.write(' --> Error rate = '+str(error_rate)+'\n')
                            FID.close()
                         except:
@@ -421,11 +420,11 @@ def check_samples_target_list(samples_target_list):
            if len(samples_target[0]) != len(samples_target[1]):
               raise ValueError, "ERROR: samples_target_list has an element that has an elements with different len. Len are: " + len(samples_target[0])+" and " + len(samples_target[1])
     if len(samples_target_list) == 1:
-       print "cross-validation"
+       print "\nCross-validation...\n"
     elif len(samples_target_list) == 2:
-       print "simple validation"
+       print "\nSimple validation...\n"
     elif len(samples_target_list) == 3:
-       print "validation + test"
+       print "\nValidation + test...\n"
     else:
        raise TypeError, "ERROR: samples_target_list have length "+str(len(samples_target_list))+" (not in [1,2,3])\n"+"samples_target_list has to be a list of [sample, target] arrays\n"+"for example :\n\t[[TrainSet, TrainLabels]]\n"+"\tor [[TrainSamples, TrainLabels], [ValidSamples, ValidLabels]]\n"+"\tor [[TrainSamples, TrainLabels], [ValidSamples, ValidLabels], [TestSamples, TestLabels]]\n"
 
@@ -455,10 +454,24 @@ if __name__ == '__main__':
     my_svm.save_filename = 'my_svm_results.txt'
    
 #<<<#
+#>>># Pre-processing your data : it is better to normalize...
+    
+    # Get the mean and standard deviation on the training set
+    # and normalize the training set (Mahalanobis)
+    #
+    mean, std = normalize(train_samples, None, None)
+    #
+    # DO NOT FORGET to apply the same normalization to other datasets
+    #
+    normalize(valid_samples, mean, std)
+    normalize(test_samples, mean, std)
+    
+#<<<#
 #>>># Defining train / valid data
     # - CROSS-VALIDATION
     
     DATA = [ [train_samples , train_targets] ]
+    svm.nr_fold = 5  #(will train on 4/5 of the data and test on 1/5: this will be done 5 times)
 
     # or...
     # - SIMPLE VALIDATION
@@ -478,10 +491,11 @@ if __name__ == '__main__':
     
     
 #<<<#
-#>>># Compute the accuracies (exploring a bit, each time, the space of parameters)
+#>>># Train several models with different sets of parameters and choosing the best set ("tuning"/"twicking")
     # - my_svm.error_rate indicates the current error rates.
     # - This error rate can only decrease while you run "train_and_tune"
     #   (as you are tuning parameters so as to improve the results)
+    # So one should run train_and_tune several times (as long as he can wait), at least for the LINEAR and RBF kernel
    
     my_svm.train_and_tune( 'LINEAR' ,  DATA )
     my_svm.train_and_tune( 'LINEAR' ,  DATA )
@@ -516,7 +530,8 @@ if __name__ == '__main__':
     #
     # or
     #
-    # If you want to try what give the best parameters (retrain the model on new train data)
+    # If you want to try what give the best parameters
+    # (retrain the model on new train data, but no search for better parameters)
     my_svm.train_and_test( NEW_DATA )
     
     valid_error_rate = my_svm.error_rate
@@ -524,7 +539,7 @@ if __name__ == '__main__':
 #<<<#
 #>>># To try the best trained model with new data (and obtain "fair" error rates)
    
-    TEST_DATA=[ [test_samples , test_targets] ]
+    TEST_DATA=[test_samples , test_targets]
     
     test_error_rate = my_svm.test( TEST_DATA )
     
