@@ -65,8 +65,8 @@ done
 for i in "$@";
   do
   iname=${i//\ /_}
-  echo "Compiling \"${BASEPROG}${iname}.cc\" with command:"
+  echo -e "\nCompiling \"${BASEPROG}${iname}.cc\" with command:"
   echo " pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc"
   pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc || ( echo "Build failed for $i"; exit)
-  echo "Ended with status: $?"
+  echo -e "Ended with status: $?\n"
 done
