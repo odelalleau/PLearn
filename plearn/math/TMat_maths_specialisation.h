@@ -46,6 +46,7 @@
 #define TMat_maths_specialisation_INC
 
 #include "TMat.h"
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
@@ -193,6 +194,7 @@ inline void productScaleAcc(const TMat<double>& C,
                             const TMat<double>& B, bool transposeB,
                             double alpha, double beta)
 {
+    Profiler::pl_profile_start("productScaleAcc(dgemm)");
 #ifdef BOUNDCHECK
     int l2;
 #endif
@@ -251,6 +253,7 @@ inline void productScaleAcc(const TMat<double>& C,
 
     dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(),
            &lda, &beta, C.data(), &ldc);
+    Profiler::pl_profile_end("productScaleAcc(dgemm)");
 }
 
 //! y <- alpha A.x + beta y 
@@ -424,6 +427,8 @@ inline void productScaleAcc(const TMat<float>& C,
                             const TMat<float>& B, bool transposeB,
                             float alpha, float beta)
 {
+    Profiler::pl_profile_start("productScaleAcc(sgemm)");
+
 #ifdef BOUNDCHECK
     int l2;
 #endif
@@ -476,6 +481,7 @@ inline void productScaleAcc(const TMat<float>& C,
 
     sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(),
            &lda, &beta, C.data(), &ldc);
+    Profiler::pl_profile_end("productScaleAcc(sgemm)");
 }
 
 //! y <- alpha A.x + beta y
