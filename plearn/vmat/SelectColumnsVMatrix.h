@@ -71,6 +71,7 @@ public:
     TVec<int> indices;
     TVec<string> fields;
     bool fields_partial_match;
+    bool inverse_fields_selection;
 
 public:
 

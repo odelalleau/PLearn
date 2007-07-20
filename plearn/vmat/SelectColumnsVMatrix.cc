@@ -58,13 +58,15 @@ PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
 //////////////////////////
 SelectColumnsVMatrix::SelectColumnsVMatrix()
     : extend_with_missing(false),
-      fields_partial_match(false)
+      fields_partial_match(false),
+      inverse_fields_selection(false)
 {}
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing)
     : extend_with_missing(the_extend_with_missing),
       fields(the_fields),
-      fields_partial_match(false)
+      fields_partial_match(false),
+      inverse_fields_selection(false)
 {
     source = the_source;
     build_();
@@ -76,7 +78,8 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
     inherited(the_source, call_build_),
     extend_with_missing(false),
     indices(the_indices),
-    fields_partial_match(false)
+    fields_partial_match(false),
+    inverse_fields_selection(false)
 {
     if (call_build_)
         build_();
@@ -84,7 +87,8 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
     : extend_with_missing(false),
-      fields_partial_match(false)
+      fields_partial_match(false),
+      inverse_fields_selection(false)
 {
     source = the_source;
     indices.resize(the_indices.length());
@@ -137,6 +141,10 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "extend_with_missing", &SelectColumnsVMatrix::extend_with_missing, OptionBase::buildoption,
                   "If set to 1, then fields specified in the 'fields' option that do not exist\n"
                   "in the source VMatrix will be filled with missing values.");
+    declareOption(ol, "inverse_fields_selection", &SelectColumnsVMatrix::inverse_fields_selection,
+                  OptionBase::buildoption,
+                  "If set to true, after all previous fields selection, we inverse the selection.\n"
+                  "This way we can specify the indicies we don't want.");
 
     inherited::declareOptions(ol);
 }
@@ -150,6 +158,7 @@ void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sinput, copies);
     deepCopyField(indices, copies);
     deepCopyField(fields, copies);
+    deepCopyField(inverse_fields_selection, copies);
 }
 
 ///////////
@@ -216,7 +225,22 @@ void SelectColumnsVMatrix::build_()
                         }
             }
         }
-
+        
+        //we inverse the selection
+        if(inverse_fields_selection){
+            TVec<int> newindices;
+            for (int i = 0;i<source.width();i++){
+                bool found=false;
+                for(int j=0;j<indices.size();j++)
+                    if(indices[j]==i){
+                        found = true;
+                        break;
+                    }
+                if(!found)
+                    newindices.append(i);
+            }
+            indices = newindices;
+        }
         // Copy matrix dimensions
         width_ = indices.length();
         length_ = source->length();
