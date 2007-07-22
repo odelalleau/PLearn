@@ -691,11 +691,12 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     if (compute_contrastive_divergence)
     {
         contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")];
-        if (!contrastive_divergence || !contrastive_divergence->isEmpty())
+/* YB: I don't agree with this error message: the behavior should be adapted to the provided ports. 
+      if (!contrastive_divergence || !contrastive_divergence->isEmpty())
             PLERROR("In RBMModule::fprop - When option "
                     "'compute_contrastive_divergence' is 'true', the "
                     "'contrastive_divergence' port should be provided, as an "
-                    "output.");
+                    "output.");*/
         negative_phase_visible_samples =
             ports_value[getPortIndex("negative_phase_visible_samples.state")];
         negative_phase_hidden_expectations =
@@ -703,7 +704,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         negative_phase_hidden_activations =
             ports_value[getPortIndex("negative_phase_hidden_activations.state")];
     }
-
     bool hidden_expectations_are_computed = false;
     hidden_activations_are_computed = false;
     bool found_a_valid_configuration = false;
@@ -804,16 +804,23 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         // Autoassociator reconstruction cost
         PLASSERT( ports_value.length() == nPorts() );
-        if(!hidden_expectations_are_computed)
-        {
-            computePositivePhaseHiddenActivations(*visible);
-            hidden_layer->computeExpectations();
-            hidden_expectations_are_computed=true;
+
+        Mat h;
+        if (hidden && !hidden->isEmpty())
+            h = *hidden;
+        else {
+            if(!hidden_expectations_are_computed)
+            {
+                computePositivePhaseHiddenActivations(*visible);
+                hidden_layer->computeExpectations();
+                hidden_expectations_are_computed=true;
+            }
+            h = hidden_layer->getExpectations();
         }
 
         // Don't need to verify if they are asked in a port, this was done previously
 
-        computeVisibleActivations(hidden_layer->getExpectations(), true);
+        computeVisibleActivations(h, true);
         if(visible_reconstruction_activations)
         {
             PLASSERT( visible_reconstruction_activations->isEmpty() );
@@ -1102,9 +1109,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* weights_grad = ports_gradient[getPortIndex("weights")];
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     Mat* contrastive_divergence_grad = NULL;
+    Mat* contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")];
+    bool computed_contrastive_divergence = compute_contrastive_divergence && 
+        contrastive_divergence && !contrastive_divergence->isEmpty();
 
     // Ensure the gradient w.r.t. contrastive divergence is 1 (if provided).
-    if (compute_contrastive_divergence) {
+    if (computed_contrastive_divergence) {
         contrastive_divergence_grad =
             ports_gradient[getPortIndex("contrastive_divergence")];
         if (contrastive_divergence_grad) {
@@ -1120,8 +1130,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     // Ensure the visible gradient is not provided as input. This is because we
     // accumulate more than once in 'visible_grad'.
-    PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "Cannot provide "
-            "an input gradient w.r.t. visible units" );
+    PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "If visible gradient is desired "
+                  " the corresponding matrix should have 0 length" );
 
     bool compute_visible_grad = visible_grad && visible_grad->isEmpty();
     bool compute_weights_grad = weights_grad && weights_grad->isEmpty();
@@ -1138,7 +1148,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         // learning rate is equal to 0. This is because we must propagate the
         // gradient to the visible layer, even though no update is required.
         setAllLearningRates(grad_learning_rate);
-        PLASSERT( hidden && hidden_act );
+        PLASSERT_MSG( hidden && hidden_act , "To compute gradients in bprop, the hidden_activations.state port must have been filled during fprop");
         // Compute gradient w.r.t. activations of the hidden layer.
         hidden_layer->bpropUpdate(
                 *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
@@ -1278,13 +1288,13 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( visible && !visible->isEmpty() );
         setAllLearningRates(cd_learning_rate);
         Mat* negative_phase_visible_samples =
-            compute_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
+            computed_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
         const Mat* negative_phase_hidden_expectations =
-            compute_contrastive_divergence ?
+            computed_contrastive_divergence ?
                 ports_value[getPortIndex("negative_phase_hidden_expectations.state")]
                 : NULL;
         Mat* negative_phase_hidden_activations =
-            compute_contrastive_divergence ?
+            computed_contrastive_divergence ?
                 ports_value[getPortIndex("negative_phase_hidden_activations.state")]
                 : NULL;
 
@@ -1304,7 +1314,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 computeHiddenActivations(visible_layer->samples);
                 hidden_layer->computeExpectations();
             }
-            PLASSERT( !compute_contrastive_divergence );
+            PLASSERT( !computed_contrastive_divergence );
             PLASSERT( !negative_phase_hidden_expectations );
             PLASSERT( !negative_phase_hidden_activations );
             negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
