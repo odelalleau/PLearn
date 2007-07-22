@@ -816,16 +816,25 @@ void KLp0p1RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         // Autoassociator reconstruction cost
         PLASSERT( ports_value.length() == nPorts() );
-        if(!hidden_expectations_are_computed)
-        {
-            computePositivePhaseHiddenActivations(*visible);
-            hidden_layer->computeExpectations();
-            hidden_expectations_are_computed=true;
+
+        // if hidden is provided, condition on it rather than
+        // use the P(h|visible) as hidden.
+        Mat h;
+        if (hidden && !hidden->isEmpty())
+            h = *hidden;
+        else {
+            if(!hidden_expectations_are_computed)
+            {
+                computePositivePhaseHiddenActivations(*visible);
+                hidden_layer->computeExpectations();
+                hidden_expectations_are_computed=true;
+            }
+            h = hidden_layer->getExpectations();
         }
 
         // Don't need to verify if they are asked in a port, this was done previously
 
-        computeVisibleActivations(hidden_layer->getExpectations(), true);
+        computeVisibleActivations(h, true);
         if(visible_reconstruction_activations)
         {
             PLASSERT( visible_reconstruction_activations->isEmpty() );
