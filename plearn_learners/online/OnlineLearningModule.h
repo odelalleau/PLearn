@@ -130,6 +130,11 @@ public:
     //! - crash otherwise
     virtual void fprop(const TVec<Mat*>& ports_value);
 
+    virtual map<string,Mat> namedFprop(map<string,Mat>& inputs, TVec<string> wanted_outputs);
+    virtual map<string,Mat> namedBpropAccUpdate(map<string,Mat>& values, 
+                                                map<string,Mat>& gradients, 
+                                                TVec<string> additional_input_gradients);
+
     //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
     //!                                           const TVec<Mat*>& ports_gradient)
     //! Adapt based on the output gradient: this method should only
@@ -295,6 +300,9 @@ protected:
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
 protected:
 

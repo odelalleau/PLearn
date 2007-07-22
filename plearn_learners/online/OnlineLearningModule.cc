@@ -42,6 +42,7 @@
 
 
 #include "OnlineLearningModule.h"
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;
@@ -322,6 +323,106 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
 
     inherited::declareOptions(ol);
 }
+
+////////////////////
+// declareMethods //
+////////////////////
+void OnlineLearningModule::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "getPorts", &OnlineLearningModule::getPorts,
+        (BodyDoc("Return the list of port names of the module\n"),
+         RetDoc ("The list of port names")));
+
+    declareMethod(
+        rmm, "forget", &OnlineLearningModule::forget,
+        (BodyDoc("Reset the parameters to the state they would be before starting training.\n"
+                 "This may involve randomization using the random generator.\n")));
+
+    declareMethod(
+        rmm, "namedFprop", &OnlineLearningModule::namedFprop,
+        (BodyDoc("Perform the fprop computation on an OnlineLearningModule, which takes matrices\n"
+                  "in user-selected input ports and computes outputs in user-selected output-ports.\n"
+                  "The function actually computed by the module depends on the selected ports and\n"
+                  "on its internal state (options and parameters)\n"),
+         ArgDoc ("inputs", "A dictionary of input matrices (one for each input port), indexed by the port names,\n"),
+         ArgDoc ("wanted_outputs", "A list of wanted output port names,\n"),
+         RetDoc ("A dictionary of the input and output matrices (indexed by their name).\n")));
+
+    declareMethod(
+        rmm, "namedBpropAccUpdate", &OnlineLearningModule::namedBpropAccUpdate,
+        (BodyDoc("Perform the BpropAccUpdate computation on an OnlineLearningModule, which\n"
+                 "takes matrices in user-selected input ports, output ports, and output\n"
+                 "gradient ports and computes gradients for user-selected input ports.\n"
+                 "The function actually computed by the module depends on the selected ports\n"
+                 "and on its internal state (options and parameters)\n"),
+         ArgDoc ("values", "A dictionary of named input and output matrices that was\n"
+                 "returned by namedFprop (one entry for each input and output port used).\n"),
+         ArgDoc ("gradients", "A dictionary of named output (and possibly input) gradient\n"
+                 "matrices (the name indexing each matrix is the name of corresponding port).\n"
+                 "Output gradient matrices should be full, whereas input gradient matrices\n"
+                 "into which to accumulate should have lenght 0 and correct width.\n"),
+         ArgDoc ("additional_input_gradients", "A list of wanted input port names,\n"
+                 "for which the gradient is desired (no accumulation)\n"),
+         RetDoc ("A dictionary of all the input and output gradient matrices (indexed\n"
+                 "by their port name), including those in the gradients argument\n"
+                 "and those named in the additional_input_gradiaents argument.\n")));
+
+}
+
+map<string,Mat> OnlineLearningModule::namedFprop(map<string,Mat>& inputs, TVec<string> wanted_outputs)
+{
+    map<string,Mat> outputs;
+    TVec<string> port_names = getPorts();
+    TVec<Mat*> ports_value(nPorts());
+    map<string,Mat>::iterator it=inputs.begin();
+    for (;it!=inputs.end();++it)
+        ports_value[getPortIndex(it->first)]= &it->second;
+    for (int i=0;i<wanted_outputs.length();i++)
+        ports_value[getPortIndex(wanted_outputs[i])]= new Mat(0,0);
+    fprop(ports_value);
+    for (it=inputs.begin();it!=inputs.end();++it)
+        outputs[it->first]=it->second;
+    for (int i=0;i<wanted_outputs.length();i++)
+        outputs[wanted_outputs[i]]= *ports_value[getPortIndex(wanted_outputs[i])];
+    return outputs;
+}
+
+map<string,Mat> OnlineLearningModule::namedBpropAccUpdate(map<string,Mat>& values, 
+                                                          map<string,Mat>& gradients, 
+                                                          TVec<string> additional_input_gradients)
+{
+    map<string,Mat> all_gradients;
+    TVec<string> port_names = getPorts();
+    TVec<Mat*> ports_value(nPorts());
+    TVec<Mat*> ports_gradient(nPorts());
+    map<string,Mat>::iterator it=values.begin();
+    for (;it!=values.end();++it)
+        ports_value[getPortIndex(it->first)]= &it->second;
+    it=gradients.begin();
+    for (;it!=gradients.end();++it)
+        ports_gradient[getPortIndex(it->first)]= &it->second;
+    for (int i=0;i<additional_input_gradients.length();i++)
+    {
+        Mat port_value = values[additional_input_gradients[i]];
+        // the additional input gradients are to be initialized as zero matrices
+        Mat* port_gradient = new Mat(port_value.length(),port_value.width());
+        port_gradient->resize(0,port_value.width());
+        ports_gradient[getPortIndex(additional_input_gradients[i])]= port_gradient;
+    }
+    bpropAccUpdate(ports_value,ports_gradient);
+    for (it=gradients.begin();it!=gradients.end();++it)
+        all_gradients[it->first]=it->second;
+    for (int i=0;i<additional_input_gradients.length();i++)
+        all_gradients[additional_input_gradients[i]]= 
+            *ports_gradient[getPortIndex(additional_input_gradients[i])];
+    return all_gradients;
+}
+
 
 ////////////
 // build_ //

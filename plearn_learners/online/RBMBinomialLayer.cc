@@ -334,34 +334,20 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
         {
             target_i = target[i];
             activation_i = activation[i];
-            if(!fast_exact_is_equal(target_i,0.0))
-                // nll -= target[i] * pl_log(expectations[i]); 
-                // but it is numerically unstable, so use instead
-                // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
-                ret += target_i * tabulated_softplus(-activation_i);
-            if(!fast_exact_is_equal(target_i,1.0))
-                // ret -= (1-target_i) * pl_log(1-expectation_i);
-                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
-                //                         = log(1/(1+exp(x)))
-                //                         = -log(1+exp(x)) = -softplus(x)
-                ret += (1-target_i) * tabulated_softplus(activation_i);
+            ret += tabulated_softplus(activation_i) - target_i * activation_i;
+            // nll -= target * pl_log(expectation); 
+            // but it is numerically unstable, so use instead the following identity:
+            // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
+            //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
+            //     = act + softplus(-act) - target*act 
+            //     = softplus(act) - target*act
         }
     } else {
         for( int i=0 ; i<size ; i++ )
         {
             target_i = target[i];
             activation_i = activation[i];
-            if(!fast_exact_is_equal(target_i,0.0))
-                // nll -= target[i] * pl_log(expectations[i]); 
-                // but it is numerically unstable, so use instead
-                // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
-                ret += target_i * softplus(-activation_i);
-            if(!fast_exact_is_equal(target_i,1.0))
-                // ret -= (1-target_i) * pl_log(1-expectation_i);
-                // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
-                //                         = log(1/(1+exp(x)))
-                //                         = -log(1+exp(x)) = -softplus(x)
-                ret += (1-target_i) * softplus(activation_i);
+            ret += softplus(activation_i) - target_i * activation_i;
         }
     }
     return ret;
