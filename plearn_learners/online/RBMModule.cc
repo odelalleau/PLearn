@@ -1109,7 +1109,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* weights_grad = ports_gradient[getPortIndex("weights")];
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     Mat* contrastive_divergence_grad = NULL;
-    Mat* contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")];
+    Mat* contrastive_divergence = NULL;
+    if (compute_contrastive_divergence)
+        contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")];
     bool computed_contrastive_divergence = compute_contrastive_divergence && 
         contrastive_divergence && !contrastive_divergence->isEmpty();
 
