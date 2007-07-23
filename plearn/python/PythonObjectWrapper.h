@@ -832,7 +832,11 @@ std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj,
                                 print_traceback);
     
     PyObject *key, *value;
+#if PL_PYTHON_VERSION>=250
+    Py_ssize_t pos = 0;
+#else
     int pos = 0;
+#endif
     std::map<T,U> result;
 
     while (PyDict_Next(pyobj, &pos, &key, &value)) {
