@@ -248,7 +248,7 @@ public:
     //!(see MStep() for more details)
     int transformDistributionPeriod;
     int transformDistributionOffset;
-    
+
     //!This parameter have to be defined if the transformation distribution
     //!is learned using a MAP procedure. We suppose that this distribution have a a multinomial form
     //(u1,u2,...,uK) with dirichlet prior probability : 
@@ -258,9 +258,11 @@ public:
     real transformDistributionAlpha;
 
 
-    //!tells us when to update the transformation parameters
+    //!tells us when to update the transformation matrices and bias
     int transformsPeriod;
     int transformsOffset;
+    int biasPeriod;
+    int biasOffset;
 
 
     //PARAMETERS OF THE DISTRIBUTION
@@ -825,9 +827,17 @@ private:
     //!NOTE :  alpha =1 ->  no regularization
     void MStepTransformDistributionMAP(real alpha);
 
-    //!maximization step with respect to transformation parameters
+
+
+    //!maximization step with respect to transformation matrices
     //!(MAP version)
     void MStepTransformations();
+    
+
+    //!maximization step with respect to transformation bias
+    //!(MAP version)
+    void MStepBias();
+    
     
     //!maximization step with respect to noise variance
     void MStepNoiseVariance();

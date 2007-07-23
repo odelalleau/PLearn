@@ -72,8 +72,10 @@ TransformationLearner::TransformationLearner():
     transformDistributionPeriod(UNDEFINED),
     transformDistributionOffset(UNDEFINED),
     transformDistributionAlpha(TRANSFORM_DISTRIBUTION_ALPHA_NO_REG),
-    transformsPeriod(1),
-    transformsOffset(0),
+    transformsPeriod(UNDEFINED),
+    transformsOffset(UNDEFINED),
+    biasPeriod(UNDEFINED),
+    biasOffset(UNDEFINED),
     noiseVariance(UNDEFINED),
     transformsVariance(1.0),
     nbTransforms(2),
@@ -209,12 +211,23 @@ void TransformationLearner::declareOptions(OptionList& ol)
                  "transformsPeriod",
                  &TransformationLearner::transformsPeriod,
                  OptionBase::buildoption,
-                 "time interval between two updates of the transformations parameters");
+                 "time interval between two updates of the transformations matrices");
    declareOption(ol,
                  "transformsOffset",
                  &TransformationLearner::transformsOffset,
                  OptionBase::buildoption,
-                 "time of the first update of the transformations parameters");
+                 "time of the first update of the transformations matrices");
+   declareOption(ol,
+                 "biasPeriod",
+                 &TransformationLearner::biasPeriod,
+                 OptionBase::buildoption,
+                 "time interval between 2 updates of the transformations bias (if any)");
+
+   declareOption(ol,
+                 "biasOffset",
+                 &TransformationLearner::biasOffset,
+                 OptionBase::buildoption,
+                 "time of the first update of the transformations bias (if any)");
 
    declareOption(ol, 
                  "noiseVariance",
@@ -515,7 +528,11 @@ void TransformationLearner::declareMethods(RemoteMethodMap& rmm){
     declareMethod(rmm,
                   "MStepTransformations",
                   &TransformationLearner::MStepTransformations,
-                  (BodyDoc("maximization step with respect to transformation parameters (MAP version)")));
+                  (BodyDoc("maximization step with respect to transformation matrices (MAP version)")));
+    declareMethod(rmm,
+                  "MStepBias",
+                  &TransformationLearner::MStepBias,
+                  (BodyDoc("maximization step with respect to transformation bias (MAP version)")));
     declareMethod(rmm,
                   "MStepNoiseVariance",
                   &TransformationLearner::MStepNoiseVariance,
@@ -797,7 +814,24 @@ void TransformationLearner::variance(Mat& covar) const
 //!WARNING: the trainset ("train_set") must be given
 void TransformationLearner::trainBuild(){
     
-    
+    int nbOptimizations =1;
+    int defaultTransformsOffset =0;
+    int defaultBiasOffset ;
+    int defaultNoiseVarianceOffset ;
+    int defaultTransformDistributionOffset ;
+    if(withBias){
+        defaultBiasOffset = nbOptimizations ;
+        nbOptimizations ++;
+    }
+    if(learnNoiseVariance){
+        defaultNoiseVarianceOffset = nbOptimizations;
+        nbOptimizations ++;
+    }
+    if(learnTransformDistribution){
+        defaultTransformDistributionOffset = nbOptimizations;
+        nbOptimizations ++;
+    }
+
     transformsSD = sqrt(transformsVariance);
     
     //DIMENSION VARIABLES
@@ -831,27 +865,30 @@ void TransformationLearner::trainBuild(){
     
     if(withBias){
         biasSet = Mat(nbTransforms,inputSpaceDim);
+        if(biasPeriod == UNDEFINED || biasOffset == UNDEFINED){
+            biasPeriod = nbOptimizations;
+            biasOffset = defaultBiasOffset;
+        }
     }
-    
+    else{
+        biasPeriod = UNDEFINED;
+        biasOffset = UNDEFINED;
+    }
+
     initTransformsParameters();
 
+  
    
     if(transformsPeriod == UNDEFINED || transformsOffset == UNDEFINED){
-        if(learnNoiseVariance){
-            transformsPeriod = 2;
-            transformsOffset = 1;
-        }
-        else{
-            transformsPeriod = 1;
-            transformsOffset = 0;
-        }
+        transformsPeriod = nbOptimizations;
+        transformsOffset = defaultTransformsOffset;
     }
 
     //training parameters for noise variance
     if(learnNoiseVariance){
         if(noiseVariancePeriod == UNDEFINED || noiseVarianceOffset == UNDEFINED){
-            noiseVariancePeriod = 2;
-            noiseVarianceOffset = 1;
+            noiseVariancePeriod = nbOptimizations;
+            noiseVarianceOffset = defaultNoiseVarianceOffset;
         }
         if(regOnNoiseVariance){
             if(noiseAlpha < 1)
@@ -864,6 +901,10 @@ void TransformationLearner::trainBuild(){
             noiseAlpha = NOISE_ALPHA_NO_REG;
             noiseBeta = NOISE_BETA_NO_REG;
         }
+    }
+    else{
+        noiseVariancePeriod = UNDEFINED;
+        noiseVarianceOffset = UNDEFINED;
     }
     
     //initialize the noise variance
@@ -879,8 +920,8 @@ void TransformationLearner::trainBuild(){
      //training parameters for transformation distribution
      if(learnTransformDistribution){
          if(transformDistributionPeriod == UNDEFINED || transformDistributionOffset == UNDEFINED){
-             transformDistributionPeriod = 1;
-             transformDistributionOffset = 0;
+             transformDistributionPeriod = nbOptimizations;
+             transformDistributionOffset = defaultTransformDistributionOffset;
          }
          if(regOnTransformDistribution){
              if(transformDistributionAlpha<=0){
@@ -890,6 +931,11 @@ void TransformationLearner::trainBuild(){
                  transformDistributionAlpha = TRANSFORM_DISTRIBUTION_ALPHA_NO_REG;
              }
          }
+     }
+     else{
+         transformDistributionPeriod = UNDEFINED;
+         transformDistributionOffset = UNDEFINED;
+         
      }
 
 
@@ -980,7 +1026,7 @@ void TransformationLearner::generatorBuild( int inputSpaceDim_,
     if(noiseBeta <= 0){
         noiseBeta = 1;
     }
-    if(noiseVariance_ == UNDEFINED){
+    if(noiseVariance_ < 0){
         initNoiseVariance();
     }
     else{
@@ -2002,6 +2048,8 @@ void TransformationLearner::MStep()
         MStepTransformDistribution();
     if(stage % transformsPeriod == transformsOffset)
         MStepTransformations();
+    if(stage % biasPeriod == biasOffset)
+        MStepBias();
     
 }
 
@@ -2047,7 +2095,7 @@ void TransformationLearner::MStepTransformDistributionMAP(real alpha)
     transformDistribution << newDistribution ;
 }
 
-//!maximization step with respect to transformation parameters
+//!maximization step with respect to transformation matrices
 //!(MAP version)
 void TransformationLearner::MStepTransformations()
 {
@@ -2088,6 +2136,42 @@ void TransformationLearner::MStepTransformations()
     }  
 }
  
+//!maximization step with respect to transformation bias
+//!(MAP version)
+void TransformationLearner::MStepBias(){
+    Mat  newBiasSet;
+    newBiasSet.resize(nbTransforms,inputSpaceDim);
+    for(int i=0; i<nbTransforms; i++){
+        for(int j =0; j<inputSpaceDim; j++){
+            newBiasSet[i][j]= 0; 
+        }
+    }
+    int transformIdx;
+    real proba;
+    real w;
+    real sum = INIT_weight(0);
+    Vec reconstruction;
+    reconstruction.resize(inputSpaceDim);
+    for(int idx=0; idx<nbReconstructions ; idx++){
+        transformIdx = reconstructionSet[idx].transformIdx;
+        w = reconstructionSet[idx].weight;
+        proba = PROBA_weight(w);
+        sum = SUM_weights(sum, w);
+        seeNeighbor(reconstructionSet[idx].neighborIdx);
+        if(transformFamily == TRANSFORM_FAMILY_LINEAR){
+            transposeProduct(reconstruction,transforms[transformIdx],neighbor);
+        }
+        else{
+            transposeProduct(reconstruction,transforms[transformIdx],neighbor);
+            reconstruction += neighbor;
+        }
+        seeTarget(reconstructionSet[idx].targetIdx);
+        newBiasSet += proba*(target - reconstruction);
+    }
+    newBiasSet = newBiasSet/( noiseVariance/transformsVariance + PROBA_weight(sum) );
+    biasSet << newBiasSet;
+}
+
 
 //!maximization step with respect to noise variance
 void TransformationLearner::MStepNoiseVariance()
