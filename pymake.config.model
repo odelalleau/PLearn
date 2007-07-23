@@ -651,7 +651,7 @@ cpp_variables += ['PL_PYTHON_VERSION']
 #####  Mathematical Libraries  ##############################################
 
 lapack_linkeroptions = '-llapack'
-blas_linkeroptions   = '-lblas -lg2c '
+blas_linkeroptions   = '-lblas'
 
 # Jasmin : In OS X, there is a framework with blas and lapack
 if platform=='darwin':
