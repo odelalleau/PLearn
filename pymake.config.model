@@ -248,15 +248,18 @@ linkeroptions_tail = ''
 ### find a better way to know where to find the libraries.
 ### TODO Should find a way to automatically find python version ?
 if not 'nopython' in optionargs:
+    # First find which version of python is installed.
+    pyver = sys.version.split()[0][0:3]
+    pyoption = 'python%s' % pyver.replace('.', '')
     if domain_name.endswith('iro.umontreal.ca'):
-        optionargs += [ 'python24' ]
-        python_version = '2.4'
+        optionargs += [ pyoption ]
+        python_version = pyver
         python_lib_root = '/usr/lib'
         if platform == 'cygwin':
             numpy_includedirs = [ ]
-            numpy_site_packages = '$HOME/local-cygwin/lib/python2.4/site-packages/numarray'
+            numpy_site_packages = '$HOME/local-cygwin/lib/python%s/site-packages/numarray' % pyver
         elif platform == 'win32':
-            python_version = '24'
+            python_version = '2.4'
             python_lib_root = ''
             linkeroptions_tail += '-L/cygdrive/r/python2.4_mingw'
             numpy_site_packages = join(homedir, \
@@ -265,7 +268,7 @@ if not 'nopython' in optionargs:
         else:
             numpy_includedirs = [ '/u/lisa/local/' + target_platform + '/include/' ]
             ### NB: The '-lutil' is necessary on i386 LISA computers.
-            numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python2.4/site-packages/numarray -lutil'
+            numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python%s/site-packages/numarray -lutil' % pyver
     elif domain_name.endswith('.ms'):
         numpy_includedirs = []
         numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
@@ -293,7 +296,7 @@ if not 'nopython' in optionargs:
         elif 'python25' in optionargs:
             python_version = '2.5'
         else:
-            python_version = '2.3'
+            python_version = pyver
 
         python_lib_root = '/usr/lib'
         numpy_site_packages = '/usr/lib/python'+python_version+'/site-packages/numarray'
@@ -648,7 +651,7 @@ cpp_variables += ['PL_PYTHON_VERSION']
 #####  Mathematical Libraries  ##############################################
 
 lapack_linkeroptions = '-llapack'
-blas_linkeroptions   = '-lblas -lg2c'
+blas_linkeroptions   = '-lblas -lg2c '
 
 # Jasmin : In OS X, there is a framework with blas and lapack
 if platform=='darwin':
