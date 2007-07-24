@@ -26,7 +26,7 @@ def execute(object, tasks, use_threads = False):
             if hasattr(object, method):
                 getattr(object, method)(*args)
             else: # assume it is a function taking the args as arguments, not a method
-                method(*args)
+                eval(method)(*args)
         lock.release()
 
     if plearn.bridgemode.useserver and use_threads:
@@ -37,7 +37,7 @@ def execute(object, tasks, use_threads = False):
             if hasattr(object, method):
                 getattr(object, method)(*args)
             else: # assume it is a function taking the object as first argument, not a method
-                method(*args)
+                eval(method)(*args)
         return True
 
 def acquire_server(use_threads = False):
@@ -233,7 +233,7 @@ each of the other columns (just like the result of the call to merge_schedules).
             for k in range(0,n_test_costs):
                 err = costs[k]
                 results[i, 1+n_schedules+n_train_costs+(j*n_test_costs)+k] = err
-                costname = costnames[cost_indices[k]]
+                costname = test_costnames[k]
                 if logfile:
                     print >>logfile, costname, "=", err,
                 if k==cost_to_select_best and j==0 and err < best_err:
@@ -425,7 +425,6 @@ def train_adapting_lr(learner,
         test_costnames = [ name for name in test_costnames
                            if name in selected_costnames ]
 
-    #cost_indices = [costnames.index(name) for name in selected_costnames]
     n_tests = len(testsets)
     #n_costs = len(cost_indices)
     n_train_costs = len(train_costnames)
@@ -523,6 +522,7 @@ def train_adapting_lr(learner,
             # Report approximate training statistics
             if logfile:
                 print >>logfile, 'train :',
+            ts=candidate.getTrainStatsCollector()
             for k, costname in zip(range(n_train_costs), train_costnames):
                 err = ts.getStat('E['+costname+']')
                 results[t, 2+k] = err
@@ -535,7 +535,7 @@ def train_adapting_lr(learner,
                     print >>logfile, " test" + str(j+1),": ",
                 for k in range(0,n_test_costs):
                     err = costs[k]
-                    costname = costnames[cost_indices[k]]
+                    costname = test_costnames[k]
                     results[t, 2+n_train_costs+(j*n_test_costs)+k] = err
                     if logfile:
                         print >>logfile, costname, "=", err,
