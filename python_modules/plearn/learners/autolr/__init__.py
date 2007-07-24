@@ -1,3 +1,4 @@
+
 from math import *
 from numarray import *
 from plearn.bridge import *
@@ -22,7 +23,10 @@ def execute(object, tasks, use_threads = False):
         # we will only send our job to the server if nothing is already running
         lock.acquire()
         for method, args in tasks: # do each task sequentially
-            getattr(object, method)(*args)
+            if hasattr(object, method):
+                getattr(object, method)(*args)
+            else: # assume it is a function taking the args as arguments, not a method
+                method(*args)
         lock.release()
 
     if plearn.bridgemode.useserver and use_threads:
@@ -30,7 +34,10 @@ def execute(object, tasks, use_threads = False):
         return t
     else:
         for method, args in tasks:
-            getattr(object, method)(*args)
+            if hasattr(object, method):
+                getattr(object, method)(*args)
+            else: # assume it is a function taking the object as first argument, not a method
+                method(*args)
         return True
 
 def acquire_server(use_threads = False):
@@ -86,6 +93,16 @@ def assign(object, use_threads = False):
         lock.release()
     return o
 
+def testlearner(learner,dataset,costs=[],ts=None):
+    if not ts:
+        ts = pl.VecStatsCollector()
+        if plearn.bridgemode.useserver:
+            ts=learner.server.new(ts)
+    learner.test(dataset,ts,0,0)
+    del costs[:]
+    for k in range(len(learner.getTestCostNames())):
+        costs.append(ts.getStat("E["+str(k)+"]"))
+    return costs
 
 def merge_schedules(schedules):
     """Merge several learning rate schedules into a kind of multi-schedule
@@ -210,15 +227,13 @@ each of the other columns (just like the result of the call to merge_schedules).
 
         # Report error on test sets
         for j in range(n_tests):
-            ts = pl.VecStatsCollector()
-            if plearn.bridgemode.useserver:
-                ts=serv.new(ts)
-            learner.test(testsets[j],ts,0,0)
+            costs = testlearner(learner,testsets[j])
             if logfile:
                 print >>logfile, "At stage ", learner.stage, " test" + str(j+1),": ",
-            for k, costname in zip(range(n_test_costs), test_costnames):
-                err = ts.getStat("E["+costname+"]")
+            for k in range(0,n_test_costs):
+                err = costs[k]
                 results[i, 1+n_schedules+n_train_costs+(j*n_test_costs)+k] = err
+                costname = costnames[cost_indices[k]]
                 if logfile:
                     print >>logfile, costname, "=", err,
                 if k==cost_to_select_best and j==0 and err < best_err:
@@ -283,11 +298,7 @@ initial_learner is unchanged (we make deep copies internally).
         learner.changeOptions(options)
         learner.nstages = int(nstages+initial_stage)
         learner.train()
-        ts = pl.VecStatsCollector()
-        if plearn.bridgemode.useserver:
-            ts=serv.new(ts)
-        learner.test(testset,ts,0,0)
-        err=ts.getStat("E["+str(cost_to_select_best)+"]")
+        err=testlearner(learner,testset)[cost_to_select_best]
         if logfile:
             print >>logfile, "*trying* initial learning rate ",lr(i), \
                   " and obtained err=",err," on cost ",cost_to_select_best
@@ -484,12 +495,8 @@ def train_adapting_lr(learner,
             tasks = [('train', ())]
             stats = []
             for j in range(0,n_tests):
-                ts = pl.VecStatsCollector()
-                if plearn.bridgemode.useserver:
-                    # no threads are running so we don't need to lock here
-                    ts = candidate.server.new(ts)
-                stats.append(ts)
-                tasks.append(('test', (testsets[j], ts, 0, 0)))
+                stats.append([])
+                tasks.append(('testlearner', (candidate,testsets[j],stats[j])))
             active_stats.append(stats)
             threads.append(execute(candidate, tasks, use_threads))
 
@@ -513,7 +520,6 @@ def train_adapting_lr(learner,
             results[t,1] = all_lr[active]
             if logfile:
                 print >>logfile, "candidate ",active,":",
-
             # Report approximate training statistics
             if logfile:
                 print >>logfile, 'train :',
@@ -524,11 +530,12 @@ def train_adapting_lr(learner,
                     print >>logfile, costname, '=', err,
 
             # Report testing statistics
-            for j, ts in zip(range(0,n_tests), stats):
+            for j, costs in zip(range(0,n_tests), stats):
                 if logfile:
                     print >>logfile, " test" + str(j+1),": ",
-                for k, costname in zip(range(n_test_costs), test_costnames):
-                    err = ts.getStat("E["+costname+"]")
+                for k in range(0,n_test_costs):
+                    err = costs[k]
+                    costname = costnames[cost_indices[k]]
                     results[t, 2+n_train_costs+(j*n_test_costs)+k] = err
                     if logfile:
                         print >>logfile, costname, "=", err,

@@ -65,7 +65,8 @@ def rbm(name,
         compute_nll=False,
         ngcd=1,
         have_reconstruction=True,
-        compute_contrastive_divergence=True):
+        compute_contrastive_divergence=True,
+        use_Gaussian_inputs=False):
     """Construct an RBMModule"""
     # Return a standard binomial RBM.
     conx = pl.RBMMatrixConnection(
@@ -78,7 +79,9 @@ def rbm(name,
             compute_contrastive_divergence = compute_contrastive_divergence,
             compute_log_likelihood = compute_nll,
             n_Gibbs_steps_CD = ngcd,
-            visible_layer = pl.RBMBinomialLayer(size = visible_size),
+            visible_layer = ifthenelse(use_Gaussian_inputs,
+                                       pl.RBMGaussianLayer(size = visible_size),
+                                       pl.RBMBinomialLayer(size = visible_size)),
             hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
             connection = conx,
             reconstruction_connection = ifthenelse(have_reconstruction,
