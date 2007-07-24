@@ -793,9 +793,9 @@ void PStream::readAsciiNum(double &x)
         unget();
         sscanf(tmpbuf,"%lf",&x);
         break;
+        if(l==0)
+            PLERROR("In PStream::readAsciiNum - we read (%c) while we expected a digit",c);
     }
-    if(l==0)
-        PLERROR("In PStream::readAsciiNum - we read (%c) while we expected a digit",c);
 }
 
 PStream& PStream::operator=(const PStream& pios)
