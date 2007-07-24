@@ -1643,7 +1643,7 @@ class FileInfo:
             elif self.hasmain:
                 self.corresponding_output = join(self.filedir, objsdir, self.filebase)
                 # We append options to the file name if they are not appended to the objsdir name
-                for opt in getOptions(options_choices,optionargs):
+                for opt in options:
                     pyopt = pymake_options_defs[opt]
                     if not pyopt.in_output_dirname:
                         self.corresponding_output = self.corresponding_output + '_' + opt
@@ -2627,7 +2627,7 @@ def main( args ):
                 optionargs.append('tmp')
 
     # I do multiple for on optionarfs, as their is a bug that make that not all
-    # elements of optionsargs are computed
+    # elements of optionargs are computed
     for option in optionargs:
         if option[0] == 'v':
             remove_verbosity_option = True
@@ -2679,6 +2679,7 @@ def main( args ):
     if 'dependency' in optionargs:
         if 1 <= len(otherargs) <= 2:
             optionargs.remove('dependency')
+            options = getOptions(options_choices,optionargs)
             find_dependency(otherargs)
             sys.exit()
         else:
