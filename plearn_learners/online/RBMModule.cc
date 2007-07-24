@@ -58,7 +58,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - 'hidden.state' : expectations of the hidden (normally output) layer\n"
     "  - 'hidden_activations.state' : activations of hidden units (given visible)\n"
     "  - 'visible_sample' : random sample obtained on visible units (input or output port)\n"
-    "  - 'visible_expectation' : expectation of visible units (output port ONLY, for sampling)\n"
+    "  - 'visible_expectation' : expectation of visible units (output port ONLY)\n"
+    "  - 'visible_activation' : ectation of visible units (output port ONLY)\n"
     "  - 'hidden_sample' : random sample obtained on hidden units\n"
     "  - 'energy' : energy of the joint (visible,hidden) pair or free-energy\n"
     "               of the visible (if given) or of the hidden (if given).\n"
@@ -281,6 +282,7 @@ void RBMModule::build_()
     addPortName("hidden_activations.state");
     addPortName("visible_sample");
     addPortName("visible_expectation");
+    addPortName("visible_activation");
     addPortName("hidden_sample");
     addPortName("energy");
     addPortName("hidden_bias");
@@ -306,6 +308,7 @@ void RBMModule::build_()
         port_sizes(getPortIndex("visible"), 1) = visible_layer->size;
         port_sizes(getPortIndex("visible_sample"), 1) = visible_layer->size;
         port_sizes(getPortIndex("visible_expectation"), 1) = visible_layer->size;
+        port_sizes(getPortIndex("visible_activation"), 1) = visible_layer->size;
     }
     if (hidden_layer) {
         port_sizes(getPortIndex("hidden.state"), 1) = hidden_layer->size;
@@ -667,6 +670,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
     Mat* visible_sample = ports_value[getPortIndex("visible_sample")];
     Mat* visible_expectation = ports_value[getPortIndex("visible_expectation")];
+    Mat* visible_activation = ports_value[getPortIndex("visible_activation")];
     Mat* hidden_sample = ports_value[getPortIndex("hidden_sample")];
     Mat* energy = ports_value[getPortIndex("energy")];
     Mat* neg_log_likelihood = ports_value[getPortIndex("neg_log_likelihood")];
@@ -747,20 +751,20 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         if (partition_function_is_stale && !during_training)
         {
-	    computePartitionFunction();
+            computePartitionFunction();
             partition_function_is_stale=false;
         }
         if (visible && !visible->isEmpty()
             && hidden && !hidden->isEmpty())
         {
-            // neg-log-likelihood(visible,hidden) = energy(visible,visible) + log(partition_function)
+            // neg-log-likelihood(visible,hidden) = energy(visible,hidden) + log(partition_function)
             computeEnergy(*visible,*hidden,*neg_log_likelihood);
             *neg_log_likelihood += log_partition_function;
         }
         else if (visible && !visible->isEmpty())
         {
             // neg-log-likelihood(visible) = free_energy(visible) + log(partition_function)
-            computeFreeEnergyOfVisible(*visible,*neg_log_likelihood);
+            computeFreeEnergyOfVisible(*visible,*neg_log_likelihood,hidden_act);
             *neg_log_likelihood += log_partition_function;
         }
         else if (hidden && !hidden->isEmpty())
@@ -770,6 +774,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             *neg_log_likelihood += log_partition_function;
         }
         else PLERROR("RBMModule: neg_log_likelihood currently computable only of the visible as inputs");
+        found_a_valid_configuration = true;
     }
 
     // REGULAR FPROP
@@ -792,6 +797,31 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         // Since we return below, the other ports must be unused.
         //PLASSERT( !visible_sample && !hidden_sample );
+        found_a_valid_configuration = true;
+    }
+
+    // DOWNWARD FPROP
+    // we are given hidden  and we want to compute the visible or visible_activation
+    if ( hidden && !hidden->isEmpty() && 
+         ((visible && visible->isEmpty()) ||
+          (visible_activation && visible_activation->isEmpty())) )
+    {
+        computeVisibleActivations(*hidden,true);
+        if (visible_activation)
+        {
+            PLASSERT_MSG(visible_activation->isEmpty(),"visible_activation should be an output");
+            visible_activation->resize(visible_layer->activations.length(),
+                                       visible_layer->size);
+            *visible_activation << visible_layer->activations;
+        }
+        if (visible)
+        {
+            PLASSERT_MSG(visible->isEmpty(),"visible should be an output");
+            visible_layer->computeExpectations();
+            const Mat expectations=visible_layer->getExpectations();
+            visible->resize(expectations.length(),visible_layer->size);
+            *visible_activation << visible_layer->activations;
+        }
         found_a_valid_configuration = true;
     }
 

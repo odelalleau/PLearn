@@ -381,9 +381,17 @@ map<string,Mat> OnlineLearningModule::namedFprop(map<string,Mat>& inputs, TVec<s
     TVec<Mat*> ports_value(nPorts());
     map<string,Mat>::iterator it=inputs.begin();
     for (;it!=inputs.end();++it)
-        ports_value[getPortIndex(it->first)]= &it->second;
+    {
+        int port_index=getPortIndex(it->first);
+        PLASSERT_MSG(port_index>=0,"Unknown port name: "+it->first);
+        ports_value[port_index]= &it->second;
+    }
     for (int i=0;i<wanted_outputs.length();i++)
-        ports_value[getPortIndex(wanted_outputs[i])]= new Mat(0,0);
+    {
+        int port_index=getPortIndex(wanted_outputs[i]);
+        PLASSERT_MSG(port_index>=0,"Unknown port name: "+wanted_outputs[i]);
+        ports_value[port_index]= new Mat(0,0);
+    }
     fprop(ports_value);
     for (it=inputs.begin();it!=inputs.end();++it)
         outputs[it->first]=it->second;
