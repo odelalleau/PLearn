@@ -1,55 +1,23 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env python
+import sys,os,re
 
-## This file is a modification made to the file apdispatch by Frederic Bastien
-## To make it use dbi.py to launch many experience in one command line
-## condordispatch
+ScriptName="launchdbi.py"
+ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>]'
+LongHelp="""
+Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
 
-## Copyright (C) 2004 ApSTAT Technologies Inc. 
-##
-## Redistribution and use in source and binary forms, with or without
-## modification, are permitted provided that the following conditions are met:
-## 
-##  1. Redistributions of source code must retain the above copyright
-##     notice, this list of conditions and the following disclaimer.
-## 
-##  2. Redistributions in binary form must reproduce the above copyright
-##     notice, this list of conditions and the following disclaimer in the
-##     documentation and/or other materials provided with the distribution.
-## 
-##  3. The name of the authors may not be used to endorse or promote
-##     products derived from this software without specific prior written
-##     permission.
-## 
-## THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
-## IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-## OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
-## NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-## SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-## TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-## PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-## LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-## NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-## SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-## 
-## This file is part of the PLearn library. For more information on the PLearn
-## library, go to the PLearn Web site at www.plearn.org
-
-$ScriptName="lauchdbi.py";
-$ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>'."\n";
-$LongHelp=<<EOUSAGE;
-Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--file=FILEPATH] [--req="CONDOR_REQUIREMENT"]<command-template>
-Dispatches jobs on Condor with dbi.py.  
+%s
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
 The arguments may contain segments of the form {{a,b,c,d}}, which trigger
-parallel dispatch: a separate "cluster --execute" command is issued for
+parallel dispatch: a separate 'cluster --execute' command is issued for
 the rest of the command template, the first time with value a, the second
 time with value b, etc.  For example, the command (NOTE: THERE MUST NOT
-BE ANY SPACES WITHIN THE "numhidden={{5,10,25}}" part and the quotes are
+BE ANY SPACES WITHIN THE 'numhidden={{5,10,25}}' part and the quotes are
 important to avoid shell misinterpretation) :
 
-  dbidispatch aplearn myscript.plearn "numhidden={{5,10,25}}"
+  dbidispatch aplearn myscript.plearn 'numhidden={{5,10,25}}'
 
 is equivalent to launching three jobs in parallel on the cluster:
 
@@ -60,7 +28,7 @@ is equivalent to launching three jobs in parallel on the cluster:
 If several arguments contain {{ }} forms, all combinations of arguments
 are taken, and the jobs are all launched in parallel.  For instance
 
-  dbidispatch aplearn myscript.plearn "numhidden={{10,25}}" "wd={{0.01,0.001}}"
+  dbidispatch aplearn myscript.plearn 'numhidden={{10,25}}' 'wd={{0.01,0.001}}'
 
 is equivalent to:
 
@@ -71,184 +39,155 @@ is equivalent to:
 
 The optional parameter '--test' make that cdispatch generate the file $ScriptName, but do not execute it. That way you can see what cdispatch generate.
 
-The optional parameter '--req="CONDOR_REQUIREMENT"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '"' must be escaped 3 times! So the requirement (Machine == "computer.example.com") must be writed like that:
+The optional parameter '--req=\"CONDOR_REQUIREMENT\"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:
 
-cdispatch "--req=Machine==\\\\\\"computer.example.com\\\\\\""
+cdispatch \"--req=Machine==\\\\\\\"computer.example.com\\\\\\\"\"
 or
-cdispatch '--req=Machine==\\"computer.example.com\\"'
+cdispatch '--req=Machine==\\\"computer.example.com\\\"' 
 
-It the the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
+If the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
 
 cdispatch --test --file=tests
 
 In the file, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
-EOUSAGE
-    ;
+"""%ShortHelp
 
-if (scalar(@ARGV) == 0) {
-    die $ShortHelp;
-}
+if len(sys.argv) == 1:
+    print ShortHelp
+    sys.exit(1)
+optionargs = []
+otherargs = []
+FILE = ""
+REQ = ""
+for argv in sys.argv[1:]:
 
-if($ARGV[0] eq "--help" || $ARGV[0] eq "-h"){
-    print $LongHelp;
-    exit;
-}
+    if argv == "--help" or argv == "-h":
+        print LongHelp
+        sys.exit(1)
+    elif argv == "--nolog":
+        optionargs.append(argv[2:])
+    elif argv == "--log":
+        optionargs.append(argv[2:])
+    elif argv == "--cluster" and not "local" in optionargs:
+        optionargs.append(argv[2:])
+    elif argv == "--local" and not "cluster" in optionargs:
+        optionargs.append(argv[2:])
+    elif argv == "--test":
+        optionargs.append(argv[2:])
+    elif argv[0:7] == "--file=":
+        FILE = argv[7:]
+        optionargs.append(argv[2:])
+    elif argv[0:6] == "--req=":
+        REQ = argv[6:]
+    elif argv[0:1] == '-':
+	print "Unknow parameter (%s)",argv
+	print ShortHelp
+        sys.exit(1)
+    else:
+        otherargs.append(argv)
+        
+if len(otherargs) == 0 and FILE == "":
+    print ShortHelp
+    sys.exit(1)
 
-if($ARGV[0] eq "--nolog" ){
-    $LOG = 0;
-    shift;
-} elsif($ARGV[0] eq "--log" ) {
-    $LOG = 1;
-    shift;
-} else {
-    $LOG = 0;
-}
 
-if ($ARGV[0] eq "--cluster") {
-    $CLUSTER = 1;
-    $LOCAL = 0;
-    shift;
-} elsif ($ARGV[0] eq "--local") {
-    $CLUSTER = 0;
-    $LOCAL = 1;
-    shift;
-} else {
-    $CLUSTER = 0;
-    $LOCAL = 0;
-}
+if "local" in optionargs and "cluster" in optionargs:
+    print "--cluster and --local can't be used together"
+    sys.exit(1)
 
-if ($ARGV[0] eq "--test") {
-    $TEST = 1;
-    shift;
-}else {
-    $TEST = 0;
-}
 
-if (substr($ARGV[0],0,7) eq "--file=") {
-    $FILE = substr($ARGV[0],7);
-    shift;
-}else {
-    $FILE = "";
-}
+SCRIPT=open(ScriptName,'w');
+SCRIPT.write(
+"""#! /usr/bin/env python
+#%s
+from plearn.parallel.dbi import DBI
+jobs = DBI([
+"""% " ".join(sys.argv))
+def generate_combination(repl):
+    if repl == []:
+        return []
+    else:
+        res = []
+        x = repl[0]
+        res1 = generate_combination(repl[1:])
+        for y in x:
+            if res1 == []:
+                res.append(y)
+            else:
+                for r in res1:
+                    res.append(y+" "+r)
+        return res
 
-if (scalar(@ARGV) == 0) {
-    die $ShortHelp;
-}
-
-if(scalar(@ARGV) != 0) {
-    if (substr($ARGV[0],0,6) eq "--req=") {
-	$REQ = substr($ARGV[0],6);
-	shift;
-    } elsif (substr($ARGV[0],0,1) eq '-'){
-	print "Unknow parameter ($ARGV[0]) or wrong parameter order\n";
-	die $ShortHelp
-    } else {
-	$REQ = "";
-    }
-} else {
-    $REQ = "";
-}
-#$command_name = shift;
-
-#print $command_name, "\n";
-#for ($i=0; $i < scalar(@ARGV); ++$i) {
-#    print "Root = ", $ARGV[$i],
-#    "\tArglist = (", join(",",@{$repl[$i]}),")\n";
-#}
-open(SCRIPT,">$ScriptName");
-print SCRIPT "#! /usr/bin/env python\n".
-    "from plearn.parallel.dbi import DBI\n".
-    "jobs = DBI([\n";
-
-$nbcommand=0;
-
-#print the command
-if ($FILE ne "") {
-    open (FD, $FILE)|| die "couldn't open the file $FILE!";
-    while ($record = <FD>) {
-	my @rec = split(" ", $record, 1024);
-	$nbcommand+=printAndExpendArgs(@rec);
-	}
-    
-    close(FD);
-} else {
-    $nbcommand=printAndExpendArgs(@ARGV)
-}
-
-if($CLUSTER){
-    print SCRIPT "   ],'Cluster'";
-}elsif($LOCAL){
-    print SCRIPT "   ],'Local'";
-}else{
-    print SCRIPT "   ],'Condor'";
-}
-
-if ($REQ ne "") {
-    print SCRIPT ", requirements=\"$REQ\"";
-}
-
-if ($TEST) {
-    print SCRIPT ", test=True";
-}
-
-if($LOG) {
-    print SCRIPT ", dolog=True";
-} else {
-    print SCRIPT ", dolog=False";
-}
-print SCRIPT ")\n".
-    "jobs.run() \n".
-    "# There is $nbcommand command in the script\n";
-
-close(SCRIPT);
-system("chmod +x $ScriptName");
-
-print "We generated $nbcommand command in the file $ScriptName\n";
-
-if ($TEST){
-    print "The script $ScriptName was not launched\n";
-} else {
-    print "Launching the script $ScriptName\n";
-    system("./$ScriptName");
-}
-
-sub printAndExpendArgs
-{
+def expendAndPrintArgs(sp):
 ### Find replacement lists in the arguments
-    my @repl = ();
-    foreach my $arg (@_) {
-	$arg =~ /{{(.*)}}/;
-	my @curargs = ("");
-	@curargs = split(",",$1) if $arg =~ /{{(.*)}}/;
-	push @repl, \@curargs;
-    }
+    repl = []
+    for arg in sp:
+        p = re.compile('\{\{\S*\}\}')
+        reg = p.search(arg)
+        if reg:
+#            print "reg:",reg.group()[2:-2]
+            curargs = reg.group()[2:-2].split(",")# if arg =~ /{{(.*)}}/
+#            print "curargs:",curargs
+            newcurargs = []
+            for curarg in curargs:
+                new = p.sub(curarg,arg)
+#                print "new:",new
+                newcurargs.append(new)
+            repl.append(newcurargs)
+        else:
+            repl.append([arg])
+#    print "repl: ",repl
+    argscombination = generate_combination(repl)
+    for arg in argscombination:
+        cmdstr = "".join(arg);
+	SCRIPT.write("   '%s',\n"%cmdstr)
+    return len(argscombination)
 
-    my @idx = (0) x @_;
-    my $nbcommand=0;
-    while ($idx[$#idx] < scalar(@{$repl[$#idx]})) {
-	### Compute current argument list
-	my @curargs;
-	for (my $i=0; $i < scalar(@idx); ++$i) {
-	    my $arg = $_[$i];
-	    if ($arg =~ /{{.*}}/) {
-		my $value = ($repl[$i])->[$idx[$i]];
-		$arg =~ s/{{.*}}/$value/;
-	    }
-	    push @curargs, $arg;
-	}
-	### Two passes are necessary to properly increment
-	for (my $i=0; $i < scalar(@idx); ++$i) {
-	    $idx[$i]++;
-	    last if $idx[$i] < scalar(@{$repl[$i]}) || $i == $#idx;
-	    $idx[$i] = 0;
-	}
-	
-	
-	###There are two distinct steps: command creation and command execution
-	### Command creation depending on cluster or direct launch:
-	$cmdstr = "" . join(" ",@curargs);
-	print SCRIPT "'$cmdstr',\n";
-	$nbcommand+=1;
-    }
-    return $nbcommand
-}
+nbcommand=0
+#print the command
+if FILE != "":
+    FD = open(FILE,'r')#|| die "couldn't open the file $FILE!";
+    for line in FD.readlines():
+        line = line.rstrip()
+	sp = line.split(" ")
+	nbcommand+=expendAndPrintArgs(sp)
+    FD.close
+else:
+    nbcommand=expendAndPrintArgs(otherargs)
+
+
+if "cluster" in optionargs:
+    SCRIPT.write("   ],'Cluster'")
+elif "local" in optionargs:
+    SCRIPT.write("   ],'Local'")
+else:
+    SCRIPT.write("   ],'Condor'")
+
+
+if REQ != "":
+    SCRIPT.write(", requirements=\"$REQ\"")
+
+if "test" in optionargs:
+    SCRIPT.write(", test=True")
+
+if "log" in optionargs:
+    SCRIPT.write(", dolog=True")
+else:
+    SCRIPT.write(", dolog=False")
+
+SCRIPT.write( """)
+jobs.run()
+# There is %d command in the script"""%(nbcommand))
+
+SCRIPT.close()
+os.system("chmod +x %s"%(ScriptName));
+
+print "We generated %s command in the file"% nbcommand
+
+if "test" in optionargs:
+    print "The script %s was not launched"% ScriptName
+else:
+    print "Launching the script %s"% ScriptName
+    os.system("./%s"%(ScriptName))
+
+
