@@ -291,7 +291,9 @@ if not 'nopython' in optionargs:
         numpy_site_packages = '/sw/lib/python'+python_version+'/site-packages/numarray' 
         numpy_includedirs   = [ '/sw/include/python'+python_version]
     else:
-        if 'python24' in optionargs:
+        if 'python23' in optionargs:
+            python_version = '2.3'
+        elif 'python24' in optionargs:
             python_version = '2.4'
         elif 'python25' in optionargs:
             python_version = '2.5'
