@@ -7,7 +7,6 @@ Logging enabled for modules: DeepBeliefNet, RBMClassificationModule
 [DeepBeliefNet] build_() called
 [DeepBeliefNet] build_layers_and_connections() called
 [DeepBeliefNet] build_classification_cost() called
-[RBMClassificationModule] build_() called
 [DeepBeliefNet] train() called 
 [DeepBeliefNet]   training_schedule = 20 10 
 [DeepBeliefNet]   cumulative_schedule = 0 20 30 
