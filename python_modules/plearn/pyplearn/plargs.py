@@ -972,7 +972,8 @@ class plnamespace:
                 return attr
 
         def __setattr__(cls, key, value):
-            if key.startswith('_'):
+            if key.startswith('_') \
+               or (hasattr(cls, key) and callable(getattr(cls,key))):
                 type.__setattr__(cls,key,value)
             else:
                 try:
