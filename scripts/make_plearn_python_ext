@@ -32,6 +32,6 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 pushd $PLEARNDIR/python_modules/plearn/pyext
-pymake -python24 -so $* plext.cc
+pymake -so $* plext.cc
 ln -fs libplext.so plext.so
 popd
