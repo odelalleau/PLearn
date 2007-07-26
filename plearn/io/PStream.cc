@@ -792,9 +792,10 @@ void PStream::readAsciiNum(double &x)
         tmpbuf[l] = '\0';
         unget();
         sscanf(tmpbuf,"%lf",&x);
-        break;
         if(l==0)
-            PLERROR("In PStream::readAsciiNum - we read (%c) while we expected a digit",c);
+            PLERROR("In PStream::readAsciiNum - we read (%c) while we "
+                    "expected a digit", c);
+        break;
     }
 }
 
