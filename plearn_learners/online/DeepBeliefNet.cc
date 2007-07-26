@@ -489,28 +489,41 @@ void DeepBeliefNet::build_classification_cost()
             "This method has not been verified yet for minibatch "
             "compatibility");
 
-    PP<RBMMatrixConnection> last_to_target = new RBMMatrixConnection();
-    last_to_target->up_size = layers[n_layers-1]->size;
-    last_to_target->down_size = n_classes;
-    last_to_target->random_gen = random_gen;
-    last_to_target->build();
+    PP<RBMMatrixConnection> last_to_target;
+    if (classification_module)
+        last_to_target = classification_module->last_to_target;
+    if (!last_to_target ||
+         last_to_target->up_size != layers[n_layers-1]->size ||
+         last_to_target->down_size != n_classes ||
+         last_to_target->random_gen != random_gen)
+    {
+        // We need to (re-)create 'last_to_target', and thus the classification
+        // module too.
+        // This is not systematically done so that the learner can be
+        // saved and loaded without losing learned parameters.
+        last_to_target = new RBMMatrixConnection();
+        last_to_target->up_size = layers[n_layers-1]->size;
+        last_to_target->down_size = n_classes;
+        last_to_target->random_gen = random_gen;
+        last_to_target->build();
 
-    PP<RBMMultinomialLayer> target_layer = new RBMMultinomialLayer();
-    target_layer->size = n_classes;
-    target_layer->random_gen = random_gen;
-    target_layer->build();
+        PP<RBMMultinomialLayer> target_layer = new RBMMultinomialLayer();
+        target_layer->size = n_classes;
+        target_layer->random_gen = random_gen;
+        target_layer->build();
 
-    PLASSERT_MSG(n_layers >= 2, "You must specify at least two layers (the "
-            "input layer and one hidden layer)");
+        PLASSERT_MSG(n_layers >= 2, "You must specify at least two layers (the "
+                "input layer and one hidden layer)");
 
-    classification_module = new RBMClassificationModule();
-    classification_module->previous_to_last = connections[n_layers-2];
-    classification_module->last_layer =
-        (RBMBinomialLayer*) (RBMLayer*) layers[n_layers-1];
-    classification_module->last_to_target = last_to_target;
-    classification_module->target_layer = target_layer;
-    classification_module->random_gen = random_gen;
-    classification_module->build();
+        classification_module = new RBMClassificationModule();
+        classification_module->previous_to_last = connections[n_layers-2];
+        classification_module->last_layer =
+            (RBMBinomialLayer*) (RBMLayer*) layers[n_layers-1];
+        classification_module->last_to_target = last_to_target;
+        classification_module->target_layer = target_layer;
+        classification_module->random_gen = random_gen;
+        classification_module->build();
+    }
 
     classification_cost = new NLLCostModule();
     classification_cost->input_size = n_classes;
@@ -520,7 +533,7 @@ void DeepBeliefNet::build_classification_cost()
     joint_layer = new RBMMixedLayer();
     joint_layer->sub_layers.resize( 2 );
     joint_layer->sub_layers[0] = layers[ n_layers-2 ];
-    joint_layer->sub_layers[1] = target_layer;
+    joint_layer->sub_layers[1] = classification_module->target_layer;
     joint_layer->random_gen = random_gen;
     joint_layer->build();
 }
