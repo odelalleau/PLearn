@@ -68,8 +68,8 @@ const char* PythonCodeSnippet::InjectSetupSnippet =\
 "__injected__ = {}\n";
 
 const char* PythonCodeSnippet::SetCurrentSnippetVar =\
-// Completed by sprintf using the snippet's address casted to a long
-"_inject_import_.setCurrentSnippet(%d)\n";
+// Completed by sprintf using the snippet's address hex value
+"_inject_import_.setCurrentSnippet(%p)\n";
 
 const char* PythonCodeSnippet::ResetCurrentSnippetVar = \
 "_inject_import_.resetCurrentSnippet()\n";
@@ -114,7 +114,7 @@ PythonCodeSnippet::PythonCodeSnippet(const string& code,
       m_remap_python_exceptions(remap_python_exceptions),
       m_instance_params(),
       m_instance(),
-      m_handle(long(this)),
+      m_handle(this),
       m_compiled_code(),
       m_injected_functions(4),
       m_python_methods(4)
@@ -662,7 +662,7 @@ void PythonCodeSnippet::run()
     Py_XDECREF(res);
 }
 
-void PythonCodeSnippet::setCurrentSnippet(const long& handle) const
+void PythonCodeSnippet::setCurrentSnippet(const void* handle) const
 {
     PythonGlobalInterpreterLock gil;         // For thread-safety
     

@@ -322,7 +322,7 @@ protected:
     //! Call PLERROR if the code contains an error.
     PythonObjectWrapper compileGlobalCode(const string& code); //const;
 
-    void setCurrentSnippet(const long& handle) const;
+    void setCurrentSnippet(const void* handle) const;
     void resetCurrentSnippet() const;
     
     //! If no Python error, do nothing.  If an error occurred, convert the
@@ -340,7 +340,7 @@ protected:
 
 protected:
     //! The Python handle for *this* instance
-    long m_handle;
+    void* m_handle;
 
 public:    
     //! Compiled Python code module and global environment
