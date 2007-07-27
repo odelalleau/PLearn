@@ -195,7 +195,7 @@ public:
     inline void clearInMap()  { copies_map_in.clear(); }
     inline void clearInOutMaps()  { clearInMap(); clearOutMap(); }
 
-    //! if outmode is raw_ascii or raw_binary t will be switched to
+    //! if outmode is raw_ascii or raw_binary, it will be switched to
     //! corresponding plearn_ascii, resp. plearn_binary.
     //! The old mode will be returned, so that you can call setOutMode
     //! to revert to the old mode when finished
@@ -245,6 +245,92 @@ public:
 
     //! Writes the corresponding 2 hex digits (ex: 0A )
     void writeAsciiHexNum(unsigned char x);
+
+    //! Writes base types to PLearn binary format
+    //! TODO: forbid this mechanism for arbitrary classes?
+    template<class I>
+    void writeBinaryNum(I x)
+    {
+#ifdef BIGENDIAN
+        put(TypeTraits<I>::big_endian_typecode());
+#else
+        put(TypeTraits<I>::little_endian_typecode());
+#endif
+        write((char*)&x, sizeof(I));
+    }
+
+    //! Reads a J element, optionnally swaps its endianness, and returns an I
+    template<class I, class J>
+    void readBinaryNumAs(J& x, bool inverted_byte_order)
+    {
+        I y;
+        read(reinterpret_cast<char*>(&y), sizeof(I));
+        if (inverted_byte_order)
+            endianswap(&y);
+        x = y;
+    }
+
+    //! Reads base types from PLearn binary format
+    //! TODO: forbid this mechanism for arbitrary classes?
+    template<class I>
+    void readBinaryNum(I &x, unsigned char typecode)
+    {
+        // If typecode corresponds to I's typecode
+        if (typecode==TypeTraits<I>::little_endian_typecode())
+        {
+            read(reinterpret_cast<char*>(&x), sizeof(I));
+#ifdef BIGENDIAN
+            endianswap(&x);
+#endif
+        }
+        else if (typecode==TypeTraits<I>::big_endian_typecode())
+        {
+            read(reinterpret_cast<char*>(&x), sizeof(I));
+#ifdef LITTLEENDIAN
+            endianswap(&x);
+#endif
+        }
+        // Else, we need to try all the different types
+        else if (typecode==TypeTraits<int8_t>::little_endian_typecode())
+            readBinaryNumAs<int8_t>(x, false);
+        else if (typecode==TypeTraits<uint8_t>::little_endian_typecode())
+            readBinaryNumAs<uint8_t>(x, false);
+        else if (typecode==TypeTraits<int16_t>::little_endian_typecode())
+            readBinaryNumAs<int16_t>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<int16_t>::big_endian_typecode())
+            readBinaryNumAs<int16_t>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<uint16_t>::little_endian_typecode())
+            readBinaryNumAs<uint16_t>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<uint16_t>::big_endian_typecode())
+            readBinaryNumAs<uint16_t>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<int32_t>::little_endian_typecode())
+            readBinaryNumAs<int32_t>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<int32_t>::big_endian_typecode())
+            readBinaryNumAs<int32_t>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<uint32_t>::little_endian_typecode())
+            readBinaryNumAs<uint32_t>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<uint32_t>::big_endian_typecode())
+            readBinaryNumAs<uint32_t>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<int64_t>::little_endian_typecode())
+            readBinaryNumAs<int64_t>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<int64_t>::big_endian_typecode())
+            readBinaryNumAs<int64_t>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<uint64_t>::little_endian_typecode())
+            readBinaryNumAs<uint64_t>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<uint64_t>::big_endian_typecode())
+            readBinaryNumAs<uint64_t>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<float>::little_endian_typecode())
+            readBinaryNumAs<float>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<float>::big_endian_typecode())
+            readBinaryNumAs<float>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<double>::little_endian_typecode())
+            readBinaryNumAs<double>(x, byte_order()==BIG_ENDIAN_ORDER);
+        else if (typecode==TypeTraits<double>::big_endian_typecode())
+            readBinaryNumAs<double>(x, byte_order()==LITTLE_ENDIAN_ORDER);
+        else
+            PLERROR("In PStream readBinaryNum: Unknown typecode '%c' (%x)",
+                    typecode, typecode);
+    }
 
     inline bool eof() const
     { return ptr->eof(); }
@@ -459,7 +545,6 @@ public:
     int count(char c);
 
     // operator>>'s for base types
-    PStream& operator>>(bool &x);
     PStream& operator>>(float &x);
     PStream& operator>>(double &x);
     PStream& operator>>(string &x);
@@ -467,16 +552,15 @@ public:
     PStream& operator>>(char &x);
     PStream& operator>>(signed char &x);
     PStream& operator>>(unsigned char &x);
-    PStream& operator>>(int &x);
-    PStream& operator>>(unsigned int &x);
-    //PStream& operator>>(long &x);
-    //PStream& operator>>(unsigned long &x);
-    PStream& operator>>(int64_t &x);
-    PStream& operator>>(uint64_t &x);
+    PStream& operator>>(bool &x);
     PStream& operator>>(short &x);
     PStream& operator>>(unsigned short &x);
-    //PStream& operator>>(long long &x);
-    //PStream& operator>>(unsigned long long &x);
+    PStream& operator>>(int &x);
+    PStream& operator>>(unsigned int &x);
+    PStream& operator>>(long &x);
+    PStream& operator>>(unsigned long &x);
+    PStream& operator>>(long long &x);
+    PStream& operator>>(unsigned long long &x);
     PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
 
     // operator<<'s for base types
@@ -502,16 +586,14 @@ public:
     // Note: If you get mysterious mesages of problems with const bool resolutions,
     // then a workaround might be to not declare <<(bool) as a method, but as an inline function
     PStream& operator<<(bool x);
-    PStream& operator<<(int x);
-    PStream& operator<<(unsigned int x);
-    //PStream& operator<<(long x);
-    //PStream& operator<<(unsigned long x);
-    PStream& operator<<(int64_t x);
-    PStream& operator<<(uint64_t x);
-    //PStream& operator<<(long long x);
-    //PStream& operator<<(unsigned long long x);
     PStream& operator<<(short x);
     PStream& operator<<(unsigned short x);
+    PStream& operator<<(int x);
+    PStream& operator<<(unsigned int x);
+    PStream& operator<<(long x);
+    PStream& operator<<(unsigned long x);
+    PStream& operator<<(long long x);
+    PStream& operator<<(unsigned long long x);
     PStream& operator<<(pl_pstream_manip func) { return (*func)(*this); }
 
 };
@@ -895,7 +977,6 @@ inline void binwrite_(PStream& out, const unsigned int* x, unsigned int n)
 inline void binwrite_(PStream& out, unsigned int* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned int))); }
 
-/*
 inline void binwrite_(PStream& out, const long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(long))); }
 inline void binwrite_(PStream& out, long* x, unsigned int n)
@@ -905,17 +986,16 @@ inline void binwrite_(PStream& out, const unsigned long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
 inline void binwrite_(PStream& out, unsigned long* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(unsigned long))); }
-*/
 
-inline void binwrite_(PStream& out, const int64_t* x, unsigned int n)
-{ out.write((char*)x, streamsize(n*sizeof(int64_t))); }
-inline void binwrite_(PStream& out, int64_t* x, unsigned int n)
-{ out.write((char*)x, streamsize(n*sizeof(int64_t))); }
+inline void binwrite_(PStream& out, const long long* x, unsigned int n)
+{ out.write((char*)x, streamsize(n*sizeof(long long))); }
+inline void binwrite_(PStream& out, long long* x, unsigned int n)
+{ out.write((char*)x, streamsize(n*sizeof(long long))); }
 
-inline void binwrite_(PStream& out, const uint64_t* x, unsigned int n)
-{ out.write((char*)x, streamsize(n*sizeof(uint64_t))); }
-inline void binwrite_(PStream& out, uint64_t* x, unsigned int n)
-{ out.write((char*)x, streamsize(n*sizeof(uint64_t))); }
+inline void binwrite_(PStream& out, const unsigned long long* x, unsigned int n)
+{ out.write((char*)x, streamsize(n*sizeof(unsigned long long))); }
+inline void binwrite_(PStream& out, unsigned long long* x, unsigned int n)
+{ out.write((char*)x, streamsize(n*sizeof(unsigned long long))); }
 
 inline void binwrite_(PStream& out, const float* x, unsigned int n)
 { out.write((char*)x, streamsize(n*sizeof(float))); }
@@ -939,6 +1019,22 @@ void binread_(PStream& in, Iterator it, unsigned int n, unsigned char typecode)
     {
         in >> *it;
         ++it;
+    }
+}
+
+
+//! Auxiliary function that reads n elements of type I, optionally swaps
+//! their endianness, then converts them into J, and puts them in a J array.
+template<class I, class J>
+void binread_as(PStream& in, J* x, unsigned int n, bool inverted_byte_order)
+{
+    I y;
+    while(n--)
+    {
+        in.read(reinterpret_cast<char*>(&y), sizeof(I));
+        if (inverted_byte_order)
+            endianswap(&y);
+        *x++ = y;
     }
 }
 
@@ -967,10 +1063,10 @@ void binread_(PStream& in, short* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, unsigned short* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, int* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, unsigned int* x, unsigned int n, unsigned char typecode);
-//void binread_(PStream& in, long* x, unsigned int n, unsigned char typecode);
-//void binread_(PStream& in, unsigned long* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, int64_t* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, uint64_t* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, long long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned long long* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode);
 
@@ -979,7 +1075,7 @@ template<class SequenceType>
 void writeSequence(PStream& out, const SequenceType& seq)
 {
     // norman: added explicit cast
-    unsigned int n = (unsigned int)seq.size();
+    uint32_t n = (uint32_t)seq.size();
     typename SequenceType::const_iterator it = seq.begin();
 
     switch(out.outmode)

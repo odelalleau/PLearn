@@ -136,6 +136,92 @@ public:                                                                         
   { return BIG_ENDIAN_TYPECODE; }                                                       \
 }
 
+#define DECLARE_TYPE_TRAITS_FOR_INTTYPE(T)                  \
+template<>                                                  \
+class TypeTraits<T>                                         \
+{                                                           \
+public:                                                     \
+    static inline string name()                             \
+    { return #T; }                                          \
+                                                            \
+    static inline unsigned char little_endian_typecode()    \
+    {                                                       \
+        switch(sizeof(T))                                   \
+        {                                                   \
+        case sizeof(int8_t):                                \
+            return 0x01;                                    \
+        case sizeof(int16_t):                               \
+            return 0x03;                                    \
+        case sizeof(int32_t):                               \
+            return 0x07;                                    \
+        case sizeof(int64_t):                               \
+            return 0x16;                                    \
+        default:                                            \
+            return 0xFF;                                    \
+        }                                                   \
+    }                                                       \
+                                                            \
+    static inline unsigned char big_endian_typecode()       \
+    {                                                       \
+        switch(sizeof(T))                                   \
+        {                                                   \
+        case sizeof(int8_t):                                \
+            return 0x01;                                    \
+        case sizeof(int16_t):                               \
+            return 0x04;                                    \
+        case sizeof(int32_t):                               \
+            return 0x08;                                    \
+        case sizeof(int64_t):                               \
+            return 0x17;                                    \
+        default:                                            \
+            return 0xFF;                                    \
+        }                                                   \
+    }                                                       \
+}
+
+#define DECLARE_TYPE_TRAITS_FOR_UINTTYPE(T)                 \
+template<>                                                  \
+class TypeTraits<T>                                         \
+{                                                           \
+public:                                                     \
+    static inline string name()                             \
+    { return #T; }                                          \
+                                                            \
+    static inline unsigned char little_endian_typecode()    \
+    {                                                       \
+        switch(sizeof(T))                                   \
+        {                                                   \
+        case sizeof(uint8_t):                               \
+            return 0x02;                                    \
+        case sizeof(uint16_t):                              \
+            return 0x05;                                    \
+        case sizeof(uint32_t):                              \
+            return 0x0B;                                    \
+        case sizeof(uint64_t):                              \
+            return 0x18;                                    \
+        default:                                            \
+            return 0xFF;                                    \
+        }                                                   \
+    }                                                       \
+                                                            \
+    static inline unsigned char big_endian_typecode()       \
+    {                                                       \
+        switch(sizeof(T))                                   \
+        {                                                   \
+        case sizeof(uint8_t):                               \
+            return 0x02;                                    \
+        case sizeof(uint16_t):                              \
+            return 0x06;                                    \
+        case sizeof(uint32_t):                              \
+            return 0x0C;                                    \
+        case sizeof(uint64_t):                              \
+            return 0x19;                                    \
+        default:                                            \
+            return 0xFF;                                    \
+        }                                                   \
+    }                                                       \
+}
+
 #define DECLARE_TYPE_TRAITS(T)                          \
 template<>                                              \
 class TypeTraits<T>                                     \
@@ -153,20 +239,22 @@ public:                                                 \
 
 // DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool, ??, ??);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(void,               0xFF, 0xFF);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(char,               0x01, 0x01);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(signed char,        0x01, 0x01);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned char,      0x02, 0x02);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(short,              0x03, 0x04);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned short,     0x05, 0x06);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(int,                0x07, 0x08);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned int,       0x0B, 0x0C);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(long,               0x07, 0x08);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long,      0x0B, 0x0C);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(long long,          0x16, 0x17);
-DECLARE_TYPE_TRAITS_FOR_BASETYPE(unsigned long long, 0x18, 0x19);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(float,              0x0E, 0x0F);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(double,             0x10, 0x11);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool,               0x30, 0x30);
+
+DECLARE_TYPE_TRAITS_FOR_INTTYPE(char);
+DECLARE_TYPE_TRAITS_FOR_INTTYPE(signed char);
+DECLARE_TYPE_TRAITS_FOR_INTTYPE(short);
+DECLARE_TYPE_TRAITS_FOR_INTTYPE(int);
+DECLARE_TYPE_TRAITS_FOR_INTTYPE(long);
+DECLARE_TYPE_TRAITS_FOR_INTTYPE(long long);
+
+DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned char);
+DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned short);
+DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned int);
+DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned long);
+DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned long long);
 
 DECLARE_TYPE_TRAITS(string);
 
