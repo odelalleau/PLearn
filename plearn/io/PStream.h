@@ -2,7 +2,8 @@
 
 // PStream.h
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and
+//  University of Montreal
 // Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Pascal Vincent
 // Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
@@ -55,17 +56,19 @@ using namespace std;
 
 /*!
  * PStream:
- *  This class defines a type of stream that should be used for all I/O within PLearn.
- *  It supports most operations available for standard c++ streams, plus:
- *   - a set of option flags that indicate which types of Object Options should be
- *     read/written (option_flags_{in|out}; has effect only for Object's);
- *   - a set of mode flags that define format used for I/O. e.g.:  "raw_ascii" for
- *     standard c++ stream behaviour, "plearn_ascii"  for human-readable
- *     serialization format, etc. (inmode and outmode);
+ *  This class defines a type of stream that should be used for all I/O within
+ *  PLearn.
+ *  It supports most operations available for standard C++ streams, plus:
+ *   - a set of option flags that indicate which types of Object Options should
+ *     be read/written (option_flags_{in|out}; has effect only for Object's);
+ *   - a set of mode flags that define format used for I/O. e.g.:
+ *      "raw_ascii" for  standard C++ stream behaviour,
+ *      "plearn_ascii"  for human-readable serialization format,
+ *      etc. (inmode and outmode);
  *   - a copies map to allow smart serialization of pointers;
- *   - a markable stream buffer which allows to 'seek back' to a previously set mark
- *     on any type of istream;
- *   - an 'attach' function to attach the stream to a POSIX file descriptor;
+ *   - a markable stream buffer which allows to 'seek back' to a previously set
+ *     mark on any type of istream;
+ *   - an 'attach' function to attach the stream to a POSIX file descriptor.
  */
 
 class PStream : public PP<PStreamBuf>
@@ -95,30 +98,53 @@ public:
      */
     enum mode_t
     {
-        plearn_ascii,    //!< PLearn ascii serialization format (can be mixed with plearn_binary)
-        plearn_binary,   //!< PLearn binary serialization format (can be mixed with plearn_ascii)
-        raw_ascii,       //!< Raw C++ ascii output without additional separators (direct output to underlying ostream)
-        raw_binary,      //!< Simply writes the bytes as they are in memory.
-        pretty_ascii     //!< Ascii pretty print (in particular for Vec and Mat, formatted output without size info)
+        //! PLearn ascii serialization format (can be mixed with plearn_binary)
+        plearn_ascii,
+        //! PLearn binary serialization format (can be mixed with plearn_ascii)
+        plearn_binary,
+        //! Raw C++ ascii output without additional separators
+        //! (direct output to underlying ostream)
+        raw_ascii,
+        //! Simply writes the bytes as they are in memory.
+        raw_binary,
+        //! Ascii pretty print (in particular for Vec and Mat, formatted output
+        //! without size info)
+        pretty_ascii
     };
 
 
-    //! Compression mode (mostly used by binary serialization of sequences of floats or doubles, such as TMat<real>)
+    //! Compression mode (mostly used by binary serialization of sequences of
+    //! floats or doubles, such as TMat<real>)
     //! (Used on output only; autodetect on read).
     enum compr_mode_t {
-        compr_none,            //!< No compression.
-        compr_double_as_float, //!< In plearn_binary mode, store doubles as float
-        compr_sparse,          //!< PLearn
-        compr_lossy_sparse     //!< Also stores double as float
+        //! No compression.
+        compr_none,
+        //! In plearn_binary mode, store doubles as float
+        compr_double_as_float,
+        //! PLearn
+        compr_sparse,
+        //! Also stores double as float
+        compr_lossy_sparse
     };
 
 public:
-    mode_t inmode;              //!< mode for input formatting
-    // bitset<32> pl_stream_flags_in;  //!< format flags for input
-    map<unsigned int, void *> copies_map_in; //!< copies map for input
-    mode_t outmode;            //!< mode for output formatting
-    // bitset<32> pl_stream_flags_out; //!< format flags for output
-    map<void *, unsigned int> copies_map_out; //!< copies map for output
+    //! mode for input formatting
+    mode_t inmode;
+
+    //! format flags for input
+    // bitset<32> pl_stream_flags_in;
+
+    //! copies map for input
+    map<unsigned int, void *> copies_map_in;
+
+    //! mode for output formatting
+    mode_t outmode;
+
+    //! format flags for output
+    // bitset<32> pl_stream_flags_out;
+
+    //! copies map for output
+    map<void *, unsigned int> copies_map_out;
 
 private:
     //! Buffer for some formatting operations
@@ -137,16 +163,16 @@ private:
     static const char* format_double_default;
 
 public:
-    //! If true, then Mat and Vec will be serialized with their elements in place,
+    //! If true, then Mat and Vec will be serialized with their elements in
+    //! place,
     //! If false, they will have an explicit pointer to a storage
     bool implicit_storage;
 
     //! Determines the way data is compressed, if any.
     compr_mode_t compression_mode;
 
-    //! Should be true if this stream is used to communicate
-    //! with a remote PLearn host.  Will serialize options
-    //! accordingly.
+    //! Should be true if this stream is used to communicate with a remote
+    //! PLearn host.  Will serialize options accordingly.
     bool remote_plearn_comm;
 
 public:
@@ -166,23 +192,51 @@ public:
     PStream(iostream* pios_, bool own_pios_=false);
 
     //! ctor. from an istream and an ostream (IO)
-    PStream(istream* pin_, ostream* pout_, bool own_pin_=false, bool own_pout_=false);
+    PStream(istream* pin_, ostream* pout_, bool own_pin_=false,
+            bool own_pout_=false);
 
     //! Default copy ctor. should be fine now.
 
     //! Destructor.
     virtual ~PStream();
 
-    inline void setBufferCapacities(streamsize inbuf_capacity, streamsize outbuf_capacity, streamsize unget_capacity)
-    { ptr->setBufferCapacities(inbuf_capacity, outbuf_capacity, unget_capacity); }
+    inline void setBufferCapacities(streamsize inbuf_capacity,
+                                    streamsize outbuf_capacity,
+                                    streamsize unget_capacity)
+    {
+        ptr->setBufferCapacities(inbuf_capacity,
+                                 outbuf_capacity,
+                                 unget_capacity);
+    }
 
-    inline mode_t setInMode(mode_t m) { mode_t oldmode = inmode; inmode = m; return oldmode; }
-    inline mode_t setOutMode(mode_t m) { mode_t oldmode = outmode; outmode = m; return oldmode; }
-    inline void setMode(mode_t m) { inmode = m; outmode = m; }
+    inline mode_t setInMode(mode_t m)
+    {
+        mode_t oldmode = inmode;
+        inmode = m;
+        return oldmode;
+    }
 
-    inline void clearOutMap() { copies_map_out.clear(); }
-    inline void clearInMap()  { copies_map_in.clear(); }
-    inline void clearInOutMaps()  { clearInMap(); clearOutMap(); }
+    inline mode_t setOutMode(mode_t m)
+    {
+        mode_t oldmode = outmode;
+        outmode = m;
+        return oldmode;
+    }
+
+    inline void setMode(mode_t m)
+    { inmode = m; outmode = m; }
+
+    inline void clearOutMap()
+    { copies_map_out.clear(); }
+
+    inline void clearInMap()
+    { copies_map_in.clear(); }
+
+    inline void clearInOutMaps()
+    {
+        clearInMap();
+        clearOutMap();
+    }
 
     //! if outmode is raw_ascii or raw_binary, it will be switched to
     //! corresponding plearn_ascii, resp. plearn_binary.
@@ -190,15 +244,28 @@ public:
     //! to revert to the old mode when finished
     mode_t switchToPLearnOutMode();
 
-    PStream& operator>>(mode_t m) { inmode = m; return *this; }
-    PStream& operator<<(mode_t m) { outmode = m; return *this; }
+    PStream& operator>>(mode_t m)
+    {
+        inmode = m;
+        return *this;
+    }
+
+    PStream& operator<<(mode_t m)
+    {
+        outmode = m;
+        return *this;
+    }
 
 public:
     //op()'s: re-init with different underlying stream(s)
 
     PStream& operator=(const PStream& pios);
+
     PStream& operator=(streambuftype* streambuf)
-    { inherited::operator=(streambuf); return *this; }
+    {
+        inherited::operator=(streambuf);
+        return *this;
+    }
 
     bool operator==(const PStream& other)
     { return PP<PStreamBuf>::operator==(other); }
@@ -490,7 +557,8 @@ public:
         return *this;
     }
 
-    // These are convenient method for writing raw strings (whatever the outmode):
+    // These are convenient method for writing raw strings
+    // (whatever the outmode):
     inline PStream& write(const char* s)
     {
         write(s, streamsize(strlen(s)));
@@ -520,15 +588,21 @@ public:
     //! skips all occurences of any of the given characters
     void skipAll(const char* chars_to_skip);
 
-    //! Reads characters from stream, until we meet one of the stopping symbols at the current "level".
-    //! i.e. any opening parenthesis, bracket, brace or quote will open a next level and we'll
-    //! be back to the current level only *after* we meet the corresponding closing parenthesis,
-    //! bracket, brace or quote.
-    //! All characters read, except the stoppingsymbol, will be *appended* to characters_read
-    //! The stoppingsymbol is read and returned, but not appended to characters_read.
-    //! Comments starting with # until the end of line may be skipped (as if they were not part of the stream)
-    int smartReadUntilNext(const string& stoppingsymbols, string& characters_read,
-                           bool ignore_brackets=false, bool skip_comments=true);
+    //! Reads characters from stream, until we meet one of the stopping symbols
+    //! at the current "level". i.e. any opening parenthesis, bracket, brace or
+    //! quote will open a next level and we'll be back to the current level
+    //! only *after* we meet the corresponding closing parenthesis, bracket,
+    //! brace or quote.
+    //! All characters read, except the stoppingsymbol, will be *appended* to
+    //! characters_read.
+    //! The stoppingsymbol is read and returned, but not appended to
+    //! characters_read.
+    //! Comments starting with # until the end of line may be skipped (as if
+    //! they were not part of the stream)
+    int smartReadUntilNext(const string& stoppingsymbols,
+                           string& characters_read,
+                           bool ignore_brackets=false,
+                           bool skip_comments=true);
 
     //! Count the number of occurrences of a character in the stream.
     int count(char c);
@@ -537,7 +611,8 @@ public:
     PStream& operator>>(float &x);
     PStream& operator>>(double &x);
     PStream& operator>>(string &x);
-    PStream& operator>>(char* x); // read string in already allocated char[]
+    // read string in already allocated char[]
+    PStream& operator>>(char* x);
     PStream& operator>>(char &x);
     PStream& operator>>(signed char &x);
     PStream& operator>>(unsigned char &x);
@@ -550,7 +625,8 @@ public:
     PStream& operator>>(unsigned long &x);
     PStream& operator>>(long long &x);
     PStream& operator>>(unsigned long long &x);
-    PStream& operator>>(pl_pstream_manip func) { return (*func)(*this); }
+    PStream& operator>>(pl_pstream_manip func)
+    { return (*func)(*this); }
 
     // operator<<'s for base types
     PStream& operator<<(float x);
@@ -572,8 +648,9 @@ public:
     PStream& operator<<(signed char x);
     PStream& operator<<(unsigned char x);
 
-    // Note: If you get mysterious mesages of problems with const bool resolutions,
-    // then a workaround might be to not declare <<(bool) as a method, but as an inline function
+    // Note: If you get mysterious mesages of problems with const bool
+    // resolutions, then a workaround might be to not declare <<(bool) as a
+    // method, but as an inline function
     PStream& operator<<(bool x);
     PStream& operator<<(short x);
     PStream& operator<<(unsigned short x);
@@ -631,7 +708,8 @@ inline PStream& operator>>(PStream& in, T*& x)
         in.get(); // Eat '*'
         unsigned int id;
         in >> id;
-        //don't skip blanks before we need to read something else (read might block).
+        // don't skip blanks before we need to read something else
+        // (read might block).
         //in.skipBlanksAndCommentsAndSeparators();
         if (id==0)
             x = 0;
@@ -644,31 +722,35 @@ inline PStream& operator>>(PStream& in, T*& x)
                 char cc = in.get();
                 if(cc != '>') // Eat '>'
                     PLERROR("In PStream::operator>>(T*&)  Wrong format.  Expecting \"*%d->\" but got \"*%d-%c\".", id, id, cc);
-                //don't skip blanks before we need to read something else (read might block).
+                // don't skip blanks before we need to read something else
+                // (read might block).
                 //in.skipBlanksAndCommentsAndSeparators();
                 if(!x)
-                    x= new T();
+                    x = new T();
                 in.skipBlanksAndCommentsAndSeparators();
                 in >> *x;
-                //don't skip blanks before we need to read something else (read might block).
+                // don't skip blanks before we need to read something else
+                // (read might block).
                 //in.skipBlanksAndCommentsAndSeparators();
                 in.copies_map_in[id]= x;
             }
             else
             {
                 // Find it in map and return ptr;
-                map<unsigned int, void *>::iterator it = in.copies_map_in.find(id);
+                map<unsigned int, void *>::iterator it =
+                    in.copies_map_in.find(id);
                 if (it == in.copies_map_in.end())
                     PLERROR("In PStream::operator>>(T*&) object (ptr) to be read with id='%d' "
                             "has not been previously defined", id);
-                x= static_cast<T *>(it->second);
+                x = static_cast<T *>(it->second);
             }
         }
     }
     else
     {
         in >> *x;
-        //don't skip blanks before we need to read something else (read might block).
+        // don't skip blanks before we need to read something else
+        // (read might block).
         //in.skipBlanksAndCommentsAndSeparators();
     }
 
@@ -681,7 +763,8 @@ inline PStream& operator<<(PStream& out, T const * const & x)
 {
     if(x)
     {
-        map<void *, unsigned int>::iterator it = out.copies_map_out.find(const_cast<T*&>(x));
+        map<void *, unsigned int>::iterator it =
+            out.copies_map_out.find(const_cast<T*&>(x));
         if (it == out.copies_map_out.end())
         {
             int id = (int)out.copies_map_out.size()+1;
@@ -869,42 +952,73 @@ void readMap(PStream& in, MapT& m)
 }
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator<<(PStream& out, const map<Key, Value, Compare, Alloc>& m)
-{ writeMap(out, m); return out; }
+inline PStream& operator<<(PStream& out,
+                           const map<Key, Value, Compare, Alloc>& m)
+{
+    writeMap(out, m);
+    return out;
+}
 
 template<class Key, class Value, class Compare, class Alloc>
 inline PStream& operator>>(PStream& in, map<Key, Value, Compare, Alloc>& m)
-{ readMap(in, m); return in; }
+{
+    readMap(in, m);
+    return in;
+}
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator<<(PStream& out, const multimap<Key, Value, Compare, Alloc>& m)
-{ writeMap(out, m); return out; }
+inline PStream& operator<<(PStream& out,
+                           const multimap<Key, Value, Compare, Alloc>& m)
+{
+    writeMap(out, m);
+    return out;
+}
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator>>(PStream& in, multimap<Key, Value, Compare, Alloc>& m)
-{ readMap(in, m); return in; }
+inline PStream& operator>>(PStream& in,
+                           multimap<Key, Value, Compare, Alloc>& m)
+{
+    readMap(in, m);
+    return in;
+}
 
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator<<(PStream& out, const hash_map<Key, Value, Compare, Alloc>& m)
-{ writeMap(out, m); return out; }
+inline PStream& operator<<(PStream& out,
+                           const hash_map<Key, Value, Compare, Alloc>& m)
+{
+    writeMap(out, m);
+    return out;
+}
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator>>(PStream& in, hash_map<Key, Value, Compare, Alloc>& m)
-{ readMap(in, m); return in; }
+inline PStream& operator>>(PStream& in,
+                           hash_map<Key, Value, Compare, Alloc>& m)
+{
+    readMap(in, m);
+    return in;
+}
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator<<(PStream& out, const hash_multimap<Key, Value, Compare, Alloc>& m)
-{ writeMap(out, m); return out; }
+inline PStream& operator<<(PStream& out,
+                           const hash_multimap<Key, Value, Compare, Alloc>& m)
+{
+    writeMap(out, m);
+    return out;
+}
 
 template<class Key, class Value, class Compare, class Alloc>
-inline PStream& operator>>(PStream& in, hash_multimap<Key, Value, Compare, Alloc>& m)
-{ readMap(in, m); return in; }
+inline PStream& operator>>(PStream& in,
+                           hash_multimap<Key, Value, Compare, Alloc>& m)
+{
+    readMap(in, m);
+    return in;
+}
 
 
 /** Serialization of sequences **/
-/* These methods are there only to simplify the writing of operator<< and operator>> and
-   should not be called by user code directly */
+/* These methods are there only to simplify the writing of operator<< and
+   operator>> and should not be called by user code directly */
 
 template<class Iterator>
 void binwrite_(PStream& out, Iterator& it, unsigned int n)
@@ -1043,20 +1157,27 @@ inline void binread_(PStream& in, char* x,
     in.read((char*)x, n);
 }
 
-inline void binread_(PStream& in, signed char* x, unsigned int n, unsigned char typecode)
+inline void binread_(PStream& in, signed char* x, unsigned int n,
+                     unsigned char typecode)
 { binread_(in, (char *)x, n, typecode); }
 
-inline void binread_(PStream& in, unsigned char* x, unsigned int n, unsigned char typecode)
+inline void binread_(PStream& in, unsigned char* x, unsigned int n,
+                     unsigned char typecode)
 { binread_(in, (char *)x, n, typecode); }
 
 void binread_(PStream& in, short* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, unsigned short* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned short* x, unsigned int n,
+              unsigned char typecode);
 void binread_(PStream& in, int* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, unsigned int* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned int* x, unsigned int n,
+              unsigned char typecode);
 void binread_(PStream& in, long* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, unsigned long* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, long long* x, unsigned int n, unsigned char typecode);
-void binread_(PStream& in, unsigned long long* x, unsigned int n, unsigned char typecode);
+void binread_(PStream& in, unsigned long* x, unsigned int n,
+              unsigned char typecode);
+void binread_(PStream& in, long long* x, unsigned int n,
+              unsigned char typecode);
+void binread_(PStream& in, unsigned long long* x, unsigned int n,
+              unsigned char typecode);
 void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode);
 void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode);
 
@@ -1112,12 +1233,14 @@ void writeSequence(PStream& out, const SequenceType& seq)
         if(byte_order()==LITTLE_ENDIAN_ORDER)
         {
             out.put((char)0x12); // 1D little-endian
-            typecode = TypeTraits<typename SequenceType::value_type>::little_endian_typecode();
+            typecode = TypeTraits<typename SequenceType::value_type>
+                ::little_endian_typecode();
         }
         else
         {
             out.put((char)0x13); // 1D big-endian
-            typecode = TypeTraits<typename SequenceType::value_type>::big_endian_typecode();
+            typecode = TypeTraits<typename SequenceType::value_type>
+                ::big_endian_typecode();
         }
 
         // write typecode
@@ -1139,13 +1262,15 @@ void writeSequence(PStream& out, const SequenceType& seq)
 
 
 //! Reads in a sequence type from a PStream.
-/*! For this to work with the current implementation, the SequenceType must have:
-  - typedefs defining (SequenceType::...) value_type, size_type, iterator
+/*! For this to work with the current implementation, the SequenceType must
+have:
+  - typedefs defining (SequenceType::...) value_type, size_type, iterator,
   - a begin() method that returns a proper iterator,
-  - a size_type size() method returning the size of the current container
-  - a resize(size_type n) method that allows to change the size of the container
-  (which should also work with resize(0) )
-  - a push_back(const value_type& x) method that appends the element x at the end
+  - a size_type size() method returning the size of the current container,
+  - a resize(size_type n) method that allows to change the size of the
+  container (which should also work with resize(0)),
+  - a push_back(const value_type& x) method that appends the element x at the
+  end.
 */
 template<class SequenceType>
 void readSequence(PStream& in, SequenceType& seq)
@@ -1161,7 +1286,8 @@ void readSequence(PStream& in, SequenceType& seq)
         {
             in.skipBlanks();
             in >> *it;
-            //don't skip blanks before we need to read something else (read might block).
+            // don't skip blanks before we need to read something else
+            // (read might block).
             //in.skipBlanks();
             ++it;
         }
@@ -1210,7 +1336,8 @@ void readSequence(PStream& in, SequenceType& seq)
             c = in.get();
             if(c!='[')
                 PLERROR("Error in readSequence(SequenceType& seq), expected '[', read '%c'",c);
-            //don't skip blanks before we need to read something else (read might block).
+            // don't skip blanks before we need to read something else
+            // (read might block).
             //in.skipBlanksAndCommentsAndSeparators();
             seq.resize((typename SequenceType::size_type) n);
             if (n>0)
@@ -1220,7 +1347,8 @@ void readSequence(PStream& in, SequenceType& seq)
                 {
                     in.skipBlanksAndCommentsAndSeparators();
                     in >> *it;
-                    //don't skip blanks before we need to read something else (read might block).
+                    // don't skip blanks before we need to read something else
+                    // (read might block).
                     //in.skipBlanksAndCommentsAndSeparators();
                     ++it;
                 }
@@ -1238,8 +1366,9 @@ void readSequence(PStream& in, SequenceType& seq)
             unsigned int l;
             in.read((char*)&l,sizeof(l));
 
-            bool inverted_byte_order = (    (c==0x12 && byte_order()==BIG_ENDIAN_ORDER)
-                                            || (c==0x13 && byte_order()==LITTLE_ENDIAN_ORDER) );
+            bool inverted_byte_order =
+                ((c==0x12 && byte_order()==BIG_ENDIAN_ORDER)
+                 || (c==0x13 && byte_order()==LITTLE_ENDIAN_ORDER) );
 
             if(inverted_byte_order)
                 endianswap(&l);
@@ -1359,7 +1488,8 @@ public:
 class POFStream: public PStream
 {
 public:
-    POFStream(const string& fname, ios_base::openmode m = ios_base::out | ios_base::trunc)
+    POFStream(const string& fname,
+              ios_base::openmode m = ios_base::out | ios_base::trunc)
         :PStream(new ofstream(fname.c_str()),true)
     {
         PLDEPRECATED("POFStream is deprecated. Use the openFile function instead.");

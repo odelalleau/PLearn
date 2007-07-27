@@ -2,7 +2,8 @@
 
 // PStream.cc
 // Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio and
+//  University of Montreal
 // Copyright (C) 2002 Frederic Morin, Xavier Saint-Mleux, Pascal Vincent
 // Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
@@ -1918,41 +1919,6 @@ void binread_(PStream& in, bool* x,
     }
 }
 
-/*
-#define IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(BASETYPE)  \
-void binread_(PStream& in, BASETYPE* x,                \
-              unsigned int n, unsigned char typecode)  \
-{                                                      \
-  if(typecode==TypeTraits<BASETYPE>::little_endian_typecode()) \
-    {                                                  \
-      in.read((char*)x, streamsize(n*sizeof(BASETYPE)));       \
-      if(byte_order()==BIG_ENDIAN_ORDER)               \
-        endianswap(x,n);                               \
-    }                                                  \
-  else if(typecode==TypeTraits<BASETYPE>::big_endian_typecode()) \
-    {                                                  \
-      in.read((char*)x, streamsize(n*sizeof(BASETYPE)));       \
-      if(byte_order()==LITTLE_ENDIAN_ORDER)            \
-        endianswap(x,n);                               \
-    }                                                  \
-  else                                                 \
-    PLERROR("In binread_ incompatible typecode");      \
-}
-
-
-// IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(char);
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(short)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned short)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(int)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned int)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(long)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned long)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(long)
-IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(unsigned long)
-//IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(int64_t)
-//IMPLEMENT_TYPICAL_BASETYPE_BINREAD_(uint64_t)
-*/
-
 #define IMPLEMENT_NUMTYPE_BINREAD_(NUMTYPE)                                 \
 void binread_(PStream& in, NUMTYPE* x,                                      \
               unsigned int n, unsigned char typecode)                       \
@@ -2006,98 +1972,6 @@ IMPLEMENT_NUMTYPE_BINREAD_(long long)
 IMPLEMENT_NUMTYPE_BINREAD_(unsigned long long)
 IMPLEMENT_NUMTYPE_BINREAD_(float)
 IMPLEMENT_NUMTYPE_BINREAD_(double)
-
-/*
-void binread_(PStream& in, double* x, unsigned int n, unsigned char typecode)
-{
-    if(typecode==TypeTraits<double>::little_endian_typecode())
-    {
-        in.read((char*)x, streamsize(n*sizeof(double)));
-#ifdef BIGENDIAN
-        endianswap(x,n);
-#endif
-    }
-    else if(typecode==TypeTraits<double>::big_endian_typecode())
-    {
-        in.read((char*)x, streamsize(n*sizeof(double)));
-#ifdef LITTLEENDIAN
-        endianswap(x,n);
-#endif
-    }
-    else if(typecode==TypeTraits<float>::little_endian_typecode())
-    {
-        float val;
-        while(n--)
-        {
-            in.read((char*)&val, sizeof(float));
-#ifdef BIGENDIAN
-            endianswap(&val);
-#endif
-            *x++ = double(val);
-        }
-    }
-    else if(typecode==TypeTraits<float>::big_endian_typecode())
-    {
-        float val;
-        while(n--)
-        {
-            in.read((char*)&val, sizeof(float));
-#ifdef LITTLEENDIAN
-            endianswap(&val);
-#endif
-            *x++ = double(val);
-        }
-    }
-    else
-        PLERROR("In binread_ incompatible typecode");
-}
-
-
-
-void binread_(PStream& in, float* x, unsigned int n, unsigned char typecode)
-{
-    if(typecode==TypeTraits<float>::little_endian_typecode())
-    {
-        in.read((char*)x, streamsize(n*sizeof(float)));
-#ifdef BIGENDIAN
-        endianswap(x,n);
-#endif
-    }
-    else if(typecode==TypeTraits<float>::big_endian_typecode())
-    {
-        in.read((char*)x, streamsize(n*sizeof(float)));
-#ifdef LITTLEENDIAN
-        endianswap(x,n);
-#endif
-    }
-    else if(typecode==TypeTraits<double>::little_endian_typecode())
-    {
-        double val;
-        while(n--)
-        {
-            in.read((char*)&val, sizeof(double));
-#ifdef BIGENDIAN
-            endianswap(&val);
-#endif
-            *x++ = float(val);
-        }
-    }
-    else if(typecode==TypeTraits<double>::big_endian_typecode())
-    {
-        double val;
-        while(n--)
-        {
-            in.read((char*)&val, sizeof(double));
-#ifdef LITTLEENDIAN
-            endianswap(&val);
-#endif
-            *x++ = float(val);
-        }
-    }
-    else
-        PLERROR("In binread_ incompatible typecode");
-}
-*/
 
 } //end of namespace PLearn
 
