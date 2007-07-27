@@ -51,6 +51,7 @@
 #include <map>
 #include <set>
 #include <nspr/prlong.h>
+#include <plearn/base/pl_stdint.h>
 
 namespace PLearn {
 using std::string;

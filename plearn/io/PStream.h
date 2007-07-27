@@ -41,10 +41,10 @@
 #include <set>
 #include <sstream>
 #include <fstream>
-#include <boost/cstdint.hpp>
 #include <plearn/base/byte_order.h>
 #include <plearn/base/pl_hash_fun.h>
 #include <plearn/base/plerror.h>
+#include <plearn/base/pl_stdint.h>
 #include "PStream_util.h"
 #include "PStreamBuf.h"
 #include "StdPStreamBuf.h"
@@ -52,17 +52,6 @@
 namespace PLearn {
 
 using namespace std;
-
-// inject principal boost integer types into namespace PLearn
-// @TODO: use them all?
-using boost::int8_t;
-using boost::uint8_t;
-using boost::int16_t;
-using boost::uint16_t;
-using boost::int32_t;
-using boost::uint32_t;
-using boost::int64_t;
-using boost::uint64_t;
 
 /*!
  * PStream:
