@@ -566,7 +566,7 @@ def train_adapting_lr(learner,
                 logfile.flush()
         if save_best and t%save_best==0:
             all_candidates[best_active].save(expdir+"/"+"best_learner.psave","plearn_binary")
-        if previous_best_err > best_err:
+        if previous_best_err >= best_err:
             previous_best_err = best_err
             if logfile:
                 print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
