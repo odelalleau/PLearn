@@ -323,7 +323,16 @@ public:
         read(reinterpret_cast<char*>(&y), sizeof(I));
         if (inverted_byte_order)
             endianswap(&y);
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1682)
+// Yes, I know that "implicit conversion of a 64-bit integral type to a smaller
+// integral type (potential portability problem)", but the conversion is
+// explicit here.
+#endif
         x = static_cast<J>(y);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1682)
+#endif
     }
 
     //! Reads base types from PLearn binary format
@@ -1137,7 +1146,17 @@ void binread_as(PStream& in, J* x, unsigned int n, bool inverted_byte_order)
         in.read(reinterpret_cast<char*>(&y), sizeof(I));
         if (inverted_byte_order)
             endianswap(&y);
+
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1682)
+// Yes, I know that "implicit conversion of a 64-bit integral type to a smaller
+// integral type (potential portability problem)", but the conversion is
+// explicit here.
+#endif
         *x = static_cast<J>(y);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1682)
+#endif
         ++x;
     }
 }

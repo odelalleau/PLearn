@@ -245,6 +245,10 @@ DECLARE_TYPE_TRAITS_FOR_BASETYPE(float,              0x0E, 0x0F);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(double,             0x10, 0x11);
 DECLARE_TYPE_TRAITS_FOR_BASETYPE(bool,               0x30, 0x30);
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:280)
+// Yes, I know that "selector expression is constant"
+#endif
 DECLARE_TYPE_TRAITS_FOR_INTTYPE(char);
 DECLARE_TYPE_TRAITS_FOR_INTTYPE(signed char);
 DECLARE_TYPE_TRAITS_FOR_INTTYPE(short);
@@ -257,6 +261,9 @@ DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned short);
 DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned int);
 DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned long);
 DECLARE_TYPE_TRAITS_FOR_UINTTYPE(unsigned long long);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:280)
+#endif
 
 DECLARE_TYPE_TRAITS(string);
 
