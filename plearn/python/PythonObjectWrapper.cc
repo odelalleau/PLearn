@@ -567,9 +567,9 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
             + classname + "(" + wrapper_name + "):\n"
             "\tpass\n\n";
 
-        PyObject* res= PyRun_String(derivcode.c_str(), 
-                                    Py_file_input, pyenv, pyenv);
-        Py_XDECREF(res);
+        PyObject* res2= PyRun_String(derivcode.c_str(),
+                                     Py_file_input, pyenv, pyenv);
+        Py_XDECREF(res2);
         env= PythonObjectWrapper(
             pyenv, PythonObjectWrapper::transfer_ownership).as<env_t>();
         clit= env.find(classname);
