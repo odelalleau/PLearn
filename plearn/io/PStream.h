@@ -323,7 +323,7 @@ public:
         read(reinterpret_cast<char*>(&y), sizeof(I));
         if (inverted_byte_order)
             endianswap(&y);
-        x = y;
+        x = static_cast<J>(y);
     }
 
     //! Reads base types from PLearn binary format
@@ -1137,7 +1137,7 @@ void binread_as(PStream& in, J* x, unsigned int n, bool inverted_byte_order)
         in.read(reinterpret_cast<char*>(&y), sizeof(I));
         if (inverted_byte_order)
             endianswap(&y);
-        *x = static_cast<I>(y);
+        *x = static_cast<J>(y);
         ++x;
     }
 }
