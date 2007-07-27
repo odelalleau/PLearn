@@ -300,8 +300,8 @@ void MaxSubsampling2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                             .subMat(i*kernel_length, j*kernel_width,
                                     kernel_length, kernel_width);
 
-                        int argmax = (int) round(argmax_kl(i,j));
-                        input_grad_zone.data()[argmax] =
+                        int argmax_klij = (int) round(argmax_kl(i,j));
+                        input_grad_zone.data()[argmax_klij] =
                             output_grad_image_kl(i,j);
                     }
             }
