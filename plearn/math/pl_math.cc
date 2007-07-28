@@ -102,7 +102,7 @@ real safeflog(real a)
 
 real safeexp(real a)
 {
-#if USEDOUBLE
+#ifdef USEDOUBLE
     if (a < -300) return 0;
     if (a > 300) return 1e38;
 #else
