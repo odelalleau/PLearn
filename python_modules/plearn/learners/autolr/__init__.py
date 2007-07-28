@@ -1,6 +1,6 @@
-
 from math import *
 from numarray import *
+from plearn import *
 from plearn.bridge import *
 from threading import *
 
@@ -93,14 +93,18 @@ def assign(object, use_threads = False):
         lock.release()
     return o
 
+def getTestCostNames(learner):
+    return learner.getTestCostNames()
+
 def testlearner(learner,dataset,costs=[],ts=None):
     if not ts:
         ts = pl.VecStatsCollector()
         if plearn.bridgemode.useserver:
             ts=learner.server.new(ts)
     learner.test(dataset,ts,0,0)
+    names = learner.getTestCostNames()
     del costs[:]
-    for k in range(len(learner.getTestCostNames())):
+    for k in range(len(names)):
         costs.append(ts.getStat("E["+str(k)+"]"))
     return costs
 
@@ -156,6 +160,7 @@ def train_with_schedule(learner,
                         trainset, testsets, expdir,
                         cost_to_select_best=0,
                         selected_costnames = None,
+                        get_train_costs = True,
                         logfile=None):
     """Train a learner with one or more schedules of learning rates.
 lr_options is a list of list of option strings. Each list in lr_options
@@ -168,7 +173,7 @@ column and sequences of learning rates (one sequence per group) in
 each of the other columns (just like the result of the call to merge_schedules).
 """
     train_costnames = learner.getTrainCostNames()
-    test_costnames = learner.getTestCostNames()
+    test_costnames = getTestCostNames(learner)
 
     # Filter out unwanted costnames
     if selected_costnames is not None:
@@ -178,6 +183,8 @@ each of the other columns (just like the result of the call to merge_schedules).
                            if name in selected_costnames ]
 
     n_train_costs = len(train_costnames)
+    if not get_train_costs:
+        n_train_costs = 0
     n_test_costs = len(test_costnames)
 
     learner.setTrainingSet(trainset,False)
@@ -204,26 +211,28 @@ each of the other columns (just like the result of the call to merge_schedules).
         for s in range(n_schedules):
             results[i,1+s] = learning_rates[i][s]
 
-        # Report approximate training error
-        train_vsc = learner.getTrainStatsCollector()
-        if train_vsc.fieldnames == []:
-            # learner did not set train_stats fieldnames
-            train_vsc.fieldnames = learner.getTrainCostNames()
-        if logfile:
-            print >>logfile, "At stage ", learner.stage, " train :",
-        for k, costname in zip(range(n_train_costs), train_costnames):
-            err = train_vsc.getStat('E['+costname+']')
-            results[i, k+1+n_schedules] = err
+        if get_train_costs:
+            # Report approximate training error
+            train_vsc = learner.getTrainStatsCollector()
+            if train_vsc.fieldnames == []:
+                # learner did not set train_stats fieldnames
+                train_vsc.fieldnames = learner.getTrainCostNames()
+        if get_train_costs:
             if logfile:
-                print >>logfile, costname, '=', err,
-            if plearn.bridgemode.interactive:
-                plot(   results[0:i+1, 0],
-                        results[0:i+1, 1+n_schedules+k],
-                        colors[k%7]+styles[0],
-                        label='train:'+costname)
-        if logfile:
-            print >>logfile
-            logfile.flush()
+                print >>logfile, "At stage ", learner.stage, " train :",
+            for k, costname in zip(range(n_train_costs), train_costnames):
+                err = train_vsc.getStat('E['+costname+']')
+                results[i, k+1+n_schedules] = err
+                if logfile:
+                    print >>logfile, costname, '=', err,
+                if plearn.bridgemode.interactive:
+                    plot(   results[0:i+1, 0],
+                            results[0:i+1, 1+n_schedules+k],
+                            colors[k%7]+styles[0],
+                            label='train:'+costname)
+            if logfile:
+                print >>logfile
+                logfile.flush()
 
         # Report error on test sets
         for j in range(n_tests):
@@ -250,8 +259,11 @@ each of the other columns (just like the result of the call to merge_schedules).
         if plearn.bridgemode.interactive and i==0:
             legend()
     # Return headers for the result matrix, and the results themselves
-    return (['stage', 'learning_rate']
-            + ['train.' + costname for costname in train_costnames]
+    train_names = []
+    if get_train_costs:
+        train_names = ['train.' + costname for costname in train_costnames]
+    return (['pstage', 'learning_rate']
+            + train_names
             + ['test'+str(j+1)+'.'+costname for j in range(n_tests)
                                             for costname in test_costnames],
             results)
@@ -360,7 +372,10 @@ def train_adapting_lr(learner,
                       min_epochs_to_delete = 2,
                       # Scaling coefficient when modifying learning rates
                       lr_steps=exp(log(10)/2),
+                      # file (or sys.stdout) where to report progress
                       logfile=None,
+                      # whether to get and report train costs
+                      get_train_costs=True,
                       # do not try to go below this learning rate
                       min_lr=1e-6,
                       # Learning rate interval for heuristic
@@ -416,8 +431,8 @@ def train_adapting_lr(learner,
             return False
         return True
 
-    train_costnames = learner.getTestCostNames()
-    test_costnames = learner.getTestCostNames()
+    train_costnames = learner.getTrainCostNames()
+    test_costnames = getTestCostNames(learner)
     if selected_costnames is not None:
         # Filter out unwanted costnames
         train_costnames = [ name for name in train_costnames
@@ -427,7 +442,7 @@ def train_adapting_lr(learner,
 
     n_tests = len(testsets)
     #n_costs = len(cost_indices)
-    n_train_costs = len(train_costnames)
+    n_train_costs = ifthenelse(get_train_costs,len(train_costnames),0)
     n_test_costs = len(test_costnames)
 
     if schedules:
@@ -441,9 +456,10 @@ def train_adapting_lr(learner,
         schedules = zeros([len(stages),2],Float)
         schedules[:,0]=stages
         schedules[:,1]=learning_rates[:,0]
-        if optimized_group != 0 and optimized_group != -1:
-            print "Incorrect value for 'optimized_group'"
-            raise Error
+        # YB: QUI A MIS CA? POURQUOI???
+        #if optimized_group != 0 and optimized_group != -1:
+        #    print "Incorrect value for 'optimized_group'"
+        #    raise Error
         if len(lr_options)!=1:
             lr_options=[lr_options[0]]
 
@@ -487,10 +503,11 @@ def train_adapting_lr(learner,
                         options[lr_option]=str(learning_rates[t,s])
             candidate.changeOptions(options)
             candidate.setTrainingSet(trainset,False)
-            train_vsc = pl.VecStatsCollector();
-            if plearn.bridgemode.useserver:
-                train_vsc = candidate.server.new(train_vsc)
-            candidate.setTrainStatsCollector(train_vsc)
+            if get_train_costs:
+                train_vsc = pl.VecStatsCollector();
+                if plearn.bridgemode.useserver:
+                    train_vsc = candidate.server.new(train_vsc)
+                candidate.setTrainStatsCollector(train_vsc)
             tasks = [('train', ())]
             stats = []
             for j in range(0,n_tests):
@@ -519,15 +536,16 @@ def train_adapting_lr(learner,
             results[t,1] = all_lr[active]
             if logfile:
                 print >>logfile, "candidate ",active,":",
-            # Report approximate training statistics
-            if logfile:
-                print >>logfile, 'train :',
-            ts=candidate.getTrainStatsCollector()
-            for k, costname in zip(range(n_train_costs), train_costnames):
-                err = ts.getStat('E['+costname+']')
-                results[t, 2+k] = err
+            if get_train_costs:
+                # Report approximate training statistics
                 if logfile:
-                    print >>logfile, costname, '=', err,
+                    print >>logfile, 'train :',
+                ts=candidate.getTrainStatsCollector()
+                for k, costname in zip(range(n_train_costs), train_costnames):
+                    err = ts.getStat('E['+costname+']')
+                    results[t, 2+k] = err
+                    if logfile:
+                        print >>logfile, costname, '=', err,
 
             # Report testing statistics
             for j, costs in zip(range(0,n_tests), stats):
@@ -571,9 +589,10 @@ def train_adapting_lr(learner,
             if logfile:
                 print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
                 print >>logfile, "stage\tl.rate\t",
-                for costname in train_costnames:
-                    print >>logfile, 'train.'+costname+"\t",
-                print >>logfile
+                if get_train_costs:
+                    for costname in train_costnames:
+                        print >>logfile, 'train.'+costname+"\t",
+                    print >>logfile
                 for costname in test_costnames:
                     print >>logfile, 'test.'+costname+'\t',
                 print >>logfile

@@ -1,14 +1,8 @@
 """Code to define and manipulate online learning modules and related learners"""
 
 import plearn.bridgemode
+from plearn import *
 from plearn.bridge import *
-
-# THIS SHOULD GO SOMEWHERE ELSE!
-def ifthenelse(cond,elsep,condp):
-    if cond:
-        return elsep
-    else:
-        return condp
 
 def supervised_classification_mlp(name,input_size,n_hidden,n_classes,
                                   L1wd=0,L2wd=0,lrate=0.01):
