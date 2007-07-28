@@ -47,6 +47,7 @@
  *
  *  - 230 = Python 2.3.x
  *  - 240 = Python 2.4.x
+ *  - 250 = Python 2.5.x
  *
  *  NOTE: This header file MUST BE INCLUDED FIRST, even before any standard
  *  library includes are carried out.  (Python.h plays hacks with some macros)
