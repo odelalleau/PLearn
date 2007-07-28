@@ -97,6 +97,8 @@ bool ConvertFromPyObject<bool>::convert(PyObject* pyobj, bool print_traceback)
     return PyObject_IsTrue(pyobj) != 0;
 }
 
+
+#if 0
 int ConvertFromPyObject<int>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT( pyobj );
@@ -146,17 +148,34 @@ uint64_t ConvertFromPyObject<uint64_t>::convert(PyObject* pyobj, bool print_trac
         PLPythonConversionError("ConvertFromPyObject<uint64_t>", pyobj, print_traceback);
     return PyInt_AsUnsignedLongLongMask(pyobj);
 }
+#endif
 
-real ConvertFromPyObject<real>::convert(PyObject* pyobj, bool print_traceback)
+double ConvertFromPyObject<double>::convert(PyObject* pyobj,
+                                            bool print_traceback)
 {
     PLASSERT( pyobj );
     if(PyFloat_Check(pyobj))
-        return (real)PyFloat_AS_DOUBLE(pyobj);
+        return PyFloat_AS_DOUBLE(pyobj);
     if(PyLong_Check(pyobj))
-        return (real)PyLong_AsDouble(pyobj);
+        return PyLong_AsDouble(pyobj);
     if(PyInt_Check(pyobj))
-        return (real)PyInt_AS_LONG(pyobj);
-    PLPythonConversionError("ConvertFromPyObject<real>", pyobj,
+        return (double)PyInt_AS_LONG(pyobj);
+    PLPythonConversionError("ConvertFromPyObject<double>", pyobj,
+                            print_traceback);
+    return 0;//shut up compiler
+}
+
+float ConvertFromPyObject<float>::convert(PyObject* pyobj,
+                                          bool print_traceback)
+{
+    PLASSERT( pyobj );
+    if(PyFloat_Check(pyobj))
+        return (float)PyFloat_AS_DOUBLE(pyobj);
+    if(PyLong_Check(pyobj))
+        return (float)PyLong_AsDouble(pyobj);
+    if(PyInt_Check(pyobj))
+        return (float)PyInt_AS_LONG(pyobj);
+    PLPythonConversionError("ConvertFromPyObject<float>", pyobj,
                             print_traceback);
     return 0;//shut up compiler
 }

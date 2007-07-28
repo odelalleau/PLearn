@@ -83,6 +83,95 @@ class VMatrix;
 void PLPythonConversionError(const char* function_name, PyObject* pyobj,
                              bool print_traceback);
 
+//! Used to retrieve integer values from python if possible without precision
+//! loss, and convert them to requested type.
+//! @TODO: put I's name in error message?
+//! @TODO: call PyErr_Print() before PyErr_Clear()?
+template <class I>
+I integerFromPyObject(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT( pyobj );
+
+    I result = (I) 0;
+    if (PyInt_Check(pyobj))
+    {
+        // pyobj is represented in Python as a long,
+        // so we are sure it fits into a long, no need to check.
+        long x = PyInt_AS_LONG(pyobj);
+        result = static_cast<I>(x);
+
+        // Check if x fits into type I (overflow or sign problem)
+        if (static_cast<long>(result) != x
+            || !(numeric_limits<I>::is_signed) && x<0)
+        {
+            PLPythonConversionError("integerFromPyObject<I>", pyobj,
+                                    print_traceback);
+        }
+
+    }
+    else if (PyLong_Check(pyobj))
+    {
+        if (numeric_limits<I>::is_signed)
+        {
+            // If I is signed, we have to accept negative values, so we use a
+            // signed long long to hold the result.
+            // No signed type can hold values greater than a long long anyway.
+            long long x = PyLong_AsLongLong(pyobj);
+
+            // Check for possible overflow during conversion
+            if (!PyErr_Occurred())
+            {
+                result = static_cast<I>(x);
+
+                // Check if x fits into type I (overflow only, there
+                // cannot be any sign error because I is signed, too)
+                if (static_cast<long long>(result) != x)
+                {
+                    PLPythonConversionError("integerFromPyObject<I>", pyobj,
+                                            print_traceback);
+                }
+            }
+            else if (PyErr_ExceptionMatches(PyExc_OverflowError))
+            {
+                PyErr_Clear();
+                PLPythonConversionError("integerFromPyObject<I>", pyobj,
+                                        print_traceback);
+            }
+            // else?
+        }
+        else
+        {
+            // I is unsigned
+            unsigned long long x = PyLong_AsUnsignedLongLong(pyobj);
+
+            // Check for possible overflow during conversion
+            if (!PyErr_Occurred())
+            {
+                result = static_cast<I>(x);
+
+                // Check if x fits into type I (overflow only)
+                if (static_cast<unsigned long long>(result) != x)
+                {
+                    PLPythonConversionError("integerFromPyObject<I>", pyobj,
+                                            print_traceback);
+                }
+            }
+            else if (PyErr_ExceptionMatches(PyExc_OverflowError) // too big
+                     || PyErr_ExceptionMatches(PyExc_TypeError)) // negative
+            {
+                PyErr_Clear();
+                PLPythonConversionError("integerFromPyObject<I>", pyobj,
+                                        print_traceback);
+            }
+            // else?
+        }
+    }
+    else
+        PLPythonConversionError("integerFromPyObject<I>", pyobj,
+                                print_traceback);
+    return result;
+}
+
 
 //#####  ConvertFromPyObject  #################################################
 
@@ -101,7 +190,7 @@ void PLPythonConversionError(const char* function_name, PyObject* pyobj,
  */
 template <class T>
 struct ConvertFromPyObject
-{ 
+{
     static T convert(PyObject* x, bool print_traceback);
 };
 
@@ -119,31 +208,62 @@ struct ConvertFromPyObject<bool>
 };
 
 template <>
+struct ConvertFromPyObject<short>
+{
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<short>(pyobj, print_traceback); }
+};
+
+template <>
+struct ConvertFromPyObject<unsigned short>
+{
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<unsigned short>(pyobj, print_traceback); }
+};
+
+template <>
 struct ConvertFromPyObject<int>
 {
-    static int convert(PyObject*, bool print_traceback);
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<int>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<unsigned int>
 {
-    static unsigned int convert(PyObject*, bool print_traceback);
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<unsigned int>(pyobj, print_traceback); }
 };
 
-/*
 template <>
 struct ConvertFromPyObject<long>
 {
-    static long convert(PyObject*, bool print_traceback);
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<long>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<unsigned long>
 {
-    static unsigned long convert(PyObject*, bool print_traceback);
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<unsigned long>(pyobj, print_traceback); }
 };
-*/
 
+template <>
+struct ConvertFromPyObject<long long>
+{
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<long long>(pyobj, print_traceback); }
+};
+
+template <>
+struct ConvertFromPyObject<unsigned long long>
+{
+    static int convert(PyObject* pyobj, bool print_traceback)
+    { return integerFromPyObject<unsigned long long>(pyobj, print_traceback); }
+};
+
+/*
 template <>
 struct ConvertFromPyObject<int64_t>
 {
@@ -155,12 +275,18 @@ struct ConvertFromPyObject<uint64_t>
 {
     static uint64_t convert(PyObject*, bool print_traceback);
 };
-
+*/
 
 template <>
-struct ConvertFromPyObject<real>
+struct ConvertFromPyObject<double>
 {
-    static real convert(PyObject*, bool print_traceback);
+    static double convert(PyObject*, bool print_traceback);
+};
+
+template <>
+struct ConvertFromPyObject<float>
+{
+    static float convert(PyObject*, bool print_traceback);
 };
 
 template <>
