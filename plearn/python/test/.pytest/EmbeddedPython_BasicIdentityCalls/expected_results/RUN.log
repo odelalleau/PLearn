@@ -52,7 +52,7 @@ def quaternary(a,b,c,d):
 isInvokable(nullary)           : 1
 Calling nullary                : Called nullary()
 Calling unary_int(42)          : 42
-Calling unary_long(int64_t(42)): 42
+Calling unary_long(2**64 - 1)  : 18446744073709551615
 Calling unary_float(42.01)     : 42.01
 Calling unary_str('Hello')     : Hello
 Calling unary_vec(v)           : 2 3 5 7 11 13 17 19 23 
