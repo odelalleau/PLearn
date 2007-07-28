@@ -52,6 +52,7 @@
 #include <utility>                           // Pairs
 #include <vector>                            // vector<T>
 #include <map>                               // map<T,U>
+#include <limits>                            // numeric_limits<I>
 
 // From PLearn
 #include <plearn/math/TVec.h>
@@ -101,13 +102,21 @@ I integerFromPyObject(PyObject* pyobj, bool print_traceback)
         result = static_cast<I>(x);
 
         // Check if x fits into type I (overflow or sign problem)
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1682)
+// Yes, I know that "implicit conversion of a 64-bit integral type to a smaller
+// integral type (potential portability problem)", but the conversion is
+// explicit here.
+#endif
         if (static_cast<long>(result) != x
             || !(numeric_limits<I>::is_signed) && x<0)
         {
             PLPythonConversionError("integerFromPyObject<I>", pyobj,
                                     print_traceback);
         }
-
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1682)
+#endif
     }
     else if (PyLong_Check(pyobj))
     {
@@ -121,7 +130,16 @@ I integerFromPyObject(PyObject* pyobj, bool print_traceback)
             // Check for possible overflow during conversion
             if (!PyErr_Occurred())
             {
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1682)
+// Yes, I know that "implicit conversion of a 64-bit integral type to a smaller
+// integral type (potential portability problem)", but the conversion is
+// explicit here.
+#endif
                 result = static_cast<I>(x);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1682)
+#endif
 
                 // Check if x fits into type I (overflow only, there
                 // cannot be any sign error because I is signed, too)
@@ -147,7 +165,16 @@ I integerFromPyObject(PyObject* pyobj, bool print_traceback)
             // Check for possible overflow during conversion
             if (!PyErr_Occurred())
             {
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1682)
+// Yes, I know that "implicit conversion of a 64-bit integral type to a smaller
+// integral type (potential portability problem)", but the conversion is
+// explicit here.
+#endif
                 result = static_cast<I>(x);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1682)
+#endif
 
                 // Check if x fits into type I (overflow only)
                 if (static_cast<unsigned long long>(result) != x)
@@ -210,14 +237,14 @@ struct ConvertFromPyObject<bool>
 template <>
 struct ConvertFromPyObject<short>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static short convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<short>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<unsigned short>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static unsigned short convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<unsigned short>(pyobj, print_traceback); }
 };
 
@@ -231,35 +258,35 @@ struct ConvertFromPyObject<int>
 template <>
 struct ConvertFromPyObject<unsigned int>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static unsigned int convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<unsigned int>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<long>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static long convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<long>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<unsigned long>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static unsigned long convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<unsigned long>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<long long>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static long long convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<long long>(pyobj, print_traceback); }
 };
 
 template <>
 struct ConvertFromPyObject<unsigned long long>
 {
-    static int convert(PyObject* pyobj, bool print_traceback)
+    static unsigned long long convert(PyObject* pyobj, bool print_traceback)
     { return integerFromPyObject<unsigned long long>(pyobj, print_traceback); }
 };
 
@@ -420,7 +447,16 @@ template <class I>
 PyObject* integerToPyObject(const I& x)
 {
     // Try to convert x to a long
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:1682)
+// Yes, I know that "implicit conversion of a 64-bit integral type to a smaller
+// integral type (potential portability problem)", but the conversion is
+// explicit here.
+#endif
     long y = static_cast<long>(x);
+#ifdef __INTEL_COMPILER
+#pragma warning(default:1682)
+#endif
 
     // Check if we lost value information or sign
     if (static_cast<I>(y) == x && (numeric_limits<I>::is_signed || y >= 0))
