@@ -2,22 +2,22 @@
 
 // PythonCodeSnippet.h
 //
-// Copyright (C) 2005 Nicolas Chapados 
-// 
+// Copyright (C) 2005 Nicolas Chapados
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id: PythonCodeSnippet.h 2797 2005-08-25 14:06:26Z chapados $ 
+/* *******************************************************
+ * $Id: PythonCodeSnippet.h 2797 2005-08-25 14:06:26Z chapados $
  ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -70,7 +70,7 @@ using namespace std;
 class PythonException : public PLearnError
 {
     typedef PLearnError inherited;
-    
+
 public:
     PythonException(const string& message)
         : inherited(message)
@@ -118,14 +118,14 @@ public:
      */
     typedef boost::function<PythonObjectWrapper (
         const TVec<PythonObjectWrapper>& args)> StandaloneFunction;
-    
+
     //! The snippet prepended to 'code' option for the injections to behave properly.
     static const char* InjectSetupSnippet;
 
     //! Used to (un)set CURRENT_SNIPPET in Python
     static const char* SetCurrentSnippetVar;
     static const char* ResetCurrentSnippetVar;
-    
+
 public:
     /**
      *  Python statement list that should be compiled at build time to provide
@@ -152,7 +152,7 @@ public:
 
     //! the python object instance
     PythonObjectWrapper m_instance;
-    
+
 public:
     //! Default constructor.  Note that "build" IS NOT CALLED from the
     //! constructor and must be called manually after all external functions
@@ -162,7 +162,7 @@ public:
 
     //! Default copy ctor, assignment op, dtor
 
-    
+
     //#####  Global Environment Interface  ####################################
 
     //! Return an object from the global environment.  Return None if the
@@ -180,7 +180,7 @@ public:
     }
 
 
-    
+
     //#####  Function Call Interface  #########################################
 
     //! Checks whether the specified function name is callable
@@ -194,25 +194,25 @@ public:
     //! 'transfer_ownership' option.
     PythonObjectWrapper invoke(const char* function_name,
                                const TVec<PythonObjectWrapper>& args) const;
-    
+
     //! Call the specified function with 1 argument.
     template <class T>
     PythonObjectWrapper invoke(const char* function_name,
                                const T& arg1) const;
-    
+
     //! Call the specified function with 2 arguments.
     template <class T, class U>
     PythonObjectWrapper invoke(const char* function_name,
                                const T& arg1,
                                const U& arg2) const;
-    
+
     //! Call the specified function with 3 arguments.
     template <class T, class U, class V>
     PythonObjectWrapper invoke(const char* function_name,
                                const T& arg1,
                                const U& arg2,
                                const V& arg3) const;
-    
+
     //! Call the specified function with 4 arguments.
     template <class T, class U, class V, class W>
     PythonObjectWrapper invoke(const char* function_name,
@@ -284,7 +284,7 @@ public:
     template <class T>
     void inject(const char* python_name, const T* object,
                 PythonObjectWrapper (T::*)(const TVec<PythonObjectWrapper>&) const);
-    
+
     /**
      *  Inject a bound C++ member function into the Python code under the given
      *  name (non-const version).
@@ -299,14 +299,14 @@ public:
      *  debugging purposes.
      */
     void dumpPythonEnvironment();
-    
+
 
     //#####  PLearn::Object Standard Functions  ###############################
 
     // Declares other standard object methods
     PLEARN_DECLARE_OBJECT(PythonCodeSnippet);
 
-    // simply calls inherited::build() then build_() 
+    // simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
@@ -314,7 +314,7 @@ public:
 
     virtual void run();
 
-protected: 
+protected:
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
 
@@ -324,7 +324,7 @@ protected:
 
     void setCurrentSnippet(const void* handle) const;
     void resetCurrentSnippet() const;
-    
+
     //! If no Python error, do nothing.  If an error occurred, convert the
     //! Python Exception into a C++ exception if required, or otherwise print a
     //! traceback and abort
@@ -342,7 +342,7 @@ protected:
     //! The Python handle for *this* instance
     void* m_handle;
 
-public:    
+public:
     //! Compiled Python code module and global environment
     PythonObjectWrapper m_compiled_code;
 
@@ -352,8 +352,8 @@ protected:
 
     //! Injected Python method definitions
     PObjectPool<PyMethodDef> m_python_methods;
-    
-private: 
+
+private:
     //! This does the actual building.  This is where the Python code
     //! is in fact compiled
     void build_();
@@ -393,8 +393,8 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
-        PyTuple_SetItem(pArgs, 0, py_arg1);        
+
+        PyTuple_SetItem(pArgs, 0, py_arg1);
 
         return_value = PyObject_CallObject(pFunc, pArgs);
 
@@ -402,7 +402,7 @@ PythonCodeSnippet::invoke(const char* function_name,
         if (! return_value)
             handlePythonErrors();
 
-        resetCurrentSnippet();        
+        resetCurrentSnippet();
     }
     else {
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
@@ -445,10 +445,10 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
+
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
 
         Py_XDECREF(pArgs);
@@ -502,7 +502,7 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
+
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
         PyTuple_SetItem(pArgs, 2, py_arg3);
@@ -563,12 +563,12 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
+
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
         PyTuple_SetItem(pArgs, 2, py_arg3);
         PyTuple_SetItem(pArgs, 3, py_arg4);
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
 
         Py_XDECREF(pArgs);
@@ -628,13 +628,13 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
+
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
         PyTuple_SetItem(pArgs, 2, py_arg3);
         PyTuple_SetItem(pArgs, 3, py_arg4);
         PyTuple_SetItem(pArgs, 4, py_arg5);
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
 
         Py_XDECREF(pArgs);
@@ -699,14 +699,14 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
+
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
         PyTuple_SetItem(pArgs, 2, py_arg3);
         PyTuple_SetItem(pArgs, 3, py_arg4);
         PyTuple_SetItem(pArgs, 4, py_arg5);
         PyTuple_SetItem(pArgs, 5, py_arg6);
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
 
         Py_XDECREF(pArgs);
@@ -776,7 +776,7 @@ PythonCodeSnippet::invoke(const char* function_name,
             PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
                     "from C++ to Python for function '%s'", function_name);
         }
-        
+
         PyTuple_SetItem(pArgs, 0, py_arg1);
         PyTuple_SetItem(pArgs, 1, py_arg2);
         PyTuple_SetItem(pArgs, 2, py_arg3);
@@ -784,7 +784,7 @@ PythonCodeSnippet::invoke(const char* function_name,
         PyTuple_SetItem(pArgs, 4, py_arg5);
         PyTuple_SetItem(pArgs, 5, py_arg6);
         PyTuple_SetItem(pArgs, 6, py_arg7);
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
 
         Py_XDECREF(pArgs);

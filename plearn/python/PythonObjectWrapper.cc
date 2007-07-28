@@ -2,23 +2,23 @@
 
 // PythonObjectWrapper.cc
 //
-// Copyright (C) 2005-2006 Nicolas Chapados 
+// Copyright (C) 2005-2006 Nicolas Chapados
 // Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -98,58 +98,6 @@ bool ConvertFromPyObject<bool>::convert(PyObject* pyobj, bool print_traceback)
 }
 
 
-#if 0
-int ConvertFromPyObject<int>::convert(PyObject* pyobj, bool print_traceback)
-{
-    PLASSERT( pyobj );
-    if (! PyInt_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<int>", pyobj, print_traceback);
-    return int(PyInt_AS_LONG(pyobj));
-}
-
-unsigned int ConvertFromPyObject<unsigned int>::convert(PyObject* pyobj, bool print_traceback)
-{
-    PLASSERT( pyobj );
-    if (! PyInt_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<unsigned int>", pyobj, print_traceback);
-    return static_cast<unsigned int>(PyInt_AsUnsignedLongMask(pyobj));
-}
-
-/*
-long ConvertFromPyObject<long>::convert(PyObject* pyobj, bool print_traceback)
-{
-    PLASSERT( pyobj );
-    if (! PyLong_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<long>", pyobj, print_traceback);
-    return PyLong_AsLong(pyobj);
-}
-
-unsigned long ConvertFromPyObject<unsigned long>::convert(PyObject* pyobj, bool print_traceback)
-{
-    PLASSERT( pyobj );
-    if (! PyInt_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<unsigned long>", pyobj, print_traceback);
-    return PyInt_AsUnsignedLongMask(pyobj);
-}
-*/
-
-int64_t ConvertFromPyObject<int64_t>::convert(PyObject* pyobj, bool print_traceback)
-{
-    PLASSERT( pyobj );
-    if (! PyLong_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<int64_t>", pyobj, print_traceback);
-    return PyLong_AsLongLong(pyobj);
-}
-
-uint64_t ConvertFromPyObject<uint64_t>::convert(PyObject* pyobj, bool print_traceback)
-{
-    PLASSERT( pyobj );
-    if (! PyInt_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<uint64_t>", pyobj, print_traceback);
-    return PyInt_AsUnsignedLongLongMask(pyobj);
-}
-#endif
-
 double ConvertFromPyObject<double>::convert(PyObject* pyobj,
                                             bool print_traceback)
 {
@@ -180,7 +128,8 @@ float ConvertFromPyObject<float>::convert(PyObject* pyobj,
     return 0;//shut up compiler
 }
 
-string ConvertFromPyObject<string>::convert(PyObject* pyobj, bool print_traceback)
+string ConvertFromPyObject<string>::convert(PyObject* pyobj,
+                                            bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyString_Check(pyobj))
@@ -189,7 +138,8 @@ string ConvertFromPyObject<string>::convert(PyObject* pyobj, bool print_tracebac
     return PyString_AsString(pyobj);
 }
 
-PPath ConvertFromPyObject<PPath>::convert(PyObject* pyobj, bool print_traceback)
+PPath ConvertFromPyObject<PPath>::convert(PyObject* pyobj,
+                                          bool print_traceback)
 {
     PLASSERT( pyobj );
     if (! PyString_Check(pyobj))
@@ -198,7 +148,8 @@ PPath ConvertFromPyObject<PPath>::convert(PyObject* pyobj, bool print_traceback)
     return PPath(PyString_AsString(pyobj));
 }
 
-PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj, bool print_traceback)
+PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj,
+                                                      bool print_traceback)
 {
     PLASSERT(pyobj);
     if (! PyCObject_Check(pyobj))
@@ -207,7 +158,8 @@ PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj, bool prin
     return static_cast<PPointable*>(PyCObject_AsVoidPtr(pyobj));
 }
 
-Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj, bool print_traceback)
+Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
+                                              bool print_traceback)
 {
     PLASSERT(pyobj);
     if(pyobj == Py_None)
@@ -225,19 +177,21 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj, bool print_traceb
         PLPythonConversionError("ConvertFromPyObject<Object*>", pyobj,
                                 print_traceback);
     Object* obj= static_cast<Object*>(PyCObject_AsVoidPtr(cptr));
-   
+
     Py_DECREF(cptr);
     return obj;
 }
 
-void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v, bool print_traceback)
+void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v,
+                                       bool print_traceback)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
     PLASSERT( pyobj );
     PyArrayObject* pyarr = NA_InputArray(pyobj, tReal, NUM_C_ARRAY);
     if (! pyarr)
-        PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj, print_traceback);
+        PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj,
+                                print_traceback);
     if (pyarr->nd != 1)
         PLERROR("ConvertFromPyObject<Vec>: Dimensionality of the returned array "
                 "should be 1; got %d", pyarr->nd);
@@ -254,14 +208,16 @@ Vec ConvertFromPyObject<Vec>::convert(PyObject* pyobj, bool print_traceback)
     return v;
 }
 
-void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m, bool print_traceback)
+void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m,
+                                       bool print_traceback)
 {
     // NA_InputArray possibly creates a well-behaved temporary (i.e. not
     // discontinuous is memory)
     PLASSERT( pyobj );
     PyArrayObject* pyarr = NA_InputArray(pyobj, tReal, NUM_C_ARRAY);
     if (! pyarr)
-        PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj, print_traceback);
+        PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj,
+                                print_traceback);
     if (pyarr->nd != 2)
         PLERROR("ConvertFromPyObject<Mat>: Dimensionality of the returned array "
                 "should be 2; got %d", pyarr->nd);
@@ -279,8 +235,10 @@ Mat ConvertFromPyObject<Mat>::convert(PyObject* pyobj, bool print_traceback)
     return m;
 }
 
-//VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj, bool print_traceback)
-PP<VMatrix> ConvertFromPyObject<PP<VMatrix> >::convert(PyObject* pyobj, bool print_traceback)
+//VMat ConvertFromPyObject<VMat>::convert(PyObject* pyobj,
+//                                        bool print_traceback)
+PP<VMatrix> ConvertFromPyObject<PP<VMatrix> >::convert(PyObject* pyobj,
+                                                       bool print_traceback)
 {
     PLASSERT(pyobj);
     if(PyObject_HasAttrString(pyobj, "_cptr"))
@@ -299,7 +257,8 @@ PythonObjectWrapper ConvertFromPyObject<PythonObjectWrapper>::convert(PyObject* 
 
 //#####  Constructors+Destructors  ############################################
 PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,
-                                         bool acquire_gil /* unused in this overload */)
+                                         // unused in this overload
+                                         bool acquire_gil)
     : m_ownership(o),
       m_object(Py_None)
 {
@@ -309,10 +268,11 @@ PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,
 
 //! Constructor for pre-existing PyObject
 PythonObjectWrapper::PythonObjectWrapper(PyObject* pyobj, OwnershipMode o,
-                                         bool acquire_gil /* unused in this overload */)
+                                         // unused in this overload
+                                         bool acquire_gil)
     : m_ownership(o),
       m_object(pyobj)
-{ 
+{
     if (m_ownership == control_ownership)
         Py_XINCREF(m_object);
 }
@@ -375,7 +335,7 @@ bool PythonObjectWrapper::isNull() const
 {
     return ! m_object || m_object == Py_None;
 }
-    
+
 
 //##### Trampoline ############################################################
 PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
@@ -387,17 +347,17 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
 
     //perr << "refcnt self= " << self->ob_refcnt << endl;
 
-    RemoteTrampoline* tramp= 
+    RemoteTrampoline* tramp=
         dynamic_cast<RemoteTrampoline*>(s.as<PPointable*>());
-    if(!tramp) 
+    if(!tramp)
         PLERROR("in PythonObjectWrapper::trampoline : "
                 "can't unwrap RemoteTrampoline.");
 
     //wrap args
     int size = PyTuple_GET_SIZE(args);
     TVec<PythonObjectWrapper> args_tvec(size);
-    for(int i= 0; i < size; ++i) 
-        args_tvec[i]= 
+    for(int i= 0; i < size; ++i)
+        args_tvec[i]=
             PythonObjectWrapper(PyTuple_GET_ITEM(args,i));
 
     // separate self from other params.
@@ -412,17 +372,17 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
         Py_XINCREF(to_return);
         return to_return;
     }
-    catch(const PLearnError& e) 
+    catch(const PLearnError& e)
     {
         PyErr_SetString(PyExc_Exception, e.message().c_str());
         return 0;
     }
-    catch(const std::exception& e) 
+    catch(const std::exception& e)
     {
         PyErr_SetString(PyExc_Exception, e.what());
         return 0;
     }
-    catch(...) 
+    catch(...)
     {
         PyErr_SetString(PyExc_Exception,
                         "Caught unknown C++ exception while executing injected function "
@@ -433,7 +393,7 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
 
 PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
 {
-    TVec<PyObject*> args_tvec= 
+    TVec<PyObject*> args_tvec=
         PythonObjectWrapper(args).as<TVec<PyObject*> >();
 
     Object* obj= PythonObjectWrapper(args_tvec[0]);
@@ -460,16 +420,17 @@ PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
 
 //#####  newPyObject  #########################################################
 
-PyObject* PythonObjectWrapper::newPyObject()           //!< Return None (increments refcount)
+//! Return None (increments refcount)
+PyObject* PythonObjectWrapper::newPyObject()
 {
     Py_XINCREF(Py_None);
     return Py_None;
 }
 
-PythonObjectWrapper::wrapped_objects_t 
+PythonObjectWrapper::wrapped_objects_t
     PythonObjectWrapper::m_wrapped_objects;//init.
 
-PythonObjectWrapper::pypl_classes_t 
+PythonObjectWrapper::pypl_classes_t
     PythonObjectWrapper::m_pypl_classes;//init.
 //init.
 bool PythonObjectWrapper::m_unref_injected= false;
@@ -479,7 +440,7 @@ PyMethodDef PythonObjectWrapper::m_unref_method_def;
 PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 {
     // void ptr becomes None
-    if(!x) 
+    if(!x)
         return PythonObjectWrapper::newPyObject();
 
     PythonGlobalInterpreterLock gil;         // For thread-safety
@@ -488,7 +449,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
     PythonObjectWrapper::initializePython();
 
     //see if this obj. is already wrapped
-    PythonObjectWrapper::wrapped_objects_t::iterator objit= 
+    PythonObjectWrapper::wrapped_objects_t::iterator objit=
         PythonObjectWrapper::m_wrapped_objects.find(x);
     if(objit != PythonObjectWrapper::m_wrapped_objects.end())
     {
@@ -502,9 +463,10 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
         "import *\n";
     PyObject* pyenv= PyDict_New();
     PyDict_SetItemString(pyenv, "__builtins__", PyEval_GetBuiltins());
-    PyObject* res= PyRun_String(importcode.c_str(), Py_file_input, pyenv, pyenv);
+    PyObject* res= PyRun_String(importcode.c_str(), Py_file_input, pyenv,
+                                pyenv);
     Py_DECREF(res);
-    if (PyErr_Occurred()) 
+    if (PyErr_Occurred())
     {
         Py_DECREF(pyenv);
         PyErr_Print();
@@ -536,16 +498,16 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
         py_method->ml_flags = METH_VARARGS;
         py_method->ml_doc   = "Injected unref function from PythonObjectWrapper; "
             "DO NOT USE THIS FUNCTION! IT MAY DEALLOCATE THE PLEARN OBJECT!";
-        
+
         PyObject* py_funcobj= PyCFunction_NewEx(py_method, NULL, NULL);
         PyObject* py_methobj= PyMethod_New(py_funcobj, NULL, wrapper);
         Py_XDECREF(py_funcobj);
-        if(!py_funcobj || !py_methobj) 
+        if(!py_funcobj || !py_methobj)
         {
             Py_DECREF(pyenv);
             Py_XDECREF(py_methobj);
             PLERROR("in PythonObjectWrapper::newPyObject : "
-                    "can't inject method '%s' (i.e. __del__)", 
+                    "can't inject method '%s' (i.e. __del__)",
                     py_method->ml_name);
         }
         PyObject_SetAttrString(wrapper, py_method->ml_name, py_methobj);
@@ -576,7 +538,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 
     // try to find existing python class
     string classname= x->classname();
-    PythonObjectWrapper::pypl_classes_t::iterator clit2= 
+    PythonObjectWrapper::pypl_classes_t::iterator clit2=
         PythonObjectWrapper::m_pypl_classes.find(classname);
     PyObject* the_pyclass= 0;
     if(clit2 == PythonObjectWrapper::m_pypl_classes.end())
@@ -595,7 +557,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
         if(clit == env.end())
             PLERROR("in PythonObjectWrapper::newPyObject : "
                     "Cannot create new python class deriving from "
-                    "%s (%s).", 
+                    "%s (%s).",
                     wrapper_name.c_str(),
                     classname.c_str());
 
@@ -607,11 +569,11 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
             optionnames[i]= options[i]->optionname();
 
         the_pyclass= clit->second;
-        if(-1==PyObject_SetAttrString(the_pyclass, "_optionnames", 
+        if(-1==PyObject_SetAttrString(the_pyclass, "_optionnames",
                                       PythonObjectWrapper(optionnames).getPyObject()))
         {
             Py_DECREF(pyenv);
-            if (PyErr_Occurred()) 
+            if (PyErr_Occurred())
                 PyErr_Print();
             PLERROR("cannot set attr _optionnames");
         }
@@ -619,12 +581,12 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
         // inject all declared methods
         const RemoteMethodMap* methods= &x->getRemoteMethodMap();
 
-        PP<PObjectPool<PyMethodDef> > meth_def_pool= 
+        PP<PObjectPool<PyMethodDef> > meth_def_pool=
             new PObjectPool<PyMethodDef>(methods->size()+1);
 
         PythonObjectWrapper::m_pypl_classes.insert(
             make_pair(classname, PLPyClass(the_pyclass, meth_def_pool)));
-        TVec<string>& methods_help= 
+        TVec<string>& methods_help=
             PythonObjectWrapper::m_pypl_classes.find(classname)->second.methods_help;
 
         while(methods)
@@ -634,7 +596,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
             {
                 //get the RemoteTrampoline
                 PyObject* tramp= PyCObject_FromVoidPtr(it->second, NULL);
-            
+
                 // Create a Python Function Object
                 PyMethodDef* py_method= meth_def_pool->allocate();
                 py_method->ml_name  = const_cast<char*>(it->first.first.c_str());
@@ -644,7 +606,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
                                                                 it->first.first.c_str(),
                                                                 it->first.second));
                 py_method->ml_doc   = const_cast<char*>(methods_help.last().c_str());
-    
+
                 PyObject* py_funcobj= PyCFunction_NewEx(py_method, tramp, NULL);
 
                 // create an unbound method from the function
@@ -652,7 +614,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 
                 Py_DECREF(tramp);
                 Py_XDECREF(py_funcobj);
-                if(!py_funcobj || !py_methobj) 
+                if(!py_funcobj || !py_methobj)
                 {
                     Py_DECREF(pyenv);
                     Py_DECREF(plobj);
@@ -661,7 +623,8 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
                             "can't inject method '%s'", py_method->ml_name);
                 }
 
-                PyObject_SetAttrString(the_pyclass, py_method->ml_name, py_methobj);
+                PyObject_SetAttrString(the_pyclass, py_method->ml_name,
+                                       py_methobj);
                 Py_DECREF(py_methobj);
             }
             methods= methods->inheritedMethods();//get parent class methods
@@ -672,12 +635,12 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
         the_pyclass= clit2->second.pyclass;
         ++clit2->second.nref;
     }
-    
+
     //create the python object itself from the_pyclass
     PyObject* args= PyTuple_New(1);
     Py_INCREF(plobj);//keep it after it is 'stolen'
     PyTuple_SetItem(args, 0, plobj);
-    
+
     PyObject* params= PyDict_New();
     PyObject* the_obj= PyObject_Call(the_pyclass, args, params);
     Py_DECREF(args);
@@ -715,40 +678,6 @@ PyObject* ConvertToPyObject<bool>::newPyObject(const bool& x)
     }
 }
 
-#if 0
-PyObject* ConvertToPyObject<int>::newPyObject(const int& x)
-{
-    return PyInt_FromLong(long(x));
-}
-
-PyObject* ConvertToPyObject<unsigned int>::newPyObject(const unsigned int& x)
-{
-    return PyLong_FromUnsignedLong(static_cast<unsigned long>(x));
-}
-
-/*
-PyObject* ConvertToPyObject<long>::newPyObject(const long& x)
-{
-    return PyLong_FromLong(x);
-}
-
-PyObject* ConvertToPyObject<unsigned long>::newPyObject(const unsigned long& x)
-{
-    return PyLong_FromUnsignedLong(x);
-}
-*/
-
-PyObject* ConvertToPyObject<int64_t>::newPyObject(const int64_t& x)
-{
-    return PyLong_FromLongLong(x);
-}
-
-PyObject* ConvertToPyObject<uint64_t>::newPyObject(const uint64_t& x)
-{
-    return PyLong_FromUnsignedLongLong(x);
-}
-#endif
-
 PyObject* ConvertToPyObject<double>::newPyObject(const double& x)
 {
     return PyFloat_FromDouble(x);
@@ -763,7 +692,7 @@ PyObject* ConvertToPyObject<char*>::newPyObject(const char* x)
 {
     return PyString_FromString(x);
 }
-    
+
 PyObject* ConvertToPyObject<string>::newPyObject(const string& x)
 {
     return PyString_FromString(x.c_str());
@@ -782,7 +711,7 @@ PyObject* ConvertToPyObject<Vec>::newPyObject(const Vec& data)
         pyarr = NA_NewArray(NULL, tReal, 1, 0);
     else
         pyarr = NA_NewArray(data.data(), tReal, 1, data.size());
-        
+
     return (PyObject*)pyarr;
 }
 
@@ -792,7 +721,8 @@ PyObject* ConvertToPyObject<Mat>::newPyObject(const Mat& data)
     if (data.isNull() || data.isEmpty())
         pyarr = NA_NewArray(NULL, tReal, 2, data.length(), data.width());
     else if (data.mod() == data.width())
-        pyarr = NA_NewArray(data.data(), tReal, 2, data.length(), data.width());
+        pyarr = NA_NewArray(data.data(), tReal, 2, data.length(),
+                            data.width());
     else {
         // static PyObject* NA_NewAll( int ndim, maybelong *shape, NumarrayType
         // type, void *buffer, maybelong byteoffset, maybelong bytestride, int
@@ -810,8 +740,8 @@ PyObject* ConvertToPyObject<Mat>::newPyObject(const Mat& data)
         // maybelong shape[2];
         // shape[0] = data.length();
         // shape[1] = data.width();
-        // pyarr = NA_NewAll(2, shape, tReal, data.data(), 0, data.mod()*sizeof(real),
-        //                   NA_ByteOrder(), 1, 1);
+        // pyarr = NA_NewAll(2, shape, tReal, data.data(), 0,
+        //                   data.mod()*sizeof(real), NA_ByteOrder(), 1, 1);
 
         // NOTE (NC) -- I could not get the above function to work; for now,
         // simply copy the matrix to new storage before converting to Python.

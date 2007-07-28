@@ -2,23 +2,23 @@
 
 // PythonObjectWrapper.h
 //
-// Copyright (C) 2005-2006 Nicolas Chapados 
+// Copyright (C) 2005-2006 Nicolas Chapados
 // Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -29,12 +29,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
-   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $ 
+/* *******************************************************
+   * $Id: .pyskeleton_header 544 2003-09-01 00:05:31Z plearner $
    ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -290,19 +290,6 @@ struct ConvertFromPyObject<unsigned long long>
     { return integerFromPyObject<unsigned long long>(pyobj, print_traceback); }
 };
 
-/*
-template <>
-struct ConvertFromPyObject<int64_t>
-{
-    static int64_t convert(PyObject*, bool print_traceback);
-};
-
-template <>
-struct ConvertFromPyObject<uint64_t>
-{
-    static uint64_t convert(PyObject*, bool print_traceback);
-};
-*/
 
 template <>
 struct ConvertFromPyObject<double>
@@ -358,7 +345,8 @@ struct ConvertFromPyObject<T*>
         //      to retrieve a pointer to something that is not an Object from
         //      python.  Only Object pointers are supported.
 
-        Object* obj = ConvertFromPyObject<Object*>::convert(pyobj, print_traceback);
+        Object* obj = ConvertFromPyObject<Object*>::convert(pyobj,
+                                                            print_traceback);
         if (T* tobj = dynamic_cast<T*>(obj))
             return tobj;
         else
@@ -580,31 +568,31 @@ template<> struct ConvertToPyObject<Mat>
 //! @TODO  Must provide a complete Python wrapper over VMatrix objects
 template<> struct ConvertToPyObject<PP<VMatrix> >
 { static PyObject* newPyObject(const PP<VMatrix>& vm); };
-    
+
 //! Generic PP: wrap pointed object
 template<class T> struct ConvertToPyObject<PP<T> >
 { static PyObject* newPyObject(const PP<T>&); };
-    
+
 //! tuples (1 to 7 elts.)
-template<class T> 
+template<class T>
 struct ConvertToPyObject<tuple<T> >
 { static PyObject* newPyObject(const tuple<T>&); };
-template <class T, class U> 
+template <class T, class U>
 struct ConvertToPyObject<tuple<T,U> >
 { static PyObject* newPyObject(const tuple<T, U>&); };
-template <class T, class U, class V> 
+template <class T, class U, class V>
 struct ConvertToPyObject<tuple<T,U,V> >
 { static PyObject* newPyObject(const tuple<T, U, V>&); };
-template <class T, class U, class V, class W> 
+template <class T, class U, class V, class W>
 struct ConvertToPyObject<tuple<T,U,V,W> >
 { static PyObject* newPyObject(const tuple<T, U, V, W>&); };
-template <class T, class U, class V, class W, class X> 
+template <class T, class U, class V, class W, class X>
 struct ConvertToPyObject<tuple<T,U,V,W,X> >
 { static PyObject* newPyObject(const tuple<T, U, V, W, X>&); };
-template <class T, class U, class V, class W, class X, class Y> 
+template <class T, class U, class V, class W, class X, class Y>
 struct ConvertToPyObject<tuple<T,U,V,W,X,Y> >
 { static PyObject* newPyObject(const tuple<T, U, V, W, X, Y>&); };
-template <class T, class U, class V, class W, class X, class Y, class Z> 
+template <class T, class U, class V, class W, class X, class Y, class Z>
 struct ConvertToPyObject<tuple<T,U,V,W,X,Y,Z> >
 { static PyObject* newPyObject(const tuple<T, U, V, W, X, Y, Z>&); };
 
@@ -627,7 +615,7 @@ template <class T, class U> struct ConvertToPyObject<std::map<T,U> >
 //! C++ stdlib pair<>: create a Python tuple with two elements
 template <class T, class U> struct ConvertToPyObject<std::pair<T,U> >
 { static PyObject* newPyObject(const std::pair<T,U>&); };
-    
+
 //! Pointer to vector<>: simply dereference pointer, or None if NULL
 //!
 //! (NOTE: we don't have conversion from general pointer type since it's
@@ -702,7 +690,7 @@ public:
     PythonGlobalInterpreterLock()
         : m_gilstate(PyGILState_Ensure())
     { }
-       
+
     ~PythonGlobalInterpreterLock()
     {
         PyGILState_Release(m_gilstate);
@@ -716,8 +704,8 @@ public:
 
 /**
  *  @class  PythonObjectWrapper
- *  @brief  Very lightweight wrapper over a Python Object that allows conversion
- *          to/from C++ types (including those of PLearn)
+ *  @brief  Very lightweight wrapper over a Python Object that allows
+ *          conversion to/from C++ types (including those of PLearn)
  *
  *  A PythonObjectWrapper provides the ability to manage a Python Object in a
  *  fairly lightweight manner.  It supports construction from a number of C++
@@ -746,7 +734,7 @@ public:
         control_ownership,
         transfer_ownership
     };
-    
+
 public:
     //#####  Construction and Utility  ########################################
 
@@ -757,15 +745,16 @@ public:
     //! reference-counted just like any other object.
     PythonObjectWrapper(OwnershipMode o = control_ownership,
                         bool acquire_gil = true /* unused in this overload */);
-    
+
     //! Constructor for pre-existing PyObject
     PythonObjectWrapper(PyObject* pyobj, OwnershipMode o = control_ownership,
                         bool acquire_gil = true /* unused in this overload */);
-    
+
     //! Constructor for general type (forwarded to newPyObject)
     template <class T>
-    explicit PythonObjectWrapper(const T& x, OwnershipMode o = control_ownership,
-                        bool acquire_gil = true)
+    explicit PythonObjectWrapper(const T& x,
+                                 OwnershipMode o = control_ownership,
+                                 bool acquire_gil = true)
         : m_ownership(o)
     {
         if (acquire_gil) {
@@ -778,7 +767,7 @@ public:
 
     //! Copy constructor: increment refcount if controlling ownership.
     PythonObjectWrapper(const PythonObjectWrapper& other);
-    
+
     //! Destructor: decrement refcount if controlling ownership.
     //! Always acquire the Python Global Interpreter Lock before decrementing.
     ~PythonObjectWrapper();
@@ -791,20 +780,20 @@ public:
 
     //! Swap *this with another instance
     void swap(PythonObjectWrapper& other);
-    
+
     //! Return the bare PyObject managed by the wrapper
     PyObject* getPyObject() const
     {
         return m_object;
     }
-    
+
     //! Return true if m_object is either NULL or stands for Python's None
     bool isNull() const;
-    
+
     //! Print out the Python object to stderr for debugging purposes
     void printDebug() const;
 
-    
+
 
     //#####  Conversion Back to C++  ##########################################
 
@@ -826,7 +815,7 @@ public:
     {
         return ConvertFromPyObject<T>::convert(m_object, false);
     }
-    
+
 
     //##### Trampoline for PLearn objects #####################################
 
@@ -849,11 +838,12 @@ public:
      *  initializations related to libnumarray.
      */
     static void initializePython();
-    
+
 protected:
-    OwnershipMode m_ownership;               //!< Whether we own the PyObject or not
+    //! Whether we own the PyObject or not
+    OwnershipMode m_ownership;
     PyObject* m_object;
-    
+
     //for the unique unref injected method
     static bool m_unref_injected;
     static PyMethodDef m_unref_method_def;
@@ -895,8 +885,8 @@ struct ConvertToPyObject<T*>
 
 //#####  ConvertFromPyObject Implementations  #################################
 
-template<class U, bool is_enum> 
-struct StaticConvertEnumFromPyObject 
+template<class U, bool is_enum>
+struct StaticConvertEnumFromPyObject
 {
     static U convert(PyObject* x, bool print_traceback)
     {
@@ -905,7 +895,7 @@ struct StaticConvertEnumFromPyObject
         return U();//to silence compiler
     }
 };
-    
+
 template<class U>
 struct StaticConvertEnumFromPyObject<U, true>
 {
@@ -924,7 +914,7 @@ T ConvertFromPyObject<T>::convert(PyObject* x, bool print_traceback)
     /*
     if(boost::is_enum<T>::value)
         return ConvertFromPyObject<int>::convert(x, print_traceback);
-    
+
     PLERROR("Cannot convert this object by value from python (type=%s).",
             TypeTraits<T>::name().c_str());
     return T();//to silence compiler
@@ -933,7 +923,8 @@ T ConvertFromPyObject<T>::convert(PyObject* x, bool print_traceback)
 
 
 template <class T>
-PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj, bool print_traceback)
+PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj,
+                                           bool print_traceback)
 {
     PLASSERT( pyobj );
     if(pyobj == Py_None)
@@ -952,10 +943,11 @@ PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj, bool print_traceback
 }
 
 template <class T>
-TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj, bool print_traceback)
+TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj,
+                                                bool print_traceback)
 {
     PLASSERT( pyobj );
-    
+
     // Here, we support both Python Tuples and Lists
     if (PyTuple_Check(pyobj)) {
         // Tuple case
@@ -985,19 +977,21 @@ TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj, bool print_trac
 }
 
 template <class T>
-TMat<T> ConvertFromPyObject<TMat<T> >::convert(PyObject* pyobj, bool print_traceback)
+TMat<T> ConvertFromPyObject<TMat<T> >::convert(PyObject* pyobj,
+                                               bool print_traceback)
 {
     PLASSERT( pyobj );
-    
+
     // Here, we support both Python Tuples and Lists
     if (PyTuple_Check(pyobj)) {
         // Tuple case
         int len= PyTuple_GET_SIZE(pyobj);
         TMat<T> v;
-        for(int i= 0; i < len; ++i) 
+        for(int i= 0; i < len; ++i)
         {
             PyObject* row_i= PyTuple_GET_ITEM(pyobj, i);
-            TVec<T> r= ConvertFromPyObject<TVec<T> >::convert(row_i, print_traceback);
+            TVec<T> r= ConvertFromPyObject<TVec<T> >::convert(row_i,
+                                                              print_traceback);
             if(i == 0)
                 v.resize(0, r.size());
             v.appendRow(r);
@@ -1008,10 +1002,11 @@ TMat<T> ConvertFromPyObject<TMat<T> >::convert(PyObject* pyobj, bool print_trace
         // List case
         int len= PyList_GET_SIZE(pyobj);
         TMat<T> v;
-        for(int i= 0; i < len; ++i) 
+        for(int i= 0; i < len; ++i)
         {
             PyObject* row_i= PyList_GET_ITEM(pyobj, i);
-            TVec<T> r= ConvertFromPyObject<TVec<T> >::convert(row_i, print_traceback);
+            TVec<T> r= ConvertFromPyObject<TVec<T> >::convert(row_i,
+                                                              print_traceback);
             if(i == 0)
                 v.resize(0, r.size());
             v.appendRow(r);
@@ -1031,7 +1026,7 @@ std::vector<T> ConvertFromPyObject< std::vector<T> >::convert(PyObject* pyobj,
                                                               bool print_traceback)
 {
     PLASSERT( pyobj );
-    
+
     // Simple but inefficient implementation: create temporary TVec and copy
     // into a vector
     TVec<T> v = ConvertFromPyObject< TVec<T> >::convert(pyobj, print_traceback);
@@ -1046,7 +1041,7 @@ std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj,
     if (! PyDict_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject< std::map<T,U> >", pyobj,
                                 print_traceback);
-    
+
     PyObject *key, *value;
 #if PL_PYTHON_VERSION>=250
     Py_ssize_t pos = 0;
@@ -1088,7 +1083,7 @@ std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
 
 //#####  newPyObject Implementations  #########################################
 
-template<size_t N> 
+template<size_t N>
 PyObject*  ConvertToPyObject<char[N]>::newPyObject(const char x[N])
 {
     return ConvertToPyObject<char*>::newPyObject(x);
@@ -1123,12 +1118,12 @@ template <class T>
 PyObject* ConvertToPyObject<TMat<T> >::newPyObject(const TMat<T>& data)
 {
     PyObject* newlist = PyList_New(data.length());
-    for (int i=0, n=data.length() ; i<n ; ++i) 
+    for (int i=0, n=data.length() ; i<n ; ++i)
     {
         // Since PyList_SET_ITEM steals the reference to the item being set,
         // one does not need to Py_XDECREF the inserted string as was required
         // for the PyArrayObject code above...
-        PyList_SET_ITEM(newlist, i, 
+        PyList_SET_ITEM(newlist, i,
                         ConvertToPyObject<TVec<T> >::newPyObject(data(i)));
     }
     return newlist;
@@ -1146,7 +1141,7 @@ PyObject* ConvertToPyObject<std::vector<T> >::newPyObject(const std::vector<T>& 
     }
     return newlist;
 }
-    
+
 template <class T, class U>
 PyObject* ConvertToPyObject<std::map<T,U> >::newPyObject(const std::map<T,U>& data)
 {

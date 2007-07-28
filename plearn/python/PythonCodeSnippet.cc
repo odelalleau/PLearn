@@ -2,22 +2,22 @@
 
 // PythonCodeSnippet.cc
 //
-// Copyright (C) 2005 Nicolas Chapados 
-// 
+// Copyright (C) 2005 Nicolas Chapados
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  1. Redistributions of source code must retain the above copyright
 //     notice, this list of conditions and the following disclaimer.
-// 
+//
 //  2. Redistributions in binary form must reproduce the above copyright
 //     notice, this list of conditions and the following disclaimer in the
 //     documentation and/or other materials provided with the distribution.
-// 
+//
 //  3. The name of the authors may not be used to endorse or promote
 //     products derived from this software without specific prior written
 //     permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 // OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
@@ -28,12 +28,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/* *******************************************************      
- * $Id: PythonCodeSnippet.cc 2771 2005-08-11 22:06:13Z chapados $ 
+/* *******************************************************
+ * $Id: PythonCodeSnippet.cc 2771 2005-08-11 22:06:13Z chapados $
  ******************************************************* */
 
 // Authors: Nicolas Chapados
@@ -105,7 +105,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "thread-safe, i.e. the Python Global Interpreter Lock is always acquired\n"
     "before sensitive operations are carried out.\n"
     );
-  
+
 
 PythonCodeSnippet::PythonCodeSnippet(const string& code,
                                      bool remap_python_exceptions)
@@ -166,7 +166,7 @@ void PythonCodeSnippet::build_()
         // initialized into a STATIC VARIABLE of the translation unit!
         import_libnumarray();
         numarray_initialized = true;
-        
+
         PythonObjectWrapper::initializePython();
     }
 
@@ -181,7 +181,7 @@ void PythonCodeSnippet::build_()
                                             string(set_current_snippet)+m_code);
         resetCurrentSnippet();
     }
-    
+
     // Forget about injected functions
     m_injected_functions.purge_memory();
     m_python_methods.purge_memory();
@@ -263,7 +263,7 @@ bool PythonCodeSnippet::isInvokable(const char* function_name) const
             pFunc= PyObject_GetAttrString(m_instance.getPyObject(), fn);
         delete[] fn;
     }
-    if(pFunc) 
+    if(pFunc)
         instance_method= true;
     else
         pFunc= PyDict_GetItemString(m_compiled_code.getPyObject(),
@@ -291,7 +291,7 @@ PythonCodeSnippet::invoke(const char* function_name) const
             pFunc= PyObject_GetAttrString(m_instance.getPyObject(), fn);
         delete[] fn;
     }
-    if(pFunc) 
+    if(pFunc)
         instance_method= true;
     else
         pFunc= PyDict_GetItemString(m_compiled_code.getPyObject(),
@@ -306,7 +306,7 @@ PythonCodeSnippet::invoke(const char* function_name) const
         return_value = PyObject_CallObject(pFunc, NULL);
         if (! return_value)
         {
-            if(instance_method) 
+            if(instance_method)
                 Py_DECREF(pFunc);
             handlePythonErrors(string("Error while calling function '")
                                + function_name
@@ -347,7 +347,7 @@ PythonCodeSnippet::invoke(const char* function_name,
             pFunc= PyObject_GetAttrString(m_instance.getPyObject(), fn);
         delete[] fn;
     }
-    if(pFunc) 
+    if(pFunc)
         instance_method= true;
     else
         pFunc= PyDict_GetItemString(m_compiled_code.getPyObject(),
@@ -356,9 +356,9 @@ PythonCodeSnippet::invoke(const char* function_name,
     // pFunc: Borrowed reference if not instance_method
 
     PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {        
+    if (pFunc && PyCallable_Check(pFunc)) {
         setCurrentSnippet(m_handle);
-        
+
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(args.size());
         for (int i=0, n=args.size() ; i<n ; ++i)
@@ -366,31 +366,31 @@ PythonCodeSnippet::invoke(const char* function_name,
             PyTuple_SetItem(pArgs, i, args[i].getPyObject());
             Py_INCREF(args[i].getPyObject());
         }
-        
+
         return_value = PyObject_CallObject(pFunc, pArgs);
 
         Py_DECREF(pArgs);
         if (! return_value)
         {
-            if(instance_method) 
+            if(instance_method)
                 Py_DECREF(pFunc);
             handlePythonErrors(string("Error while calling function '")
                                + function_name
-                               + "' with " 
+                               + "' with "
                                + tostring(args.length())
                                + " params.");
         }
-        resetCurrentSnippet();        
+        resetCurrentSnippet();
     }
     else
     {
-        if(instance_method) 
+        if(instance_method)
             Py_DECREF(pFunc);
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
                 function_name);
     }
 
-    if(instance_method) 
+    if(instance_method)
         Py_DECREF(pFunc);
     //return PythonObjectWrapper(return_value);
     PythonObjectWrapper r(return_value);
@@ -415,10 +415,10 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
         int size = PyTuple_GET_SIZE(args);
         TVec<PythonObjectWrapper> args_tvec(size);
         for (int i=0 ; i<size ; ++i) {
-            args_tvec[i]= 
+            args_tvec[i]=
                 PythonObjectWrapper(PyTuple_GET_ITEM(args,i));
         }
-        
+
         // Now get the void* stored within the PyCObject of self
         StandaloneFunction* func =
             static_cast<StandaloneFunction*>(PyCObject_AsVoidPtr(self));
@@ -429,13 +429,13 @@ PyObject* PythonCodeSnippet::pythonTrampoline(PyObject* self, PyObject* args)
     }
     // Catch PLERROR and such
     catch (const PLearnError& e) {
-        PyErr_SetString(PyExc_Exception, 
+        PyErr_SetString(PyExc_Exception,
                         (string("PLearn Error: ")+e.message()).c_str());
         return NULL;
     }
     // Catch C++ stdlib exceptions
     catch (const std::exception& e) {
-        PyErr_SetString(PyExc_Exception, 
+        PyErr_SetString(PyExc_Exception,
                         (string("C++ stdlib error: ")+e.what()).c_str());
         return NULL;
     }
@@ -457,18 +457,18 @@ void PythonCodeSnippet::injectInternal(const char* python_name,
 
     // Wrap the function_ptr into a PyCObject
     PyObject* self = PyCObject_FromVoidPtr(function_ptr, NULL);
-    
+
     // Create a Python Function Object
     PyMethodDef* py_method = m_python_methods.allocate();
     py_method->ml_name  = const_cast<char*>(python_name);
     py_method->ml_meth  = pythonTrampoline;
     py_method->ml_flags = METH_VARARGS;
     py_method->ml_doc   = "injected-function-from-PythonCodeSnippet";
-    
+
     PyObject* py_funcobj = PyCFunction_NewEx(py_method,
                                              self /* info for trampoline */,
                                              NULL /* module */);
-    
+
     if (py_funcobj) {
         // Inject into the running snippet.  Note that when a
         // PythonObjectWrapper is constructed from a PyObject, it steals the
@@ -478,7 +478,7 @@ void PythonCodeSnippet::injectInternal(const char* python_name,
         {
             char* fn= new char[strlen(python_name)+1];
             strcpy(fn, python_name);
-            PyObject_SetAttrString(m_instance.getPyObject(), 
+            PyObject_SetAttrString(m_instance.getPyObject(),
                                    fn, py_funcobj);
             delete[] fn;
         }
@@ -487,7 +487,7 @@ void PythonCodeSnippet::injectInternal(const char* python_name,
             // Publish the injection in the '__injected__' dictionary for imported modules
             PythonObjectWrapper inj_dict = this->getGlobalObject("__injected__");
             PyDict_SetItemString(inj_dict.getPyObject(), python_name, py_funcobj);
-            
+
             Py_XDECREF(self);
         }
     }
@@ -546,14 +546,14 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
     //get the global env. as an stl map
     PythonObjectWrapper wrapped_globals(globals);
     Py_XDECREF(globals);
-    map<string, PyObject*> global_map= 
+    map<string, PyObject*> global_map=
         wrapped_globals.as<map<string, PyObject*> >();
 
     //inject global funcs, if not already done
     static bool global_funcs_injected= false;
     if(!global_funcs_injected)
     {
-        map<string, PyObject*>::iterator it= 
+        map<string, PyObject*>::iterator it=
             global_map.find("pl_global_funcs");
         if(it == global_map.end())
             PLERROR("in PythonCodeSnippet::compileGlobalCode : "
@@ -564,7 +564,7 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
 
     //try to find an EmbeddedCodeSnippet to instantiate
     PyObject* snippet_found= 0;
-    map<string, PyObject*>::iterator it_id= 
+    map<string, PyObject*>::iterator it_id=
         global_map.find("pl_embedded_code_snippet_type");
 
     if(it_id != global_map.end())
@@ -574,7 +574,7 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
         list<pair<string, PyObject*> > classes_found;
 
         //iter (find)
-        PyTypeObject* embedded_code_snippet_type= 
+        PyTypeObject* embedded_code_snippet_type=
             (PyTypeObject*)global_map["EmbeddedCodeSnippet"];
 
         //find all classes deriving from EmbeddedCodeSnippet
@@ -582,9 +582,9 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
             it != global_map.end(); ++it)
         {
             if(PyType_Check(it->second)
-               && 0 != PyObject_Compare(it->second, 
+               && 0 != PyObject_Compare(it->second,
                                         (PyObject*)embedded_code_snippet_type)
-               && PyType_IsSubtype((PyTypeObject*)it->second, 
+               && PyType_IsSubtype((PyTypeObject*)it->second,
                                    embedded_code_snippet_type))
             {
                 classes_found.push_back(*it);
@@ -607,7 +607,7 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
         if(nclasses == 1)
             snippet_found= jt->second;
     }
-    
+
     if(snippet_found)
     {//instantiate object of appropriate type
         PyObject* pyparams= PyDict_New();
@@ -636,8 +636,8 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
             PLERROR("in PythonCodeSnippet::compileGlobalCode : "
                     "found subclass of EmbeddedCodeSnippet, but can't "
                     "call constructor with given params.  "
-                    "class='%s', params=%s", 
-                    ((PyTypeObject*)snippet_found)->tp_name, 
+                    "class='%s', params=%s",
+                    ((PyTypeObject*)snippet_found)->tp_name,
                     tostring(m_instance_params).c_str());
         }
         m_instance= PythonObjectWrapper(the_obj);
@@ -665,14 +665,14 @@ void PythonCodeSnippet::run()
 void PythonCodeSnippet::setCurrentSnippet(const void* handle) const
 {
     PythonGlobalInterpreterLock gil;         // For thread-safety
-    
+
     char set_current_snippet[100];
-    sprintf(set_current_snippet, SetCurrentSnippetVar, handle);    
-    PyObject* res= PyRun_String(set_current_snippet, 
+    sprintf(set_current_snippet, SetCurrentSnippetVar, handle);
+    PyObject* res= PyRun_String(set_current_snippet,
                                 Py_file_input /* exec code block */,
-                                m_compiled_code.getPyObject(), 
+                                m_compiled_code.getPyObject(),
                                 m_compiled_code.getPyObject());
-    
+
     Py_XDECREF(res);
     if (PyErr_Occurred()) {
         Py_XDECREF(m_compiled_code.getPyObject());
@@ -685,10 +685,10 @@ void PythonCodeSnippet::setCurrentSnippet(const void* handle) const
 void PythonCodeSnippet::resetCurrentSnippet() const
 {
     PythonGlobalInterpreterLock gil;         // For thread-safety
-    
-    PyObject* res= PyRun_String(ResetCurrentSnippetVar, 
+
+    PyObject* res= PyRun_String(ResetCurrentSnippetVar,
                                 Py_file_input /* exec code block */,
-                                m_compiled_code.getPyObject(), 
+                                m_compiled_code.getPyObject(),
                                 m_compiled_code.getPyObject());
     Py_XDECREF(res);
     if (PyErr_Occurred()) {
@@ -719,9 +719,9 @@ void PythonCodeSnippet::handlePythonErrors(const string& extramsg) const
                                              "exception but there is no traceback.\n")
                                       + extramsg);
             }
-            
 
-            PyObject* tbstr= 
+
+            PyObject* tbstr=
                 PyString_FromString("plearn.utilities.pltraceback");
             PyObject* tbmod= PyImport_Import(tbstr);
             Py_XDECREF(tbstr);
@@ -745,7 +745,7 @@ void PythonCodeSnippet::handlePythonErrors(const string& extramsg) const
                                       " call to cgitb.text failed");
             string str= PyString_AsString(pystr);
             Py_XDECREF(pystr);
-            
+
             PyErr_Clear();
 
             Py_XDECREF(exception);
@@ -756,10 +756,10 @@ void PythonCodeSnippet::handlePythonErrors(const string& extramsg) const
         else {
             PyErr_Print();
             PyErr_Clear();
-            PLERROR("PythonCodeSnippet: encountered Python exception.\n%s", 
+            PLERROR("PythonCodeSnippet: encountered Python exception.\n%s",
                     extramsg.c_str());
         }
-    }  
+    }
 }
 
 
@@ -769,7 +769,7 @@ void PythonCodeSnippet::dumpPythonEnvironment()
 }
 
 
-    
+
 } // end of namespace PLearn
 
 
