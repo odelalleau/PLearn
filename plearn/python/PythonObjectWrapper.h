@@ -415,6 +415,22 @@ struct ConvertFromPyObject< std::pair<T,U> >
 };
 
 
+//! Used to convert integer values to python, using PyInt if possible
+template <class I>
+PyObject* integerToPyObject(const I& x)
+{
+    // Try to convert x to a long
+    long y = static_cast<long>(x);
+
+    // Check if we lost value information or sign
+    if (static_cast<I>(y) == x && (numeric_limits<I>::is_signed || y >= 0))
+        return PyInt_FromLong(y);
+    else if (numeric_limits<I>::is_signed)
+        return PyLong_FromLongLong(static_cast<long long>(x));
+    else
+        return PyLong_FromUnsignedLongLong(static_cast<unsigned long long>(x));
+}
+
 /////////////////////////////////////
 // ConvertToPyObject<>
 // Conversions from PLearn to Python
@@ -440,21 +456,59 @@ template<> struct ConvertToPyObject<Object*>
 template<> struct ConvertToPyObject<bool>
 { static PyObject* newPyObject(const bool& x); };
 
-template<> struct ConvertToPyObject<int>
-{ static PyObject* newPyObject(const int& x); };
-template<> struct ConvertToPyObject<unsigned int>
-{ static PyObject* newPyObject(const unsigned int& x); };
+template<> struct ConvertToPyObject<short>
+{
+    static PyObject* newPyObject(const short& x)
+    { return integerToPyObject(x); }
+};
 
+template<> struct ConvertToPyObject<unsigned short>
+{
+    static PyObject* newPyObject(const unsigned short& x)
+    { return integerToPyObject(x); }
+};
+
+template<> struct ConvertToPyObject<int>
+{
+    static PyObject* newPyObject(const int& x)
+    { return integerToPyObject(x); }
+};
+
+template<> struct ConvertToPyObject<unsigned int>
+{
+    static PyObject* newPyObject(const unsigned int& x)
+    { return integerToPyObject(x); }
+};
+
+template<> struct ConvertToPyObject<long>
+{
+    static PyObject* newPyObject(const long& x)
+    { return integerToPyObject(x); }
+};
+
+template<> struct ConvertToPyObject<unsigned long>
+{
+    static PyObject* newPyObject(const unsigned long& x)
+    { return integerToPyObject(x); }
+};
+
+template<> struct ConvertToPyObject<long long>
+{
+    static PyObject* newPyObject(const long long& x)
+    { return integerToPyObject(x); }
+};
+
+template<> struct ConvertToPyObject<unsigned long long>
+{
+    static PyObject* newPyObject(const unsigned long long& x)
+    { return integerToPyObject(x); }
+};
+
+/*
 template<> struct ConvertToPyObject<int64_t>
 { static PyObject* newPyObject(const int64_t& x); };
 template<> struct ConvertToPyObject<uint64_t>
 { static PyObject* newPyObject(const uint64_t& x); };
-
-/*
-template<> struct ConvertToPyObject<long>
-{ static PyObject* newPyObject(const long& x); };
-template<> struct ConvertToPyObject<unsigned long>
-{ static PyObject* newPyObject(const unsigned long& x); };
 */
 
 template<> struct ConvertToPyObject<double>

@@ -715,7 +715,7 @@ PyObject* ConvertToPyObject<bool>::newPyObject(const bool& x)
     }
 }
 
-
+#if 0
 PyObject* ConvertToPyObject<int>::newPyObject(const int& x)
 {
     return PyInt_FromLong(long(x));
@@ -747,6 +747,7 @@ PyObject* ConvertToPyObject<uint64_t>::newPyObject(const uint64_t& x)
 {
     return PyLong_FromUnsignedLongLong(x);
 }
+#endif
 
 PyObject* ConvertToPyObject<double>::newPyObject(const double& x)
 {
