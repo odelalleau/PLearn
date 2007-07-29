@@ -581,6 +581,8 @@ void KLp0p1RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(hidden_layer,     copies);
     deepCopyField(visible_layer,    copies);
+    deepCopyField(conf_hidden_layer,     copies);
+    deepCopyField(conf_visible_layer,    copies);
     deepCopyField(connection,       copies);
     deepCopyField(reconstruction_connection, copies);
 

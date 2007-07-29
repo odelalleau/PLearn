@@ -335,9 +335,8 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
             target_i = target[i];
             activation_i = activation[i];
             ret += tabulated_softplus(activation_i) - target_i * activation_i;
-            // nll -= target * pl_log(expectation); 
-            // but it is numerically unstable, so use instead the following identity:
             // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
+            // but it is numerically unstable, so use instead the following identity:
             //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
             //     = act + softplus(-act) - target*act 
             //     = softplus(act) - target*act
