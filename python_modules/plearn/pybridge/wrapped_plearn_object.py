@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 #
 # Copyright (C) 2007 Xavier Saint-Mleux, ApSTAT Technologies inc.
 #
@@ -31,8 +33,26 @@
 
 class WrappedPLearnObject(object):
 
-    def __init__(self, cptr):
-        self._cptr= cptr # ptr to c++ obj
+    def __init__(self, **kwargs):
+        #print 'WrappedPLearnObject.__init__',type(self),kwargs
+        if '_cptr' in kwargs:
+            self._cptr= kwargs['_cptr'] # ptr to c++ obj
+        elif hasattr(self,'_cptr'):
+            #print 'init->SETOPTIONS2',kwargs
+            self.setOptions(kwargs)
+            
+    def setOptions(self, kwargs):
+        #print 'SETOPTIONS',kwargs
+        call_build= True
+        for k in kwargs:
+            if k=='__call_build':
+                call_build= kwargs[k]
+            elif k=='_cptr':
+                pass
+            else:
+                self.__setattr__(k, kwargs[k])
+        if call_build:
+            self.build()
     
     def __setattr__(self, attr, val):
         if attr != '_optionnames' and attr in self._optionnames:
@@ -49,11 +69,16 @@ class WrappedPLearnObject(object):
                                    + repr(self))
         
     def __del__(self):
-        return self.unref()
+        #from plearn import pyext
+        #print 'del',type(self),self._cptr
+        #pyext.printWrappedObjects()
+        self._unref()
+        #pyext.printWrappedObjects()
 
     def __repr__(self):
         return self.asString() #PLearn repr. for now
 
+#from numpy.numarray import *
 from numarray import *
 
 class WrappedPLearnVMat(WrappedPLearnObject):

@@ -823,6 +823,9 @@ public:
 
     static PyObject* python_del(PyObject* self, PyObject* args);
 
+    static PyObject* newCPPObj(PyObject* self, PyObject* args);
+
+    static PyObject* refCPPObj(PyObject* self, PyObject* args);
 
     //#####  Low-Level PyObject Creation  #####################################
 
@@ -839,23 +842,24 @@ public:
      */
     static void initializePython();
 
-protected:
-    //! Whether we own the PyObject or not
-    OwnershipMode m_ownership;
-    PyObject* m_object;
-
     //for the unique unref injected method
     static bool m_unref_injected;
     static PyMethodDef m_unref_method_def;
-
+    static PyMethodDef m_newCPPObj_method_def;
+    static PyMethodDef m_refCPPObj_method_def;
     typedef map<const string, PLPyClass> pypl_classes_t;
     static pypl_classes_t m_pypl_classes;
 
+protected:
+    OwnershipMode m_ownership;               //!< Whether we own the PyObject or not
+    PyObject* m_object;
+    
     typedef map<const Object*, PyObject*> wrapped_objects_t;
 
     static wrapped_objects_t m_wrapped_objects; //!< for wrapped PLearn Objects
 
     template<class T> friend class ConvertToPyObject;
+    friend void printWrappedObjects();
 };
 
 // Specialization for General T*.  Attempt to cast into Object*.  If that works
@@ -1276,6 +1280,9 @@ PyObject* ConvertToPyObject<std::map<T,U> const* >::newPyObject(const std::map<T
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v);
 DECLARE_TYPE_TRAITS(PythonObjectWrapper);
+
+//! for debug purposes
+void printWrappedObjects();
 
 } // end of namespace PLearn
 

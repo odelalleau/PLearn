@@ -39,13 +39,21 @@
 namespace PLearn {
 
 // Trampoline for global PLearn 'remote' functions
-  PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args);
+PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args);
 
 // inject all PLearn global functions into a python env.
 void injectPLearnGlobalFunctions(PyObject* env);
 
+// inject all PLearn concrete classes
+void injectPLearnClasses(PyObject* env);
+
 // Init func for python module.
-  void initPythonExtensionModule(char* module_name);
+void initPythonExtensionModule(char* module_name);
+
+// inject funcs. and classes, set global module.
+void setPythonModuleAndInject(PyObject* module);
+
+extern PyObject* the_PLearn_python_module;
 
 } // end of namespace PLearn
 

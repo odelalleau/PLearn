@@ -692,8 +692,7 @@ namespace {
                                                  const TVec<PythonObjectWrapper>& args) const
                 {
 			checkNargs(args.size(), 0);
-                        return PythonObjectWrapper(instance,
-                                                   PythonObjectWrapper::transfer_ownership);
+                        return PythonObjectWrapper(instance);
                 }
 #endif //def PL_PYTHON_VERSION 
 
@@ -743,6 +742,10 @@ void Object::declareMethods(RemoteMethodMap& rmm)
     declareMethod(rmm, "classname", &Object::classname,
                   (BodyDoc("Returns the name of the class"),
                    RetDoc ("Class name as string")));
+
+    declareMethod(rmm, "usage", &Object::usage,
+                  (BodyDoc("Returns the refcount of this PPointable"),
+                   RetDoc ("Number of references")));
 
 
 #ifdef PL_PYTHON_VERSION 

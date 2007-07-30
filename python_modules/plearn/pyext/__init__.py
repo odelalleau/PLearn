@@ -31,28 +31,13 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 from plearn.pyext.plext import *
+from plearn.pyext import plext as pl
 
 from plearn.pyplearn.plargs import *
 import cgitb
 cgitb.enable(format='PLearn')
 
 print versionString()
-
-class pl:
-    class __metaclass__(type):
-        def __getattr__(cls, name):
-            def newObj(**kwargs):
-                call_build= True
-                obj= newObjectFromClassname(name)
-                for k in kwargs.keys():
-                    if k=='__call_build':
-                        call_build= kwargs[k]
-                    else:
-                        obj.__setattr__(k, kwargs[k])
-                if call_build:
-                    obj.build()
-                return obj
-            return newObj
 
 # Redefines function TMat to emulate pyplearn behaviour
 def TMat( *args ):

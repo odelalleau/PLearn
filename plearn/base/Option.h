@@ -126,18 +126,12 @@ public:
 #ifdef PL_PYTHON_VERSION 
     virtual PythonObjectWrapper getAsPythonObject(Object* o) const 
     { 
-        return PythonObjectWrapper(ConvertToPyObject<OptionType>::
-                                   newPyObject(*(OptionType*)getAsVoidPtr(o)),
-                                   PythonObjectWrapper::transfer_ownership); 
-        
+        return PythonObjectWrapper(*(OptionType*)getAsVoidPtr(o)); 
     }
 
     virtual PythonObjectWrapper getAsPythonObject(const Object* o) const 
     { 
-        return PythonObjectWrapper(ConvertToPyObject<OptionType>::
-                                   newPyObject(*(OptionType*)getAsVoidPtr(o)),
-                                   PythonObjectWrapper::transfer_ownership); 
-
+        return PythonObjectWrapper(*(OptionType*)getAsVoidPtr(o)); 
     }
 
     virtual void setFromPythonObject(Object* o, const PythonObjectWrapper& v) const
