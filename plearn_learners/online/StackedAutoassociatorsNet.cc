@@ -61,9 +61,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     l1_neuron_decay_center( 0 ),
     compute_all_test_costs( false ),
     n_layers( 0 ),
-    currently_trained_layer( 0 ),
-    final_module_has_learning_rate( false ),
-    final_cost_has_learning_rate( false )
+    currently_trained_layer( 0 )
 {
     // random_gen will be initialized in PLearner::build_()
     random_gen = new PRandom();
@@ -137,6 +135,13 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "The weights of the reconstruction connections between the "
                   "layers");
 
+    declareOption(ol, "correlation_connections", 
+                  &StackedAutoassociatorsNet::correlation_connections,
+                  OptionBase::buildoption,
+                  "Optional weights to capture correlation and anti-correlation\n"
+                  "in the hidden layers. They must have the same input and\n"
+                  "output sizes, compatible with their corresponding layers.");
+
     declareOption(ol, "final_module", &StackedAutoassociatorsNet::final_module,
                   OptionBase::buildoption,
                   "Module that takes as input the output of the last layer\n"
@@ -185,7 +190,14 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "n_layers", &StackedAutoassociatorsNet::n_layers,
                   OptionBase::learntoption,
-                  "Number of layers");
+                  "Number of layers"
+        );
+
+    declareOption(ol, "correlation_layers", 
+                  &StackedAutoassociatorsNet::correlation_layers,
+                  OptionBase::learntoption,
+                  "Hidden layers for the correlation connections"
+        );
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -262,6 +274,35 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
                 "there should be %d connections.\n",
                 n_layers-1);
 
+    if( reconstruction_connections.length() != n_layers-1 )
+        PLERROR("StackedAutoassociatorsNet::build_layers_and_connections() - \n"
+                "there should be %d reconstruction connections.\n",
+                n_layers-1);
+    
+    if( correlation_connections.length() != 0 &&
+        correlation_connections.length() != n_layers-1 )
+        PLERROR("StackedAutoassociatorsNet::build_layers_and_connections() - \n"
+                "there should be either %d correlation connections or none.\n",
+                n_layers-1);
+    
+    if(correlation_connections.length() != 0)
+    {
+        correlation_layers.resize( layers.length()-1 );
+        for( int i=0 ; i<n_layers-1 ; i++ )
+        {
+            if( greedy_stages[i] == 0 )
+            {
+                CopiesMap map;
+                correlation_layers[i] = 
+                    layers[i+1]->deepCopy(map);
+            }
+        }
+        correlation_activations.resize( n_layers-1 );
+        correlation_expectations.resize( n_layers-1 );
+        correlation_activation_gradients.resize( n_layers-1 );
+        correlation_expectation_gradients.resize( n_layers-1 );
+    }
+
     if(layers[0]->size != inputsize_)
         PLERROR("StackedAutoassociatorsNet::build_layers_and_connections() - \n"
                 "layers[0] should have a size of %d.\n",
@@ -271,6 +312,7 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
     expectations.resize( n_layers );
     activation_gradients.resize( n_layers );
     expectation_gradients.resize( n_layers );
+
 
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
@@ -300,6 +342,32 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
                     "%d.\n",
                     i, layers[i]->size);
 
+        if(correlation_connections.length() != 0)
+        {
+            if( correlation_connections[i]->up_size != layers[i+1]->size ||
+                correlation_connections[i]->down_size != layers[i+1]->size )
+                PLERROR("StackedAutoassociatorsNet::build_layers_and_connections()"
+                        " - \n"
+                        "correlation_connections[%i] should have a up_size and "
+                        "down_size of %d.\n",
+                        i, layers[i+1]->size);
+            correlation_activations[i].resize( layers[i+1]->size );
+            correlation_expectations[i].resize( layers[i+1]->size );
+            correlation_activation_gradients[i].resize( layers[i+1]->size );
+            correlation_expectation_gradients[i].resize( layers[i+1]->size );
+            if( !(correlation_connections[i]->random_gen) )
+            {
+                correlation_connections[i]->random_gen = random_gen;
+                correlation_connections[i]->forget();
+            }
+
+            if( !(correlation_layers[i]->random_gen) )
+            {
+                correlation_layers[i]->random_gen = random_gen;
+                correlation_layers[i]->forget();
+            }
+        }
+
         if( !(layers[i]->random_gen) )
         {
             layers[i]->random_gen = random_gen;
@@ -316,7 +384,7 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
         {
             reconstruction_connections[i]->random_gen = random_gen;
             reconstruction_connections[i]->forget();
-        }
+        }        
 
         activations[i].resize( layers[i]->size );
         expectations[i].resize( layers[i]->size );
@@ -360,7 +428,7 @@ void StackedAutoassociatorsNet::build_costs()
     if( final_module->output_size != final_cost->input_size )
         PLERROR("StackedAutoassociatorsNet::build_costs() - \n"
                 "final_module should have an output_size of %d.\n", 
-                final_module->input_size);
+                final_cost->input_size);
 
     final_module->setLearningRate( fine_tuning_learning_rate );
 
@@ -433,6 +501,12 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(reconstruction_expectations, copies);
     deepCopyField(reconstruction_activation_gradients, copies);
     deepCopyField(reconstruction_expectation_gradients, copies);
+    deepCopyField(correlation_connections, copies);
+    deepCopyField(correlation_activations, copies);
+    deepCopyField(correlation_expectations, copies);
+    deepCopyField(correlation_activation_gradients, copies);
+    deepCopyField(correlation_expectation_gradients, copies);
+    deepCopyField(correlation_layers, copies);
     deepCopyField(partial_costs_positions, copies);
     deepCopyField(partial_cost_value, copies);
     deepCopyField(final_cost_input, copies);
@@ -475,6 +549,15 @@ void StackedAutoassociatorsNet::forget()
     for( int i=0 ; i<partial_costs.length() ; i++ )
         if( partial_costs[i] )
             partial_costs[i]->forget();
+
+    if(correlation_connections.length() != 0)
+    {        
+        for( int i=0 ; i<n_layers-1 ; i++)
+        {
+            correlation_connections[i]->forget();
+            correlation_layers[i]->forget();
+        }        
+    }
 
     stage = 0;
     greedy_stages.clear();
@@ -528,12 +611,17 @@ void StackedAutoassociatorsNet::train()
         layers[i]->setLearningRate( lr );
         connections[i]->setLearningRate( lr );
         reconstruction_connections[i]->setLearningRate( lr );
+        if(correlation_connections.length() != 0)
+        {
+            correlation_connections[i]->setLearningRate( lr );
+            correlation_layers[i]->setLearningRate( lr );
+        }
         layers[i+1]->setLearningRate( lr );
 
-        reconstruction_activations.resize(layers[i+1]->size);
-        reconstruction_expectations.resize(layers[i+1]->size);
-        reconstruction_activation_gradients.resize(layers[i+1]->size);
-        reconstruction_expectation_gradients.resize(layers[i+1]->size);
+        reconstruction_activations.resize(layers[i]->size);
+        reconstruction_expectations.resize(layers[i]->size);
+        reconstruction_activation_gradients.resize(layers[i]->size);
+        reconstruction_expectation_gradients.resize(layers[i]->size);
 
         for( ; *this_stage<end_stage ; (*this_stage)++ )
         {
@@ -544,7 +632,12 @@ void StackedAutoassociatorsNet::train()
                 layers[i]->setLearningRate( lr );
                 connections[i]->setLearningRate( lr );
                 reconstruction_connections[i]->setLearningRate( lr );
-                layers[i+1]->setLearningRate( lr );                
+                layers[i+1]->setLearningRate( lr );
+                if(correlation_connections.length() != 0)
+                {
+                    correlation_connections[i]->setLearningRate( lr );
+                    correlation_layers[i]->setLearningRate( lr );
+                }
             }
 
             sample = *this_stage % nsamples;
@@ -592,7 +685,8 @@ void StackedAutoassociatorsNet::train()
     }
     
     train_stats->finalize();
-        
+    MODULE_LOG << "  train costs = " << train_stats->getMean() << endl;
+
     // Update currently_trained_layer
     if(stage > 0)
         currently_trained_layer = n_layers;
@@ -610,10 +704,26 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
     PLASSERT( index < n_layers );
 
     expectations[0] << input;
-    for( int i=0 ; i<index + 1; i++ )
+    if(correlation_connections.length() != 0)
     {
-        connections[i]->fprop( expectations[i], activations[i+1] );
-        layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        for( int i=0 ; i<index + 1; i++ )
+        {
+            connections[i]->fprop( expectations[i], correlation_activations[i] );
+            layers[i+1]->fprop( correlation_activations[i],
+                                correlation_expectations[i] );
+            correlation_connections[i]->fprop( correlation_expectations[i], 
+                                               activations[i+1] );
+            correlation_layers[i]->fprop( activations[i+1], 
+                                          expectations[i+1] );
+        }
+    }
+    else
+    {
+        for( int i=0 ; i<index + 1; i++ )
+        {
+            connections[i]->fprop( expectations[i], activations[i+1] );
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        }
     }
 
     if( partial_costs && partial_costs[ index ] )
@@ -649,12 +759,13 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                                 reconstruction_activations);
     layers[ index ]->fprop( reconstruction_activations,
                             layers[ index ]->expectation);
-    
+
+    layers[ index ]->activation << reconstruction_activations;
     layers[ index ]->expectation_is_up_to_date = true;
     train_costs[index] = layers[ index ]->fpropNLL(expectations[index]);
-
+    
     layers[ index ]->bpropNLL(expectations[index], train_costs[index],
-                                  reconstruction_activation_gradients);
+                              reconstruction_activation_gradients);
 
     layers[ index ]->update(reconstruction_activation_gradients);
 
@@ -667,7 +778,7 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
     reconstruction_connections[ index ]->bpropUpdate( 
         expectations[ index + 1], 
         reconstruction_activations, 
-        reconstruction_expectation_gradients, //reused
+        reconstruction_expectation_gradients, 
         reconstruction_activation_gradients);
 
     if(!fast_exact_is_equal(l1_neuron_decay,0))
@@ -688,16 +799,48 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
     }
 
     // Update hidden layer bias and weights
-    layers[ index+1 ]->bpropUpdate( activations[ index + 1 ],
-                                    expectations[ index + 1 ],
-                                    reconstruction_activation_gradients, // reused
-                                    reconstruction_expectation_gradients);    
 
-    connections[ index ]->bpropUpdate( 
-        expectations[ index ],
-        activations[ index + 1 ],
-        reconstruction_expectation_gradients, //reused
-        reconstruction_activation_gradients);
+    if(correlation_connections.length() != 0)
+    {
+        correlation_layers[ index ]->bpropUpdate(
+            activations[ index + 1 ],
+            expectations[ index + 1 ],
+            reconstruction_activation_gradients,  // reused
+            reconstruction_expectation_gradients
+            );
+
+        correlation_connections[ index ]->bpropUpdate( 
+            correlation_expectations[ index ],
+            activations[ index+1 ],
+            correlation_expectation_gradients[ index ], 
+            reconstruction_activation_gradients);
+        
+        layers[ index+1 ]->bpropUpdate( 
+            correlation_activations[ index ],
+            correlation_expectations[ index ],
+            correlation_activation_gradients [ index ],
+            correlation_expectation_gradients [ index ]);    
+        
+        connections[ index ]->bpropUpdate( 
+            expectations[ index ],
+            correlation_activations[ index ],
+            reconstruction_expectation_gradients, //reused
+            correlation_activation_gradients [ index ]);
+    }
+    else
+    {
+        layers[ index+1 ]->bpropUpdate( activations[ index + 1 ],
+                                        expectations[ index + 1 ],
+                                        // reused
+                                        reconstruction_activation_gradients, 
+                                        reconstruction_expectation_gradients);    
+        
+        connections[ index ]->bpropUpdate( 
+            expectations[ index ],
+            activations[ index + 1 ],
+            reconstruction_expectation_gradients, //reused
+            reconstruction_activation_gradients);
+    }
 
 }
 
@@ -706,10 +849,27 @@ void StackedAutoassociatorsNet::fineTuningStep( const Vec& input, const Vec& tar
 {
     // fprop
     expectations[0] << input;
-    for( int i=0 ; i<n_layers-1; i++ )
+
+    if(correlation_connections.length() != 0)
     {
-        connections[i]->fprop( expectations[i], activations[i+1] );
-        layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        for( int i=0 ; i<n_layers-1; i++ )
+        {
+            connections[i]->fprop( expectations[i], correlation_activations[i] );
+            layers[i+1]->fprop( correlation_activations[i],
+                                correlation_expectations[i] );
+            correlation_connections[i]->fprop( correlation_expectations[i], 
+                                               activations[i+1] );
+            correlation_layers[i]->fprop( activations[i+1], 
+                                          expectations[i+1] );
+        }
+    }
+    else
+    {
+        for( int i=0 ; i<n_layers-1; i++ )
+        {
+            connections[i]->fprop( expectations[i], activations[i+1] );
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        }
     }
 
     final_module->fprop( expectations[ n_layers-1 ],
@@ -728,17 +888,47 @@ void StackedAutoassociatorsNet::fineTuningStep( const Vec& input, const Vec& tar
                                expectation_gradients[ n_layers-1 ],
                                final_cost_gradient );
 
-    for( int i=n_layers-1 ; i>0 ; i-- )
+    if( correlation_connections.length() != 0 )
     {
-        layers[i]->bpropUpdate( activations[i],
-                                expectations[i],
-                                activation_gradients[i],
-                                expectation_gradients[i] );
+        for( int i=n_layers-1 ; i>0 ; i-- )
+        {
+            correlation_layers[i-1]->bpropUpdate( 
+                activations[i],
+                expectations[i],
+                activation_gradients[i],
+                expectation_gradients[i] );
 
-        connections[i-1]->bpropUpdate( expectations[i-1],
-                                       activations[i],
-                                       expectation_gradients[i-1],
-                                       activation_gradients[i] );
+            correlation_connections[i-1]->bpropUpdate( 
+                correlation_expectations[i-1],
+                activations[i],
+                correlation_expectation_gradients[i-1],
+                activation_gradients[i] );
+
+            layers[i]->bpropUpdate( correlation_activations[i-1],
+                                    correlation_expectations[i-1],
+                                    correlation_activation_gradients[i-1],
+                                    correlation_expectation_gradients[i-1] );
+            
+            connections[i-1]->bpropUpdate( expectations[i-1],
+                                           correlation_activations[i-1],
+                                           expectation_gradients[i-1],
+                                           correlation_activation_gradients[i-1] );
+        }
+    }
+    else
+    {
+        for( int i=n_layers-1 ; i>0 ; i-- )
+        {
+            layers[i]->bpropUpdate( activations[i],
+                                    expectations[i],
+                                    activation_gradients[i],
+                                    expectation_gradients[i] );
+            
+            connections[i-1]->bpropUpdate( expectations[i-1],
+                                           activations[i],
+                                           expectation_gradients[i-1],
+                                           activation_gradients[i] );
+        }        
     }
 }
 
@@ -748,20 +938,57 @@ void StackedAutoassociatorsNet::computeOutput(const Vec& input, Vec& output) con
 
     expectations[0] << input;
 
-    for(int i=0 ; i<currently_trained_layer-1 ; i++ )
+    if(correlation_connections.length() != 0)
     {
-        connections[i]->fprop( expectations[i], activations[i+1] );
-        layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        for( int i=0 ; i<currently_trained_layer-1; i++ )
+        {
+            connections[i]->fprop( expectations[i], correlation_activations[i] );
+            layers[i+1]->fprop( correlation_activations[i],
+                                correlation_expectations[i] );
+            correlation_connections[i]->fprop( correlation_expectations[i], 
+                                               activations[i+1] );
+            correlation_layers[i]->fprop( activations[i+1], 
+                                          expectations[i+1] );
+        }
+    }
+    else
+    {   
+        for(int i=0 ; i<currently_trained_layer-1 ; i++ )
+        {
+            connections[i]->fprop( expectations[i], activations[i+1] );
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        }
     }
 
     if( currently_trained_layer<n_layers )
     {
-        connections[currently_trained_layer-1]->fprop( 
-            expectations[currently_trained_layer-1], 
-            activations[currently_trained_layer] );
-        layers[currently_trained_layer]->fprop(
-            activations[currently_trained_layer],
-            output);
+        if(correlation_connections.length() != 0)
+        {
+            connections[currently_trained_layer-1]->fprop( 
+                expectations[currently_trained_layer-1], 
+                correlation_activations[currently_trained_layer-1] );
+
+            layers[currently_trained_layer]->fprop(
+                correlation_activations[currently_trained_layer-1],
+                correlation_expectations[currently_trained_layer-1] );
+
+            correlation_connections[currently_trained_layer-1]->fprop( 
+                correlation_expectations[currently_trained_layer-1], 
+                activations[currently_trained_layer] );
+
+            correlation_layers[currently_trained_layer-1]->fprop( 
+                activations[currently_trained_layer], 
+                output );
+        }
+        else
+        {
+            connections[currently_trained_layer-1]->fprop( 
+                expectations[currently_trained_layer-1], 
+                activations[currently_trained_layer] );
+            layers[currently_trained_layer]->fprop(
+                activations[currently_trained_layer],
+                output);
+        }
     }
     else        
         final_module->fprop( expectations[ currently_trained_layer - 1],
@@ -785,9 +1012,10 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
             layers[ i ]->fprop( reconstruction_activations,
                                     layers[ i ]->expectation);
             
+            layers[ i ]->activation << reconstruction_activations;
             layers[ i ]->expectation_is_up_to_date = true;
             costs[i] = layers[ i ]->fpropNLL(expectations[ i ]);
-            
+
             if( partial_costs && partial_costs[i])
             {
                 partial_costs[ i ]->fprop( expectations[ i + 1],
@@ -808,6 +1036,8 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
             reconstruction_activations,
             layers[ currently_trained_layer-1 ]->expectation);
         
+        layers[ currently_trained_layer-1 ]->activation << 
+            reconstruction_activations;
         layers[ currently_trained_layer-1 ]->expectation_is_up_to_date = true;
         costs[ currently_trained_layer-1 ] = 
             layers[ currently_trained_layer-1 ]->fpropNLL(
@@ -869,6 +1099,11 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
     {
         layers[i]->setLearningRate( the_learning_rate );
         connections[i]->setLearningRate( the_learning_rate );
+        if(correlation_layers.length() != 0)
+        {
+            correlation_layers[i]->setLearningRate( the_learning_rate );
+            correlation_connections[i]->setLearningRate( the_learning_rate );
+        }
     }
     layers[n_layers-1]->setLearningRate( the_learning_rate );
 

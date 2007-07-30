@@ -105,6 +105,11 @@ public:
     //! The weights of the reconstruction connections between the layers
     TVec< PP<RBMConnection> > reconstruction_connections;
 
+    //! Optional weights to capture correlation and anti-correlation
+    //! in the hidden layers. They must have the same input and
+    //! output sizes, compatible with their corresponding layers.
+    TVec< PP<RBMConnection> > correlation_connections;
+
     //! Module that takes as input the output of the last layer
     //! (layers[n_layers-1), and feeds its output to final_cost
     //! which defines the fine-tuning criteria.
@@ -220,11 +225,26 @@ protected:
     //! Reconstruction expectations
     mutable Vec reconstruction_expectations;
     
-    //! Reconstruction activations
+    //! Reconstruction activation gradients
     mutable Vec reconstruction_activation_gradients;
     
-    //! Reconstruction expectations
+    //! Reconstruction expectation gradients
     mutable Vec reconstruction_expectation_gradients;
+
+    //! Activations before the correlation layer
+    mutable TVec<Vec> correlation_activations;
+    
+    //! Expectations before the correlation layer
+    mutable TVec<Vec> correlation_expectations;
+    
+    //! Gradients of activations before the correlation layer
+    mutable TVec<Vec> correlation_activation_gradients;
+    
+    //! Gradients of expectations before the correlation layer
+    mutable TVec<Vec> correlation_expectation_gradients;
+
+    //! Hidden layers for the correlation connections
+    mutable TVec< PP<RBMLayer> > correlation_layers;
 
     //! Position in the total cost vector of the different partial costs
     mutable TVec<int> partial_costs_positions;
