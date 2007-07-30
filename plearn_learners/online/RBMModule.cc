@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Olivier Delalleau
+// Authors: Olivier Delalleau, Yoshua Bengio
 
 /*! \file RBMModule.cc */
 
@@ -288,6 +288,13 @@ void RBMModule::build_()
     addPortName("hidden_bias");
     addPortName("weights");
     addPortName("neg_log_likelihood");
+    // a column matrix with one element -log P(h) for each row h of "hidden", 
+    // used as an input port, with neg_log_pvisible_given_phidden as output
+    addPortName("neg_log_phidden"); 
+    // compute column matrix with one entry -log P(x) = -log( sum_h P(x|h) P(h) ) for
+    // each row x of "visible", and where {P(h)}_h is provided 
+    // in "neg_log_phidden" for the set of h's in "hidden".
+    addPortName("neg_log_pvisible_given_phidden"); 
     if(reconstruction_connection)
     {
         addPortName("visible_reconstruction.state");
@@ -320,6 +327,8 @@ void RBMModule::build_()
     }
     port_sizes(getPortIndex("energy"),1) = 1;
     port_sizes(getPortIndex("neg_log_likelihood"),1) = 1;
+    port_sizes(getPortIndex("neg_log_phidden"),1) = 1;
+    port_sizes(getPortIndex("neg_log_pvisible_given_phidden"),1) = 1;
     if(reconstruction_connection)
     {
         if (visible_layer) {
@@ -674,6 +683,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     Mat* hidden_sample = ports_value[getPortIndex("hidden_sample")];
     Mat* energy = ports_value[getPortIndex("energy")];
     Mat* neg_log_likelihood = ports_value[getPortIndex("neg_log_likelihood")];
+    Mat* neg_log_phidden = ports_value[getPortIndex("neg_log_phidden")];
+    Mat* neg_log_pvisible_given_phidden = ports_value[getPortIndex("neg_log_pvisible_given_phidden")];
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     weights = ports_value[getPortIndex("weights")];
     Mat* visible_reconstruction = 0;
@@ -746,7 +757,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         found_a_valid_configuration = true;
     }
-    // COMPUTE NLL
+    // COMPUTE UNSUPERVISED NLL
     if (neg_log_likelihood && neg_log_likelihood->isEmpty() && compute_log_likelihood)
     {
         if (partition_function_is_stale && !during_training)
@@ -900,6 +911,49 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         visible_reconstruction->resize(to_store.length(),
                                        to_store.width());
         *visible_reconstruction << to_store;
+        found_a_valid_configuration = true;
+    }
+
+    // Compute column matrix with one entry -log P(x) = -log( sum_h P(x|h) P(h) ) for
+    // each row x of "visible", and where {P(h)}_h is provided 
+    // in "neg_log_phidden" for the set of h's in "hidden".
+    // neg_log_phidden is an optional column matrix with one element -log P(h) for each 
+    // row h of "hidden", used as an input port, with neg_log_pvisible_given_phidden as output. 
+    // If neg_log_phidden is provided, it is assumed to be 1/n_h (n_h=h->length()).
+    if (neg_log_pvisible_given_phidden && neg_log_pvisible_given_phidden->isEmpty() &&
+        hidden && !hidden->isEmpty() && visible && !visible->isEmpty())
+    {
+        // estimate P(x) by sum_h P(x|h) P(h) where P(h) is either constant or provided by neg_log_phidden
+        if (neg_log_phidden)
+        {
+            PLASSERT_MSG(!neg_log_phidden->isEmpty(),"If neg_log_phidden is provided, it must be an input");
+            PLASSERT_MSG(neg_log_phidden->length()==hidden->length(),
+                     "If neg_log_phidden is provided, it must have the same length as hidden.state");
+            PLASSERT_MSG(neg_log_phidden->width()==1,"neg_log_phidden must have width 1 (single column)");
+        }
+        computeVisibleActivations(*hidden,true);
+        int n_h = hidden->length();
+        int T = visible->length();
+        real default_neg_log_ph = safelog(real(n_h)); // default P(h)=1/Nh: -log(1/Nh) = log(Nh)
+        Vec old_act = visible_layer->activation;
+        neg_log_pvisible_given_phidden->resize(T,1);
+        for (int t=0;t<T;t++)
+        {
+            Vec x_t = (*visible)(t);
+            real log_p_xt=0;
+            for (int i=0;i<n_h;i++)
+            {
+                visible_layer->activation = visible_layer->activations(i);
+                real neg_log_p_xt_given_hi = visible_layer->fpropNLL(x_t);
+                real neg_log_p_hi = neg_log_phidden?(*neg_log_phidden)(i,0):default_neg_log_ph;
+                if (i==0)
+                    log_p_xt = -(neg_log_p_xt_given_hi + neg_log_p_hi);
+                else
+                    log_p_xt = logadd(log_p_xt, -(neg_log_p_xt_given_hi + neg_log_p_hi));
+            }
+            (*neg_log_pvisible_given_phidden)(t,0) = -log_p_xt;
+        }
+        visible_layer->activation = old_act;
         found_a_valid_configuration = true;
     }
 
