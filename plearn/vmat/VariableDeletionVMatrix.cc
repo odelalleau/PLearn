@@ -237,12 +237,13 @@ void VariableDeletionVMatrix::build_()
                 "have an inputsize defined");
 
     VMat the_train_source = train_set ? train_set : source;
+    PLCHECK( the_train_source.width() == source->width() );
+
     if (number_of_train_samples > 0 &&
         number_of_train_samples < the_train_source->length())
         the_train_source = new SubVMatrix(the_train_source, 0, 0,
                                           number_of_train_samples,
                                           the_train_source->width());
-        
     TVec<StatsCollector> stats;
     if(min_non_missing_threshold > 0 || max_constant_threshold > 0){
         stats = PLearn::computeStats(the_train_source, -1, false);
