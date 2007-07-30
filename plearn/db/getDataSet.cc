@@ -169,6 +169,17 @@ VMat getDataSet(const PPath& dataset_path)
         vm->defineSizes(vm->width(), 0, 0);
     }
 
+    // Set inputsize if it can be deduced from other sizes.
+    if (vm->inputsize() < 0 && vm->width() >= 0 && vm->targetsize() >= 0 &&
+            vm->weightsize() >= 0 && vm->extrasize() >= 0)
+    {
+        int is = vm->width() - vm->targetsize() - vm->weightsize() -
+            vm->extrasize();
+        if (is >= 0)
+            vm->defineSizes(is, vm->targetsize(), vm->weightsize(),
+                    vm->extrasize());
+    }
+
     // Ensure sizes do not conflict with width.
     if (vm->inputsize() >= 0 && vm->targetsize() >= 0 && vm->weightsize() >= 0 &&
         vm->width() >= 0 &&  vm->width() < vm->inputsize() + vm->targetsize() + vm->weightsize())
