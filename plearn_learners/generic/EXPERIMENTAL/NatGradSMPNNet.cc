@@ -811,6 +811,7 @@ void NatGradSMPNNet::train()
                     exit(0);
                 }
             }
+            PLASSERT( iam == 0 );
             if (semctl(semaphore_id, sem_value + 1, GETVAL) == 0) {
                 // The next process is not done yet: we need to wait.
 #if 0
