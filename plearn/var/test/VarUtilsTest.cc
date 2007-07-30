@@ -137,7 +137,7 @@ void VarUtilsTest::perform()
     Var prob_vec_var(var_length, 1);
     Var scalar_var(1, 1);
     Var multi_index_var(var_width, 1);
-    multi_index_var->matValue << "[ 1 3 5 2 9 ]";
+    multi_index_var->matValue << "1 3 5 2 9";
     Var single_index_var(1, 1);
     single_index_var->matValue(0, 0) = 3;
     PRandom::common(false)->fill_random_uniform(mat_var->matValue, -bound, bound);
