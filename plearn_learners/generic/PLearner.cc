@@ -875,6 +875,9 @@ void PLearner::useOnTrain(Mat& outputs) const {
 void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     VMat testoutputs, VMat testcosts) const
 {
+
+    Profiler::pl_profile_start("PLearner::test");
+
     int len = testset.length();
     Vec input;
     Vec target;
@@ -1083,6 +1086,9 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     if (use_a_separate_random_generator_for_testing && random_gen)
         *random_gen = *copy_random_gen;
+
+    Profiler::pl_profile_end("PLearner::test");
+
 }
 
 void PLearner::computeOutput(const Vec& input, Vec& output) const
