@@ -330,13 +330,24 @@ public:
 // explicit here.
 #endif
         x = static_cast<J>(y);
+
+        // Check if there was a conversion problem (sign or overflow)
+        if (static_cast<I>(x) != y
+            || !(numeric_limits<J>::is_signed) && y<0)
+        {
+            std::stringstream error;
+            error << "In PStream::readBinaryNumAs, overflow error: " << std::endl
+                << "unable to read value \"" << y << "\""
+                << "into a " << TypeTraits<I>::name() << std::endl;
+
+            PLERROR( error.str().c_str() );
+        }
 #ifdef __INTEL_COMPILER
 #pragma warning(default:1682)
 #endif
     }
 
     //! Reads base types from PLearn binary format
-    //! TODO: forbid this mechanism for arbitrary classes?
     template<class I>
     void readBinaryNum(I &x, unsigned char typecode)
     {
