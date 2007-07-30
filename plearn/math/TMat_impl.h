@@ -351,8 +351,10 @@ void TMat<T>::input(PStream& in) const
         T* v = rowdata(i);
         for (int j=0;j<width();j++)
         {
-            if(!(in>>v[j]))
+            if (!in)
                 PLERROR("In TMat<T>::input error encountered while reading matrix");
+            else
+                in>>v[j];
         }
     }
 }
