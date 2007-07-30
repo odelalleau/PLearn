@@ -158,7 +158,6 @@ void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sinput, copies);
     deepCopyField(indices, copies);
     deepCopyField(fields, copies);
-    deepCopyField(inverse_fields_selection, copies);
 }
 
 ///////////
