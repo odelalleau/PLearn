@@ -1115,26 +1115,48 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
         width_ = vm->width();
 
     // Copy sizes from vm if not set and they do not conflict with the width.
+    int current_w = max(0, inputsize_) + max(0, targetsize_) +
+                    max(0, weightsize_) + max(0, extrasize_);
     if(inputsize_<0) {
         int is = vm->inputsize();
-        if (is <= width_)
+        if (is + current_w <= width_) {
             inputsize_ = is;
+            current_w += is;
+        }
     }
     if(targetsize_<0) {
         int ts = vm->targetsize();
-        if (ts + (inputsize_ > 0 ? inputsize_ : 0) <= width_)
+        if (ts + current_w <= width_) {
             targetsize_ = ts;
+            current_w += ts;
+        }
     }
     if(weightsize_<0) {
         int ws = vm->weightsize();
-        if (ws + (inputsize_ > 0 ? inputsize_ : 0) + (targetsize_ > 0 ? targetsize_ : 0) <= width_)
+        if (ws + current_w <= width_) {
             weightsize_ = ws;
+            current_w += ws;
+        }
     }
     if(extrasize_<=0) {
         int es = vm->extrasize();
-        if (es + (inputsize_ > 0 ? inputsize_ : 0) + (targetsize_ > 0 ? targetsize_ : 0) + (weightsize_ > 0 ? weightsize_ : 0) <= width_)
+        if (es + current_w <= width_) {
             extrasize_ = es;
+            current_w += es;
+        }
     }
+
+    // Automatically find out inputsize if possible.
+    // Note that this could be done also with other sizes.
+    if (inputsize_ < 0 && width_ >= 0 && targetsize_ >= 0 &&
+            weightsize_ >= 0 && extrasize_ >= 0)
+    {
+        int new_is = width_ - targetsize_ - weightsize_ -
+            extrasize_;
+        if (new_is >= 0)
+            inputsize_ = new_is;
+    }
+
 
     // Copy fieldnames from vm if not set and they look good.
     bool same_fields_as_source =
