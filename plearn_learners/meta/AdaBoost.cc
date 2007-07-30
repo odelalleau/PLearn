@@ -270,7 +270,7 @@ void AdaBoost::train()
     static Vec pseudo_loss;
 
     input.resize(inputsize());
-    output.resize(1);
+    output.resize(weak_learner_template->outputsize());// We use only the first one as the output from the weak learner
     target.resize(targetsize());
     examples_error.resize(n);
 
@@ -610,9 +610,9 @@ void AdaBoost::train()
 
 void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
-    output.resize(1);
+    output.resize(weak_learner_template->outputsize());
     real sum_out=0;
-    static Vec weak_learner_output(1);
+    static Vec weak_learner_output(output.size());
     for (int i=0;i<voting_weights.length();i++)
     {
         weak_learners[i]->computeOutput(input,weak_learner_output);
@@ -623,6 +623,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
             sum_out += weak_learner_output[0]*voting_weights[i];
     }
     output[0] = sum_out/sum_voting_weights;
+    output.resize(1);
 }
 
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
