@@ -77,10 +77,14 @@ public:
 
     //! Size of mini-batch for gradient descent
     int batch_size;
+
+    //! Indication that the output layer (given by the final module)
+    //! should have as input all units of the network (including the input units)
+    bool global_output_layer;
     
     //! Minimum relative improvement convergence criteria
     //! for the logistic auto-regression.
-    real minimum_relative_improvement;
+    real relative_min_improvement;
     
     //! The layers of units in the network
     TVec< PP<RBMLayer> > layers;
@@ -197,6 +201,15 @@ protected:
     
     //! Reconstruction activations
     mutable Mat reconstruction_input_gradients;
+
+    //! Global output layer input
+    mutable Vec global_output_layer_input;
+
+    //! Global output layer inputs
+    mutable Mat global_output_layer_inputs;
+
+    //! Global output layer input gradients
+    mutable Mat global_output_layer_input_gradients;
 
     //! Inputs of the final_cost
     mutable Mat final_cost_inputs;
