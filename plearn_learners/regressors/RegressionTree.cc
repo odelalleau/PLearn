@@ -146,7 +146,7 @@ void RegressionTree::build_()
         if (weightsize != 1 && weightsize != 0)  PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d", weightsize_);
         if (loss_function_weight != 0.0)
         {
-            l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2.0);
+            l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2);
             l1_loss_function_factor = 2.0 / loss_function_weight;
         }
         else
@@ -322,7 +322,7 @@ void RegressionTree::computeOutputAndCosts(const Vec& inputv, const Vec& targetv
 
 void RegressionTree::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-    costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
+    costsv[0] = pow((outputv[0] - targetv[0]), 2);
     costsv[1] = outputv[1];
     costsv[2] = 1.0 - (l2_loss_function_factor * costsv[0]);
     costsv[3] = 1.0 - (l1_loss_function_factor * abs(outputv[0] - targetv[0]));

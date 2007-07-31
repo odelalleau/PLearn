@@ -112,7 +112,7 @@ void RegressionTreeMulticlassLeave::initStats()
     if (loss_function_weight != 0.0)
     {
         l1_loss_function_factor = 2.0 / loss_function_weight;
-        l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2.0);
+        l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2);
     }
     else
     {
@@ -198,7 +198,7 @@ void RegressionTreeMulticlassLeave::computeOutputAndError()
         {
             for (multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
             {
-                error[0] += pow(output[0] - multiclass_outputs[multiclass_ind], 2.0) * multiclass_weights_sum[multiclass_ind];
+                error[0] += pow(output[0] - multiclass_outputs[multiclass_ind], 2) * multiclass_weights_sum[multiclass_ind];
             }
             error[0] *= l2_loss_function_factor * length / weights_sum;
             if (error[0] < 1E-10) error[0] = 0.0;

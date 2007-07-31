@@ -106,7 +106,7 @@ void BaseRegressorConfidence::build_()
         target_to_compare.resize(1);
         neighbors.resize(train_set->length(), number_of_neighbors);
         nearest_neighbbors_target_mean.resize(train_set->length());
-        two_sigma_square = 2.0 * pow(sigma, 2.0);
+        two_sigma_square = 2.0 * pow(sigma, 2);
         root_two_pi_sigma_square = sigma * 2.506628274631;
     }
 }
@@ -180,7 +180,7 @@ void BaseRegressorConfidence::computeOutput(const Vec& inputv, Vec& outputv) con
             nearest_neighbor = row;
         }
     }
-    outputv[1] = exp(-1.0 * pow((outputv[0] - nearest_neighbbors_target_mean[nearest_neighbor]), 2.0) / two_sigma_square); //  / root_two_pi_sigma_square?
+    outputv[1] = exp(-1.0 * pow((outputv[0] - nearest_neighbbors_target_mean[nearest_neighbor]), 2) / two_sigma_square); //  / root_two_pi_sigma_square?
     outputv[0] = nearest_neighbbors_target_mean[nearest_neighbor];
     if (outputv[1] >= raise_confidence) outputv[1] = 1.0;
     if (outputv[1] < lower_confidence) outputv[1] = 0.0;
@@ -194,7 +194,7 @@ void BaseRegressorConfidence::computeOutputAndCosts(const Vec& inputv, const Vec
 
 void BaseRegressorConfidence::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-    costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
+    costsv[0] = pow((outputv[0] - targetv[0]), 2);
 }
 
 } // end of namespace PLearn

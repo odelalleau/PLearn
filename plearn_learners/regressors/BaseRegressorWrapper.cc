@@ -259,7 +259,7 @@ void BaseRegressorWrapper::computeOutputAndCosts(const Vec& inputv, const Vec& t
 
 void BaseRegressorWrapper::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-    costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
+    costsv[0] = pow((outputv[0] - targetv[0]), 2);
     costsv[1] = outputv[1];
     costsv[2] = 1.0 - (2.0 * loss_function_weight * costsv[0]);
 }

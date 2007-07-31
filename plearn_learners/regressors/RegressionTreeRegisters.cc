@@ -150,17 +150,17 @@ void RegressionTreeRegisters::registerLeave(int leave_id, int row)
     leave_register[row] = leave_id;
 }
 
-double RegressionTreeRegisters::getFeature(int row, int col)
+real RegressionTreeRegisters::getFeature(int row, int col)
 {
     return train_set->get(row, col);
 }
 
-double RegressionTreeRegisters::getTarget(int row)
+real RegressionTreeRegisters::getTarget(int row)
 {
     return train_set->get(row, inputsize);
 }
 
-double RegressionTreeRegisters::getWeight(int row)
+real RegressionTreeRegisters::getWeight(int row)
 {
     if (weightsize <= 0) return 1.0 / length;
     else return train_set->get(row, inputsize + 1);
@@ -344,7 +344,7 @@ void RegressionTreeRegisters::swapIndex(int index_i, int index_j, int dim)
     sorted_row(index_j, dim) = saved_index;
 }
 
-double RegressionTreeRegisters::compare(double field1, double field2)
+real RegressionTreeRegisters::compare(real field1, real field2)
 {
     if (is_missing(field1) && is_missing(field2)) return 0.0;
     if (is_missing(field1)) return -1.0;

@@ -142,7 +142,7 @@ void RegressionTreeLeave::initStats()
     squared_targets_sum = 0.0;
     weighted_targets_sum = 0.0;
     weighted_squared_targets_sum = 0.0; 
-    if (loss_function_weight != 0.0) loss_function_factor = 2.0 / pow(loss_function_weight, 2.0);
+    if (loss_function_weight != 0.0) loss_function_factor = 2.0 / pow(loss_function_weight, 2);
     else loss_function_factor = 1.0;
 }
 
@@ -153,7 +153,7 @@ void RegressionTreeLeave::addRow(int row, Vec outputv, Vec errorv)
     length += 1;
     weights_sum += weight;
     targets_sum += target;
-    squared_target = pow(target, 2.0);
+    squared_target = pow(target, 2);
     squared_targets_sum += squared_target;
     weighted_targets_sum += weight * target;
     weighted_squared_targets_sum += weight * squared_target;  
@@ -170,7 +170,7 @@ void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
     length -= 1;
     weights_sum -= weight;
     targets_sum -= target;
-    squared_target = pow(target, 2.0);
+    squared_target = pow(target, 2);
     squared_targets_sum -= squared_target;
     weighted_targets_sum -= weight * target;
     weighted_squared_targets_sum -= weight * squared_target; 
