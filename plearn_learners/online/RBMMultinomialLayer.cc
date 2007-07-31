@@ -257,6 +257,8 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
             }
             else
             {
+                PLCHECK_MSG(false,
+                            "Momentum not correctly implemented with batch");
                 // The update rule becomes:
                 // bias_inc = momentum*bias_inc - learning_rate*input_gradient
                 // bias += bias_inc
