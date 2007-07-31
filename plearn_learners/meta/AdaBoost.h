@@ -50,7 +50,6 @@ using namespace std;
 
 class AdaBoost: public PLearner
 {
-public:
     typedef PLearner inherited;
   
 protected:
@@ -58,6 +57,9 @@ protected:
     Vec learners_error;
     // weighing scheme over examples
     Vec example_weights;
+
+    //! Used to store outputs from the weak learners.
+    mutable Vec weak_learner_output;
 
     // *********************
     // * protected options *

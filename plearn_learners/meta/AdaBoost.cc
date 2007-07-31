@@ -213,11 +213,12 @@ void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(learners_error, copies);
-    deepCopyField(example_weights, copies);
-    deepCopyField(voting_weights, copies);
-    deepCopyField(weak_learners, copies);
-    deepCopyField(weak_learner_template, copies);
+    deepCopyField(learners_error,           copies);
+    deepCopyField(example_weights,          copies);
+    deepCopyField(weak_learner_output,      copies);
+    deepCopyField(voting_weights,           copies);
+    deepCopyField(weak_learners,            copies);
+    deepCopyField(weak_learner_template,    copies);
 }
 
 
@@ -616,7 +617,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     output.resize(weak_learner_template->outputsize());
     real sum_out=0;
-    static Vec weak_learner_output(output.size());
+    weak_learner_output.resize(output.size());
     for (int i=0;i<voting_weights.length();i++)
     {
         weak_learners[i]->computeOutput(input,weak_learner_output);
