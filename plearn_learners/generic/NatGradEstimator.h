@@ -66,7 +66,7 @@ public:
     int cov_minibatch_size;
 
     //! regularization coefficient of covariance matrix (initial values on diagonal)
-    real lambda;
+    real init_lambda;
 
     //! number of eigenvectors-eigenvalues that is preserved of the covariance matrix
     int n_eigen;
@@ -79,6 +79,10 @@ public:
     //! use the formula Ginv <-- (1+eps) Ginv - eps Ginv g g' Ginv
     //! to estimate the inverse of the covariance matrix
     bool amari_version;
+
+    //! Following an eigendecomposition, set lambda to the (n_eigen+1)th
+    //! eigenvalue.
+    bool update_lambda_from_eigen;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -148,7 +152,7 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
-
+    real lambda;
     Vec r; //! rhs of linear system (G + gamma^{-i} lambda I) a = r
     Mat Vt;
     Mat Vkt; //! sub-matrix of Vt with first n_eigen eigen-vectors

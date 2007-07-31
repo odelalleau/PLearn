@@ -70,12 +70,15 @@ PLEARN_IMPLEMENT_OBJECT(
 NatGradEstimator::NatGradEstimator()
     /* ### Initialize all fields to their default value */
     : cov_minibatch_size(10),
-      lambda(1),
+      init_lambda(1.),
       n_eigen(10),
       gamma(0.99),
       renormalize(true),
+      amari_version(false),
+      update_lambda_from_eigen(false),
       previous_t(-1),
-      first_t(-1)
+      first_t(-1),
+      lambda(1.)
 {
     build();
 }
@@ -119,13 +122,13 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   "to operator() before re-estimating the principal\n"
                   "eigenvectors/values. Note that each such re-computation will\n"
                   "cost O(n_eigen * n)");
-    declareOption(ol, "lambda", &NatGradEstimator::lambda,
+    declareOption(ol, "init_lambda", &NatGradEstimator::init_lambda,
                   OptionBase::buildoption,
                   "Initial variance. The first covariance is assumed to be\n"
-                  "lambda times the identity. Default = 1.\n");
-    declareOption(ol, "regularizer", &NatGradEstimator::lambda,
+                  "init_lambda times the identity. Default = 1.\n");
+    declareOption(ol, "regularizer", &NatGradEstimator::init_lambda,
                   OptionBase::buildoption,
-                  "Proxy for option lambda (different name to avoid python problems).\n");
+                  "Proxy for option init_lambda (different name to avoid python problems).\n");
     declareOption(ol, "n_eigen", &NatGradEstimator::n_eigen,
                   OptionBase::buildoption,
                   "Number of principal eigenvectors of the covariance matrix\n"
@@ -137,6 +140,10 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Instead of our tricks, use the formula Ginv <-- (1+eps) Ginv - eps Ginv g g' Ginv\n"
                   "to estimate the inverse of the covariance matrix, and multiply it with g at each step.\n");
+    declareOption(ol, "update_lambda_from_eigen", &NatGradEstimator::update_lambda_from_eigen,
+                  OptionBase::buildoption,
+                  "Following an eigendecomposition, set lambda to the (n_eigen+1)th eigenvalue\n");
+
     declareOption(ol, "verbosity", &NatGradEstimator::verbosity,
                   OptionBase::buildoption,
                   "Verbosity level\n");
@@ -182,12 +189,15 @@ void NatGradEstimator::init()
         Xt.resize(n_eigen+cov_minibatch_size, n_dim);
         Xt.clear();
         r.resize(n_eigen);
+        lambda = init_lambda;
         for (int j=0;j<n_eigen;j++)
             G(j,j) = lambda;
         first_t=-1;
         previous_t=-1;
     }
 }
+// TODO replace the calls to pow by something else. It's notoriously
+// inefficient.
 void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
 {
     if (previous_t>=0)
@@ -229,21 +239,17 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         cout << "solution r = " << r << endl;
     // solution is in r
     transposeProduct(v, Xt, r);
-    if (renormalize)
+
+    // Multiply v by C's normalizer.
+    if (renormalize) 
         v*=(1 - pow(gamma,real(t+1)))/(1 - gamma);
-        //v/=(1 - pow(gamma,real(t+1)))/(1 - gamma);
-/*    {
-        real gnorm = dot(g,g);
-        real vnorm = dot(v,v);
-        g*=sqrt(vnorm/gnorm);
-    }
-*/
-    if (verbosity>0 && i%(cov_minibatch_size/2)==0)
+
+    if (verbosity>0 && i%(cov_minibatch_size)==0)
     {
-        real gnorm = dot(g,g);
-        real vnorm = dot(v,v);
-        real angle = acos(dot(v,g)/sqrt(gnorm*vnorm))*360/(2*3.14159);
-        cout << "angle(g,v)="<<angle<<", norm ratio="<<vnorm/gnorm<<endl;
+        real gnorm = sqrt(dot(g,g));
+        real vnorm = sqrt(dot(v,v));
+        real angle = acos(dot(v,g)/(gnorm*vnorm))*360/(2*3.14159);
+        cout << "angle(g,v)="<<angle<<", gnorm="<<gnorm<<", vnorm="<<vnorm<<", norm ratio="<<vnorm/gnorm<<endl;
     }
 
     // recompute the eigen-decomposition
@@ -253,18 +259,28 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         //if (save_G)
         //    saveAscii("G.amat",G);
         eigenVecOfSymmMat(G,n_eigen+1,D,Vt);
-        
-        // convert eigenvectors Vt of G into eigenvectors U of C
+        // Get all eigenvalues -> this resizes D and Vt, but it doesn't matter
+//        eigenVecOfSymmMat(G,G.width(),D,Vt);
+//        cout << "-= " << t << " =-" << endl;
+//        cout << D.length() << " eigenvalues = " << D << endl;
+
+        if( D.length() < n_eigen )
+            PLERROR("GOT LESS EIGENVECTORS THAN n_eigen.");
+
+        // convert eigenvectors Vt of G into *unnormalized* eigenvectors U of C
         product(Ut,Vkt,Xt);
         Ut *= 1.0/rn;
         D *= 1.0/rn2;
-        for (int j=0;j<n_eigen;j++) 
+        for (int j=0;j<n_eigen;j++) {
             if (D[j]<1e-10)
                 PLWARNING("NatGradEstimator: very small eigenvalue %d = %g\n",j,D[j]);
+//            if (D[j]<lambda)
+//                cout << " *** Small D[j] *** -> " << D[j] << endl;
+        }
         if (verbosity>0) // verifier Ut U = D/
         {
             static Mat Dmat;
-            cout << "eigenvalues = " << D << endl;
+            cout << D.length() << " eigenvalues = " << D << endl;
             if (verbosity>2)
             {
                 Dmat.resize(n_eigen,n_eigen);
@@ -281,6 +297,28 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         G.clear();
         for (int j=0;j<n_eigen;j++)
             G(j,j) = D[j];
+
+        // Update lambda in a yet to be determined smart way
+        if( update_lambda_from_eigen )    {
+//            if (D[n_eigen-1]>lambda)
+//                cout << " *** Last lambda too small? *** lambda, last eigen : " << lambda << ", " << D[n_eigen-1] << endl;
+/*            float big_eig = D[0];
+            bool cont = true;
+            for (int j=0;j<n_eigen && cont;j++) {
+                if( D[j]< (0.1*big_eig) ) {
+                    lambda = D[j];
+                    cont = false;
+                }
+            }
+            if(cont)*/
+                lambda = D[n_eigen-1];
+//          if (D[n_eigen]<1e-6)
+//              PLWARNING("NatGradEstimator: updating lambda with small value %g\n",D[n_eigen]);
+//          lambda = D[n_eigen-1];
+
+//            if(lambda<0.01)
+//                lambda = 0.01;
+        }
     }
     previous_t = t;
 }
