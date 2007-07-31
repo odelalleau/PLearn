@@ -68,6 +68,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 NatGradSMPNNet::NatGradSMPNNet():
       delayed_update(true),
+      wait_for_final_update(true),
       noutputs(-1),
       params_averaging_coeff(1.0),
       params_averaging_freq(5),
@@ -111,6 +112,13 @@ void NatGradSMPNNet::declareOptions(OptionList& ol)
         "If true, then each CPU's update will be delayed until it is its own\n"
         "turn to update. This ensures no two CPUs are modifying parameters\n"
         "at the same time.");
+
+    declareOption(ol, "wait_for_final_update",
+                  &NatGradSMPNNet::wait_for_final_update,
+                  OptionBase::buildoption,
+        "If true, each CPU will wait its turn before performing its final\n"
+        "update. It should impact performance only when 'delayed_update' is\n"
+        "also true.");
 
     declareOption(ol, "noutputs", &NatGradSMPNNet::noutputs,
                   OptionBase::buildoption,
@@ -789,11 +797,33 @@ void NatGradSMPNNet::train()
         */
     }
 
+    if (!wait_for_final_update) {
+        if (nsteps >  0) {
+            //printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
+            if (delayed_update) {
+                all_params += params_update;
+                params_update.clear();
+            }
+            nsteps = 0;
+        }
+        // Indicate this CPU is done.
+        semun_v.val = 1;
+        semctl(semaphore_id, iam + 1, SETVAL, semun_v);
+        if (iam != 0) {
+            // Exit additional processes after training.
+            //printf("CPU %d exiting\n", iam);
+            exit(0);
+        }
+    }
+
+    Profiler::reset("Synchronization");
+    Profiler::start("Synchronization");
+
     // Wait until it is our turn.
     while (true) {
         int sem_value = semctl(semaphore_id, 0, GETVAL);
         if (sem_value == iam || iam == 0) {
-            if (sem_value == iam) {
+            if (sem_value == iam && wait_for_final_update) {
                 if (nsteps >  0) {
                     //printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
                     if (delayed_update) {
@@ -844,6 +874,12 @@ void NatGradSMPNNet::train()
             semctl(semaphore_id, 0, SETVAL, semun_v);
         }
     }
+
+    Profiler::end("Synchronization");
+    const Profiler::Stats& synch_stats = Profiler::getStats("Synchronization");
+    real synch_time = (synch_stats.user_duration + synch_stats.system_duration)
+        / real(Profiler::ticksPerSecond());
+    //pout << "Synch time: " << synch_time << endl;
 
     // Free semaphore's ressources.
     if (semaphore_id >= 0) {

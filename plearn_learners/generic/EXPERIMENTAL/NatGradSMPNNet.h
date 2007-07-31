@@ -58,6 +58,7 @@ public:
     //#####  Public Build Options  ############################################
 
     bool delayed_update;
+    bool wait_for_final_update;
 
     int noutputs;
 
