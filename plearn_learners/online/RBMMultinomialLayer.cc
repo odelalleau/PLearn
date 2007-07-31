@@ -235,6 +235,7 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
 
     // input_gradients[k][i] =
     //   (output_gradients[k][i]-output_gradients[k].outputs[k]) outputs[k][i]
+    real mean_lr = learning_rate / mbatch_size;
     for( int k=0; k<mbatch_size; k++ )
     {
         real outg_dot_out = dot( output_gradients(k), outputs(k) );
@@ -252,14 +253,14 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
             if( momentum == 0. )
             {
                 // update the bias: bias -= learning_rate * input_gradient
-                b[i] -= learning_rate * ing_ki;
+                b[i] -= mean_lr * ing_ki;
             }
             else
             {
                 // The update rule becomes:
                 // bias_inc = momentum*bias_inc - learning_rate*input_gradient
                 // bias += bias_inc
-                binc[i] = momentum * binc[i] - learning_rate * ing_ki;
+                binc[i] = momentum * binc[i] - mean_lr * ing_ki;
                 b[i] += binc[i];
             }
         }
@@ -440,7 +441,7 @@ void RBMMultinomialLayer::getConfiguration(int conf_index, Vec& output)
 
     for ( int i = 0; i < size; ++i ) {
         output[i] = i == conf_index ? 1 : 0;
-    }    
+    }
 }
 
 
