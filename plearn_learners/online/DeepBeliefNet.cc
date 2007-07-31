@@ -684,7 +684,8 @@ int DeepBeliefNet::outputsize() const
 
     if( final_module )
         out_size += final_module->output_size;
-    else
+    
+    if( !use_classification_cost && !final_module )
         out_size += layers[n_layers-1]->size;
 
     return out_size;
@@ -2073,6 +2074,14 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         }
     }
 
+    if( !use_classification_cost && !final_module)
+    {
+        connections[ n_layers-2 ]->setAsDownInput(
+            layers[ n_layers-2 ]->expectation );
+        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
+        layers[ n_layers-1 ]->computeExpectation();
+        output << layers[ n_layers-1 ]->expectation;
+    }
 }
 
 void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
