@@ -281,7 +281,9 @@ Optimize initial learning rate by exploring greedily from a given initial
 learning rate.
 If call_forget then the provided initial_learner is changed (and not
 necessarily the optimal one) upon return. But if not call_forget then the
-initial_learner is unchanged (we make deep copies internally).
+initial_learner is unchanged (we make deep copies internally). However, if
+note call_forget, then deep-copies are made and the best learner is returned
+(3rd element of returned tuple).
 """
     log_initial_lr=log(initial_lr)
     log_steps=log(lr_steps)

@@ -78,6 +78,8 @@ if use_gui:
         sys.exit()
     loggingControl(verb, logs)
 
+pl.AutoVMatrix()
+AutoVMatrix.__len__ = lambda self: self.length
 
 if __name__ == "__main__":
     class A(plargs):
