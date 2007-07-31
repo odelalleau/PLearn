@@ -87,7 +87,7 @@ real WeightedDistance::evaluate(const Vec& x1, const Vec& x2) const
     real return_value = 0.0;
     for (int i = 0; i < weights.length(); i++)
     {
-        return_value += weights[i] * pow(x1[i] - x2[i], 2.0);
+        return_value += weights[i] * pow(x1[i] - x2[i], 2);
     }
     return return_value;
 }

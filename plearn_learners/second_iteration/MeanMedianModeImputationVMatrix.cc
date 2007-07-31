@@ -439,7 +439,7 @@ void MeanMedianModeImputationVMatrix::swapValues(Vec input_vec, int index_i, int
   input_vec[index_j] = saved_value;
 }
 
-double MeanMedianModeImputationVMatrix::compare(double field1, double field2)
+real MeanMedianModeImputationVMatrix::compare(real field1, real field2)
 {
   if (is_missing(field1) && is_missing(field2)) return 0.0;
   if (is_missing(field1)) return +1.0;

@@ -52,10 +52,9 @@
 #include <plearn/vmat/ExplicitSplitter.h>     //!<  For the splitter stuff.
 #include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
-#include <plearn_learners/second_iteration/CovariancePreservationImputationVMatrix.h>
-#include <plearn_learners/second_iteration/NeighborhoodImputationVMatrix.h>
-#include <plearn_learners/second_iteration/WeightedDistance.h>
-#include <plearn_learners/second_iteration/Experimentation.h>
+#include <plearn_learners/cgi/CovariancePreservationImputationVMatrix.h>
+#include <plearn_learners/cgi/NeighborhoodImputationVMatrix.h>
+#include <plearn_learners/cgi/WeightedDistance.h>
 
 namespace PLearn {
 

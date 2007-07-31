@@ -390,9 +390,9 @@ void TestImputations::computeMeanMedianModeStats()
     for (int test_row = 0; test_row < test_length; test_row++)
     {
         to_deal_with_value = test_samples_set->get(test_row, to_deal_with_next);
-        mmmf_mean_err += pow(to_deal_with_value - mmmf_mean, 2.0);
-        mmmf_median_err += pow(to_deal_with_value - mmmf_median, 2.0);
-        mmmf_mode_err += pow(to_deal_with_value - mmmf_mode, 2.0);
+        mmmf_mean_err += pow(to_deal_with_value - mmmf_mean, 2);
+        mmmf_median_err += pow(to_deal_with_value - mmmf_median, 2);
+        mmmf_mode_err += pow(to_deal_with_value - mmmf_mode, 2);
         pb->update( test_row );
     }
     delete pb;
@@ -421,7 +421,7 @@ void TestImputations::computeTreeCondMeanStats()
     for (int test_row = 0; test_row < test_length; test_row++)
     {
         to_deal_with_value = test_samples_set->get(test_row, to_deal_with_next);
-        tcmf_mean_err += pow(to_deal_with_value - tcmf_file->get(indices[test_row], 0), 2.0);
+        tcmf_mean_err += pow(to_deal_with_value - tcmf_file->get(indices[test_row], 0), 2);
         pb->update( test_row );
     }
     delete pb;
@@ -459,7 +459,7 @@ void TestImputations::computeCovPresStats()
     for (int test_row = 0; test_row < test_length; test_row++)
     {
         test_samples_set->getRow(test_row, train_input);
-        cvpf_mean_err += pow(to_deal_with_value - covariancePreservationValue(to_deal_with_next), 2.0);
+        cvpf_mean_err += pow(to_deal_with_value - covariancePreservationValue(to_deal_with_next), 2);
         pb->update( test_row );
     }
     delete pb;
@@ -516,7 +516,7 @@ void TestImputations::computeNeighborhoodStats()
             }
             if (knnv_value_count > 0.0)
             {
-                knnf_mean_err[knnf_row] += pow(to_deal_with_value - (knnf_sum_value / knnv_value_count), 2.0);
+                knnf_mean_err[knnf_row] += pow(to_deal_with_value - (knnf_sum_value / knnv_value_count), 2);
                 continue;
             }
             knnf_value = ref_cov((int) knnf_neighbors[knnf_row], to_deal_with_next);
@@ -524,7 +524,7 @@ void TestImputations::computeNeighborhoodStats()
                 PLERROR("In TestImputations::computeNeighborhoodStats(): missing value found in the reference with covariance preserved at: %i , %i",
                          (int) knnf_neighbors[knnf_row], to_deal_with_next);
             knnf_sum_cov += knnf_value;
-            knnf_mean_err[knnf_row] += pow(to_deal_with_value - (knnf_sum_cov / (knnf_row + 1)), 2.0);
+            knnf_mean_err[knnf_row] += pow(to_deal_with_value - (knnf_sum_cov / (knnf_row + 1)), 2);
         }
         pb->update( test_row );
     }

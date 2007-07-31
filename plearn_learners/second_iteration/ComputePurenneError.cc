@@ -141,10 +141,10 @@ void ComputePurenneError::computeOutputAndCosts(const Vec& inputv, const Vec& ta
 
 void ComputePurenneError::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-    costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
+    costsv[0] = pow((outputv[0] - targetv[0]), 2);
     costsv[1] = outputv[1] == targetv[1] ? 0 : 1;
     costsv[2] = int(round(fabs(outputv[1] - targetv[1])));
-    costsv[3] = pow((outputv[1] - targetv[1]), 2.0);
+    costsv[3] = pow((outputv[1] - targetv[1]), 2);
 }
 
 } // end of namespace PLearn
