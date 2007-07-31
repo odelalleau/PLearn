@@ -248,7 +248,7 @@ public:
     //!(see MStep() for more details)
     int transformDistributionPeriod;
     int transformDistributionOffset;
-
+    
     //!This parameter have to be defined if the transformation distribution
     //!is learned using a MAP procedure. We suppose that this distribution have a a multinomial form
     //(u1,u2,...,uK) with dirichlet prior probability : 
@@ -258,12 +258,11 @@ public:
     real transformDistributionAlpha;
 
 
-    //!tells us when to update the transformation matrices and bias
+    //!tells us when to update the transformation parameters
     int transformsPeriod;
     int transformsOffset;
     int biasPeriod;
     int biasOffset;
-
 
     //PARAMETERS OF THE DISTRIBUTION
 
@@ -307,23 +306,11 @@ public:
     //#####  PDistribution Member Functions  ##################################
 
     //! Return log of probability density log(p(y | x)).
-    virtual real log_density(const Vec& y) ;//const;
-
-    //! Return survival function: P(Y>y | x).
-    virtual real survival_fn(const Vec& y) const;
-
-    //! Return cdf: P(Y<y | x).
-    virtual real cdf(const Vec& y) const;
-
-    //! Return E[Y | x].
-    virtual void expectation(Vec& mu) const;
-
-    //! Return Var[Y | x].
-    virtual void variance(Mat& cov) const;
+    virtual real log_density(const Vec& y) const;
 
     //! Return a pseudo-random sample generated from the conditional
     //! distribution, of density p(y | x).
-    virtual void generate(Vec& y); //const ;
+    virtual void generate(Vec& y) const ;
 
     //### Override this method if you need it (and if your distribution can
     //### handle it. Default version calls PLERROR.
@@ -338,17 +325,6 @@ public:
     //! Reset the random number generator used by generate() using the
     //! given seed.
     // virtual void resetGenerator(long g_seed) const;
-
-    //! Set the 'predictor' and 'predicted' sizes for this distribution.
-    //### See help in PDistribution.h.
-    virtual bool setPredictorPredictedSizes(int the_predictor_size,
-                                            int the_predicted_size,
-                                            bool call_parent = true);
-
-    //! Set the value for the predictor part of a conditional probability.
-    //### See help in PDistribution.h.
-    virtual void setPredictor(const Vec& predictor, bool call_parent = true)
-                              const;
 
     // ### These methods may be overridden for efficiency purpose:
     /*
@@ -421,7 +397,9 @@ public:
     //!(bias are set to 0)
     void setTransformsParameters(TVec<Mat>  transforms, Mat bias=Mat());
     
-    
+   
+
+
     //!initializes the noise variance randomly
     //!(gamma distribution)
     void initNoiseVariance();
@@ -447,7 +425,7 @@ public:
 
     //!generates a sample data point from a source data point and returns it
     //! (if transformIdx >= 0 , we use the corresponding transformation )
-    Vec returnPredictedFrom(Vec source, int transformIdx=-1);
+    Vec returnPredictedFrom(Vec source, int transformIdx=-1)const ;
     
 
     //!fill the matrix "samples" with data points obtained from a given center data point
@@ -465,7 +443,7 @@ public:
     //                          2) apply it on center
     //                          3) add noise)
     // - (*) if transformIdx>=0, we always use the corresponding transformation
-    Mat returnGeneratedSamplesFrom(Vec center, int n, int transformIdx=-1);
+    Mat returnGeneratedSamplesFrom(Vec center, int n, int transformIdx=-1)const;
     
     
     //!select a transformation randomly (with respect to our multinomial distribution)
@@ -504,10 +482,12 @@ public:
     void treeDataSet(const Vec &root,
                      int deepness,
                      int branchingFactor,
-                     Mat & dataPoints);
+                     Mat & dataPoints,
+                     int transformIdx = -1)const;
     Mat returnTreeDataSet(Vec root,
                           int deepness,
-                          int branchingFactor);
+                          int branchingFactor,
+                          int transformIdx =-1)const;
     
 
     //!create a "sequential" dataset:
@@ -515,9 +495,10 @@ public:
     //! (where "->" stands for : "generate the")
     void sequenceDataSet(const Vec & start,
                          int n,
-                         Mat & dataPoints);
+                         Mat & dataPoints,
+                         int transformIdx=-1)const;
 
-    Mat returnSequenceDataSet(Vec start,int n);
+    Mat returnSequenceDataSet(Vec start,int n, int transformIdx=-1)const;
 
   
 
@@ -528,26 +509,26 @@ public:
     //!COPIES OF THE STRUCTURES
 
     //!returns the "idx"th data point in the training set
-    Vec returnTrainingPoint(int idx);
+    Vec returnTrainingPoint(int idx)const;
 
     //!returns all the reconstructions candidates associated to a given target
-    TVec<ReconstructionCandidate> returnReconstructionCandidates(int targetIdx);
+    TVec<ReconstructionCandidate> returnReconstructionCandidates(int targetIdx)const;
 
     //!returns the reconstructions of the "targetIdx"th data point value in the training set
     //!(one reconstruction for each reconstruction candidate)
-    Mat returnReconstructions(int targetIdx);
+    Mat returnReconstructions(int targetIdx)const;
 
     //!returns the neighbors choosen to reconstruct the target
     //!(one choosen neighbor for each reconstruction candidate associated to the target)
-    Mat returnNeighbors(int targetIdx);
+    Mat returnNeighbors(int targetIdx)const;
 
     //!returns the parameters of the "transformIdx"th transformation
-    Mat returnTransform(int transformIdx);
+    Mat returnTransform(int transformIdx)const;
 
     //!returns the parameters of each transformation
     //!(as an KdXd matrix, K = number of transformations,
     //!                    d = dimension of input space)
-    Mat returnAllTransforms();
+    Mat returnAllTransforms()const;
 
 
     //OTHER BUILDING/INITIALIZATION METHODS 
@@ -555,9 +536,12 @@ public:
     // Simply calls inherited::build() then build_()
     virtual void build();
     
-    //! initialization operations that have to be done before the training
-    void trainBuild();
+    //! main initialization operations that have to be done before any training phase
+    void mainLearnerBuild();
     
+    void buildLearnedParameters();
+    
+
     //! initialization operations that have to be done before a generation process
     //! (all the undefined parameters will be initialized  randomly)
     void generatorBuild(int inputSpaceDim_=2,
@@ -640,9 +624,7 @@ protected:
     //!Each matrix is a view on a sub-matrix in th bigger matrix "B_C" described above.
     TVec<Mat> B,C;
     
-    //!To get easily a view on an input point from the training set
-    Vec target, neighbor;
-    
+   
     
 protected:
     //#####  Protected Member Functions  ######################################
@@ -666,13 +648,14 @@ private:
     
     //! stores a VIEW on the reconstruction candidates related to the specified
     //! target (into the variable "targetReconstructionSet" )
-    void seeTargetReconstructionSet(int targetIdx) ;
+    void seeTargetReconstructionSet(int targetIdx,
+                                    TVec<ReconstructionCandidate> & targetReconstructionSet)const ;
     // stores the "targetIdx"th point in the training set into the variable
     // "target"
-    void seeTarget(const int targetIdx) ;
+    void seeTarget(const int targetIdx, Vec & target) const ;
     // stores the "neighborIdx"th input in the training set into the variable
     // "neighbor" 
-    void seeNeighbor(const int neighborIdx);
+    void seeNeighbor(const int neighborIdx, Vec & neighbor)const;
 
 
     //!GENERATE GAMMA RANDOM VARIABLES
@@ -681,7 +664,7 @@ private:
     
     //!returns a pseudo-random positive real number x  
     //!using the distribution p(x)=Gamma(alpha,beta)
-    real gamma_sample(real alpha,real beta=1);
+    real gamma_sample(real alpha,real beta=1)const;
     
     
     //!GENERATE DIRICHLET RANDOM VARIABLES
@@ -691,8 +674,8 @@ private:
     //!using the distribution p(x) = Dirichlet(x| all the parameters = alpha)
     //!-all the element of the vector are between 0 and 1,
     //!-the elements of the vector sum to 1
-    void dirichlet_sample(real alpha, Vec & sample);
-    Vec return_dirichlet_sample(real alpha);
+    void dirichlet_sample(real alpha, Vec & sample)const;
+    Vec return_dirichlet_sample(real alpha)const;
 
     
   
@@ -701,7 +684,7 @@ private:
     //!OPERATIONS ON WEIGHTS 
     
      //!normalizes the reconstruction weights related to a given target. 
-    void normalizeTargetWeights(int targetIdx, real totalWeight) const;
+    void normalizeTargetWeights(int targetIdx, real totalWeight);
     
     //!returns a random weight 
     real randomWeight() const;
@@ -717,13 +700,13 @@ private:
     //!update/compute the weight of a reconstruction candidate with
     //!the actual transformation parameters
     real updateReconstructionWeight(int candidateIdx);
-    real computeReconstructionWeight(const ReconstructionCandidate & gc);
+    real computeReconstructionWeight(const ReconstructionCandidate & gc) const;
     real computeReconstructionWeight(int targetIdx, 
                                      int neighborIdx, 
-                                     int transformIdx);
+                                     int transformIdx) const;
     real computeReconstructionWeight(const Vec & target,
                                      int neighborIdx,
-                                     int transformIdx);
+                                     int transformIdx) const;
 
     //!applies "transformIdx"th transformation on data point "src"
     void applyTransformationOn(int transformIdx, const Vec & src , Vec & dst) const ;
@@ -734,7 +717,7 @@ private:
     //! those probabilities sum to 1 . 
     //!(the distribution is represented as a set of weights, which are typically
     //! log-probabilities)
-    bool isWellDefined(Vec & distribution);
+    bool isWellDefined(Vec & distribution)const;
 
     //!INITIAL E STEP 
     
@@ -827,18 +810,14 @@ private:
     //!NOTE :  alpha =1 ->  no regularization
     void MStepTransformDistributionMAP(real alpha);
 
-
-
     //!maximization step with respect to transformation matrices
     //!(MAP version)
     void MStepTransformations();
-    
-
+  
     //!maximization step with respect to transformation bias
     //!(MAP version)
     void MStepBias();
-    
-    
+
     //!maximization step with respect to noise variance
     void MStepNoiseVariance();
     
@@ -850,11 +829,6 @@ private:
     //!returns the distance between the reconstruction and the target
     //!for the 'candidateIdx'th reconstruction candidate
     real reconstructionEuclideanDistance(int candidateIdx);
-    
-    
-    //STOPPING CRITERION
-    //stage == nstages?
-    bool stoppingCriterionReached();
     
     //increment the variable 'stage' of 1
     void nextStage();
