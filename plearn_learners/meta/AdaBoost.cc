@@ -378,6 +378,10 @@ void AdaBoost::train()
             for (int i=0; i<n; ++i) {
                 if(report_progress) pb->update(i);
                 train_set->getExample(i, input, target, weight);
+#ifdef BOUNDCHECK
+                if(target[0]==0||target[0]==1)
+                    PLERROR("In AdaBoost::train() - target is not 0 or 1 in the training set. We implement only two class boosting.");
+#endif
                 new_weak_learner->computeOutput(input,output);
                 real y_i=target[0];
                 real f_i=output[0];
