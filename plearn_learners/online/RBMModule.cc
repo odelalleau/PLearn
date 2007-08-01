@@ -105,6 +105,7 @@ PLEARN_IMPLEMENT_OBJECT(
 RBMModule::RBMModule():
     cd_learning_rate(0),
     grad_learning_rate(0),
+    tied_connection_weights(false),
     compute_contrastive_divergence(false),
     n_Gibbs_steps_CD(1),
     min_n_Gibbs_steps(1),
@@ -155,6 +156,10 @@ void RBMModule::declareOptions(OptionList& ol)
         "Learning rate for the constrastive divergence step. Note that when\n"
         "set to 0, the gradient of the contrastive divergence will not be\n"
         "computed at all.");
+
+    declareOption(ol, "tied_connection_weights", &RBMModule::tied_connection_weights,
+                  OptionBase::buildoption,
+        "Whether to keep fixed the connection weights during learning.");
 
     declareOption(ol, "compute_contrastive_divergence", &RBMModule::compute_contrastive_divergence,
                   OptionBase::buildoption,
@@ -1136,15 +1141,12 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             // compute contrastive divergence itself
             for (int i=0;i<mbs;i++)
             {
-                (*contrastive_divergence)(i,0) =
-                    // positive phase energy
-                    visible_layer->energy((*visible)(i))
-                    - dot((*h)(i),(*h_act)(i))
-                    // minus
-                    -
-                    // negative phase energy
-                    (visible_layer->energy(visible_layer->samples(i))
-                     - dot(hidden_expectations(i),hidden_layer->activations(i)));
+	    	real s = visible_layer->energy((*visible)(i)) - visible_layer->energy(visible_layer->samples(i));
+		Vec a = (*h_act)(i);
+		Vec b = hidden_layer->activations(i); 
+		for (int j=0;j<hidden_layer->size;j++)
+		    s -= tabulated_softplus(a[j]) - tabulated_softplus(b[j]);
+		(*contrastive_divergence)(i,0) = s;
             }
         }
         else
@@ -1244,7 +1246,11 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         // Note: we need to perform the following steps even if the gradient
         // learning rate is equal to 0. This is because we must propagate the
         // gradient to the visible layer, even though no update is required.
-        setAllLearningRates(grad_learning_rate);
+	if (tied_connection_weights)
+           setLearningRatesOnlyForLayers(grad_learning_rate);
+	else
+           setAllLearningRates(grad_learning_rate);
+	
         PLASSERT_MSG( hidden && hidden_act , "To compute gradients in bprop, the hidden_activations.state port must have been filled during fprop");
         // Compute gradient w.r.t. activations of the hidden layer.
         hidden_layer->bpropUpdate(
@@ -1310,7 +1316,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if (cd_learning_rate > 0 && minimize_log_likelihood) {
         PLASSERT( visible && !visible->isEmpty() );
         PLASSERT( hidden && !hidden->isEmpty() );
-        setAllLearningRates(cd_learning_rate);
+	if (tied_connection_weights)
+           setLearningRatesOnlyForLayers(cd_learning_rate);
+	else
+           setAllLearningRates(cd_learning_rate);
 
         // positive phase
         visible_layer->accumulatePosStats(*visible);
@@ -1383,7 +1392,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                            << name << "'" << endl;
         // Perform a step of contrastive divergence.
         PLASSERT( visible && !visible->isEmpty() );
-        setAllLearningRates(cd_learning_rate);
+	if (tied_connection_weights)
+           setLearningRatesOnlyForLayers(cd_learning_rate);
+	else
+           setAllLearningRates(cd_learning_rate);
         Mat* negative_phase_visible_samples =
             computed_contrastive_divergence?ports_value[getPortIndex("negative_phase_visible_samples.state")]:0;
         const Mat* negative_phase_hidden_expectations =
@@ -1498,7 +1510,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     }
                 }
             }
-            if (!standard_cd_grad) {
+            if (!standard_cd_grad && !tied_connection_weights) {
                 // Update connection manually.
                 Mat& weights = ((RBMMatrixConnection*)
                                 get_pointer(connection))->weights;
@@ -1575,7 +1587,10 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     }
 
     if (reconstruction_error_grad && !reconstruction_error_grad->isEmpty()) {
-        setAllLearningRates(grad_learning_rate);
+	if (tied_connection_weights)
+           setLearningRatesOnlyForLayers(grad_learning_rate);
+	else
+           setAllLearningRates(grad_learning_rate);
         PLASSERT( reconstruction_connection != 0 );
         // Perform gradient descent on Autoassociator reconstruction cost
         Mat* visible_reconstruction = ports_value[getPortIndex("visible_reconstruction.state")];
@@ -1764,6 +1779,16 @@ void RBMModule::setAllLearningRates(real lr)
     if(reconstruction_connection)
         reconstruction_connection->setLearningRate(lr);
 }
+
+void RBMModule::setLearningRatesOnlyForLayers(real lr)
+{
+    hidden_layer->setLearningRate(lr);
+    visible_layer->setLearningRate(lr);
+    connection->setLearningRate(0.);
+    if(reconstruction_connection)
+        reconstruction_connection->setLearningRate(0.);
+}
+
 
 //////////////////////////////
 // sampleHiddenGivenVisible //
