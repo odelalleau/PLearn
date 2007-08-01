@@ -1202,6 +1202,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     weights = ports_value[getPortIndex("weights")];
     Mat* weights_grad = ports_gradient[getPortIndex("weights")];
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
+    Mat* energy_grad = ports_gradient[getPortIndex("energy")];
     Mat* contrastive_divergence_grad = NULL;
     Mat* contrastive_divergence = NULL;
     if (compute_contrastive_divergence)
@@ -1653,6 +1654,39 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 visible_exp_grad, hidden_act_grad, true);
         }
         partition_function_is_stale = true;
+    }
+
+    if (energy_grad && !energy_grad->isEmpty() &&
+        visible_grad && visible_grad->isEmpty())
+        // compute the gradient of the free-energy wrt input
+    {
+        // very cheap shot, specializing to the common case...
+        PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+        PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
+        PLASSERT(connection->classname()=="RBMMatrixConnection");
+        // FE(x) = -b'x - sum_i softplus(hidden_layer->activation[i])        
+        // dFE(x)/dx = -b - sum_i sigmoid(hidden_layer->activation[i]) W_i
+        // dC/dxt = -b dC/dFE - dC/dFE sum_i p_ti W_i
+        int mbs=energy_grad->length();
+        visible_grad->resize(mbs,visible_layer->size);
+        Mat& weights = ((RBMMatrixConnection*)
+                        get_pointer(connection))->weights;
+        bool same_dC_dFE=true;
+        real dC_dFE=(*energy_grad)(0,0);
+        const Mat& p = hidden_layer->getExpectations();
+        for (int t=0;t<mbs;t++)
+        {
+            real new_dC_dFE=(*energy_grad)(t,0);
+            if (new_dC_dFE!=dC_dFE)
+                same_dC_dFE=false;
+            dC_dFE = new_dC_dFE;
+            multiplyAcc((*visible_grad)(t),visible_layer->bias,-dC_dFE);
+        }
+        if (same_dC_dFE)
+            productScaleAcc(*visible_grad,p,false,weights,false,-1,1);
+        else
+            for (int t=0;t<mbs;t++)
+                productScaleAcc((*visible_grad)(t),weights,true,p(t),-dC_dFE,1);
     }
 
     // Explicit error message in the case of the 'visible' port.
