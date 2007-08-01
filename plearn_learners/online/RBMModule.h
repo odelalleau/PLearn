@@ -71,6 +71,7 @@ public:
 
     real cd_learning_rate;
     real grad_learning_rate;
+    bool tied_connection_weights;
 
     bool compute_contrastive_divergence;
 
@@ -266,6 +267,10 @@ protected:
 
     //! Forward the given learning rate to all elements of this module.
     void setAllLearningRates(real lr);
+        
+    //! Forward the given learning rate to all elements of the layers
+    //! and to the reconstruction connections (NOT of the connection weights).
+    void setLearningRatesOnlyForLayers(real lr);
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
