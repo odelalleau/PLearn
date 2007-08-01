@@ -120,7 +120,7 @@ void RegressionTreeMulticlassLeave::initStats()
         l2_loss_function_factor = 1.0;
     }
     multiclass_weights_sum.resize(multiclass_outputs.length());
-    for (multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++) multiclass_weights_sum[multiclass_ind] = 0.0;
+    multiclass_weights_sum.fill(0);
 }
 
 void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
@@ -130,7 +130,7 @@ void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
     length += 1;
     weights_sum += weight;
     int multiclass_found = 0;
-    for (multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+    for (int multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {
         if (target == multiclass_outputs[multiclass_ind])
         {
@@ -152,7 +152,7 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
     target = train_set->getTarget(row);
     length -= 1;
     weights_sum -= weight;
-    for (multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+    for (int multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {
         if (target == multiclass_outputs[multiclass_ind])
         {
@@ -168,7 +168,7 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
 void RegressionTreeMulticlassLeave::computeOutputAndError()
 {
     multiclass_winer = 0;
-    for (multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+    for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {
         if (multiclass_weights_sum[multiclass_ind] > multiclass_weights_sum[multiclass_winer]) multiclass_winer = multiclass_ind;
     }
@@ -186,7 +186,7 @@ void RegressionTreeMulticlassLeave::computeOutputAndError()
         error[0] = 0.0;
         if (objective_function == "l1")
         {
-            for (multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+            for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
             {
                 error[0] += abs(output[0] - multiclass_outputs[multiclass_ind]) * multiclass_weights_sum[multiclass_ind];
             }
@@ -196,7 +196,7 @@ void RegressionTreeMulticlassLeave::computeOutputAndError()
         }
         else
         {
-            for (multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+            for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
             {
                 error[0] += pow(output[0] - multiclass_outputs[multiclass_ind], 2) * multiclass_weights_sum[multiclass_ind];
             }

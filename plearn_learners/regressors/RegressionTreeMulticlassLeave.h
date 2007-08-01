@@ -72,7 +72,6 @@ private:
   Work fields: they are sized and initialized if need be, at buid time
 */  
  
-    int multiclass_ind;
     int multiclass_winer;
   
 public:
