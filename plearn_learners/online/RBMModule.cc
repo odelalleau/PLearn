@@ -625,12 +625,12 @@ void RBMModule::computePartitionFunction()
 {
     int hidden_configurations = hidden_layer->getConfigurationCount();
     int visible_configurations = visible_layer->getConfigurationCount();
-
+	
     PLASSERT_MSG(hidden_configurations != RBMLayer::INFINITE_CONFIGURATIONS ||
                  visible_configurations != RBMLayer::INFINITE_CONFIGURATIONS,
                  "To compute exact log-likelihood of an RBM maximum configurations of hidden "
                  "or visible layer must be less than 2^31.");
-
+	
     // Compute partition function
     if (hidden_configurations > visible_configurations)
         // do it by log-summing minus-free-energy of visible configurations
@@ -650,6 +650,7 @@ void RBMModule::computePartitionFunction()
             else
                 log_partition_function = logadd(log_partition_function,-free_energy(0,0));
         }
+        hidden_activations_are_computed = false;
     }
     else
         // do it by summing free-energy of hidden configurations
@@ -763,37 +764,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         found_a_valid_configuration = true;
     }
-    // COMPUTE UNSUPERVISED NLL
-    if (neg_log_likelihood && neg_log_likelihood->isEmpty() && compute_log_likelihood)
-    {
-        if (partition_function_is_stale && !during_training)
-        {
-            computePartitionFunction();
-            partition_function_is_stale=false;
-        }
-        if (visible && !visible->isEmpty()
-            && hidden && !hidden->isEmpty())
-        {
-            // neg-log-likelihood(visible,hidden) = energy(visible,hidden) + log(partition_function)
-            computeEnergy(*visible,*hidden,*neg_log_likelihood);
-            *neg_log_likelihood += log_partition_function;
-        }
-        else if (visible && !visible->isEmpty())
-        {
-            // neg-log-likelihood(visible) = free_energy(visible) + log(partition_function)
-            computeFreeEnergyOfVisible(*visible,*neg_log_likelihood,hidden_act);
-            *neg_log_likelihood += log_partition_function;
-        }
-        else if (hidden && !hidden->isEmpty())
-        {
-            // neg-log-likelihood(hidden) = free_energy(hidden) + log(partition_function)
-            computeFreeEnergyOfHidden(*hidden,*neg_log_likelihood);
-            *neg_log_likelihood += log_partition_function;
-        }
-        else PLERROR("RBMModule: neg_log_likelihood currently computable only of the visible as inputs");
-        found_a_valid_configuration = true;
-    }
-
     // REGULAR FPROP
     // we are given the visible units and we want to compute the hidden
     // activation and/or the hidden expectation
@@ -891,6 +861,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             {
                 PLASSERT( reconstruction_error->isEmpty() );
                 reconstruction_error->resize(visible->length(),1);
+                visible_layer->setBatchSize( visible->length() );
                 visible_layer->fpropNLL(*visible,
                                         *reconstruction_error);
             }
@@ -1141,6 +1112,37 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         else
             PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
                     "only possible if only visible are provided in input).\n");
+        found_a_valid_configuration = true;
+    }
+
+    // COMPUTE UNSUPERVISED NLL
+    if (neg_log_likelihood && neg_log_likelihood->isEmpty() && compute_log_likelihood)
+    {
+        if (partition_function_is_stale && !during_training)
+        {
+            computePartitionFunction();
+            partition_function_is_stale=false;
+        }
+        if (visible && !visible->isEmpty()
+            && hidden && !hidden->isEmpty())
+        {
+            // neg-log-likelihood(visible,hidden) = energy(visible,hidden) + log(partition_function)
+            computeEnergy(*visible,*hidden,*neg_log_likelihood);
+            *neg_log_likelihood += log_partition_function;
+        }
+        else if (visible && !visible->isEmpty())
+        {
+            // neg-log-likelihood(visible) = free_energy(visible) + log(partition_function)
+            computeFreeEnergyOfVisible(*visible,*neg_log_likelihood,hidden_act);
+            *neg_log_likelihood += log_partition_function;
+        }
+        else if (hidden && !hidden->isEmpty())
+        {
+            // neg-log-likelihood(hidden) = free_energy(hidden) + log(partition_function)
+            computeFreeEnergyOfHidden(*hidden,*neg_log_likelihood);
+            *neg_log_likelihood += log_partition_function;
+        }
+        else PLERROR("RBMModule: neg_log_likelihood currently computable only of the visible as inputs");
         found_a_valid_configuration = true;
     }
 
