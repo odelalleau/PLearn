@@ -304,7 +304,11 @@ public:
 
 
     //#####  PDistribution Member Functions  ##################################
+ 
 
+    virtual TVec<string> getTrainCostNames() const;
+    
+    
     //! Return log of probability density log(p(y | x)).
     virtual real log_density(const Vec& y) const;
 

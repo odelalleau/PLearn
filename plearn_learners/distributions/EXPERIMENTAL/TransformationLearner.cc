@@ -82,9 +82,6 @@ TransformationLearner::TransformationLearner():
     nbTransforms(2),
     nbNeighbors(2)
 {
-
-    pout << "constructor called" <<endl;
-
 }
 
 
@@ -349,7 +346,6 @@ void TransformationLearner::declareMethods(RemoteMethodMap& rmm){
                    ArgDoc("const Vec source","source data point"),
                    ArgDoc("int transformIdx","index of the transformation (optional)"),
                    RetDoc("Vec")));
-
     declareMethod(rmm,
                   "returnGeneratedSamplesFrom",
                   &TransformationLearner::returnGeneratedSamplesFrom,
@@ -608,13 +604,34 @@ int TransformationLearner::inputsize() const {
     return inputSpaceDim;
 }
 
+
+/*TVec<string> PDistribution::getTestCostNames() const
+{
+    TVec<string> nll_cost;
+    if (nll_cost.isEmpty())
+        nll_cost.append("NLL");
+    return nll_cost;
+    }*/
+
+///////////////////////
+// getTrainCostNames //
+///////////////////////
+TVec<string> TransformationLearner::getTrainCostNames() const
+{
+    return getTestCostNames();
+}
+
+
+
+
+
+
+
 /////////////////
 // log_density //
 /////////////////
 real TransformationLearner::log_density(const Vec& y) const
 {
- 
-    pout << "in TransformationLearner :: log_density" << endl;
     PLASSERT(y.length() == inputSpaceDim);
     real weight;
     real totalWeight = INIT_weight(0);
@@ -649,9 +666,10 @@ void TransformationLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### shallow-copied.
     // ### ex:
     // deepCopyField(trainvec, copies);
+    
 
     // ### Remove this line when you have fully implemented this method.
-    PLERROR("TransformationLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    //PLERROR("TransformationLearner::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////////
@@ -2107,8 +2125,38 @@ void TransformationLearner::MStepTransformations()
  
 
 //TODO
+//!maximization step with respect to transformation bias
+//!(MAP version)
 void TransformationLearner::MStepBias(){
-    
+    Mat newBiasSet;
+    newBiasSet.resize(nbTransforms, inputSpaceDim);
+    Vec norms;
+    norms.resize(nbTransforms);
+    for(int t=0;t<nbTransforms;t++){
+        norms[t] = INIT_weight(0);
+    }
+    int transformIdx;
+    Vec target,neighbor,reconstruction;
+    real proba,weight;
+    for(int idx=0; idx<nbReconstructions; idx++){
+        transformIdx = reconstructionSet[idx].transformIdx;
+        weight = reconstructionSet[idx].weight;
+        proba = PROBA_weight(weight);
+        target.resize(inputSpaceDim);
+        seeTarget(reconstructionSet[idx].targetIdx,target);
+        neighbor.resize(inputSpaceDim);
+        seeNeighbor(reconstructionSet[idx].neighborIdx, neighbor);
+        reconstruction.resize(inputSpaceDim);
+        applyTransformationOn(transformIdx,neighbor, reconstruction);
+        newBiasSet(transformIdx) += proba*(target - reconstruction);
+        norms[transformIdx] = SUM_weights(norms[transformIdx],weight);
+    }
+    for(int t=0; t<nbTransforms ; t++){
+        newBiasSet(t) /= ((noiseVariance/transformsVariance) 
+                       +
+                       PROBA_weight(norms[t]));
+    }
+    biasSet << newBiasSet;   
 }
 
 
