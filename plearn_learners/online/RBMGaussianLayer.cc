@@ -644,7 +644,7 @@ real RBMGaussianLayer::freeEnergyContribution(const Vec& unit_activations)
     for (int i=0; i<size; i++)
     {
         real a_i = unit_activations[i];
-        real q_i = quad_coeff[i];
+        real q_i = share_quad_coeff ? quad_coeff[i] : quad_coeff[0];
         result += pl_log(q_i);
         result -= a_i * a_i / (4 * q_i * q_i);
     }
