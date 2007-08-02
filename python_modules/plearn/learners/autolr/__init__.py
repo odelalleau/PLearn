@@ -193,14 +193,15 @@ each of the other columns (just like the result of the call to merge_schedules).
     n_train = len(stages)
     n_schedules = len(lr_options)
     n_tests = len(testsets)
-    results = zeros([n_train, 2 + n_train_costs + n_tests*n_test_costs], Float)
+    results = zeros([n_train, 1 + n_schedules + n_train_costs + n_tests*n_test_costs], Float)
     best_err = 1e10
+    initial_stage=learner.stage
     if plearn.bridgemode.interactive:
         clf()
     colors="bgrcmyk"
     styles=['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's', '+', 'x', 'D']
     for i in range(n_train):
-        learner.nstages = int(stages[i])
+        learner.nstages = initial_stage + int(stages[i])
         options = {}
         for s in range(n_schedules):
             for lr_option in lr_options[s]:
@@ -479,6 +480,7 @@ def train_adapting_lr(learner,
     actives = [0]
     best_candidate = learner
     best_early_stop = stages[0]
+    initial_stage = learner.stage
     if plearn.bridgemode.interactive:
         clf()
         colors="bgrcmyk"
@@ -495,7 +497,7 @@ def train_adapting_lr(learner,
         for active in actives:
             candidate = all_candidates[active]
             results = all_results[active]
-            candidate.nstages = int(stage)
+            candidate.nstages = initial_stage+int(stage)
             options = {}
             for s in range(n_schedules):
                 for lr_option in lr_options[s]:
