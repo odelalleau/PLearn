@@ -73,15 +73,15 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
       
     declareOption(ol, "next_id", &RegressionTreeRegisters::next_id, OptionBase::learntoption,
                   "The next id for creating a new leave\n");
-    declareOption(ol, "length", &RegressionTreeRegisters::length, OptionBase::learntoption,
+    declareOption(ol, "length", &RegressionTreeRegisters::length_, OptionBase::learntoption,
                   "The length of the train set\n");
-    declareOption(ol, "width", &RegressionTreeRegisters::width, OptionBase::learntoption,
+    declareOption(ol, "width", &RegressionTreeRegisters::width_, OptionBase::learntoption,
                   "The width of the train set\n");
-    declareOption(ol, "inputsize", &RegressionTreeRegisters::inputsize, OptionBase::learntoption,
+    declareOption(ol, "inputsize", &RegressionTreeRegisters::inputsize_, OptionBase::learntoption,
                   "The input size of the train set\n");
-    declareOption(ol, "targetsize", &RegressionTreeRegisters::targetsize, OptionBase::learntoption,
+    declareOption(ol, "targetsize", &RegressionTreeRegisters::targetsize_, OptionBase::learntoption,
                   "The target size of the train set\n");
-    declareOption(ol, "weightsize", &RegressionTreeRegisters::weightsize, OptionBase::learntoption,
+    declareOption(ol, "weightsize", &RegressionTreeRegisters::weightsize_, OptionBase::learntoption,
                   "The weight of each sample in the train set\n");
     declareOption(ol, "sorted_row", &RegressionTreeRegisters::sorted_row, OptionBase::learntoption,
                   "The matrix holding the sequence of samples in ascending value order for each dimension\n");
@@ -97,15 +97,7 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
 void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(report_progress, copies);
-    deepCopyField(verbosity, copies);
     deepCopyField(train_set, copies);
-    deepCopyField(next_id, copies);
-    deepCopyField(length, copies);
-    deepCopyField(width, copies);
-    deepCopyField(inputsize, copies);
-    deepCopyField(targetsize, copies);
-    deepCopyField(weightsize, copies);
     deepCopyField(sorted_row, copies);
     deepCopyField(inverted_sorted_row, copies);
     deepCopyField(leave_register, copies);
@@ -125,13 +117,13 @@ void RegressionTreeRegisters::build_()
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {
     train_set = the_train_set;
-    length = train_set->length();
-    width = train_set->width();
-    inputsize = train_set->inputsize();
-    targetsize = train_set->targetsize();
-    weightsize = train_set->weightsize();
-    leave_register.resize(length);
-    leave_candidate.resize(length);
+    length_ = train_set->length();
+    width_ = train_set->width();
+    inputsize_ = train_set->inputsize();
+    targetsize_ = train_set->targetsize();
+    weightsize_ = train_set->weightsize();
+    leave_register.resize(length());
+    leave_candidate.resize(length());
     sortRows();
 }
 
@@ -157,18 +149,19 @@ real RegressionTreeRegisters::getFeature(int row, int col)
 
 real RegressionTreeRegisters::getTarget(int row)
 {
-    return train_set->get(row, inputsize);
+    return train_set->get(row, inputsize());
 }
 
 real RegressionTreeRegisters::getWeight(int row)
 {
-    if (weightsize <= 0) return 1.0 / length;
-    else return train_set->get(row, inputsize + 1);
+    if (weightsize() <= 0) return 1.0 / length();
+    else return train_set->get(row, inputsize() + targetsize() );
 }
 
-int RegressionTreeRegisters::getLength()
+void RegressionTreeRegisters::setWeight(int row, real val)
 {
-    return length;
+    PLASSERT(weightsize() > 0);
+    train_set->put(row, inputsize() + targetsize(), val );
 }
 
 int RegressionTreeRegisters::getNextId()
@@ -177,19 +170,15 @@ int RegressionTreeRegisters::getNextId()
     return next_id;
 }
 
-int RegressionTreeRegisters::getInputsize()
-{
-    return inputsize;
-}
-
 int RegressionTreeRegisters::getNextRegisteredRow(int leave_id, int col, int previous_row)
 {
-    if (previous_row >= length) return length;
+    if (previous_row >= length()) return length();
+    int each_train_sample_index;
     if (previous_row < 0) each_train_sample_index = 0;
     else each_train_sample_index = inverted_sorted_row(previous_row, col) + 1;
     while (true)
     {
-        if (each_train_sample_index >= length) return length;
+        if (each_train_sample_index >= length()) return length();
         if (leave_register[sorted_row(each_train_sample_index, col)] == leave_id) break;
         each_train_sample_index += 1;
     }
@@ -198,12 +187,13 @@ int RegressionTreeRegisters::getNextRegisteredRow(int leave_id, int col, int pre
 
 int RegressionTreeRegisters::getNextCandidateRow(int leave_id, int col, int previous_row)
 {
-    if (previous_row >= length) return length;
+    if (previous_row >= length()) return length();
+    int each_train_sample_index;
     if (previous_row < 0) each_train_sample_index = 0;
     else each_train_sample_index = inverted_sorted_row(previous_row, col) + 1;
     while (true)
     {
-        if (each_train_sample_index >= length) return length;
+        if (each_train_sample_index >= length()) return length();
         if (leave_candidate[sorted_row(each_train_sample_index, col)] == leave_id) break;
         each_train_sample_index += 1;
     }
@@ -213,34 +203,34 @@ int RegressionTreeRegisters::getNextCandidateRow(int leave_id, int col, int prev
 void RegressionTreeRegisters::sortRows()
 {
     next_id = 0;
-    if (sorted_row.length() == length && sorted_row.width() == inputsize)
+    if (sorted_row.length() == length() && sorted_row.width() == inputsize())
     {
         verbose("RegressionTreeRegisters: Sorted train set indices are present, no sort required", 3);
         return;
     }
     verbose("RegressionTreeRegisters: The train set is being sorted", 3);
-    sorted_row.resize(length, inputsize);
+    sorted_row.resize(length(), inputsize());
     PP<ProgressBar> pb;
     if (report_progress)
     {
-        pb = new ProgressBar("RegressionTreeRegisters : sorting the train set on input dimensions: ", inputsize);
+        pb = new ProgressBar("RegressionTreeRegisters : sorting the train set on input dimensions: ", inputsize());
     }
-    for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
+    for (int each_train_sample_index = 0; each_train_sample_index < length(); each_train_sample_index++)
     {
-        for (sample_dim = 0; sample_dim < inputsize; sample_dim++)
+        for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
         {
             sorted_row(each_train_sample_index, sample_dim) = each_train_sample_index;
         }
     }
-    for (sample_dim = 0; sample_dim < inputsize; sample_dim++)
+    for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
     {
         sortEachDim(sample_dim);
         if (report_progress) pb->update(sample_dim);
     }
-    inverted_sorted_row.resize(length, inputsize);
-    for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
+    inverted_sorted_row.resize(length(), inputsize());
+    for (int each_train_sample_index = 0; each_train_sample_index < length(); each_train_sample_index++)
     {
-        for (sample_dim = 0; sample_dim < inputsize; sample_dim++)
+        for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
         {
             inverted_sorted_row(sorted_row(each_train_sample_index, sample_dim), sample_dim) = each_train_sample_index;
         }
@@ -250,7 +240,7 @@ void RegressionTreeRegisters::sortRows()
 void RegressionTreeRegisters::sortEachDim(int dim)
 {
     int start_index = 0;
-    int end_index = length - 1;
+    int end_index = length() - 1;
     int forward_index;
     int backward_index;
     int stack_index = -1;
@@ -284,7 +274,7 @@ void RegressionTreeRegisters::sortEachDim(int dim)
                 swapIndex(start_index, start_index + 1, dim);
             forward_index = start_index + 1;
             backward_index = end_index;
-            sample_feature = train_set->get(sorted_row(start_index + 1, dim), dim);
+            real sample_feature = train_set->get(sorted_row(start_index + 1, dim), dim);
             for (;;)
             {
                 do forward_index++; while (compare(train_set->get(sorted_row(forward_index, dim), dim), sample_feature) < 0.0);
@@ -317,12 +307,13 @@ void RegressionTreeRegisters::sortEachDim(int dim)
   
 void RegressionTreeRegisters::sortSmallSubArray(int the_start_index, int the_end_index, int dim)
 {
-    for (next_train_sample_index = the_start_index + 1;
+    for (int next_train_sample_index = the_start_index + 1;
          next_train_sample_index <= the_end_index;
          next_train_sample_index++)
     {
-        saved_index = sorted_row(next_train_sample_index, dim);
-        sample_feature = train_set->get(saved_index, dim);
+        int saved_index = sorted_row(next_train_sample_index, dim);
+        real sample_feature = train_set->get(saved_index, dim);
+        int each_train_sample_index;
         for (each_train_sample_index = next_train_sample_index - 1;
              each_train_sample_index >= the_start_index;
              each_train_sample_index--)
@@ -339,7 +330,7 @@ void RegressionTreeRegisters::sortSmallSubArray(int the_start_index, int the_end
 
 void RegressionTreeRegisters::swapIndex(int index_i, int index_j, int dim)
 {
-    saved_index = sorted_row(index_i, dim);
+    int saved_index = sorted_row(index_i, dim);
     sorted_row(index_i, dim) = sorted_row(index_j, dim);
     sorted_row(index_j, dim) = saved_index;
 }
@@ -355,9 +346,9 @@ real RegressionTreeRegisters::compare(real field1, real field2)
 void RegressionTreeRegisters::printRegisters()
 {
     cout << "candidate: ";
-    for (int ii = 0; ii < length; ii++) cout << " " << tostring(leave_candidate[ii]);
+    for (int ii = 0; ii < length(); ii++) cout << " " << tostring(leave_candidate[ii]);
     cout << " register:  ";
-    for (int ii = 0; ii < length; ii++) cout << " " << tostring(leave_register[ii]);
+    for (int ii = 0; ii < length(); ii++) cout << " " << tostring(leave_register[ii]);
     cout << endl;
 }
 
@@ -366,6 +357,30 @@ void RegressionTreeRegisters::verbose(string the_msg, int the_level)
     if (verbosity >= the_level)
         cout << the_msg << endl;
 }
+
+void RegressionTreeRegisters::getExample(int i, Vec& input, Vec& target, real& weight)
+{
+    if(inputsize_<0)
+        PLERROR("In VMatrix::getExample, inputsize_ not defined for this vmat");
+    input.resize(inputsize_);
+    train_set->getSubRow(i,0,input);
+    if(targetsize_<0)
+        PLERROR("In VMatrix::getExample, targetsize_ not defined for this vmat");
+    target.resize(targetsize_);
+    if (targetsize_ > 0) {
+        train_set->getSubRow(i,inputsize_,target);
+    }
+
+    if(weightsize()==0)
+        weight = 1;
+    else if(weightsize()<0)
+        PLERROR("In VMatrix::getExample, weightsize_ not defined for this vmat");
+    else if(weightsize()>1)
+        PLERROR("In VMatrix::getExample, weightsize_ >1 not supported by this call");
+    else
+        weight = train_set->get(i,inputsize()+targetsize());
+}
+
 
 } // end of namespace PLearn
 

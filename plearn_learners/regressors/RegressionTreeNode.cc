@@ -182,8 +182,8 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
     missing_leave_id = train_set->getNextId();
     left_leave_id =  train_set->getNextId();
     right_leave_id =  train_set->getNextId();
-    length = train_set->getLength();
-    inputsize = train_set->getInputsize();
+    length = train_set->length();
+    inputsize = train_set->inputsize();
     missing_leave = ::PLearn::deepCopy(leave_template);
     missing_leave->setOption("id", tostring(missing_leave_id));
     if (missing_is_valid > 0) missing_leave->setOption("missing_leave", "0");

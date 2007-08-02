@@ -69,26 +69,16 @@ private:
 */
 
     int       next_id;
-    int       length;
-    int       width;
-    int       inputsize;
-    int       targetsize;
-    int       weightsize;  
+    int       length_;
+    int       width_;
+    int       inputsize_;
+    int       targetsize_;
+    int       weightsize_;  
     TMat<int> sorted_row;
     TMat<int> inverted_sorted_row;
     TVec<int> leave_register;
     TVec<int> leave_candidate;
  
-/*
-  Work fields: they are sized and initialized if need be, at buid time
-*/  
- 
-    int  each_train_sample_index;
-    int  next_train_sample_index;
-    int  saved_index;
-    int  sample_dim;
-    real sample_feature;
-  
 public:
     RegressionTreeRegisters();
     virtual              ~RegressionTreeRegisters();
@@ -105,13 +95,18 @@ public:
     real         getFeature(int row, int col);
     real         getTarget(int row);
     real         getWeight(int row);
-    int          getLength();
+    void         setWeight(int row,real val);
+    int          length(){return length_;}
     int          getNextId();
-    int          getInputsize();
+    int          inputsize(){return inputsize_;}
+    int          targetsize(){return targetsize_;}
+    int          weightsize(){return weightsize_;}
     int          getNextRegisteredRow(int leave_id, int col, int previous_row);
     int          getNextCandidateRow(int leave_id, int col, int previous_row);
     void         sortRows();
     void         printRegisters();
+    void         getExample(int i, Vec& input, Vec& target, real& weight);
+
 private:
     void         build_();
     void         sortEachDim(int dim);
