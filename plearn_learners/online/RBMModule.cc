@@ -1670,6 +1670,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
         PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
         PLASSERT(connection->classname()=="RBMMatrixConnection");
+        PLASSERT(hidden && !hidden->isEmpty());
         // FE(x) = -b'x - sum_i softplus(hidden_layer->activation[i])        
         // dFE(x)/dx = -b - sum_i sigmoid(hidden_layer->activation[i]) W_i
         // dC/dxt = -b dC/dFE - dC/dFE sum_i p_ti W_i
@@ -1679,7 +1680,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         get_pointer(connection))->weights;
         bool same_dC_dFE=true;
         real dC_dFE=(*energy_grad)(0,0);
-        const Mat& p = hidden_layer->getExpectations();
+        const Mat& p = *hidden;
         for (int t=0;t<mbs;t++)
         {
             real new_dC_dFE=(*energy_grad)(t,0);
@@ -1689,7 +1690,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             multiplyAcc((*visible_grad)(t),visible_layer->bias,-dC_dFE);
         }
         if (same_dC_dFE)
-            productScaleAcc(*visible_grad,p,false,weights,false,-1,1);
+            productScaleAcc(*visible_grad,p,false,weights,false,-dC_dFE,1);
         else
             for (int t=0;t<mbs;t++)
                 productScaleAcc((*visible_grad)(t),weights,true,p(t),-dC_dFE,1);
