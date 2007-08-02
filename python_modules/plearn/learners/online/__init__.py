@@ -67,10 +67,13 @@ def rbm(name,
     conx = pl.RBMMatrixConnection(
                 down_size = visible_size,
                 up_size = hidden_size)
-    if independent_reconstruction and have_reconstruction:
-        conx2 = pl.RBMMatrixConnection(
-            down_size = visible_size,
-            up_size = hidden_size)
+    conx2 = None
+    if have_reconstruction:
+        conx2 = conx
+        if independent_reconstruction:
+            conx2 = pl.RBMMatrixConnection(
+                down_size = visible_size,
+                up_size = hidden_size)
     return pl.RBMModule(
             name = name,
             cd_learning_rate = cd_learning_rate,
@@ -83,12 +86,7 @@ def rbm(name,
                                        pl.RBMBinomialLayer(size = visible_size)),
             hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
             connection = conx,
-            reconstruction_connection = ifthenelse(have_reconstruction,
-                                                   ifthenelse(independent_reconstruction,
-                                                              conx2,
-                                                              conx),
-                                                   None))
-
+            reconstruction_connection = conx2)
 
 def connection(src, dst, propagate_gradient = True):
     """Construct a NetworkConnection"""
