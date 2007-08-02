@@ -596,7 +596,6 @@ void AddCostToLearner::train()
                 "threshold and no *class_error costs are selected.\n"
                 "We use the first *class_error cost to select the threshold");
     }
-
     inherited::train();
     
     if(-1 != find_threshold){
@@ -670,6 +669,9 @@ void AddCostToLearner::computeOutputAndCosts(const Vec& input, const Vec& target
 void AddCostToLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
                                              Mat& output, Mat& costs) const {
     PLASSERT( learner_ );
+    //done this way to use a possibly optimizer version 
+    //of computeOutputsAndCosts from the sub learner as with NatGradNNet
+    //with a minibatch_size>1
     Mat sub_costs = costs.subMatColumns(0, learner_->nTestCosts());
     learner_->computeOutputsAndCosts(input, target, output, sub_costs);
     for (int i=0;i<input.length();i++)
