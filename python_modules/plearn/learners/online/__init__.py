@@ -59,6 +59,7 @@ def rbm(name,
         compute_nll=False,
         ngcd=1,
         have_reconstruction=True,
+        independent_reconstruction=False,
         compute_contrastive_divergence=True,
         use_Gaussian_inputs=False):
     """Construct an RBMModule"""
@@ -66,6 +67,10 @@ def rbm(name,
     conx = pl.RBMMatrixConnection(
                 down_size = visible_size,
                 up_size = hidden_size)
+    if independent_reconstruction and have_reconstruction:
+        conx2 = pl.RBMMatrixConnection(
+            down_size = visible_size,
+            up_size = hidden_size)
     return pl.RBMModule(
             name = name,
             cd_learning_rate = cd_learning_rate,
@@ -79,7 +84,9 @@ def rbm(name,
             hidden_layer = pl.RBMBinomialLayer(size = hidden_size),
             connection = conx,
             reconstruction_connection = ifthenelse(have_reconstruction,
-                                                   conx,
+                                                   ifthenelse(independent_reconstruction,
+                                                              conx2,
+                                                              conx),
                                                    None))
 
 
