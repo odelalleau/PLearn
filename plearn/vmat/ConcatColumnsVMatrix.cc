@@ -310,6 +310,21 @@ void ConcatColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sources, copies);
 }
 
+void ConcatColumnsVMatrix::put(int i, int j, real value)
+{
+#ifdef BOUNDCHECK
+    if(j>=width_)
+        PLERROR("access out of bound. Width=%i accessed col=%i",width_,j);
+#endif
+    int pos=0,k=0;
+    while(j>=pos+sources[k]->width())
+    {
+        pos += sources[k]->width();
+        k++;
+    }
+    sources[k]->put(i,j-pos,value);
+}
+
 } // end of namespace PLearn
 
 

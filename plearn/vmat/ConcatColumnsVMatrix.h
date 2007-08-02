@@ -102,6 +102,9 @@ public:
     //! Gives the possible values of a certain field (column) given the input
     virtual void getValues(const Vec& input, int col, Vec& values) const;
 
+    //! Sets element (i,j) to value.
+    virtual void put(int i, int j, real value);
+
 private:
     void build_();
 
