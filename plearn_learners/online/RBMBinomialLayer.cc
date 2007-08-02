@@ -469,7 +469,7 @@ real RBMBinomialLayer::freeEnergyContribution(const Vec& unit_activations)
     // result = -\sum_{i=0}^{size-1} softplus(a_i)
     real result = 0;
     real* a = unit_activations.data();
-    for (int i=0; i<size, i++)
+    for (int i=0; i<size; i++)
     {
         if (use_fast_approximations)
             result -= tabulated_softplus(a[i]);

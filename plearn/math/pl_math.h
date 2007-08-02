@@ -152,6 +152,10 @@ inline real negative(real a) { if (a<0) return a; return 0; }
 #  define Pi 3.141592653589793
 #endif
 
+#if !defined(LogPi)
+#  define LogPi 1.14472988585
+#endif
+
 #if !defined(Log2Pi)
 #  define Log2Pi 1.837877066409
 #endif
