@@ -73,6 +73,21 @@ void softmax(const TMat<T>& x, const TMat<T>& y)
     }
 }
 
+template <class T>
+T logadd(const TMat<T>& mat)
+{
+    if (mat.isEmpty())
+        return LOG_INIT;
+
+    TMatElementIterator<real> p_mat = mat.begin();
+    T sum = *p_mat++;
+
+    for (int i=1; i<mat.size(); i++, p_mat++)
+        sum = logadd(sum, *p_mat);
+
+    return sum;
+}
+
 int multinomial_sample(const PP<PRandom>& rg, const Mat& distribution)
 {
     real u = rg->uniform_sample();
@@ -789,7 +804,8 @@ real RBMLocalMultinomialLayer::freeEnergyContribution(
 {
     PLASSERT( activation_values.size() == size );
 
-    // result = -\sum_{i=0}^{n_areas-1} log(\sum_{j=0}^{area_size-1} a_{ij})
+    // result =
+    //  -\sum_{i=0}^{n_areas-1} log(\sum_{j=0}^{area_size-1} exp(a_{ij}))
     real result = 0;
     Mat activation_images = activation_values
         .toMat(n_images*images_length, images_width);
@@ -801,7 +817,7 @@ real RBMLocalMultinomialLayer::freeEnergyContribution(
                     area_length,
                     area_width);
 
-        result -= pl_log(sum(activation_area));
+        result -= logadd(activation_area);
     }
     return result;
 }

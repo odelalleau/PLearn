@@ -434,7 +434,8 @@ real RBMMultinomialLayer::energy(const Vec& unit_values) const
 real RBMMultinomialLayer::freeEnergyContribution(const Vec& unit_activations)
     const
 {
-    return -pl_log(sum(unit_activations));
+    // result = -log(\sum_{i=0}^{size-1} exp(a_i))
+    return -logadd(unit_activations);
 }
 
 int RBMMultinomialLayer::getConfigurationCount()
