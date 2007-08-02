@@ -1041,7 +1041,7 @@ inline PStream& operator>>(PStream& in,
    operator>> and should not be called by user code directly */
 
 template<class Iterator>
-void binwrite_(PStream& out, Iterator& it, unsigned int n)
+void binwrite_(PStream& out, Iterator it, unsigned int n)
 {
     PStream::mode_t outmode = out.outmode; // store previous outmode
     if(outmode!=PStream::raw_binary && outmode!=PStream::plearn_binary)
