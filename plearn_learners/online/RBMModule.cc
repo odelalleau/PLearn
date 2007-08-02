@@ -431,9 +431,9 @@ void RBMModule::computeEnergy(const Mat& visible, const Mat& hidden,
 // FREE-ENERGY(hidden) CASE
 // we know h:
 // free energy = -log sum_x e^{-energy(h,x)}
-//  = -c'h - sum_i log sigmoid(b_i + W_{.i}'h) .... FOR BINOMIAL INPUT LAYER
 // or more robustly,
-//  = hidden_layer->energy(h) - sum_i softplus(visible_layer->activation[i])
+//  = hidden_layer->energy(h)
+//    + visible_layer->freeEnergyContribution(visible_layer->activation)
 void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
 {
     int mbs=hidden.length();
@@ -442,17 +442,13 @@ void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
     else {
         PLASSERT( energy.length() == mbs && energy.width() == 1 );
     }
-    PLASSERT(visible_layer->classname()=="RBMBinomialLayer");
+
     computeVisibleActivations(hidden, false);
     for (int i=0;i<mbs;i++)
     {
-        energy(i,0) = hidden_layer->energy(hidden(i));
-        if (use_fast_approximations)
-            for (int j=0;j<visible_layer->size;j++)
-                energy(i,0) -= tabulated_softplus(visible_layer->activations(i,j));
-        else
-            for (int j=0;j<visible_layer->size;j++)
-                energy(i,0) -= softplus(visible_layer->activations(i,j));
+        energy(i,0) = hidden_layer->energy(hidden(i))
+            + visible_layer->freeEnergyContribution(
+                visible_layer->activations(i));
     }
 }
 
@@ -462,9 +458,9 @@ void RBMModule::computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy)
 // FREE-ENERGY(visible) CASE
 // we know x:
 // free energy = -log sum_h e^{-energy(h,x)}
-//  = -b'x - sum_i log sigmoid(c_i + W_i'x) .... FOR BINOMIAL HIDDEN LAYER
 // or more robustly,
-//  = visible_layer->energy(x) - sum_i softplus(hidden_layer->activation[i])
+//  = visible_layer->energy(x)
+//    + hidden_layer->freeEnergyContribution(hidden_layer->activation)
 void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
                                            bool positive_phase)
 {
@@ -474,7 +470,7 @@ void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
     else {
         PLASSERT( energy.length() == mbs && energy.width() == 1 );
     }
-    PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
+
     Mat* hidden_activations = NULL;
     if (positive_phase) {
         computePositivePhaseHiddenActivations(visible);
@@ -488,13 +484,8 @@ void RBMModule::computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
             && hidden_activations->width() == hidden_layer->size );
     for (int i=0;i<mbs;i++)
     {
-        energy(i,0) = visible_layer->energy(visible(i));
-        if (use_fast_approximations)
-            for (int j=0;j<hidden_layer->size;j++)
-                energy(i,0) -= tabulated_softplus((*hidden_activations)(i,j));
-        else
-            for (int j=0;j<hidden_layer->size;j++)
-                energy(i,0) -= softplus((*hidden_activations)(i,j));
+        energy(i,0) = visible_layer->energy(visible(i))
+            + hidden_layer->freeEnergyContribution((*hidden_activations)(i));
     }
 }
 
@@ -1130,9 +1121,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                                                       neg_hidden_act.width());
             *negative_phase_hidden_activations << neg_hidden_act;
 
-            // compute the energy (again for now only in the binomial case)
-            PLASSERT(hidden_layer->classname()=="RBMBinomialLayer");
-
             // note that h_act and h may point to hidden_act_store and hidden_exp_store
             PLASSERT(h_act && !h_act->isEmpty());
             PLASSERT(h && !h->isEmpty());
@@ -1141,12 +1129,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             // compute contrastive divergence itself
             for (int i=0;i<mbs;i++)
             {
-	    	real s = visible_layer->energy((*visible)(i)) - visible_layer->energy(visible_layer->samples(i));
-		Vec a = (*h_act)(i);
-		Vec b = hidden_layer->activations(i); 
-		for (int j=0;j<hidden_layer->size;j++)
-		    s -= tabulated_softplus(a[j]) - tabulated_softplus(b[j]);
-		(*contrastive_divergence)(i,0) = s;
+                // + Free energy of positive example
+                // - free energy of negative example
+                (*contrastive_divergence)(i,0) =
+                    visible_layer->energy((*visible)(i))
+                  + hidden_layer->freeEnergyContribution((*h_act)(i))
+                  - visible_layer->energy(visible_layer->samples(i))
+                  - hidden_layer->freeEnergyContribution(hidden_layer->activations(i));
             }
         }
         else
