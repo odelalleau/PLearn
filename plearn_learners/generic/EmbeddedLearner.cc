@@ -63,7 +63,8 @@ EmbeddedLearner::EmbeddedLearner(string expdir_append_)
     : learner_(0),
       expdir_append(expdir_append_),
       forward_test(false),
-      provide_learner_expdir(true)
+      provide_learner_expdir(true),
+      forward_nstages(false)
 { }
 
 void EmbeddedLearner::declareOptions(OptionList& ol)
@@ -81,6 +82,10 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "A string which should be appended to the expdir for the inner learner;"
                   "default = \"\".");
+    declareOption(ol, "forward_nstages",&EmbeddedLearner::forward_nstages,
+                  OptionBase::buildoption,
+                  "Did we forward our value of nstages to the sublearner before calling "
+                  "the sublearner train()");
 
     // 'forward_test' is set as a 'nosave' option: each subclass should set it
     // to either 'true' or 'false' depending on its specific needs.
@@ -174,6 +179,8 @@ void EmbeddedLearner::forget()
 void EmbeddedLearner::train()
 {
     PLASSERT( learner_ );
+    if(forward_nstages)
+        learner_->nstages = nstages;
     learner_->train();
     stage = learner_->stage;
 }

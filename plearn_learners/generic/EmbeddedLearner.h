@@ -63,6 +63,7 @@ public:
     bool forward_test;
     bool provide_learner_expdir;
 
+    bool forward_nstages;
     // ****************
     // * Constructors *
     // ****************
