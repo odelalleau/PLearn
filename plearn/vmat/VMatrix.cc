@@ -1404,7 +1404,8 @@ TVec<RealMapping> VMatrix::getRanges()
 /////////
 void VMatrix::put(int i, int j, real value)
 {
-    PLERROR("In VMatrix::put - Method not implemented for this VMat(%s), please implement.",classname());
+    PLERROR("In VMatrix::put - Method not implemented for this VMat(%s), please implement.",
+            classname().c_str());
 }
 
 ///////////////
