@@ -1321,6 +1321,7 @@ void VMatrix::loadStringMapping(int col)
         {
             map_sr[col][s]   = val;
             map_rs[col][val] = s;
+            f.skipBlanks();
         }
     }
 }
