@@ -139,7 +139,8 @@ void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
             break;      
         }
     }
-    if (multiclass_found < 1) cout << "RegressionTreeMultilassLeave: Unknown target: " << tostring(target) << " row: " << tostring(row) << endl;
+    if (multiclass_found < 1) 
+        PLERROR("RegressionTreeMultilassLeave: Unknown target: %d row: %d\n", target,row);
     computeOutputAndError();
     getOutput(outputv);
     getError(errorv);
@@ -167,6 +168,10 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
 
 void RegressionTreeMulticlassLeave::computeOutputAndError()
 {
+#ifdef BOUNDCHECK
+    if(multiclass_outputs.length()<=0)
+        PLERROR("In RegressionTreeMulticlassLeave::computeOutputAndError() - multiclass_outputs must not be empty");
+#endif
     multiclass_winer = 0;
     for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {
