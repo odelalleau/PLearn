@@ -222,6 +222,7 @@
 #include <plearn_learners/online/RBMConv2DConnection.h>
 #include <plearn_learners/online/RBMGaussianLayer.h>
 #include <plearn_learners/online/RBMLayer.h>
+#include <plearn_learners/online/RBMLocalMultinomialLayer.h>
 #include <plearn_learners/online/RBMMatrixConnection.h>
 #include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 #include <plearn_learners/online/RBMMixedConnection.h>
