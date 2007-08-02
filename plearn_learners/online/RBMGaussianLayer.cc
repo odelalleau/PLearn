@@ -634,6 +634,23 @@ real RBMGaussianLayer::energy(const Vec& unit_values) const
     return en;
 }
 
+real RBMGaussianLayer::freeEnergyContribution(const Vec& unit_activations)
+    const
+{
+    PLASSERT( unit_activations.size() == size );
+
+    // result = \sum_{i=0}^{size-1} (-(a_i/(2 q_i))^2 + log(q_i)) - n/2 log(Pi)
+    real result = -0.5 * size * LogPi;
+    for (int i=0; i<size; i++)
+    {
+        real a_i = unit_activations[i];
+        real q_i = quad_coeff[i];
+        result += pl_log(q_i);
+        result -= a_i * a_i / (4 * q_i * q_i);
+    }
+    return result;
+}
+
 real RBMGaussianLayer::fpropNLL(const Vec& target)
 {
     PLASSERT( target.size() == input_size );

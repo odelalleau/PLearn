@@ -461,6 +461,24 @@ real RBMBinomialLayer::energy(const Vec& unit_values) const
     return -dot(unit_values, bias);
 }
 
+real RBMBinomialLayer::freeEnergyContribution(const Vec& unit_activations)
+    const
+{
+    PLASSERT( unit_activations.size() == size );
+
+    // result = -\sum_{i=0}^{size-1} softplus(a_i)
+    real result = 0;
+    real* a = unit_activations.data();
+    for (int i=0; i<size, i++)
+    {
+        if (use_fast_approximations)
+            result -= tabulated_softplus(a[i]);
+        else
+            result -= softplus(a[i]);
+    }
+    return result;
+}
+
 int RBMBinomialLayer::getConfigurationCount()
 {
     return size < 31 ? 1<<size : INFINITE_CONFIGURATIONS;
@@ -474,7 +492,7 @@ void RBMBinomialLayer::getConfiguration(int conf_index, Vec& output)
     for ( int i = 0; i < size; ++i ) {
         output[i] = conf_index & 1;
         conf_index >>= 1;
-    }    
+    }
 }
 
 } // end of namespace PLearn

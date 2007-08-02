@@ -631,6 +631,12 @@ real RBMLayer::energy(const Vec& unit_values) const
     return 0;
 }
 
+real RBMLayer::freeEnergyContribution(const Vec& unit_activations) const
+{
+    PLERROR("RBMLayer::freeEnergyContribution(Vec) not implemented in subclass %s\n",classname().c_str());
+    return 0;
+}
+
 int RBMLayer::getConfigurationCount()
 {
     PLERROR("RBMLayer::getConfigurationCount() not implemented in subclass %s\n",classname().c_str());
