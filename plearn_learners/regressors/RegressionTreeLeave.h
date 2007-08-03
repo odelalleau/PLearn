@@ -50,7 +50,8 @@ using namespace std;
 class RegressionTreeLeave: public Object
 {
     typedef Object inherited;
-  
+ 
+    friend class RegressionTreeNode;
 protected:
 
 /*
@@ -58,7 +59,7 @@ protected:
 */
 
     int  id;
-    int  missing_leave;
+    bool  missing_leave;
     real loss_function_weight;
     int  verbosity;
     PP<RegressionTreeRegisters> train_set;
@@ -72,20 +73,11 @@ protected:
     Vec  error;
     real weights_sum;
     real targets_sum;
-    real squared_targets_sum;
     real weighted_targets_sum;
     real weighted_squared_targets_sum;
     real loss_function_factor;
  
-/*
-  Work fields: they are sized and initialized if need be, at buid time
-*/  
- 
-    real weight;
-    real target;
-    real squared_target;
-  
-  
+
 public:
     RegressionTreeLeave();
     virtual              ~RegressionTreeLeave();
@@ -102,8 +94,7 @@ public:
     void         registerRow(int row);
     int          getId();
     int          getLength();
-    void         getError(Vec errorv);
-    void         getOutput(Vec outputv);
+    void         getOutputAndError(Vec outputv, Vec errorv);
     virtual void         printStats();
   
 private:

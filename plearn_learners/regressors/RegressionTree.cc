@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTree,
     );
 
 RegressionTree::RegressionTree()     
-    : missing_is_valid(0),
+    : missing_is_valid(false),
       loss_function_weight(1.0),
       maximum_number_of_nodes(400),
       compute_train_stats(1),
@@ -134,7 +134,21 @@ void RegressionTree::build()
 
 void RegressionTree::build_()
 {
-    if (train_set)
+    if(sorted_train_set)
+    {
+        length = sorted_train_set->length();
+        
+        if (length < 1) PLERROR("RegressionTree: the training set must contain at least one sample, got %d", length);
+        inputsize = sorted_train_set->inputsize();
+        targetsize = sorted_train_set->targetsize();
+        weightsize = sorted_train_set->weightsize();
+        if (inputsize < 1) PLERROR("RegressionTree: expected  inputsize greater than 0, got %d", inputsize);
+        if (targetsize != 1) PLERROR("RegressionTree: expected targetsize to be 1, got %d", targetsize);
+        if (weightsize != 1 && weightsize != 0)  PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d", weightsize);
+        sample_input.resize(inputsize);
+        sample_target.resize(targetsize);
+    }
+    else if (train_set)
     { 
         length = train_set->length();
         if (length < 1) PLERROR("RegressionTree: the training set must contain at least one sample, got %d", length);
@@ -143,21 +157,22 @@ void RegressionTree::build_()
         weightsize = train_set->weightsize();
         if (inputsize < 1) PLERROR("RegressionTree: expected  inputsize greater than 0, got %d", inputsize);
         if (targetsize != 1) PLERROR("RegressionTree: expected targetsize to be 1, got %d", targetsize);
-        if (weightsize != 1 && weightsize != 0)  PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d", weightsize_);
-        if (loss_function_weight != 0.0)
-        {
-            l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2);
-            l1_loss_function_factor = 2.0 / loss_function_weight;
-        }
-        else
-        {
-            l2_loss_function_factor = 1.0;
-            l1_loss_function_factor = 1.0;
-        }
+        if (weightsize != 1 && weightsize != 0)  PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d", weightsize);
         sample_input.resize(inputsize);
         sample_target.resize(targetsize);
-        sample_output.resize(2);
-        sample_costs.resize(4);
+    }
+
+    sample_output.resize(2);
+    sample_costs.resize(4);
+    if (loss_function_weight != 0.0)
+    {
+        l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2);
+        l1_loss_function_factor = 2.0 / loss_function_weight;
+    }
+    else
+    {
+        l2_loss_function_factor = 1.0;
+        l1_loss_function_factor = 1.0;
     }
 }
 
@@ -185,7 +200,7 @@ void RegressionTree::train()
     train_stats->forget();
     for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
     {  
-        train_set->getExample(each_train_sample_index, sample_input, sample_target, sample_weight);
+        sorted_train_set->getExample(each_train_sample_index, sample_input, sample_target, sample_weight);
         computeOutput(sample_input, sample_output);
         computeCostsFromOutputs(sample_input, sample_output, sample_target, sample_costs); 
         train_stats->update(sample_costs);
@@ -218,13 +233,16 @@ void RegressionTree::initialiseTree()
     {
         sorted_train_set->reinitRegisters();
     }
+    //Set value common value of all leave
+    // for optimisation, by default they aren't missing leave
+    leave_template->setOption("missing_leave", "0");
+    leave_template->setOption("loss_function_weight", tostring(loss_function_weight));
+    leave_template->setOption("verbosity", tostring(verbosity));
+
     first_leave_output.resize(2);
     first_leave_error.resize(3);
     first_leave = ::PLearn::deepCopy(leave_template);
     first_leave->setOption("id", tostring(sorted_train_set->getNextId()));
-    first_leave->setOption("missing_leave", "0");
-    first_leave->setOption("loss_function_weight", tostring(loss_function_weight));
-    first_leave->setOption("verbosity", tostring(verbosity));
     first_leave->initLeave(sorted_train_set);
     first_leave->initStats();
     for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
@@ -266,15 +284,17 @@ int RegressionTree::expandTree()
         verbose("RegressionTree: expand is negative?", 3);
         return -1;
     }
-    priority_queue->addHeap(node->getNodes()[0]); 
-    priority_queue->addHeap(node->getNodes()[1]);
-    if (missing_is_valid > 0) priority_queue->addHeap(node->getNodes()[2]);
+    TVec< PP<RegressionTreeNode> > subnode = node->getNodes();
+    priority_queue->addHeap(subnode[0]); 
+    priority_queue->addHeap(subnode[1]);
+    if (missing_is_valid) priority_queue->addHeap(subnode[2]);
     return 1; 
 }
 
 void RegressionTree::setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set)
 {
     sorted_train_set = the_sorted_train_set;
+    build();
 }
 
 int RegressionTree::outputsize() const

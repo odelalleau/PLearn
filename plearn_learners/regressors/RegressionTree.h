@@ -60,7 +60,7 @@ private:
   Build options: they have to be set before training
 */
 
-    int  missing_is_valid;
+    bool  missing_is_valid;
     real loss_function_weight;
     int maximum_number_of_nodes;
     int compute_train_stats;   

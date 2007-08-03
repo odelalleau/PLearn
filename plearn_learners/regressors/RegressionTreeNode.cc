@@ -184,25 +184,20 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
     right_leave_id =  train_set->getNextId();
     length = train_set->length();
     inputsize = train_set->inputsize();
+
     missing_leave = ::PLearn::deepCopy(leave_template);
-    missing_leave->setOption("id", tostring(missing_leave_id));
-    if (missing_is_valid > 0) missing_leave->setOption("missing_leave", "0");
-    else missing_leave->setOption("missing_leave", "1");
-    missing_leave->setOption("loss_function_weight", tostring(loss_function_weight));
-    missing_leave->setOption("verbosity", tostring(verbosity));
+    missing_leave->id=missing_leave_id;
+    missing_leave->missing_leave=missing_is_valid;
     missing_leave->initLeave(train_set);
+
     left_leave = ::PLearn::deepCopy(leave_template);
-    left_leave->setOption("id", tostring(left_leave_id));
-    left_leave->setOption("missing_leave", "0");
-    left_leave->setOption("loss_function_weight", tostring(loss_function_weight));
-    left_leave->setOption("verbosity", tostring(verbosity));
+    left_leave->id=left_leave_id;
     left_leave->initLeave(train_set);
+
     right_leave = ::PLearn::deepCopy(leave_template);
-    right_leave->setOption("id", tostring(right_leave_id));
-    right_leave->setOption("missing_leave", "0");
-    right_leave->setOption("loss_function_weight", tostring(loss_function_weight));
-    right_leave->setOption("verbosity", tostring(verbosity));
+    right_leave->id=right_leave_id;
     right_leave->initLeave(train_set);
+
     leave_output.resize(2);
     leave_error.resize(3);
     missing_output.resize(2);
@@ -211,30 +206,31 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
     left_error.resize(3);
     right_output.resize(2);
     right_error.resize(3);
-    leave->getOutput(leave_output);
-    leave->getError(leave_error);
+
+    leave->getOutputAndError(leave_output,leave_error);
 }
 
 void RegressionTreeNode::lookForBestSplit()
 {
-    for (col = 0; col < inputsize; col++)
+    for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
         left_leave->initStats();
         right_leave->initStats();
-        for (row = train_set->getNextRegisteredRow(leave_id, col, -1); row < length; row = train_set->getNextRegisteredRow(leave_id, col, row))
+        for (int row = train_set->getNextRegisteredRow(leave_id, col, -1); row < length; row = train_set->getNextRegisteredRow(leave_id, col, row))
         {
-            if (is_missing(train_set->getFeature(row, col))) missing_leave->addRow(row, missing_output, missing_error);
+            if (is_missing(train_set->get(row, col))) missing_leave->addRow(row, missing_output, missing_error);
             else right_leave->addRow(row, right_output, right_error);
         }
-        row = train_set->getNextCandidateRow(right_leave_id, col, -1);
-        next_row = train_set->getNextCandidateRow(right_leave_id, col, row);
+        int row = train_set->getNextCandidateRow(right_leave_id, col, -1);
+        int next_row = train_set->getNextCandidateRow(right_leave_id, col, row);
+
         while (true)
         {
             if (next_row >= length) break;
             right_leave->removeRow(row, right_output, right_error);
             left_leave->addRow(row, left_output, left_error);
-            compareSplit(col, train_set->getFeature(row, col), train_set->getFeature(next_row, col));
+            compareSplit(col, train_set->get(row, col), train_set->get(next_row, col));
             row = next_row;
             next_row = train_set->getNextCandidateRow(right_leave_id, col, row);
         }
@@ -244,18 +240,11 @@ void RegressionTreeNode::lookForBestSplit()
 void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature)
 {
     if (left_leave_last_feature >= right_leave_first_feature) return;
-    work_error = missing_error[0] + missing_error[1] + left_error[0] + left_error[1] + right_error[0] + right_error[1];
-    work_balance = abs(left_leave->getLength() - right_leave->getLength());
-    if (split_col < 0)
-    {
-        split_col = col;
-        split_feature_value = 0.5 * (right_leave_first_feature + left_leave_last_feature);
-        after_split_error = work_error;
-        split_balance = work_balance;
-        return;
-    }
-    if (work_error > after_split_error) return;
-    if (work_error == after_split_error && work_balance > split_balance) return;
+    real work_error = missing_error[0] + missing_error[1] + left_error[0] + left_error[1] + right_error[0] + right_error[1];
+    int work_balance = abs(left_leave->getLength() - right_leave->getLength());
+    if(split_col<0);
+    else if (work_error > after_split_error) return;
+    else if (work_error == after_split_error && work_balance > split_balance) return;
     split_col = col;
     split_feature_value = 0.5 * (right_leave_first_feature + left_leave_last_feature);
     after_split_error = work_error;
@@ -264,8 +253,7 @@ void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, rea
 
 int RegressionTreeNode::expandNode()
 {
-    col = split_col;
-    if (col < 0)
+    if (split_col < 0)
     {
         verbose("RegressionTreeNode: there is no more split candidate", 3);
         return -1;
@@ -273,16 +261,16 @@ int RegressionTreeNode::expandNode()
     missing_leave->initStats();
     left_leave->initStats();
     right_leave->initStats();
-    for (row = train_set->getNextRegisteredRow(leave_id, col, -1); row < length; row = train_set->getNextRegisteredRow(leave_id, col, row))
+    for (int row = train_set->getNextRegisteredRow(leave_id, split_col, -1); row < length; row = train_set->getNextRegisteredRow(leave_id, split_col, row))
     {
-        if (is_missing(train_set->getFeature(row, col)))
+        if (is_missing(train_set->get(row, split_col)))
         {
             missing_leave->addRow(row, missing_output, missing_error);
             missing_leave->registerRow(row);
         }
         else
         {
-            if (train_set->getFeature(row, col) < split_feature_value)
+            if (train_set->get(row, split_col) < split_feature_value)
             {
                 left_leave->addRow(row, left_output, left_error);
                 left_leave->registerRow(row);    
@@ -300,22 +288,22 @@ int RegressionTreeNode::expandNode()
     if (missing_is_valid > 0)
     {
         missing_node = new RegressionTreeNode();
-        missing_node->setOption("missing_is_valid", tostring(missing_is_valid));
-        missing_node->setOption("loss_function_weight", tostring(loss_function_weight));
-        missing_node->setOption("verbosity", tostring(verbosity));
+        missing_node->missing_is_valid=missing_is_valid;
+        missing_node->loss_function_weight=loss_function_weight;
+        missing_node->verbosity=verbosity;
         missing_node->initNode(train_set, missing_leave, leave_template);
         missing_node->lookForBestSplit();
     }
     left_node = new RegressionTreeNode();
-    left_node->setOption("missing_is_valid", tostring(missing_is_valid));
-    left_node->setOption("loss_function_weight", tostring(loss_function_weight));
-    left_node->setOption("verbosity", tostring(verbosity));
+    left_node->missing_is_valid=missing_is_valid;
+    left_node->loss_function_weight=loss_function_weight;
+    left_node->verbosity=verbosity;
     left_node->initNode(train_set, left_leave, leave_template);
     left_node->lookForBestSplit();
     right_node = new RegressionTreeNode();
-    right_node->setOption("missing_is_valid", tostring(missing_is_valid));
-    right_node->setOption("loss_function_weight", tostring(loss_function_weight));
-    right_node->setOption("verbosity", tostring(verbosity));
+    right_node->missing_is_valid=missing_is_valid;
+    right_node->loss_function_weight=loss_function_weight;
+    right_node->verbosity=verbosity;
     right_node->initNode(train_set, right_leave, leave_template);
     right_node->lookForBestSplit();
     return +1;

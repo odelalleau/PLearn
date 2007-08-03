@@ -94,16 +94,6 @@ private:
     Vec right_output;
     Vec right_error;
  
-/*
-  Work fields: they are sized and initialized if need be, at buid time
-*/  
-
-    int row;
-    int next_row;
-    int col;  
-    int work_balance;
-    real work_error;    
-
 public:  
     RegressionTreeNode();
     virtual              ~RegressionTreeNode();

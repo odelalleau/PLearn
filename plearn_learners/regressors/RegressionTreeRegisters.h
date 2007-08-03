@@ -42,7 +42,7 @@
 #ifndef RegressionTreeRegisters_INC
 #define RegressionTreeRegisters_INC
 
-#include <plearn/base/Object.h>
+#include <plearn/vmat/SourceVMatrix.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/math/TMat.h>
 #include <plearn/vmat/VMat.h>
@@ -50,9 +50,9 @@
 namespace PLearn {
 using namespace std;
 
-class RegressionTreeRegisters: public Object
+class RegressionTreeRegisters: public VMatrix
 {
-    typedef Object inherited;
+    typedef VMatrix inherited;
   
 private:
 
@@ -62,24 +62,21 @@ private:
 
     int  report_progress;
     int  verbosity;
-    VMat train_set;
+//    VMat train_set;
   
 /*
   Learnt options: they are sized and initialized if need be, at initRegisters(...) or reinitRegisters()
 */
 
     int       next_id;
-    int       length_;
-    int       width_;
-    int       inputsize_;
-    int       targetsize_;
-    int       weightsize_;  
     TMat<int> sorted_row;
     TMat<int> inverted_sorted_row;
     TVec<int> leave_register;
     TVec<int> leave_candidate;
  
 public:
+
+    VMat source;
     RegressionTreeRegisters();
     virtual              ~RegressionTreeRegisters();
     
@@ -92,20 +89,17 @@ public:
     void         reinitRegisters();
     void         applyForRow(int leave_id, int row);
     void         registerLeave(int leave_id, int row);
-    real         getFeature(int row, int col);
+    virtual real get(int row, int col) const;
     real         getTarget(int row);
     real         getWeight(int row);
     void         setWeight(int row,real val);
-    int          length(){return length_;}
     int          getNextId();
-    int          inputsize(){return inputsize_;}
-    int          targetsize(){return targetsize_;}
-    int          weightsize(){return weightsize_;}
     int          getNextRegisteredRow(int leave_id, int col, int previous_row);
     int          getNextCandidateRow(int leave_id, int col, int previous_row);
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
+//    virtual void getNewRow(int i, const Vec& v) const;
 
 private:
     void         build_();
