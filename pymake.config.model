@@ -266,7 +266,7 @@ if not 'nopython' in optionargs:
                   'local/lib/python2.4/site-packages/numarray')
             numpy_includedirs = []
         else:
-            numpy_includedirs = [ '/u/lisa/local/' + target_platform + '/include/' ]
+            numpy_includedirs = [ '/u/lisa/local/' + target_platform + '/include/', '/usr/include/python'+python_version ]
             ### NB: The '-lutil' is necessary on i386 LISA computers.
             numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python%s/site-packages/numarray -lutil' % pyver
     elif domain_name.endswith('.ms'):
