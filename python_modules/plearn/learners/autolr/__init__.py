@@ -388,8 +388,12 @@ def train_adapting_lr(learner,
     if plearn.bridgemode.useserver:
         servers[0][1] = 1 # learner
 
-    # although 1 is probably too small
-    min_epochs_to_delete = max(1, min_epochs_to_delete)
+    train_costnames = learner.getTrainCostNames()
+    if selected_costnames is not None:
+        # Filter out unwanted costnames
+        train_costnames = [ name for name in train_costnames
+                            if name in selected_costnames ]
+    n_train_costs = ifthenelse(get_train_costs,len(train_costnames),0)
 
     def error_curve(active,start_t,current_t):
         delta_t = current_t+1-start_t
@@ -398,29 +402,25 @@ def train_adapting_lr(learner,
         # cost number 'cost' (index in the selected_costnames list),
         # in testset 'test'.
         # And testset 0 is the one used for selection.
-        return all_results[active][start_t:current_t+1,2+cost_to_select_best]
+        return all_results[active][start_t:current_t+1,
+                                   2+cost_to_select_best+n_train_costs]
 
     def error_curve_dominates(c1,c2,t):
         """curve1 has a lower last error than curve2, but will curve2
         eventually cross curve1? if yes return False o/w return True"""
-
-        start_t = max(all_start[c1],all_start[c2])
-        curve1 = error_curve(c1,start_t,t)
-        curve2 = error_curve(c2,start_t,t)
-        if curve1.shape[0]-1<min_epochs_to_delete or curve1[-1]>=curve2[-1]:
-            return False
-        slope1=curve1[-1]-curve1[-2]
-        slope2=curve2[-1]-curve2[-2]
-        if  slope1 >= slope2:
-            return False
 
         # check to see if c2 is alone with its learning rate (or nearby);
         # if yes keep it
         alone=True
         c2lr=all_lr[c2]
         c2err=all_last_err[c2]
+        start_t = max(all_start[c1],all_start[c2])
+        curve1 = error_curve(c1,start_t,t)#[valid_error]
+        curve2 = error_curve(c2,start_t,t)
+        if curve2.shape[0]-1<min_epochs_to_delete:
+            return False
         for a in actives:
-            if all_lr[a]==c2lr and all_last_err[a]<=c2err:
+            if a!=c2 and all_lr[a]==c2lr and all_last_err[a]<=c2err:
                 # throw it away if worse than other actives of same lr
                 return True
 
@@ -428,24 +428,29 @@ def train_adapting_lr(learner,
             # and greater lr
             if a!=c2 and all_lr[a]>c2lr and abs(log(all_lr[a]/c2lr))<keep_lr*log(lr_steps):
                 alone=False
+
+        if curve1[-1]>=curve2[-1]:
+            return False
+        slope1=curve1[-1]-curve1[-2]
+        slope2=curve2[-1]-curve2[-2]
+        if  slope1 >= slope2 or all_last_err[c1] >= c2err:
+            return False
+
         c1lr=all_lr[c1]
         if alone and c2lr>c1lr: # and slope2<0:
             # keep if alone and a larger learning rate and improving
             return False
         return True
 
-    train_costnames = learner.getTrainCostNames()
-    test_costnames = getTestCostNames(learner)
-    if selected_costnames is not None:
-        # Filter out unwanted costnames
-        train_costnames = [ name for name in train_costnames
-                            if name in selected_costnames ]
-        test_costnames = [ name for name in test_costnames
-                           if name in selected_costnames ]
+    # although 1 is probably too small
+    min_epochs_to_delete = max(1, min_epochs_to_delete)
 
+    test_costnames = getTestCostNames(learner)
     n_tests = len(testsets)
     #n_costs = len(cost_indices)
-    n_train_costs = ifthenelse(get_train_costs,len(train_costnames),0)
+    if selected_costnames is not None:
+        test_costnames = [ name for name in test_costnames
+                           if name in selected_costnames ]
     n_test_costs = len(test_costnames)
 
     if schedules:
@@ -488,8 +493,9 @@ def train_adapting_lr(learner,
     for t in range(n_train):
         stage=stages[t]
         if logfile:
-            print >>logfile, "At stage ", stage
-        print "actives now: ",actives, " with lr=", array(all_lr)[actives]
+            print >>logfile, "After ", stage, "stage"
+        print "After",stage,"stages, actives now: ",actives, " with lr=", array(all_lr)[actives]
+        print "current best actives:",best_active,"best_error:",all_last_err[best_active],"lr:",all_lr[best_active]
         print >>logfile, "actives now: ",actives, " with lr=", array(all_lr)[actives]
 
         threads = []
@@ -591,7 +597,7 @@ def train_adapting_lr(learner,
         if previous_best_err >= best_err:
             previous_best_err = best_err
             if logfile:
-                print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err
+                print >>logfile,"BEST to now is candidate ",best_active," with err=",best_err,"and lr=",all_lr[best_active]
                 print >>logfile, "stage\tl.rate\t",
                 if get_train_costs:
                     for costname in train_costnames:
@@ -609,7 +615,7 @@ def train_adapting_lr(learner,
         else:
             if logfile:
                 print >>logfile, "THE BEST ACTIVE HAS GOTTEN WORSE!!!!"
-        if s%(epoch*nskip)==0 and s<nstages:
+        if learner.stage%(epoch*nskip)==0 and learner.stage<nstages:
             best_active = actives[argmin(array(all_last_err)[actives])]
             # remove candidates that are worse and have higher slope
             best_last = all_last_err[best_active]
@@ -638,7 +644,7 @@ def train_adapting_lr(learner,
                 all_last_err.append(best_last)
                 all_start.append(t)
                 if logfile:
-                    print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at epoch ",s," with lr=",all_lr[new_a]
+                    print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at stage ",learner.stage," with lr=",all_lr[new_a]
                     logfile.flush()
     if return_best_model:
         final_model = best_candidate
