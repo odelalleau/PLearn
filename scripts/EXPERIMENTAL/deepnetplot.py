@@ -6,7 +6,8 @@ from plearn.io.server import *
 from plearn.pyplearn import *
 from plearn.plotting.netplot import *
 from numarray import *
-from numarray.random_array import *
+# from numpy.numarray import *
+#from numarray.random_array import *
 import numpy.random
 
 
@@ -15,11 +16,47 @@ import numpy.random
 ################
 
 def print_usage_and_exit():
-    print "Usage: drnPlot <task> <file> [<other arguments>]",    
-    "drnPlot plotSingleMatrix x.psave ",
-    "drnPlot plotEachRow learner.psave chars.pmat"
-    "drnPlot plotRepAndRec learner.psave chars.pmat"
+    print "Usage :"  
+    print "deepnetplot.py plotSingleMatrix x.psave "
+    print "deepnetplot.py plotEachRow learner.psave chars.pmat"
+    print "deepnetplot.py plotRepAndRec learner.psave chars.pmat"
+    print "deepnetplot.py help"
+    print ""
+    print "where learner.psave is a .psave of a DeepReconstructorNet object"
+    print "and chars.pmat are the training examples"
+    print ""
+    print "exemple:"
+    print ""
+    print "deepnetplot.py plotRepAndRec multimax_tied_small_gs1\=4_ng1\=225/Strat0/Trials0/Split0/final_learner.psave /cluster/pauli/data/mnist/mnist_small/mnist_basic2_train.pmat"
     sys.exit()
+
+def print_usage_repAndRec():
+    print 'putting you mouse OVER a hidden layer an hitting these keyes does... things :'
+    print
+    print 'f : fproping from the last layer'
+    print 'F : fproping form the last layer and for the next ones'
+    print 'r : reconstructing this layer from the next one'
+    print 'R : reconstructing this layer from the next one and also the previous ones'
+    print 'm : set the max of each group of the current hidden layer to 1 and the other elements of the group to 0'
+    print 's : each group of the current layer is sampled (each group has to sum to 1.0)'
+    print 'S : samples the current layer, then reconstruct the previous layer, thant sample this reconstructed layer, and continues until the input'
+    print 'z : set the current pixel (the one the mouse is over) to 0.0'
+    print 'x : set the current pixel to 0.25'
+    print 'c : set the current pixel to 0.5'
+    print 'v : set the current pixel to 0.75'
+    print 'b : set the current pixel to 1.0'
+    print ' space-bar : print value and position of the current pixel'
+    print 'i : print values of the current layer'
+    print 'w : plot the weight matrices associated with the current pixel'
+    print 'W : same as w but for all a group'
+    print 'C : same as w but for the hidden unit that has the highest value in each group'
+    print 'o : set the current hidden layer to its original state'
+    print 'O : same as o but for every layer'
+    print 'right arrow : prints the next character in the dataset and its corresponding hidden layers and reconstructions'
+    print 'left arrow :same but for previous character'
+    print '0,1,2,3...9 : after having pressed a digit, right and left arrows will only find this digit'
+    print '. : cancel the effec of pressing a digit'
+    print 'Control + clic : plots the clicked hidden layer in a new figure'
 
 
 def appendMatrixToFile(file, matrix, matrix_name=""):
@@ -32,11 +69,13 @@ def appendMatrixToFile(file, matrix, matrix_name=""):
         
 
 class HiddenLayer:
+    '''represents a hidden layer which elements are divised in groups
+       and we have some methods to be able to plot it'''
     
     def __init__(self,hidden_Layer, groupsize):
         self.hidden_layer = hidden_Layer
         self.groupsize = groupsize
-
+        
         self.max_height = 150
 
         #if it's too tall, we do this little tweak
@@ -56,7 +95,7 @@ class HiddenLayer:
     def matrixToLayer(self, x, y):
         gs = self.groupsize
         x,y = self.correctXY(x,y)
-        return x + gs*self.nbgroups*y
+        return x + gs*self.nbgroups*y        
 
     def correctXY(self,x,y):
         return int(x + .4), int(y + .3)        
@@ -77,10 +116,12 @@ class HiddenLayer:
         for i in arange(n*self.groupsize,(n+1)*self.groupsize):
            self.hidden_layer[i] = row[c]
            c+=1
-
+    def getNGroups(self):
+        return self.hidden_layer.size()/self.groupsize
 
 
 class InteractiveRepRecPlotter:
+    '''this class is used to plot representations and reconstructions of a DeepReconstructorNet'''
     
     def __init__(self, learner, vmat, image_width=28, char_indice=0):
         '''constructor'''
@@ -105,7 +146,6 @@ class InteractiveRepRecPlotter:
 
         self.plotNext()#starting with a plot...
         self.__linkEvents()
-               
 
 
     def size(self):
@@ -122,7 +162,7 @@ class InteractiveRepRecPlotter:
         self.input = row[:-1]
 
     def __getNextChar(self):
-        '''get next input row from the vmat'''        
+        '''get next input row from the vmat'''
         while True:
             self.current+=1
             raw_input = vmat.getRow(self.current)
@@ -132,7 +172,7 @@ class InteractiveRepRecPlotter:
         self.__rowToClassInput(raw_input)
 
     def __getPrevChar(self):
-        '''get next input row from the vmat'''        
+        '''get next input row from the vmat'''
         while True:
             self.current-=1
             raw_input = vmat.getRow(self.current)
@@ -209,7 +249,7 @@ class InteractiveRepRecPlotter:
 
 
     def __repCommands(self,event):
-
+        
         #met a jour self.current_hl
         self.__findCurrentLayer(event)
         
@@ -258,35 +298,27 @@ class InteractiveRepRecPlotter:
             # reconstruction -- r
                 
             elif char == 'r':
-                print 'reconstructing...'
-                self.learner.setMatValue(i+1, reshape(hl2.hidden_layer, (1,-1)))
-                #reconstruct
-                row = self.learner.reconstructOneLayer(i+1)[0]
-                #HACK
-                if len(row) == 28*28*2:
-                    print 'hacking...'
-                    row = array(toMinusRow(row))
-                #print the new layer
-                hl1.hidden_layer = row
-                self.rep_axes[i].imshow(hl1.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)                 
-                draw()
-                print '...done'
+                if i<self.size()-2:
+                    print 'reconstructing...'
+                    self.__reconstructLayer(i)
+                    self.rep_axes[i].imshow(hl1.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)                 
+                    draw()
+                    print '...done'
+                else:
+                    print 'invalid layer for reconstruction'
 
             # big-reconstruction -- R
 
             elif char == 'R':
-                print 'big-reconstructing...'
-                for k in arange(i+1, 0, -1):
-                    self.learner.setMatValue(k, reshape(self.hidden_layers[k].hidden_layer, (1,-1)))
-                    row = self.learner.reconstructOneLayer(k)[0]
-                    #HACK
-                    if len(row) == 28*28*2:
-                        print 'hacking...'
-                        row = array(toMinusRow(row))
-                    self.hidden_layers[k-1].hidden_layer = row
-                    self.rep_axes[k-1].imshow(self.hidden_layers[k-1].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                if i<self.size()-2:
+                    print 'big-reconstructing...'
+                    for k in arange(i, -1, -1):
+                        self.__reconstructLayer(k)
+                        self.rep_axes[k].imshow(self.hidden_layers[k].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
                     draw()
-                print '...done'                
+                    print '...done'
+                else:
+                    print 'invalid layer for reconstruction'
 
             # max -- m
 
@@ -321,11 +353,20 @@ class InteractiveRepRecPlotter:
 
             elif char == 's':
                 print 'sampling...'
-                for n in arange(hl.hidden_layer.nelements()/hl.groupsize):
-                    print 'sum', hl.getRow(n).sum()
-                    multi = numpy.random.multinomial(1,hl.getRow(n))                    
-                    hl.setRow(n,multi)                            
+                self.__sampleLayer(i)                
                 self.rep_axes[i].imshow(hl.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                draw()
+                print '...done'
+
+            # sampling + reconstructin -- S
+
+            elif char == 'S':
+                print 'sampling and reconstruction...'
+                for n in arange(i,0,-1):
+                    self.__sampleLayer(n)
+                    self.__reconstructLayer(n-1)
+                for n in arange(i+1):
+                    self.rep_axes[n].imshow(self.hidden_layers[n].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
                 draw()
                 print '...done'
                 
@@ -355,7 +396,12 @@ class InteractiveRepRecPlotter:
                 x,y = event.xdata, event.ydata
                 print
                 print 'Position', hl.matrixToLayer(x,y), '(', x, y, ')'
-                print 'Value', hl.getElement(x,y)                
+                print 'Value', hl.getElement(x,y)
+
+            # more infos -- 'i'
+
+            elif char == 'i':
+                print hl.getMatrix()                
 
             # plot W and M -- w
 
@@ -375,7 +421,8 @@ class InteractiveRepRecPlotter:
                 namesToPlot = []
 
                 x,y = hl.correctXY(event.xdata,event.ydata)
-                n = hl.matrixToLayer(x, y)
+                #n = hl.matrixToLayer(x, y)
+                n = hl.matrixToLayer(event.xdata, event.ydata)               
                 
                 
                 if nameW in listNames and nameM not in listNames:
@@ -405,14 +452,15 @@ class InteractiveRepRecPlotter:
                         namesToPlot.append(nameWr)
 
                     figure(3)
+                    
                     clf()
                     plotMatrices(matricesToPlot, namesToPlot)
                     draw()
 
                 if nameW in listNames and nameM in listNames:
 
-                    rowW = learner.getParameterRow(nameW,x)
-                    rowM = learner.getParameterRow(nameM,y)
+                    rowW = learner.getParameterRow(nameW,n%hl.groupsize)
+                    rowM = learner.getParameterRow(nameM,int(n/hl.groupsize))
                     
                     #HACK !!!
                     #print 'just hacked...'
@@ -420,16 +468,21 @@ class InteractiveRepRecPlotter:
                     #    row = array(toMinusRow(row))
                     #END OF HACK
                                       
-                    rowW = reshape(rowW, (-1,self.hidden_layers[i-1].groupsize))
-                    rowM = reshape(rowM,(-1,self.hidden_layers[i-1].groupsize))
+                    matW1 = reshape(toMinusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
+                    matM1 = reshape(toMinusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
+                    matW2 = reshape(toPlusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
+                    matM2 = reshape(toPlusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
 
                     #TODO: rajouter les deux cas  : juste un Wr et lautre : Mr ET Wr
+                    produit = matW1*matM1
+                    produit2 = matW2*matM2
 
-                    produit = rowW*rowM                   
-
+                    
                     figure(3)
+                    ioff()
                     clf()                  
-                    plotMatrices([rowW,rowM,produit], [nameW,nameM, 'term-to-term product'])
+                    plotMatrices([matW1,matM1,matW2,matM2,produit,produit2], [nameW + "-",nameM+"-", nameW + "+",nameM+"+",'term-to-term product (-)', 'term-to-term product (+)'])
+                    ion()
                     draw()
 
                 #BIAS
@@ -464,7 +517,167 @@ class InteractiveRepRecPlotter:
                     clf()
                     plotMatrices(matricesToPlot, namesToPlot)
                     draw()
+            
+            #like 'w' but for an entire row -- 'W'
+            elif char == 'W':
+
+                prefixe = 'Layer' + str(i)
+                nameW = prefixe + '_W'
+                nameWr = nameW + 'r'
+                nameM = prefixe + '_M'
+                nameMr = nameM + 'r'
+                nameB = prefixe + '_b'
+                nameBr = nameB + 'r'
+
+                listNames = learner.listParameterNames()
+
+                matricesToPlot = []
+                namesToPlot = []                
+
+                print 'x,y=', event.xdata, event.ydata
+                n = hl.matrixToLayer(event.xdata, event.ydata)
+                print 'n =',n
+            
                 
+                #                 if nameW in listNames and nameM not in listNames:
+                
+                #                     row_list = []
+                #                     for j in arange(n,n+hl.groupsize):
+                #                         row_list.append(learner.getParameterRow(nameW,j))
+                #                     print row_list
+                    
+                #                     #HACK !!!
+                #                     for row in row_list:
+                #                         if len(row) == 28*28*2:
+                #                             row = array(toMinusRow(list(row)))
+                #                             print 'just hacked...'
+                #                     #END OF HACK
+                
+                #                     for j,row in enumerate(row_list):
+                #                         matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
+                #                         namesToPlot.append(nameW + '_' + str(n+j))
+                
+                #                     if nameWr in listNames:
+                
+                #                         row = learner.getParameterRow(nameWr,n)
+                
+                #                         #HACK !!!
+                #                         print 'just hacked...'
+                #                         if i==1 and len(row) == 28*28*2:
+                #                             row = array(toMinusRow(list(row)))
+                #                         #END OF HACK 
+                
+                #                         matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
+                #                         namesToPlot.append(nameWr)
+
+                if nameW in listNames and nameM not in listNames:                
+
+                    n = n - n%hl.groupsize
+                    print 'plotting weigths from',n,'to',n+hl.groupsize-1
+                    print learner.getParameterValue(nameW).shape
+                   
+                    figure(3)
+                    ioff()                    
+                    clf()
+                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.01, toMinusRow)
+                    ion()
+                    draw()
+                    
+                #if nameM in listNames and nameM in listNames:
+                    
+                   # index_w = n%hl.groupsize
+                   # index_m = int(n/hl.groupsize)#
+
+#                    figure(3)
+#                    ioff()                    
+#                    clf()
+#                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.01, toMinusRow)
+#                    ion()
+#                    draw()
+#                    
+#                    figure(4)
+#                    ioff()
+#                    clf()
+#                    plotLayer1(learner.getParameterValue(nameM), 28, .1, n, hl.groupsize,.01, toMinusRow)
+#                    ion()
+#                    draw()
+                    
+                #  if nameW in listNames and nameM in listNames:
+                
+                #                     rowW = learner.getParameterRow(nameW,x)
+                #                     rowM = learner.getParameterRow(nameM,y)
+                
+                #                     #HACK !!!
+                #                     #print 'just hacked...'
+                #                     #if i==1 and len(row) == 28*28*2:
+                #                     #    row = array(toMinusRow(row))
+                #                     #END OF HACK
+                
+                #                     rowW = reshape(rowW, (-1,self.hidden_layers[i-1].groupsize))
+                #                     rowM = reshape(rowM,(-1,self.hidden_layers[i-1].groupsize))
+                
+                #                     #TODO: rajouter les deux cas  : juste un Wr et lautre : Mr ET Wr
+                
+                #                     produit = rowW*rowM                   
+                
+                #                     figure(3)
+                
+                #                     clf()                  
+                #                     plotMatrices([rowW,rowM,produit], [nameW,nameM, 'term-to-term product'])
+                #                     draw()
+
+
+            # like 'w' on the max of each row -- 'C'
+
+            elif char == 'C':
+
+                prefixe = 'Layer' + str(i)
+                nameW = prefixe + '_W'
+                nameWr = nameW + 'r'
+                nameM = prefixe + '_M'
+                nameMr = nameM + 'r'
+                nameB = prefixe + '_b'
+                nameBr = nameB + 'r'
+                
+                listNames = learner.listParameterNames()
+                
+                matricesToPlot = []
+                namesToPlot = []
+                
+                print event.xdata,event.ydata
+                
+                indexes = []
+                names = []
+                for j in arange(hl.getNGroups()):
+                    row = hl.getRow(j)
+                    index = 0
+                    for k,el in enumerate(row):
+                        if el > row[index]:
+                            index = k
+
+                    indexes.append(j*hl.groupsize + index)
+                    names.append(str(row[index])[0:8])
+                
+                
+                if nameW in listNames:# and nameM not in listNames:                
+                   
+                    figure(3)
+                    ioff()                    
+                    clf()
+                    plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.01, toMinusRow, indexes,names)
+                    ion()
+                    draw()
+                    
+                if nameM in listNames:
+                    
+                    figure(4)
+                    ioff()
+                    clf()
+                    plotLayer1(learner.getParameterValue(nameM), 28, .05,0,0,.01,toMinusRow,indexes,names)
+                    ion()
+                    draw()
+                    
+                    
 
             # back to Original -- o
             
@@ -474,6 +687,9 @@ class InteractiveRepRecPlotter:
                 self.rep_axes[i].imshow(self.hidden_layers[i].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
                 draw()
                 print '...done'
+
+            else :
+                print_usage_repAndRec()
                 
        
 
@@ -485,27 +701,35 @@ class InteractiveRepRecPlotter:
                 self.rep_axes[k].imshow(self.hidden_layers[k].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
                 draw()
             print '...done'
-        
+
 
 
     def __clicked(self, event):
             
         self.__findCurrentLayer(event)
         
-        print 'current hidden layer is now', self.current_hl
+        if event.key == 'control':
+            print 'control-clic performed'
 
-        if event.key == 'control' and self.current_hl != -1:
+            data = self.hidden_layers[self.current_hl].getMatrix()
+            x,y,s,c = [],[],[],[]
+            for i in arange(data.shape[0]):
+                for j in arange(data.shape[1]):
+                    x.append(j)
+                    y.append(data.shape[1]-i)
+                    s.append(data[i,j]*25.)
+                    if data[i,j]<0 :
+                        c.append(1)
+                    else:
+                        c.append(-1)
+            f = figure(5)
             
-            hidden_layer = self.hidden_layers[self.current_hl]
-            
-            n = hidden_layer.matrixToLayer(x,y)
-           # print 'n', n
-            hidden_layer.hidden_layer[n] = 1 - hidden_layer.hidden_layer[n]
-            axes.imshow(hidden_layer.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)        
-            draw()
-
-        if event.button == 3:
-            print 'Layer', self.current_hl, ', position (',x,y,'), value', xself.hidden_layers[self.current_hl].getElement(x,y)
+            clf()
+            scatter(x,y,s=s, c=c, marker='s',cmap = cm.gray, norm = Normalize())
+            f.gca().set_axis_bgcolor("0.75")
+            colorbar()
+            draw()            
+        
 
     def __findCurrentLayer(self, event):
 
@@ -516,6 +740,7 @@ class InteractiveRepRecPlotter:
         if axes != None:
             figure(fig)
             
+            
             #we find to which hidden layer corresponds our axes
             for i,a in enumerate(self.rep_axes):                
                 if a == axes:
@@ -525,11 +750,13 @@ class InteractiveRepRecPlotter:
     def __linkEvents(self):
 
         figure(self.fig_rep)
+        
         connect('key_press_event', self.__changeChar)
-        #connect('button_press_event', self.__clicked)
+        connect('button_press_event', self.__clicked)
         connect('key_press_event', self.__repCommands)
 
         figure(self.fig_rec)
+        
         connect('key_press_event', self.__changeChar)        
         #connect('button_press_event', self.__clicked)        
         
@@ -538,23 +765,27 @@ class InteractiveRepRecPlotter:
     ###
 
     def __plotReconstructions(self):
-        print 'plotting reconstructions...'
+        print 'plotting reconstructions...'        
         figure(self.fig_rec)
+        ioff()
         clf()
         plotMatrices(self.reconstructions)
+        ion()
         draw()
         print '...done.'
 
     def __plotRepresentations(self):
         print 'plotting representations...'
+        ioff()
         figure(self.fig_rep)
         clf()
         temp = []
         for x in self.hidden_layers:
             temp.append( x.getMatrix() )        
+        #draw()
+        self.rep_axes = plotMatrices(temp)        
         draw()
-
-        self.rep_axes = plotMatrices(temp)
+        ion()
         print '...done.'
 
     def __computeAndPlot(self):        
@@ -639,7 +870,30 @@ class InteractiveRepRecPlotter:
             file.write("\n\n\n---------- REC ------------------------------------------------------\n")            
             for i, mat in enumerate(rec):
                 appendMatrixToFile(file,  rowToMatrix(mat[0],28), 'rec of hidden layer ' + str(i+1))
-            
+
+    ###
+    ### utils
+    ###
+
+    def __sampleLayer(self, which_layer):
+        hl = self.hidden_layers[which_layer]
+        for n in arange(hl.hidden_layer.nelements()/hl.groupsize):
+            multi = numpy.random.multinomial(1,hl.getRow(n))                    
+            hl.setRow(n,multi)
+
+    def __reconstructLayer(self, which_layer):
+        hl = self.hidden_layers[which_layer+1]
+        
+        self.learner.setMatValue(which_layer+1, reshape(hl.hidden_layer, (1,-1)))
+        #reconstruct
+        row = self.learner.reconstructOneLayer(which_layer+1)[0]
+        #HACK
+        if len(row) == 28*28*2:
+            print 'hacking...'
+            row = array(toMinusRow(row))
+            #print the new layer
+        self.hidden_layers[which_layer].hidden_layer = row
+    
 
 
 class EachRowPlotter:
@@ -703,7 +957,7 @@ if task == 'plotEachRow':
     names = learner.listParameterNames()
     
     #doToRow = None
-    doToRow = toPlusRow
+    doToRow = toMinusRow
     #doToRow = toMinusRow
 
     matrixName = ''
@@ -780,10 +1034,18 @@ elif task == 'plotSingleMatrix':
 
 elif task == 'test':
     #jutilise cet endroit pour faire des tests
-
     pass
+elif task == 'help':
+    print 'plotRepAndRec:'
+    print
+    print_usage_repAndRec()
 
 
 
 else:
     print_usage_and_exit()
+
+
+
+
+    
