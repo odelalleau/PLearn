@@ -706,7 +706,9 @@ void NatGradSMPNNet::train()
     // The other ones are 0/1 values that are initialized with 0, and take 1
     // once the corresponding CPU has finished all updates for this training
     // period.
-    semaphore_id = semget(IPC_PRIVATE, ncpus + 1, 0666 | IPC_CREAT);
+    // Finally, the last value is the current stage, i.e. the number of samples
+    // with which the network has been updated so far.
+    semaphore_id = semget(IPC_PRIVATE, ncpus + 2, 0666 | IPC_CREAT);
     if (semaphore_id == -1)
         PLERROR("In NatGradSMPNNet::train - Could not create semaphore "
                 "(errno = %d)", errno);
@@ -719,6 +721,9 @@ void NatGradSMPNNet::train()
             PLERROR("In NatGradSMPNNet::train - Could not initialize semaphore"
                     " value (errno = %d)", errno);
     }
+    semun_v.val = stage;
+    int success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
+    PLCHECK( success == 0 );
 
     // Fork one process/cpu.
     int iam = 0;
@@ -752,7 +757,11 @@ void NatGradSMPNNet::train()
         //Profiler::pl_profile_end("getting_data");
         if (b+1==minibatch_size) // do also special end-case || stage+1==nstages)
         {
-            onlineStep(stage, targets, train_costs, example_weights );
+            // Read the current stage value (will be used to compute the
+            // current learning rate).
+            int cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
+            PLASSERT( cur_stage >= 0 );
+            onlineStep(cur_stage, targets, train_costs, example_weights );
             nsteps++;
             /*
             for (int i=0;i<minibatch_size;i++)
@@ -772,8 +781,13 @@ void NatGradSMPNNet::train()
                 sem_value = (sem_value + 1) % ncpus;
                 semun_v.val = sem_value;
                 semctl(semaphore_id, 0, SETVAL, semun_v);
+                // Update the current stage.
+                cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
+                PLASSERT( cur_stage >= 0 );
+                semun_v.val = cur_stage + nsteps * minibatch_size;
+                success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
+                PLASSERT( success == 0 );
                 nsteps = 0;
-                // TODO Perform update.
             } else {
 #if 0
                 printf("CPU %d NOT updating (sem_value = %d)\n",
@@ -876,10 +890,16 @@ void NatGradSMPNNet::train()
     }
 
     Profiler::end("Synchronization");
+    /*
     const Profiler::Stats& synch_stats = Profiler::getStats("Synchronization");
     real synch_time = (synch_stats.user_duration + synch_stats.system_duration)
         / real(Profiler::ticksPerSecond());
-    //pout << "Synch time: " << synch_time << endl;
+    pout << "Synch time: " << synch_time << endl;
+    */
+
+    // Get current stage (for debug purpose).
+    int cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
+    PLASSERT( cur_stage >= 0 );
 
     // Free semaphore's ressources.
     if (semaphore_id >= 0) {
@@ -892,6 +912,9 @@ void NatGradSMPNNet::train()
 
     // Update the learner's stage.
     stage = nstages;
+    if (stage != cur_stage)
+        PLWARNING("The target stage (%d) was not reached exactly (actual "
+                "stage: %d", stage, cur_stage);
 
     Profiler::end("training");
     Profiler::pl_profile_end("Totaltraining");
@@ -916,17 +939,13 @@ void NatGradSMPNNet::train()
 
 }
 
-void NatGradSMPNNet::onlineStep(int tutu, const Mat& targets,
+void NatGradSMPNNet::onlineStep(int cur_stage, const Mat& targets,
                              Mat& train_costs, Vec example_weights)
 {
-    // Simply crash right now (easy!) if one tries to use a decrease constant.
-    if (!fast_exact_is_equal(lrate_decay, 0))
-        PLERROR("In NatGradSMPNNet::onlineStep - Learning rate decay not "
-                "implemented");
     // mean gradient over minibatch_size examples has less variance, can afford larger learning rate
     // TODO Note that this scaling formula is disabled to avoid confusion about
     // what learning rates are being used in experiments.
-    real lrate = /*sqrt(real(minibatch_size))* */ init_lrate/(1 + 0*lrate_decay);
+    real lrate = /*sqrt(real(minibatch_size))* */ init_lrate/(1 + cur_stage * lrate_decay);
     PLASSERT(targets.length()==minibatch_size && train_costs.length()==minibatch_size && example_weights.length()==minibatch_size);
     fpropNet(minibatch_size, true);
     fbpropLoss(neuron_outputs_per_layer[n_layers-1],targets,example_weights,train_costs);
