@@ -79,6 +79,7 @@ void DoubleProductVariable::fprop()
         d = x.width();// ( = w.width() = m.width() )
 
 
+    /*
     for(int n=0; n<nx; n++)
         for(int i=0; i<nw; i++)        
             for(int j=0; j<nm; j++)
@@ -87,6 +88,25 @@ void DoubleProductVariable::fprop()
                 for(int k=0; k<d; k++)
                     matValue(n,i+j*nw) += x(n,k)*w(i,k)*m(j,k);
             }
+    */
+
+    for(int n=0; n<nx; n++)
+    {
+        real* matValue_n = matValue[n];
+        const real* x_n = x[n];
+        for(int j=0; j<nm; j++)
+        {
+            const real* m_j = m[j];
+            for(int i=0; i<nw; i++)
+            {
+                const real* w_i = w[i];
+                real val = 0;
+                for(int k=0; k<d; k++)
+                    val += x_n[k]*w_i[k]*m_j[k];
+                matValue_n[i+j*nw] = val;
+            }
+        }
+    }
 }
 // ### computes varray gradients from gradient
 void DoubleProductVariable::bprop()
@@ -104,18 +124,43 @@ void DoubleProductVariable::bprop()
         nm = m.length(),
         d = x.width();// ( = w.width()= m.width() )
 
-    
-    for(int n=0; n<nx; n++)
+    /*
+     for(int n=0; n<nx; n++)
         for(int i=0 ;i<nw; i++)
             for(int j=0; j<nm; j++)
             {
                 for(int k=0; k<d; k++)
-                {             
+                {
                     x_grad(n,k) += s_grad(n,i+j*nw)*w(i,k)*m(j,k);
                     w_grad(i,k) += s_grad(n,i+j*nw)*x(n,k)*m(j,k);
                     m_grad(j,k) += s_grad(n,i+j*nw)*x(n,k)*w(i,k);
+                }
+            }
+    */
+
+    for(int n=0; n<nx; n++)
+    {
+        const real* s_grad_n = s_grad[n];
+        const real* x_n = x[n];
+        real* x_grad_n = x_grad[n];
+        for(int j=0; j<nm; j++)
+        {
+            const real* m_j = m[j];
+            real* m_grad_j = m_grad[j];
+            for(int i=0 ;i<nw; i++)
+            {
+                const real* w_i = w[i];
+                real* w_grad_i = w_grad[i];
+                real s_grad_n_val = s_grad_n[i+j*nw];
+                for(int k=0; k<d; k++)
+                {             
+                    x_grad_n[k] += s_grad_n_val*w_i[k]*m_j[k];
+                    w_grad_i[k] += s_grad_n_val*x_n[k]*m_j[k];
+                    m_grad_j[k] += s_grad_n_val*x_n[k]*w_i[k];
                 }                
             }
+        }
+    }
 }
 // ### You can implement these methods:
 // void DoubleProductVariable::bbprop() {}
