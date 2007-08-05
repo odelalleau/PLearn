@@ -841,7 +841,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             visible_layer->computeExpectations();
             const Mat expectations=visible_layer->getExpectations();
             visible->resize(expectations.length(),visible_layer->size);
-            *visible_activation << visible_layer->activations;
+            *visible << expectations;
+        }
+        if (hidden_act && hidden_act->isEmpty())
+        {
+            // THIS IS STUPID CODE TO HANDLE THE BAD state SYSTEM AND AVOID AN UNNECESSARY ERROR MESSAGE
+            // (hidden_act is a "state" port that must always be produced, even if we don't compute it!)
+            hidden_act->resize(hidden_layer->samples.length(),
+                               hidden_layer->samples.width());
         }
         found_a_valid_configuration = true;
     }
