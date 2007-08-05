@@ -1693,11 +1693,12 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             multiplyAcc((*visible_grad)(t),visible_layer->bias,-dC_dFE);
         }
         if (same_dC_dFE)
-            productScaleAcc(*visible_grad,p,false,weights,false,-dC_dFE,1);
+            productScaleAcc(*visible_grad, p, false, weights, false, -dC_dFE,
+                            real(1));
         else
             for (int t=0;t<mbs;t++)
-                productScaleAcc((*visible_grad)(t),weights,true,p(t),
-                        -(*energy_grad)(t, 0),1);
+                productScaleAcc((*visible_grad)(t), weights, true, p(t),
+                        -(*energy_grad)(t, 0), real(1));
     }
 
     // Explicit error message in the case of the 'visible' port.
