@@ -158,6 +158,7 @@ def train_with_schedule(learner,
                         lr_options,
                         schedules,
                         trainset, testsets, expdir,
+                        tester=None,
                         cost_to_select_best=0,
                         selected_costnames = None,
                         get_train_costs = True,
@@ -171,9 +172,13 @@ Exemple of lr_options with only one schedule applied to two modules:
 The schedules argument is an array with the stages sequence in its first
 column and sequences of learning rates (one sequence per group) in
 each of the other columns (just like the result of the call to merge_schedules).
+Optionally, a different learner can be supplied for training (the learner)
+and testing (the tester).
 """
+    if not tester:
+        tester = learner
     train_costnames = learner.getTrainCostNames()
-    test_costnames = getTestCostNames(learner)
+    test_costnames = getTestCostNames(tester)
 
     # Filter out unwanted costnames
     if selected_costnames is not None:
@@ -237,7 +242,7 @@ each of the other columns (just like the result of the call to merge_schedules).
 
         # Report error on test sets
         for j in range(n_tests):
-            costs = testlearner(learner,testsets[j])
+            costs = testlearner(tester,testsets[j])
             if logfile:
                 print >>logfile, "At stage ", learner.stage, " test" + str(j+1),": ",
             for k in range(0,n_test_costs):
@@ -249,6 +254,8 @@ each of the other columns (just like the result of the call to merge_schedules).
                 if k==cost_to_select_best and j==0 and err < best_err:
                     best_err = err
                     learner.save(expdir+"/"+"best_learner.psave","plearn_ascii")
+                    if learner!=tester:
+                        learner.save(expdir+"/"+"best_tester.psave","plearn_ascii")
                 if plearn.bridgemode.interactive:
                     plot(results[0:i+1,0],
                             results[0:i+1, 1+n_schedules+n_train_costs+(j*n_test_costs)+k],
