@@ -245,6 +245,8 @@ protected:
     Mat* hidden_act;
     bool hidden_activations_are_computed;
 
+    bool hidden_is_output;
+
     //! Used to store the contrastive divergence gradient w.r.t. weights.
     Mat store_weights_grad;
 

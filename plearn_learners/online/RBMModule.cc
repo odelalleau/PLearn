@@ -682,18 +682,32 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     PLASSERT( connection );
 
     Mat* visible = ports_value[getPortIndex("visible")];
+    bool visible_is_output = visible && visible->isEmpty();
     Mat* hidden = ports_value[getPortIndex("hidden.state")];
+    // hidden_is_output is needed in BPROP, which is VERY BAD, VIOLATING OUR DESIGN ASSUMPTIONS
+    hidden_is_output = hidden && hidden->isEmpty();
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
+    bool hidden_act_is_output = hidden_act && hidden_act->isEmpty();
     Mat* visible_sample = ports_value[getPortIndex("visible_sample")];
+    bool visible_sample_is_output = visible_sample && visible_sample->isEmpty();
     Mat* visible_expectation = ports_value[getPortIndex("visible_expectation")];
+    bool visible_expectation_is_output = visible_expectation && visible_expectation->isEmpty();
     Mat* visible_activation = ports_value[getPortIndex("visible_activation")];
+    bool visible_activation_is_output = visible_activation && visible_activation->isEmpty();
     Mat* hidden_sample = ports_value[getPortIndex("hidden_sample")];
+    bool hidden_sample_is_output = hidden_sample && hidden_sample->isEmpty();
     Mat* energy = ports_value[getPortIndex("energy")];
+    bool energy_is_output = energy && energy->isEmpty();
     Mat* neg_log_likelihood = ports_value[getPortIndex("neg_log_likelihood")];
+    bool neg_log_likelihood_is_output = neg_log_likelihood && neg_log_likelihood->isEmpty();
     Mat* neg_log_phidden = ports_value[getPortIndex("neg_log_phidden")];
+    bool neg_log_phidden_is_output = neg_log_phidden && neg_log_phidden->isEmpty();
     Mat* neg_log_pvisible_given_phidden = ports_value[getPortIndex("neg_log_pvisible_given_phidden")];
+    bool neg_log_pvisible_given_phidden_is_output = neg_log_pvisible_given_phidden && neg_log_pvisible_given_phidden->isEmpty();
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
+    //bool hidden_bias_is_output = hidden_bias && hidden_bias->isEmpty();
     weights = ports_value[getPortIndex("weights")];
+    //bool weights_is_output = weights && weights->isEmpty();
     Mat* visible_reconstruction = 0;
     Mat* visible_reconstruction_activations = 0;
     Mat* reconstruction_error = 0;
@@ -706,6 +720,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         reconstruction_error =
             ports_value[getPortIndex("reconstruction_error.state")];
     }
+    bool visible_reconstruction_is_output = visible_reconstruction && visible_reconstruction->isEmpty();
+    bool visible_reconstruction_activations_is_output = visible_reconstruction_activations && visible_reconstruction_activations->isEmpty();
+    bool reconstruction_error_is_output = reconstruction_error && reconstruction_error->isEmpty();
     Mat* contrastive_divergence = 0;
     Mat* negative_phase_visible_samples = 0;
     Mat* negative_phase_hidden_expectations = 0;
@@ -726,11 +743,16 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         negative_phase_hidden_activations =
             ports_value[getPortIndex("negative_phase_hidden_activations.state")];
     }
+    bool contrastive_divergence_is_output = contrastive_divergence && contrastive_divergence->isEmpty();
+    //bool negative_phase_visible_samples_is_output = negative_phase_visible_samples && negative_phase_visible_samples->isEmpty();
+    bool negative_phase_hidden_expectations_is_output = negative_phase_hidden_expectations && negative_phase_hidden_expectations->isEmpty();
+    bool negative_phase_hidden_activations_is_output = negative_phase_hidden_activations && negative_phase_hidden_activations->isEmpty();
+
     bool hidden_expectations_are_computed = false;
     hidden_activations_are_computed = false;
     bool found_a_valid_configuration = false;
 
-    if (visible && !visible->isEmpty())
+    if (visible && !visible_is_output)
     {
         // When an input is provided, that would restart the chain for
         // unconditional sampling, from that example.
@@ -742,18 +764,18 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     // COMPUTE ENERGY
     if (energy)
     {
-        PLASSERT_MSG( energy->isEmpty(),
+        PLASSERT_MSG( energy_is_output,
                       "RBMModule: the energy port can only be an output port\n" );
-        if (visible && !visible->isEmpty()
-            && hidden && !hidden->isEmpty())
+        if (visible && !visible_is_output
+            && hidden && !hidden_is_output)
         {
             computeEnergy(*visible, *hidden, *energy);
         }
-        else if (visible && !visible->isEmpty())
+        else if (visible && !visible_is_output)
         {
             computeFreeEnergyOfVisible(*visible,*energy);
         }
-        else if (hidden && !hidden->isEmpty())
+        else if (hidden && !hidden_is_output)
         {
             computeFreeEnergyOfHidden(*hidden,*energy);
         }
@@ -767,27 +789,27 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
 
     // COMPUTE UNSUPERVISED NLL
-    if (neg_log_likelihood && neg_log_likelihood->isEmpty() && compute_log_likelihood)
+    if (neg_log_likelihood && neg_log_likelihood_is_output && compute_log_likelihood)
     {
         if (partition_function_is_stale && !during_training)
         {
             computePartitionFunction();
             partition_function_is_stale=false;
         }
-        if (visible && !visible->isEmpty()
-            && hidden && !hidden->isEmpty())
+        if (visible && !visible_is_output
+            && hidden && !hidden_is_output)
         {
             // neg-log-likelihood(visible,hidden) = energy(visible,hidden) + log(partition_function)
             computeEnergy(*visible,*hidden,*neg_log_likelihood);
             *neg_log_likelihood += log_partition_function;
         }
-        else if (visible && !visible->isEmpty())
+        else if (visible && !visible_is_output)
         {
             // neg-log-likelihood(visible) = free_energy(visible) + log(partition_function)
             computeFreeEnergyOfVisible(*visible,*neg_log_likelihood,hidden_act);
             *neg_log_likelihood += log_partition_function;
         }
-        else if (hidden && !hidden->isEmpty())
+        else if (hidden && !hidden_is_output)
         {
             // neg-log-likelihood(hidden) = free_energy(hidden) + log(partition_function)
             computeFreeEnergyOfHidden(*hidden,*neg_log_likelihood);
@@ -801,21 +823,18 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     // REGULAR FPROP
     // we are given the visible units and we want to compute the hidden
     // activation and/or the hidden expectation
-    if ( visible && !visible->isEmpty() &&
-         ((hidden && hidden->isEmpty() ) ||
-          (hidden_act && hidden_act->isEmpty())) )
+    if ( visible && !visible_is_output &&
+         hidden && hidden_is_output )
     {
         computePositivePhaseHiddenActivations(*visible);
-        if (hidden) {
-            PLASSERT( hidden->isEmpty() );
-            PLCHECK_MSG( !hidden_layer->expectations_are_up_to_date, "Safety "
-                    "check: how were expectations computed previously?" );
-            hidden_layer->computeExpectations();
-            hidden_expectations_are_computed=true;
-            const Mat& hidden_out = hidden_layer->getExpectations();
-            hidden->resize(hidden_out.length(), hidden_out.width());
-            *hidden << hidden_out;
-        }
+        PLCHECK_MSG( !hidden_layer->expectations_are_up_to_date, "Safety "
+                     "check: how were expectations computed previously?" );
+        hidden_layer->computeExpectations();
+        hidden_expectations_are_computed=true;
+        const Mat& hidden_out = hidden_layer->getExpectations();
+        hidden->resize(hidden_out.length(), hidden_out.width());
+        *hidden << hidden_out;
+
         // Since we return below, the other ports must be unused.
         //PLASSERT( !visible_sample && !hidden_sample );
         found_a_valid_configuration = true;
@@ -823,27 +842,27 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
     // DOWNWARD FPROP
     // we are given hidden  and we want to compute the visible or visible_activation
-    if ( hidden && !hidden->isEmpty() && 
-         ((visible && visible->isEmpty()) ||
-          (visible_activation && visible_activation->isEmpty())) )
+    if ( hidden && !hidden_is_output && 
+         ((visible && visible_is_output) ||
+          (visible_activation && visible_activation_is_output)) )
     {
         computeVisibleActivations(*hidden,true);
         if (visible_activation)
         {
-            PLASSERT_MSG(visible_activation->isEmpty(),"visible_activation should be an output");
+            PLASSERT_MSG(visible_activation_is_output,"visible_activation should be an output");
             visible_activation->resize(visible_layer->activations.length(),
                                        visible_layer->size);
             *visible_activation << visible_layer->activations;
         }
         if (visible)
         {
-            PLASSERT_MSG(visible->isEmpty(),"visible should be an output");
+            PLASSERT_MSG(visible_is_output,"visible should be an output");
             visible_layer->computeExpectations();
             const Mat expectations=visible_layer->getExpectations();
             visible->resize(expectations.length(),visible_layer->size);
             *visible << expectations;
         }
-        if (hidden_act && hidden_act->isEmpty())
+        if (hidden_act && hidden_act_is_output)
         {
             // THIS IS STUPID CODE TO HANDLE THE BAD state SYSTEM AND AVOID AN UNNECESSARY ERROR MESSAGE
             // (hidden_act is a "state" port that must always be produced, even if we don't compute it!)
@@ -854,17 +873,17 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     }
 
     // COMPUTE AUTOASSOCIATOR RECONSTRUCTION ERROR
-    if ( visible && !visible->isEmpty() &&
-         ( ( visible_reconstruction && visible_reconstruction->isEmpty() ) ||
+    if ( visible && !visible_is_output &&
+         ( ( visible_reconstruction && visible_reconstruction_is_output ) ||
            ( visible_reconstruction_activations &&
-             visible_reconstruction_activations->isEmpty() ) ||
-           ( reconstruction_error && reconstruction_error->isEmpty() ) ) )
+             visible_reconstruction_activations_is_output ) ||
+           ( reconstruction_error && reconstruction_error_is_output ) ) )
     {
         // Autoassociator reconstruction cost
         PLASSERT( ports_value.length() == nPorts() );
 
         Mat h;
-        if (hidden && !hidden->isEmpty())
+        if (hidden && !hidden_is_output)
             h = *hidden;
         else {
             if(!hidden_expectations_are_computed)
@@ -881,7 +900,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         computeVisibleActivations(h, true);
         if(visible_reconstruction_activations)
         {
-            PLASSERT( visible_reconstruction_activations->isEmpty() );
+            PLASSERT( visible_reconstruction_activations_is_output );
             const Mat& to_store = visible_layer->activations;
             visible_reconstruction_activations->resize(to_store.length(),
                                                        to_store.width());
@@ -892,7 +911,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             visible_layer->computeExpectations();
             if(visible_reconstruction)
             {
-                PLASSERT( visible_reconstruction->isEmpty() );
+                PLASSERT( visible_reconstruction_is_output );
                 const Mat& to_store = visible_layer->getExpectations();
                 visible_reconstruction->resize(to_store.length(),
                                                to_store.width());
@@ -900,7 +919,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
             if(reconstruction_error)
             {
-                PLASSERT( reconstruction_error->isEmpty() );
+                PLASSERT( reconstruction_error_is_output );
                 reconstruction_error->resize(visible->length(),1);
                 visible_layer->setBatchSize( visible->length() );
                 visible_layer->fpropNLL(*visible,
@@ -910,21 +929,21 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         found_a_valid_configuration = true;
     }
     // COMPUTE VISIBLE GIVEN HIDDEN
-    else if ( visible_reconstruction && visible_reconstruction->isEmpty()
-         && hidden && !hidden->isEmpty())
+    else if ( visible_reconstruction && visible_reconstruction_is_output
+         && hidden && !hidden_is_output)
     {
         // Don't need to verify if they are asked in a port, this was done previously
         computeVisibleActivations(*hidden,true);
         if(visible_reconstruction_activations)
         {
-            PLASSERT( visible_reconstruction_activations->isEmpty() );
+            PLASSERT( visible_reconstruction_activations_is_output );
             const Mat& to_store = visible_layer->activations;
             visible_reconstruction_activations->resize(to_store.length(),
                                                        to_store.width());
             *visible_reconstruction_activations << to_store;
         }
         visible_layer->computeExpectations();
-        PLASSERT( visible_reconstruction->isEmpty() );
+        PLASSERT( visible_reconstruction_is_output );
         const Mat& to_store = visible_layer->getExpectations();
         visible_reconstruction->resize(to_store.length(),
                                        to_store.width());
@@ -938,13 +957,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     // neg_log_phidden is an optional column matrix with one element -log P(h) for each 
     // row h of "hidden", used as an input port, with neg_log_pvisible_given_phidden as output. 
     // If neg_log_phidden is provided, it is assumed to be 1/n_h (n_h=h->length()).
-    if (neg_log_pvisible_given_phidden && neg_log_pvisible_given_phidden->isEmpty() &&
-        hidden && !hidden->isEmpty() && visible && !visible->isEmpty())
+    if (neg_log_pvisible_given_phidden && neg_log_pvisible_given_phidden_is_output &&
+        hidden && !hidden_is_output && visible && !visible_is_output)
     {
         // estimate P(x) by sum_h P(x|h) P(h) where P(h) is either constant or provided by neg_log_phidden
         if (neg_log_phidden)
         {
-            PLASSERT_MSG(!neg_log_phidden->isEmpty(),"If neg_log_phidden is provided, it must be an input");
+            PLASSERT_MSG(!neg_log_phidden_is_output,"If neg_log_phidden is provided, it must be an input");
             PLASSERT_MSG(neg_log_phidden->length()==hidden->length(),
                      "If neg_log_phidden is provided, it must have the same length as hidden.state");
             PLASSERT_MSG(neg_log_phidden->width()==1,"neg_log_phidden must have width 1 (single column)");
@@ -976,24 +995,24 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     }
 
     // SAMPLING
-    if ((visible_sample && visible_sample->isEmpty())               // is asked to sample visible units (discrete)
-        || (visible_expectation && visible_expectation->isEmpty())  //              "                   (continous)
-        || (hidden_sample && hidden_sample->isEmpty()))             // or to sample hidden units
+    if ((visible_sample && visible_sample_is_output)               // is asked to sample visible units (discrete)
+        || (visible_expectation && visible_expectation_is_output)  //              "                   (continous)
+        || (hidden_sample && hidden_sample_is_output))             // or to sample hidden units
     {
-        if (hidden_sample && !hidden_sample->isEmpty()) // sample visible conditionally on hidden
+        if (hidden_sample && !hidden_sample_is_output) // sample visible conditionally on hidden
         {
             sampleVisibleGivenHidden(*hidden_sample);
             Gibbs_step=0;
             //cout << "sampling visible from hidden" << endl;
         }
-        else if (visible_sample && !visible_sample->isEmpty()) // if an input is provided, sample hidden conditionally
+        else if (visible_sample && !visible_sample_is_output) // if an input is provided, sample hidden conditionally
         {
             sampleHiddenGivenVisible(*visible_sample);
             hidden_activations_are_computed = false;
             Gibbs_step=0;
             //cout << "sampling hidden from visible" << endl;
         }
-        else if (visible_expectation && !visible_expectation->isEmpty())
+        else if (visible_expectation && !visible_expectation_is_output)
         {
              PLERROR("In RBMModule::fprop visible_expectation can only be an output port (use visible as input port");
         }
@@ -1003,7 +1022,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             // start or continue the chain
             if (visible_layer->samples.isEmpty())
             {
-                if (visible && !visible->isEmpty())
+                if (visible && !visible_is_output)
                     visible_layer->samples << *visible;
                 else if (!visible_layer->getExpectations().isEmpty())
                     visible_layer->samples << visible_layer->getExpectations();
@@ -1024,38 +1043,38 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             //cout << " -> " << Gibbs_step << endl;
         }
 
-        if ( hidden && hidden->isEmpty())   // fill hidden.state with expectations
+        if ( hidden && hidden_is_output)   // fill hidden.state with expectations
         {
               const Mat& hidden_expect = hidden_layer->getExpectations();
               hidden->resize(hidden_expect.length(), hidden_expect.width());
               *hidden << hidden_expect;
         }
-        if (visible_sample && visible_sample->isEmpty()) // provide sample of the visible units
+        if (visible_sample && visible_sample_is_output) // provide sample of the visible units
         {
             visible_sample->resize(visible_layer->samples.length(),
                                    visible_layer->samples.width());
             *visible_sample << visible_layer->samples;
         }
-        if (hidden_sample && hidden_sample->isEmpty()) // provide sample of the hidden units
+        if (hidden_sample && hidden_sample_is_output) // provide sample of the hidden units
         {
             hidden_sample->resize(hidden_layer->samples.length(),
                                   hidden_layer->samples.width());
             *hidden_sample << hidden_layer->samples;
         }
-        if (visible_expectation && visible_expectation->isEmpty()) // provide expectation of the visible units
+        if (visible_expectation && visible_expectation_is_output) // provide expectation of the visible units
         {
             const Mat& to_store = visible_layer->getExpectations();
             visible_expectation->resize(to_store.length(),
                                         to_store.width());
             *visible_expectation << to_store;
         }
-        if (hidden && hidden->isEmpty())
+        if (hidden && hidden_is_output)
         {
             hidden->resize(hidden_layer->samples.length(),
                            hidden_layer->samples.width());
             *hidden << hidden_layer->samples;
         }
-        if (hidden_act && hidden_act->isEmpty())
+        if (hidden_act && hidden_act_is_output)
         {
             hidden_act->resize(hidden_layer->samples.length(),
                                hidden_layer->samples.width());
@@ -1067,9 +1086,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     // COMPUTE CONTRASTIVE DIVERGENCE CRITERION
     if (contrastive_divergence)
     {
-        PLASSERT_MSG( contrastive_divergence->isEmpty(),
+        PLASSERT_MSG( contrastive_divergence_is_output,
                       "RBMModule: the contrastive_divergence port can only be an output port\n" );
-        if (visible && !visible->isEmpty())
+        if (visible && !visible_is_output)
         {
             int mbs = visible->length();
             const Mat& hidden_expectations = hidden_layer->getExpectations();
@@ -1120,9 +1139,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
             PLASSERT(negative_phase_visible_samples);
             PLASSERT(negative_phase_hidden_expectations &&
-                     negative_phase_hidden_expectations->isEmpty());
+                     negative_phase_hidden_expectations_is_output);
             PLASSERT(negative_phase_hidden_activations &&
-                     negative_phase_hidden_activations->isEmpty());
+                     negative_phase_hidden_activations_is_output);
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
             *negative_phase_visible_samples << visible_layer->samples;
             negative_phase_hidden_expectations->resize(hidden_expectations.length(),
@@ -1132,10 +1151,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             negative_phase_hidden_activations->resize(neg_hidden_act.length(),
                                                       neg_hidden_act.width());
             *negative_phase_hidden_activations << neg_hidden_act;
-
-            // note that h_act and h may point to hidden_act_store and hidden_exp_store
-            PLASSERT(h_act && !h_act->isEmpty());
-            PLASSERT(h && !h->isEmpty());
 
             contrastive_divergence->resize(hidden_expectations.length(),1);
             // compute contrastive divergence itself
@@ -1156,12 +1171,30 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         found_a_valid_configuration = true;
     }
 
+    // UGLY HACK TO DEAL WITH THE PROBLEM THAT XXX.state MAY NOT BE NEEDED
+    // BUT IS ALWAYS EXPECTED BECAUSE IT IS A STATE (!@#$%!!!)
+    if (hidden_act && hidden_act->isEmpty())
+        hidden_act->resize(1,1);
+    if (hidden && hidden->isEmpty())
+        hidden->resize(1,1);
+    if (visible_reconstruction && visible_reconstruction->isEmpty())
+        visible_reconstruction->resize(1,1);
+    if (visible_reconstruction_activations && visible_reconstruction_activations->isEmpty())
+        visible_reconstruction_activations->resize(1,1);
+    if (reconstruction_error && reconstruction_error->isEmpty())
+        reconstruction_error->resize(1,1);
+    if (negative_phase_visible_samples && negative_phase_visible_samples->isEmpty())
+        negative_phase_visible_samples->resize(1,1);
+    if (negative_phase_hidden_expectations && negative_phase_hidden_expectations->isEmpty())
+        negative_phase_hidden_expectations->resize(1,1);
+    if (negative_phase_hidden_activations && negative_phase_hidden_activations->isEmpty())
+        negative_phase_hidden_activations->resize(1,1);
+    
     // Reset some class fields to ensure they are not reused by mistake.
     hidden_act = NULL;
     hidden_bias = NULL;
     weights = NULL;
     hidden_activations_are_computed = false;
-
 
 
     if (!found_a_valid_configuration)
@@ -1636,38 +1669,49 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         reconstruction_connection->bpropAccUpdate( rec_ports_value,
                                                    rec_ports_gradient );
 
-        // Hidden layer bias update
-        hidden_layer->bpropUpdate(*hidden_act,
-                                  *hidden, hidden_act_grad,
-                                  hidden_exp_grad, false);
-        if (hidden_bias_grad)
+        // UGLY HACK WHICH BREAKS THE RULE THAT RBMMODULE CAN BE CALLED IN DIFFERENT CONTEXTS AND fprop/bprop ORDERS
+        // BUT NECESSARY WHEN hidden WAS AN INPUT
+        if (hidden_is_output) 
         {
-            if (hidden_bias_grad->isEmpty()) {
-                PLASSERT( hidden_bias_grad->width() == hidden_layer->size );
-                hidden_bias_grad->resize(mbs,hidden_layer->size);
+            // Hidden layer bias update
+            hidden_layer->bpropUpdate(*hidden_act,
+                                      *hidden, hidden_act_grad,
+                                      hidden_exp_grad, false);
+            if (hidden_bias_grad)
+            {
+                if (hidden_bias_grad->isEmpty()) {
+                    PLASSERT( hidden_bias_grad->width() == hidden_layer->size );
+                    hidden_bias_grad->resize(mbs,hidden_layer->size);
+                }
+                *hidden_bias_grad += hidden_act_grad;
             }
-            *hidden_bias_grad += hidden_act_grad;
+            // Connection update
+            if(compute_visible_grad)
+            {
+                // The length of 'visible_grad' must be either 0 (if not computed
+                // previously) or the size of the mini-batches (otherwise).
+                PLASSERT( visible_grad->width() == visible_layer->size &&
+                          visible_grad->length() == 0 ||
+                          visible_grad->length() == mbs );
+                visible_grad->resize(mbs, visible_grad->width());
+                connection->bpropUpdate(
+                    *visible, *hidden_act,
+                    *visible_grad, hidden_act_grad, true);
+            }
+            else
+            {
+                visible_exp_grad.resize(mbs,visible_layer->size);
+                connection->bpropUpdate(
+                    *visible, *hidden_act,
+                    visible_exp_grad, hidden_act_grad, true);
+            }
         }
-        // Connection update
-        if(compute_visible_grad)
+        else if (hidden_grad && hidden_grad->isEmpty()) // copy the hidden gradient
         {
-            // The length of 'visible_grad' must be either 0 (if not computed
-            // previously) or the size of the mini-batches (otherwise).
-            PLASSERT( visible_grad->width() == visible_layer->size &&
-                      visible_grad->length() == 0 ||
-                      visible_grad->length() == mbs );
-            visible_grad->resize(mbs, visible_grad->width());
-            connection->bpropUpdate(
-                *visible, *hidden_act,
-                *visible_grad, hidden_act_grad, true);
+            hidden_grad->resize(mbs,hidden_layer->size);
+            *hidden_grad << hidden_exp_grad;
         }
-        else
-        {
-            visible_exp_grad.resize(mbs,visible_layer->size);
-            connection->bpropUpdate(
-                *visible, *hidden_act,
-                visible_exp_grad, hidden_act_grad, true);
-        }
+
         partition_function_is_stale = true;
     }
 
