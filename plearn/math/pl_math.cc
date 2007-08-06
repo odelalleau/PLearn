@@ -155,7 +155,7 @@ real tabulated_softplus_primitive(real x) {
 }
 
 // compute log(exp(log_a)+exp(log_b)) without losing too much precision
-real logadd(real log_a, real log_b)
+real logadd(double log_a, double log_b)
 {
     if (log_a < log_b)
     { // swap them
@@ -163,10 +163,10 @@ real logadd(real log_a, real log_b)
         log_a = log_b;
         log_b = tmp;
     }
-    real negative_absolute_difference = log_b - log_a;
+    double negative_absolute_difference = log_b - log_a;
     if (negative_absolute_difference < MINUS_LOG_THRESHOLD)
         return log_a;
-    return log_a + log1p(exp(negative_absolute_difference));
+    return (real)(log_a + log1p(exp(negative_absolute_difference)));
 }
 
 real square_f(real x)

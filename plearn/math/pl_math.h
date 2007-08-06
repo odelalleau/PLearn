@@ -548,8 +548,9 @@ real safeflog2(real a);
 typedef real (*tRealFunc)(real);
 typedef real (*tRealReadFunc)(real,real);
 
-//!  compute log(exp(log_a)+exp(log_b)) without losing too much precision
-real logadd(real log_a, real log_b);
+//! compute log(exp(log_a)+exp(log_b)) without losing too much precision
+//! (doing the computation in double precision)
+real logadd(double log_a, double log_b);
 
 //!  compute log(exp(log_a)-exp(log_b)) without losing too much precision
 real logsub(real log_a, real log_b);
