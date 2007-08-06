@@ -206,6 +206,12 @@
 #include <plearn_learners/online/ModuleStackModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
+#include <plearn_learners/online/RBMModule.h>
+#include <plearn_learners/online/NetworkModule.h>
+#include <plearn_learners/online/ModuleLearner.h>
+#include <plearn_learners/online/NullModule.h>
+#include <plearn_learners/online/SplitModule.h>
+#include <plearn_learners/online/LinearCombinationModule.h>
 #include <plearn_learners/online/RBMBinomialLayer.h>
 #include <plearn_learners/online/RBMClassificationModule.h>
 #include <plearn_learners/online/RBMConnection.h>
