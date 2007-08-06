@@ -83,6 +83,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - KURT         -  Excess Kurtosis == E(X-mu)^4 / sigma^4 - 3\n"
     "  - MIN          -  Minimum value\n"
     "  - MAX          -  Maximum value\n"
+    "  - AGEMIN       -  How many observations ago the min was observed\n"
+    "  - AGEMAX       -  How many observations ago the max was observed\n"
     "  - RANGE        -  The range, i.e. MAX - MIN\n"
     "  - SUM          -  Sum of observations \n"
     "  - SUMSQ        -  Sum of squares\n"
@@ -161,6 +163,8 @@ StatsCollector::StatsCollector(int the_maxnvalues)
       sumfourth_(0.),
       min_(MISSING_VALUE),
       max_(MISSING_VALUE),
+      agemin_(MISSING_VALUE),
+      agemax_(MISSING_VALUE),
       first_(MISSING_VALUE),
       last_(MISSING_VALUE),
       more_than_maxnvalues(false),
@@ -270,6 +274,16 @@ void StatsCollector::declareOptions(OptionList& ol)
         ol, "max_", &StatsCollector::max_,
         OptionBase::learntoption,
         "the max");
+
+    declareOption(
+        ol, "agmemin_", &StatsCollector::agemin_,
+        OptionBase::learntoption,
+        "How many observations ago the min was observed");
+
+    declareOption(
+        ol, "agemax_", &StatsCollector::agemax_,
+        OptionBase::learntoption,
+        "How many observations ago the max was observed");
     
     declareOption(
         ol, "first_", &StatsCollector::first_,
@@ -348,6 +362,8 @@ void StatsCollector::forget()
     sumfourth_ = 0.;
     min_ = MISSING_VALUE;
     max_ = MISSING_VALUE;
+    agemin_ = MISSING_VALUE;
+    agemax_ = MISSING_VALUE;
     first_ = last_ = MISSING_VALUE;
     more_than_maxnvalues = (maxnvalues == 0);
     approximate_counts.clear();
@@ -375,10 +391,18 @@ void StatsCollector::update(real val, real weight)
         last_ = val;
         if(fast_exact_is_equal(nnonmissing_,0))    // first value encountered
             min_ = max_ = first_ = last_ = val;
-        else if(val<min_)
+        else if(val<min_) {
             min_ = val;
-        else if(val>max_)
+            agemin_ = 0;
+        }
+        else if(val>max_) {
             max_ = val;
+            agemax_ = 0;
+        }
+        else {
+            ++agemax_;                       // works even if they are missing
+            ++agemin_;
+        }
         nnonmissing_ += weight;
         sumsquarew_  += weight * weight;
         double sqval = (val-first_)*(val-first_);
@@ -931,6 +955,8 @@ real StatsCollector::getStat(const string& statname) const
         statistics["KURT"]        = STATFUN(&StatsCollector::kurtosis);
         statistics["MIN"]         = STATFUN(&StatsCollector::min);
         statistics["MAX"]         = STATFUN(&StatsCollector::max);
+        statistics["AGEMIN"]      = STATFUN(&StatsCollector::agemin);
+        statistics["AGEMAX"]      = STATFUN(&StatsCollector::agemax);
         statistics["RANGE"]       = STATFUN(&StatsCollector::range);
         statistics["SUM"]         = STATFUN(&StatsCollector::sum);
         statistics["SUMSQ"]       = STATFUN(&StatsCollector::sumsquare);
@@ -977,7 +1003,7 @@ real StatsCollector::getStat(const string& statname) const
   
     map<string,STATFUN>::iterator fun = statistics.find(statname);
     if (fun == statistics.end())
-        PLERROR("In StatsCollector::getStat, invalid statname %s",
+        PLERROR("In StatsCollector::getStat, invalid statname '%s'",
                 statname.c_str());
     else
         return (this->*(fun->second))();
@@ -1241,14 +1267,28 @@ void StatsCollector::merge(const StatsCollector& other)
     nnonmissing_+= other.nnonmissing_;
     sumsquarew_+= other.sumsquarew_;
 
-    min_= std::min(min_, other.min_);
-    max_= std::max(max_, other.max_);
-    last_= other.last_; //assume this is first and other is last.
+    // In merging first/last/ages, we assume that 'this' comes first, and
+    // 'other' comes last.
+    if (other.min_ < min_) {
+        min_ = other.min_;
+        agemin_ = other.agemin_;
+    }
+    else {
+        agemin_ += other.n();
+    }
+    
+    if (other.max_ > max_) {
+        max_ = other.max_;
+        agemax_ = other.agemax_;
+    }
+    else {
+        agemax_ += other.n();
+    }
+    last_= other.last_; // assume this is first and other is last.
     sorted = false;
 
     if (storeCounts())//now merge counts
-    {
-        
+    {        
         int nextid= 0;
         set<real> already_merged;
         map<real,StatsCollectorCounts>::iterator it;

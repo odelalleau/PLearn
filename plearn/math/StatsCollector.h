@@ -182,6 +182,8 @@ public:
     double sumfourth_;     //!< sum of fourth-power of all (values-first_)
     real min_;             //!< the min
     real max_;             //!< the max
+    real agemin_;          //!< how many observations ago the min was observed
+    real agemax_;          //!< how many observations ago the max was observed
     real first_;           //!< first encountered nonmissing observation
     real last_;            //!< last encountered nonmissing observation
     bool more_than_maxnvalues;
@@ -232,6 +234,8 @@ public:
                                                       first_*first_*nnonmissing_); }
     real min() const                    { return min_; }
     real max() const                    { return max_; }
+    real agemin() const                 { return agemin_; }
+    real agemax() const                 { return agemax_; }
     real range() const                  { return max_ - min_; }
     real mean() const                   { return real(sum()/nnonmissing_); }
     //! The normalization for variance (nnonmissing_ - sumsquarew_/nnonmissing_)
