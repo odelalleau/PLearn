@@ -368,6 +368,12 @@ class plopt(object):
                     elem_type = str
             casted = list_cast(value, elem_type)
 
+        elif self._type is dict:
+            if isinstance(value, str):
+                casted = eval(value)
+            else:
+                casted = value
+            
         # Simple type cast
         else:
             casted = self._type(value)
