@@ -542,9 +542,13 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
                 PLERROR("In AddCostToLearner::computeCostsFromOutputs - confusion_matrix_target(%d) "
                         "not in the range of target_length(%d)", confusion_matrix_target, target_length);            
             if (sub_learner_output[confusion_matrix_target] >= n_classes
-                || desired_target[confusion_matrix_target] >= n_classes)
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - confusion_matrix sub_learner_output[i](%f) "
-                        "or desired_target[i](%d) higher or egual to n_classes (%d)", sub_learner_output[confusion_matrix_target],
+                || is_missing(sub_learner_output[confusion_matrix_target]))
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of sub_learner: sub_learner_output[confusion_matrix_target]=%f,  "
+                        " missing or higher or egual to n_classes (%d)",
+                        sub_learner_output[confusion_matrix_target],n_classes);
+            if (desired_target[confusion_matrix_target] >= n_classes
+                ||is_missing(desired_target[confusion_matrix_target]))
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of desired_target[i]=%f, missing or higher or egual to n_classes (%d)",
                         desired_target[confusion_matrix_target], n_classes);
 #endif
             for(int local_ind = ind_cost ; local_ind < (n_classes*n_classes+ind_cost); local_ind++){
