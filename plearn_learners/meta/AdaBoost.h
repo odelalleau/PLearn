@@ -44,6 +44,7 @@
 #define AdaBoost_INC
 
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn_learners/regressors/RegressionTreeRegisters.h>
 
 namespace PLearn {
 using namespace std;
@@ -76,7 +77,9 @@ protected:
 
     //! Indication that a weak learner with 0 training error has been found
     bool found_zero_error_weak_learner;
-  
+
+    //! a sorted train set when using a tree as a base regressor  
+    PP<RegressionTreeRegisters> sorted_train_set;
 public:
 
     // ************************
