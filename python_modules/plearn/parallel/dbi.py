@@ -12,6 +12,7 @@ from utils import *
 from configobj import ConfigObj
 from textwrap import dedent
 import pdb
+from threading import Thread,BoundedSemaphore
 from time import sleep
 #from plearn.pymake import pymake
 
@@ -593,10 +594,10 @@ class DBICondor(DBIBase):
 
 
     def run(self):
-        if len(self.pre_batch)>0):
+        if len(self.pre_batch)>0:
             exec_pre_batch()
         self.run_all_job()
-        if len(self.post_batch)>0):
+        if len(self.post_batch)>0:
             exec_post_batch()
 
 
@@ -609,9 +610,11 @@ class DBILocal(DBIBase):
 
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
-
+        self.args=args
+        self.threads=[]
+        self.nb_proc=1
         for command in commands:
-            addjobs(command)
+            self.add_command(command)
             
     def add_command(self,command):
         pos = string.find(command,' ')
@@ -637,7 +640,7 @@ class DBILocal(DBIBase):
             raise Exception("The command '"+c+"' do not have execution permission!")
         self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                self.time_format, self.pre_tasks,
-                               self.post_tasks,self.dolog,args))
+                               self.post_tasks,self.dolog,self.args))
         
         #keeps a list of the temporary files created, so that they can be deleted at will            
 
@@ -647,6 +650,11 @@ class DBILocal(DBIBase):
         # Launch condor
         output = PIPE
         error = PIPE
+        if not self.file_redirect_stdout and self.nb_proc>1:
+            print "[DBI] WARNING: many process but all their stdout are redirected to the parent"
+        if not self.file_redirect_stderr and self.nb_proc>1:
+            print "[DBI] WARNING: many process but all their stderr are redirected to the parent"
+            
         if int(self.file_redirect_stdout):
             output = file(self.log_file + '.out', 'w')
         if int(self.file_redirect_stderr):
@@ -654,8 +662,11 @@ class DBILocal(DBIBase):
 
         c = (';'.join(task.commands))
         if self.test == False:
+            self.sema.acquire()
             print c
-            os.system(c)
+            p = Popen(c, shell=True,stdout=output,stderr=error)
+            p.wait()
+            self.sema.release()
         else:
             print c
             
@@ -669,23 +680,25 @@ class DBILocal(DBIBase):
                 pass
             pass    
 
-
     def run(self):
         if self.test:
             print "Test mode, we only print the command to be executed, we don't execute them"
-        for (task,ind) in zip(self.tasks,range(len(self.tasks))):
-            print "Will execute command %d/%d"%(ind+1,len(self.tasks))
-            self.run_one_job(task)
 
         # Execute pre-batch
         output = PIPE
         error = PIPE
         if len(self.pre_batch)>0:
             exec_pre_batch()
-
+        
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        for task in self.tasks:
-            self.run_one_job(task)
+        self.sema=BoundedSemaphore(int(self.nb_proc))
+        for (task,ind) in zip(self.tasks,range(len(self.tasks))):
+            t=Thread(target=self.run_one_job,args=(task,))
+            t.start()
+            self.threads.append(t)
+
+        for t in self.threads:
+            t.join()
 
         # Execute post-batchs
         if len(self.post_batch)>0:

@@ -2,7 +2,7 @@
 import sys,os,re,time
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>] [--32|--64|--3264]'
+ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local[=nb_process]] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>] [--32|--64|--3264]'
 LongHelp="""
 Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
 
@@ -60,6 +60,7 @@ otherargs = []
 FILE = ""
 REQ = ""
 ARCH = ""
+NB_PROC=None
 for argv in sys.argv[1:]:
 
     if argv == "--help" or argv == "-h":
@@ -69,10 +70,13 @@ for argv in sys.argv[1:]:
         optionargs.append(argv[2:])
     elif argv == "--log":
         optionargs.append(argv[2:])
-    elif argv == "--cluster" and not "local" in optionargs:
+    elif argv == "--cluster":
         optionargs.append(argv[2:])
-    elif argv == "--local" and not "cluster" in optionargs:
-        optionargs.append(argv[2:])
+    elif argv[0:7] == "--local":
+        optionargs.append(argv[2:7])
+        if len(argv)>7:
+            assert(argv[7]=="=")
+            NB_PROC=argv[8:]
     elif argv == "--test":
         optionargs.append(argv[2:])
     elif argv[0:7] == "--file=":
@@ -165,7 +169,9 @@ else:
     dbi_param["dolog"]=False
 if ARCH!="":
     dbi_param["arch"]=ARCH
-    
+if NB_PROC:
+    dbi_param["nb_proc"]=NB_PROC
+
 if "test" in optionargs:
     print "We generated %s command in the file"% len(commands)
     print "The script %s was not launched"% ScriptName
