@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import sys,os,re
+import sys,os,re,time
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>]'
+ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>] [--32|--64|--3264]'
 LongHelp="""
 Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
 
@@ -59,6 +59,7 @@ optionargs = []
 otherargs = []
 FILE = ""
 REQ = ""
+ARCH = ""
 for argv in sys.argv[1:]:
 
     if argv == "--help" or argv == "-h":
@@ -76,6 +77,9 @@ for argv in sys.argv[1:]:
         optionargs.append(argv[2:])
     elif argv[0:7] == "--file=":
         FILE = argv[7:]
+        optionargs.append(argv[2:])
+    elif argv == "--32"  or argv == "--64" or argv == "--3264":
+        ARCH=argv[2:]
         optionargs.append(argv[2:])
     elif argv[0:6] == "--req=":
         REQ = argv[6:]
@@ -95,14 +99,6 @@ if "local" in optionargs and "cluster" in optionargs:
     print "--cluster and --local can't be used together"
     sys.exit(1)
 
-
-SCRIPT=open(ScriptName,'w');
-SCRIPT.write(
-"""#! /usr/bin/env python
-#%s
-from plearn.parallel.dbi import DBI
-jobs = DBI([
-"""% " ".join(sys.argv))
 def generate_combination(repl):
     if repl == []:
         return []
@@ -118,7 +114,7 @@ def generate_combination(repl):
                     res.append(y+" "+r)
         return res
 
-def expendAndPrintArgs(sp):
+def generate_commands(sp):
 ### Find replacement lists in the arguments
     repl = []
     for arg in sp:
@@ -138,56 +134,70 @@ def expendAndPrintArgs(sp):
             repl.append([arg])
 #    print "repl: ",repl
     argscombination = generate_combination(repl)
-    for arg in argscombination:
-        cmdstr = "".join(arg);
-	SCRIPT.write("   '%s',\n"%cmdstr)
-    return len(argscombination)
+    return argscombination
 
-nbcommand=0
-#print the command
+#generate the command
 if FILE != "":
     FD = open(FILE,'r')#|| die "couldn't open the file $FILE!";
     for line in FD.readlines():
         line = line.rstrip()
 	sp = line.split(" ")
-	nbcommand+=expendAndPrintArgs(sp)
+        commands=generate_commands(sp)
     FD.close
 else:
-    nbcommand=expendAndPrintArgs(otherargs)
-
+    commands=generate_commands(otherargs)
 
 if "cluster" in optionargs:
-    SCRIPT.write("   ],'Cluster'")
+    launch_cmd='Cluster'
 elif "local" in optionargs:
-    SCRIPT.write("   ],'Local'")
+    launch_cmd='Local'
 else:
-    SCRIPT.write("   ],'Condor'")
+    launch_cmd='Condor'
 
-
+dbi_param={}
 if REQ != "":
-    SCRIPT.write(", requirements=\"$REQ\"")
-
+    dbi_param["requirements"]="\"%s\""%REQ
 if "test" in optionargs:
-    SCRIPT.write(", test=True")
-
+    dbi_param["test"]=True
 if "log" in optionargs:
-    SCRIPT.write(", dolog=True")
+    dbi_param["dolog"]=True
 else:
-    SCRIPT.write(", dolog=False")
-
-SCRIPT.write( """)
-jobs.run()
-# There is %d command in the script"""%(nbcommand))
-
-SCRIPT.close()
-os.system("chmod +x %s"%(ScriptName));
-
-print "We generated %s command in the file"% nbcommand
-
+    dbi_param["dolog"]=False
+if ARCH!="":
+    dbi_param["arch"]=ARCH
+    
 if "test" in optionargs:
+    print "We generated %s command in the file"% len(commands)
     print "The script %s was not launched"% ScriptName
-else:
-    print "Launching the script %s"% ScriptName
-    os.system("./%s"%(ScriptName))
+    SCRIPT=open(ScriptName,'w');
+    SCRIPT.write(
+"""#! /usr/bin/env python
+#%s
+from plearn.parallel.dbi import DBI
+jobs = DBI([
+"""% " ".join(sys.argv))
+    for arg in commands:
+        cmdstr = "".join(arg);
+        SCRIPT.write("   '%s',\n"%cmdstr)
+    SCRIPT.write("   ],'%s'"%(launch_cmd))
+    for key in dbi_param.keys():
+        SCRIPT.write(","+str(key)+"="+str(dbi_param[key]))
+    SCRIPT.write(
+""")
+jobs.run()
+# There is %d command in the script"""%(len(commands)))
+        
+    SCRIPT.close()
+    os.system("chmod +x %s"%(ScriptName));
 
+else:
+    print "We generate the DBI object with %s command"%(len(commands))
+    from plearn.parallel.dbi import *
+    t1=time.time()
+    jobs = DBI(commands,launch_cmd,**dbi_param)
+    t2=time.time()
+    print "it took %f s to create the DBI objects"%(t2-t1)
+    jobs.run()
+    t3=time.time()
+    print "it took %f s to launch all the commands"%(t3-t2)
 
