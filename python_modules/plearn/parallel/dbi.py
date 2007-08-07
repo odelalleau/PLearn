@@ -37,7 +37,7 @@ class DBIBase:
         # the( human readable) time format used in log file
         self.time_format = "%Y-%m-%d/%H:%M:%S"
 
-        # Commands to be executed once before the entire batch
+        # Commands to be executed once before the entire batch on the submit node
         self.pre_batch = []
         # Commands to be executed before every task in tasks
         self.pre_tasks = []
@@ -45,7 +45,7 @@ class DBIBase:
         self.tasks = []
         # Commands to be executed after each task in tasks
         self.post_tasks = []
-        # Commands to be executed once after the entire batch
+        # Commands to be executed once after the entire batch on the submit node
         self.post_batch = []
 
         # the default directory where to keep all the log files
@@ -263,6 +263,7 @@ class DBICluster(DBIBase):
             task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
+        print "The Log file are under %s"%self.log_dir
         if self.test:
             print "Test mode, we only print the command to be executed, we don't execute them"
         # Execute pre-batch
@@ -278,6 +279,7 @@ class DBICluster(DBIBase):
             exec_post_batch()
 
         print "The Log file are under %s"%self.log_dir
+
     def clean(self):
         #TODO: delete all log files for the current batch
         pass
@@ -363,9 +365,11 @@ class DBIbqtools(DBIBase):
                 concurrentJobs = 200
 
                 ''') )
-#                preBatch = ''' + pre_batch_command + '''
-#                postBatch = ''' + post_batch_command +'''
         bqsubmit_dat.close()
+
+        # Execute pre-batch
+        if len(self.pre_batch)>0:
+            exec_pre_batch()
 
         # Launch bqsubmit
         output = PIPE
@@ -378,6 +382,11 @@ class DBIbqtools(DBIBase):
 
         os.chdir('parent')
 
+        # Execute post-batchs
+        if len(self.post_batch)>0:
+            exec_post_batch()
+
+            
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
@@ -507,8 +516,6 @@ class DBICondor(DBIBase):
                        self.log_dir,self.targetcondorplatform,self.unique_id,
                        self.log_dir,self.targetcondorplatform,self.unique_id,
                        self.log_dir,self.targetcondorplatform)))
-#                preBatch = ''' + pre_batch_command + '''
-#                postBatch = ''' + post_batch_command +'''
 
         if len(condor_datas)!=0:
             for i in condor_datas:
@@ -594,6 +601,8 @@ class DBICondor(DBIBase):
 
 
     def run(self):
+        print "The Log file are under %s"%self.log_dir
+
         if len(self.pre_batch)>0:
             exec_pre_batch()
         self.run_all_job()
@@ -645,16 +654,9 @@ class DBILocal(DBIBase):
         #keeps a list of the temporary files created, so that they can be deleted at will            
 
     def run_one_job(self,task):
-        launch_file = os.path.join(self.tmp_dir, 'launch.sh')
-
-        # Launch condor
+            
         output = PIPE
         error = PIPE
-        if not self.file_redirect_stdout and self.nb_proc>1:
-            print "[DBI] WARNING: many process but all their stdout are redirected to the parent"
-        if not self.file_redirect_stderr and self.nb_proc>1:
-            print "[DBI] WARNING: many process but all their stderr are redirected to the parent"
-            
         if int(self.file_redirect_stdout):
             output = file(self.log_file + '.out', 'w')
         if int(self.file_redirect_stderr):
@@ -682,11 +684,14 @@ class DBILocal(DBIBase):
 
     def run(self):
         if self.test:
-            print "Test mode, we only print the command to be executed, we don't execute them"
+            print "[DBI] Test mode, we only print the command to be executed, we don't execute them"
+        if not self.file_redirect_stdout and self.nb_proc>1:
+            print "[DBI] WARNING: many process but all their stdout are redirected to the parent"
+        if not self.file_redirect_stderr and self.nb_proc>1:
+            print "[DBI] WARNING: many process but all their stderr are redirected to the parent"
+        print "The Log file are under %s"%self.log_dir
 
         # Execute pre-batch
-        output = PIPE
-        error = PIPE
         if len(self.pre_batch)>0:
             exec_pre_batch()
         
@@ -801,6 +806,8 @@ class DBISsh(DBIBase):
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
+        print "The Log file are under %s"%self.log_dir
+
         # Execute pre-batch
         if len(self.pre_batch)>0:
             exec_pre_batch()
