@@ -321,14 +321,15 @@ void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
     root->computeOutput(inputv, outputv);
     if (multiclass_outputs.length() <= 0) return;
-    real closest_value;
-    real margin_to_closest_value;
-    for (int value_ind = 0; value_ind < multiclass_outputs.length(); value_ind++)
+    real closest_value=multiclass_outputs[0];
+    real margin_to_closest_value=abs(outputv[0] - multiclass_outputs[0]);
+    for (int value_ind = 1; value_ind < multiclass_outputs.length(); value_ind++)
     {
-        if (value_ind == 0 || abs(outputv[0] - multiclass_outputs[value_ind]) < margin_to_closest_value)
+        real v=abs(outputv[0] - multiclass_outputs[value_ind]);
+        if (v < margin_to_closest_value)
         {
             closest_value = multiclass_outputs[value_ind];
-            margin_to_closest_value = abs(outputv[0] - multiclass_outputs[value_ind]);
+            margin_to_closest_value = v;
         }
     }
     outputv[0] = closest_value;
