@@ -844,7 +844,6 @@ class PLearnWorkQueue( object ):
 
 #####  C++ Functional Interface  ############################################
 
-#global plide_main_window
 plide_main_window = None
 
 def StartPlide(argv = [], streams_to_watch= {}):
@@ -944,8 +943,6 @@ if __name__ == "__main__":
     #class Poubelle:
     #    def __getattr__(self, attr): return None
 
-    global plide_main_window
-    global injected
     injected = Poubelle()
     
     StartPlide(streams_to_watch= {injected.errstm.fileno(): 'injected-stderr'})
