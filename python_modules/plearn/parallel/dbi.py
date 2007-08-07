@@ -618,10 +618,10 @@ class DBICondor(DBIBase):
 class DBILocal(DBIBase):
 
     def __init__( self, commands, **args ):
+        self.nb_proc=1
         DBIBase.__init__(self, commands, **args)
         self.args=args
         self.threads=[]
-        self.nb_proc=1
         for command in commands:
             self.add_command(command)
             
