@@ -361,7 +361,8 @@ class plopt(object):
         elif self._type is list :
             elem_type = self._kwargs.pop("elem_type", None) 
             if elem_type is None:
-                if len(self.get()) > 0:
+                got= self.get()
+                if got!=None and len(got) > 0:
                     elem_type = type(self.get()[0])
                 else:
                     elem_type = str
