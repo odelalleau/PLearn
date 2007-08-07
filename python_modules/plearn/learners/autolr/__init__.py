@@ -489,6 +489,7 @@ def train_adapting_lr(learner,
     all_last_err = [best_err]
     all_lr = [initial_lr]
     all_start = [0]
+    all_end = [-1]
     actives = [0]
     best_candidate = learner
     best_early_stop = stages[0]
@@ -500,10 +501,11 @@ def train_adapting_lr(learner,
     for t in range(n_train):
         stage=stages[t]
         if logfile:
-            print >>logfile, "After ", stage, "stage"
-        print "After",stage,"stages, actives now: ",actives, " with lr=", array(all_lr)[actives]
+            print >>logfile, "Before epoch",t+1
+            print >>logfile, "Actives now: ",actives
+            print >>logfile, " with lr=", array(all_lr)[actives]
+        print "Before epoch %d/%d"%(t,n_train),"actives now: ",actives, " with lr=", array(all_lr)[actives]
         print "current best actives:",best_active,"best_error:",all_last_err[best_active],"lr:",all_lr[best_active]
-        print >>logfile, "actives now: ",actives, " with lr=", array(all_lr)[actives]
 
         threads = []
         active_stats = []
@@ -593,6 +595,8 @@ def train_adapting_lr(learner,
                             best_err = err
                             best_active = active
                             best_early_stop = stage
+                            best_early_stop_candidate = active
+                            best_early_stop_epoch = t
                             if return_best_model:
                                 best_candidate = deepcopy(candidate,
                                                           use_threads)
@@ -633,6 +637,7 @@ def train_adapting_lr(learner,
                         print >>logfile,"REMOVE candidate ",a
                     release_server(all_candidates[a], use_threads)
                     # hopefully this destroys the candidate
+                    all_end[a]=t
                     all_candidates[a]=None
                     del actives[j-ndeleted]
                     ndeleted+=1
@@ -650,6 +655,7 @@ def train_adapting_lr(learner,
                 all_results.append(all_results[best_active].copy())
                 all_last_err.append(best_last)
                 all_start.append(t)
+                all_end.append(-1)
                 if logfile:
                     print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at stage ",learner.stage," with lr=",all_lr[new_a]
                     logfile.flush()
@@ -661,6 +667,18 @@ def train_adapting_lr(learner,
         schedules[:,1+optimized_group]=all_results[best_active][:,1]
     if logfile and best_err < all_last_err[best_active]:
         print >>logfile, "WARNING: best performing model would have stopped early at stage ",best_early_stop
+    if logfile:
+        print >>logfile,"When then learner started",all_start
+        print >>logfile,"When then learner ended",all_end
+        l=[]
+        for i in range(len(all_start)):
+            if all_end[i]==-1:
+                l.append(abs(all_start[i]-n_train))
+            else:
+                l.append(abs(all_start[i]-all_end[i]+1))
+        print >>logfile,"Duration of all learner in number of epoch:",l
+        sum=reduce(lambda x,y:x+y, l)
+        print >>logfile,"Their was a total of %d epoch executed for %d asked(%fx more)"%(sum,n_train,float(sum)/n_train)
     return (# Learner
             final_model,
             # Matrix of schedules (including the one that was optimized)
@@ -677,5 +695,5 @@ def train_adapting_lr(learner,
             all_start,
             # Timestep (in stages) at which early-stopping should have happened
             # (i.e. stage of best error found)
-            best_early_stop)
+            (best_early_stop,best_early_stop_candidate,best_early_stop_epoch))
 
