@@ -461,12 +461,7 @@ PyObject* integerToPyObject(const I& x)
 template<typename T>
 struct ConvertToPyObject
 {
-    static PyObject* newPyObject(const T& x)
-    {
-        PLERROR("Cannot convert type %s by value to python.",
-                TypeTraits<T>::name().c_str());
-        return 0;//shut up compiler
-    }
+    static PyObject* newPyObject(const T& x);
 };
 
 // Specialization for Object*
@@ -1086,9 +1081,36 @@ std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
 
 
 //#####  newPyObject Implementations  #########################################
+template<typename T, bool is_enum>
+struct StaticConvertEnumToPyObject
+{
+    static PyObject* newPyObject(const T& x)
+    {
+        PLERROR("Cannot convert type %s by value to python.",
+                TypeTraits<T>::name().c_str());
+        return 0;//shut up compiler
+    }
+};
+
+template<typename T>
+struct StaticConvertEnumToPyObject<T, true>
+{
+    static PyObject* newPyObject(const T& x)
+    {
+        return ConvertToPyObject<int>::newPyObject(x);
+    }
+};
+
+template<typename T>
+PyObject* ConvertToPyObject<T>::newPyObject(const T& x)
+{
+    return StaticConvertEnumToPyObject<T, boost::is_enum<T>::value>
+        ::newPyObject(x);
+}
+
 
 template<size_t N>
-PyObject*  ConvertToPyObject<char[N]>::newPyObject(const char x[N])
+PyObject* ConvertToPyObject<char[N]>::newPyObject(const char x[N])
 {
     return ConvertToPyObject<char*>::newPyObject(x);
 }
