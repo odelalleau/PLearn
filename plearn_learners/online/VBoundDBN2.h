@@ -229,7 +229,6 @@ public:
     //! the most common case.
     virtual const TVec<string>& getPorts();
 
-    /* Optional
     //! Return the size of all ports, in the form of a two-column matrix, where
     //! each row represents a port, and the two numbers on a row are
     //! respectively its length and its width (with -1 representing an
@@ -242,6 +241,7 @@ public:
     //!           second row if nPorts() >= 2
     virtual const TMat<int>& getPortSizes();
 
+    /* Optional
     //! Return the index (as in the list of ports returned by getPorts()) of
     //! a given port.
     //! If 'port' does not exist, -1 is returned.
@@ -289,6 +289,7 @@ private:
     Mat all_h; // for computing exact likelihood
     Mat neglogP2h;
     TVec<string> ports;
+    TMat<int> sizes;
 };
 
 // Declares a few other classes and functions related to this class

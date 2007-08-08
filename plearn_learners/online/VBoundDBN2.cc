@@ -262,8 +262,11 @@ const TVec<string>& VBoundDBN2::getPorts() {
 // getPortSizes //
 //////////////////
 const TMat<int>& VBoundDBN2::getPortSizes() {
-    TMat<int> sizes(nPorts(),2);
-    sizes.fill(-1);
+    if (sizes.width()!=2)
+    {
+        sizes.resize(nPorts(),2);
+        sizes.fill(-1);
+    }
     return sizes;
 }
 
@@ -281,7 +284,7 @@ void VBoundDBN2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sampled_h_state, copies);
     deepCopyField(global_improvement_state, copies);
     deepCopyField(ph_given_v_state, copies);
-    deepCopyField(neglogphsample_given_h, copies);
+    deepCopyField(neglogphsample_given_v, copies);
     deepCopyField(all_h, copies);
     deepCopyField(all_h, copies);
     deepCopyField(neglogP2h, copies);
