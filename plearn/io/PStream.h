@@ -304,6 +304,10 @@ public:
 
     //! Writes base types to PLearn binary format
     //! TODO: forbid this mechanism for arbitrary classes?
+    template<bool x> struct chkUnsigned 
+    { template<class I> static bool notOk(I& y) { return false; } };
+    struct chkUnsigned<true> 
+    { template<class I> static bool notOk(I& y) { return y<0; } };
     template<class I>
     void writeBinaryNum(I x)
     {
@@ -332,8 +336,10 @@ public:
         x = static_cast<J>(y);
 
         // Check if there was a conversion problem (sign or overflow)
+
         if (static_cast<I>(x) != y
-            || !(numeric_limits<J>::is_signed) && y<0)
+            || !(numeric_limits<J>::is_signed) 
+            && chkUnsigned<numeric_limits<I>::is_signed>::notOk(y))
         {
             std::stringstream error;
             error << "In PStream::readBinaryNumAs, overflow error: " << std::endl
