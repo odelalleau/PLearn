@@ -968,29 +968,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                      "If neg_log_phidden is provided, it must have the same length as hidden.state");
             PLASSERT_MSG(neg_log_phidden->width()==1,"neg_log_phidden must have width 1 (single column)");
         }
-        computeVisibleActivations(*hidden,true);
-        int n_h = hidden->length();
-        int T = visible->length();
-        real default_neg_log_ph = safelog(real(n_h)); // default P(h)=1/Nh: -log(1/Nh) = log(Nh)
-        Vec old_act = visible_layer->activation;
-        neg_log_pvisible_given_phidden->resize(T,1);
-        for (int t=0;t<T;t++)
-        {
-            Vec x_t = (*visible)(t);
-            real log_p_xt=0;
-            for (int i=0;i<n_h;i++)
-            {
-                visible_layer->activation = visible_layer->activations(i);
-                real neg_log_p_xt_given_hi = visible_layer->fpropNLL(x_t);
-                real neg_log_p_hi = neg_log_phidden?(*neg_log_phidden)(i,0):default_neg_log_ph;
-                if (i==0)
-                    log_p_xt = -(neg_log_p_xt_given_hi + neg_log_p_hi);
-                else
-                    log_p_xt = logadd(log_p_xt, -(neg_log_p_xt_given_hi + neg_log_p_hi));
-            }
-            (*neg_log_pvisible_given_phidden)(t,0) = -log_p_xt;
-        }
-        visible_layer->activation = old_act;
+        computeNegLogPVisibleGivenPHidden(*visible,*hidden,neg_log_phidden,*neg_log_pvisible_given_phidden);
         found_a_valid_configuration = true;
     }
 
@@ -1217,6 +1195,33 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
     checkProp(ports_value);
 
+}
+
+void RBMModule::computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat neg_log_pvisible_given_phidden)
+{
+    computeVisibleActivations(hidden,true);
+    int n_h = hidden->length();
+    int T = visible->length();
+    real default_neg_log_ph = safelog(real(n_h)); // default P(h)=1/Nh: -log(1/Nh) = log(Nh)
+    Vec old_act = visible_layer->activation;
+    neg_log_pvisible_given_phidden.resize(T,1);
+    for (int t=0;t<T;t++)
+    {
+        Vec x_t = visible(t);
+        real log_p_xt=0;
+        for (int i=0;i<n_h;i++)
+        {
+            visible_layer->activation = visible_layer->activations(i);
+            real neg_log_p_xt_given_hi = visible_layer->fpropNLL(x_t);
+            real neg_log_p_hi = neg_log_phidden?(*neg_log_phidden)(i,0):default_neg_log_ph;
+            if (i==0)
+                log_p_xt = -(neg_log_p_xt_given_hi + neg_log_p_hi);
+            else
+                log_p_xt = logadd(log_p_xt, -(neg_log_p_xt_given_hi + neg_log_p_hi));
+        }
+        neg_log_pvisible_given_phidden(t,0) = -log_p_xt;
+    }
+    visible_layer->activation = old_act;
 }
 
 ////////////////////

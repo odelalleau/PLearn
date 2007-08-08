@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// RBMModule.h
+// VBoundDBN2.h
 //
-// Copyright (C) 2007 Olivier Delalleau
+// Copyright (C) 2007 yoshua Bengio
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,84 +32,102 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Olivier Delalleau
+// Authors: yoshua Bengio
 
-/*! \file RBMModule.h */
+/*! \file VBoundDBN2.h */
 
 
-#ifndef RBMModule_INC
-#define RBMModule_INC
+#ifndef VBoundDBN2_INC
+#define VBoundDBN2_INC
 
-#include <map>
 #include <plearn_learners/online/OnlineLearningModule.h>
-#include <plearn_learners/online/RBMConnection.h>
-#include <plearn_learners/online/RBMLayer.h>
+#include <plearn_learners/online/RBMModule.h>
 
 namespace PLearn {
 
 /**
- * The first sentence should be a BRIEF DESCRIPTION of what the class does.
- * Place the rest of the class programmer documentation here.  Doxygen supports
- * Javadoc-style comments.  See http://www.doxygen.org/manual.html
+ * 2-RBM DBN trained using Hinton's new variational bound of global likelihood:
+ * 
+ * log P(x) >= -FE1(x) + E_{P1(h|x)}[ FE1(h) - FE2(h) ] - log Z2
  *
- * @todo Write class to-do's here if there are any.
+ * where P1 and P2 are RBMs with Pi(x) = exp(-FEi(x))/Zi.
  *
- * @deprecated Write deprecated stuff here if there is any.  Indicate what else
- * should be used instead.
  */
-class RBMModule : public OnlineLearningModule
+class VBoundDBN2 : public OnlineLearningModule
 {
     typedef OnlineLearningModule inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
-    PP<RBMLayer> hidden_layer;
-    PP<RBMLayer> visible_layer;
-    PP<RBMConnection> connection;
-    PP<RBMConnection> reconstruction_connection;
+    //! ### declare public option fields (such as build options) here
+    //! Start your comments with Doxygen-compatible comments such as //!
 
-    real cd_learning_rate;
-    real grad_learning_rate;
-    bool tied_connection_weights;
-
-    bool compute_contrastive_divergence;
-
-    //! Number of Gibbs sampling steps in negative phase
-    //! of contrastive divergence.
-    int n_Gibbs_steps_CD;
-
-    //! used to generate samples from the RBM
-    int min_n_Gibbs_steps;
-    int n_Gibbs_steps_per_generated_sample;
-
-    bool compute_log_likelihood;
-    bool minimize_log_likelihood;
-
-    //#####  Public Learnt Options  ############################################
-    //! used to generate samples from the RBM
-    int Gibbs_step;
-    real log_partition_function;
-    bool partition_function_is_stale;
-
-    bool standard_cd_grad;
-    bool standard_cd_bias_grad;
-    bool standard_cd_weights_grad;
-
+    PP<RBMModule> rbm1;
+    PP<RBMModule> rbm2;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    RBMModule();
+    // ### Make sure the implementation in the .cc
+    // ### initializes all fields to reasonable default values.
+    VBoundDBN2();
 
     // Your other public member functions go here
 
-    //! given the input, compute the output (possibly resize it appropriately)
-    virtual void fprop(const Vec& input, Vec& output) const;
+    //! Perform a fprop step.
+    //! Each Mat* pointer in the 'ports_value' vector can be one of:
+    //! - a full matrix: this is data that is provided to the module, and can
+    //!                  be used to compute other ports' values
+    //! - an empty matrix: this is what we want to compute
+    //! - a NULL pointer: this is data that is not available, but whose value
+    //!                   does not need to be returned (or even computed)
+    //! The default version will either:
+    //! - call the mini-batch versions of standard fprop if 'ports_value' has
+    //!   size 2, with the first value being provided (and the second being
+    //!   the desired output)
+    //! - crash otherwise
+    void fprop(const TVec<Mat*>& ports_value);
+
+    //! Perform a back propagation step (also updating parameters according to
+    //! the provided gradient).
+    //! The matrices in 'ports_value' must be the same as the ones given in a
+    //! previous call to 'fprop' (and thus they should in particular contain
+    //! the result of the fprop computation). However, they are not necessarily
+    //! the same as the ones given in the LAST call to 'fprop': if there is a
+    //! need to store an internal module state, this should be done using a
+    //! specific port to store this state.
+    //! Each Mat* pointer in the 'ports_gradient' vector can be one of:
+    //! - a full matrix  : this is the gradient that is provided to the module,
+    //!                    and can be used to compute other ports' gradient.
+    //! - an empty matrix: this is a gradient we want to compute and accumulate
+    //!                    into. This matrix must have length 0 and a width
+    //!                    equal to the width of the corresponding matrix in
+    //!                    the 'ports_value' vector (we can thus accumulate
+    //!                    gradients using PLearn's ability to keep intact
+    //!                    stored values when resizing a matrix' length).
+    //! - a NULL pointer : this is a gradient that is not available, but does
+    //!                    not need to be returned (or even computed).
+    //! The default version tries to use the standard mini-batch bpropUpdate
+    //! method, when possible.
+    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
+                                const TVec<Mat*>& ports_gradient);
 
     /* Optional
-       THE DEFAULT IMPLEMENTATION IN SUPER-CLASS JUST RAISES A PLERROR.
+
+    //! Given the input, compute the output (possibly resize it appropriately)
+    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
+    virtual void fprop(const Vec& input, Vec& output) const;
+
+    //! Given a batch of inputs, compute the outputs
+    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
+    virtual void fprop(const Mat& inputs, Mat& outputs);
+    */
+
+    /* Optional
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
     //! Adapt based on the output gradient, and obtain the input gradient.
     //! The flag indicates wether the input_gradient is accumulated or set.
     //! This method should only be called just after a corresponding
@@ -122,9 +140,19 @@ public:
                              Vec& input_gradient,
                              const Vec& output_gradient,
                              bool accumulate=false);
+
+    //! Batch version
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             Mat& input_gradients,
+                             const Mat& output_gradients,
+                             bool accumulate=false);
     */
 
     /* Optional
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
        A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
        JUST CALLS
             bpropUpdate(input, output, input_gradient, output_gradient)
@@ -132,6 +160,12 @@ public:
     //! This version does not obtain the input gradient.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);
+
+    //! Batch version
+    //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,
+    //!                                           const TVec<Mat*>& ports_gradient)
+    virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
+                             const Mat& output_gradients);
     */
 
     /* Optional
@@ -183,34 +217,45 @@ public:
     virtual bool bpropDoesNothing();
     */
 
-    //! Throws an error (please use explicitely the two different kinds of
-    //! learning rates available here).
+    /* Optional
+       Default implementation prints a warning and does nothing
+    //! If this class has a learning rate (or something close to it), set it.
+    //! If not, you can redefine this method to get rid of the warning.
     virtual void setLearningRate(real dynamic_learning_rate);
+    */
 
-    //! Overridden.
-    virtual void fprop(const TVec<Mat*>& ports_value);
-
-    //! Overridden.
-    virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
-                                const TVec<Mat*>& ports_gradient);
-
-    //! Returns all ports in a RBMModule.
+    //! Return the list of ports in the module.
+    //! The default implementation returns a pair ("input", "output") to handle
+    //! the most common case.
     virtual const TVec<string>& getPorts();
 
-    //! The ports' sizes are given by the corresponding RBM layers.
+    /* Optional
+    //! Return the size of all ports, in the form of a two-column matrix, where
+    //! each row represents a port, and the two numbers on a row are
+    //! respectively its length and its width (with -1 representing an
+    //! undefined or variable value).
+    //! The default value fills this matrix with:
+    //!     - in the first column (lengths): -1
+    //!     - in the second column (widths):
+    //!         - -1 if nPorts() < 2
+    //!         - 'input_size' for the first row and 'output_size' for the
+    //!           second row if nPorts() >= 2
     virtual const TMat<int>& getPortSizes();
 
     //! Return the index (as in the list of ports returned by getPorts()) of
     //! a given port.
     //! If 'port' does not exist, -1 is returned.
+    //  ### Default implementation performs a simple linear search in
+    //  ### getPorts().
     virtual int getPortIndex(const string& port);
+    */
 
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_OBJECT(RBMModule);
+    PLEARN_DECLARE_OBJECT(VBoundDBN2);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -220,112 +265,10 @@ public:
 
 
 protected:
-
-    Mat* hidden_bias;
-    Mat* weights;
-
-    //! Used to store gradient w.r.t. expectations of the hidden layer.
-    Mat hidden_exp_grad;
-
-    //! Used to store gradient w.r.t. activations of the hidden layer.
-    Mat hidden_act_grad;
-
-    //! Used to store gradient w.r.t. expectations of the visible layer.
-    Mat visible_exp_grad;
-
-    //! Used to store gradient w.r.t. activations of the visible layer.
-    Mat visible_act_grad;
-
-    //! Used to store gradient w.r.t. bias of visible layer
-    Vec visible_bias_grad;
-
-    //! Used to cache the hidden layer expectations and activations
-    Mat hidden_exp_store;
-    Mat hidden_act_store;
-    Mat* hidden_act;
-    bool hidden_activations_are_computed;
-
-    bool hidden_is_output;
-
-    //! Used to store the contrastive divergence gradient w.r.t. weights.
-    Mat store_weights_grad;
-
-    //! Used to store the contrastive divergence gradient w.r.t. hidden bias.
-    Mat store_hidden_bias_grad;
-
-    //! List of port names.
-    TVec<string> ports;
-
-    //! Map from a port name to its index in the 'ports' vector.
-    map<string, int> portname_to_index;
-
-    //! Used to store inputs generated to compute the free energy.
-    Mat energy_inputs;
-
     //#####  Protected Member Functions  ######################################
-
-    //! Add a new port to the 'portname_to_index' map and 'ports' vector.
-    void addPortName(const string& name);
-
-    //! Forward the given learning rate to all elements of this module.
-    void setAllLearningRates(real lr);
-        
-    //! Forward the given learning rate to all elements of the layers
-    //! and to the reconstruction connections (NOT of the connection weights).
-    void setLearningRatesOnlyForLayers(real lr);
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
-
-public:
-    //! Compute activations on the hidden layer based on the provided
-    //! visible input.
-    //! If 'hidden_bias' is not null nor empty, then it is used as an
-    //! additional bias for hidden activations.
-    void computeHiddenActivations(const Mat& visible);
-
-    //! Compute activations on the visible layer.
-    //! If 'using_reconstruction_connection' is true, then we use the
-    //! reconstruction connection to compute these activations. Otherwise, we
-    //! use the normal connection, in a 'top->down' fashion.
-    void computeVisibleActivations(const Mat& hidden,
-                                   bool using_reconstruction_connection=false);
-
-    //! Compute activations on the hidden layer based on the provided visible
-    //! input during positive phase. This method is called to ensure hidden
-    //! hidden activations are computed only once, and during a fprop it should
-    //! always be called with the same 'visible' input.
-    //! If 'hidden_act' is not null, it is filled with the computed hidden
-    //! activations.
-    void computePositivePhaseHiddenActivations(const Mat& visible);
-
-    //! Sample hidden layer data based on the provided 'visible' inputs.
-    void sampleHiddenGivenVisible(const Mat& visible);
-
-    //! Sample visible layer data based on the provided 'hidden' inputs.
-    void sampleVisibleGivenHidden(const Mat& hidden);
-
-    //! Compute free energy on the visible layer and store it in the 'energy'
-    //! matrix.
-    //! The 'positive_phase' boolean is used to save computations when we know
-    //! we are in the positive phase of fprop.
-    void computeFreeEnergyOfVisible(const Mat& visible, Mat& energy,
-                                    bool positive_phase = true);
-
-    //! Compute free energy on the hidden layer and store it in the 'energy'
-    //! matrix.
-    void computeFreeEnergyOfHidden(const Mat& hidden, Mat& energy);
-
-    //! Compute energy of the joint (visible, hidden) configuration and store
-    //! it in the 'energy' matrix.
-    //! The 'positive_phase' boolean is used to save computations when we know
-    //! we are in the positive phase of fprop.
-    void computeEnergy(const Mat& visible, const Mat& hidden, Mat& energy,
-                       bool positive_phase = true);
-
-    void computePartitionFunction();
-
-    void computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat neg_log_pvisible_given_phidden);
 
 private:
     //#####  Private Member Functions  ########################################
@@ -337,10 +280,19 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+
+    Mat FE1v, FE1h, FE2h;
+    Mat sampled_h_state;
+    Mat global_improvement_state;
+    Mat ph_given_v_state;
+    Mat neglogphsample_given_v;
+    Mat all_h; // for computing exact likelihood
+    Mat neglogP2h;
+    TVec<string> ports;
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(RBMModule);
+DECLARE_OBJECT_PTR(VBoundDBN2);
 
 } // end of namespace PLearn
 
