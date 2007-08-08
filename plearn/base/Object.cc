@@ -751,12 +751,13 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                   (BodyDoc("Returns a deep copy of the object"),
                    RetDoc ("Deep copy.")));
 
+#ifdef PL_PYTHON_VERSION 
     declareMethod(rmm, "pyDeepCopy", &Object::pyDeepCopy,
                   (BodyDoc("Returns a pair containing a deep copy of "
                            "the object and the updated copies map."),
                    ArgDoc ("copies", "The initial copies map"),
                    RetDoc ("Deep copy, copies map")));
-
+#endif //def PL_PYTHON_VERSION 
 
 #ifdef PL_PYTHON_VERSION 
     declareMethod(rmm, "setOptionFromPython", &Object::setOptionFromPython,
