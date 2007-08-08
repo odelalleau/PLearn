@@ -367,7 +367,7 @@ if not 'nopython' in optionargs:
             print 'Cannot find numpy include dirs for python'+python_version+'.',
             print 'Make sure numpy is installed for this version of python'+\
                   ' or compile using another version of python.'
-            sys.exit()
+            sys.exit(100)
 
     numpy_lib= ' -lnumarray '
     if 'numpy' in optionargs:
