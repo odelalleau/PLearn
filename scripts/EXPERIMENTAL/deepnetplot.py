@@ -5,7 +5,7 @@ from pylab import *
 from plearn.io.server import *
 from plearn.pyplearn import *
 from plearn.plotting.netplot import *
-from numarray import *
+from numpy.numarray import *
 # from numpy.numarray import *
 #from numarray.random_array import *
 import numpy.random
@@ -80,13 +80,13 @@ class HiddenLayer:
 
         #if it's too tall, we do this little tweak
         gs = self.groupsize
-        height = self.hidden_layer.size()/gs
+        height = self.hidden_layer.size/gs
         self.nbgroups = 1
         while height > self.max_height:
             self.nbgroups+=1
-            while (self.hidden_layer.size()/gs)%self.nbgroups != 0 :
+            while (self.hidden_layer.size/gs)%self.nbgroups != 0 :
                 self.nbgroups+=1                       
-            height = self.hidden_layer.size()/gs/self.nbgroups
+            height = self.hidden_layer.size/gs/self.nbgroups
         print 'nbgroups', self.nbgroups
         
     def getMatrix(self):        
@@ -117,7 +117,7 @@ class HiddenLayer:
            self.hidden_layer[i] = row[c]
            c+=1
     def getNGroups(self):
-        return self.hidden_layer.size()/self.groupsize
+        return self.hidden_layer.size/self.groupsize
 
 
 class InteractiveRepRecPlotter:
@@ -472,8 +472,7 @@ class InteractiveRepRecPlotter:
                     matM1 = reshape(toMinusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
                     matW2 = reshape(toPlusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
                     matM2 = reshape(toPlusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
-
-                    #TODO: rajouter les deux cas  : juste un Wr et lautre : Mr ET Wr
+                   
                     produit = matW1*matM1
                     produit2 = matW2*matM2
 
@@ -484,6 +483,29 @@ class InteractiveRepRecPlotter:
                     plotMatrices([matW1,matM1,matW2,matM2,produit,produit2], [nameW + "-",nameM+"-", nameW + "+",nameM+"+",'term-to-term product (-)', 'term-to-term product (+)'])
                     ion()
                     draw()
+
+#                     if nameWr in listNames and nameMr in listNames:
+
+#                         print 'ok'
+#                         rowWr = learner.getParameterRow(nameWr, n%hl.groupsize)
+#                         rowMr = learner.getParameterRow(nameMr, int(n/hl.groupsize))
+#                         print 'ok2'
+                        
+#                         matWr1 = reshape(toMinusRow(rowWr), (-1, self.hidden_layers[i-1].groupsize))
+#                         matMr1 = reshape(toMinusRow(rowMr), (-1, self.hidden_layers[i-1].groupsize))
+#                         matWr2 = reshape(toPlusRow(rowWr), (-1, self.hidden_layers[i-1].groupsize))
+#                         matMr2 = reshape(toPlusRow(rowMr), (-1, self.hidden_layers[i-1].groupsize))
+#                         print 'ok3'
+
+#                         produit = matWr1*matMr1
+#                         produit2 = matWr2*matMr2
+
+#                         figure(4)
+#                         ioff()
+#                         clf()
+#                         plotMatrices([matWr1, matMr1, matWr2, matMr2, produit, produit2], [nameWr + "-", nameMr + "-", nameWr + "+", nameMr + "+", 't.-t.-t. product (-)', 't.-t.-t. product (+)'])
+#                         ion()
+#                         draw()
 
                 #BIAS
 
@@ -538,38 +560,6 @@ class InteractiveRepRecPlotter:
                 n = hl.matrixToLayer(event.xdata, event.ydata)
                 print 'n =',n
             
-                
-                #                 if nameW in listNames and nameM not in listNames:
-                
-                #                     row_list = []
-                #                     for j in arange(n,n+hl.groupsize):
-                #                         row_list.append(learner.getParameterRow(nameW,j))
-                #                     print row_list
-                    
-                #                     #HACK !!!
-                #                     for row in row_list:
-                #                         if len(row) == 28*28*2:
-                #                             row = array(toMinusRow(list(row)))
-                #                             print 'just hacked...'
-                #                     #END OF HACK
-                
-                #                     for j,row in enumerate(row_list):
-                #                         matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
-                #                         namesToPlot.append(nameW + '_' + str(n+j))
-                
-                #                     if nameWr in listNames:
-                
-                #                         row = learner.getParameterRow(nameWr,n)
-                
-                #                         #HACK !!!
-                #                         print 'just hacked...'
-                #                         if i==1 and len(row) == 28*28*2:
-                #                             row = array(toMinusRow(list(row)))
-                #                         #END OF HACK 
-                
-                #                         matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
-                #                         namesToPlot.append(nameWr)
-
                 if nameW in listNames and nameM not in listNames:                
 
                     n = n - n%hl.groupsize
@@ -583,48 +573,7 @@ class InteractiveRepRecPlotter:
                     ion()
                     draw()
                     
-                #if nameM in listNames and nameM in listNames:
-                    
-                   # index_w = n%hl.groupsize
-                   # index_m = int(n/hl.groupsize)#
 
-#                    figure(3)
-#                    ioff()                    
-#                    clf()
-#                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.01, toMinusRow)
-#                    ion()
-#                    draw()
-#                    
-#                    figure(4)
-#                    ioff()
-#                    clf()
-#                    plotLayer1(learner.getParameterValue(nameM), 28, .1, n, hl.groupsize,.01, toMinusRow)
-#                    ion()
-#                    draw()
-                    
-                #  if nameW in listNames and nameM in listNames:
-                
-                #                     rowW = learner.getParameterRow(nameW,x)
-                #                     rowM = learner.getParameterRow(nameM,y)
-                
-                #                     #HACK !!!
-                #                     #print 'just hacked...'
-                #                     #if i==1 and len(row) == 28*28*2:
-                #                     #    row = array(toMinusRow(row))
-                #                     #END OF HACK
-                
-                #                     rowW = reshape(rowW, (-1,self.hidden_layers[i-1].groupsize))
-                #                     rowM = reshape(rowM,(-1,self.hidden_layers[i-1].groupsize))
-                
-                #                     #TODO: rajouter les deux cas  : juste un Wr et lautre : Mr ET Wr
-                
-                #                     produit = rowW*rowM                   
-                
-                #                     figure(3)
-                
-                #                     clf()                  
-                #                     plotMatrices([rowW,rowM,produit], [nameW,nameM, 'term-to-term product'])
-                #                     draw()
 
 
             # like 'w' on the max of each row -- 'C'
@@ -673,7 +622,25 @@ class InteractiveRepRecPlotter:
                     figure(4)
                     ioff()
                     clf()
-                    plotLayer1(learner.getParameterValue(nameM), 28, .05,0,0,.01,toMinusRow,indexes,names)
+                    plotLayer1(learner.getParameterValue(nameM), 28, .056,0,0,.01,toMinusRow,indexes,names)
+                    ion()
+                    draw()
+
+                if nameWr in listNames:
+
+                    figure(5)
+                    ioff()
+                    clf()
+                    plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.01,toMinusRow,indexes,names)
+                    ion()
+                    draw()
+
+                if nameMr in listNames:
+
+                    figure(6)
+                    ioff()
+                    clf()
+                    plotLayer1(learner.getParameterValue(nameMr), 28, .056,0,0,.01,toMinusRow,indexes,names)
                     ion()
                     draw()
                     
