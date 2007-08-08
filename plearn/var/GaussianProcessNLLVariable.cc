@@ -295,6 +295,12 @@ void GaussianProcessNLLVariable::fbpropFragments(
     kernel->computeGramMatrix(gram);
     addToDiagonal(gram, noise);
 
+    // The PLearn code relies on the matrix actually being symmetric in memory
+    // (assumption which LAPACK does not make).  Symmetrize the matrix
+    for (int i=1, n=gram.width() ; i<n ; ++i)
+        for (int j=0 ; j<i ; ++j)
+            gram(j,i) = gram(i,j);
+    
     // Save the Gram matrix if requested
     if (save_gram_matrix) {
         static int counter = 1;
@@ -329,6 +335,7 @@ void GaussianProcessNLLVariable::fbpropFragments(
 
 //#####  fbpropFragments (LAPACK)  ############################################
 
+// #if 0
 #ifdef USE_BLAS_SPECIALISATIONS
 void GaussianProcessNLLVariable::fbpropFragments(
     Kernel* kernel, real noise, const Mat& inputs, const Mat& targets,
@@ -390,7 +397,7 @@ void GaussianProcessNLLVariable::fbpropFragments(
     }
 }
 #endif
-
+// #endif
 
 //#####  logVarray  ###########################################################
 
