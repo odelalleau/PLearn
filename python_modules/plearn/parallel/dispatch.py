@@ -179,14 +179,19 @@ class TaskType:
         """
         got_info= False
         while not got_info:
-            s= child_fd.readline()
-            if s=='':
-                print "Cannot get info from server!"
-                sys.exit()
-            ss= s.split(' ')
-            if ss[0] == "PLEARN_SERVER_TCP":
-                info= (ss[1], int(ss[2]), int(ss[3]))
-                got_info= True
+            try:
+                s= child_fd.readline()
+                if s=='':
+                    print "Cannot get info from server!"
+                    sys.exit()
+                ss= s.split(' ')
+                if ss[0] == "PLEARN_SERVER_TCP":
+                    info= (ss[1], int(ss[2]), int(ss[3]))
+                    got_info= True
+            except IOError:
+                print '.',
+                time.sleep(1)
+                
         cls._launched_servers_info+= [info]
         return info
     getLaunchedServerInfo= classmethod(getLaunchedServerInfo)

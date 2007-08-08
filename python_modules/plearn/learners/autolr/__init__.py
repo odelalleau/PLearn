@@ -1,5 +1,7 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 from math import *
-from numarray import *
+from numpy.numarray import *
 from plearn import *
 from plearn.bridge import *
 from threading import *
@@ -697,3 +699,4 @@ def train_adapting_lr(learner,
             # (i.e. stage of best error found)
             (best_early_stop,best_early_stop_candidate,best_early_stop_epoch))
 
+import numpy.numarray as numarray

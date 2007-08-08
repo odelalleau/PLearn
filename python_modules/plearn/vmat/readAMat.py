@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # readMMat.py
 # Copyright (C) 2006 by Nicolas Chapados
 #
@@ -32,7 +34,7 @@
 
 # Author: Nicolas Chapados
 
-from numarray import array
+from numpy.numarray import array
 import fpconst
 
 def safefloat(str):

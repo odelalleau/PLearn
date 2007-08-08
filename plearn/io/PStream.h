@@ -971,6 +971,17 @@ void readMap(PStream& in, MapT& m)
     in.get(); // eat the '}'
 }
 
+inline PStream& operator>>(PStream& in, CopiesMap&)
+{
+    PLERROR("PLearn::CopiesMap cannot be serialized.");
+    return in;
+}
+inline PStream& operator<<(PStream& out, const CopiesMap&)
+{
+    PLERROR("PLearn::CopiesMap cannot be [un]serialized.");
+    return out;
+}
+
 template<class Key, class Value, class Compare, class Alloc>
 inline PStream& operator<<(PStream& out,
                            const map<Key, Value, Compare, Alloc>& m)
@@ -1501,7 +1512,6 @@ operator>>(PStream &in, set<T> &v)
 template <class T> inline PStream &
 operator<<(PStream &out, const set<T> &v)
 { writeSet(out, v); return out; }
-
 
 /// @deprected Use openFile instead.
 class PIFStream: public PStream

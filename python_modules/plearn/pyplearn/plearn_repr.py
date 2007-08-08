@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # plearn_repr.py
 # Copyright (C) 2005, 2006 Christian Dorion
 #
@@ -38,9 +40,11 @@ from plearn.utilities.pobject  import PObject
 from plearn.utilities.Bindings import Bindings
 
 try:
-    import numarray
+    #import numpy.numarray as numarray
+    import numpy
 except ImportError:
-    numarray = None
+    #numarray = None
+    numpy = None
 
 #
 #  Deprecated functions
@@ -280,8 +284,9 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
 ##             return '(' + ', '.join( [ inner_repr(elem, indent_level+1) for elem in obj] ) + ') '
 
     # Stands for TMat<real>
-    elif numarray is not None and isinstance( obj, numarray.numarraycore.NumArray ):
-        shape = obj.getshape()
+    #elif numarray is not None and isinstance( obj, numarray.numarraycore.NumArray ):
+    elif numpy is not None and isinstance( obj, numpy.ndarray ):
+        shape = obj.shape
         if len(shape) == 1:
             listrepr = [ elem for elem in obj ]
             return "%d %s" % ( shape[0], inner_repr(listrepr, indent_level+1) )
@@ -290,6 +295,7 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
             l,w = shape
             listrepr = []
             # we do this explicit for due to a numarray bug for 0x0 matrices...
+            # N.B. is this still true w/ numpy?
             for i in xrange(l):
                 row = obj[i]
                 for elem in row:
@@ -297,7 +303,8 @@ def __plearn_repr( obj, indent_level, inner_repr = plearn_repr ):
             # listrepr = [ f for row in obj for f in row ]
             return "%d %d %s" % ( l, w, inner_repr(listrepr, indent_level+1) )
 
-        raise ValueError( "Only numarrays of dimension 1 and 2 are understood by plearn_repr." )
+        #raise ValueError( "Only numarrays of dimension 1 and 2 are understood by plearn_repr." )
+        raise ValueError( "Only NumPy arrays of dimension 1 and 2 are understood by plearn_repr." )
             
     
     elif obj is None:
@@ -346,7 +353,8 @@ if __name__ == "__main__":
 
     toplevel2 = pl.TopLevel( name = "Embedded", embedded = toplevel,
                              some_dict = { "a" : 1, "b" : 2 },
-                             some_mat  = numarray.array([[1,2], [3, 4]])
+                             #some_mat  = numarray.array([[1,2], [3, 4]])
+                             some_mat  = numpy.array([[1,2], [3, 4]])
                              )
     print toplevel2 
 

@@ -1,5 +1,5 @@
 from pylab import *
-from numarray import *
+from numpy.numarray import *
 
 
 #################

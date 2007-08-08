@@ -33,7 +33,7 @@
 # Author: Nicolas Chapados
 
 import csv
-import numarray
+import numpy.numarray
 
 from plearn.vmat.PMat import PMat
 from plearn.vmat.readAMat import readAMat
@@ -162,7 +162,7 @@ def smartReadMat(filename):
         csv_reader = csv.reader(f)
         if has_header:
             fieldnames = csv_reader.next()
-        arr = numarray.array([[float(value) for value in fields] for fields in csv_reader])
+        arr = numpy.numarray.array([[float(value) for value in fields] for fields in csv_reader])
         if not has_header:
             # Generate fake fieldnames
             fieldnames = ['field%d' % (i + 1) for i in range(arr.shape[1])]

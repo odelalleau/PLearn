@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # plotting.py
 # Copyright (C) 2005 Pascal Vincent
 #
@@ -33,8 +35,7 @@
 # Author: Pascal Vincent
 
 # from array import *
-import numarray
-
+import numpy.numarray as numarray
 import string
 import matplotlib
 # matplotlib.interactive(True)
@@ -42,7 +43,7 @@ import matplotlib
 #matplotlib.use('GTK')
   
 from pylab import *
-from numarray import *
+from numpy.numarray import *
 from mayavi.tools import imv
 
 from plearn.vmat.PMat import *

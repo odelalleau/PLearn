@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # serialize.py
 # Copyright (C) 2005, 2006 Pascal Vincent, Christian Dorion
 #
@@ -36,7 +38,7 @@
 Streams are built using the File objects' specifications
 """
 import logging, sys, string
-import numarray
+import numpy.numarray as numarray
 from plearn.pyplearn import pl
 from plearn.pyplearn.plearn_repr import plearn_repr, clear_ref_map
 import plearn.utilities.pl_struct as struct  ## corrige un bug dans struct
@@ -334,7 +336,7 @@ class PLearnIO:
         ar = numarray.fromstring(data, atype, shape)
         
         if sys.byteorder!=endianness:
-            ar.byteswap()
+            ar.byteswap(True)
 
         if self.return_lists:
             ar = ar.tolist()

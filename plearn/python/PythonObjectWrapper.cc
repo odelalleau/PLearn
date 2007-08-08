@@ -256,6 +256,36 @@ PythonObjectWrapper ConvertFromPyObject<PythonObjectWrapper>::convert(PyObject* 
     return PythonObjectWrapper(pyobj);
 }
 
+CopiesMap ConvertFromPyObject<CopiesMap>::convert(PyObject* pyobj,
+                                                  bool print_traceback)
+{
+    PLASSERT( pyobj );
+    if (! PyDict_Check(pyobj))
+        PLPythonConversionError("ConvertFromPyObject<CopiesMap>", 
+                                pyobj, print_traceback);
+#if PL_PYTHON_VERSION>=250
+    Py_ssize_t pos = 0;
+#else
+    int pos = 0;
+#endif
+    CopiesMap copies;
+    PyObject *key, *val;
+    while(PyDict_Next(pyobj, &pos, &key, &val)) 
+    {
+        if(!PyCObject_Check(key))
+            PLPythonConversionError("ConvertFromPyObject<CopiesMap> "
+                                    "(key is not a cptr)", 
+                                    key, print_traceback);
+        if(!PyCObject_Check(val))
+            PLPythonConversionError("ConvertFromPyObject<CopiesMap> "
+                                    "(val is not a cptr)", 
+                                    val, print_traceback);
+        copies.insert(make_pair(PyCObject_AsVoidPtr(key),
+                                PyCObject_AsVoidPtr(val)));
+    }
+    return copies;
+}
+
 //#####  Constructors+Destructors  ############################################
 PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,
                                          // unused in this overload
@@ -433,7 +463,8 @@ PyObject* PythonObjectWrapper::refCPPObj(PyObject* self, PyObject* args)
         PythonObjectWrapper(args).as<TVec<PyObject*> >();
     PyObject* pyo= args_tvec[1];
     Object* o= PythonObjectWrapper(pyo);
-    o->ref();
+    if(args_tvec.length() < 3 || args_tvec[2]==Py_True)
+        o->ref();
     //perr << "ref o->usage()= " << o->usage() << endl;
     PythonObjectWrapper::m_wrapped_objects[o]= pyo;
     //perr << "refCPPObj: " << (void*)o << " : " << (void*)pyo << endl;
@@ -630,6 +661,24 @@ PyObject* ConvertToPyObject<PythonObjectWrapper>::newPyObject(const PythonObject
 {
     Py_XINCREF(pow.m_object);
     return pow.m_object;
+}
+
+PyObject* ConvertToPyObject<CopiesMap>::newPyObject(const CopiesMap& copies)
+{
+    PyObject* pyobj= PyDict_New();
+    for(CopiesMap::const_iterator it= copies.begin();
+        it != copies.end(); ++it)
+    {
+        PyObject* key= PyCObject_FromVoidPtr(const_cast<void*>(it->first), 0);
+        PyObject* val= PyCObject_FromVoidPtr(it->second, 0);
+        int non_success = PyDict_SetItem(pyobj, key, val);
+        Py_XDECREF(key);
+        Py_XDECREF(val);
+        if(non_success)
+            PLERROR("ConvertToPyObject<CopiesMap>::newPyObject: cannot insert element "
+                    "into Python dict");
+    }
+    return pyobj;
 }
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v)

@@ -747,6 +747,16 @@ void Object::declareMethods(RemoteMethodMap& rmm)
                   (BodyDoc("Returns the refcount of this PPointable"),
                    RetDoc ("Number of references")));
 
+    declareMethod(rmm, "deepCopyNoMap", &Object::deepCopyNoMap,
+                  (BodyDoc("Returns a deep copy of the object"),
+                   RetDoc ("Deep copy.")));
+
+    declareMethod(rmm, "pyDeepCopy", &Object::pyDeepCopy,
+                  (BodyDoc("Returns a pair containing a deep copy of "
+                           "the object and the updated copies map."),
+                   ArgDoc ("copies", "The initial copies map"),
+                   RetDoc ("Deep copy, copies map")));
+
 
 #ifdef PL_PYTHON_VERSION 
     declareMethod(rmm, "setOptionFromPython", &Object::setOptionFromPython,
@@ -806,6 +816,21 @@ void Object::load(const PPath& filename)
               "So you should call PLearn::load directly (it's defined in plearn/io/load_and_save.h).");
     PLearn::load(filename, *this);
 }
+
+Object* Object::deepCopyNoMap()
+{
+    CopiesMap cm;
+    return deepCopy(cm);
+}
+
+#ifdef PL_PYTHON_VERSION 
+tuple<Object*, CopiesMap> Object::pyDeepCopy(CopiesMap& copies)
+{
+    Object* o= deepCopy(copies);
+    return make_tuple(o, copies);
+}
+#endif //def PL_PYTHON_VERSION 
+
 
 Object* loadObject(const PPath &filename)
 {

@@ -123,41 +123,34 @@ void injectPLearnGlobalFunctions(PyObject* env)
 }
 
 
-void injectPLearnClasses(PyObject* injenv)
+void injectPLearnClasses(PyObject* module)
 {
     PythonGlobalInterpreterLock gil;         // For thread-safety
     PythonObjectWrapper::initializePython();
 
-    PyObject* module= 0;
-    if(PyModule_Check(injenv))
-        module= injenv;
-
+    if(!PyModule_Check(module))
+        PLERROR("In injectPLearnClasses : "
+                "module param. should be a python module.");
     // import python class for wrapping PLearn objects
     string importcode= "\nfrom plearn.pybridge.wrapped_plearn_object "
         "import *\n";
-    PyObject* pyenv= PyDict_New();
-    PyDict_SetItemString(pyenv, "__builtins__", PyEval_GetBuiltins());
-    PyObject* res= PyRun_String(importcode.c_str(), Py_file_input, pyenv, pyenv);
+    PyObject_SetAttrString(module, "__builtins__", PyEval_GetBuiltins());
+    PyObject* res= PyRun_String(importcode.c_str(), Py_file_input, 
+                                PyModule_GetDict(module), PyModule_GetDict(module));
     if(!res)
     {
-       if(PyErr_Occurred()) PyErr_Print();
-       PLERROR("in injectPLearnClasses : cannot import plearn.pybridge.wrapped_plearn_object.");
+        Py_DECREF(module);
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in injectPLearnClasses : cannot import plearn.pybridge.wrapped_plearn_object.");
     }
-
     Py_DECREF(res);
-    if (PyErr_Occurred()) 
-    {
-        Py_DECREF(pyenv);
-        PyErr_Print();
-        PLERROR("in injectPLearnClasses : error compiling "
-                "WrappedPLearnObject python code.");
-    }
 
     string wrapper_name= "WrappedPLearnObject";
     // now find the class in the env.
     typedef map<string, PyObject*> env_t;
     env_t env= PythonObjectWrapper(
-        pyenv, PythonObjectWrapper::transfer_ownership).as<env_t>();
+        PyModule_GetDict(module), 
+        PythonObjectWrapper::transfer_ownership).as<env_t>();
     env_t::iterator clit= env.find(wrapper_name);
     if(clit == env.end())
         PLERROR("in injectPLearnClasses : "
@@ -178,7 +171,7 @@ void injectPLearnClasses(PyObject* injenv)
     Py_XDECREF(py_funcobj);
     if(!py_funcobj || !py_methobj) 
     {
-        Py_DECREF(pyenv);
+        Py_DECREF(module);
         Py_XDECREF(py_methobj);
         PLERROR("in injectPLearnClasses : "
                 "can't inject method '%s' (i.e. __del__)", 
@@ -211,7 +204,7 @@ void injectPLearnClasses(PyObject* injenv)
         Py_XDECREF(py_funcobj);
         if(!py_funcobj || !py_methobj) 
         {
-            Py_DECREF(pyenv);
+            Py_DECREF(module);
             Py_XDECREF(py_methobj);
             PLERROR("in injectPLearnClasses : "
                     "can't inject method '%s' (i.e. C++'s new)", 
@@ -223,11 +216,12 @@ void injectPLearnClasses(PyObject* injenv)
         string classmethodname= wrapper_name+"."+py_method->ml_name;
         res= PyRun_String((classmethodname
                            +"= classmethod("+classmethodname+".im_func)").c_str(), 
-                          Py_file_input, pyenv, pyenv);
+                          Py_file_input, 
+                          PyModule_GetDict(module), PyModule_GetDict(module));
         Py_DECREF(res);
         if (PyErr_Occurred()) 
         {
-            Py_DECREF(pyenv);
+            Py_DECREF(module);
             PyErr_Print();
             PLERROR("in injectPLearnClasses : error making "
                     "newCPPObj a classmethod.");
@@ -268,10 +262,12 @@ void injectPLearnClasses(PyObject* injenv)
             "      cls._refCPPObj(obj)\n"
             "    return obj\n";
         PyObject* res= PyRun_String(derivcode.c_str(), 
-                                    Py_file_input, pyenv, pyenv);
+                                    Py_file_input, 
+                                    PyModule_GetDict(module), PyModule_GetDict(module));
         Py_XDECREF(res);
         env= PythonObjectWrapper(
-            pyenv, PythonObjectWrapper::transfer_ownership).as<env_t>();
+            PyModule_GetDict(module), 
+            PythonObjectWrapper::transfer_ownership).as<env_t>();
         clit= env.find(pyclassname);
         if(clit == env.end())
             PLERROR("in injectPLearnClasses : "
@@ -291,7 +287,7 @@ void injectPLearnClasses(PyObject* injenv)
         if(-1==PyObject_SetAttrString(the_pyclass, "_optionnames", 
                                       PythonObjectWrapper(optionnames).getPyObject()))
         {
-            Py_DECREF(pyenv);
+            Py_DECREF(module);
             if (PyErr_Occurred()) PyErr_Print();
             PLERROR("in injectPLearnClasses : "
                     "cannot set attr _optionnames for class %s",
@@ -336,7 +332,7 @@ void injectPLearnClasses(PyObject* injenv)
                 Py_XDECREF(py_funcobj);
                 if(!py_funcobj || !py_methobj) 
                 {
-                    Py_DECREF(pyenv);
+                    Py_DECREF(module);
                     Py_XDECREF(py_methobj);
                     PLERROR("in injectPLearnClasses : "
                             "can't inject method '%s'", py_method->ml_name);

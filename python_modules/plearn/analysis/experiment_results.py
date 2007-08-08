@@ -28,9 +28,9 @@
 #
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
-import sys, os, os.path, glob, fnmatch, csv, numarray
+import sys, os, os.path, glob, fnmatch, csv, numpy.numarray
 
-import os, glob, fnmatch, numarray
+import os, glob, fnmatch, numpy.numarray
 from plearn.vmat.PMat          import PMat
 from plearn.vmat.smartReadMat  import smartReadMat
 from plearn.utilities.moresh   import relative_path

@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # readMMat.py
 # Copyright (C) 2006 by Nicolas Chapados
 #
@@ -33,12 +35,12 @@
 # Author: Nicolas Chapados
 
 import os, sys
-import numarray.ieeespecial        as  ieee
-from   plearn.math import isNaN
-from   numarray    import array    as  normal_array
-from   numarray    import sometrue as  normal_sometrue
-from   numarray    import zeros, matrixmultiply, transpose
-from   numarray.ma import *                         # masked array
+from numpy import isnan
+from   numpy.numarray    import array    as  normal_array
+from   numpy.numarray    import sometrue as  normal_sometrue
+from   numpy.numarray    import zeros, matrixmultiply, transpose
+#from   numpy.numarray.ma import *                         # masked array
+from   numpy.numarray.ma import masked_array, argmin, argmax, array, nonzero, outerproduct, diagonal, sqrt, sum
 from   fpconst     import NegInf, PosInf
 
 from   plearn.utilities import ppath
@@ -49,7 +51,7 @@ def _printMatrix(m, rownames, colnames, os, pretty = True):
     If 'pretty' is set to False, the output will not be so nice, but at least
     will not cause test failures due to a zero test blank tolerance.
     """
-    (length, width) = shape(m)
+    (length, width) = m.shape #shape(m)
     assert length == len(rownames)
     assert width  == len(colnames)
     leftlen  = max([len(x) for x in rownames])
@@ -113,15 +115,15 @@ class StatsCollector:
         assume that all observations have the same weight.
         Properly handle missing values.
         """
-        assert self.width() == shape(arr)[1]
+        assert self.width() == arr.shape[1] #shape(arr)[1]
         i = 0
 
         ## Update number of elements counters
-        (length,width)= shape(arr)
-        initial_n     = self.n[:]          # Keep old n for argmin/argmax
+        (length,width)= arr.shape #shape(arr)
+        initial_n     = self.n.copy()#self.n[:]          # Keep old n for argmin/argmax
         n             = zeros(width) + length
-        missings      = isNaN(arr)
-        nnan          = sum(missings)
+        missings      = isnan(arr)
+        nnan          = sum(missings,0)
         self.n       += n
         self.nnan    += nnan
         self.nnonnan += n - nnan
@@ -129,12 +131,12 @@ class StatsCollector:
         ## Create masked version of arr and update accumulators
         ma = masked_array(arr, mask=missings)        # Here, mask missings only
         arr_nomissings = arr[~normal_sometrue(missings,1)]  # Here, strip missing rows
-        self.sum     = self.sum + sum(ma)            # += does not work...
-        self.sum_ssq = self.sum_ssq + sum(ma*ma)     # += does not work...
+        self.sum     = self.sum + sum(ma,0)            # += does not work...
+        self.sum_ssq = self.sum_ssq + sum(ma*ma,0)     # += does not work...
         self.sum_xxt = self.sum_xxt + matrixmultiply(transpose(arr_nomissings),
                                                      arr_nomissings)
-        self.sum_nomi= self.sum_nomi + sum(arr_nomissings)
-        self.nxxt   += shape(arr_nomissings)[0]
+        self.sum_nomi= self.sum_nomi + sum(arr_nomissings,0)
+        self.nxxt   += arr_nomissings.shape[0] #shape(arr_nomissings)[0]
 
         ## Update (arg)min / make sure old argmin is kept if not updated
         ma_argmin  = argmin(ma,0)
@@ -194,7 +196,7 @@ class StatsCollector:
         If 'pretty' is set to False, the output will not be so nice, but at least
         will not cause test failures due to a zero test blank tolerance.
         """
-        if len(nonzero(self.nnonnan)) != len(self.nnonnan):
+        if len(nonzero(self.nnonnan)[0]) != len(self.nnonnan):
             print >>os, "One or more columns in StatsCollector does not contain any data"
             return                      # Nothing accumulated yet
         
@@ -203,7 +205,9 @@ class StatsCollector:
               "V"      , "STDDEV"   , "STDERR"      , "SUM" ,
               "SUMSQ"  , "MIN"      , "ARGMIN"      , "MAX" ,  "ARGMAX" ]
 
+        
         m = array([[stats[k][i] for i in range(self.width())] for k in sk])
+
         _printMatrix(m, sk, self.fieldnames, os, pretty)
         
         print "\nCovariance Matrix:"

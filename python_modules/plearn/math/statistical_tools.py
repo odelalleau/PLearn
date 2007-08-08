@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # statistical_tools.py
 # Copyright (C) 2006 Christian Dorion
 #
@@ -345,11 +347,11 @@ def ols_regression(X, Y, intercept=True):
 
     # for convenience...
     if K==1:
-        beta = beta.getflat()
+        beta = beta.ravel()
     if N==1:
         alpha   = alpha.  getflat()
         beta    = beta.   getflat()
-        epsilon = epsilon.getflat()
+        epsilon = epsilon.ravel()
         
     return alpha, beta, epsilon, sigma
 
@@ -376,7 +378,7 @@ def _test_ols_regression(T, K, alpha=0.0, scale=10.0, plot=False):
 
     print
     if K==1:
-        X = X.getflat()
+        X = X.ravel()
     scipy = stats.linregress(X, Y)    
     print "Beta SciPy (with intercept %s):"%scipy[1],
     print scipy[0], "(%.3f)"%matrix_distance(array(scipy[0]),beta)
@@ -410,7 +412,7 @@ class StatsHolder(dict):
     __delattr__ = dict.__delitem__
 
 if __name__ == "__main__":        
-    from numarray.random_array import seed, random, normal
+    from numpy.numarray.random_array import seed, random, normal
     seed(02, 25)
     
     # Setting the problem

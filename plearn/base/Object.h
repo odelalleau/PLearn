@@ -937,6 +937,18 @@ public:
      */
     virtual void load(const PPath& filename);
 
+    /**
+     * deepCopyNoMap: same as deepCopy, but starts with an empty CopiesMap
+     * and returns an Object*.
+     */
+    Object* deepCopyNoMap();
+
+#ifdef PL_PYTHON_VERSION 
+    /**
+     * pyDeepCopy: deep copy called from python
+     */
+    tuple<Object*, CopiesMap> pyDeepCopy(CopiesMap& copies);
+#endif //def PL_PYTHON_VERSION 
 
 protected:
     //#####  Protected Member Functions  ######################################

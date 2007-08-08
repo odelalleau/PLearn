@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 from plearn.pyplearn import *
 
 ### This is an inline Matrix that will be processed (transformed) by the
@@ -20,9 +22,10 @@ source_mat = pl.MemoryVMatrix(
 ### indentation-sensitive.
 processing_code = """
 import sys
-from numarray import *
+from numpy.numarray import *
 
 def getRow(row_no, source_row):
+    row_no= array([row_no])
     return concatenate((10*row_no, 2*source_row))
 
 def getFieldNames(source_field_names):

@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # pyplearn/__init__.py
 # Copyright (C) 2004-2006 Christian Dorion
 #
@@ -165,8 +167,7 @@ def TMat( *args ):
     @returns: PyPLearn's TMat representation
     @rtype: A numarray or L{ __TMat} wrapper
     """
-    import numarray
-    
+    import numpy.numarray as numarray
     nargs   = len(args)
     is_real = lambda r: isinstance( r, int   ) or isinstance( r, float )
 

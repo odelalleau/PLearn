@@ -1,7 +1,9 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 #!/usr/bin/env python
 from math import ceil, floor
-from numarray import *
-from numarray.random_array import normal
+from numpy.numarray import *
+from numpy.numarray.random_array import normal
 
 #####  Utility Functions  ###################################################
 #####    Instanciate the process' class and extract the process          ####

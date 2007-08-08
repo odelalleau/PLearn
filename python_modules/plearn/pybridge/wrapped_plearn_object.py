@@ -69,17 +69,30 @@ class WrappedPLearnObject(object):
                                    + repr(self))
         
     def __del__(self):
-        #from plearn import pyext
-        #print 'del',type(self),self._cptr
-        #pyext.printWrappedObjects()
-        self._unref()
-        #pyext.printWrappedObjects()
+        if hasattr(self, '_cptr'):
+            self._unref()
 
     def __repr__(self):
         return self.asString() #PLearn repr. for now
 
-#from numpy.numarray import *
-from numarray import *
+    def __deepcopy__(self, memo= None):
+        if not memo: memo= {}
+        if 'PLearnCopiesMap' not in memo:
+            memo['PLearnCopiesMap']= {}
+        plnewone, memo['PLearnCopiesMap']= \
+            self.pyDeepCopy(memo['PLearnCopiesMap'])
+        newone= self.__class__(_cptr= plnewone._cptr)
+        memo[id(self)]= newone
+        del plnewone._cptr
+        newone._refCPPObj(newone, False)
+        for k in self.__dict__:
+            if k != '_cptr':
+                newone.__dict__[k]= \
+                    copy.deepcopy(self.__dict__[k], memo)
+        return newone
+
+
+from numpy.numarray import *
 
 class WrappedPLearnVMat(WrappedPLearnObject):
     def __init__(self, cptr):

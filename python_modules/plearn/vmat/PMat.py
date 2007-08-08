@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # PMat.py
 # Copyright (C) 2005 Pascal Vincent
 #
@@ -32,7 +34,8 @@
 
 # Author: Pascal Vincent
 
-import numarray, sys, os, os.path
+#import numarray, sys, os, os.path
+import numpy.numarray, sys, os, os.path
 pyplearn_import_failed = False
 try:
     from plearn.pyplearn.plearn_repr import plearn_repr, format_list_elements
@@ -51,7 +54,7 @@ def array_columns( a, cols ):
     else:
         indices = list( cols )            
 
-    return numarray.take(a, indices, axis=1)
+    return numpy.numarray.take(a, indices, axis=1)
 
 def load_pmat_as_array(fname):
     s = file(fname,'rb').read()
@@ -75,15 +78,15 @@ def load_pmat_as_array(fname):
 
     l = int(l)
     w = int(w)
-    X = numarray.fromstring(datastr,elemtype, shape=(l,w) )
+    X = numpy.numarray.fromstring(datastr,elemtype, shape=(l,w) )
     if byteorder!=sys.byteorder:
-        X.byteswap()
+        X.byteswap(True)
     return X
 
 def save_array_as_pmat( fname, ar, fieldnames=[] ):
     s = file(fname,'wb')
     
-    length, width = ar.getshape()
+    length, width = ar.shape
     if fieldnames:
         assert len(fieldnames) == width
         metadatadir = fname+'.metadata'
@@ -96,16 +99,16 @@ def save_array_as_pmat( fname, ar, fieldnames=[] ):
         f.close()
     
     header = 'MATRIX ' + str(length) + ' ' + str(width) + ' '
-    if ar.typecode()=='d':
+    if ar.dtype.char=='d':
         header += 'DOUBLE '
         elemsize = 8
 
-    elif ar.typecode()=='f':
+    elif ar.dtype.char=='f':
         header += 'FLOAT '
         elemsize = 4
 
     else:
-        raise TypeError('Unsupported typecode: %s' % ar.typecode())
+        raise TypeError('Unsupported typecode: %s' % ar.dtype.char)
 
     rowsize = elemsize*width
 
@@ -181,7 +184,7 @@ class VMat:
             assert len(key) == 2
             rows = self.__getitem__( key[0] )
 
-            shape = rows.getshape()                       
+            shape = rows.shape                       
             if len(shape) == 1:
                 return rows[ key[1] ]
 
@@ -254,7 +257,7 @@ class PMat( VMat ):
             raise ValueError("Currently only supported openmodes are 'r', 'w' and 'a': "+repr(openmode)+" is not supported")
 
         if array is not None:
-            shape  = array.getshape()
+            shape  = array.shape
             if len(shape) == 1:
                 row_format = lambda r: [ r ]
             elif len(shape) == 2:
@@ -344,9 +347,9 @@ class PMat( VMat ):
             raise IndexError('PMat index out of range')
         self.f.seek(64+i*self.rowsize)
         data = self.f.read(self.rowsize)
-        ar = numarray.fromstring(data, self.elemtype, (self.width,))
+        ar = numpy.numarray.fromstring(data, self.elemtype, (self.width,))
         if self.swap_bytes:
-            ar.byteswap()
+            ar.byteswap(True)
         return ar
 
     def getRows(self,i,l):
@@ -354,9 +357,9 @@ class PMat( VMat ):
             raise IndexError('PMat index out of range')
         self.f.seek(64+i*self.rowsize)
         data = self.f.read(l*self.rowsize)
-        ar = numarray.fromstring(data, self.elemtype, (l,self.width))
+        ar = numpy.numarray.fromstring(data, self.elemtype, (l,self.width))
         if self.swap_bytes:
-            ar.byteswap()
+            ar.byteswap(True)
         return ar
 
     def putRow(self,i,row):
@@ -367,10 +370,10 @@ class PMat( VMat ):
         if i<0 or i>=self.length:
             raise IndexError
         if self.swap_bytes: # must make a copy and swap bytes
-            ar = numarray.numarray(row,type=self.elemtype)
-            ar.byteswap()
+            ar = numpy.numarray.numarray(row,type=self.elemtype)
+            ar.byteswap(True)
         else: # asarray makes a copy if not already a numarray of the right type
-            ar = numarray.asarray(row,type=self.elemtype)
+            ar = numpy.numarray.asarray(row,type=self.elemtype)
         self.f.seek(64+i*self.rowsize)
         self.f.write(ar.tostring())
 
@@ -378,10 +381,10 @@ class PMat( VMat ):
         if len(row)!=self.width:
             raise TypeError('length of row ('+str(len(row))+ ') differs from matrix width ('+str(self.width)+')')
         if self.swap_bytes: # must make a copy and swap bytes
-            ar = numarray.numarray(row,type=self.elemtype)
-            ar.byteswap()
+            ar = numpy.numarray.numarray(row,type=self.elemtype)
+            ar.byteswap(True)
         else: # asarray makes a copy if not already a numarray of the right type
-            ar = numarray.asarray(row,type=self.elemtype)
+            ar = numpy.numarray.asarray(row,type=self.elemtype)
 
         self.f.seek(64+self.length*self.rowsize)
         self.f.write(ar.tostring())

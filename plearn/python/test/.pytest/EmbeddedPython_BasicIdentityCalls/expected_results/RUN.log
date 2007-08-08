@@ -1,6 +1,7 @@
 Python code to be executed: 
 >>>import sys
-from numarray import *
+#from numarray import *
+from numpy import *
 
 def nullary():
     print >>sys.stderr, 'Called nullary()'
@@ -23,13 +24,15 @@ def unary_str(x):
     return x
 
 def unary_vec(x):
-    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 1
+    #assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 1
+    assert isinstance(x,ndarray) and len(x.shape) == 1
     return x
 
 def unary_mat(x):
     print >>sys.stderr, 'Called unary_mat with:\n',x
     sys.stderr.flush()
-    assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2
+    #assert isinstance(x,numarraycore.NumArray) and len(x.shape) == 2
+    assert isinstance(x,ndarray) and len(x.shape) == 2
     return x
 
 def unary_list_str(x):

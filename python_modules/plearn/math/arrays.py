@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # arrays.py
 # Copyright (C) 2005,2006 Christian Dorion
 #
@@ -30,10 +32,13 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 # Author: Christian Dorion
+import numpy.numarray as numarray
 from math import *
-from numarray import *
-from numarray.linear_algebra import inverse as __numarray_inverse
-from numarray.linear_algebra import determinant
+from numpy.numarray import *
+from numpy.numarray.linear_algebra import inverse as __numarray_inverse
+from numpy.numarray.linear_algebra import determinant
+from numpy import *
+import numpy.numarray as ufunc #most ufuncs are part of the numpy module
 
 def _2D_shape(M):
     if len(M.shape)==1:
@@ -81,7 +86,7 @@ def kronecker(m1, m2):
             K[i*l2:(i+1)*l2, j*w2:(j+1)*w2] = M1[i,j] * m2
 
     if w1==1 and w2==1:
-        K = K.getflat()
+        K = K.ravel()
     return K
 
 def lag(series, k=1, fill=(lambda shape : array([]))):
@@ -110,7 +115,7 @@ def matrix2vector(mat):
     assert len(shp)==2
     length = shp[0]*shp[1]
 
-    mat.setshape((length,))
+    mat.shape = (length,)
     return shp
 
 def mmult(*args):
@@ -176,7 +181,7 @@ def to_diagonal(a):
     """Returns a diagonal matrix with elements in 'a' on the diagonal."""
     assert len(a.shape)==1
     n = len(a)
-    A = zeros(shape=(n,n), type=a.type())
+    A = zeros(shape=(n,n), type=numarray.typefrom(a))
     for i in range(n):
         A[i,i] = a[i]
     return A
@@ -195,17 +200,17 @@ def hasNaN(f):
     f = ravel(f)
     if len(f)==0:
         return False
-    f = choose(isNaN(f), (0, 1))
+    f = choose(isnan(f), (0, 1))
     return sum(f)
     
 def isNaN(f):
     """Return 1 where f contains NaN values, 0 elsewhere."""
-    from numarray import ieeespecial
+    import numpy as ieeespecial
     return ieeespecial.mask(f, ieeespecial.NAN)
 
 def isNotNaN(f):
     """Return 0 where f contains NaN values, 1 elsewhere."""
-    return ufunc.equal(isNaN(f), 0.0)
+    return ufunc.equal(isnan(f), 0.0)
 
 def replace_nans(a, repl_with=0.0):
     return choose(isNotNaN(a), (repl_with, a))
@@ -231,11 +236,11 @@ if __name__ == '__main__':
     
     print fast_softmax([ 0, 0, 100 ])
     print
-    print isNaN(float('NaN'))
-    print isNaN(2.0)
-    print isNaN([1.0, float('NaN'), 3.0])
+    print isnan(float('NaN'))
+    print isnan(2.0)
+    print isnan([1.0, float('NaN'), 3.0])
     print hasNaN([1.0, float('NaN'), 3.0])
-    print isNaN([1.0, 2.0, 3.0])
+    print isnan([1.0, 2.0, 3.0])
     print hasNaN([1.0, 2.0, 3.0])
     print
 
@@ -266,7 +271,7 @@ if __name__ == '__main__':
     print a
     a_shape = matrix2vector(a)
     print a
-    a.setshape(a_shape)
+    a.shape = a_shape
     print a
     
     

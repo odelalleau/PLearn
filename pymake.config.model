@@ -242,15 +242,58 @@ optionalLibrary( name = 'wordnet',
 
 linkeroptions_tail = ''
 
+
+#####  Global List of pymake Options  #######################################
+
+# List of lists of mutually exclusive pymake options.
+# First option that appears in each group is the default, and is assumed if you
+# do not specify any option from that group.
+options_choices = [
+  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi',
+    'purify', 'quantify', 'vc++' ],
+  
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
+    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg' ],
+  
+  [ 'double', 'float' ],
+  
+  # [ 'throwerrors', 'exiterrors' ],
+  [ 'autopython', 'python23', 'python24', 'python25', 'nopython' ],
+  
+  [ 'blas', 'noblas' ],
+  [ 'defblas', 'nolibblas', 'p3blas','p4blas','athlonblas','pentiumblas',
+    'mammouthblas', 'veclib', 'scs', 'goto', 'lisa' ],
+  
+  [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
+    'logging=extreme', 'logging=dbg-profile' ],
+
+  [ 'numpy', 'numarray' ]
+
+]
+
 ### Using Python code snippets in C++ code
 ### TODO Using /u/lisa/... is quite ugly. But the PLEARN_LIBDIR ppath may also
 ### be problematic (it should be different depending on the platform) => must
 ### find a better way to know where to find the libraries.
 ### TODO Should find a way to automatically find python version ?
+
+
+pyver = sys.version.split()[0][0:3]
+pyoption = 'python%s' % pyver.replace('.', '')
+#verify/set optionargs for python and numpy
+python_choices= [x for x in options_choices if 'autopython' in x][0]
+if [x for x in python_choices if x in optionargs]==[]:
+    optionargs.append('autopython')
+numpy_choices= [x for x in options_choices if 'numpy' in x][0]
+if [x for x in numpy_choices if x in optionargs]==[]:
+    optionargs.append('numpy')
+#auto-detected python version, if needed
+if 'autopython' in optionargs:
+    optionargs.remove('autopython')
+    optionargs += [ pyoption ]
+
 if not 'nopython' in optionargs:
     # First find which version of python is installed.
-    pyver = sys.version.split()[0][0:3]
-    pyoption = 'python%s' % pyver.replace('.', '')
     if domain_name.endswith('iro.umontreal.ca'):
         optionargs += [ pyoption ]
         python_version = pyver
@@ -301,15 +344,40 @@ if not 'nopython' in optionargs:
             python_version = pyver
 
         python_lib_root = '/usr/lib'
-        numpy_site_packages = '/usr/lib/python'+python_version+'/site-packages/numarray'
-        numpy_includedirs   = [ '/usr/include/python'+python_version]
+        numpy_site_packages = '-L/usr/lib/python'+python_version+'/site-packages/numarray'
+        python_includedirs   = [ '/usr/include/python'+python_version]
 
+        numpy_includedirs   = python_includedirs
+
+
+    if python_version != pyver:
+        print '*** WARNING: python version mismatch:'
+        print '\tcompiling for python'+python_version+' using python'+pyver
+
+    if 'numpy' in optionargs:
+        try:
+            numpy_numarray_include, numpy_core_include= \
+              os.popen('python' + python_version + ' ' 
+                       + os.path.join( plearndir,'scripts','get_numpy_includes.py'),
+                       'r').read().splitlines()
+            numpy_site_packages= numpy_numarray_include
+            numpy_includedirs= [numpy_site_packages+'/numpy', numpy_core_include] \
+                               + python_includedirs
+        except ValueError:
+            print 'Cannot find numpy include dirs for python'+python_version+'.',
+            print 'Make sure numpy is installed for this version of python'+\
+                  ' or compile using another version of python.'
+            sys.exit()
+
+    numpy_lib= ' -lnumarray '
+    if 'numpy' in optionargs:
+        numpy_lib= '/_capi.so -lutil '
 
     if platform!='darwin':
         optionalLibrary( name = 'python',
                      triggers = '[Pp]ython*',
                      includedirs = numpy_includedirs,
-                     linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
+                     linkeroptions = ( '%s%s ' % (numpy_site_packages, numpy_lib) + 
                                        '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
                                        '-Xlinker -export-dynamic ' + 
                                        '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
@@ -410,32 +478,6 @@ optionalLibrary( name = 'NSPR',
 # What linker options to put always after those from the optional libraries
 linkeroptions_tail += ' -L' + libdir + ' -lm'
 
-
-#####  Global List of pymake Options  #######################################
-
-# List of lists of mutually exclusive pymake options.
-# First option that appears in each group is the default, and is assumed if you
-# do not specify any option from that group.
-options_choices = [
-  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi',
-    'purify', 'quantify', 'vc++' ],
-  
-  [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
-    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg' ],
-  
-  [ 'double', 'float' ],
-  
-  # [ 'throwerrors', 'exiterrors' ],
-  [ 'python23', 'python24', 'python25', 'nopython' ],
-  
-  [ 'blas', 'noblas' ],
-  [ 'defblas', 'nolibblas', 'p3blas','p4blas','athlonblas','pentiumblas',
-    'mammouthblas', 'veclib', 'scs', 'goto', 'lisa' ],
-  
-  [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
-    'logging=extreme', 'logging=dbg-profile' ]
-
-]
 
 #####  Compiler-Related Options  ############################################
 
@@ -621,6 +663,11 @@ cpp_variables += ['USEFLOAT', 'USEDOUBLE']
 
 #####  Python version  ######################################################
 
+
+# pymakeOption( name = 'autopython',
+#               description = 'auto-detect python version',
+#               cpp_definitions = ['PL_PYTHON_VERSION='+str(int(float(pyver)*100))])
+
 pymakeOption( name = 'python23',
               description = 'the installed version of python is 2.3.X',
               cpp_definitions = ['PL_PYTHON_VERSION=230'])
@@ -759,6 +806,18 @@ pymakeOption( name            = 'logging=dbg-profile',
               )
 
 cpp_variables += ['PL_LOG_VERBOSITY', 'PL_PROFILE']
+
+
+#####  Python NUMARRAY vs NumPy  ########################################
+
+pymakeOption( name = 'numarray',
+              description = 'use numarray arrays',
+              cpp_definitions = ['PL_USE_NUMARRAY'] )
+pymakeOption( name = 'numpy',
+              description = 'use numpy arrays',
+              cpp_definitions = ['PL_USE_NUMPY'] )
+
+cpp_variables += ['PL_USE_NUMARRAY', 'PL_USE_NUMPY']
 
 #####  Network Setup  #######################################################
 

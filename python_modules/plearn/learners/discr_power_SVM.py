@@ -1,5 +1,7 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 import sys, os, time
-#from numarray import *
+#from numpy.numarray import *
 from math import *
 from libsvm import *
 

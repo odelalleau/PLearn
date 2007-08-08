@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # missings_robust_covariance
 # Copyright (C) 2007 by Nicolas Chapados
 #
@@ -35,7 +37,7 @@
 
 import sys
 from fpconst     import NaN
-from numarray.ma import *
+from numpy.numarray.ma import *
 from plearn.math import isNaN
 
 def missingsRobustCovariance(arr, unbiased=False, epsilon=1e-8):
@@ -57,7 +59,7 @@ def missingsRobustCovariance(arr, unbiased=False, epsilon=1e-8):
     the diagonal.
     """
     ## Second-order statistics
-    mask   = isNaN(arr)
+    mask   = isnan(arr)
     arr_ma = array(arr, mask=mask)
     count  = array(1 - mask)
 

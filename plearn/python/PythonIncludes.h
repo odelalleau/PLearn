@@ -74,14 +74,32 @@
 #include <python2.5/Python.h>
 #include <python2.5/compile.h>  // define PyCodeObject
 #include <python2.5/eval.h>     // for accessing PyEval_EvalCode: not included by default
-#include <python2.5/numarray/libnumarray.h>
+#ifdef PL_USE_NUMARRAY
+#  include <python2.5/numarray/libnumarray.h>
+#else
+#  ifdef PL_USE_NUMPY
+#    pragma GCC system_header //suppress all warnings/errors for numpy
+#    include <libnumarray.h>
+#  else
+#    error "should use either NumPy (preferred) or NUMARRAY (deprecated)"
+#  endif //def PL_USE_NUMPY
+#endif //def PL_USE_NUMARRAY
 
 #elif PL_PYTHON_VERSION >= 240
 
 #include <python2.4/Python.h>
 #include <python2.4/compile.h>  // define PyCodeObject
 #include <python2.4/eval.h>     // for accessing PyEval_EvalCode: not included by default
-#include <python2.4/numarray/libnumarray.h>
+#ifdef PL_USE_NUMARRAY
+#  include <python2.4/numarray/libnumarray.h>
+#else
+#  ifdef PL_USE_NUMPY
+#    pragma GCC system_header //suppress all warnings/errors for numpy
+#    include <libnumarray.h>
+#  else
+#    error "should use either NumPy (preferred) or NUMARRAY (deprecated)"
+#  endif //def PL_USE_NUMPY
+#endif //def PL_USE_NUMARRAY
 
 #elif PL_PYTHON_VERSION >= 230
 

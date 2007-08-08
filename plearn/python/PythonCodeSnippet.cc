@@ -558,7 +558,7 @@ PythonObjectWrapper PythonCodeSnippet::compileGlobalCode(const string& code) //c
         if(it == global_map.end())
             PLERROR("in PythonCodeSnippet::compileGlobalCode : "
                     "plearn.pybridge.pl_global_funcs not present in global env!");
-        injectPLearnGlobalFunctions(it->second);//inject in pl_global_funcs module
+        setPythonModuleAndInject(it->second);
         global_funcs_injected= true;
     }
 

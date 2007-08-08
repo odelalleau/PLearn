@@ -1,3 +1,5 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # cvx_utils.py
 # Copyright (C) 2007 Christian Dorion
 #
@@ -33,7 +35,7 @@
 # Author: Christian Dorion
 """Provides functions to use CVX transparently where NumPy or NumArray is the standard."""
 import numpy
-import numarray 
+import numpy.numarray as numarray
 from cvxopt import base as cvx
 
 

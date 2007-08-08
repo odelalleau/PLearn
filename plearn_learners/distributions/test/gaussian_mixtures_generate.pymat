@@ -1,7 +1,9 @@
+## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
+
 # Generate data from Gaussian mixtures.
 # Also test the 'expecation' method.
 
-from numarray        import array
+from numpy.numarray        import array
 from plearn.pyplearn import pl
 
 def diagonal(predictor_size):

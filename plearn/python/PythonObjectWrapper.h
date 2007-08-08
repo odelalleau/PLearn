@@ -61,6 +61,7 @@
 #include <plearn/base/PMemPool.h>
 #include <plearn/base/TypeTraits.h>
 #include <plearn/base/tuple.h>
+#include <plearn/base/CopiesMap.h>
 
 // from boost
 #include <boost/static_assert.hpp>
@@ -429,6 +430,12 @@ struct ConvertFromPyObject< std::pair<T,U> >
     static std::pair<T,U> convert(PyObject*, bool print_traceback);
 };
 
+template <>
+struct ConvertFromPyObject<CopiesMap>
+{
+    static CopiesMap convert(PyObject*, bool print_traceback);
+};
+
 
 //! Used to convert integer values to python, using PyInt if possible
 template <class I>
@@ -628,6 +635,8 @@ template <class T, class U> struct ConvertToPyObject<std::map<T,U> const* >
 template<> struct ConvertToPyObject<PythonObjectWrapper>
 { static PyObject* newPyObject(const PythonObjectWrapper& pow); };
 
+template<> struct ConvertToPyObject<CopiesMap>
+{ static PyObject* newPyObject(const CopiesMap& copies); };
 
 
 struct PLPyClass
@@ -844,17 +853,14 @@ public:
     static PyMethodDef m_refCPPObj_method_def;
     typedef map<const string, PLPyClass> pypl_classes_t;
     static pypl_classes_t m_pypl_classes;
+    typedef map<const Object*, PyObject*> wrapped_objects_t;
+    static wrapped_objects_t m_wrapped_objects; //!< for wrapped PLearn Objects
 
 protected:
     OwnershipMode m_ownership;               //!< Whether we own the PyObject or not
     PyObject* m_object;
-    
-    typedef map<const Object*, PyObject*> wrapped_objects_t;
-
-    static wrapped_objects_t m_wrapped_objects; //!< for wrapped PLearn Objects
 
     template<class T> friend class ConvertToPyObject;
-    friend void printWrappedObjects();
 };
 
 // Specialization for General T*.  Attempt to cast into Object*.  If that works
@@ -1077,8 +1083,6 @@ std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
 
     return p;
 }
-
-
 
 //#####  newPyObject Implementations  #########################################
 template<typename T, bool is_enum>
