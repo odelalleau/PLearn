@@ -229,19 +229,41 @@ def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=Fal
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxDoubleProductRLayer(input, iw, igs, ow, ogs, basename=""):
+def addMultiSoftMaxDoubleProductRLayer(input, iw, igs, ow, ogs, add_bias=False, constrain_mask=False, basename="", positive=False):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
+    
+    #TODO: constrain_mask is not used...
+    if constrain_mask:
+        raise Exception("not implemented yet")
+    
     ra = 1./max(iw,ow)
     sqra = sqrt(ra)
-    M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
-    W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
-    hidden = input.doubleProduct(W,M).multiSoftMax(ogs)
-    Mr = Var(iw/igs, ow, "uniform", -sqra, sqra, False, varname=basename+"_Mr")
-    Wr = Var(igs, ow, "uniform", -sqra, sqra, False, varname=basename+"_Wr")
+
+    if positive:
+        W = Var(ogs, iw, "uniform", 0, sqra, False, varname=basename+"_W", min_value=0, max_value=1e100)
+        M = Var(ow/ogs, iw, "uniform", 0, sqra, False, varname=basename+"_M", min_value=0, max_value=1e100)
+    else:           
+        M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
+        W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
+    
+    if positive:
+        Mr = Var(iw/igs, ow, "uniform", 0, sqra, False, varname=basename+"_Mr", min_value=0, max_value=1e100)
+        Wr = Var(igs, ow, "uniform", 0, sqra, False, varname=basename+"_Wr", min_value=0, max_value=1e100)
+    else:
+        Mr = Var(iw/igs, ow, "uniform", -sqra, sqra, False, varname=basename+"_Mr")
+        Wr = Var(igs, ow, "uniform", -sqra, sqra, False, varname=basename+"_Wr")
+        
     # TODO: a repenser s'il faut un transpose ou non
-    log_reconstructed = hidden.doubleProduct(Wr,Mr).multiLogSoftMax(igs)
+    if add_bias:
+        b = Var(1,ow,"fill",0, varname=basename+'_b')        
+        hidden = input.doubleProduct(W,M).add(b).multiSoftMax(ogs)
+        br = Var(1,iw,"fill",0, varname=basename+'_br')
+        log_reconstructed = hidden.doubleProduct(Wr,Mr).add(br).multiLogSoftMax(igs)
+    else:    
+        hidden = input.doubleProduct(W,M).multiSoftMax(ogs)    
+        log_reconstructed = hidden.doubleProduct(Wr,Mr).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input
