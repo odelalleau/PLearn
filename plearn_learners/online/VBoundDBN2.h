@@ -285,6 +285,7 @@ private:
     Mat sampled_h_state;
     Mat global_improvement_state;
     Mat ph_given_v_state;
+    Mat p2ph_state;
     Mat neglogphsample_given_v;
     Mat all_h; // for computing exact likelihood
     Mat neglogP2h;

@@ -100,6 +100,7 @@ void VBoundDBN2::build_()
     ports.append("sampled_h"); // 3
     ports.append("global_improvement"); // 4
     ports.append("ph_given_v"); // 5
+    ports.append("p2ph"); // 6
 }
 
 ///////////
@@ -124,6 +125,54 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* sampled_h_ = ports_value[3]; // a state if input is given
     Mat* global_improvement_ = ports_value[4]; // a state if input is given
     Mat* ph_given_v_ = ports_value[5]; // a state if input is given
+    Mat* p2ph_ = ports_value[6]; // same story
+    
+    PLASSERT( input && sampled_h_ && global_improvement_
+              && ph_given_v_ && p2ph_);
+
+    // do CD on rbm2
+    rbm2->setAllLearningRates(rbm2->cd_learning_rate);
+    rbm2->hidden_layer->setExpectations(*p2ph_);
+    rbm2->hidden_layer->generateSamples();
+    rbm2->computeHiddenActivations(rbm2->visible_layer->samples);
+    rbm2->visible_layer->update(*sampled_h_,rbm2->visible_layer->samples);
+    rbm2->connection->update(*sampled_h_,*p2ph_,
+                             rbm2->visible_layer->samples,
+                             rbm2->hidden_layer->getExpectations());
+    rbm2->hidden_layer->update(*p2ph_,rbm2->hidden_layer->getExpectations());
+
+    // for now do the ugly hack, for binomial + MatrixConnection case
+    PLASSERT(rbm1->visible_layer->classname()=="RBMBinomialLayer");
+    PLASSERT(rbm1->hidden_layer->classname()=="RBMBinomialLayer");
+    PLASSERT(rbm1->connection->classname() == "RBMMatrixConnection");
+    Mat& weights = ((RBMMatrixConnection*)
+                    get_pointer(rbm1->connection))->weights;
+    Vec& hidden_bias = rbm1->hidden_layer->bias;    
+    Vec& visible_bias = rbm1->hidden_layer->bias;    
+    static Mat delta_W;
+    static Vec delta_hb;
+    static Vec delta_vb;
+    static Mat delta_h;
+    deltaW.resize(rbm1->hidden_layer->size,rbm1->visible_layer->size);
+    delta_hb.resize(rbm1->hidden_layer->size);
+    delta_vb.resize(rbm1->visible_layer->size);
+    delta_h.resize(mbs,rbm1->hidden_layer->size);
+
+    // reconstruct the input
+    rbm1->computeVisibleActivations(*sampled_h_);
+    rbm1->visible_layer->computeExpectations();
+    Mat reconstructed_v = rbm1->visible_layer->getExpectations();
+
+    // compute RBM1 weight negative gradient
+    substract(*sampled_h_,*p2h_,delta_h);
+    multiply(delta_h, delta_h,global_improvement->toVec());
+    delta_h += *ph_given_v_;
+    productScaleAcc(deltaW, delta_h, true, *input, false, 1, 0);
+    productScaleAcc(deltaW, *sampled_h_, true, reconstructed_v, false, -1, 1);
+    // update the weights
+    multiplyAcc(weights, deltaW, rbm1->cd_learning_rate);
+
+    // do the biases now
 
 
     // Ensure all required gradients have been computed.
@@ -173,6 +222,7 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
     Mat* sampled_h_ = ports_value[3]; // a state if input is given
     Mat* global_improvement_ = ports_value[4]; // a state if input is given
     Mat* ph_given_v_ = ports_value[5]; // a state if input is given
+    Mat* p2ph_ = ports_value[6]; // same story
 
     // fprop has two modes:
     //  1) input is given (presumably for learning, or measuring bound or nll)
@@ -189,6 +239,7 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
         Mat* sampled_h = sampled_h_?sampled_h_:&sampled_h_state;
         Mat* global_improvement = global_improvement_?global_improvement_:&global_improvement_state;
         Mat* ph_given_v = ph_given_v_?ph_given_v_:&ph_given_v_state;
+        Mat* p2ph = p2ph_?p2ph_:&p2ph_state;
         sampled_h->resize(mbs,rbm1->hidden_layer->size);
         global_improvement->resize(mbs,1);
         ph_given_v->resize(mbs,rbm1->hidden_layer->size);
@@ -199,9 +250,10 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
         *ph_given_v << rbm1->hidden_layer->getExpectations();
         *sampled_h << rbm1->hidden_layer->samples;
         rbm1->visible_layer->fpropNLL(*sampled_h,neglogphsample_given_v);
-        rbm1->computeFreeEnergyOfVisible(*input,FE1v);
+        rbm1->computeFreeEnergyOfVisible(*input,FE1v,false);
         rbm1->computeFreeEnergyOfHidden(*sampled_h,FE1h);
-        rbm2->computeFreeEnergyOfVisible(*sampled_h,FE2h);
+        rbm2->computeFreeEnergyOfVisible(*sampled_h,FE2h,false);
+        *p2ph << rbm2->hidden_layer->getExpectations();
         substract(FE1h,FE2h,*global_improvement);
 
         if (bound) // actually minus the bound, to be in same units as nll, only computed exactly during test
@@ -284,6 +336,7 @@ void VBoundDBN2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sampled_h_state, copies);
     deepCopyField(global_improvement_state, copies);
     deepCopyField(ph_given_v_state, copies);
+    deepCopyField(p2ph_state, copies);
     deepCopyField(neglogphsample_given_v, copies);
     deepCopyField(all_h, copies);
     deepCopyField(all_h, copies);
