@@ -1200,8 +1200,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 void RBMModule::computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat neg_log_pvisible_given_phidden)
 {
     computeVisibleActivations(hidden,true);
-    int n_h = hidden->length();
-    int T = visible->length();
+    int n_h = hidden.length();
+    int T = visible.length();
     real default_neg_log_ph = safelog(real(n_h)); // default P(h)=1/Nh: -log(1/Nh) = log(Nh)
     Vec old_act = visible_layer->activation;
     neg_log_pvisible_given_phidden.resize(T,1);
