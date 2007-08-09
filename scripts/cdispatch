@@ -174,7 +174,7 @@ if NB_PROC:
     
 tmp="_".join(sys.argv)
 tmp=tmp[tmp.find("cdispatch"):]
-re.sub( '[^a-zA-Z0-9]', '_', tmp )
+tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
 tmp+=str(datetime.datetime.now()).replace(' ','_')
 print tmp
 dbi_param["log_dir"]=os.path.join("LOGS",tmp)
@@ -195,7 +195,10 @@ jobs = DBI([
         SCRIPT.write("   '%s',\n"%cmdstr)
     SCRIPT.write("   ],'%s'"%(launch_cmd))
     for key in dbi_param.keys():
-        SCRIPT.write(","+str(key)+"="+str(dbi_param[key]))
+        if isinstance(dbi_param[key],str):
+            SCRIPT.write(","+str(key)+"='"+str(dbi_param[key])+"'")
+        else:
+            SCRIPT.write(","+str(key)+"="+str(dbi_param[key]))
     SCRIPT.write(
 """)
 jobs.run()

@@ -87,8 +87,10 @@ class DBIBase:
             self.post_batch = [self.post_batch]
 
     def n_avail_machines(self): raise NotImplementedError, "DBIBase.n_avail_machines()"
+    
     def add_commands(self,commands): raise NotImplementedError, "DBIBase.add_commands()"
-    def get_redirection(stdout_file,stderr_file):
+    
+    def get_redirection(self,stdout_file,stderr_file):
         """Calcule the needed redirection based of the objects attribute
         return a tuple (stdout,stderr) that can be used with popen
         """
@@ -100,12 +102,13 @@ class DBIBase:
             error = STDOUT
         elif int(self.file_redirect_stderr):
             error = file(stderr_file, 'w')
+        return (output,error)
             
     def exec_pre_batch(self):
         # Execute pre-batch
         pre_batch_command = ';'.join( self.pre_batch )
 
-        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+        (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
             
         if not self.test:
             self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
@@ -116,7 +119,7 @@ class DBIBase:
         # Execute post-batch
         post_batch_command = ';'.join( self.post_batch )
         
-        output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+        (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
         
         if not self.test:
             self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
@@ -246,7 +249,11 @@ class DBICluster(DBIBase):
 
     def __init__(self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
+        add_commands(commands)
 
+    def add_commands(self,commands):
+        if not isinstance(commands, list):
+            commands=[commands]
 
         # create the information about the tasks
         for command in commands:
@@ -267,7 +274,7 @@ class DBICluster(DBIBase):
             command += "--typecpu all"
         command += " '"+string.join(task.commands,';') + "'"
         
-        print command
+        print "[DBI] "+command
 
         if self.test:
             return
@@ -275,14 +282,14 @@ class DBICluster(DBIBase):
         task.launch_time = time.time()
         task.set_scheduled_time()
 
-        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+        (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
 
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
-        print "The Log file are under %s"%self.log_dir
+        print "[DBI] The Log file are under %s"%self.log_dir
         if self.test:
-            print "Test mode, we only print the command to be executed, we don't execute them"
+            print "[DBI] Test mode, we only print the command to be executed, we don't execute them"
         # Execute pre-batch
         if len(self.pre_batch)>0:
             exec_pre_batch()
@@ -295,7 +302,7 @@ class DBICluster(DBIBase):
         if len(self.post_batch)>0:
             exec_post_batch()
 
-        print "The Log file are under %s"%self.log_dir
+        print "[DBI]The Log file are under %s"%self.log_dir
 
     def clean(self):
         #TODO: delete all log files for the current batch
@@ -317,13 +324,19 @@ class DBIbqtools(DBIBase):
 
         # create the information about the tasks
         args['temp_dir'] = self.temp_dir
+        
+        add_commands(commands)
+
+    def add_commands(self,commands):
+        if not isinstance(commands, list):
+            commands=[commands]
+
+        # create the information about the tasks
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,
                                    [self.pre_tasks, 'cd parent;'],
                                    self.post_tasks,self.dolog,False,args))
-
-
     def run(self):
         pre_batch_command = ';'.join( self.pre_batch );
         post_batch_command = ';'.join( self.post_batch );
@@ -381,7 +394,7 @@ class DBIbqtools(DBIBase):
 
         # Launch bqsubmit
         if not self.test:
-            (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
             task.set_scheduled_time()
             self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
         else:
@@ -404,9 +417,14 @@ class DBICondor(DBIBase):
         
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
-            
+
+        add_commands(commands)
+
+    def add_commands(self,commands):
+        if not isinstance(commands, list):
+            commands=[commands]
+
         # create the information about the tasks
-#        args['temp_dir'] = self.temp_dir
         for command in commands:
             pos = string.find(command,' ')
             if pos>=0:
@@ -537,13 +555,13 @@ class DBICondor(DBIBase):
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
         if not os.path.exists(dbi_file):
-            print 'WARNING: Can\' locate dbi.py file. Meaby the file "'+launch_file+'" is not up to date!'
+            print '[DBI] WARNING: Can\' locate dbi.py file. Meaby the file "'+launch_file+'" is not up to date!'
         else:
             if os.path.exists(launch_file):
                 mtimed=os.stat(dbi_file)[8]
                 mtimel=os.stat(launch_file)[8]
                 if mtimed>mtimel:
-                    print 'WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
+                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
                     overwrite_launch_file=True
         
         if not os.path.exists(launch_file) or overwrite_launch_file:
@@ -586,12 +604,12 @@ class DBICondor(DBIBase):
 
         # Launch condor
         if self.test == False:
-            (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
-            print "Executing: condor_submit " + condor_file
+            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
+            print "[DBI] Executing: condor_submit " + condor_file
             task.set_scheduled_time()
             self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
         else:
-            print "Created condor file: " + condor_file
+            print "[DBI] Created condor file: " + condor_file
             if self.dolog:
                 print "[DBI] The scheduling time will not be logged when you will submit the condor file" 
             
@@ -607,7 +625,7 @@ class DBICondor(DBIBase):
 
 
     def run(self):
-        print "The Log file are under %s"%self.log_dir
+        print "[DBI] The Log file are under %s"%self.log_dir
 
         if len(self.pre_batch)>0:
             exec_pre_batch()
@@ -634,7 +652,8 @@ class DBILocal(DBIBase):
             
     def add_commands(self,commands):
         if not isinstance(commands, list):
-            self.post_batch = [self.post_batch]
+            commands=[commands]
+
         #We copy the variable localy as an optimisation for big list of commands
         #save around 15% with 100 commands
         tmp_dir=self.tmp_dir
@@ -671,12 +690,12 @@ class DBILocal(DBIBase):
 
     def run_one_job(self,task):
         c = (';'.join(task.commands))
-        print c
+        print "[DBI] "+c
         if self.test:
             return
         task.set_scheduled_time()
 
-        (output,error)=get_redirection(task.log_file + '.out',task.log_file + '.err')
+        (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
 
         if self.nb_proc>1:
             self.sema.acquire()
@@ -685,6 +704,7 @@ class DBILocal(DBIBase):
             self.sema.release()
         else:
             p = Popen(c, shell=True,stdout=output,stderr=error)
+            p.wait()
             
     def clean(self):
         if len(self.temp_files)>0:
@@ -703,7 +723,7 @@ class DBILocal(DBIBase):
             print "[DBI] WARNING: many process but all their stdout are redirected to the parent"
         if not self.file_redirect_stderr and self.nb_proc>1:
             print "[DBI] WARNING: many process but all their stderr are redirected to the parent"
-        print "The Log file are under %s"%self.log_dir
+        print "[DBI] The Log file are under %s"%self.log_dir
 
         # Execute pre-batch
         if len(self.pre_batch)>0:
@@ -726,7 +746,7 @@ class DBILocal(DBIBase):
         if len(self.post_batch)>0:
             exec_post_batch()
             
-        print "The Log file are under %s"%self.log_dir
+        print "[DBI] The Log file are under %s"%self.log_dir
         
     def clean(self):
         pass
@@ -784,18 +804,23 @@ def cmp_ssh_hosts(h1, h2):
 class DBISsh(DBIBase):
 
     def __init__(self, commands, **args ):
-        print "WARNING: The SSH DBI is not fully implemented!"
-        print "Use at your own risk!"
+        print "[DBI] WARNING: The SSH DBI is not fully implemented!"
+        print "[DBI] Use at your own risk!"
         DBIBase.__init__(self, commands, **args)
 
+        add_commands(commands)
+        self.hosts= find_all_ssh_hosts()
+        
+    def add_commands(self,commands):
+        if not isinstance(commands, list):
+            commands=[commands]
+            
         # create the information about the tasks
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
                                    self.post_tasks,self.dolog,False))
-        self.hosts= find_all_ssh_hosts()
-        
-
+            
     def getHost(self):
         self.hosts.sort(cmp= cmp_ssh_hosts)
         #print "hosts= "
@@ -811,7 +836,7 @@ class DBISsh(DBIBase):
 
         cwd= os.getcwd()
         command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + "'"
-        print command
+        print "[DBI]"+command
 
         if self.test:
             return
@@ -819,19 +844,19 @@ class DBISsh(DBIBase):
         task.launch_time = time.time()
         task.set_scheduled_time()
         
-        (output,error)=get_redirection(task.log_file + '.out',task.log_file + '.err')
+        (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
         
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
-        print "The Log file are under %s"%self.log_dir
+        print "[DBI] The Log file are under %s"%self.log_dir
 
         # Execute pre-batch
         if len(self.pre_batch)>0:
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        print "tasks= ", self.tasks
+        print "[DBI] tasks= ", self.tasks
         for task in self.tasks:
             self.run_one_job(task)
 
