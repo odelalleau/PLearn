@@ -66,7 +66,7 @@ void VBoundDBN2::declareOptions(OptionList& ol)
     declareOption(ol, "rbm1", &VBoundDBN2::rbm1,
                   OptionBase::buildoption,
                   "First RBM, taking the DBN's input in its visible layer");
-    declareOption(ol, "rbm2", &VBoundDBN2::rbm1,
+    declareOption(ol, "rbm2", &VBoundDBN2::rbm2,
                   OptionBase::buildoption,
                   "Second RBM, producing the DBN's output and generating internal representations.");
 
@@ -94,13 +94,16 @@ void VBoundDBN2::build_()
             rbm2->forget();
         }
     }
-    ports.append("input"); // 0
-    ports.append("bound"); // 1
-    ports.append("nll"); // 2
-    ports.append("sampled_h"); // 3
-    ports.append("global_improvement"); // 4
-    ports.append("ph_given_v"); // 5
-    ports.append("p2ph"); // 6
+    if (ports.length()==0)
+    {
+        ports.append("input"); // 0
+        ports.append("bound"); // 1
+        ports.append("nll"); // 2
+        ports.append("sampled_h"); // 3
+        ports.append("global_improvement"); // 4
+        ports.append("ph_given_v"); // 5
+        ports.append("p2ph"); // 6
+    }
 }
 
 ///////////
@@ -134,7 +137,9 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
     rbm2->setAllLearningRates(rbm2->cd_learning_rate);
     rbm2->hidden_layer->setExpectations(*p2ph_);
     rbm2->hidden_layer->generateSamples();
+    rbm2->sampleVisibleGivenHidden(rbm2->hidden_layer->samples);
     rbm2->computeHiddenActivations(rbm2->visible_layer->samples);
+    rbm2->hidden_layer->computeExpectations();
     rbm2->visible_layer->update(*sampled_h_,rbm2->visible_layer->samples);
     rbm2->connection->update(*sampled_h_,*p2ph_,
                              rbm2->visible_layer->samples,
@@ -213,9 +218,11 @@ void VBoundDBN2::finalize()
 ////////////
 void VBoundDBN2::forget()
 {
-    PLASSERT(rbm1 && rbm2);
-    rbm1->forget();
-    rbm2->forget();
+    if (rbm1 && rbm2)
+    {
+        rbm1->forget();
+        rbm2->forget();
+    }
 }
 
 ///////////
@@ -259,10 +266,9 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
         rbm1->sampleHiddenGivenVisible(*input);
         *ph_given_v << rbm1->hidden_layer->getExpectations();
         *sampled_h << rbm1->hidden_layer->samples;
-        rbm1->visible_layer->fpropNLL(*sampled_h,neglogphsample_given_v);
         rbm1->computeFreeEnergyOfVisible(*input,FE1v,false);
-        rbm1->computeFreeEnergyOfHidden(*sampled_h,FE1h);
         rbm2->computeFreeEnergyOfVisible(*sampled_h,FE2h,false);
+        p2ph->resize(mbs,rbm2->hidden_layer->size);
         *p2ph << rbm2->hidden_layer->getExpectations();
         substract(FE1h,FE2h,*global_improvement);
 
@@ -324,10 +330,18 @@ const TVec<string>& VBoundDBN2::getPorts() {
 // getPortSizes //
 //////////////////
 const TMat<int>& VBoundDBN2::getPortSizes() {
+    PLASSERT(rbm1 && rbm2);
     if (sizes.width()!=2)
     {
         sizes.resize(nPorts(),2);
         sizes.fill(-1);
+        sizes(0,1)=rbm1->visible_layer->size;
+        sizes(1,1)=1;
+        sizes(2,1)=1;
+        sizes(3,1)=rbm1->hidden_layer->size;
+        sizes(4,1)=1;
+        sizes(5,1)=rbm1->hidden_layer->size;
+        sizes(6,1)=rbm2->hidden_layer->size;
     }
     return sizes;
 }
@@ -347,7 +361,6 @@ void VBoundDBN2::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(global_improvement_state, copies);
     deepCopyField(ph_given_v_state, copies);
     deepCopyField(p2ph_state, copies);
-    deepCopyField(neglogphsample_given_v, copies);
     deepCopyField(all_h, copies);
     deepCopyField(all_h, copies);
     deepCopyField(neglogP2h, copies);
