@@ -54,6 +54,14 @@ namespace PLearn {
 
 using namespace std;
 
+
+// for readBinaryNumAs
+template<bool x> struct chkUnsigned 
+{ template<class I> static bool notOk(I& y) { return false; } };
+template<> struct chkUnsigned<true> 
+{ template<class I> static bool notOk(I& y) { return y<0; } };
+
+
 /*!
  * PStream:
  *  This class defines a type of stream that should be used for all I/O within
@@ -304,10 +312,6 @@ public:
 
     //! Writes base types to PLearn binary format
     //! TODO: forbid this mechanism for arbitrary classes?
-    template<bool x> struct chkUnsigned 
-    { template<class I> static bool notOk(I& y) { return false; } };
-    struct chkUnsigned<true> 
-    { template<class I> static bool notOk(I& y) { return y<0; } };
     template<class I>
     void writeBinaryNum(I x)
     {
