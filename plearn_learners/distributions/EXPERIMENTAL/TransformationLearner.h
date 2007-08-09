@@ -657,7 +657,7 @@ private:
  
 
     //! stores the "idx"th training data point into the variable 'dst'
-    void seeTrainingPoint(const int idx, Vec & dst) const ;
+    inline void seeTrainingPoint(const int idx, Vec & dst) const ;
 
 
     //!GENERATE GAMMA RANDOM VARIABLES
@@ -686,32 +686,44 @@ private:
     //!OPERATIONS ON WEIGHTS 
     
      //!normalizes the reconstruction weights related to a given target. 
-    void normalizeTargetWeights(int targetIdx, real totalWeight);
+    inline void normalizeTargetWeights(int targetIdx, real totalWeight);
     
     //!returns a random weight 
-    real randomWeight() const;
+    inline real randomWeight() const;
     
     //!arithmetic operations on  reconstruction weights
-    real INIT_weight(real initValue) const; //!CONSTRUCTOR
-    real PROBA_weight(real weight) const; //!GET CORRESPONDING PROBABILITY 
-    real DIV_weights(real numWeight, real denomWeight) const; //!DIVISION
-    real MULT_INVERSE_weight(real weight) const ;//!MULTIPLICATIVE INVERSE
-    real MULT_weights(real weight1, real weight2) const ; //!MULTIPLICATION
-    real SUM_weights(real weight1, real weight2) const ; //!SUM 
+    inline real INIT_weight(real initValue) const; //!CONSTRUCTOR
+    inline real PROBA_weight(real weight) const; //!GET CORRESPONDING PROBABILITY 
+    inline real DIV_weights(real numWeight, real denomWeight) const; //!DIVISION
+    inline real MULT_INVERSE_weight(real weight) const ;//!MULTIPLICATIVE INVERSE
+    inline real MULT_weights(real weight1, real weight2) const ; //!MULTIPLICATION
+    inline real SUM_weights(real weight1, real weight2) const ; //!SUM 
     
     //!update/compute the weight of a reconstruction candidate with
     //!the actual transformation parameters
-    real updateReconstructionWeight(int candidateIdx);
-    real computeReconstructionWeight(const ReconstructionCandidate & gc) const;
-    real computeReconstructionWeight(int targetIdx, 
-                                     int neighborIdx, 
-                                     int transformIdx) const;
-    real computeReconstructionWeight(const Vec & target,
-                                     int neighborIdx,
-                                     int transformIdx) const;
-
+    inline real updateReconstructionWeight(int candidateIdx);
+    inline real updateReconstructionWeight(int candidateIdx,
+                                           const Vec & target,
+                                           const Vec & neighbor,
+                                           int transformIdx,
+                                           Vec & predictedTarget);
+    inline real computeReconstructionWeight(const ReconstructionCandidate & gc) const;
+    inline real computeReconstructionWeight(int targetIdx, 
+                                            int neighborIdx, 
+                                            int transformIdx) const;
+    inline real computeReconstructionWeight(const Vec & target,
+                                            int neighborIdx,
+                                            int transformIdx) const;
+    inline real computeReconstructionWeight(const Vec & target,
+                                            const Vec & neighbor,
+                                            int transformIdx)const;
+    inline real computeReconstructionWeight(const Vec & target,
+                                            const Vec & neighbor,
+                                            int transformIdx,
+                                            Vec & predictedTarget)const;
+    
     //!applies "transformIdx"th transformation on data point "src"
-    void applyTransformationOn(int transformIdx, const Vec & src , Vec & dst) const ;
+    inline void applyTransformationOn(int transformIdx, const Vec & src , Vec & dst) const ;
 
     
     //! verify if the multinomial distribution given is well-defined
@@ -830,7 +842,7 @@ private:
     
     //!returns the distance between the reconstruction and the target
     //!for the 'candidateIdx'th reconstruction candidate
-    real reconstructionEuclideanDistance(int candidateIdx);
+    inline real reconstructionEuclideanDistance(int candidateIdx);
     
     //increment the variable 'stage' of 1
     void nextStage();

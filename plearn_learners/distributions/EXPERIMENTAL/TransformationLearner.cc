@@ -621,11 +621,15 @@ real TransformationLearner::log_density(const Vec& y) const
     real scalingFactor = -1*(pl_log(pow(2*Pi*noiseVariance, inputSpaceDim/2.0)) 
                              +
                              pl_log(trainingSetLength));
+    Vec neighbor(inputSpaceDim);
+    Vec predictedTarget(inputSpaceDim);
     for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
+        seeTrainingPoint(neighborIdx,neighbor);
         for(int transformIdx=0 ; transformIdx<nbTransforms ; transformIdx++){
             weight = computeReconstructionWeight(y,
-                                                 neighborIdx,
-                                                 transformIdx);
+                                                 neighbor,
+                                                 transformIdx,
+                                                 predictedTarget);
             weight = MULT_weights(weight,
                                   transformDistribution[transformIdx]);
             totalWeight = SUM_weights(weight,totalWeight);
@@ -1568,6 +1572,23 @@ real TransformationLearner::updateReconstructionWeight(int candidateIdx)
     reconstructionSet[candidateIdx].weight = w;
     return w; 
 }
+
+//! NOT A USER METHOD !
+real TransformationLearner::updateReconstructionWeight(int candidateIdx, 
+                                                       const Vec & target,
+                                                       const Vec & neighbor,
+                                                       int transformIdx,
+                                                       Vec & predictedTarget){
+    
+    real w = computeReconstructionWeight(target,
+                                         neighbor,
+                                         transformIdx,
+                                         predictedTarget);
+    reconstructionSet[candidateIdx].weight = w;
+    return w;
+}
+
+
 real TransformationLearner::computeReconstructionWeight(const ReconstructionCandidate & gc)const
 {
     return computeReconstructionWeight(gc.targetIdx,
@@ -1579,27 +1600,40 @@ real TransformationLearner::computeReconstructionWeight(int targetIdx,
                                                         int transformIdx)const
 {
 
-    Vec target;
-    target.resize(inputSpaceDim);
+    Vec target(inputSpaceDim);
     seeTrainingPoint(targetIdx,target);
     return computeReconstructionWeight(target,
                                        neighborIdx,
                                        transformIdx);
 }
-real TransformationLearner::computeReconstructionWeight(const Vec & target_,
+real TransformationLearner::computeReconstructionWeight(const Vec & target,
                                                         int neighborIdx,
                                                         int transformIdx)const
 {
-    Vec neighbor;
-    neighbor.resize(inputSpaceDim);
+    Vec neighbor(inputSpaceDim);
     seeTrainingPoint(neighborIdx, neighbor);
-    Vec predictedTarget ;
-    predictedTarget.resize(inputSpaceDim);
+    return computeReconstructionWeight(target,neighbor,transformIdx);
+}
+
+real TransformationLearner::computeReconstructionWeight(const Vec & target,
+                                                        const Vec & neighbor,
+                                                        int transformIdx )const
+{
+    Vec predictedTarget(inputSpaceDim);
+    return computeReconstructionWeight(target, neighbor, transformIdx,predictedTarget);
+}
+
+real TransformationLearner::computeReconstructionWeight(const Vec & target,
+                                                        const Vec & neighbor,
+                                                        int transformIdx,
+                                                        Vec & predictedTarget)const
+{
     applyTransformationOn(transformIdx, neighbor, predictedTarget);
     real factor = -1/(2*noiseVariance);
-    real w = factor*powdistance(target_, predictedTarget);
-    return MULT_weights(w, transformDistribution[transformIdx]); 
+    real w = factor*powdistance(target, predictedTarget);
+    return MULT_weights(w, transformDistribution[transformIdx]);      
 }
+
 
 //!applies "transformIdx"th transformation on data point "src"
 void TransformationLearner::applyTransformationOn(int transformIdx,
@@ -1842,14 +1876,20 @@ void TransformationLearner::findBestTargetReconstructionCandidates(int targetIdx
     PLASSERT(pq.empty()); 
     
     real weight;
+    Vec target(inputSpaceDim);
+    seeTrainingPoint(targetIdx, target);
+    Vec neighbor(inputSpaceDim);
+    Vec predictedTarget(inputSpaceDim);
 
     //for each potential neighbor
     for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
         if(neighborIdx != targetIdx){
+            seeTrainingPoint(neighborIdx, neighbor);
             for(int transformIdx=0; transformIdx<nbTransforms; transformIdx++){
-                weight = computeReconstructionWeight(targetIdx, 
-                                                     neighborIdx, 
-                                                     transformIdx);
+                weight = computeReconstructionWeight(target, 
+                                                     neighbor, 
+                                                     transformIdx,
+                                                     predictedTarget);
                 
                 //if the weight is among "nbEntries" biggest weight seen,
                 //keep it until to see a bigger neighbor. 
@@ -1929,14 +1969,19 @@ void TransformationLearner::findBestWeightedNeighbors(int targetIdx,
     PLASSERT(pq.empty()); 
     
     real weight; 
+    Vec target(inputSpaceDim);
+    seeTrainingPoint(targetIdx, target);
+    Vec neighbor(inputSpaceDim);
+    Vec predictedTarget(inputSpaceDim);
     
     //for each potential neighbor
     for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
         if(neighborIdx != targetIdx){ //(the target cannot be his own neighbor)
-          
-            weight = computeReconstructionWeight(targetIdx, 
-                                                 neighborIdx, 
-                                                 transformIdx);
+            seeTrainingPoint(neighborIdx, neighbor);
+            weight = computeReconstructionWeight(target, 
+                                                 neighbor, 
+                                                 transformIdx,
+                                                 predictedTarget);
             //if the weight of the triple is among the "nbNeighbors" biggest 
             //seen,keep it until see a bigger weight. 
             if(int(pq.size()) < nbNeighbors){
@@ -1976,11 +2021,20 @@ void TransformationLearner::smallEStep()
     int candidateIdx =0;
     int  targetIdx = reconstructionSet[candidateIdx].targetIdx;
     real totalWeight = INIT_weight(0);
+    Vec target(inputSpaceDim);
+    seeTrainingPoint(targetIdx,target);
+    Vec neighbor(inputSpaceDim);
+    Vec predictedTarget(inputSpaceDim);
     
     while(candidateIdx < nbReconstructions){
         
+        seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx, neighbor);
         totalWeight = SUM_weights(totalWeight,
-                                  updateReconstructionWeight(candidateIdx));
+                                  updateReconstructionWeight(candidateIdx,
+                                                             target,
+                                                             neighbor,
+                                                             reconstructionSet[candidateIdx].transformIdx,
+                                                             predictedTarget));
         candidateIdx ++;
     
         if(candidateIdx == nbReconstructions)
@@ -1989,6 +2043,7 @@ void TransformationLearner::smallEStep()
             normalizeTargetWeights(targetIdx, totalWeight);
             totalWeight = INIT_weight(0);
             targetIdx = reconstructionSet[candidateIdx].targetIdx;
+            seeTrainingPoint(targetIdx, target);
         }
     }    
 }
