@@ -1784,17 +1784,15 @@ void TransformationLearner::findNearestNeighbors(int targetIdx,
     PLASSERT(pq.empty()); 
   
     //capture the target from his index in the training set
-    Vec target;
-    target.resize(inputSpaceDim);
+    Vec target(inputSpaceDim);
     seeTrainingPoint(targetIdx, target);
     
     //for each potential neighbor,
     real dist;    
+    Vec neighbor(inputSpaceDim);
     for(int i=0; i<trainingSetLength; i++){
         if(i != targetIdx){ //(the target cannot be his own neighbor)
             //computes the distance to the target
-            Vec neighbor;
-            neighbor.resize(inputSpaceDim);
             seeTrainingPoint(i, neighbor);
             dist = powdistance(target, neighbor); 
             //if the distance is among "nbNeighbors" smallest distances seen,
@@ -2122,7 +2120,9 @@ void TransformationLearner::MStepTransformations()
     B_C.clear();
     
     real lambda = 1.0*noiseVariance/transformsVariance;
-    Vec v;
+    Vec v(inputSpaceDim);
+    Vec target(inputSpaceDim);
+    Vec neighbor(inputSpaceDim);
     for(int idx=0 ; idx<nbReconstructions ; idx++){
         
         //catch a view on the next entry of our dataset, that is, a  triple:
@@ -2131,16 +2131,12 @@ void TransformationLearner::MStepTransformations()
         real p = PROBA_weight(reconstructionSet[idx].weight);
   
         //catch the target and neighbor points from the training set
-        Vec target;
-        target.resize(inputSpaceDim);
+        
         seeTrainingPoint(reconstructionSet[idx].targetIdx, target);
-        Vec neighbor;
-        neighbor.resize(inputSpaceDim);
         seeTrainingPoint(reconstructionSet[idx].neighborIdx, neighbor);
         
         int t = reconstructionSet[idx].transformIdx;
         
-        v.resize(inputSpaceDim);
         v << target;
         if(transformFamily == TRANSFORM_FAMILY_LINEAR_INCREMENT){
             v = v - neighbor;
@@ -2210,25 +2206,27 @@ void TransformationLearner::MStepTransformations()
 //!maximization step with respect to transformation bias
 //!(MAP version)
 void TransformationLearner::MStepBias(){
-    Mat newBiasSet;
-    newBiasSet.resize(nbTransforms, inputSpaceDim);
-    Vec norms;
-    norms.resize(nbTransforms);
+    Mat newBiasSet(nbTransforms, inputSpaceDim);
+    for(int i=0;i<nbTransforms;i++){
+        for(int j=0; j<inputSpaceDim; j++){
+            newBiasSet[i][j]=0;
+        }
+    }
+    Vec norms(nbTransforms);
     for(int t=0;t<nbTransforms;t++){
         norms[t] = INIT_weight(0);
     }
     int transformIdx;
-    Vec target,neighbor,reconstruction;
+    Vec target(inputSpaceDim);
+    Vec neighbor(inputSpaceDim);
+    Vec reconstruction(inputSpaceDim);
     real proba,weight;
     for(int idx=0; idx<nbReconstructions; idx++){
         transformIdx = reconstructionSet[idx].transformIdx;
         weight = reconstructionSet[idx].weight;
         proba = PROBA_weight(weight);
-        target.resize(inputSpaceDim);
         seeTrainingPoint(reconstructionSet[idx].targetIdx,target);
-        neighbor.resize(inputSpaceDim);
         seeTrainingPoint(reconstructionSet[idx].neighborIdx, neighbor);
-        reconstruction.resize(inputSpaceDim);
         applyTransformationOn(transformIdx,neighbor, reconstruction);
         newBiasSet(transformIdx) += proba*(target - reconstruction);
         norms[transformIdx] = SUM_weights(norms[transformIdx],weight);
@@ -2254,35 +2252,59 @@ void TransformationLearner::MStepNoiseVariance()
 void TransformationLearner::MStepNoiseVarianceMAP(real alpha, real beta)
 {
     
-    Vec total_k;
-    total_k.resize(nbTransforms);
+    Vec total_k(nbTransforms);
+    for(int i=0;i<nbTransforms; i++){
+        total_k[i]=0;
+    }
     int transformIdx;
     real proba;
-    for(int idx=0; idx < nbReconstructions; idx++){
-        transformIdx = reconstructionSet[idx].transformIdx;
-        proba = PROBA_weight(reconstructionSet[idx].weight);
-        total_k[transformIdx]+=(proba * reconstructionEuclideanDistance(idx));
-    }
+    Vec target(inputSpaceDim);
+    Vec neighbor(inputSpaceDim);
+    Vec reconstruction(inputSpaceDim);
+    int candidateIdx=0;
+    for(int targetIdx=0; targetIdx<trainingSetLength; targetIdx ++){
+        seeTrainingPoint(targetIdx,target);
+        for(int idx=0; idx < nbTargetReconstructions; idx++){
+            transformIdx = reconstructionSet[candidateIdx].transformIdx;
+            seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx , neighbor);
+            proba = PROBA_weight(reconstructionSet[candidateIdx].weight);
+            total_k[transformIdx]+=(proba * reconstructionEuclideanDistance(target,
+                                                                            neighbor,
+                                                                            transformIdx,
+                                                                            reconstruction));
+            candidateIdx ++;
+        }
     noiseVariance = (2*beta + sum(total_k))/(2*alpha - 2 + trainingSetLength*inputSpaceDim);  
+    }
 }
  
 //!returns the distance between the reconstruction and the target
 //!for the 'candidateIdx'th reconstruction candidate
 real TransformationLearner::reconstructionEuclideanDistance(int candidateIdx){
-    Vec target;
-    target.resize(inputSpaceDim);
+    Vec target(inputSpaceDim);
     seeTrainingPoint(reconstructionSet[candidateIdx].targetIdx, target);
-    Vec neighbor;
-    neighbor.resize(inputSpaceDim);
+    Vec neighbor(inputSpaceDim);
     seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx,
-                neighbor);
-    Vec reconstruction;
-    reconstruction.resize(inputSpaceDim);
+                     neighbor);
+    Vec reconstruction(inputSpaceDim);
     applyTransformationOn(reconstructionSet[candidateIdx].transformIdx,
                           neighbor,
                           reconstruction);
     return powdistance(target, reconstruction);
 }
+
+real TransformationLearner::reconstructionEuclideanDistance(const Vec& target,
+                                                            const Vec& neighbor,
+                                                            int transformIdx,
+                                                            Vec& reconstruction)const
+{
+    applyTransformationOn(transformIdx,
+                          neighbor,
+                          reconstruction);
+    return powdistance(target,reconstruction);
+
+}
+
 
 
 //!increments the variable 'stage' of 1 

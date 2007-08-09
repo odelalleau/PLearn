@@ -843,7 +843,11 @@ private:
     //!returns the distance between the reconstruction and the target
     //!for the 'candidateIdx'th reconstruction candidate
     inline real reconstructionEuclideanDistance(int candidateIdx);
-    
+    inline real reconstructionEuclideanDistance(const Vec & target,
+                                                const Vec & neighbor,
+                                                int transformIdx,
+                                                Vec & reconstruction)const;
+
     //increment the variable 'stage' of 1
     void nextStage();
 
