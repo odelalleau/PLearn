@@ -263,14 +263,16 @@ class DBICluster(DBIBase):
         
         print command
 
+        if self.test:
+            return
+
         task.launch_time = time.time()
         set_config_value(task.log_file, 'SCHEDULED_TIME',
                 time.strftime(self.time_format, time.localtime(time.time())))
 
         (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
 
-        if self.test == False:
-            task.p = Popen(command, shell=True,stdout=output,stderr=error)
+        task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
         print "The Log file are under %s"%self.log_dir
@@ -319,16 +321,7 @@ class DBIbqtools(DBIBase):
 
     def run(self):
         pre_batch_command = ';'.join( self.pre_batch );
-        if int(self.file_redirect_stdout):
-            pre_batch_command += ' >> ' + self.log_file + '.pre_batch.out'
-        if int(self.file_redirect_stderr):
-            pre_batch_command += ' 2>> ' + self.log_file + '.pre_batch.err'
-
         post_batch_command = ';'.join( self.post_batch );
-        if int(self.file_redirect_stdout):
-            post_batch_command += ' >> ' + self.log_file + '.post_batch.out'
-        if int(self.file_redirect_stderr):
-            post_batch_command += ' 2>> ' + self.log_file + '.post_batch.err'
 
         # create one (sh) script that will launch the appropriate ~~command~~
         # in the right environment
@@ -382,10 +375,11 @@ class DBIbqtools(DBIBase):
             exec_pre_batch()
 
         # Launch bqsubmit
-        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
-
-        self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
-
+        if not self.test:
+            (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+            self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
+        else:
+            print "[DBI] in test mode, we generate all the file, but we do not execute bqsubmit"
         os.chdir('parent')
 
         # Execute post-batchs
@@ -808,6 +802,9 @@ class DBISsh(DBIBase):
         command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + "'"
         print command
 
+        if self.test:
+            return
+        
         task.launch_time = time.time()
         set_config_value(task.log_file, 'SCHEDULED_TIME',
                 time.strftime(self.time_format, time.localtime(time.time())))
