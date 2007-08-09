@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,os,re,time
+import sys,os,re,time,datetime
 
 ScriptName="launchdbi.py"
 ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local[=nb_process]] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>] [--32|--64|--3264]'
@@ -171,6 +171,14 @@ if ARCH!="":
     dbi_param["arch"]=ARCH
 if NB_PROC:
     dbi_param["nb_proc"]=NB_PROC
+    
+tmp="_".join(sys.argv)
+tmp=tmp[tmp.find("cdispatch"):]
+re.sub( '[^a-zA-Z0-9]', '_', tmp )
+tmp+=str(datetime.datetime.now()).replace(' ','_')
+print tmp
+dbi_param["log_dir"]=os.path.join("LOGS",tmp)
+dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
 if "test" in optionargs:
     print "We generated %s command in the file"% len(commands)
