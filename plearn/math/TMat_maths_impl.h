@@ -4479,31 +4479,47 @@ void makeRowsSumTo1(const TMat<T>& mat)
     }
 }
 
-
-// result[i,j] = x[i,j]*scale;
+// result[i,j] = x[i,j]*y[i] or x[i,j]*y[j] (transpose case)
 template<class T>
-void multiply(const TMat<T>& result, const TMat<T>& x, T scale)
+void multiply(TMat<T>& result, const TMat<T>& x, const TVec<T>& y, bool transpose=false)
 {
-#ifdef BOUNDCHECK
-    if (result.length()!=x.length() || result.width()!=x.width())
-        PLERROR("multiply incompatible dimensions: %dx%d <- %dx%d",
-                result.length(),result.width(),x.length(),x.width());
-#endif
+    PLASSERT_MSG(transpose && x.width()==y.length() ||
+                 !transpose && x.length()==y.length(),
+                 "multiply matrix rows or columns by vector: incompatible dimensions");
+    result.resize(x.length(),x.width());
     if(result.isCompact() && x.isCompact())
     {
         typename TMat<T>::compact_iterator itm = result.compact_begin();
-        typename TMat<T>::compact_iterator itmend = result.compact_end();
         typename TMat<T>::compact_iterator itx = x.compact_begin();
-        for(; itm!=itmend; ++itm, ++itx)
-            *itm = *itx * scale;
+        typename TVec<T>::iterator ity = y.begin();
+        if (transpose)
+            for (int i=0;i<x.length();i++)
+            {
+                ity = y.begin();
+                for (int j=0;j<x.width();j++,++itx,++itm,++ity)
+                    *itm = *itx * *ity;
+            }
+        else
+            for (int i=0;i<x.length();i++,++ity)
+                for (int j=0;j<x.width();j++,++itx,++itm)
+                    *itm = *itx * *ity;
     }
     else // use non-compact iterators
     {
         typename TMat<T>::iterator itm = result.begin();
-        typename TMat<T>::iterator itmend = result.end();
         typename TMat<T>::iterator itx = x.begin();
-        for(; itm!=itmend; ++itm, ++itx)
-            *itm = *itx * scale;
+        typename TVec<T>::iterator ity = y.begin();
+        if (transpose)
+            for (int i=0;i<x.length();i++)
+            {
+                ity = y.begin();
+                for (int j=0;j<x.width();j++,++itx,++itm,++ity)
+                    *itm = *itx * *ity;
+            }
+        else
+            for (int i=0;i<x.length();i++,++ity)
+                for (int j=0;j<x.width();j++,++itx,++itm)
+                    *itm = *itx * *ity;
     }
 }
 
