@@ -1197,7 +1197,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
 }
 
-void RBMModule::computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat neg_log_pvisible_given_phidden)
+void RBMModule::computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat& neg_log_pvisible_given_phidden)
 {
     computeVisibleActivations(hidden,true);
     int n_h = hidden.length();

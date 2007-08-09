@@ -258,8 +258,9 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int ModuleLearner::outputsize() const
 {
-    PLASSERT( module && store_outputs );
-    return module->getPortWidth("output");
+    if ( module && store_outputs )
+        return module->getPortWidth("output");
+    return 0;
 }
 
 ////////////

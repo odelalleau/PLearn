@@ -325,7 +325,7 @@ public:
 
     void computePartitionFunction();
 
-    void computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat neg_log_pvisible_given_phidden);
+    void computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat& neg_log_pvisible_given_phidden);
 
 private:
     //#####  Private Member Functions  ########################################
