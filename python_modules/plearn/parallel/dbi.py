@@ -7,14 +7,14 @@ import string
 import time
 import traceback
 import shutil
-from subprocess import Popen,PIPE
+from subprocess import Popen,PIPE,STDOUT
 from utils import *
 from configobj import ConfigObj
 from textwrap import dedent
 import pdb
 from threading import Thread,BoundedSemaphore
 from time import sleep
-#from plearn.pymake import pymake
+import datetime
 
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
@@ -58,6 +58,7 @@ class DBIBase:
         #
         self.file_redirect_stdout = True
         self.file_redirect_stderr = True
+        self.redirect_stderr_to_stdout = True
 
         # Initialize the namespace
         self.requirements = ''
@@ -86,16 +87,26 @@ class DBIBase:
             self.post_batch = [self.post_batch]
 
     def n_avail_machines(self): raise NotImplementedError, "DBIBase.n_avail_machines()"
-    def add_command(self,command): raise NotImplementedError, "DBIBase.add_command()"
-    def exec_pre_batch(self):
-        # Execute pre-batch
+    def add_commands(self,commands): raise NotImplementedError, "DBIBase.add_commands()"
+    def get_redirection(stdout_file,stderr_file):
+        """Calcule the needed redirection based of the objects attribute
+        return a tuple (stdout,stderr) that can be used with popen
+        """
         output = PIPE
         error = PIPE
-        pre_batch_command = ';'.join( self.pre_batch )
         if int(self.file_redirect_stdout):
-            output = file(self.log_file + '.pre_batch.out', 'w')
-        if int(self.file_redirect_stderr):
-            error = file(self.log_file + '.pre_batch.err', 'w')
+            output = file(stdout_file, 'w')
+        if self.redirect_stderr_to_stdout:
+            error = STDOUT
+        elif int(self.file_redirect_stderr):
+            error = file(stderr_file, 'w')
+            
+    def exec_pre_batch(self):
+        # Execute pre-batch
+        pre_batch_command = ';'.join( self.pre_batch )
+
+        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+            
         if not self.test:
             self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
         else:
@@ -103,13 +114,10 @@ class DBIBase:
             
     def exec_post_batch(self):
         # Execute post-batch
-        output = PIPE
-        error = PIPE
         post_batch_command = ';'.join( self.post_batch )
-        if int(self.file_redirect_stdout):
-            output = file(self.log_file + '.post_batch.out', 'w')
-        if int(self.file_redirect_stderr):
-            error = file(self.log_file + '.post_batch.err', 'w')
+        
+        output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+        
         if not self.test:
             self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
         else:
@@ -123,11 +131,8 @@ class DBIBase:
 
 class Task:
 
-    def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, args = {}):
-        self.unique_id = get_new_sid('')
+    def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, gen_unique_id = True, args = {}):
         self.add_unique_id = 0
-        formatted_command = re.sub( '[^a-zA-Z0-9]', '_', command );
-        self.log_file = truncate( os.path.join(log_dir, self.unique_id +'_'+ formatted_command), 200) + ".log"
         # The "python utils.py..." command is not exactly the same for every
         # task in a batch, so it cannot be considered a "pre-command", and
         # has to be actually part of the command.  Since the user-provided
@@ -140,6 +145,14 @@ class Task:
 
         for key in args.keys():
             self.__dict__[key] = args[key]
+
+        formatted_command = re.sub( '[^a-zA-Z0-9]', '_', command );
+        if gen_unique_id:
+            self.unique_id = get_new_sid('')#compation intense
+            self.log_file = truncate( os.path.join(log_dir, self.unique_id +'_'+ formatted_command), 200) + ".log"
+        else:
+            self.unique_id = formatted_command+str(datetime.datetime.now()).replace(' ','_')
+            self.log_file = truncate( os.path.join(log_dir, self.unique_id), 200) + ".log"
 
         if self.add_unique_id:
                 command = command + ' unique_id=' + self.unique_id
@@ -233,7 +246,7 @@ class DBICluster(DBIBase):
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,self.pre_tasks,
-                                   self.post_tasks,self.dolog))
+                                   self.post_tasks,self.dolog,False))
 
 
     def run_one_job(self, task):
@@ -253,12 +266,9 @@ class DBICluster(DBIBase):
         task.launch_time = time.time()
         set_config_value(task.log_file, 'SCHEDULED_TIME',
                 time.strftime(self.time_format, time.localtime(time.time())))
-        output = PIPE
-        error = PIPE
-        if int(self.file_redirect_stdout):
-            output = file(task.log_file + '.out','w')
-        if int(self.file_redirect_stderr):
-            error = file(task.log_file + '.err','w')
+
+        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+
         if self.test == False:
             task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
@@ -304,7 +314,7 @@ class DBIbqtools(DBIBase):
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,
                                    [self.pre_tasks, 'cd parent;'],
-                                   self.post_tasks,self.dolog,args))
+                                   self.post_tasks,self.dolog,False,args))
 
 
     def run(self):
@@ -372,12 +382,8 @@ class DBIbqtools(DBIBase):
             exec_pre_batch()
 
         # Launch bqsubmit
-        output = PIPE
-        error = PIPE
-        if int(self.file_redirect_stdout):
-            output = file(self.log_file + '.out', 'w')
-        if int(self.file_redirect_stderr):
-            error = file(self.log_file + '.err', 'w')
+        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+
         self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
 
         os.chdir('parent')
@@ -410,7 +416,7 @@ class DBICondor(DBIBase):
 
             # We use the absolute path so that we don't have corner case as with ./ 
             c = os.path.normpath(os.path.join(os.getcwd(), c))
-            command = c + c2
+            command = "".join([c,c2])
             
                 # We will execute the command on the specified architecture
                 # if it is specified. If the executable exist for both
@@ -462,7 +468,7 @@ class DBICondor(DBIBase):
 
             self.tasks.append(Task(newcommand, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
-                                   self.post_tasks,self.dolog,args))
+                                   self.post_tasks,self.dolog,False,args))
 
             #keeps a list of the temporary files created, so that they can be deleted at will            
 
@@ -575,29 +581,24 @@ class DBICondor(DBIBase):
                          '/python_modules/plearn/parallel/configobj.py',  configobj_file)
             self.temp_files.append(configobj_file)            
             os.chmod(configobj_file, 0755)
-        # Launch condor
-        output = PIPE
-        error = PIPE
-        if int(self.file_redirect_stdout):
-            output = file(self.log_file + '.out', 'w')
-        if int(self.file_redirect_stderr):
-            error = file(self.log_file + '.err', 'w')
 
+        # Launch condor
         if self.test == False:
+            (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
             print "Executing: condor_submit " + condor_file
             self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
         else:
             print "Created condor file: " + condor_file
             
     def clean(self):
-                
-        sleep(20)
-        for file_name in self.temp_files:
-            try:
-                os.remove(file_name)
-            except os.error:
-                pass
-            pass    
+        if len(self.temp_files)>0:
+            sleep(20)
+            for file_name in self.temp_files:
+                try:
+                    os.remove(file_name)
+                except os.error:
+                    pass
+                pass    
 
 
     def run(self):
@@ -620,67 +621,75 @@ class DBILocal(DBIBase):
     def __init__( self, commands, **args ):
         self.nb_proc=1
         DBIBase.__init__(self, commands, **args)
+        if isinstance(self.nb_proc,basestring):
+            self.nb_proc=int(self.nb_proc)
         self.args=args
         self.threads=[]
+        self.add_commands(commands)
+            
+    def add_commands(self,commands):
+        if not isinstance(commands, list):
+            self.post_batch = [self.post_batch]
+        #We copy the variable localy as an optimisation for big list of commands
+        #save around 15% with 100 commands
+        tmp_dir=self.tmp_dir
+        log_dir=self.log_dir
+        time_format=self.time_format
+        pre_tasks=self.pre_tasks
+        post_tasks=self.post_tasks
+        dolog=self.dolog
+        args=self.args
         for command in commands:
-            self.add_command(command)
+            pos = string.find(command,' ')
+            if pos>=0:
+                c = command[0:pos]
+                c2 = command[pos:]
+            else:
+                c=command
+                c2=""
+                
+            # We use the absolute path so that we don't have corner case as with ./ 
+            c = os.path.normpath(os.path.join(os.getcwd(), c))
+            command = "".join([c,c2])
             
-    def add_command(self,command):
-        pos = string.find(command,' ')
-        if pos>=0:
-            c = command[0:pos]
-            c2 = command[pos:]
-        else:
-            c=command
-            c2=""
+            # We will execute the command on the specified architecture
+            # if it is specified. If the executable exist for both
+            # architecture we execute on both. Otherwise we execute on the
+            # same architecture as the architecture of the launch computer
             
-        # We use the absolute path so that we don't have corner case as with ./ 
-        c = os.path.normpath(os.path.join(os.getcwd(), c))
-        command = c + c2
-        
-        # We will execute the command on the specified architecture
-        # if it is specified. If the executable exist for both
-        # architecture we execute on both. Otherwise we execute on the
-        # same architecture as the architecture of the launch computer
-        
-        if not os.path.exists(c):
-            raise Exception("The command '"+c+"' do not exist!")
-        elif not os.access(c, os.X_OK):
-            raise Exception("The command '"+c+"' do not have execution permission!")
-        self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
-                               self.time_format, self.pre_tasks,
-                               self.post_tasks,self.dolog,self.args))
-        
+            if not os.access(c, os.X_OK):
+                raise Exception("The command '"+c+"' do not exist or have execution permission!")
+            self.tasks.append(Task(command, tmp_dir, log_dir,
+                                   time_format, pre_tasks,
+                                   post_tasks,dolog,False,args))
         #keeps a list of the temporary files created, so that they can be deleted at will            
 
     def run_one_job(self,task):
-            
-        output = PIPE
-        error = PIPE
-        if int(self.file_redirect_stdout):
-            output = file(self.log_file + '.out', 'w')
-        if int(self.file_redirect_stderr):
-            error = file(self.log_file + '.err', 'w')
-
         c = (';'.join(task.commands))
-        if self.test == False:
+        print c
+        if self.test:
+            return
+
+        (output,error)=get_redirection(task.log_file + '.out',task.log_file + '.err')
+#        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+
+        if self.nb_proc>1:
             self.sema.acquire()
-            print c
             p = Popen(c, shell=True,stdout=output,stderr=error)
             p.wait()
             self.sema.release()
         else:
-            print c
+            p = Popen(c, shell=True,stdout=output,stderr=error)
             
     def clean(self):
-                
-        sleep(20)
-        for file_name in self.temp_files:
-            try:
-                os.remove(file_name)
-            except os.error:
-                pass
-            pass    
+        if len(self.temp_files)>0:
+            sleep(20)
+            for file_name in self.temp_files:
+                try:
+                    os.remove(file_name)
+                except os.error:
+                    pass
+                pass    
 
     def run(self):
         if self.test:
@@ -694,21 +703,26 @@ class DBILocal(DBIBase):
         # Execute pre-batch
         if len(self.pre_batch)>0:
             exec_pre_batch()
-        
-        # Execute all Tasks (including pre_tasks and post_tasks if any)
-        self.sema=BoundedSemaphore(int(self.nb_proc))
-        for (task,ind) in zip(self.tasks,range(len(self.tasks))):
-            t=Thread(target=self.run_one_job,args=(task,))
-            t.start()
-            self.threads.append(t)
 
-        for t in self.threads:
-            t.join()
+        # Execute all Tasks (including pre_tasks and post_tasks if any)
+        if not self.test and self.nb_proc>1:
+            self.sema=BoundedSemaphore(int(self.nb_proc))
+            for task in self.tasks:
+                t=Thread(target=self.run_one_job,args=(task,))
+                t.start()
+                self.threads.append(t)
+                for t in self.threads:
+                    t.join()
+        else:
+            for task in self.tasks:
+                self.run_one_job(task)
 
         # Execute post-batchs
         if len(self.post_batch)>0:
             exec_post_batch()
             
+        print "The Log file are under %s"%self.log_dir
+        
     def clean(self):
         pass
 
@@ -773,7 +787,7 @@ class DBISsh(DBIBase):
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
-                                   self.post_tasks,self.dolog))
+                                   self.post_tasks,self.dolog,False))
         self.hosts= find_all_ssh_hosts()
         
 
@@ -797,12 +811,9 @@ class DBISsh(DBIBase):
         task.launch_time = time.time()
         set_config_value(task.log_file, 'SCHEDULED_TIME',
                 time.strftime(self.time_format, time.localtime(time.time())))
-        output = PIPE
-        error = PIPE
-        if int(self.file_redirect_stdout):
-            output = file(task.log_file + '.out','w')
-        if int(self.file_redirect_stderr):
-            error = file(task.log_file + '.err','w')        
+        
+        (output,error)=get_redirection(task.log_file + '.out',task.log_file + '.err')
+        
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
     def run(self):
