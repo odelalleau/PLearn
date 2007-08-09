@@ -209,6 +209,12 @@ class Task:
             pass
         return None
 
+    def set_scheduled_time(self):
+        if self.dolog:
+            set_config_value(self.log_file, 'STATUS',str(STATUS_WAITING))
+            set_config_value(self.log_file, 'SCHEDULED_TIME',
+                             time.strftime(self.time_format, time.localtime(time.time())))
+            
     def get_waiting_time(self):
         # get the string representation
         str_sched = get_config_value(self.log_file,'SCHEDULED_TIME')
@@ -267,8 +273,7 @@ class DBICluster(DBIBase):
             return
 
         task.launch_time = time.time()
-        set_config_value(task.log_file, 'SCHEDULED_TIME',
-                time.strftime(self.time_format, time.localtime(time.time())))
+        task.set_scheduled_time()
 
         (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
 
@@ -377,9 +382,12 @@ class DBIbqtools(DBIBase):
         # Launch bqsubmit
         if not self.test:
             (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
+            task.set_scheduled_time()
             self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
         else:
-            print "[DBI] in test mode, we generate all the file, but we do not execute bqsubmit"
+            print "[DBI] Test mode, we generate all the file, but we do not execute bqsubmit"
+            if self.dolog:
+                print "[DBI] The scheduling time will not be logged when you will submit the generated file" 
         os.chdir('parent')
 
         # Execute post-batchs
@@ -509,13 +517,13 @@ class DBICondor(DBIBase):
                 executable     = %s/launch.sh
                 universe       = vanilla
                 requirements   = %s
-                output         = %s/condor.%s.%s.$(Process).out
-                error          = %s/condor.%s.%s.$(Process).error
-                log            = %s/condor.%s.log
+                output         = %s/condor.%s.$(Process).out
+                error          = %s/condor.%s.$(Process).error
+                log            = %s/condor.log
                 ''' % (self.tmp_dir,req,
-                       self.log_dir,self.targetcondorplatform,self.unique_id,
-                       self.log_dir,self.targetcondorplatform,self.unique_id,
-                       self.log_dir,self.targetcondorplatform)))
+                       self.log_dir,self.unique_id,
+                       self.log_dir,self.unique_id,
+                       self.log_dir)))
 
         if len(condor_datas)!=0:
             for i in condor_datas:
@@ -580,9 +588,12 @@ class DBICondor(DBIBase):
         if self.test == False:
             (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
             print "Executing: condor_submit " + condor_file
+            task.set_scheduled_time()
             self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
         else:
             print "Created condor file: " + condor_file
+            if self.dolog:
+                print "[DBI] The scheduling time will not be logged when you will submit the condor file" 
             
     def clean(self):
         if len(self.temp_files)>0:
@@ -663,9 +674,9 @@ class DBILocal(DBIBase):
         print c
         if self.test:
             return
+        task.set_scheduled_time()
 
         (output,error)=get_redirection(task.log_file + '.out',task.log_file + '.err')
-#        (output,error)=get_redirection(self.log_file + '.out',self.log_file + '.err')
 
         if self.nb_proc>1:
             self.sema.acquire()
@@ -806,8 +817,7 @@ class DBISsh(DBIBase):
             return
         
         task.launch_time = time.time()
-        set_config_value(task.log_file, 'SCHEDULED_TIME',
-                time.strftime(self.time_format, time.localtime(time.time())))
+        task.set_scheduled_time()
         
         (output,error)=get_redirection(task.log_file + '.out',task.log_file + '.err')
         
