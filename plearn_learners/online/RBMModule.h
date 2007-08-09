@@ -267,9 +267,6 @@ protected:
     //! Add a new port to the 'portname_to_index' map and 'ports' vector.
     void addPortName(const string& name);
 
-    //! Forward the given learning rate to all elements of this module.
-    void setAllLearningRates(real lr);
-        
     //! Forward the given learning rate to all elements of the layers
     //! and to the reconstruction connections (NOT of the connection weights).
     void setLearningRatesOnlyForLayers(real lr);
@@ -278,6 +275,9 @@ protected:
     static void declareOptions(OptionList& ol);
 
 public:
+    //! Forward the given learning rate to all elements of this module.
+    void setAllLearningRates(real lr);
+        
     //! Compute activations on the hidden layer based on the provided
     //! visible input.
     //! If 'hidden_bias' is not null nor empty, then it is used as an

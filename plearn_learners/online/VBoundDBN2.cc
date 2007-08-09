@@ -37,7 +37,7 @@
 /*! \file VBoundDBN2.cc */
 
 
-
+#include <plearn_learners/online/RBMMatrixConnection.h>
 #include "VBoundDBN2.h"
 
 namespace PLearn {
@@ -126,7 +126,7 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* global_improvement_ = ports_value[4]; // a state if input is given
     Mat* ph_given_v_ = ports_value[5]; // a state if input is given
     Mat* p2ph_ = ports_value[6]; // same story
-    
+    int mbs = input->length();
     PLASSERT( input && sampled_h_ && global_improvement_
               && ph_given_v_ && p2ph_);
 
@@ -147,15 +147,15 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
     PLASSERT(rbm1->connection->classname() == "RBMMatrixConnection");
     Mat& weights = ((RBMMatrixConnection*)
                     get_pointer(rbm1->connection))->weights;
-    Vec& hidden_bias = rbm1->hidden_layer->bias;    
-    Vec& visible_bias = rbm1->hidden_layer->bias;    
     static Mat delta_W;
     static Vec delta_hb;
-    static Vec delta_vb;
+    static Vec delta_vb1;
+    static Vec delta_vb2;
     static Mat delta_h;
-    deltaW.resize(rbm1->hidden_layer->size,rbm1->visible_layer->size);
+    delta_W.resize(rbm1->hidden_layer->size,rbm1->visible_layer->size);
     delta_hb.resize(rbm1->hidden_layer->size);
-    delta_vb.resize(rbm1->visible_layer->size);
+    delta_vb1.resize(rbm1->visible_layer->size);
+    delta_vb2.resize(rbm1->visible_layer->size);
     delta_h.resize(mbs,rbm1->hidden_layer->size);
 
     // reconstruct the input
@@ -164,16 +164,26 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat reconstructed_v = rbm1->visible_layer->getExpectations();
 
     // compute RBM1 weight negative gradient
-    substract(*sampled_h_,*p2h_,delta_h);
-    multiply(delta_h, delta_h,global_improvement->toVec());
+    //  dlogbound/dWij sampling approx = (ph_given_v[i] + (h[i]-ph_given_v[i])*global_improvement)*v[j] - h[i]*reconstructed_v[j]
+    substract(*sampled_h_,*ph_given_v_,delta_h);
+    multiply(delta_h, delta_h,global_improvement_->toVec());
     delta_h += *ph_given_v_;
-    productScaleAcc(deltaW, delta_h, true, *input, false, 1, 0);
-    productScaleAcc(deltaW, *sampled_h_, true, reconstructed_v, false, -1, 1);
+    productScaleAcc(delta_W, delta_h, true, *input, false, 1., 0.);
+    productScaleAcc(delta_W, *sampled_h_, true, reconstructed_v, false, -1., 1.);
     // update the weights
-    multiplyAcc(weights, deltaW, rbm1->cd_learning_rate);
+    multiplyAcc(weights, delta_W, rbm1->cd_learning_rate);
 
     // do the biases now
-
+    //  dlogbound/dbi sampling approx = (ph_given_v[i] + (h[i]-ph_given_v[i])*global_improvement) - h[i]
+    substract(delta_h, *sampled_h_, delta_h);
+    columnSum(delta_h,delta_hb);
+    multiplyAcc(rbm1->hidden_layer->bias,delta_hb,rbm1->cd_learning_rate);
+    
+    //  dlogbound/dji sampling approx = v[j] - reconstructed_v[j]
+    columnSum(reconstructed_v,delta_vb1);
+    columnSum(*input,delta_vb2);
+    substract(delta_vb2,delta_vb1,delta_vb1);
+    multiplyAcc(rbm1->visible_layer->bias,delta_vb1,rbm1->cd_learning_rate);
 
     // Ensure all required gradients have been computed.
     checkProp(ports_gradient);
