@@ -424,6 +424,9 @@ void TransformationLearner::declareMethods(RemoteMethodMap& rmm){
                    RetDoc("mdXd matrix, m = number of transformations \n"
                           "             d = dimensionality of the input space")));
     
+    declareMethod(rmm,"buildLearnedParameters",
+                  &TransformationLearner::buildLearnedParameters,
+                  (BodyDoc("builds the structures related to learned parameters")));
     declareMethod(rmm,
                   "generatorBuild",
                   &TransformationLearner::generatorBuild,
@@ -593,7 +596,7 @@ void TransformationLearner::generate(Vec & y) const
     neighborIdx=pickNeighborIdx();
     Vec neighbor;
     neighbor.resize(inputSpaceDim);
-    seeNeighbor(neighborIdx, neighbor);
+    seeTrainingPoint(neighborIdx, neighbor);
     generatePredictedFrom(neighbor, y);
 }
 
@@ -603,26 +606,6 @@ void TransformationLearner::generate(Vec & y) const
 int TransformationLearner::inputsize() const {
     return inputSpaceDim;
 }
-
-
-/*TVec<string> PDistribution::getTestCostNames() const
-{
-    TVec<string> nll_cost;
-    if (nll_cost.isEmpty())
-        nll_cost.append("NLL");
-    return nll_cost;
-    }*/
-
-///////////////////////
-// getTrainCostNames //
-///////////////////////
-TVec<string> TransformationLearner::getTrainCostNames() const
-{
-    return getTestCostNames();
-}
-
-
-
 
 
 
@@ -1029,6 +1012,7 @@ void TransformationLearner::initTransformsParameters()
 void TransformationLearner::setTransformsParameters(TVec<Mat> transforms_,
                                                     Mat biasSet_)
 {
+    
     PLASSERT(transforms_.length() == nbTransforms);
     
     int nbRows = inputSpaceDim*nbTransforms;
@@ -1349,7 +1333,7 @@ Mat TransformationLearner::returnReconstructions(int targetIdx)const
         transformIdx= reconstructionSet[candidateIdx].transformIdx;
         Vec neighbor;
         neighbor.resize(inputSpaceDim);
-        seeNeighbor(neighborIdx, neighbor);
+        seeTrainingPoint(neighborIdx, neighbor);
         Vec v = reconstructions(i);
         applyTransformationOn(transformIdx, neighbor, v);
         candidateIdx ++;
@@ -1368,7 +1352,7 @@ Mat TransformationLearner::returnNeighbors(int targetIdx)const
         neighborIdx = reconstructionSet[candidateIdx].neighborIdx;
         Vec neighbor;
         neighbor.resize(inputSpaceDim);
-        seeNeighbor(neighborIdx, neighbor);
+        seeTrainingPoint(neighborIdx, neighbor);
         neighbors(i) << neighbor;
         candidateIdx++;
     }
@@ -1405,23 +1389,13 @@ void TransformationLearner::seeTargetReconstructionSet(int targetIdx,
                                                        nbTargetReconstructions); 
 }
 
-// stores the "targetIdx"th point in the training set into the variable
-// "target"
-void TransformationLearner::seeTarget(const int targetIdx, Vec & storage)const
-{
-    Vec v;
-    real w;
-    train_set->getExample(targetIdx,storage,v,w);
-    
-}
 
-// stores the "neighborIdx"th input in the training set into the variable
-// "neighbor" 
-void TransformationLearner::seeNeighbor(const int neighborIdx, Vec & neighbor)const
+// stores the 'idx'th training data point into 'dst'
+void TransformationLearner::seeTrainingPoint(const int idx, Vec & dst)const
 {
     Vec v;
     real w;
-    train_set->getExample(neighborIdx, neighbor,v,w);
+    train_set->getExample(idx, dst,v,w);
 }
 
 
@@ -1607,7 +1581,7 @@ real TransformationLearner::computeReconstructionWeight(int targetIdx,
 
     Vec target;
     target.resize(inputSpaceDim);
-    seeTarget(targetIdx,target);
+    seeTrainingPoint(targetIdx,target);
     return computeReconstructionWeight(target,
                                        neighborIdx,
                                        transformIdx);
@@ -1618,7 +1592,7 @@ real TransformationLearner::computeReconstructionWeight(const Vec & target_,
 {
     Vec neighbor;
     neighbor.resize(inputSpaceDim);
-    seeNeighbor(neighborIdx, neighbor);
+    seeTrainingPoint(neighborIdx, neighbor);
     Vec predictedTarget ;
     predictedTarget.resize(inputSpaceDim);
     applyTransformationOn(transformIdx, neighbor, predictedTarget);
@@ -1634,14 +1608,16 @@ void TransformationLearner::applyTransformationOn(int transformIdx,
 {
     if(transformFamily==TRANSFORM_FAMILY_LINEAR){
         Mat m  = transforms[transformIdx];
-        transposeProduct(dst,m,src); 
+        //transposeProduct(dst,m,src); 
+        product(dst,m,src);
         if(withBias){
             dst += biasSet(transformIdx);
         }
     }
     else{ //transformFamily == TRANSFORM_FAMILY_LINEAR_INCREMENT
         Mat m = transforms[transformIdx];
-        transposeProduct(dst,m,src);
+        //transposeProduct(dst,m,src);
+        product(dst,m,src);
         dst += src;
         if(withBias){
             dst += biasSet(transformIdx);
@@ -1776,7 +1752,7 @@ void TransformationLearner::findNearestNeighbors(int targetIdx,
     //capture the target from his index in the training set
     Vec target;
     target.resize(inputSpaceDim);
-    seeTarget(targetIdx, target);
+    seeTrainingPoint(targetIdx, target);
     
     //for each potential neighbor,
     real dist;    
@@ -1785,7 +1761,7 @@ void TransformationLearner::findNearestNeighbors(int targetIdx,
             //computes the distance to the target
             Vec neighbor;
             neighbor.resize(inputSpaceDim);
-            seeNeighbor(i, neighbor);
+            seeTrainingPoint(i, neighbor);
             dist = powdistance(target, neighbor); 
             //if the distance is among "nbNeighbors" smallest distances seen,
             //keep it until to see a closer neighbor. 
@@ -2032,8 +2008,7 @@ void TransformationLearner::MStep()
     if(biasPeriod > 0 && stage % biasPeriod == biasOffset)
         MStepBias();
     if(stage % transformsPeriod == transformsOffset)
-        MStepTransformations();
-    
+        MStepTransformations();    
 }
 
 //!maximization step  with respect to  transformation distribution
@@ -2080,6 +2055,11 @@ void TransformationLearner::MStepTransformDistributionMAP(real alpha)
 
 //!maximization step with respect to transformation parameters
 //!(MAP version)
+/*-Notation: we will use the symbol _T to indicate the transposition operation
+  -To better understand how the algorithm  is working, 
+   see the NOTE (in comments) placed right after the method.
+   (The method is called often and has to be efficient. Some details
+   of the implantation might be a bit unclear for this reason.) */
 void TransformationLearner::MStepTransformations()
 {
     
@@ -2098,10 +2078,10 @@ void TransformationLearner::MStepTransformations()
         //catch the target and neighbor points from the training set
         Vec target;
         target.resize(inputSpaceDim);
-        seeTarget(reconstructionSet[idx].targetIdx, target);
+        seeTrainingPoint(reconstructionSet[idx].targetIdx, target);
         Vec neighbor;
         neighbor.resize(inputSpaceDim);
-        seeNeighbor(reconstructionSet[idx].neighborIdx, neighbor);
+        seeTrainingPoint(reconstructionSet[idx].neighborIdx, neighbor);
         
         int t = reconstructionSet[idx].transformIdx;
         
@@ -2113,16 +2093,63 @@ void TransformationLearner::MStepTransformations()
         if(withBias){
             v = v - biasSet(t);
         }
+        //at the end, we want that matrix C[t] represents
+        //the matrix ( (NeighborPart(t)_T)W(NeighborPart(t)) + lambdaI ) transposed. 
         externalProductScaleAcc(C[t], neighbor, neighbor, p);
         
-        externalProductScaleAcc(B[t], neighbor, v,p); 
+        //at the end, that matrix B[t] represents
+        //the matrix (NeighborPart(t)_T)W(TargetPart(t)) transposed.
+        //externalProductScaleAcc(B[t], neighbor, v,p);
+        externalProductScaleAcc(B[t],v,neighbor,p);
     }
+    
+    TVec<int> pivots(inputSpaceDim);
     for(int t=0; t<nbTransforms; t++){
         addToDiagonal(C[t],lambda);
-        transforms[t] << solveLinearSystem(C[t], B[t]);  
+        //transforms[t] << solveLinearSystem(C[t], B[t]);  
+        lapackSolveLinearSystem(C[t],B[t],pivots);
+        transforms[t] << B[t];
+        
     }  
 }
+/*NOTE : MStepTransformations() 
+ -Notation: we will use the symbol _T to indicate the transposition operation
+ -The algorithm consist in solving a linear system :
+      for each t, we want to find
+                 transforms(t)=X ,
+                 with X such that : E(t)X_T=D(t)
+                 Here, 
+                 E(t) = (NeighborPart(t)_T)W(NeighborPart(t)) + lambda(I)
+                 D(t) = (NeighborPart(t)_T)W(TargetPart(t))
+ -We will compute E(t)_T = C(t) , and D(t)_T =B(t)
+  in the algorithm. It is necessary to compute directly those transposed 
+  versions of E(t) and D(t) to solve the linear system with efficiency. 
+ -once the computations of C(t) and B(t) are done,
+  we use a method from plapack package to solve our linear system 
+    lapackSolveLinearSystem(A_T,B_T, pivots):
+    Here is a copy of the description of the method: 
+ -------------------------------------------------------------------------------------------------------
+   Solves AX = B
+  This is a simple wrapper over the lapack routine. It expects At and Bt (transposes of A and B) as input, 
+  as well as storage for resulting pivots vector of ints of same length as A.
+  The call overwrites Bt, putting the transposed solution Xt in there,
+  and At is also overwritten to contain the factors L and U from the factorization A = P*L*U; 
+  (the unit diagonal elements of L  are  not stored).
+  The lapack status is returned:
+  = 0:  successful exit
+  < 0:  if INFO = -i, the i-th argument had an illegal value
+  > 0:  if INFO = i, U(i,i) is  exactly  zero.   The factorization has been completed, 
+  but the factor U is exactly singular, so the solution could not be computed.
+--------------------------------------------------------------------------------------------------------
+-Like you can see, we have to transmit the transposed versions of matrices
+ E(t) and D(t) to the procedure, that is, matrices C(t) and B(t)
+ -The matrix transforms(t)=X will be stored in B(t) at the end of the algorithm
+*/
+
  
+
+
+
 
 //TODO
 //!maximization step with respect to transformation bias
@@ -2143,9 +2170,9 @@ void TransformationLearner::MStepBias(){
         weight = reconstructionSet[idx].weight;
         proba = PROBA_weight(weight);
         target.resize(inputSpaceDim);
-        seeTarget(reconstructionSet[idx].targetIdx,target);
+        seeTrainingPoint(reconstructionSet[idx].targetIdx,target);
         neighbor.resize(inputSpaceDim);
-        seeNeighbor(reconstructionSet[idx].neighborIdx, neighbor);
+        seeTrainingPoint(reconstructionSet[idx].neighborIdx, neighbor);
         reconstruction.resize(inputSpaceDim);
         applyTransformationOn(transformIdx,neighbor, reconstruction);
         newBiasSet(transformIdx) += proba*(target - reconstruction);
@@ -2189,10 +2216,10 @@ void TransformationLearner::MStepNoiseVarianceMAP(real alpha, real beta)
 real TransformationLearner::reconstructionEuclideanDistance(int candidateIdx){
     Vec target;
     target.resize(inputSpaceDim);
-    seeTarget(reconstructionSet[candidateIdx].targetIdx, target);
+    seeTrainingPoint(reconstructionSet[candidateIdx].targetIdx, target);
     Vec neighbor;
     neighbor.resize(inputSpaceDim);
-    seeNeighbor(reconstructionSet[candidateIdx].neighborIdx,
+    seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx,
                 neighbor);
     Vec reconstruction;
     reconstruction.resize(inputSpaceDim);

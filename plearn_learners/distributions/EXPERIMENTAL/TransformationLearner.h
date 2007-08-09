@@ -306,7 +306,7 @@ public:
     //#####  PDistribution Member Functions  ##################################
  
 
-    virtual TVec<string> getTrainCostNames() const;
+    // virtual TVec<string> getTrainCostNames() const;
     
     
     //! Return log of probability density log(p(y | x)).
@@ -654,12 +654,10 @@ private:
     //! target (into the variable "targetReconstructionSet" )
     void seeTargetReconstructionSet(int targetIdx,
                                     TVec<ReconstructionCandidate> & targetReconstructionSet)const ;
-    // stores the "targetIdx"th point in the training set into the variable
-    // "target"
-    void seeTarget(const int targetIdx, Vec & target) const ;
-    // stores the "neighborIdx"th input in the training set into the variable
-    // "neighbor" 
-    void seeNeighbor(const int neighborIdx, Vec & neighbor)const;
+ 
+
+    //! stores the "idx"th training data point into the variable 'dst'
+    void seeTrainingPoint(const int idx, Vec & dst) const ;
 
 
     //!GENERATE GAMMA RANDOM VARIABLES
