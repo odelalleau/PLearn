@@ -6,7 +6,7 @@ from numarray import *
 ### constants ###
 #################
 
-defaultColorMap = cm.jet
+defaultColorMap = cm.gray#cm.jet
 defaultInterpolation = 'nearest'
 
 ########################
@@ -25,12 +25,14 @@ def findMinMax(matrix):
     M = matrix
     mi = M[0][0]
     ma = M[0][0]
-    for row in M:
-        for el in row:
-            if el > ma:
-                ma = el
-            if el < mi:
-                mi = el
+
+    for i in arange(M.shape[0]):
+        for j in arange(M.shape[1]):
+            if M[i,j] > ma:
+                ma = M[i,j]
+            if M[i,j] < mi:
+                mi = M[i,j]
+    
     return mi,ma
 
 def customColorBar(min, max, (x,y,width,height) = (0.9,0.1,0.1,0.8), nb_ticks = 50., color_map = defaultColorMap):
@@ -91,7 +93,7 @@ def plotLayer1Old(W, M, width):
             imshow(rowToMatrix(toPlusRow(row),width), interpolation="nearest", cmap = colorMap)
             setPlotParams(names[i%2] + "_" + str(i) + "_" + str(j), False, True)
 
-def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=.01, apply_to_rows = None):
+def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=.01, apply_to_rows = None, index_to_plot = [], names = []):
 
     
     #some calculations for plotting
@@ -121,9 +123,14 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     
     x,y = sbi,sbi
     toReturn = -1
-    
-    for i in arange(start,length):
-    
+
+    if index_to_plot == []:
+        index_to_plot = arange(start,start+length)
+    print index_to_plot
+
+    j=0
+    for i in index_to_plot:
+           
         #normal
         row = M[i]
         if apply_to_rows != None:
@@ -134,8 +141,11 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
         
         axes((x, y, plotWidth, plotHeight))
         imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colorMap, vmin = mi, vmax = ma)
-        setPlotParams('row_' + str(i), False, True)
-
+        if names == []:
+            setPlotParams('row_' + str(i), False, True)
+        else:
+            setPlotParams(names[j],False,True)
+        j+=1
         
 
         x = x + plotWidth + sbi
@@ -154,7 +164,7 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
 
 
 
-def plotMatrices(matrices, names = None, ticks = False, same_color_bar = False, space_between_matrices = 5):
+def plotMatrices(matrices, names = None, ticks = False, same_color_bar = False, space_between_matrices = 5, horizontal=True):
     '''plot matrices from left to right
     TODO : same_color_bar does nothing !!
     '''

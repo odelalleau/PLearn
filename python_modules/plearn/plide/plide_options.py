@@ -353,7 +353,9 @@ class PyPLearnOptionsDialog( GladeDialog ):
         """
         for (widget_getter, group, option_name) in self.widget_map:
             value = widget_getter()
-            if value!='None':
+            opt= group.get_plopt(option_name)
+            dftval= opt.getDefault()
+            if value!='None' and opt.cast(value) != dftval:
                 group.set(option_name, value)
 
         ## Updates from the first page of the dialog

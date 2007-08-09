@@ -37,17 +37,34 @@ from math import sqrt
     
 class Var:
 
-    def __init__(self, l, w=1, random_type="none", random_a=0., random_b=1., random_clear_first_row=False, varname=""):
+    def __init__(self, l, w=1, random_type="none", random_a=0., random_b=1., random_clear_first_row=False, varname="", min_value = None, max_value = None):
         if isinstance(l, Var):
             self.v = l.v
         elif isinstance(l,int):
-            self.v = pl.SourceVariable(build_length=l,
-                                       build_width=w,
-                                       random_type=random_type,
-                                       random_a=random_a,
-                                       random_b=random_b,
-                                       random_clear_first_row=random_clear_first_row,
-                                       varname=varname)
+            if min_value == None and max_value == None:
+                self.v = pl.SourceVariable(build_length=l,
+                                           build_width=w,
+                                           random_type=random_type,
+                                           random_a=random_a,
+                                           random_b=random_b,
+                                           random_clear_first_row=random_clear_first_row,
+                                           varname=varname)
+            elif min_value == None:
+                pass
+            elif max_value == None:
+                pass
+            else:
+                self.v = pl.SourceVariable(build_length=l,
+                                           build_width=w,
+                                           random_type=random_type,
+                                           random_a=random_a,
+                                           random_b=random_b,
+                                           random_clear_first_row=random_clear_first_row,
+                                           varname=varname,
+                                           min_value = min_value,
+                                           max_value = max_value)
+                
+                
         else: # assume parameter l is a pl. plvar
             self.v = l
 
@@ -127,6 +144,9 @@ class Var:
     def multiLogSoftMax(self, igs):
         return self.multiMax(igs, 'L')
 
+    def multiSample(self, gs):
+        return Var(pl.MultiSampleVariable(input=self.v, groupsize=gs))
+
     def transposeDoubleProduct(self, W, M):
         return Var(pl.TransposedDoubleProductVariable(varray=[self.v, W, M]))
 
@@ -180,16 +200,23 @@ def addSigmoidTiedRLayer(input, iw, ow, add_bias=True, basename=""):
     cost = reconstr_activation.negCrossEntropySigmoid(input)
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, constrain_mask=False, basename=""):
+def addMultiSoftMaxDoubleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, constrain_mask=False, basename="", positive=False):
     """iw is the input's width
     igs is the input's group size
     ow and ogs analog but for output"""
+
     ra = 1./max(iw,ow)
     sqra = sqrt(ra)
-    M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
+
+    if positive:
+        W = Var(ogs, iw, "uniform", 0, sqra, False, varname=basename+"_W", min_value=0, max_value=1e100)
+        M = Var(ow/ogs, iw, "uniform", 0, sqra, False, varname=basename+"_M", min_value=0, max_value=1e100)
+    else:
+        W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
+        M = Var(ow/ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_M")
+       
     if constrain_mask:
         M = M.sigmoid()
-    W = Var(ogs, iw, "uniform", -sqra, sqra, False, varname=basename+"_W")
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
         hidden = input.doubleProduct(W,M).add(b).multiSoftMax(ogs)
@@ -242,32 +269,51 @@ def addMultiSoftMaxMixedProductRLayer(input, iw, igs, ow, ogs, add_bias=False, b
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
-    ra = 1./max(iw,ow)
-    W = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_W')
+def addMultiSoftMaxSimpleProductTiedRLayer(input, iw, igs, ow, ogs, add_bias=False, basename="", positive=False, stochastic_sample=False):
+    
+    sup = 1./max(iw,ow)
+    if positive:
+        W = Var(ow, iw, "uniform", 0, sup, varname=basename+'_W', min_value=0, max_value=1e100)
+    else:
+        W = Var(ow, iw, "uniform", -sup, sup, varname=basename+'_W')
+
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
         hidden = input.matrixProduct_A_Bt(W).add(b).multiSoftMax(ogs)
+        if stochastic_sample:
+            hidden = hidden.multiSample(ogs)
         br = Var(1,iw,"fill",0, varname=basename+'_br')
         log_reconstructed = hidden.matrixProduct(W).add(br).multiLogSoftMax(igs)
     else:        
         hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
+        if stochastic_sample:
+            hidden = hidden.multiSample(ogs)
         log_reconstructed = hidden.matrixProduct(W).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
     cost = log_reconstructed.dot(input).neg()
     return hidden, cost, reconstructed_input
 
-def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs, add_bias=False, basename=""):
+def addMultiSoftMaxSimpleProductRLayer(input, iw, igs, ow, ogs, add_bias=False, basename="", positive=False, stochastic_sample=False):
     ra = 1./max(iw,ow)
-    W = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_W')
-    Wr = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_Wr')
+
+    if positive:
+        W = Var(ow, iw, "uniform", 0, ra, varname=basename+'_W',min_value=0, max_value=1e100)
+        Wr = Var(ow, iw, "uniform", 0, ra, varname=basename+'_Wr', min_value=0, max_value=1e100)
+    else :            
+        W = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_W')
+        Wr = Var(ow, iw, "uniform", -ra, ra, varname=basename+'_Wr')
+        
     if add_bias:
         b = Var(1,ow,"fill",0, varname=basename+'_b')
         hidden = input.matrixProduct_A_Bt(W).add(b).multiSoftMax(ogs)
+        if stochastic_sample:
+            hidden = hidden.multiSample(ogs)
         br = Var(1,iw,"fill",0, varname=basename+'_br')
         log_reconstructed = hidden.matrixProduct(Wr).add(br).multiLogSoftMax(igs)
     else:
         hidden = input.matrixProduct_A_Bt(W).multiSoftMax(ogs)
+        if stochastic_sample:
+            hidden = hidden.multiSample(ogs)
         log_reconstructed = hidden.matrixProduct(Wr).multiLogSoftMax(igs)
     reconstructed_input = log_reconstructed.exp()
     cost = log_reconstructed.dot(input).neg()
