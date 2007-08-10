@@ -54,7 +54,7 @@
 
 import sys,string
 from plearn.vmat.PMat import *
-from numarray import *
+from numpy import *
 
 # should probably be an option
 separator = "_"
@@ -99,7 +99,8 @@ def selectres(loc_specs,a):
         la = a.shape[0]
         if la<maxrow:
             b[la-minrow:] = float('NaN')
-      res=concatenate([res,b],1)
+      if b:
+        res=concatenate([res,b],1)
       if i==5:
         i=6
       else:
@@ -205,7 +206,13 @@ def outputres(f,mode,speclist,results):
       arrays.append(res[0])
     # extend the shorter arrays with NaNs
     maxlen = max([a.shape[0] for a in arrays])
-    arrays = [concatenate([a,resize(array([[float("NaN")]]),(maxlen-a.shape[0],a.shape[1]))],0) for a in arrays]
+    alist=[]
+    for a in arrays:
+      if maxlen>a.shape[0]:
+        b=resize(array([[float("NaN")]]),(maxlen-a.shape[0],a.shape[1]))
+        alist.append(concatenate([a,b],0))
+      else:
+        alist.append(a)
     a = concatenate(arrays,1)
     # write the array to file, without any []
     write_array(f,a)
