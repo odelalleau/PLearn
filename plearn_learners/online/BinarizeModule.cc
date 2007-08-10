@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // BinarizeModule //
 //////////////////
 BinarizeModule::BinarizeModule()
-    : stochastic(true)
+    : stochastic(true),copy_gradients(false),saturate_gradients(false)
 {
 }
 
@@ -70,6 +70,14 @@ void BinarizeModule::declareOptions(OptionList& ol)
     declareOption(ol, "stochastic", &BinarizeModule::stochastic,
                   OptionBase::buildoption,
                   "If true then sample the output bits stochastically, else use a hard threshold.\n");
+
+    declareOption(ol, "copy_gradients", &BinarizeModule::copy_gradients,
+                  OptionBase::buildoption,
+                  "If true then simply copy the gradients through with no alteration.\n");
+
+    declareOption(ol, "saturate_gradients", &BinarizeModule::saturate_gradients,
+                  OptionBase::buildoption,
+                  "If true then multiply output gradients by p(1-p) for input probability p.\n");
 
     inherited::declareOptions(ol);
 }
@@ -98,20 +106,31 @@ void BinarizeModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 {
     PLASSERT( ports_value.length() == nPorts() && ports_gradient.length() == nPorts());
 
+    Mat* input = ports_value[0];
     Mat* output = ports_value[1];
     Mat* input_gradient = ports_gradient[0];
     Mat* output_gradient = ports_gradient[1];
     
     int mbs=output->length();
-    input_gradient->resize(mbs,output->width());
-    for (int t=0;t<mbs;t++)
+    if (input_gradient)
     {
-        real* yt = (*output)[t];
-        real* dyt = (*output_gradient)[t];
-        real* dxt = (*input_gradient)[t];
-        for (int i=0;i<output->width();i++)
-            if ((yt[i]-0.5)*dyt[i] > 0)
-                dxt[i] += dyt[i];
+        input_gradient->resize(mbs,output->width());
+        for (int t=0;t<mbs;t++)
+        {
+            real* yt = (*output)[t];
+            real* dyt = (*output_gradient)[t];
+            real* dxt = (*input_gradient)[t];
+            real* xt = (*input)[t];
+            if (copy_gradients)
+                for (int i=0;i<output->width();i++)
+                    dxt[i] += dyt[i];
+            else if (saturate_gradients)
+                for (int i=0;i<output->width();i++)
+                    dxt[i] += dyt[i]*xt[i]*(1-xt[i]);
+            else for (int i=0;i<output->width();i++)
+                if ((yt[i]-0.5)*dyt[i] > 0)
+                    dxt[i] += dyt[i];
+        }
     }
 }
 

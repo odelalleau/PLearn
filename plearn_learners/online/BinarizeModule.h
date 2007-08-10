@@ -63,6 +63,12 @@ public:
     //! If true then sample the output bits stochastically, else use a hard threshold.
     bool stochastic;
 
+    //! If true just pass the gradient straight through with no alteration
+    bool copy_gradients;
+
+    //! If true then multiply output gradients by p(1-p) for input probability p
+    bool saturate_gradients;
+
 public:
     //#####  Public Member Functions  #########################################
 

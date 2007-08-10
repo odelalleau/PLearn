@@ -267,6 +267,7 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
         *ph_given_v << rbm1->hidden_layer->getExpectations();
         *sampled_h << rbm1->hidden_layer->samples;
         rbm1->computeFreeEnergyOfVisible(*input,FE1v,false);
+        rbm1->computeFreeEnergyOfHidden(*sampled_h,FE1h);
         rbm2->computeFreeEnergyOfVisible(*sampled_h,FE2h,false);
         p2ph->resize(mbs,rbm2->hidden_layer->size);
         *p2ph << rbm2->hidden_layer->getExpectations();
