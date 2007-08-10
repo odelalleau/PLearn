@@ -197,6 +197,7 @@
 
 // Online
 #include <plearn_learners/online/BackConvolution2DModule.h>
+#include <plearn_learners/online/BinarizeModule.h>
 #include <plearn_learners/online/CombiningCostsModule.h>
 #include <plearn_learners/online/Convolution2DModule.h>
 #include <plearn_learners/online/CostModule.h>
