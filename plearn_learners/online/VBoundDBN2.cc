@@ -170,8 +170,8 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     // compute RBM1 weight negative gradient
     //  dlogbound/dWij sampling approx = (ph_given_v[i] + (h[i]-ph_given_v[i])*global_improvement)*v[j] - h[i]*reconstructed_v[j]
-    substract(*sampled_h_,*ph_given_v_,delta_h);
-    multiply(delta_h, delta_h,global_improvement_->toVec());
+    substract(*sampled_h_, *ph_given_v_, delta_h);
+    multiply(delta_h, delta_h, global_improvement_->toVec());
     delta_h += *ph_given_v_;
     productScaleAcc(delta_W, delta_h, true, *input, false, 1., 0.);
     productScaleAcc(delta_W, *sampled_h_, true, reconstructed_v, false, -1., 1.);
@@ -286,6 +286,7 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
         }
         if (nll) // exact -log P(input) = - log sum_h P2(h) P1(input|h)
         {
+            PLASSERT( nll->isEmpty() );
             int n_h_configurations = 1 << rbm1->hidden_layer->size;
             if (all_h.length()!=n_h_configurations || all_h.width()!=rbm1->hidden_layer->size)
             {
@@ -303,8 +304,25 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
             // compute -log P2(h) for each possible h configuration
             if (rbm2->partition_function_is_stale && !during_training)
                 rbm2->computePartitionFunction();
-            neglogP2h.resize(n_h_configurations,1);
-            rbm2->computeFreeEnergyOfVisible(all_h,neglogP2h,false);
+            neglogP2h.resize(n_h_configurations, 1);
+            rbm2->computeFreeEnergyOfVisible(all_h, neglogP2h, false);
+            neglogP2h += rbm2->log_partition_function;
+            /*
+            if (!during_training) {
+                // Debug code to ensure probabilities sum to 1.
+                real check = 0;
+                real check2 = 0;
+                for (int c = 0; c < n_h_configurations; c++) {
+                    check2 += exp(- neglogP2h(c, 0));
+                    if (c == 0)
+                        check = - neglogP2h(c, 0);
+                    else
+                        check = logadd(check, - neglogP2h(c, 0));
+                }
+                pout << check << endl;
+                pout << check2 << endl;
+            }
+            */
             rbm1->computeNegLogPVisibleGivenPHidden(*input,all_h,&neglogP2h,*nll);
         }
     }
