@@ -722,8 +722,11 @@ void NatGradSMPNNet::train()
                     " value (errno = %d)", errno);
     }
     semun_v.val = stage;
+    semun_v.val = 0; // TODO Fix (pb with max semaphore value)
     int success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
-    PLCHECK( success == 0 );
+    if (success != 0)
+        PLERROR("In NatGradSMPNNet::train - Could not initialize semaphore"
+                " value to store the stage (errno = %d)", errno);
 
     // Fork one process/cpu.
     int iam = 0;
@@ -778,15 +781,26 @@ void NatGradSMPNNet::train()
                     all_params += params_update;
                     params_update.clear();
                 }
-                sem_value = (sem_value + 1) % ncpus;
-                semun_v.val = sem_value;
-                semctl(semaphore_id, 0, SETVAL, semun_v);
                 // Update the current stage.
                 cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
                 PLASSERT( cur_stage >= 0 );
                 semun_v.val = cur_stage + nsteps * minibatch_size;
+                semun_v.val = 0; // TODO Fix: pb with max semaphore value.
                 success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
-                PLASSERT( success == 0 );
+                if (success != 0)
+                    PLERROR("In NatGradSMPNNet::train - Could not update "
+                            "stage value for semaphore (errno = %d, returned "
+                            "value = %d, set value = %d)", errno, success,
+                            semun_v.val);
+                // Give update token to next CPU.
+                sem_value = (sem_value + 1) % ncpus;
+                semun_v.val = sem_value;
+                success = semctl(semaphore_id, 0, SETVAL, semun_v);
+                if (success != 0)
+                    PLERROR("In NatGradSMPNNet::train - Could not update "
+                            "semaphore with next CPU (errno = %d, returned "
+                            "value = %d, set value = %d)", errno, success,
+                            semun_v.val);
                 nsteps = 0;
             } else {
 #if 0
@@ -914,7 +928,7 @@ void NatGradSMPNNet::train()
     stage = nstages;
     if (stage != cur_stage)
         PLWARNING("The target stage (%d) was not reached exactly (actual "
-                "stage: %d", stage, cur_stage);
+                "stage: %d)", stage, cur_stage);
 
     Profiler::end("training");
     Profiler::pl_profile_end("Totaltraining");
