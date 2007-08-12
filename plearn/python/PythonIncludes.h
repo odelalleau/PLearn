@@ -69,6 +69,10 @@
 #endif
 */
 
+#if defined(PL_USE_NUMARRAY) && defined(PL_USE_NUMPY)
+#  error "Symbols PL_USE_NUMARRAY and PL_USE_NUMPY are mutually exclusive; they should not both be defined"
+#endif
+
 #if PL_PYTHON_VERSION >= 250
 
 #include <python2.5/Python.h>
