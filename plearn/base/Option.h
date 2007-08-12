@@ -100,10 +100,10 @@ public:
     { }
 
     virtual void read(Object* o, PStream& in) const
-    { in >> dynamic_cast<ObjectType*>(o)->*ptr; }
+    { (void)(in >> dynamic_cast<ObjectType*>(o)->*ptr); }
 
     virtual void write(const Object* o, PStream& out) const
-    { out << dynamic_cast<ObjectType *>(const_cast<Object*>(o))->*ptr; }
+    { (void)(out << dynamic_cast<ObjectType *>(const_cast<Object*>(o))->*ptr); }
 
     virtual Object* getAsObject(Object* o) const
     { return toObjectPtr(dynamic_cast<ObjectType*>(o)->*ptr); }
