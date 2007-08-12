@@ -389,15 +389,20 @@ void StatsCollector::update(real val, real weight)
         //sum_ += val * weight;
         //sumsquare_ += val*val * weight;
         last_ = val;
-        if(fast_exact_is_equal(nnonmissing_,0))    // first value encountered
+        if(fast_exact_is_equal(nnonmissing_,0)) {   // first value encountered
             min_ = max_ = first_ = last_ = val;
+            agemin_ = 0;
+            agemax_ = 0;
+        }
         else if(val<min_) {
             min_ = val;
             agemin_ = 0;
+            ++agemax_;
         }
         else if(val>max_) {
             max_ = val;
             agemax_ = 0;
+            ++agemin_;
         }
         else {
             ++agemax_;                       // works even if they are missing
@@ -505,7 +510,7 @@ void StatsCollector::remove_observation(real val, real weight)
             // negative values for statistics that should always be
             // positive. We don't call forget() since missing values' count
             // would be lost...
-            min_ = max_ = first_ = last_ = MISSING_VALUE;
+            min_ = max_ = agemin_ = agemax_ = first_ = last_ = MISSING_VALUE;
             sum_ = sumsquare_ = sumcube_ = sumfourth_ = sumsquarew_ = 0.0;
         }
 
