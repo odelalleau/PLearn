@@ -426,8 +426,17 @@ def train_adapting_lr(learner,
         start_t = max(all_start[c1],all_start[c2])
         curve1 = error_curve(c1,start_t,t)#[valid_error]
         curve2 = error_curve(c2,start_t,t)
+        
         if curve2.shape[0]-1<min_epochs_to_delete:
             return False
+
+        #If the best have a higher lr then the current one, we remove this one
+        #This one can't be better then the next one we will create
+        #as the next one we will create won't have a lower lr than this one
+        #and it start with a lower error rate
+        if all_lr[c1]>c2lr:
+            return True
+        
         for a in actives:
             if a!=c2 and all_lr[a]==c2lr and all_last_err[a]<=c2err:
                 # throw it away if worse than other actives of same lr
@@ -506,7 +515,7 @@ def train_adapting_lr(learner,
             print >>logfile, "Before epoch",t+1
             print >>logfile, "Actives now: ",actives
             print >>logfile, " with lr=", array(all_lr)[actives]
-        print "Before epoch %d/%d"%(t,n_train),"actives now: ",actives, " with lr=", array(all_lr)[actives]
+        print "Before epoch %d/%d"%(t+1,n_train),"actives now: ",actives, " with lr=", array(all_lr)[actives]
         print "current best actives:",best_active,"best_error:",all_last_err[best_active],"lr:",all_lr[best_active]
 
         threads = []
@@ -639,7 +648,7 @@ def train_adapting_lr(learner,
                         print >>logfile,"REMOVE candidate ",a
                     release_server(all_candidates[a], use_threads)
                     # hopefully this destroys the candidate
-                    all_end[a]=t
+                    all_end[a]=t+1 # so that all_end[i]-all_start[i]=nb of epoch executed by this learner
                     all_candidates[a]=None
                     del actives[j-ndeleted]
                     ndeleted+=1
@@ -656,7 +665,7 @@ def train_adapting_lr(learner,
                 all_candidates.append(new_candidate)
                 all_results.append(all_results[best_active].copy())
                 all_last_err.append(best_last)
-                all_start.append(t)
+                all_start.append(t+1)#start at the next epoch
                 all_end.append(-1)
                 if logfile:
                     print >>logfile,"CREATE candidate ", new_a, " from ",best_active,"at stage ",learner.stage," with lr=",all_lr[new_a]
@@ -670,14 +679,13 @@ def train_adapting_lr(learner,
     if logfile and best_err < all_last_err[best_active]:
         print >>logfile, "WARNING: best performing model would have stopped early at stage ",best_early_stop
     if logfile:
-        print >>logfile,"When then learner started",all_start
-        print >>logfile,"When then learner ended",all_end
+        print >>logfile,"We created %d learner"%len(all_start)
+        print >>logfile,"When the learners started:",all_start
+        all_end2=[ ifthenelse(x==-1,t+1,x) for x in all_end ]
+        print >>logfile,"When the learners ended:",all_end2
         l=[]
         for i in range(len(all_start)):
-            if all_end[i]==-1:
-                l.append(abs(all_start[i]-n_train))
-            else:
-                l.append(abs(all_start[i]-all_end[i]+1))
+            l.append(all_end2[i]-all_start[i])
         print >>logfile,"Duration of all learner in number of epoch:",l
         sum=reduce(lambda x,y:x+y, l)
         print >>logfile,"Their was a total of %d epoch executed for %d asked(%fx more)"%(sum,n_train,float(sum)/n_train)
