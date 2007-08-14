@@ -52,6 +52,7 @@
 #include <utility>                           // Pairs
 #include <vector>                            // vector<T>
 #include <map>                               // map<T,U>
+#include <set>                               // set<T>
 #include <limits>                            // numeric_limits<I>
 
 // From PLearn
@@ -424,6 +425,12 @@ struct ConvertFromPyObject< std::map<T,U> >
     static std::map<T,U> convert(PyObject*, bool print_traceback);
 };
 
+template <class T>
+struct ConvertFromPyObject<std::set<T> >
+{
+    static std::set<T> convert(PyObject*, bool print_traceback);
+};
+
 template <class T, class U>
 struct ConvertFromPyObject< std::pair<T,U> >
 {
@@ -614,6 +621,10 @@ template <class T> struct ConvertToPyObject<std::vector<T> >
 template <class T, class U> struct ConvertToPyObject<std::map<T,U> >
 { static PyObject* newPyObject(const std::map<T,U>&); };
 
+//! C++ stlib set<>: create a Python set of those objects
+template <class T> struct ConvertToPyObject<std::set<T> >
+{ static PyObject* newPyObject(const std::set<T>&); };
+
 //! C++ stdlib pair<>: create a Python tuple with two elements
 template <class T, class U> struct ConvertToPyObject<std::pair<T,U> >
 { static PyObject* newPyObject(const std::pair<T,U>&); };
@@ -629,6 +640,10 @@ template <class T> struct ConvertToPyObject<std::vector<T> const* >
 //! Pointer to map<>: simply dereference pointer, or None if NULL
 template <class T, class U> struct ConvertToPyObject<std::map<T,U> const* >
 { static PyObject* newPyObject(const std::map<T,U>*); };
+
+//! Pointer to set<>: simply dereference pointer, or None if NULL
+template <class T> struct ConvertToPyObject<std::set<T> const* >
+{ static PyObject* newPyObject(const std::set<T>*); };
 
 //! For a general PythonObjectWrapper: we simply increment the refcount
 //! to the underlying Python object, no matter whether we own it or not.
@@ -1063,6 +1078,38 @@ std::map<T,U> ConvertFromPyObject< std::map<T,U> >::convert(PyObject* pyobj,
     return result;
 }
 
+template <class T>
+std::set<T> ConvertFromPyObject<std::set<T> >::convert(PyObject* pyobj,
+                                                       bool print_traceback)
+{
+    PLASSERT( pyobj );
+    PyObject* env= PyDict_New();
+    if(0 != PyDict_SetItemString(env, "__builtins__", PyEval_GetBuiltins()))
+        PLERROR("in ConvertFromPyObject<std::set<T> >::convert : "
+                "cannot insert builtins in env.");
+    if(0 != PyDict_SetItemString(env, "the_set", pyobj))
+        PLERROR("in ConvertFromPyObject<std::set<T> >::convert : "
+                "cannot insert the_set in env.");
+    PyObject* res= PyRun_String("\nresult= list(the_set)\n", 
+                                Py_file_input, env, env);
+    if(!res)
+    {
+        Py_DECREF(env);
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in ConvertFromPyObject<std::set<T> >::convert : "
+                "cannot convert to a set.");
+    }
+    Py_DECREF(res);
+    TVec<PythonObjectWrapper> listobj= 
+        PythonObjectWrapper(env).as<std::map<string, PythonObjectWrapper> >()["result"];
+    Py_DECREF(env);
+    std::set<T> the_set;
+    for(TVec<PythonObjectWrapper>::iterator it= listobj.begin();
+        it != listobj.end(); ++it)
+        the_set.insert(*it);
+    return the_set;
+}
+
 template <class T, class U>
 std::pair<T,U> ConvertFromPyObject< std::pair<T,U> >::convert(PyObject* pyobj,
                                                               bool print_traceback)
@@ -1198,6 +1245,45 @@ PyObject* ConvertToPyObject<std::map<T,U> >::newPyObject(const std::map<T,U>& da
     return newdict;
 }
 
+template <class T>
+PyObject* ConvertToPyObject<std::set<T> >::newPyObject(const std::set<T>& data)
+{
+    TVec<T> as_list(data.size());
+    int i= 0;
+    for(typename std::set<T>::iterator it= data.begin();
+        it != data.end(); ++it, ++i)
+        as_list[i]= *it;
+    PyObject* pylist= ConvertToPyObject<TVec<T> >::newPyObject(as_list);
+    PyObject* env= PyDict_New();
+    if(0 != PyDict_SetItemString(env, "__builtins__", PyEval_GetBuiltins()))
+        PLERROR("in ConvertToPyObject<std::set<T> >::newPyObject : "
+                "cannot insert builtins in env.");
+    if(0 != PyDict_SetItemString(env, "the_list", pylist))
+        PLERROR("in ConvertToPyObject<std::set<T> >::newPyObject : "
+                "cannot insert the_list in env.");
+    string code= "";
+#if PL_PYTHON_VERSION <= 230
+    code+= "\nfrom sets import Set as set\n";
+#endif // PL_PYTHON_VERSION <= 230
+    code+= "\nresult= set(the_list)\n";
+    PyObject* res= PyRun_String(const_cast<const char*>(code.c_str()),
+                                Py_file_input, env, env);
+    Py_DECREF(pylist);
+    if(!res)
+    {
+        Py_DECREF(env);
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in ConvertToPyObject<std::set<T> >::newPyObject : "
+                "cannot convert to a set.");
+    }
+    Py_DECREF(res);
+    PyObject* setobj= 
+        PythonObjectWrapper(env).as<map<string, PyObject*> >()["result"];
+    Py_INCREF(setobj);
+    Py_DECREF(env);
+    return setobj;
+}
+
 template <class T, class U>
 PyObject* ConvertToPyObject<std::pair<T,U> >::newPyObject(const std::pair<T,U>& data)
 {
@@ -1300,6 +1386,15 @@ PyObject* ConvertToPyObject<std::map<T,U> const* >::newPyObject(const std::map<T
 {
     if (data)
         return ConvertToPyObject<std::map<T,U> >::newPyObject(*data);
+    else
+        return PythonObjectWrapper::newPyObject();
+}
+
+template <class T>
+PyObject* ConvertToPyObject<std::set<T> const* >::newPyObject(const std::set<T>* data)
+{
+    if(data)
+        return ConvertToPyObject<std::set<T> >::newPyObject(*data);
     else
         return PythonObjectWrapper::newPyObject();
 }

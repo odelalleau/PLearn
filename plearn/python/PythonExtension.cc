@@ -279,10 +279,9 @@ void injectPLearnClasses(PyObject* module)
         //set option names
         OptionList& options= tit->second.getoptionlist_method();
         unsigned int nopts= options.size();
-        TVec<string> optionnames(nopts);
+        set<string> optionnames;
         for(unsigned int i= 0; i < nopts; ++i)
-            optionnames[i]= options[i]->optionname();
-
+            optionnames.insert(options[i]->optionname());
         the_pyclass= clit->second;
         if(-1==PyObject_SetAttrString(the_pyclass, "_optionnames", 
                                       PythonObjectWrapper(optionnames).getPyObject()))

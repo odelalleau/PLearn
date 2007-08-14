@@ -156,25 +156,19 @@ void Object::setOption(const string& optionname, const string& value)
 #ifdef PL_PYTHON_VERSION 
 void Object::setOptionFromPython(const string& optionname, const PythonObjectWrapper& value)
 {
-    OptionList &options= getOptionList();
-    for(OptionList::iterator it= options.begin(); 
-        it != options.end(); ++it)
-        if((*it)->optionname() == optionname)
-        {
-            (*it)->setFromPythonObject(this, value);
-            return;
-        }
+    OptionMap& om= getOptionMap();
+    OptionMap::iterator it= om.find(optionname);
+    if(it == om.end())
+        PLERROR("%s has no option %s.", classname().c_str(), optionname.c_str());
+    it->second->setFromPythonObject(this, value);
 }
 #endif //def PL_PYTHON_VERSION 
 
 bool Object::hasOption(const string &optionname) const
 { 
-    OptionList &options= getOptionList();
-    for(OptionList::iterator it= options.begin(); 
-        it != options.end(); ++it)
-        if((*it)->optionname() == optionname)
-            return true;
-    return false;
+    OptionMap& om= getOptionMap();
+    OptionMap::iterator it= om.find(optionname);
+    return it != om.end();
 }
 
 string Object::getOption(const string &optionname) const
@@ -211,14 +205,13 @@ void Object::readOptionVal(PStream &in, const string &optionname)
 {
     try 
     {
-        OptionList &options = getOptionList();
-        for (OptionList::iterator it = options.begin(); it != options.end(); ++it) 
+
+        OptionMap& om= getOptionMap();
+        OptionMap::iterator it= om.find(optionname);
+        if(it != om.end())
         {
-            if ((*it)->optionname() == optionname) 
-            {
-                (*it)->read(this, in);
-                return;
-            }
+            it->second->read(this, in);
+            return;
         }
 
         // Found no options matching 'optionname'. First look for brackets. If there
@@ -234,24 +227,25 @@ void Object::readOptionVal(PStream &in, const string &optionname)
             // Found no dot, or a right bracket before a dot
             if (dot_pos == string::npos || rb_pos < dot_pos) {
                 string index = optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1);
-                for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-                    if ((*it)->optionname() == optname) 
-                    {
-                        // There are two cases here: either there is a dot located
-                        // immediately after the right bracket, or there is no dot.
-                        // If there is a dot, the option HAS to be an Object
-                        if (dot_pos != string::npos && dot_pos == rb_pos+1) {
-                            int i = toint(index);
-                            (*it)->getIndexedObject(this, i)->readOptionVal(
-                                in, optionname.substr(dot_pos + 1));
-                        }
-                        else if (dot_pos == string::npos)
-                            (*it)->readIntoIndex(this, in, index);
-                        else
-                            PLERROR("Object::readOptionVal() - unknown option format \"%s\"",
-                                    optionname.c_str());
-                        return;
+
+                it= om.find(optname);
+                if(it != om.end())
+                {
+                    // There are two cases here: either there is a dot located
+                    // immediately after the right bracket, or there is no dot.
+                    // If there is a dot, the option HAS to be an Object
+                    if (dot_pos != string::npos && dot_pos == rb_pos+1) {
+                        int i = toint(index);
+                        it->second->getIndexedObject(this, i)->readOptionVal(
+                            in, optionname.substr(dot_pos + 1));
                     }
+                    else if (dot_pos == string::npos)
+                        it->second->readIntoIndex(this, in, index);
+                    else
+                        PLERROR("Object::readOptionVal() - unknown option format \"%s\"",
+                                optionname.c_str());
+                    return;
+                }
             }
         }
         else if (lb_pos != string::npos)
@@ -263,12 +257,12 @@ void Object::readOptionVal(PStream &in, const string &optionname)
             // Found a dot, assume it's a field with an Object * field
             string optname = optionname.substr(0, dot_pos);
             string optoptname = optionname.substr(dot_pos + 1);
-            for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-                if ((*it)->optionname() == optname) 
-                {
-                    (*it)->getAsObject(this)->readOptionVal(in, optoptname);
-                    return;
-                }
+            it= om.find(optname);
+            if(it != om.end())
+            {
+                it->second->getAsObject(this)->readOptionVal(in, optoptname);
+                return;
+            }
         }
     }
     catch(const PLearnError& e)
@@ -287,13 +281,14 @@ void Object::readOptionVal(PStream &in, const string &optionname)
 
 void Object::writeOptionVal(PStream &out, const string &optionname) const
 {
-    OptionList &options = getOptionList();
-    for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-        if ((*it)->optionname() == optionname) {
-            (*it)->write(this, out);
-            return;
-        }
-
+    OptionMap& om= getOptionMap();
+    OptionMap::iterator it= om.find(optionname);
+    if(it != om.end())
+    {
+        it->second->write(this, out);
+        return;
+    }
+    
     // Found no options matching 'optionname'. First look for brackets. If there
     // are brackets, they must be located before any dot.
     size_t lb_pos = optionname.find('[');
@@ -307,23 +302,24 @@ void Object::writeOptionVal(PStream &out, const string &optionname) const
         // Found no dot, or a right bracket before a dot
         if (dot_pos == string::npos || rb_pos < dot_pos) {
             string index = optionname.substr(lb_pos + 1, rb_pos - lb_pos - 1);
-            for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-                if ((*it)->optionname() == optname) {
-                    // There are two cases here: either there is a dot located
-                    // immediately after the right bracket, or there is no dot.  If
-                    // there is a dot, the option HAS to be an Object
-                    if (dot_pos != string::npos && dot_pos == rb_pos+1) {
-                        int i = toint(index);
-                        (*it)->getIndexedObject(this, i)->writeOptionVal(
-                            out, optionname.substr(dot_pos + 1));
-                    }
-                    else if (dot_pos == string::npos)
-                        (*it)->writeAtIndex(this, out, index);
-                    else
-                        PLERROR("Object::writeOptionVal() - unknown option format \"%s\"",
-                                optionname.c_str());
-                    return;
+            it= om.find(optname);
+            if(it != om.end())
+            {
+                // There are two cases here: either there is a dot located
+                // immediately after the right bracket, or there is no dot.  If
+                // there is a dot, the option HAS to be an Object
+                if (dot_pos != string::npos && dot_pos == rb_pos+1) {
+                    int i = toint(index);
+                    it->second->getIndexedObject(this, i)->writeOptionVal(
+                        out, optionname.substr(dot_pos + 1));
                 }
+                else if (dot_pos == string::npos)
+                    it->second->writeAtIndex(this, out, index);
+                else
+                    PLERROR("Object::writeOptionVal() - unknown option format \"%s\"",
+                            optionname.c_str());
+                return;
+            }
         }
     }
     else if (lb_pos != string::npos)
@@ -334,11 +330,12 @@ void Object::writeOptionVal(PStream &out, const string &optionname) const
         // Found a dot, assume it's a field with an Object * field
         string optname = optionname.substr(0, dot_pos);
         string optoptname = optionname.substr(dot_pos + 1);
-        for (OptionList::iterator it = options.begin(); it != options.end(); ++it)
-            if ((*it)->optionname() == optname) {
-                (*it)->getAsObject(this)->writeOptionVal(out, optoptname);
-                return;
-            }
+        it= om.find(optname);
+        if(it != om.end())
+        {
+            it->second->getAsObject(this)->writeOptionVal(out, optoptname);
+            return;
+        }
     }
     // There are bigger problems in the world but still it isn't always funny
     PLERROR("Object::writeOptionVal() - Unknown option \"%s\"", optionname.c_str());    
@@ -520,13 +517,10 @@ void Object::newread(PStream &in)
             in.getline(optionname, '=');
             optionname = removeblanks(optionname);
             in.skipBlanksAndComments();
-
-            OptionList &options = getOptionList();
-            OptionList::iterator it =
-                find_if(options.begin(), options.end(),
-                        bind2nd(mem_fun(&OptionBase::isOptionNamed), optionname));
-            // if (it != options.end() && ((*it)->flags() & in.option_flags_in) == 0)
-            if (it!=options.end() && (*it)->shouldBeSkipped() ) {
+            OptionMap& om= getOptionMap();
+            OptionMap::iterator it= om.find(optionname);
+            if(it != om.end() && it->second->shouldBeSkipped())
+            {
                 // Create a dummy object that will read this option.
                 if (!dummy_obj) {
                     // Note that we do not call build on 'dummy_obj'. This is
@@ -546,15 +540,6 @@ void Object::newread(PStream &in)
                 // cerr << "returned from reading optiion " << optionname << endl;
             }
             in.skipBlanksAndCommentsAndSeparators();
-            /*
-              in.skipBlanksAndCommentsAndSeparators();
-              in.skipBlanksAndCommentsAndSeparators();
-              in.skipBlanksAndCommentsAndSeparators();
-              in.skipBlanksAndCommentsAndSeparators();
-              cerr << "PEEK1: " << in.peek() << endl;
-              in.peek(); in.peek(); in.peek();
-              cerr << "PEEK2: " << in.peek() << endl;
-            */
 
             if (in.peek() == ')') 
             {
@@ -661,11 +646,10 @@ namespace {
                 {
                     checkNargs(args.size(), 1);
                     string optionname= args[0];
-                    OptionList &options= instance->getOptionList();
-                    for (OptionList::iterator it= options.begin(); 
-                         it != options.end(); ++it)
-                        if ((*it)->optionname() == optionname)
-                            return (*it)->getAsPythonObject(instance);
+                    OptionMap& om= instance->getOptionMap();
+                    OptionMap::iterator it= om.find(optionname);
+                    if(it != om.end())
+                        return it->second->getAsPythonObject(instance);
                     PLERROR("in ObjectTrampolineGetOption::call (python ver.) : "
                             "unknown option: '%s'", optionname.c_str());
                     return PythonObjectWrapper();//gcc: shut up!

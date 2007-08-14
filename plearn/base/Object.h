@@ -88,6 +88,7 @@ using namespace std;
         virtual string classname() const;                       \
         static  OptionList& _getOptionList_();                  \
         virtual OptionList& getOptionList() const;              \
+        virtual OptionMap& getOptionMap() const;                \
         static  RemoteMethodMap& _getRemoteMethodMap_();        \
         virtual RemoteMethodMap& getRemoteMethodMap() const;    \
         static  Object* _new_instance_for_typemap_();           \
@@ -120,6 +121,18 @@ using namespace std;
         OptionList& CLASSTYPE::getOptionList() const                                            \
         {                                                                                       \
             return _getOptionList_();                                                           \
+        }                                                                                       \
+                                                                                                \
+        OptionMap& CLASSTYPE::getOptionMap() const                                              \
+        {                                                                                       \
+            static OptionMap om;                                                                \
+            if(om.empty())                                                                      \
+            {                                                                                   \
+                OptionList& ol= getOptionList();                                                \
+                for(OptionList::iterator it= ol.begin(); it != ol.end(); ++it)                  \
+                    om[(*it)->optionname()]= *it;                                               \
+            }                                                                                   \
+            return om;                                                                          \
         }                                                                                       \
                                                                                                 \
         RemoteMethodMap& CLASSTYPE::_getRemoteMethodMap_()                                      \
@@ -271,6 +284,7 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         virtual string classname() const;                                                       \
         static  OptionList& _getOptionList_();                                                  \
         virtual OptionList& getOptionList() const;                                              \
+        virtual OptionMap& getOptionMap() const;                                                \
         static  RemoteMethodMap& _getRemoteMethodMap_();                                        \
         virtual RemoteMethodMap& getRemoteMethodMap() const;                                    \
         static  Object* _new_instance_for_typemap_();                                           \
@@ -306,6 +320,18 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
         OptionList& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::getOptionList() const             \
         {                                                                                       \
             return _getOptionList_();                                                           \
+        }                                                                                       \
+        template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \
+        OptionMap& CLASSTYPE< TEMPLATE_ARGS_ ## CLASSTYPE >::getOptionMap() const               \
+        {                                                                                       \
+            static OptionMap om;                                                                \
+            if(om.empty())                                                                      \
+            {                                                                                   \
+                OptionList& ol= getOptionList();                                                \
+                for(OptionList::iterator it= ol.begin(); it != ol.end(); ++it)                  \
+                    om[(*it)->optionname()]= *it;                                               \
+            }                                                                                   \
+            return om;                                                                          \
         }                                                                                       \
                                                                                                 \
         template < TEMPLATE_DEF_ ## CLASSTYPE >                                                 \

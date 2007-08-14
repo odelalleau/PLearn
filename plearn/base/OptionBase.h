@@ -326,6 +326,7 @@ public:
 };
 
 typedef std::vector< PP<OptionBase> > OptionList;
+typedef std::map<std::string, PP<OptionBase> > OptionMap;
 
 
 
