@@ -155,7 +155,7 @@ class Task:
             self.log_file = truncate( os.path.join(log_dir, self.unique_id +'_'+ formatted_command), 200) + ".log"
         else:
             self.unique_id = formatted_command+str(datetime.datetime.now()).replace(' ','_')
-            self.log_file = truncate( os.path.join(log_dir, self.unique_id), 200) + ".log"
+            self.log_file = os.path.join(log_dir, self.unique_id) + ".log"
 
         if self.add_unique_id:
                 command = command + ' unique_id=' + self.unique_id
