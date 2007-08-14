@@ -736,8 +736,8 @@ class DBILocal(DBIBase):
                 t=Thread(target=self.run_one_job,args=(task,))
                 t.start()
                 self.threads.append(t)
-                for t in self.threads:
-                    t.join()
+            for t in self.threads:
+                t.join()
         else:
             for task in self.tasks:
                 self.run_one_job(task)
