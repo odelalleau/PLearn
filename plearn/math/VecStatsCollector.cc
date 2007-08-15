@@ -218,6 +218,12 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Returns the number of statistics collected.\n"),
          RetDoc ("=stats.length()")));
 
+   declareMethod(
+        rmm, "update", &VecStatsCollector::remote_update,
+        (BodyDoc("Update the stats with gived data.\n"),
+         ArgDoc ("x"," the new data\n"),
+         ArgDoc ("weight"," the weight of the data")));
+
  }
 
 int VecStatsCollector::length() const
@@ -390,6 +396,11 @@ void VecStatsCollector::update(const Vec& x, real weight)
             remove_observation(obs, w);
         }
     }
+}
+
+void VecStatsCollector::remote_update(const Vec& x, real weight)
+{
+    update(x,weight);
 }
 
 bool VecStatsCollector::shouldUpdateWindow(const Vec& x)

@@ -163,6 +163,10 @@ public:
 
     //! clears all previously accumulated statistics
     virtual void forget();
+    
+    //! updates the statistics when seeing x
+    //! The weight applies to all elements of x
+    virtual void remote_update(const Vec& x, real weight = 1.0);
 
     //! updates the statistics when seeing x
     //! The weight applies to all elements of x
