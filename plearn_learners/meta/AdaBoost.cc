@@ -119,6 +119,14 @@ void AdaBoost::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Initial sum of weights on the examples. Do not temper with.\n");
 
+    declareOption(ol, "example_weights", &AdaBoost::example_weights,
+                  OptionBase::learntoption,
+                  "The current weights of the examples.\n");
+
+    declareOption(ol, "learners_error", &AdaBoost::learners_error,
+                  OptionBase::learntoption,
+                  "The error of each learners.\n");
+
     declareOption(ol, "weak_learner_template", &AdaBoost::weak_learner_template,
                   OptionBase::buildoption,
                   "Template for the regression weak learner to be"
@@ -197,6 +205,11 @@ void AdaBoost::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "A sorted train set when using the class RegressionTree as a base regressor\n");
 
+    declareOption(ol, "weak_learner_output",
+                  &AdaBoost::weak_learner_output,
+                  OptionBase::nosave,
+                  "A temp vector that contain the weak learner output\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -252,7 +265,7 @@ void AdaBoost::train()
     if(!train_set)
         PLERROR("In AdaBoost::train, you did not setTrainingSet");
     
-    if(!train_stats)
+    if(!train_stats and compute_training_error)
         PLERROR("In AdaBoost::train, you did not setTrainStatsCollector");
 
     if (train_set->targetsize()!=1)
