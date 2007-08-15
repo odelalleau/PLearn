@@ -123,6 +123,23 @@ PythonCodeSnippet::PythonCodeSnippet(const string& code,
 }
 
 
+PythonCodeSnippet::PythonCodeSnippet(const PythonObjectWrapper& instance,
+                                     bool remap_python_exceptions)
+    : inherited(),
+      m_code(""),
+      m_remap_python_exceptions(remap_python_exceptions),
+      m_instance_params(),
+      m_instance(instance),
+      m_handle(this),
+      m_compiled_code(),
+      m_injected_functions(4),
+      m_python_methods(4)
+{
+    PyObject* compiled_code= 
+        PyObject_GetAttrString(m_instance.getPyObject(), "__dict__");
+    m_compiled_code= PythonObjectWrapper(compiled_code, PythonObjectWrapper::transfer_ownership);
+    // NOTE: build() not called
+}
 
 void PythonCodeSnippet::declareOptions(OptionList& ol)
 {
@@ -179,7 +196,8 @@ void PythonCodeSnippet::build_()
         sprintf(set_current_snippet, SetCurrentSnippetVar, m_handle);
         m_compiled_code = compileGlobalCode(InjectSetupSnippet+
                                             string(set_current_snippet)+m_code);
-        resetCurrentSnippet();
+        if(m_instance.isNull())
+            resetCurrentSnippet();
     }
 
     // Forget about injected functions
@@ -214,8 +232,13 @@ PythonObjectWrapper
 PythonCodeSnippet::getGlobalObject(const string& object_name) const
 {
     PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pyobj = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           object_name.c_str());
+    PyObject* pyobj;
+    if(!m_instance.isNull())
+        pyobj= PyObject_GetAttrString(m_instance.getPyObject(),
+                                      const_cast<char*>(object_name.c_str()));
+    else
+        pyobj= PyDict_GetItemString(m_compiled_code.getPyObject(),
+                                    object_name.c_str());
     if (pyobj) {
         // pyobj == borrowed reference
         // Increment refcount to keep long-lived reference
@@ -232,7 +255,11 @@ void PythonCodeSnippet::setGlobalObject(const string& object_name,
 
     // Note that PyDict_SetItemString increments the reference count for us
     int non_success = 0;
-    if (! pow.isNull())
+    if(!m_instance.isNull())
+        non_success= PyObject_SetAttrString(m_instance.getPyObject(),
+                                            const_cast<char*>(object_name.c_str()),
+                                            pow.getPyObject());
+    else if (! pow.isNull())
         non_success = PyDict_SetItemString(m_compiled_code.getPyObject(),
                                            object_name.c_str(),
                                            pow.getPyObject());
@@ -301,7 +328,8 @@ PythonCodeSnippet::invoke(const char* function_name) const
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
+        if(!instance_method)
+            setCurrentSnippet(m_handle);
 
         return_value = PyObject_CallObject(pFunc, NULL);
         if (! return_value)
@@ -313,7 +341,8 @@ PythonCodeSnippet::invoke(const char* function_name) const
                                + "' with no params.");
         }
 
-        resetCurrentSnippet();
+        if(!instance_method)
+            resetCurrentSnippet();
     }
     else
     {
@@ -357,7 +386,8 @@ PythonCodeSnippet::invoke(const char* function_name,
 
     PyObject* return_value = 0;
     if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
+        if(!instance_method)
+            setCurrentSnippet(m_handle);
 
         // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
         PyObject* pArgs = PyTuple_New(args.size());
@@ -380,7 +410,8 @@ PythonCodeSnippet::invoke(const char* function_name,
                                + tostring(args.length())
                                + " params.");
         }
-        resetCurrentSnippet();
+        if(!instance_method)
+            resetCurrentSnippet();
     }
     else
     {
@@ -678,7 +709,8 @@ void PythonCodeSnippet::setCurrentSnippet(const void* handle) const
         Py_XDECREF(m_compiled_code.getPyObject());
         PyErr_Print();
         PLERROR("PythonCodeSnippet::setCurrentSnippet: error compiling "
-                "Python code contained in the 'SetCurrentSnippetVar'.");
+                "Python code contained in the 'SetCurrentSnippetVar'."
+                "\n\t'%s'", set_current_snippet);
     }
 }
 

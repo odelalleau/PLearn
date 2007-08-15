@@ -155,7 +155,7 @@ public:
     //! registered methods with that name (whatever their arity),
     //! or return the string "** No method named ... **"
     string getMethodHelpText(const string& methodname, int arity=-1) const;
-    
+
     //! Get the method map itself
     const MethodMap& getMap() const
     { return m_methods; }

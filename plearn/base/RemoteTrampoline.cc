@@ -44,6 +44,8 @@ using namespace std;
 
 //#####  RemoteTrampoline  ####################################################
 
+const RemoteTrampoline::flag_t RemoteTrampoline::nopython= 1;
+
 void RemoteTrampoline::checkNargs(int nargs, int expected_nargs) const
 {
     if (nargs != expected_nargs)

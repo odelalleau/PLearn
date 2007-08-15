@@ -105,10 +105,17 @@ class Object;
  */
 struct RemoteTrampoline : public PPointable
 {
+    //! type for remote method flags
+    typedef unsigned int flag_t;
+    //! nopython flag: do not inject this method in python
+    static const flag_t nopython;
+
     //! Constructor takes the methodname and some documentation.
-    RemoteTrampoline(const string& methodname, const RemoteMethodDoc& doc)
+    RemoteTrampoline(const string& methodname, const RemoteMethodDoc& doc,
+                     const flag_t& flgs= 0)
         : m_methodname(methodname),
-          m_documentation(doc)
+          m_documentation(doc),
+          m_flags(flgs)
     {
         m_documentation.setName(methodname);
         m_documentation.checkConsistency();
@@ -119,6 +126,9 @@ struct RemoteTrampoline : public PPointable
     {
         return m_documentation;
     }
+
+    //! Flags accessor
+    const flag_t& flags() const { return m_flags; }
     
     /**
      *  Perform the act of binding arguments on a stream with an object
@@ -225,6 +235,9 @@ protected:
 
     //! Documentation associated with the method
     RemoteMethodDoc m_documentation;
+
+    //! Flags associated with this method
+    flag_t m_flags;
 };
 
 //#####  Zero Arguments  ######################################################
@@ -240,9 +253,10 @@ struct RemoteTrampoline_0 : public RemoteTrampoline
     typedef R (T::*MethodType)();
     
     RemoteTrampoline_0(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
-                                 RTYPE_DOC(R))),
+                                 RTYPE_DOC(R)),
+                    flgs),
           m_method(m)
     { }
 
@@ -277,9 +291,10 @@ struct RemoteTrampoline_0<T,void> : public RemoteTrampoline
     typedef void (T::*MethodType)();
     
     RemoteTrampoline_0(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
-                                 RTYPE_DOC(void))),
+                                 RTYPE_DOC(void)),
+                    flgs),
           m_method(m)
     { }
 
@@ -317,10 +332,11 @@ struct RemoteTrampoline_1 : public RemoteTrampoline
     typedef R (T::*MethodType)(A1);
     
     RemoteTrampoline_1(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(R),
-                                 ATYPE_DOC(A1))),
+                                 ATYPE_DOC(A1)),
+                    flgs),
           m_method(m)
     { }
 
@@ -357,10 +373,11 @@ struct RemoteTrampoline_1<T,void,A1> : public RemoteTrampoline
     typedef void (T::*MethodType)(A1);
     
     RemoteTrampoline_1(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(void),
-                                 ATYPE_DOC(A1))),
+                                 ATYPE_DOC(A1)),
+                    flgs),
           m_method(m)
     { }
 
@@ -400,10 +417,11 @@ struct RemoteTrampoline_2 : public RemoteTrampoline
     typedef R (T::*MethodType)(A1,A2);
     
     RemoteTrampoline_2(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(R),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2)),
+                    flgs),
           m_method(m)
     { }
 
@@ -442,10 +460,11 @@ struct RemoteTrampoline_2<T,void,A1,A2> : public RemoteTrampoline
     typedef void (T::*MethodType)(A1,A2);
     
     RemoteTrampoline_2(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(void),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2)),
+                    flgs),
           m_method(m)
     { }
 
@@ -487,10 +506,11 @@ struct RemoteTrampoline_3 : public RemoteTrampoline
     typedef R (T::*MethodType)(A1,A2,A3);
     
     RemoteTrampoline_3(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(R),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3)),
+                    flgs),
           m_method(m)
     { }
 
@@ -531,10 +551,11 @@ struct RemoteTrampoline_3<T,void,A1,A2,A3> : public RemoteTrampoline
     typedef void (T::*MethodType)(A1,A2,A3);
     
     RemoteTrampoline_3(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(void),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3)),
+                    flgs),
           m_method(m)
     { }
 
@@ -578,11 +599,12 @@ struct RemoteTrampoline_4 : public RemoteTrampoline
     typedef R (T::*MethodType)(A1,A2,A3,A4);
     
     RemoteTrampoline_4(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(R),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4))),
+                                 ATYPE_DOC(A4)),
+                    flgs),
           m_method(m)
     { }
 
@@ -625,11 +647,12 @@ struct RemoteTrampoline_4<T,void,A1,A2,A3,A4> : public RemoteTrampoline
     typedef void (T::*MethodType)(A1,A2,A3,A4);
     
     RemoteTrampoline_4(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(void),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4))),
+                                 ATYPE_DOC(A4)),
+                    flgs),
           m_method(m)
     { }
 
@@ -675,11 +698,12 @@ struct RemoteTrampoline_5 : public RemoteTrampoline
     typedef R (T::*MethodType)(A1,A2,A3,A4,A5);
     
     RemoteTrampoline_5(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(R),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5)),
+                    flgs),
           m_method(m)
     { }
 
@@ -724,11 +748,12 @@ struct RemoteTrampoline_5<T,void,A1,A2,A3,A4,A5> : public RemoteTrampoline
     typedef void (T::*MethodType)(A1,A2,A3,A4,A5);
     
     RemoteTrampoline_5(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(void),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5)),
+                    flgs),
           m_method(m)
     { }
 
@@ -776,11 +801,12 @@ struct RemoteTrampoline_6 : public RemoteTrampoline
     typedef R (T::*MethodType)(A1,A2,A3,A4,A5,A6);
     
     RemoteTrampoline_6(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(R),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6)),
+                    flgs),
           m_method(m)
     { }
 
@@ -827,11 +853,12 @@ struct RemoteTrampoline_6<T,void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
     typedef void (T::*MethodType)(A1,A2,A3,A4,A5,A6);
     
     RemoteTrampoline_6(const string& methodname, const RemoteMethodDoc& doc,
-                       MethodType m)
+                       MethodType m, const flag_t& flgs= 0)
         : inherited(methodname, (doc,
                                  RTYPE_DOC(void),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6)),
+                    flgs),
           m_method(m)
     { }
 
@@ -888,9 +915,10 @@ struct FRemoteTrampoline_0 : public RemoteTrampoline
     typedef R (*FunctionType)();
     
     FRemoteTrampoline_0(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
-                                 RTYPE_DOC(R))),
+                                 RTYPE_DOC(R)),
+                    flgs),
           m_function(m)
     { }
 
@@ -926,8 +954,8 @@ struct FRemoteTrampoline_0<void> : public RemoteTrampoline
     typedef void (*FunctionType)();
     
     FRemoteTrampoline_0(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
-        : inherited(functionname, (doc, RetTypeDoc("void"))),
+                       FunctionType m, const flag_t& flgs= 0)
+        : inherited(functionname, (doc, RetTypeDoc("void")), flgs),
           m_function(m)
     { }
 
@@ -966,10 +994,11 @@ struct FRemoteTrampoline_1 : public RemoteTrampoline
     typedef R (*FunctionType)(A1);
     
     FRemoteTrampoline_1(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(R),
-                                 ATYPE_DOC(A1))),
+                                 ATYPE_DOC(A1)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1007,10 +1036,11 @@ struct FRemoteTrampoline_1<void,A1> : public RemoteTrampoline
     typedef void (*FunctionType)(A1);
     
     FRemoteTrampoline_1(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(void),
-                                 ATYPE_DOC(A1))),
+                                 ATYPE_DOC(A1)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1051,10 +1081,11 @@ struct FRemoteTrampoline_2 : public RemoteTrampoline
     typedef R (*FunctionType)(A1,A2);
     
     FRemoteTrampoline_2(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(R),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1094,10 +1125,11 @@ struct FRemoteTrampoline_2<void,A1,A2> : public RemoteTrampoline
     typedef void (*FunctionType)(A1,A2);
     
     FRemoteTrampoline_2(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(void),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1140,10 +1172,11 @@ struct FRemoteTrampoline_3 : public RemoteTrampoline
     typedef R (*FunctionType)(A1,A2,A3);
     
     FRemoteTrampoline_3(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(R),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1185,10 +1218,11 @@ struct FRemoteTrampoline_3<void,A1,A2,A3> : public RemoteTrampoline
     typedef void (*FunctionType)(A1,A2,A3);
     
     FRemoteTrampoline_3(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                        FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(void),
-                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3))),
+                                 ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1233,11 +1267,12 @@ struct FRemoteTrampoline_4 : public RemoteTrampoline
     typedef R (*FunctionType)(A1,A2,A3,A4);
     
     FRemoteTrampoline_4(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(R),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4))),
+                                 ATYPE_DOC(A4)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1281,11 +1316,12 @@ struct FRemoteTrampoline_4<void,A1,A2,A3,A4> : public RemoteTrampoline
     typedef void (*FunctionType)(A1,A2,A3,A4);
     
     FRemoteTrampoline_4(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                       FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(void),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4))),
+                                 ATYPE_DOC(A4)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1332,11 +1368,12 @@ struct FRemoteTrampoline_5 : public RemoteTrampoline
     typedef R (*FunctionType)(A1,A2,A3,A4,A5);
     
     FRemoteTrampoline_5(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                        FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(R),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1382,11 +1419,12 @@ struct FRemoteTrampoline_5<void,A1,A2,A3,A4,A5> : public RemoteTrampoline
     typedef void (*FunctionType)(A1,A2,A3,A4,A5);
     
     FRemoteTrampoline_5(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                        FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(void),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1435,11 +1473,12 @@ struct FRemoteTrampoline_6 : public RemoteTrampoline
     typedef R (*FunctionType)(A1,A2,A3,A4,A5,A6);
     
     FRemoteTrampoline_6(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                        FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(R),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6)),
+                    flgs),
           m_function(m)
     { }
 
@@ -1487,11 +1526,12 @@ struct FRemoteTrampoline_6<void,A1,A2,A3,A4,A5,A6> : public RemoteTrampoline
     typedef void (*FunctionType)(A1,A2,A3,A4,A5,A6);
     
     FRemoteTrampoline_6(const string& functionname, const RemoteMethodDoc& doc,
-                       FunctionType m)
+                        FunctionType m, const flag_t& flgs= 0)
         : inherited(functionname, (doc,
                                  RTYPE_DOC(void),
                                  ATYPE_DOC(A1), ATYPE_DOC(A2), ATYPE_DOC(A3),
-                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6))),
+                                 ATYPE_DOC(A4), ATYPE_DOC(A5), ATYPE_DOC(A6)),
+                    flgs),
           m_function(m)
     { }
 

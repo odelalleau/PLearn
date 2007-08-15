@@ -876,6 +876,8 @@ protected:
     PyObject* m_object;
 
     template<class T> friend class ConvertToPyObject;
+    friend PStream& operator>>(PStream& in, PythonObjectWrapper& v);
+    friend PStream& operator<<(PStream& out, const PythonObjectWrapper& v);
 };
 
 // Specialization for General T*.  Attempt to cast into Object*.  If that works
@@ -931,16 +933,7 @@ T ConvertFromPyObject<T>::convert(PyObject* x, bool print_traceback)
 {
     return StaticConvertEnumFromPyObject<T, boost::is_enum<T>::value>
         ::convert(x, print_traceback);
-    /*
-    if(boost::is_enum<T>::value)
-        return ConvertFromPyObject<int>::convert(x, print_traceback);
-
-    PLERROR("Cannot convert this object by value from python (type=%s).",
-            TypeTraits<T>::name().c_str());
-    return T();//to silence compiler
-    */
 }
-
 
 template <class T>
 PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj,
@@ -1399,7 +1392,9 @@ PyObject* ConvertToPyObject<std::set<T> const* >::newPyObject(const std::set<T>*
         return PythonObjectWrapper::newPyObject();
 }
 
+
 PStream& operator>>(PStream& in, PythonObjectWrapper& v);
+PStream& operator<<(PStream& out, const PythonObjectWrapper& v);
 DECLARE_TYPE_TRAITS(PythonObjectWrapper);
 
 //! for debug purposes

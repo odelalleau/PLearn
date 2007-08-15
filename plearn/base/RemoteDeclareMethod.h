@@ -70,12 +70,13 @@ RemoteMethodMap& getGlobalFunctionMap();
 template <class R>
 inline void declareFunction(const string& funcname,
                             R (*func)(),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_0<R> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 
@@ -84,12 +85,13 @@ inline void declareFunction(const string& funcname,
 template <class R, class A1>
 inline void declareFunction(const string& funcname,
                             R (*func)(A1),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_1<R,A1> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 
@@ -98,12 +100,13 @@ inline void declareFunction(const string& funcname,
 template <class R, class A1, class A2>
 inline void declareFunction(const string& funcname,
                             R (*func)(A1,A2),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_2<R,A1,A2> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 
@@ -112,12 +115,13 @@ inline void declareFunction(const string& funcname,
 template <class R, class A1, class A2, class A3>
 inline void declareFunction(const string& funcname,
                             R (*func)(A1,A2,A3),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_3<R,A1,A2,A3> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 
@@ -126,12 +130,13 @@ inline void declareFunction(const string& funcname,
 template <class R, class A1, class A2, class A3, class A4>
 inline void declareFunction(const string& funcname,
                             R (*func)(A1,A2,A3,A4),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_4<R,A1,A2,A3,A4> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 //#####  5 Arguments  #########################################################
@@ -139,12 +144,13 @@ inline void declareFunction(const string& funcname,
 template <class R, class A1, class A2, class A3, class A4, class A5>
 inline void declareFunction(const string& funcname,
                             R (*func)(A1,A2,A3,A4,A5),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_5<R,A1,A2,A3,A4,A5> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 //#####  6 Arguments  #########################################################
@@ -152,12 +158,13 @@ inline void declareFunction(const string& funcname,
 template <class R, class A1, class A2, class A3, class A4, class A5, class A6>
 inline void declareFunction(const string& funcname,
                             R (*func)(A1,A2,A3,A4,A5,A6),
-                            const RemoteMethodDoc& doc)
+                            const RemoteMethodDoc& doc,
+                            const RemoteTrampoline::flag_t& flgs= 0)
 {
     RemoteMethodMap& rmm = getGlobalFunctionMap();
     typedef FRemoteTrampoline_6<R,A1,A2,A3,A4,A5,A6> Trampoline;
     rmm.insert(funcname, Trampoline::expected_nargs,
-               new Trampoline(funcname, doc, func));
+               new Trampoline(funcname, doc, func, flgs));
 }
 
 
@@ -171,11 +178,12 @@ template <class T, class R>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_0<T,R> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -183,11 +191,12 @@ template <class T, class R>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)() const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_0<T,R> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 
@@ -198,11 +207,12 @@ template <class T, class R, class A1>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_1<T,R,A1> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -210,11 +220,12 @@ template <class T, class R, class A1>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1) const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_1<T,R,A1> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 
@@ -225,11 +236,12 @@ template <class T, class R, class A1, class A2>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_2<T,R,A1,A2> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -237,11 +249,12 @@ template <class T, class R, class A1, class A2>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2) const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_2<T,R,A1,A2> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 
@@ -252,11 +265,12 @@ template <class T, class R, class A1, class A2, class A3>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_3<T,R,A1,A2,A3> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -264,11 +278,12 @@ template <class T, class R, class A1, class A2, class A3>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3) const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_3<T,R,A1,A2,A3> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 
@@ -279,11 +294,12 @@ template <class T, class R, class A1, class A2, class A3, class A4>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3,A4),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_4<T,R,A1,A2,A3,A4> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -291,11 +307,12 @@ template <class T, class R, class A1, class A2, class A3, class A4>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3,A4) const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_4<T,R,A1,A2,A3,A4> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 
@@ -306,11 +323,12 @@ template <class T, class R, class A1, class A2, class A3, class A4, class A5>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3,A4,A5),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_5<T,R,A1,A2,A3,A4,A5> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -318,11 +336,12 @@ template <class T, class R, class A1, class A2, class A3, class A4, class A5>
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3,A4,A5) const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_5<T,R,A1,A2,A3,A4,A5> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 
@@ -333,11 +352,12 @@ template <class T, class R, class A1, class A2, class A3, class A4, class A5, cl
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3,A4,A5,A6),
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_6<T,R,A1,A2,A3,A4,A5,A6> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 // Const method
@@ -345,11 +365,12 @@ template <class T, class R, class A1, class A2, class A3, class A4, class A5, cl
 inline void declareMethod(RemoteMethodMap& rmm,
                           const string& methodname,
                           R (T::*method)(A1,A2,A3,A4,A5,A6) const,
-                          const RemoteMethodDoc& doc)
+                          const RemoteMethodDoc& doc,
+                          const RemoteTrampoline::flag_t& flgs= 0)
 {
     typedef RemoteTrampoline_6<T,R,A1,A2,A3,A4,A5,A6> Trampoline;
     rmm.insert(methodname, Trampoline::expected_nargs,
-               new Trampoline(methodname, doc, METHOD_UNCONST(method)));
+               new Trampoline(methodname, doc, METHOD_UNCONST(method), flgs));
 }
 
 

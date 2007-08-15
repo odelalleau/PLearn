@@ -41,7 +41,6 @@
 namespace PLearn {
 using namespace std;
 
-
 //#####  RemoteMethodMap Implementation  ######################################
 
 RemoteMethodMap::~RemoteMethodMap()
@@ -116,7 +115,6 @@ string RemoteMethodMap::getMethodHelpText(const string& methodname, int arity) c
     } 
     return txt;
 }
-
 
 } // end of namespace PLearn
 

@@ -683,8 +683,85 @@ PyObject* ConvertToPyObject<CopiesMap>::newPyObject(const CopiesMap& copies)
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v)
 {
-    PLERROR("Attempting to read a PythonObjectWrapper from a stream : not supported");
+    PLERROR("operator>>(PStream&, PythonObjectWrapper&) : "
+            "not supported (yet).");
+/*
+    string s;
+    in >> s;
+    string sub= "PythonObjectWrapper(ownership=";
+    if(s.substr(0,sub.length()) != sub)
+        PLERROR("in operator>>(PStream& in, PythonObjectWrapper& v) : "
+                "expected '%s' but got '%s'.",
+                sub.c_str(), s.c_str());
+    s= s.substr(sub.length());
+    v.m_ownership= static_cast<PythonObjectWrapper::OwnershipMode>(s[0]-'0');
+    s= s.substr(1);
+    sub= ", object=";
+    if(s.substr(0,sub.length()) != sub)
+        PLERROR("in operator>>(PStream& in, PythonObjectWrapper& v) : "
+                "expected '%s' but got '%s'.",
+                sub.c_str(), s.c_str());
+    s= s.substr(sub.length());
+    PStream sin= openString(s, PStream::plearn_ascii, "r");
+    string pickle;
+    sin >> pickle;
+
+    PyObject* pypickle= PyString_FromString(pickle.c_str());
+    PyObject* env= PyDict_New();
+    if(0 != PyDict_SetItemString(env, "__builtins__", PyEval_GetBuiltins()))
+        PLERROR("in operator>>(PStream&, PythonObjectWrapper& v) : "
+                "cannot insert builtins in env.");
+    if(0 != PyDict_SetItemString(env, "the_pickle", pypickle))
+        PLERROR("in operator>>(PStream&, PythonObjectWrapper& v) : "
+                "cannot insert the_pickle in env.");
+    Py_DECREF(pypickle);
+    PyObject* res= PyRun_String("\nfrom cPickle import *\nresult= loads(the_pickle)\n", 
+                                Py_file_input, env, env);
+    if(!res)
+    {
+        Py_DECREF(env);
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in operator<<(PStream&, const PythonObjectWrapper& v) : "
+                "cannot unpickle python object '%s'.",pickle.c_str());
+    }
+    Py_DECREF(res);
+    v.m_object= 
+        PythonObjectWrapper(env).as<std::map<string, PyObject*> >()["result"];
+    Py_INCREF(v.m_object);
+    Py_DECREF(env);
+*/
     return in;
+}
+
+PStream& operator<<(PStream& out, const PythonObjectWrapper& v)
+{
+    PLERROR("operator<<(PStream&, const PythonObjectWrapper&) : "
+            "not supported (yet).");
+/*
+    PyObject* env= PyDict_New();
+    if(0 != PyDict_SetItemString(env, "__builtins__", PyEval_GetBuiltins()))
+        PLERROR("in operator<<(PStream&, const PythonObjectWrapper& v) : "
+                "cannot insert builtins in env.");
+    if(0 != PyDict_SetItemString(env, "the_obj", v.m_object))
+        PLERROR("in operator<<(PStream&, const PythonObjectWrapper& v) : "
+                "cannot insert the_obj in env.");
+    PyObject* res= PyRun_String("\nfrom cPickle import *\nresult= dumps(the_obj)\n", 
+                                Py_file_input, env, env);
+    if(!res)
+    {
+        Py_DECREF(env);
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in operator<<(PStream&, const PythonObjectWrapper& v) : "
+                "cannot pickle python object.");
+    }
+    Py_DECREF(res);
+    string pickle= 
+        PythonObjectWrapper(env).as<std::map<string, PythonObjectWrapper> >()["result"];
+    Py_DECREF(env);
+    string toout= string("PythonObjectWrapper(ownership=") + tostring(v.m_ownership) + ", object=\"" + pickle + "\")";
+    out << toout;
+*/
+    return out; // shut up compiler
 }
 
 //! debug

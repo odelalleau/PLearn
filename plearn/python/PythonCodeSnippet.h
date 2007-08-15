@@ -160,6 +160,9 @@ public:
     PythonCodeSnippet(const string& code = "",
                       bool remap_python_exceptions = false);
 
+    PythonCodeSnippet(const PythonObjectWrapper& instance,
+                      bool remap_python_exceptions = false);
+
     //! Default copy ctor, assignment op, dtor
 
 
@@ -373,44 +376,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     TVec<PythonObjectWrapper> args(1);
     args[0]= PythonObjectWrapper(arg1);
     return invoke(function_name, args);
-/*
-
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(1);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-
-        if (! (py_arg1)) {
-            Py_XDECREF(py_arg1);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else {
-        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
-                function_name);
-    }
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 
@@ -424,45 +389,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     args[0]= PythonObjectWrapper(arg1);
     args[1]= PythonObjectWrapper(arg2);
     return invoke(function_name, args);
-/*
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(2);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-        PyObject* py_arg2 = PythonObjectWrapper::newPyObject(arg2);
-
-        if (! (py_arg1 && py_arg2)) {
-            Py_XDECREF(py_arg1);
-            Py_XDECREF(py_arg2);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        PyTuple_SetItem(pArgs, 1, py_arg2);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else
-        PLERROR("PythonCodeSnippet::invoke: cannot invoke function '%s'",
-                function_name);
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 
@@ -478,49 +404,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     args[1]= PythonObjectWrapper(arg2);
     args[2]= PythonObjectWrapper(arg3);
     return invoke(function_name, args);
-
-/*
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(3);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-        PyObject* py_arg2 = PythonObjectWrapper::newPyObject(arg2);
-        PyObject* py_arg3 = PythonObjectWrapper::newPyObject(arg3);
-
-        if (! (py_arg1 && py_arg2 && py_arg3)) {
-            Py_XDECREF(py_arg1);
-            Py_XDECREF(py_arg2);
-            Py_XDECREF(py_arg3);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        PyTuple_SetItem(pArgs, 1, py_arg2);
-        PyTuple_SetItem(pArgs, 2, py_arg3);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else
-        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
-                function_name);
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 
@@ -538,51 +421,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     args[2]= PythonObjectWrapper(arg3);
     args[3]= PythonObjectWrapper(arg4);
     return invoke(function_name, args);
-/*
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(4);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-        PyObject* py_arg2 = PythonObjectWrapper::newPyObject(arg2);
-        PyObject* py_arg3 = PythonObjectWrapper::newPyObject(arg3);
-        PyObject* py_arg4 = PythonObjectWrapper::newPyObject(arg4);
-
-        if (! (py_arg1 && py_arg2 && py_arg3 && py_arg4)) {
-            Py_XDECREF(py_arg1);
-            Py_XDECREF(py_arg2);
-            Py_XDECREF(py_arg3);
-            Py_XDECREF(py_arg4);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        PyTuple_SetItem(pArgs, 1, py_arg2);
-        PyTuple_SetItem(pArgs, 2, py_arg3);
-        PyTuple_SetItem(pArgs, 3, py_arg4);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else
-        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
-                function_name);
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 template <class T, class U, class V, class W, class X>
@@ -601,54 +439,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     args[3]= PythonObjectWrapper(arg4);
     args[4]= PythonObjectWrapper(arg5);
     return invoke(function_name, args);
-/*
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(5);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-        PyObject* py_arg2 = PythonObjectWrapper::newPyObject(arg2);
-        PyObject* py_arg3 = PythonObjectWrapper::newPyObject(arg3);
-        PyObject* py_arg4 = PythonObjectWrapper::newPyObject(arg4);
-        PyObject* py_arg5 = PythonObjectWrapper::newPyObject(arg5);
-
-        if (! (py_arg1 && py_arg2 && py_arg3 && py_arg4 && py_arg5)) {
-            Py_XDECREF(py_arg1);
-            Py_XDECREF(py_arg2);
-            Py_XDECREF(py_arg3);
-            Py_XDECREF(py_arg4);
-            Py_XDECREF(py_arg5);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        PyTuple_SetItem(pArgs, 1, py_arg2);
-        PyTuple_SetItem(pArgs, 2, py_arg3);
-        PyTuple_SetItem(pArgs, 3, py_arg4);
-        PyTuple_SetItem(pArgs, 4, py_arg5);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else
-        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
-                function_name);
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 template <class T, class U, class V, class W, class X, class Y>
@@ -669,58 +459,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     args[4]= PythonObjectWrapper(arg5);
     args[5]= PythonObjectWrapper(arg6);
     return invoke(function_name, args);
-/*
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(6);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-        PyObject* py_arg2 = PythonObjectWrapper::newPyObject(arg2);
-        PyObject* py_arg3 = PythonObjectWrapper::newPyObject(arg3);
-        PyObject* py_arg4 = PythonObjectWrapper::newPyObject(arg4);
-        PyObject* py_arg5 = PythonObjectWrapper::newPyObject(arg5);
-        PyObject* py_arg6 = PythonObjectWrapper::newPyObject(arg6);
-
-        if (! (py_arg1 && py_arg2 && py_arg3 && py_arg4 && py_arg5 &&
-               py_arg6 )) {
-            Py_XDECREF(py_arg1);
-            Py_XDECREF(py_arg2);
-            Py_XDECREF(py_arg3);
-            Py_XDECREF(py_arg4);
-            Py_XDECREF(py_arg5);
-            Py_XDECREF(py_arg6);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        PyTuple_SetItem(pArgs, 1, py_arg2);
-        PyTuple_SetItem(pArgs, 2, py_arg3);
-        PyTuple_SetItem(pArgs, 3, py_arg4);
-        PyTuple_SetItem(pArgs, 4, py_arg5);
-        PyTuple_SetItem(pArgs, 5, py_arg6);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else
-        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
-                function_name);
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 
@@ -744,61 +482,6 @@ PythonCodeSnippet::invoke(const char* function_name,
     args[5]= PythonObjectWrapper(arg6);
     args[6]= PythonObjectWrapper(arg7);
     return invoke(function_name, args);
-/*
-    PythonGlobalInterpreterLock gil;         // For thread-safety
-    PyObject* pFunc = PyDict_GetItemString(m_compiled_code.getPyObject(),
-                                           function_name);
-    // pFunc: Borrowed reference
-
-    PyObject* return_value = 0;
-    if (pFunc && PyCallable_Check(pFunc)) {
-        setCurrentSnippet(m_handle);
-
-        // Create argument tuple.  Warning: PyTuple_SetItem STEALS references.
-        PyObject* pArgs = PyTuple_New(7);
-        PyObject* py_arg1 = PythonObjectWrapper::newPyObject(arg1);
-        PyObject* py_arg2 = PythonObjectWrapper::newPyObject(arg2);
-        PyObject* py_arg3 = PythonObjectWrapper::newPyObject(arg3);
-        PyObject* py_arg4 = PythonObjectWrapper::newPyObject(arg4);
-        PyObject* py_arg5 = PythonObjectWrapper::newPyObject(arg5);
-        PyObject* py_arg6 = PythonObjectWrapper::newPyObject(arg6);
-        PyObject* py_arg7 = PythonObjectWrapper::newPyObject(arg7);
-
-        if (! (py_arg1 && py_arg2 && py_arg3 && py_arg4 && py_arg5 &&
-               py_arg6 && py_arg7 )) {
-            Py_XDECREF(py_arg1);
-            Py_XDECREF(py_arg2);
-            Py_XDECREF(py_arg3);
-            Py_XDECREF(py_arg4);
-            Py_XDECREF(py_arg5);
-            Py_XDECREF(py_arg6);
-            Py_XDECREF(py_arg7);
-            PLERROR("PythonCodeSnippet::invoke: error during argument conversion "
-                    "from C++ to Python for function '%s'", function_name);
-        }
-
-        PyTuple_SetItem(pArgs, 0, py_arg1);
-        PyTuple_SetItem(pArgs, 1, py_arg2);
-        PyTuple_SetItem(pArgs, 2, py_arg3);
-        PyTuple_SetItem(pArgs, 3, py_arg4);
-        PyTuple_SetItem(pArgs, 4, py_arg5);
-        PyTuple_SetItem(pArgs, 5, py_arg6);
-        PyTuple_SetItem(pArgs, 6, py_arg7);
-
-        return_value = PyObject_CallObject(pFunc, pArgs);
-
-        Py_XDECREF(pArgs);
-        if (! return_value)
-            handlePythonErrors();
-
-        resetCurrentSnippet();
-    }
-    else
-        PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
-                function_name);
-
-    return PythonObjectWrapper(return_value);
-*/
 }
 
 

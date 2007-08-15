@@ -304,11 +304,17 @@ void injectPLearnClasses(PyObject* module)
         TVec<string>& methods_help= 
             PythonObjectWrapper::m_pypl_classes.find(classname)->second.methods_help;
 
+        set<pair<string, int> > methods_done;
         while(methods)
         {
             for(RemoteMethodMap::MethodMap::const_iterator it= methods->begin();
                 it != methods->end(); ++it)
             {
+                //skip methods already injected, or not to inject
+                if(methods_done.find(it->first) != methods_done.end()) continue;
+                methods_done.insert(it->first);
+                if(it->second->flags() & RemoteTrampoline::nopython) continue;
+
                 //get the RemoteTrampoline
                 PyObject* tramp= PyCObject_FromVoidPtr(it->second, NULL);
             
