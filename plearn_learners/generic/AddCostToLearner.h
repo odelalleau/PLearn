@@ -107,6 +107,8 @@ protected:
     //! The threshold between class
     Vec class_threshold;
 
+    //! The total time passed in training
+    real train_time;
 public:
 
     // ************************

@@ -252,6 +252,7 @@ void AddCostToLearner::build_()
         } else if (c == "squared_norm_reconstruction_error") {
         } else if (c == "class_error") {
         } else if (c == "binary_class_error") {
+        } else if (c == "train_time") {
         } else if (c == "linear_class_error") {
         } else if (c == "square_class_error") {
         } else if (c == "confusion_matrix") {
@@ -268,6 +269,7 @@ void AddCostToLearner::build_()
     if (n > 0 && display) {
         cout << endl;
     }
+    Profiler::activate();
 }
 
 /////////////////////////////
@@ -576,6 +578,8 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             PLWARNING("In AddCostToLearner::computeCostsFromOutputs - 'squared_norm_reconstruction_error'"
                       " has not been tested yet, please remove this warning if it works correctly");
             costs[ind_cost] = abs(pownorm(input, 2) - pownorm(sub_learner_output, 2));
+        } else if (c == "train_time") {
+            costs[ind_cost] = train_time;
         } else {
             PLERROR("In AddCostToLearner::computeCostsFromOutputs - Unknown cost");
         }
@@ -587,7 +591,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 ///////////
 void AddCostToLearner::train()
 {
-    Profiler::pl_profile_start("AddCostToLearner::train");
+    Profiler::start("AddCostToLearner::train");
 
     int find_threshold = -1;
     if(find_class_threshold){
@@ -655,8 +659,9 @@ void AddCostToLearner::train()
                 cout << "class_threshold[" << i << "] = " <<class_threshold[i] << endl;
 
     }
-    Profiler::pl_profile_end("AddCostToLearner::train");
-
+    Profiler::end("AddCostToLearner::train");
+    const Profiler::Stats& stats = Profiler::getStats("AddCostToLearner::train");
+    train_time=stats.wall_duration/Profiler::ticksPerSecond();
 }
 
 ///////////////////////////
