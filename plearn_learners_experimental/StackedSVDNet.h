@@ -81,6 +81,11 @@ public:
     //! Indication that the output layer (given by the final module)
     //! should have as input all units of the network (including the input units)
     bool global_output_layer;
+
+    //! Indication that the zero diagonal of the weight matrix after
+    //! logistic auto-regression should be filled with the
+    //! maximum absolute value of each corresponding row.
+    bool fill_in_null_diagonal;
     
     //! Minimum relative improvement convergence criteria
     //! for the logistic auto-regression.

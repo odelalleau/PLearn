@@ -59,6 +59,7 @@ StackedSVDNet::StackedSVDNet() :
     fine_tuning_decrease_ct( 0. ),
     batch_size(50),
     global_output_layer(false),
+    fill_in_null_diagonal(true),
     relative_min_improvement(1e-3),
     n_layers( 0 )
 {
@@ -106,6 +107,13 @@ void StackedSVDNet::declareOptions(OptionList& ol)
                   "Indication that the output layer (given by the final module)\n"
                   "should have as input all units of the network (including the"
                   "input units).\n");
+
+    declareOption(ol, "fill_in_null_diagonal", 
+                  &StackedSVDNet::fill_in_null_diagonal,
+                  OptionBase::buildoption,
+                  "Indication that the zero diagonal of the weight matrix after\n"
+                  "logistic auto-regression should be filled with the\n"
+                  "maximum absolute value of each corresponding row.\n");
 
     declareOption(ol, "relative_min_improvement", 
                   &StackedSVDNet::relative_min_improvement,
@@ -412,12 +420,15 @@ void StackedSVDNet::train()
                         cost << " or " << cost/layers[i]->size << " (rel)" << endl;
             }
 
-            // Fill in the empty diagonal
-            for(int j=0; j<layers[i]->size; j++)
+            if(fill_in_null_diagonal)
             {
-                connections[i]->weights(j,j) = maxabs(connections[i]->weights(j));
+                // Fill in the empty diagonal
+                for(int j=0; j<layers[i]->size; j++)
+                {
+                    connections[i]->weights(j,j) = maxabs(connections[i]->weights(j));
+                }
             }
-
+            
             if(layers[i]->size != layers[i+1]->size)
             {
                 Mat A,U,Vt;
