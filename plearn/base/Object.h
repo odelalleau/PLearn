@@ -130,7 +130,9 @@ using namespace std;
             {                                                                                   \
                 OptionList& ol= getOptionList();                                                \
                 for(OptionList::iterator it= ol.begin(); it != ol.end(); ++it)                  \
-                    om[(*it)->optionname()]= *it;                                               \
+                    /*N.B. option map will contain derived class's option*/                     \
+                    /*  when it also exists in a base class.             */                     \
+                    om.insert(make_pair((*it)->optionname(), *it));                             \
             }                                                                                   \
             return om;                                                                          \
         }                                                                                       \
@@ -329,7 +331,9 @@ template<> StaticInitializer Toto<int,3>::_static_initializer_(&Toto<int,3>::_st
             {                                                                                   \
                 OptionList& ol= getOptionList();                                                \
                 for(OptionList::iterator it= ol.begin(); it != ol.end(); ++it)                  \
-                    om[(*it)->optionname()]= *it;                                               \
+                    /*N.B. option map will contain derived class's option*/                     \
+                    /*  when it also exists in a base class.             */                     \
+                    om.insert(make_pair((*it)->optionname(), *it));                             \
             }                                                                                   \
             return om;                                                                          \
         }                                                                                       \
