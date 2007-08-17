@@ -692,7 +692,8 @@ class Routine( PyTestObject ):
         os.chdir( self.test.directory() )
         
     def compileProgram(self):
-        if not self.test.program.isCompilable():
+        if not self.test.program.isCompilable() \
+           and not self.test.program.areDependenciesCompilable():
             return True
 
         logging.debug("\nCompilation:")

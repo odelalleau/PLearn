@@ -185,40 +185,50 @@ class Program(core.PyTestObject):
 
         # Account for dependencies
         success = no_need_to_compile or (self.__attempted_to_compile and exec_exists)
-        for dep in self.dependencies:
+        #print "+++ compilationSucceeded():", self.name, success, no_need_to_compile, self.__attempted_to_compile, exec_exists
+        for dep in self.dependencies:            
             success = (success and dep.compilationSucceeded())
+            #print "+++ DEP compilationSucceeded():", success
         return success
 
     def compile(self, publish_dirpath=""):
-        # Remove old compile log if any
-        publish_target = os.path.join(publish_dirpath, os.path.basename(self.__log_file_path))
-        if os.path.islink(publish_target) or os.path.isfile(publish_target):
-            os.remove(publish_target)
-        assert not os.path.exists(publish_target)
-
-        # Ensure compilation is needed
-        if self.compilationSucceeded():
-            logging.debug("Already successfully compiled %s"%self.getInternalExecPath())
-            succeeded = True
-
-        elif self.__attempted_to_compile:
-            logging.debug("Already attempted to compile %s"%self.getInternalExecPath())
-            succeeded = False
-
-        # First compilation attempt
-        else:
-            succeeded = self.__first_compilation_attempt()               
-
-        # Publish the compile log
-        if succeeded and publish_dirpath:
-            logging.debug("Publishing the compile log %s"%self.__log_file_path)
-            toolkit.symlink(self.__log_file_path,
-                            moresh.relative_path(publish_target))
+        succeeded = True
+        if self.isCompilable():
+            # Remove old compile log if any        
+            publish_target = os.path.join(publish_dirpath,
+                                          os.path.basename(self.__log_file_path))
+            if os.path.islink(publish_target) or os.path.isfile(publish_target):
+                os.remove(publish_target)
+            assert not os.path.exists(publish_target)
+            
+            # Ensure compilation is needed
+            if self.compilationSucceeded():
+                logging.debug("Already successfully compiled %s"%self.getInternalExecPath())
+                succeeded = True
+            
+            elif self.__attempted_to_compile:
+                logging.debug("Already attempted to compile %s"%self.getInternalExecPath())
+                succeeded = False
+            
+            # First compilation attempt
+            else:
+                #print "+++ SHORTCUT!!!", self.name
+                #succeeded = True 
+                succeeded = self.__first_compilation_attempt()               
+                #print "+++ FIRST ATTEMPT", self.name, succeeded
+            
+            # Publish the compile log
+            if succeeded and publish_dirpath:
+                logging.debug("Publishing the compile log %s"%self.__log_file_path)
+                toolkit.symlink(self.__log_file_path,
+                                moresh.relative_path(publish_target))
 
         # Account for dependencies
+        #print "+++ Success", self.name, succeeded        
         for dep in self.dependencies:
-            succeeded = (succeeded and dep.compile(publish_dirpath))
-        
+            succeeded = (succeeded and dep.compile(publish_dirpath))        
+            #print "+++ DEP", succeeded
+            
         return succeeded
         
     def __first_compilation_attempt(self):
@@ -365,14 +375,18 @@ class Program(core.PyTestObject):
             # Otherwise assumed to be non-compilable
             else:
                 self.__is_compilable = False
-                for dep in self.dependencies:
-                    if dep.isCompilable():
-                        self.__is_compilable = True
-                        break
 
             # It is now cached... 
             return self.__is_compilable
-        
+
+    def areDependenciesCompilable(self):
+        compilable = False
+        for dep in self.dependencies:
+            if dep.isCompilable():
+                compilable = True
+                break        
+        return compilable
+    
     def isGlobal(self):
         return self.__is_global
 
