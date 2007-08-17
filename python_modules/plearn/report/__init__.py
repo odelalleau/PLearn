@@ -54,18 +54,21 @@ def triggerLightGraySetup():
     FONTPROP   = FontProperties(family='sans-serif', weight='normal', size=FONTSIZE)
 
     global LEGEND_FONTSIZE, LEGEND_FONTPROP
-    LEGEND_FONTSIZE = 10
+    LEGEND_FONTSIZE = 24
     LEGEND_FONTPROP = FontProperties(family='sans-serif',
                                      weight='normal', size=LEGEND_FONTSIZE)    
 
-    global TICK_LABEL_FONTSIZE, TICK_LABEL_FONTPROP
-    TICK_LABEL_FONTSIZE = 10
-    TICK_LABEL_FONTPROP = FontProperties(family='sans-serif',
-                                         weight='normal', size=TICK_LABEL_FONTSIZE)
-    matplotlib.rc('text',           usetex=True)
-    matplotlib.rc('tick',           color='k')
+    #global TICK_LABEL_FONTSIZE, TICK_LABEL_FONTPROP
+    #TICK_LABEL_FONTSIZE = 10
+    #TICK_LABEL_FONTPROP = FontProperties(family='sans-serif',
+    #                                     weight='normal', size=TICK_LABEL_FONTSIZE)
+    matplotlib.rc('text',   usetex=True)
+    matplotlib.rc('legend', fontsize=14)
+    matplotlib.rc('xtick',  color='k', labelsize=14)
+    matplotlib.rc('ytick',  color='k', labelsize=14)
+    
     matplotlib.rc('figure',         facecolor=FIGURE_BG)
-    matplotlib.rc('figure.subplot', bottom=0.15)
+    matplotlib.rc('figure.subplot', bottom=0.10)
     matplotlib.rc('lines',          linewidth=1.5, linestyle='-')
     matplotlib.rc('grid',           color=GRID_COL, linewidth=0.5, linestyle='-')
 

@@ -203,11 +203,7 @@ def hasNaN(f):
     f = choose(isnan(f), (0, 1))
     return sum(f)
     
-def isNaN(f):
-    """Return 1 where f contains NaN values, 0 elsewhere."""
-    import numpy as ieeespecial
-    return ieeespecial.mask(f, ieeespecial.NAN)
-
+isNaN = isnan
 def isNotNaN(f):
     """Return 0 where f contains NaN values, 1 elsewhere."""
     return ufunc.equal(isnan(f), 0.0)

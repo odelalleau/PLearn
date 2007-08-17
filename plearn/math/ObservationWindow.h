@@ -87,7 +87,10 @@ public:
     
     const Vec lastObs() const;
     real lastWeight() const;
-    
+
+    //TBA: // Get the min/max value in a column
+    //TBA: void columnMin(int col, real& min, real& agemin) const;
+    //TBA: void columnMax(int col, real& max, real& agemax) const;
 
     //#####  PLearn::Object Protocol  #########################################
 

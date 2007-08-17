@@ -225,6 +225,37 @@ real ObservationWindow::lastWeight() const
     return m_obs_weights[last_obs];
 }
 
+// The TMatElementIterator<double> are not as easy to handle as real*...
+//
+//TBA:// Get the min/max value in a column
+//TBA:void ObservationWindow::columnMin(int col, real& min, real& agemin) const
+//TBA:{
+//TBA:    const Mat& column = m_observations.column(col);
+//TBA:    real* beg = column.begin();
+//TBA:    real* ptr = std::min_element(beg, column.end());
+//TBA:    min = *ptr;
+//TBA:
+//TBA:    // The cursor is now at the position *after* the position of the last added
+//TBA:    // value... 
+//TBA:    agemin = abs((ptr - beg) - m_cursor);
+//TBA:    if ( agemin == 0 )
+//TBA:        agemin = m_window;
+//TBA:}
+//TBA:
+//TBA:void ObservationWindow::columnMax(int col, real& max, real& agemax) const
+//TBA:{
+//TBA:    const Mat& column = m_observations.column(col);
+//TBA:    real* beg = column.begin();
+//TBA:    real* ptr = std::max_element(beg, column.end());
+//TBA:    max = *ptr;
+//TBA:
+//TBA:    // The cursor is now at the position *after* the position of the last added
+//TBA:    // value... 
+//TBA:    agemax = abs((ptr - beg) - m_cursor);
+//TBA:    if ( agemax == 0 )
+//TBA:        agemax = m_window;
+//TBA:}
+
 /*
 //! Deep copying
 ObservationWindow* ObservationWindow::deepCopy(CopiesMap& copies) const

@@ -91,8 +91,9 @@ def setLegend(axes, legend_map, sorted_keys=None, loc=0):
     if not sorted_keys:
         sorted_keys = legend_map.keys(); sorted_keys.sort()
     values = [ legend_map[k] for k in sorted_keys ]
-    legend = axes.legend(values, sorted_keys,
-                         loc=loc, shadow=False, prop = FontProperties(size=13))
+    legend = axes.legend(values, sorted_keys, loc=loc, shadow=False)
+    #legend = axes.legend(values, sorted_keys,
+    #                     loc=loc, shadow=False, prop = FontProperties(size=13))
     legend.set_zorder(100)
 
 class Struct(dict):

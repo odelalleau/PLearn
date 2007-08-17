@@ -437,8 +437,15 @@ void VecStatsCollector::remove_observation(const Vec& x, real weight)
                  n, stats.size() );
 
     for(int k=0; k<n; k++)
-        stats[k].remove_observation(x[k], weight);
-  
+    {
+        real obs = x[k];
+        stats[k].remove_observation(obs, weight);
+        //TBA: if ( is_equal(obs, stats[k].min_) )
+        //TBA:     m_observation_window->columnMin(k, stats[k].min_, stats[k].agemin_);
+        //TBA: if ( is_equal(obs, stats[k].max_) )
+        //TBA:     m_observation_window->columnMax(k, stats[k].max_, stats[k].agemax_);
+    }
+        
     // This removes the observation x contribution to the covariance matrix.
     if( compute_covariance ) {
         if (fast_exact_is_equal(stats[0].nnonmissing(), 0)) {

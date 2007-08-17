@@ -529,8 +529,17 @@ void StatsCollector::remove_observation(real val, real weight)
         }
         
         if(storeCounts())
-            PLERROR("The remove observation mechanism is incompatible with "
-                    "maxnvalues.");
+        {
+            if ( maxnvalues > 0 )
+                PLERROR("The remove observation mechanism is incompatible with "
+                        "maxnvalues > 0.");
+
+            // Find the associated count and decrement. Note that I do not
+            // verify whether the count reaches 0.0. A null count does not have
+            // any impact on pseudo_quantile() while removing the element from
+            // the map could mess up with ids...
+            counts[val].n -= weight;
+        }
     }
 }                           
 
