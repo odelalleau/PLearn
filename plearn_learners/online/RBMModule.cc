@@ -297,7 +297,7 @@ void RBMModule::build_()
     addPortName("hidden_activations.state");
     addPortName("visible_sample");
     addPortName("visible_expectation");
-    addPortName("visible_activation.state");
+    addPortName("visible_activations.state");
     addPortName("hidden_sample");
     addPortName("energy");
     addPortName("hidden_bias");
@@ -330,7 +330,7 @@ void RBMModule::build_()
         port_sizes(getPortIndex("visible"), 1) = visible_layer->size;
         port_sizes(getPortIndex("visible_sample"), 1) = visible_layer->size;
         port_sizes(getPortIndex("visible_expectation"), 1) = visible_layer->size;
-        port_sizes(getPortIndex("visible_activation.state"), 1) = visible_layer->size;
+        port_sizes(getPortIndex("visible_activations.state"), 1) = visible_layer->size;
     }
     if (hidden_layer) {
         port_sizes(getPortIndex("hidden.state"), 1) = hidden_layer->size;
@@ -692,7 +692,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     bool visible_sample_is_output = visible_sample && visible_sample->isEmpty();
     Mat* visible_expectation = ports_value[getPortIndex("visible_expectation")];
     bool visible_expectation_is_output = visible_expectation && visible_expectation->isEmpty();
-    Mat* visible_activation = ports_value[getPortIndex("visible_activation.state")];
+    Mat* visible_activation = ports_value[getPortIndex("visible_activations.state")];
     bool visible_activation_is_output = visible_activation && visible_activation->isEmpty();
     Mat* hidden_sample = ports_value[getPortIndex("hidden_sample")];
     bool hidden_sample_is_output = hidden_sample && hidden_sample->isEmpty();
