@@ -115,6 +115,7 @@ RBMModule::RBMModule():
     Gibbs_step(0),
     log_partition_function(0),
     partition_function_is_stale(true),
+    deterministic_reconstruction_in_cd(false),
     standard_cd_grad(true),
     standard_cd_bias_grad(true),
     standard_cd_weights_grad(true),
@@ -165,6 +166,16 @@ void RBMModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "Compute the constrastive divergence in an output port.");
 
+    declareOption(ol, "deterministic_reconstruction_in_cd",
+                  &RBMModule::deterministic_reconstruction_in_cd,
+                  OptionBase::buildoption,
+        "Whether to use the expectation of the visible (given a hidden sample)\n"
+	"or a sample of the visible in the contrastive divergence learning.\n"
+        "In other words, instead of the classical Gibbs sampling\n"
+        "   v_0 --> h_0 ~ p(h|v_0) --> v_1 ~ p(v|h_0) -->  p(h|v_1)\n"
+        "we will have by setting 'deterministic_reconstruction_in_cd=1'\n"
+        "   v_0 --> h_0 ~ p(h|v_0) --> v_1 = E(v|h_0) -->  p(h|E(v|h_0)).");
+ 
     declareOption(ol, "standard_cd_grad",
                   &RBMModule::standard_cd_grad,
                   OptionBase::buildoption,
@@ -1106,10 +1117,21 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             for( int i=0; i<n_Gibbs_steps_CD; i++)
             {
                 hidden_layer->generateSamples();
-                // (Negative phase) Generate visible samples.
-                sampleVisibleGivenHidden(hidden_layer->samples);
-                // compute corresponding hidden expectations.
-                computeHiddenActivations(visible_layer->samples);
+                if (deterministic_reconstruction_in_cd)
+                {
+                   // (Negative phase) compute visible expectations
+                   computeVisibleActivations(hidden_layer->samples);
+                   visible_layer->computeExpectations();
+                   // compute corresponding hidden expectations.
+                   computeHiddenActivations(visible_layer->getExpectations());
+                }
+                else
+                {
+                   // (Negative phase) Generate visible samples.
+                   sampleVisibleGivenHidden(hidden_layer->samples);
+                   // compute corresponding hidden expectations.
+                   computeHiddenActivations(visible_layer->samples);
+                }
                 hidden_activations_are_computed = false;
                 hidden_layer->computeExpectations();
             }
@@ -1119,7 +1141,10 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             PLASSERT(negative_phase_hidden_activations &&
                      negative_phase_hidden_activations_is_output);
             negative_phase_visible_samples->resize(mbs,visible_layer->size);
-            *negative_phase_visible_samples << visible_layer->samples;
+            if (deterministic_reconstruction_in_cd)
+               *negative_phase_visible_samples << visible_layer->getExpectations();
+            else
+               *negative_phase_visible_samples << visible_layer->samples;
             negative_phase_hidden_expectations->resize(hidden_expectations.length(),
                                                        hidden_expectations.width());
             *negative_phase_hidden_expectations << hidden_expectations;
@@ -1177,19 +1202,6 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
     if (!found_a_valid_configuration)
     {
-        /*
-        if (visible)
-            cout << "visible_empty : "<< (bool) visible->isEmpty() << endl;
-        if (hidden)
-            cout << "hidden_empty : "<< (bool) hidden->isEmpty() << endl;
-        if (visible_sample)
-            cout << "visible_sample_empty : "<< (bool) visible_sample->isEmpty() << endl;
-        if (hidden_sample)
-            cout << "hidden_sample_empty : "<< (bool) hidden_sample->isEmpty() << endl;
-        if (visible_expectation)
-            cout << "visible_expectation_empty : "<< (bool) visible_expectation->isEmpty() << endl;
-
-        */
         PLERROR("In RBMModule::fprop - Unknown port configuration for module %s", name.c_str());
     }
 
@@ -1474,6 +1486,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( visible && hidden );
         PLASSERT( !negative_phase_visible_samples ||
                   !negative_phase_visible_samples->isEmpty() );
+
+        Mat vis_expect_ptr;
         if (!negative_phase_visible_samples)
         {
             // Generate hidden samples.
@@ -1481,18 +1495,34 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             for( int i=0; i<n_Gibbs_steps_CD; i++)
             {
                 hidden_layer->generateSamples();
-                // (Negative phase) Generate visible samples.
-                sampleVisibleGivenHidden(hidden_layer->samples);
-                // compute corresponding hidden expectations.
-                computeHiddenActivations(visible_layer->samples);
+                if (deterministic_reconstruction_in_cd)
+                {
+                   // (Negative phase) compute visible expectations
+                   computeVisibleActivations(hidden_layer->samples);
+                   visible_layer->computeExpectations();
+                   // compute corresponding hidden expectations.
+                   computeHiddenActivations(visible_layer->getExpectations());
+                }
+                else // classical CD learning
+                {
+                   // (Negative phase) Generate visible samples.
+                   sampleVisibleGivenHidden(hidden_layer->samples);
+                   // compute corresponding hidden expectations.
+                   computeHiddenActivations(visible_layer->samples);
+                }
                 hidden_layer->computeExpectations();
             }
             PLASSERT( !computed_contrastive_divergence );
             PLASSERT( !negative_phase_hidden_expectations );
             PLASSERT( !negative_phase_hidden_activations );
-            negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
-            negative_phase_visible_samples = &(visible_layer->samples);
+            if (deterministic_reconstruction_in_cd) {
+                vis_expect_ptr = visible_layer->getExpectations();
+                negative_phase_visible_samples = &vis_expect_ptr;
+            }
+	    else // classical CD learning
+               negative_phase_visible_samples = &(visible_layer->samples);
             negative_phase_hidden_activations = &(hidden_layer->activations);
+            negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
         }
         PLASSERT( negative_phase_hidden_expectations &&
                   !negative_phase_hidden_expectations->isEmpty() );
@@ -1589,7 +1619,6 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             }
         }
         if (!connection_update_is_done)
-            // Perform standard update of the connection.
             connection->update(*visible, *hidden,
                     *negative_phase_visible_samples,
                     *negative_phase_hidden_expectations);
@@ -1639,7 +1668,6 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             for (int i = 0; i < mbs; i++)
                 bias -= lr * (*hidden_bias_g)(i);
         }
-
 
         partition_function_is_stale = true;
     } else {
