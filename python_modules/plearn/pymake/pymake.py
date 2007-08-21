@@ -911,8 +911,8 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
             print "Warning: bad target", target
         else:
             info = file_info(cctarget)
-            if info.hasmain or create_dll or create_so:
-                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
+            if info.hasmain or create_dll or create_so or create_pyso:
+                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so and not create_pyso:
                     info.make_symbolic_link(linkname, None, info.corresponding_output) # remake the correct symbolic link
                     print 'Target',info.filebase,'is up to date.'
                 else:
@@ -1051,7 +1051,7 @@ def sequential_link(executables_to_link, linkname):
                 print '[ LINKING',ccfile.filebase,']'
             link_exit_code = ccfile.launch_linking()
             if platform!='win32':
-                if create_so:
+                if create_so or create_pyso:
                     so_filename = os.path.basename(ccfile.corresponding_output)
                     ccfile.make_symbolic_link(so_filename, so_filename)
                 else:
@@ -1096,7 +1096,7 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
     so_options = ""
     if force_32bits:
         linkeroptions = linkeroptions + ' -m32'
-    if create_so:
+    if create_so or create_pyso:
         so_options = " -shared "
     for opt in options:
         optdef = pymake_options_defs[opt]
@@ -1639,6 +1639,9 @@ class FileInfo:
 
             elif create_so:
                 self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
+                
+            elif create_pyso:
+                self.corresponding_output = join(self.filedir, objsdir, self.filebase+'.so')
 
             elif self.hasmain:
                 self.corresponding_output = join(self.filedir, objsdir, self.filebase)
@@ -1683,7 +1686,7 @@ class FileInfo:
         """returns the list of FileInfos of all .cc files that need to be linked together to produce the corresponding_output"""
         if not hasattr(self,"ccfiles_to_link"):
             #if not self.hasmain or not self.is_ccfile:
-            if (not self.hasmain and not create_dll and not create_so) or not self.is_ccfile:
+            if (not self.hasmain and not create_dll and not create_so and not create_pyso) or not self.is_ccfile:
                 raise "called get_ccfiles_to_link on a file that is not a .cc file or that does not contain a main()"
             self.ccfiles_to_link = []
             visited_hfiles = []
@@ -2216,7 +2219,7 @@ digraph G
         so_options = ""
         if force_32bits:
             linkeroptions = linkeroptions + ' -m32'
-        if create_so:
+        if create_so or create_pyso:
             so_options = " -shared "
         elif static_linking:
             so_options = " -static "
@@ -2401,6 +2404,7 @@ def main( args ):
     # Variables that can be useful to have read access to in the config file
     global optionargs, otherargs, linkname, link_target_override, \
             create_dll, relocatable_dll, no_cygwin, force_32bits, create_so, \
+            create_pyso, \
             static_linking, force_recompilation, force_link, \
             local_compilation, symlinkobjs, temp_objs, distribute, vcproj, \
             local_ofiles, local_ofiles_base_path
@@ -2546,6 +2550,12 @@ def main( args ):
     else:
         create_so = 0
 
+    if 'pyso' in optionargs:
+        create_pyso = 1
+        optionargs.remove('pyso')
+    else:
+        create_pyso = 0
+
     # do we want to create a statically linked executable
     if 'static' in optionargs:
         static_linking = 1
@@ -2554,12 +2564,13 @@ def main( args ):
         static_linking = 0
 
     # Check for incompatibilities
-    if create_so and create_dll:
-        print 'Error: cannot create a DLL and a Shared Object at the same time.  Remove "-dll" or "-so" option.'
+    if create_so + create_dll + create_pyso > 1:
+        print ('Error: cannot create a DLL, Shared Object and/or Python Shared Object '
+               +'at the same time.  Remove "-dll", "-so" or "-pyso" option.')
         sys.exit(100)
 
-    if static_linking and (create_so or create_dll):
-        print 'Incompatible command line options specified: you may specify only one of -static, -so, -dll'
+    if static_linking and (create_so or create_dll or create_pyso):
+        print 'Incompatible command line options specified: you may specify only one of -static, -so, -dll, -pyso'
         sys.exit(100)
 
     ##  Options that will not affect the final compiled file

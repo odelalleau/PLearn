@@ -50,6 +50,9 @@ PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args)
     TVec<PythonObjectWrapper> as;
     for(int i= 0; i < nas; ++i)
         as.push_back(PythonObjectWrapper(PyTuple_GET_ITEM(args, i)));
+
+    PythonObjectWrapper::gc_collect1();
+
     try
     {
         PythonObjectWrapper returned_value= t->call(0, as);

@@ -395,6 +395,8 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
     Object* obj= args_tvec[0];
     args_tvec.subVecSelf(1, args_tvec.size()-1);
 
+    gc_collect1();
+
     //call, catch and send any errors to python
     try
     {
@@ -441,6 +443,10 @@ PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
     obj->unref();//python no longer references this obj.
     //perr << "aft.del o->usage()= " << obj->usage() << endl;
 
+    //GC
+    if(m_gc_next_object->first == obj)
+        m_gc_next_object= m_wrapped_objects.end();
+
     m_wrapped_objects.erase(obj);
 
     //printWrappedObjects();
@@ -453,7 +459,9 @@ PyObject* PythonObjectWrapper::newCPPObj(PyObject* self, PyObject* args)
     TVec<PyObject*> args_tvec= 
         PythonObjectWrapper(args).as<TVec<PyObject*> >();
     Object* o= newObjectFromClassname(PyString_AsString(args_tvec[1]));
+
     //perr << "new o->usage()= " << o->usage() << endl;
+
     return PyCObject_FromVoidPtr(o, 0);
 }
 
@@ -465,14 +473,33 @@ PyObject* PythonObjectWrapper::refCPPObj(PyObject* self, PyObject* args)
     Object* o= PythonObjectWrapper(pyo);
     if(args_tvec.length() < 3 || args_tvec[2]==Py_True)
         o->ref();
+
     //perr << "ref o->usage()= " << o->usage() << endl;
     PythonObjectWrapper::m_wrapped_objects[o]= pyo;
     //perr << "refCPPObj: " << (void*)o << " : " << (void*)pyo << endl;
 
+    Py_INCREF(pyo);
     //printWrappedObjects();
 
     return newPyObject();//None
 }
+
+void PythonObjectWrapper::gc_collect1()
+{
+    if(m_gc_next_object == m_wrapped_objects.end())
+        m_gc_next_object= m_wrapped_objects.begin();
+    if(m_gc_next_object != m_wrapped_objects.end())
+    {
+        wrapped_objects_t::iterator it= m_gc_next_object;
+        ++m_gc_next_object;
+        if(it->first->usage() == 1 && it->second->ob_refcnt == 1)
+        {
+            Py_DECREF(it->second);
+            gc_collect1();
+        }
+    }
+}
+
 
 //#####  newPyObject  #########################################################
 
@@ -493,11 +520,14 @@ bool PythonObjectWrapper::m_unref_injected= false;
 PyMethodDef PythonObjectWrapper::m_unref_method_def;
 PyMethodDef PythonObjectWrapper::m_newCPPObj_method_def;
 PyMethodDef PythonObjectWrapper::m_refCPPObj_method_def;
+PythonObjectWrapper::wrapped_objects_t::iterator 
+  PythonObjectWrapper::m_gc_next_object= 
+  PythonObjectWrapper::m_wrapped_objects.end();
 
 PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 {
-//     perr << "in ConvertToPyObject<Object*>::newPyObject : "
-//          << x->classname() << ' ' << (void*)x << endl;
+    //perr << "in ConvertToPyObject<Object*>::newPyObject : "
+    //     << x->classname() << ' ' << (void*)x << endl;
 
     // void ptr becomes None
     if(!x) return PythonObjectWrapper::newPyObject();
@@ -555,7 +585,8 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 
 //    perr << "newPyObject: " << (void*)x << " : " << (void*)the_obj << endl;
 
-//    printWrappedObjects();
+    Py_INCREF(the_obj);
+    //printWrappedObjects();
 
     return the_obj;
 }
@@ -776,9 +807,29 @@ void printWrappedObjects()
              << (void*)it->second << ' ' << it->second->ob_refcnt << endl;
 }
 
+void ramassePoubelles()
+{
+    size_t sz= 0;
+    while(sz != PythonObjectWrapper::m_wrapped_objects.size())
+    {
+        sz= PythonObjectWrapper::m_wrapped_objects.size();
+        PythonObjectWrapper::wrapped_objects_t::iterator it= 
+            PythonObjectWrapper::m_wrapped_objects.begin();
+        while(it != PythonObjectWrapper::m_wrapped_objects.end())
+        {
+            PythonObjectWrapper::wrapped_objects_t::iterator jt= it;
+            ++it;
+            if(jt->second->ob_refcnt == 1 && jt->first->usage() == 1)
+                Py_DECREF(jt->second);
+        }
+    }
+}
+
 BEGIN_DECLARE_REMOTE_FUNCTIONS
     declareFunction("printWrappedObjects", &printWrappedObjects,
                     (BodyDoc("Prints PLearn objects wrapped into python.\n")));
+    declareFunction("ramassePoubelles", &ramassePoubelles,
+                    (BodyDoc("GC for wrapped objects.\n")));
 END_DECLARE_REMOTE_FUNCTIONS
 
 

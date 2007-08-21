@@ -846,6 +846,8 @@ public:
 
     static PyObject* refCPPObj(PyObject* self, PyObject* args);
 
+    static void gc_collect1();
+
     //#####  Low-Level PyObject Creation  #####################################
 
     /**
@@ -870,6 +872,7 @@ public:
     static pypl_classes_t m_pypl_classes;
     typedef map<const Object*, PyObject*> wrapped_objects_t;
     static wrapped_objects_t m_wrapped_objects; //!< for wrapped PLearn Objects
+    static wrapped_objects_t::iterator m_gc_next_object;
 
 protected:
     OwnershipMode m_ownership;               //!< Whether we own the PyObject or not
@@ -1399,6 +1402,7 @@ DECLARE_TYPE_TRAITS(PythonObjectWrapper);
 
 //! for debug purposes
 void printWrappedObjects();
+void ramassePoubelles();
 
 } // end of namespace PLearn
 
