@@ -842,9 +842,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
 
     // DOWNWARD FPROP
     // we are given hidden  and we want to compute the visible or visible_activation
-    if ( hidden && !hidden_is_output && 
-         ((visible && visible_is_output) ||
-          (visible_activation && visible_activation_is_output)) )
+    if ( hidden && !hidden_is_output && visible && visible_is_output)
     {
         computeVisibleActivations(*hidden,true);
         if (visible_activation)
@@ -1270,8 +1268,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     // Ensure the visible gradient is not provided as input. This is because we
     // accumulate more than once in 'visible_grad'.
-    PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "If visible gradient is desired "
-                  " the corresponding matrix should have 0 length" );
+//    PLASSERT_MSG( !visible_grad || visible_grad->isEmpty(), "If visible gradient is desired "
+//                  " the corresponding matrix should have 0 length" );
 
     bool compute_visible_grad = visible_grad && visible_grad->isEmpty();
     bool compute_hidden_grad = hidden_grad && hidden_grad->isEmpty();
@@ -1367,9 +1365,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                                    *visible, visible_act_grad, *visible_grad, 
                                    false);
         
-        PLASSERT_MSG(!visible_bias_grad,"back-prop into visible bias  not implemented for downward fprop");
-        PLASSERT_MSG(!weights_grad,"back-prop into weights  not implemented for downward fprop");
-        hidden_grad->resize(mbs,hidden_layer->size);
+//        PLASSERT_MSG(!visible_bias_grad,"back-prop into visible bias  not implemented for downward fprop");
+//        PLASSERT_MSG(!weights_grad,"back-prop into weights  not implemented for downward fprop");
+//        hidden_grad->resize(mbs,hidden_layer->size);
         TVec<Mat*> ports_value(2);
         TVec<Mat*> ports_gradient(2);
         ports_value[0] = visible_activations;
