@@ -83,14 +83,18 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
                   "The target size of the train set\n");
     declareOption(ol, "weightsize", &RegressionTreeRegisters::weightsize_, OptionBase::learntoption,
                   "The weight of each sample in the train set\n");
-    declareOption(ol, "sorted_row", &RegressionTreeRegisters::sorted_row, OptionBase::learntoption,
-                  "The matrix holding the sequence of samples in ascending value order for each dimension\n");
-    declareOption(ol, "inverted_sorted_row", &RegressionTreeRegisters::inverted_sorted_row, OptionBase::learntoption,
-                  "The matrix holding the position of a given entry in the sorted row matrix\n");
     declareOption(ol, "leave_register", &RegressionTreeRegisters::leave_register, OptionBase::learntoption,
                   "The vector identifying the leave to which, each row belongs\n");
     declareOption(ol, "leave_candidate", &RegressionTreeRegisters::leave_candidate, OptionBase::learntoption,
                   "The vector identifying the candidate leave to which, each row could belong after split\n");
+
+    //too big to save
+    declareOption(ol, "sorted_row", &RegressionTreeRegisters::sorted_row, OptionBase::nosave,
+                  "The matrix holding the sequence of samples in ascending value order for each dimension\n");
+    //too big to save
+    declareOption(ol, "inverted_sorted_row", &RegressionTreeRegisters::inverted_sorted_row, OptionBase::nosave,
+                  "The matrix holding the position of a given entry in the sorted row matrix\n");
+
     inherited::declareOptions(ol);
 }
 
@@ -129,6 +133,9 @@ void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 void RegressionTreeRegisters::reinitRegisters()
 {
     next_id = 0;
+
+    //in case we don't save the sorted data
+    sortRows();
 }
 
 void RegressionTreeRegisters::applyForRow(int leave_id, int row)
