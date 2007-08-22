@@ -198,6 +198,10 @@ void InterfunctionXchgTest::perform()
         msg_without_sys_dependent_data =
             regex_replace(msg_without_sys_dependent_data, extra_info, "");
 
+        boost::regex blank_line("^( )+$", boost::regex::perl);
+        msg_without_sys_dependent_data =
+            regex_replace(msg_without_sys_dependent_data, blank_line, "");
+
         cout << "Caught Python Exception: '" << msg_without_sys_dependent_data
              << "'" << endl;
     }
