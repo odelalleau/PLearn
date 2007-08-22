@@ -26,12 +26,6 @@ function calls leading up to the error, in the order they occurred.
  <string> in get_value()
 
 NameError: global name 'buf' is not defined
-    __doc__ = 'Name not found globally.'
-    __getitem__ = <bound method NameError.__getitem__ of <exceptions.NameError instance>>
-    __init__ = <bound method NameError.__init__ of <exceptions.NameError instance>>
-    __module__ = 'exceptions'
-    __str__ = <bound method NameError.__str__ of <exceptions.NameError instance>>
-    args = ("global name 'buf' is not defined",)
 
 The above is a description of an error in a Python program.  Here is
 the original traceback:

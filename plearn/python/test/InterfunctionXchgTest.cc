@@ -174,18 +174,30 @@ void InterfunctionXchgTest::perform()
     }
     catch (const PythonException& e) {
         string exception_msg = e.message();
-        // Remove memory addresses from the exception message, as they may
-        // differ from one computer to another, causing the test to fail.
+        // Remove system dependent strings from the error message.
         boost::regex memory_adr("0x[abcdef0123456789]{6,}",
                                 boost::regex::perl|boost::regex::icase);
         string msg_without_sys_dependent_data =
             regex_replace(exception_msg, memory_adr,
                     "0x[memory_address]");
-        boost::regex python_ver("Python 2\\.[0-9]\\.[0-9]",
+
+        boost::regex python_ver("Python 2\\.[0-9](\\.[0-9])?",
                                 boost::regex::perl|boost::regex::icase);
         msg_without_sys_dependent_data =
             regex_replace(msg_without_sys_dependent_data, python_ver,
                     "Python 2.X.Y");
+
+        boost::regex except_display("<type 'exceptions.([a-z]+)'>",
+                                    boost::regex::perl|boost::regex::icase);
+        msg_without_sys_dependent_data =
+            regex_replace(msg_without_sys_dependent_data, except_display,
+                    "\\1");
+
+        boost::regex extra_info("__doc__(.)*args = \\([^\\)]*\\)$\\n",
+                                boost::regex::perl|boost::regex::icase);
+        msg_without_sys_dependent_data =
+            regex_replace(msg_without_sys_dependent_data, extra_info, "");
+
         cout << "Caught Python Exception: '" << msg_without_sys_dependent_data
              << "'" << endl;
     }
