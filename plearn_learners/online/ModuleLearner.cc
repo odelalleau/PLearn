@@ -260,7 +260,8 @@ int ModuleLearner::outputsize() const
 {
     if ( module && store_outputs )
         return module->getPortWidth("output");
-    return 0;
+    else
+        return -1; // Undefined.
 }
 
 ////////////
