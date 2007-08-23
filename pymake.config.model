@@ -357,6 +357,26 @@ if not 'nopython' in optionargs:
 
     if 'numpy' in optionargs:
         try:
+            # Ensure Python and Numpy are correctly installed.
+            # First check for the correct Python version.
+            ok_version = False
+            getpyver = toolkit.command_output('python%s -V' % python_version)
+            if len(getpyver) == 1:
+                tokens = getpyver[0].split()
+                if len(tokens) == 2:
+                    foundver = tokens[1]
+                    tokens = foundver.split('.')
+                    if len(tokens) >= 2:
+                        foundver = '.'.join(tokens[0:2])
+                        if foundver == python_version:
+                            ok_version = True
+            if not ok_version:
+                print "Could not find correct Python version: " + \
+                        "'python%s -V' should return 'Python %s.X', but returned '%s'" % \
+                        (python_version, python_version, ''.join(getpyver).strip())
+                sys.exit(100)
+            
+            # Then verify Numpy works with this version.
             numpy_numarray_include, numpy_core_include= \
               os.popen('python' + python_version + ' ' 
                        + os.path.join( plearndir,'scripts','get_numpy_includes.py'),
