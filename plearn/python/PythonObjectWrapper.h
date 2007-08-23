@@ -1246,7 +1246,7 @@ PyObject* ConvertToPyObject<std::set<T> >::newPyObject(const std::set<T>& data)
 {
     TVec<T> as_list(data.size());
     int i= 0;
-    for(typename std::set<T>::iterator it= data.begin();
+    for(typename std::set<T>::const_iterator it= data.begin();
         it != data.end(); ++it, ++i)
         as_list[i]= *it;
     PyObject* pylist= ConvertToPyObject<TVec<T> >::newPyObject(as_list);
