@@ -265,7 +265,7 @@ void AdaBoost::train()
     if(!train_set)
         PLERROR("In AdaBoost::train, you did not setTrainingSet");
     
-    if(!train_stats and compute_training_error)
+    if(!train_stats && compute_training_error)
         PLERROR("In AdaBoost::train, you did not setTrainStatsCollector");
 
     if (train_set->targetsize()!=1)
