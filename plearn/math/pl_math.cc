@@ -159,13 +159,13 @@ real logadd(double log_a, double log_b)
 {
     if (log_a < log_b)
     { // swap them
-        real tmp = log_a;
+        double tmp = log_a;
         log_a = log_b;
         log_b = tmp;
     }
     double negative_absolute_difference = log_b - log_a;
     if (negative_absolute_difference < MINUS_LOG_THRESHOLD)
-        return log_a;
+        return real(log_a);
     return (real)(log_a + log1p(exp(negative_absolute_difference)));
 }
 
