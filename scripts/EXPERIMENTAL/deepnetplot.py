@@ -31,7 +31,7 @@ def print_usage_and_exit():
     sys.exit()
 
 def print_usage_repAndRec():
-    print 'putting you mouse OVER a hidden layer an hitting these keyes does... things :'
+    print 'putting you mouse OVER a hidden layer and hitting these keyes does... things :'
     print
     print 'f : fproping from the last layer'
     print 'F : fproping form the last layer and for the next ones'
@@ -52,6 +52,7 @@ def print_usage_repAndRec():
     print 'C : same as w but for the hidden unit that has the highest value in each group'
     print 'o : set the current hidden layer to its original state'
     print 'O : same as o but for every layer'
+    print 't : now we have the same scale for  W, C'
     print 'right arrow : prints the next character in the dataset and its corresponding hidden layers and reconstructions'
     print 'left arrow :same but for previous character'
     print '0,1,2,3...9 : after having pressed a digit, right and left arrows will only find this digit'
@@ -146,6 +147,8 @@ class InteractiveRepRecPlotter:
 
         self.plotNext()#starting with a plot...
         self.__linkEvents()
+
+        self.same_scale = True
 
 
     def size(self):
@@ -325,7 +328,7 @@ class InteractiveRepRecPlotter:
             elif char == 'm':
                 print 'maximum...'
 
-                for n in arange(hl.hidden_layer.nelements()/hl.groupsize):
+                for n in arange(hl.hidden_layer.size/hl.groupsize):
 
                     row = hl.getRow(n)
 
@@ -432,10 +435,10 @@ class InteractiveRepRecPlotter:
                     #HACK !!!
                     print 'just hacked...'
                     if i==1 and len(row) == 28*28*2:
-                        row = array(toMinusRow(list(row)))
+                        matricesToPlot.append(doubleSizedWeightVectorToImageMatrix(row))
                     #END OF HACK
-
-                    matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
+                    else:
+                        matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
                     namesToPlot.append(nameW)
 
                     if nameWr in listNames:
@@ -445,10 +448,10 @@ class InteractiveRepRecPlotter:
                         #HACK !!!
                         print 'just hacked...'
                         if i==1 and len(row) == 28*28*2:
-                            row = array(toMinusRow(list(row)))
+                            matricesToPlot.append(doubleSizedWeightVectorToImageMatrix(row))
                         #END OF HACK 
-                        
-                        matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
+                        else:
+                            matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
                         namesToPlot.append(nameWr)
 
                     figure(3)
@@ -468,19 +471,21 @@ class InteractiveRepRecPlotter:
                     #    row = array(toMinusRow(row))
                     #END OF HACK
                                       
-                    matW1 = reshape(toMinusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
-                    matM1 = reshape(toMinusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
-                    matW2 = reshape(toPlusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
-                    matM2 = reshape(toPlusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
+                    #matW1 = reshape(toMinusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
+                    #matM1 = reshape(toMinusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
+                    #matW2 = reshape(toPlusRow(rowW), (-1,self.hidden_layers[i-1].groupsize))
+                    #matM2 = reshape(toPlusRow(rowM),(-1,self.hidden_layers[i-1].groupsize))
+                    
+                    matW =doubleSizedWeightVectorToImageMatrix(rowW)
+                    matM = doubleSizedWeightVectorToImageMatrix(rowM)
+                    produit = matW*matM
                    
-                    produit = matW1*matM1
-                    produit2 = matW2*matM2
 
                     
                     figure(3)
                     ioff()
                     clf()                  
-                    plotMatrices([matW1,matM1,matW2,matM2,produit,produit2], [nameW + "-",nameM+"-", nameW + "+",nameM+"+",'term-to-term product (-)', 'term-to-term product (+)'])
+                    plotMatrices([matW,matM,produit], [nameW, nameM,'term-to-term product'])
                     ion()
                     draw()
 
@@ -508,37 +513,8 @@ class InteractiveRepRecPlotter:
 #                         draw()
 
                 #BIAS
-
-                if nameB in listNames:
-
-                    row = learner.getParameterValue(nameB)
-                    print nameB,row.shape
-
-                    print 'i',i
-                    matricesToPlot = [reshape(row, (-1, self.hidden_layers[i].groupsize))]
-                                           
-                    namesToPlot = [nameB]
-
-                    if nameBr in listNames:
-
-                        row = learner.getParameterValue(nameBr)
-                        print nameBr,row.shape
-
-                        #HACK !!!
-                        print i, row.shape[1]
-                        if i==1 and row.shape[1] == 28*28*2:
-                            row = array(toMinusRow(list(row[0])))
-                            print 'just hacked...'
-                        #END OF HACK
-
-                        matricesToPlot.append(reshape(row, (-1, self.hidden_layers[i-1].groupsize)))
-                        
-                        namesToPlot.append(nameBr)
-
-                    figure(4)
-                    clf()
-                    plotMatrices(matricesToPlot, namesToPlot)
-                    draw()
+                #TODO
+                
             
             #like 'w' but for an entire row -- 'W'
             elif char == 'W':
@@ -557,8 +533,14 @@ class InteractiveRepRecPlotter:
                 namesToPlot = []                
 
                 print 'x,y=', event.xdata, event.ydata
-                n = hl.matrixToLayer(event.xdata, event.ydata)
+                x,y = hl.correctXY(event.xdata, event.ydata)
+                n = hl.matrixToLayer(x,y)
                 print 'n =',n
+
+
+                names = []
+                for i in arange(n, n+hl.groupsize):
+                    names.append( formatFloat(hl.hidden_layer[i]))
             
                 if nameW in listNames and nameM not in listNames:                
 
@@ -569,12 +551,26 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     ioff()                    
                     clf()
-                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.01, toMinusRow)
+                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.05, softmaxGroup2, [], names, self.same_scale)
                     ion()
                     draw()
+
+                if nameW in listNames and nameM in listNames:
+
                     
+                    w = learner.getParameterValue(nameW)
+                    m = learner.getParameterValue(nameM)
+                    M = zeros((hl.groupsize,w.shape[1]))
+                    
+                    for a in arange(hl.groupsize):
+                        M[a] = m[y]*w[a]                    
 
-
+                    figure(3)
+                    ioff()
+                    clf()
+                    plotLayer1(M, 28, .056,0,M.shape[0],.05, softmaxGroup2, [], names, self.same_scale)
+                    ion()
+                    draw()
 
             # like 'w' on the max of each row -- 'C'
 
@@ -605,42 +601,49 @@ class InteractiveRepRecPlotter:
                             index = k
 
                     indexes.append(j*hl.groupsize + index)
-                    names.append(str(row[index])[0:8])
-                
-                
-                if nameW in listNames:# and nameM not in listNames:                
+                    names.append(formatFloat(row[index]))
+
+                if nameW in listNames and nameM not in listNames:
                    
                     figure(3)
                     ioff()                    
                     clf()
-                    plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.01, toMinusRow, indexes,names)
+                    plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.05, softmaxGroup2, indexes,names, self.same_scale)
                     ion()
                     draw()
                     
-                if nameM in listNames:
+                if nameW in listNames and nameM in listNames:
                     
-                    figure(4)
+                    figure(3)
                     ioff()
                     clf()
-                    plotLayer1(learner.getParameterValue(nameM), 28, .056,0,0,.01,toMinusRow,indexes,names)
+
+                    w = learner.getParameterValue(nameW)
+                    m = learner.getParameterValue(nameM)
+                    M = zeros((len(indexes),w.shape[1]))
+                    
+                    for y,x in enumerate(indexes):
+                        print x%hl.groupsize,y
+                        M[y] =  m[y]*w[x%hl.groupsize]
+                    print M
+                    
+                    plotLayer1(M, 28, .056,0,M.shape[0],.05,softmaxGroup2,[],names, self.same_scale)
                     ion()
                     draw()
 
-                if nameWr in listNames:
+                    figure(4)
+                    ioff()
+                    clf()                    
+                    plotLayer1(M, 28, .056,0,M.shape[0],.05,softmaxGroup2,[],names, self.same_scale)
+                    ion()
+                    draw()
+
+                if nameWr in listNames and nameMr not in listNames:
 
                     figure(5)
                     ioff()
                     clf()
-                    plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.01,toMinusRow,indexes,names)
-                    ion()
-                    draw()
-
-                if nameMr in listNames:
-
-                    figure(6)
-                    ioff()
-                    clf()
-                    plotLayer1(learner.getParameterValue(nameMr), 28, .056,0,0,.01,toMinusRow,indexes,names)
+                    plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.05,softmaxGroup2,indexes,names, self.same_scale)
                     ion()
                     draw()
                     
@@ -657,10 +660,20 @@ class InteractiveRepRecPlotter:
 
             else :
                 print_usage_repAndRec()
-                
-       
 
+
+        # toggle "same scale" or "individuals scales" for  'W' and 'C' -- t
+        
+        if char == 't':
+            self.same_scale = 1-self.same_scale
+            if self.same_scale:
+                print 'now we have the same scale for  W, C'
+            else:
+                print 'now we have individuals scales for  W, C'
+                
+            
         # big-back to Original -- O
+        
         if char == 'O':
             print 'getting all original layers...'
             for k in arange(0,self.size()):
@@ -844,7 +857,7 @@ class InteractiveRepRecPlotter:
 
     def __sampleLayer(self, which_layer):
         hl = self.hidden_layers[which_layer]
-        for n in arange(hl.hidden_layer.nelements()/hl.groupsize):
+        for n in arange(hl.hidden_layer.size/hl.groupsize):
             multi = numpy.random.multinomial(1,hl.getRow(n))                    
             hl.setRow(n,multi)
 
