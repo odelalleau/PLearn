@@ -93,7 +93,6 @@ public:
     bool partition_function_is_stale;
 
     bool deterministic_reconstruction_in_cd;
-    bool stochastic_posterior_in_cd;
 
     bool standard_cd_grad;
     bool standard_cd_bias_grad;
