@@ -296,11 +296,11 @@ void GaussianProcessNLLVariable::fbpropFragments(
     addToDiagonal(gram, noise);
 
     // The PLearn code relies on the matrix actually being symmetric in memory
-    // (assumption which LAPACK does not make).  Symmetrize the matrix
-    for (int i=1, n=gram.width() ; i<n ; ++i)
-        for (int j=0 ; j<i ; ++j)
-            gram(j,i) = gram(i,j);
-    
+    // (assumption which LAPACK does not make). Symmetrize the matrix.
+    PLCHECK(kernel->is_symmetric);
+    PLASSERT_MSG(gram.isSymmetric(false), "Gram matrix is not symmetric");
+    fillItSymmetric(gram);
+
     // Save the Gram matrix if requested
     if (save_gram_matrix) {
         static int counter = 1;
