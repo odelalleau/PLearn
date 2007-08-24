@@ -212,6 +212,15 @@ public:
     //!if we learn the transformation distribution, do we use the MAP estimator ?
     bool regOnTransformDistribution;
 
+    //!set to True, it modifies the way the transformation parameters are learned
+    //!A term which represents diversity among transformations is added to the function
+    //!to optimize : div_factor*sum(||theta_i - theta_j ||^2)
+    //!The transformations can no more be updated all the same time
+    //!We will need to define periods and offsets to know when to update them.  
+    bool emphasisOnDiversity;
+    real diversityFactor;
+   
+
     //!how the initial values of the parameters to learn are choosen?
     int initializationMode;
 
@@ -263,6 +272,9 @@ public:
     int transformsOffset;
     int biasPeriod;
     int biasOffset;
+
+    
+
 
     //PARAMETERS OF THE DISTRIBUTION
 
@@ -658,8 +670,12 @@ protected:
     mutable Vec msnvMAP_target;
     mutable Vec msnvMAP_neighbor;
     mutable Vec msnvMAP_reconstruction;
-    
-
+    mutable Mat mstd_B;
+    mutable Mat mstd_C;
+    mutable Mat mstd_D;
+    mutable Vec mstd_v;
+    mutable Vec mstd_target;
+    mutable Vec mstd_neighbor;
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -849,6 +865,7 @@ private:
     //!parameters
     void MStepTransformDistribution();
     
+
     //!maximization step  with respect to transformation distribution
     //!parameters
     //!(MAP version, alpha = dirichlet prior distribution parameter)
@@ -859,6 +876,12 @@ private:
     //!(MAP version)
     void MStepTransformations();
   
+    //!maximization step with respect to a specific transformation matrix
+    //! - it is a MAP version, prior probability of the matrix put 
+    //!   more emphasis on a matrix that diverges from the other transformations matrices
+    void MStepTransformationDiv(int transformIdx);
+
+
     //!maximization step with respect to transformation bias
     //!(MAP version)
     void MStepBias();

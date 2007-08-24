@@ -61,6 +61,8 @@ TransformationLearner::TransformationLearner():
     regOnNoiseVariance(false),
     learnTransformDistribution(false),
     regOnTransformDistribution(false),
+    emphasisOnDiversity(false),
+    diversityFactor(0),
     initializationMode(INIT_MODE_DEFAULT),
     largeEStepAPeriod(UNDEFINED),
     largeEStepAOffset(UNDEFINED),
@@ -149,6 +151,21 @@ void TransformationLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "yes/no: prior assumptions on the transformation distribution ?");
     
+    declareOption(ol,
+                  "emphasisOnDiversity",
+                  &TransformationLearner::emphasisOnDiversity,
+                  OptionBase::buildoption,
+                  "increase probability of a set of transformations if they are more diversified \n"
+                  "note: -the learning process is changed :\n"
+                  "       the transformation functions can no more be updated at the same time \n"
+                  "      -we assume there are no bias added to the transformation functions \n");
+
+    declareOption(ol,
+                  "diversityFactor",
+                  &TransformationLearner::diversityFactor,
+                  OptionBase::buildoption,
+                  "positive real number: high value  gives  high importance to diversity among transformations \n"
+                  "(has an effect only if the boolean 'emphasisOnDiversity' is set to True)\n");
     declareOption(ol,
                   "initializationMode",
                   &TransformationLearner::initializationMode,
@@ -490,6 +507,11 @@ void TransformationLearner::declareMethods(RemoteMethodMap& rmm){
                   &TransformationLearner::MStepTransformations,
                   (BodyDoc("maximization step with respect to transformation matrices (MAP version)")));
     declareMethod(rmm,
+                  "MStepTransformationDiv",
+                  &TransformationLearner::MStepTransformationDiv,
+                  (BodyDoc("maximization step with respect to a specific transformation matrix (MAP version + emphasis on diversity)"),
+                   ArgDoc("int transformIdx","index of the transformation matrix to optimize")));
+    declareMethod(rmm,
                   "MStepBias",
                   &TransformationLearner::MStepBias,
                   (BodyDoc("maximization step with respect to transformation bias (MAP version)")));
@@ -792,6 +814,7 @@ void TransformationLearner::mainLearnerBuild(){
     //dimension of the input space
     inputSpaceDim = train_set->inputsize();
 
+    //some storage variables that we will re-use to save time
     newDistribution.resize(nbTransforms) ;
     ses_target.resize(inputSpaceDim);
     ses_neighbor.resize(inputSpaceDim);
@@ -819,8 +842,23 @@ void TransformationLearner::mainLearnerBuild(){
     msnvMAP_target.resize(inputSpaceDim);
     msnvMAP_neighbor.resize(inputSpaceDim);
     msnvMAP_reconstruction.resize(inputSpaceDim);
-    
+    mstd_B.resize(inputSpaceDim,inputSpaceDim);
+    mstd_C.resize(inputSpaceDim,inputSpaceDim);
+    mstd_D.resize(inputSpaceDim,inputSpaceDim);
+    mstd_v.resize(inputSpaceDim);
+    mstd_target.resize(inputSpaceDim);
+    mstd_neighbor.resize(inputSpaceDim);
 
+    //put more emphasis on diversity among transformation?
+    if(emphasisOnDiversity){
+        PLASSERT(!withBias);
+        if(diversityFactor<=0){
+            diversityFactor = (nbTransforms - 1)*1.0/transformsVariance;  
+        }
+    }
+    else{
+        diversityFactor = 0;
+    }
 
 
     int defaultPeriod = 1;
@@ -2075,8 +2113,15 @@ void TransformationLearner::MStep()
         MStepTransformDistribution();
     if(biasPeriod > 0 && stage % biasPeriod == biasOffset)
         MStepBias();
-    if(stage % transformsPeriod == transformsOffset)
-        MStepTransformations();    
+    if(stage % transformsPeriod == transformsOffset){
+        if(emphasisOnDiversity){
+            int t  = ((stage - transformsOffset)/transformsPeriod) % nbTransforms;
+            MStepTransformationDiv(t);
+        }
+        else{
+            MStepTransformations();
+        }    
+    }
 }
 
 //!maximization step  with respect to  transformation distribution
@@ -2205,10 +2250,67 @@ void TransformationLearner::MStepTransformations()
 
  
 
+//!TODO
+ //!maximization step with respect to a specific transformation matrix
+//! - it is also a MAP version, but this time the prior probability of the matrix is different:
+//!   we put more probability on a matrix that diverges from the other transformations matrices
+//! - for the moment, we assume that they are no bias associated to the function
+void TransformationLearner::MStepTransformationDiv(int transformIdx){
+    //set the m dXd matrices Ck and Bk , k in{1, ...,m} to 0.
+    mstd_B.clear();
+    mstd_C.clear();
+    mstd_D.clear();
+    
+    for(int t=0; t<nbTransforms ; t++){
+        if(t != transformIdx){
+            mstd_D += transforms[t];
+        }
+    }
+    mstd_D *= -2*diversityFactor;
+   
+
+    real lambda = 1.0*noiseVariance*(1.0/transformsVariance -2*(nbTransforms - 1)*diversityFactor);
+    for(int idx=0 ; idx<nbReconstructions ; idx++){
+        
+        //catch a view on the next entry of our dataset, that is, a  triple:
+        //(target_idx, neighbor_idx, transformation_idx)
+        
+        real p = PROBA_weight(reconstructionSet[idx].weight);
+  
+        //catch the target and neighbor points from the training set
+        
+        seeTrainingPoint(reconstructionSet[idx].targetIdx, mstd_target);
+        seeTrainingPoint(reconstructionSet[idx].neighborIdx, mstd_neighbor);
+        
+        if( reconstructionSet[idx].transformIdx == transformIdx){
+            mstd_v << mstd_target;
+            if(transformFamily == TRANSFORM_FAMILY_LINEAR_INCREMENT){
+                mstd_v = mstd_v - mstd_neighbor;
+            }
+     
+            //at the end, we want that matrix C[t] represents
+            //the matrix ( (NeighborPart(t)_T)W(NeighborPart(t)) + lambdaI ) transposed. 
+            externalProductScaleAcc(mstd_C, mstd_neighbor, mstd_neighbor, p);
+            
+            //at the end, that matrix B[t] represents
+            //the matrix (NeighborPart(t)_T)W(TargetPart(t)) transposed.
+            //externalProductScaleAcc(B[t], neighbor, v,p);
+            externalProductScaleAcc(mstd_B,mstd_v,mstd_neighbor,p);
+        }
+        
+    }
+
+    addToDiagonal(mstd_C,lambda);
+    //transforms[t] << solveLinearSystem(C[t], B[t]); 
+    mstd_B += mstd_D;
+    lapackSolveLinearSystem(mstd_C,mstd_B, mst_pivots);
+    transforms[transformIdx] << mstd_B;
+    
+}
 
 
 
-//TODO
+
 //!maximization step with respect to transformation bias
 //!(MAP version)
 void TransformationLearner::MStepBias(){
