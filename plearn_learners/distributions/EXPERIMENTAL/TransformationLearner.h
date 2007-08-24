@@ -627,9 +627,40 @@ protected:
     //!Vectors of matrices that will be used in transformations parameters updating process.
     //!Each matrix is a view on a sub-matrix in th bigger matrix "B_C" described above.
     TVec<Mat> B,C;
+
+    // Temporary storage for internal methods
+    mutable Vec newDistribution;
+    mutable Vec ses_target;
+    mutable Vec ses_neighbor;
+    mutable Vec ses_predictedTarget;
+    mutable Vec lg_neighbor;
+    mutable Vec lg_predictedTarget;
+    mutable Vec stp_v;
+    mutable real stp_w;
+    mutable Vec fnn_target;
+    mutable Vec fnn_neighbor;
+    mutable Vec fbtrc_target;
+    mutable Vec fbtrc_neighbor;
+    mutable Vec fbtrc_predictedTarget;
+    mutable Vec fbwn_target;
+    mutable Vec fbwn_neighbor;
+    mutable Vec fbwn_predictedTarget;
+    mutable Vec mst_v;
+    mutable Vec mst_target;
+    mutable Vec mst_neighbor;
+    mutable TVec<int> mst_pivots;
+    mutable Mat msb_newBiasSet;
+    mutable Vec msb_norms;
+    mutable Vec msb_target;
+    mutable Vec msb_neighbor;
+    mutable Vec msb_reconstruction;
+    mutable Vec msnvMAP_total_k;
+    mutable Vec msnvMAP_target;
+    mutable Vec msnvMAP_neighbor;
+    mutable Vec msnvMAP_reconstruction;
     
-   
-    
+
+
 protected:
     //#####  Protected Member Functions  ######################################
 

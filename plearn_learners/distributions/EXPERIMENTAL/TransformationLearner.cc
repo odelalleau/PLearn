@@ -621,15 +621,13 @@ real TransformationLearner::log_density(const Vec& y) const
     real scalingFactor = -1*(pl_log(pow(2*Pi*noiseVariance, inputSpaceDim/2.0)) 
                              +
                              pl_log(trainingSetLength));
-    Vec neighbor(inputSpaceDim);
-    Vec predictedTarget(inputSpaceDim);
     for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
-        seeTrainingPoint(neighborIdx,neighbor);
+        seeTrainingPoint(neighborIdx,ses_neighbor);
         for(int transformIdx=0 ; transformIdx<nbTransforms ; transformIdx++){
             weight = computeReconstructionWeight(y,
-                                                 neighbor,
+                                                 ses_neighbor,
                                                  transformIdx,
-                                                 predictedTarget);
+                                                 ses_predictedTarget);
             weight = MULT_weights(weight,
                                   transformDistribution[transformIdx]);
             totalWeight = SUM_weights(weight,totalWeight);
@@ -790,11 +788,46 @@ void TransformationLearner::buildLearnedParameters(){
 //! initialization operations that have to be done before the training
 //!WARNING: the trainset ("train_set") must be given
 void TransformationLearner::mainLearnerBuild(){
+
+    //dimension of the input space
+    inputSpaceDim = train_set->inputsize();
+
+    newDistribution.resize(nbTransforms) ;
+    ses_target.resize(inputSpaceDim);
+    ses_neighbor.resize(inputSpaceDim);
+    ses_predictedTarget.resize(inputSpaceDim);
+    lg_neighbor.resize(inputSpaceDim);
+    lg_predictedTarget.resize(inputSpaceDim);
+    fnn_target.resize(inputSpaceDim);
+    fnn_neighbor.resize(inputSpaceDim);
+    fbtrc_neighbor.resize(inputSpaceDim);
+    fbtrc_target.resize(inputSpaceDim);
+    fbtrc_predictedTarget.resize(inputSpaceDim);
+    fbwn_target.resize(inputSpaceDim);
+    fbwn_neighbor.resize(inputSpaceDim);
+    fbwn_predictedTarget.resize(inputSpaceDim);
+    mst_v.resize(inputSpaceDim);
+    mst_target.resize(inputSpaceDim);
+    mst_neighbor.resize(inputSpaceDim);
+    mst_pivots.resize(inputSpaceDim);
+    msb_newBiasSet.resize(nbTransforms,inputSpaceDim);
+    msb_norms.resize(nbTransforms);
+    msb_target.resize(inputSpaceDim);
+    msb_neighbor.resize(inputSpaceDim);
+    msb_reconstruction.resize(inputSpaceDim);
+    msnvMAP_total_k.resize(inputSpaceDim);
+    msnvMAP_target.resize(inputSpaceDim);
+    msnvMAP_neighbor.resize(inputSpaceDim);
+    msnvMAP_reconstruction.resize(inputSpaceDim);
+    
+
+
+
     int defaultPeriod = 1;
-    int defaultTransformsOffset;
-    int defaultBiasOffset;
-    int defaultNoiseVarianceOffset;
-    int defaultTransformDistributionOffset;
+    int defaultTransformsOffset=0;
+    int defaultBiasOffset=0;
+    int defaultNoiseVarianceOffset=0;
+    int defaultTransformDistributionOffset=0;
 
     defaultTransformsOffset = 0;
     
@@ -815,10 +848,7 @@ void TransformationLearner::mainLearnerBuild(){
     transformsSD = sqrt(transformsVariance);
     
     //DIMENSION VARIABLES
-    
-    //dimension of the input space
-    inputSpaceDim = train_set->inputsize();
-      
+          
     //number of samples given in the training set
     trainingSetLength = train_set->length();
     
@@ -1397,9 +1427,7 @@ void TransformationLearner::seeTargetReconstructionSet(int targetIdx,
 // stores the 'idx'th training data point into 'dst'
 void TransformationLearner::seeTrainingPoint(const int idx, Vec & dst)const
 {
-    Vec v;
-    real w;
-    train_set->getExample(idx, dst,v,w);
+    train_set->getExample(idx, dst,stp_v,stp_w);
 }
 
 
@@ -1784,17 +1812,15 @@ void TransformationLearner::findNearestNeighbors(int targetIdx,
     PLASSERT(pq.empty()); 
   
     //capture the target from his index in the training set
-    Vec target(inputSpaceDim);
-    seeTrainingPoint(targetIdx, target);
+    seeTrainingPoint(targetIdx, fnn_target);
     
     //for each potential neighbor,
     real dist;    
-    Vec neighbor(inputSpaceDim);
     for(int i=0; i<trainingSetLength; i++){
         if(i != targetIdx){ //(the target cannot be his own neighbor)
             //computes the distance to the target
-            seeTrainingPoint(i, neighbor);
-            dist = powdistance(target, neighbor); 
+            seeTrainingPoint(i, fnn_neighbor);
+            dist = powdistance(fnn_target, fnn_neighbor); 
             //if the distance is among "nbNeighbors" smallest distances seen,
             //keep it until to see a closer neighbor. 
             if(int(pq.size()) < nbNeighbors){
@@ -1874,20 +1900,16 @@ void TransformationLearner::findBestTargetReconstructionCandidates(int targetIdx
     PLASSERT(pq.empty()); 
     
     real weight;
-    Vec target(inputSpaceDim);
-    seeTrainingPoint(targetIdx, target);
-    Vec neighbor(inputSpaceDim);
-    Vec predictedTarget(inputSpaceDim);
-
+    seeTrainingPoint(targetIdx, fbtrc_target);
     //for each potential neighbor
     for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
         if(neighborIdx != targetIdx){
-            seeTrainingPoint(neighborIdx, neighbor);
+            seeTrainingPoint(neighborIdx, fbtrc_neighbor);
             for(int transformIdx=0; transformIdx<nbTransforms; transformIdx++){
-                weight = computeReconstructionWeight(target, 
-                                                     neighbor, 
+                weight = computeReconstructionWeight(fbtrc_target, 
+                                                     fbtrc_neighbor, 
                                                      transformIdx,
-                                                     predictedTarget);
+                                                     fbtrc_predictedTarget);
                 
                 //if the weight is among "nbEntries" biggest weight seen,
                 //keep it until to see a bigger neighbor. 
@@ -1967,19 +1989,15 @@ void TransformationLearner::findBestWeightedNeighbors(int targetIdx,
     PLASSERT(pq.empty()); 
     
     real weight; 
-    Vec target(inputSpaceDim);
-    seeTrainingPoint(targetIdx, target);
-    Vec neighbor(inputSpaceDim);
-    Vec predictedTarget(inputSpaceDim);
-    
+    seeTrainingPoint(targetIdx, fbwn_target);
     //for each potential neighbor
     for(int neighborIdx=0; neighborIdx<trainingSetLength; neighborIdx++){
         if(neighborIdx != targetIdx){ //(the target cannot be his own neighbor)
-            seeTrainingPoint(neighborIdx, neighbor);
-            weight = computeReconstructionWeight(target, 
-                                                 neighbor, 
+            seeTrainingPoint(neighborIdx, fbwn_neighbor);
+            weight = computeReconstructionWeight(fbwn_target, 
+                                                 fbwn_neighbor, 
                                                  transformIdx,
-                                                 predictedTarget);
+                                                 fbwn_predictedTarget);
             //if the weight of the triple is among the "nbNeighbors" biggest 
             //seen,keep it until see a bigger weight. 
             if(int(pq.size()) < nbNeighbors){
@@ -2019,20 +2037,17 @@ void TransformationLearner::smallEStep()
     int candidateIdx =0;
     int  targetIdx = reconstructionSet[candidateIdx].targetIdx;
     real totalWeight = INIT_weight(0);
-    Vec target(inputSpaceDim);
-    seeTrainingPoint(targetIdx,target);
-    Vec neighbor(inputSpaceDim);
-    Vec predictedTarget(inputSpaceDim);
+    seeTrainingPoint(targetIdx,ses_target);
     
     while(candidateIdx < nbReconstructions){
         
-        seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx, neighbor);
+        seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx, ses_neighbor);
         totalWeight = SUM_weights(totalWeight,
                                   updateReconstructionWeight(candidateIdx,
-                                                             target,
-                                                             neighbor,
+                                                             ses_target,
+                                                             ses_neighbor,
                                                              reconstructionSet[candidateIdx].transformIdx,
-                                                             predictedTarget));
+                                                             ses_predictedTarget));
         candidateIdx ++;
     
         if(candidateIdx == nbReconstructions)
@@ -2041,7 +2056,7 @@ void TransformationLearner::smallEStep()
             normalizeTargetWeights(targetIdx, totalWeight);
             totalWeight = INIT_weight(0);
             targetIdx = reconstructionSet[candidateIdx].targetIdx;
-            seeTrainingPoint(targetIdx, target);
+            seeTrainingPoint(targetIdx, ses_target);
         }
     }    
 }
@@ -2077,14 +2092,8 @@ void TransformationLearner::MStepTransformDistribution()
 //!NOTE :  alpha =1 ->  no regularization
 void TransformationLearner::MStepTransformDistributionMAP(real alpha)
 {
-   
-    Vec newDistribution ;
-    newDistribution.resize(nbTransforms);
-    
-    for(int k=0; k<nbTransforms ; k++){
-        newDistribution[k] = INIT_weight(0);
-    }
-    
+    newDistribution.fill(INIT_weight(0));
+        
     int transformIdx;
     real weight;
     for(int idx =0 ;idx < nbReconstructions ; idx ++){
@@ -2120,9 +2129,6 @@ void TransformationLearner::MStepTransformations()
     B_C.clear();
     
     real lambda = 1.0*noiseVariance/transformsVariance;
-    Vec v(inputSpaceDim);
-    Vec target(inputSpaceDim);
-    Vec neighbor(inputSpaceDim);
     for(int idx=0 ; idx<nbReconstructions ; idx++){
         
         //catch a view on the next entry of our dataset, that is, a  triple:
@@ -2132,33 +2138,33 @@ void TransformationLearner::MStepTransformations()
   
         //catch the target and neighbor points from the training set
         
-        seeTrainingPoint(reconstructionSet[idx].targetIdx, target);
-        seeTrainingPoint(reconstructionSet[idx].neighborIdx, neighbor);
+        seeTrainingPoint(reconstructionSet[idx].targetIdx, mst_target);
+        seeTrainingPoint(reconstructionSet[idx].neighborIdx, mst_neighbor);
         
         int t = reconstructionSet[idx].transformIdx;
         
-        v << target;
+        mst_v << mst_target;
         if(transformFamily == TRANSFORM_FAMILY_LINEAR_INCREMENT){
-            v = v - neighbor;
+            mst_v = mst_v - mst_neighbor;
         }
         if(withBias){
-            v = v - biasSet(t);
+            mst_v = mst_v - biasSet(t);
         }
         //at the end, we want that matrix C[t] represents
         //the matrix ( (NeighborPart(t)_T)W(NeighborPart(t)) + lambdaI ) transposed. 
-        externalProductScaleAcc(C[t], neighbor, neighbor, p);
+        externalProductScaleAcc(C[t], mst_neighbor, mst_neighbor, p);
         
         //at the end, that matrix B[t] represents
         //the matrix (NeighborPart(t)_T)W(TargetPart(t)) transposed.
         //externalProductScaleAcc(B[t], neighbor, v,p);
-        externalProductScaleAcc(B[t],v,neighbor,p);
+        externalProductScaleAcc(B[t],mst_v,mst_neighbor,p);
     }
     
-    TVec<int> pivots(inputSpaceDim);
+ 
     for(int t=0; t<nbTransforms; t++){
         addToDiagonal(C[t],lambda);
         //transforms[t] << solveLinearSystem(C[t], B[t]);  
-        lapackSolveLinearSystem(C[t],B[t],pivots);
+        lapackSolveLinearSystem(C[t],B[t],mst_pivots);
         transforms[t] << B[t];
         
     }  
@@ -2206,37 +2212,26 @@ void TransformationLearner::MStepTransformations()
 //!maximization step with respect to transformation bias
 //!(MAP version)
 void TransformationLearner::MStepBias(){
-    Mat newBiasSet(nbTransforms, inputSpaceDim);
-    for(int i=0;i<nbTransforms;i++){
-        for(int j=0; j<inputSpaceDim; j++){
-            newBiasSet[i][j]=0;
-        }
-    }
-    Vec norms(nbTransforms);
-    for(int t=0;t<nbTransforms;t++){
-        norms[t] = INIT_weight(0);
-    }
+    msb_newBiasSet.fill(0);
+    msb_norms.fill(INIT_weight(0));
     int transformIdx;
-    Vec target(inputSpaceDim);
-    Vec neighbor(inputSpaceDim);
-    Vec reconstruction(inputSpaceDim);
     real proba,weight;
     for(int idx=0; idx<nbReconstructions; idx++){
         transformIdx = reconstructionSet[idx].transformIdx;
         weight = reconstructionSet[idx].weight;
         proba = PROBA_weight(weight);
-        seeTrainingPoint(reconstructionSet[idx].targetIdx,target);
-        seeTrainingPoint(reconstructionSet[idx].neighborIdx, neighbor);
-        applyTransformationOn(transformIdx,neighbor, reconstruction);
-        newBiasSet(transformIdx) += proba*(target - reconstruction);
-        norms[transformIdx] = SUM_weights(norms[transformIdx],weight);
+        seeTrainingPoint(reconstructionSet[idx].targetIdx,msb_target);
+        seeTrainingPoint(reconstructionSet[idx].neighborIdx, msb_neighbor);
+        applyTransformationOn(transformIdx,msb_neighbor, msb_reconstruction);
+        msb_newBiasSet(transformIdx) += proba*(msb_target - msb_reconstruction);
+        msb_norms[transformIdx] = SUM_weights(msb_norms[transformIdx],weight);
     }
     for(int t=0; t<nbTransforms ; t++){
-        newBiasSet(t) /= ((noiseVariance/transformsVariance) 
-                       +
-                       PROBA_weight(norms[t]));
+        msb_newBiasSet(t) /= ((noiseVariance/transformsVariance) 
+                              +
+                              PROBA_weight(msb_norms[t]));
     }
-    biasSet << newBiasSet;   
+    biasSet << msb_newBiasSet;   
 }
 
 
@@ -2252,30 +2247,25 @@ void TransformationLearner::MStepNoiseVariance()
 void TransformationLearner::MStepNoiseVarianceMAP(real alpha, real beta)
 {
     
-    Vec total_k(nbTransforms);
-    for(int i=0;i<nbTransforms; i++){
-        total_k[i]=0;
-    }
+    msnvMAP_total_k.fill(0);
     int transformIdx;
     real proba;
-    Vec target(inputSpaceDim);
-    Vec neighbor(inputSpaceDim);
-    Vec reconstruction(inputSpaceDim);
     int candidateIdx=0;
     for(int targetIdx=0; targetIdx<trainingSetLength; targetIdx ++){
-        seeTrainingPoint(targetIdx,target);
+        seeTrainingPoint(targetIdx,msnvMAP_target);
         for(int idx=0; idx < nbTargetReconstructions; idx++){
             transformIdx = reconstructionSet[candidateIdx].transformIdx;
-            seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx , neighbor);
+            seeTrainingPoint(reconstructionSet[candidateIdx].neighborIdx , msnvMAP_neighbor);
             proba = PROBA_weight(reconstructionSet[candidateIdx].weight);
-            total_k[transformIdx]+=(proba * reconstructionEuclideanDistance(target,
-                                                                            neighbor,
-                                                                            transformIdx,
-                                                                            reconstruction));
+            msnvMAP_total_k[transformIdx]+=(proba * reconstructionEuclideanDistance(msnvMAP_target,
+                                                                                    msnvMAP_neighbor,
+                                                                                    transformIdx,
+                                                                                    msnvMAP_reconstruction));
             candidateIdx ++;
         }
-    noiseVariance = (2*beta + sum(total_k))/(2*alpha - 2 + trainingSetLength*inputSpaceDim);  
     }
+    noiseVariance = (2*beta + sum(msnvMAP_total_k))/(2*alpha - 2 + trainingSetLength*inputSpaceDim);  
+        
 }
  
 //!returns the distance between the reconstruction and the target
