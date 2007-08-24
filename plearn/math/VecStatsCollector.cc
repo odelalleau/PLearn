@@ -539,6 +539,7 @@ void VecStatsCollector::forget()
     sum_non_missing_square_weights = 0;
 
     // Window mechanism
+    m_num_incremental = 0;
     if (m_window > 0 || m_window == -2)
         m_observation_window->forget();
 }
