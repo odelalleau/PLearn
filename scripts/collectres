@@ -65,11 +65,17 @@ def selectres(loc_specs,a):
   if loc_mode=="pos":
     row=int(loc_specs[1])
     if row<0:
-      row = max(0,a.shape[0]+row)
+      row = max(0,a.length+row)
     i=2
-    if row<a.shape[0]:
+    if row<a.length:
       while len(loc_specs[i:])>0:
-        res.append(a[row,int(loc_specs[i])])
+        if loc_specs[i]=="all":
+          res.extend(a[row])
+        elif loc_specs[i] in a.fieldnames:
+          index=a.fieldnames.index(loc_specs[i])
+          res.append(a[row,index])
+        else:
+          res.append(a[row,int(loc_specs[i])])
         i+=1
   elif loc_mode=="mincol":
     mcol = int(loc_specs[1])
@@ -77,13 +83,19 @@ def selectres(loc_specs,a):
     print "found min row = ",mrow," for col ",mcol,", with value=",a[mrow,mcol]
     i=1
     while len(loc_specs[i:])>0:
-      res.append(a[mrow,int(loc_specs[i])])
+      if loc_specs[i]=="all":
+        res.extend(a[mrow])
+      elif loc_specs[i] in a.fieldnames:
+        index=a.fieldnames.index(loc_specs[i])
+        res.append(a[mrow,index])
+      else:
+        res.append(a[mrow,int(loc_specs[i])])
       i+=1
   elif loc_mode=="cols":
     minrow = int(loc_specs[3])
     maxrow = int(loc_specs[4])
     if maxrow<0:
-      maxrow = a.shape[0]+maxrow
+      maxrow = a.length+maxrow
     maxrow += 1
     i=5
     b=[]
@@ -96,7 +108,7 @@ def selectres(loc_specs,a):
       else:
         b=a[minrow:maxrow,col].copy()
         b = b.resize([maxrow-minrow,1])
-        la = a.shape[0]
+        la = a.length
         if la<maxrow:
             b[la-minrow:] = float('NaN')
       if b:
@@ -114,10 +126,18 @@ def getres(loc_specs,filenames):
   for filename in filenames:
     try:
       file_res = selectres(loc_specs,
-                           load_pmat_as_array(filename))
+                           PMat(filename))
       all_results.append([file_res,filename])
     except ValueError,v:
       print >>sys.stderr, "caught ValueError exception in", filename
+      print >>sys.stderr, v
+      print >>sys.stderr, ""
+    except IndexError,v:
+      print >>sys.stderr, "caught IndexError exception in", filename
+      print >>sys.stderr, v
+      print >>sys.stderr, ""
+    except IOError,v:
+      print >>sys.stderr, "caught IOError exception in", filename
       print >>sys.stderr, v
       print >>sys.stderr, ""
   return all_results
