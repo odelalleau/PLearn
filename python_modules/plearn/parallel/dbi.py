@@ -58,7 +58,7 @@ class DBIBase:
         #
         self.file_redirect_stdout = True
         self.file_redirect_stderr = True
-        self.redirect_stderr_to_stdout = True
+        self.redirect_stderr_to_stdout = False
 
         # Initialize the namespace
         self.requirements = ''
@@ -70,9 +70,9 @@ class DBIBase:
             self.__dict__[key] = args[key]
 
         # check if log directory exists, if not create it
-#        if (not os.path.exists(self.log_dir)):
+        if (not os.path.exists(self.log_dir)):
 #            if self.dolog or self.file_redirect_stdout or self.file_redirect_stderr:
-        os.mkdir(self.log_dir)
+            os.mkdir(self.log_dir)
 
         # If some arguments aren't lists, put them in a list
         if not isinstance(commands, list):
@@ -148,7 +148,8 @@ class Task:
 
         for key in args.keys():
             self.__dict__[key] = args[key]
-
+        self.dolog = dolog
+        
         formatted_command = re.sub( '[^a-zA-Z0-9]', '_', command );
         if gen_unique_id:
             self.unique_id = get_new_sid('')#compation intense
@@ -168,7 +169,7 @@ class Task:
         if len(pre_tasks) > 0:
             self.commands.extend( pre_tasks )
 
-        if dolog == True:
+        if self.dolog == True:
             self.commands.append(utils_file + ' set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_RUNNING)],' '))
             # set the current date in the field LAUNCH_TIME
@@ -178,7 +179,7 @@ class Task:
 
         self.commands.append( command )
         self.commands.extend( post_tasks )
-        if dolog == True:
+        if self.dolog == True:
             self.commands.append(utils_file + ' set_config_value '+
                 string.join([self.log_file,'STATUS',str(STATUS_FINISHED)],' '))
             # set the current date in the field FINISHED_TIME
@@ -249,7 +250,7 @@ class DBICluster(DBIBase):
 
     def __init__(self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
-        add_commands(commands)
+        self.add_commands(commands)
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -265,14 +266,16 @@ class DBICluster(DBIBase):
     def run_one_job(self, task):
         DBIBase.run(self)
         
-        command = "cluster --execute" 
-        if self.arch == 32:
-            command += "--typecpu 32bits"
-        elif self.arch == 64:
-            command += "--typecpu 64bits"
-        if self.arch==3264:
-            command += "--typecpu all"
-        command += " '"+string.join(task.commands,';') + "'"
+        command = "cluster" 
+        if self.arch == "32":
+            command += " --typecpu 32bits"
+        elif self.arch == "64":
+            command += " --typecpu 64bits"
+        elif self.arch == "3264":
+            command += " --typecpu all"
+        if self.duree:
+            command += " --duree "+self.duree
+        command += " --execute '"+string.join(task.commands,';') + "'"
         
         print "[DBI] "+command
 
@@ -282,7 +285,7 @@ class DBICluster(DBIBase):
         task.launch_time = time.time()
         task.set_scheduled_time()
 
-        (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
+        (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
 
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
 
@@ -302,7 +305,7 @@ class DBICluster(DBIBase):
         if len(self.post_batch)>0:
             exec_post_batch()
 
-        print "[DBI]The Log file are under %s"%self.log_dir
+        print "[DBI] The Log file are under %s"%self.log_dir
 
     def clean(self):
         #TODO: delete all log files for the current batch
@@ -325,7 +328,7 @@ class DBIbqtools(DBIBase):
         # create the information about the tasks
         args['temp_dir'] = self.temp_dir
         
-        add_commands(commands)
+        self.add_commands(commands)
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -418,7 +421,7 @@ class DBICondor(DBIBase):
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
 
-        add_commands(commands)
+        self.add_commands(commands)
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -690,19 +693,22 @@ class DBILocal(DBIBase):
 
     def run_one_job(self,task):
         c = (';'.join(task.commands))
-        print "[DBI] "+c
-        if self.test:
-            return
         task.set_scheduled_time()
+
+        if self.test:
+            print "[DBI] "+c
+            return
 
         (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
 
         if self.nb_proc>1:
             self.sema.acquire()
+            print "[DBI] ",time.ctime()+"::"+c
             p = Popen(c, shell=True,stdout=output,stderr=error)
             p.wait()
             self.sema.release()
         else:
+            print "[DBI] ",time.ctime()+"::"+c
             p = Popen(c, shell=True,stdout=output,stderr=error)
             p.wait()
             
@@ -808,7 +814,7 @@ class DBISsh(DBIBase):
         print "[DBI] Use at your own risk!"
         DBIBase.__init__(self, commands, **args)
 
-        add_commands(commands)
+        self.add_commands(commands)
         self.hosts= find_all_ssh_hosts()
         
     def add_commands(self,commands):
@@ -836,7 +842,7 @@ class DBISsh(DBIBase):
 
         cwd= os.getcwd()
         command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + "'"
-        print "[DBI]"+command
+        print "[DBI] "+command
 
         if self.test:
             return
