@@ -2,11 +2,14 @@
 import sys,os,re,time,datetime
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--log|--nolog] [--cluster|--local[=nb_process]] [--test] [--req="CONDOR_REQUIREMENT"] [--file=FILEPATH | <command-template>] [--32|--64|--3264]'
+ShortHelp='Usage: cdispatch [--help|-h] [--log|*--nolog] [--cluster|--local[=nb_process]|*--condor] [--test] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
 LongHelp="""
 Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
 
 %s
+
+parameter only for cluster:--duree,--wait,--3264,--32,--64
+parameter only for condor:--req=X
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -58,35 +61,41 @@ if len(sys.argv) == 1:
 optionargs = []
 otherargs = []
 FILE = ""
-REQ = ""
-ARCH = ""
-NB_PROC=None
+dbi_param={}
+
 for argv in sys.argv[1:]:
 
     if argv == "--help" or argv == "-h":
         print LongHelp
         sys.exit(1)
     elif argv == "--nolog":
-        optionargs.append(argv[2:])
+        dbi_param["dolog"]=False
     elif argv == "--log":
-        optionargs.append(argv[2:])
+        dbi_param["dolog"]=True
     elif argv == "--cluster":
         optionargs.append(argv[2:])
-    elif argv[0:7] == "--local":
+    elif argv == "--condor":
+        #it is the default
+        optionargs.append(argv[2:])
+    elif argv.startswith("--duree="):
+        dbi_param["duree"]=argv[8:]
+    elif argv.startswith("--local"):
         optionargs.append(argv[2:7])
         if len(argv)>7:
             assert(argv[7]=="=")
             NB_PROC=argv[8:]
+            dbi_param["nb_proc"]=argv[8:]
     elif argv == "--test":
-        optionargs.append(argv[2:])
-    elif argv[0:7] == "--file=":
+        dbi_param["test"]=True
+    elif argv.startswith("--file="):
         FILE = argv[7:]
         optionargs.append(argv[2:])
     elif argv == "--32"  or argv == "--64" or argv == "--3264":
-        ARCH=argv[2:]
-        optionargs.append(argv[2:])
+        dbi_param["arch"]=argv[2:]
+    elif argv == "--wait":
+        dbi_param["wait"]=True
     elif argv[0:6] == "--req=":
-        REQ = argv[6:]
+        dbi_param["requirements"]="\"%s\""%argv[6:]
     elif argv[0:1] == '-':
 	print "Unknow parameter (%s)",argv
 	print ShortHelp
@@ -158,29 +167,17 @@ elif "local" in optionargs:
 else:
     launch_cmd='Condor'
 
-dbi_param={}
-if REQ != "":
-    dbi_param["requirements"]="\"%s\""%REQ
-if "test" in optionargs:
-    dbi_param["test"]=True
-if "log" in optionargs:
-    dbi_param["dolog"]=True
-else:
-    dbi_param["dolog"]=False
-if ARCH!="":
-    dbi_param["arch"]=ARCH
-if NB_PROC:
-    dbi_param["nb_proc"]=NB_PROC
     
-tmp="_".join(sys.argv)
-tmp=tmp[tmp.find("cdispatch"):]
+t = [x for x in sys.argv[1:] if not x[:2]=="--"]
+t[0]=os.path.split(t[0])[1]
+tmp="_".join(t)
 tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
 tmp+=str(datetime.datetime.now()).replace(' ','_')
-print tmp
+print "tmp:",tmp
 dbi_param["log_dir"]=os.path.join("LOGS",tmp)
 dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
-if "test" in optionargs:
+if "test" in dbi_param:
     print "We generated %s command in the file"% len(commands)
     print "The script %s was not launched"% ScriptName
     SCRIPT=open(ScriptName,'w');
@@ -210,6 +207,7 @@ jobs.run()
 else:
     print "We generate the DBI object with %s command"%(len(commands))
     from plearn.parallel.dbi import *
+    print time.ctime()
     t1=time.time()
     jobs = DBI(commands,launch_cmd,**dbi_param)
     t2=time.time()
