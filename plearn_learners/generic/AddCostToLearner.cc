@@ -540,36 +540,46 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
         } else if (c == "confusion_matrix") {
 
 #ifdef BOUNDCHECK
-            if (confusion_matrix_target >= target_length)
+            if (confusion_matrix_target >= target_length || confusion_matrix_target<-1)
                 PLERROR("In AddCostToLearner::computeCostsFromOutputs - confusion_matrix_target(%d) "
-                        "not in the range of target_length(%d)", confusion_matrix_target, target_length);            
-            if (sub_learner_output[confusion_matrix_target] >= n_classes
-                || is_missing(sub_learner_output[confusion_matrix_target]))
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of sub_learner: sub_learner_output[confusion_matrix_target]=%f,  "
+                        "not in the range of target_length(%d)", confusion_matrix_target, target_length);
+#endif
+            int sub_learner_out;
+            real the_target;
+            if (confusion_matrix_target==-1) {
+                //output are probability
+                sub_learner_out = argmax(sub_learner_output);
+                the_target = desired_target[0];
+            }else{
+                sub_learner_out = int(round(sub_learner_output[confusion_matrix_target]));
+                the_target = desired_target[confusion_matrix_target];
+            }
+	    if(sub_learner_out<0){
+	      PLWARNING("In AddCostToLearner::computeCostsFromOutputs - bad value for sub_learner_out %d, we use 0 instead", sub_learner_out);
+	      sub_learner_out = 0;
+	    }
+	    if(sub_learner_out>=n_classes){
+	      PLWARNING("In AddCostToLearner::computeCostsFromOutputs - bad value for sub_learner_out %d, we use %d instead", sub_learner_out,n_classes -1);
+	      sub_learner_out = n_classes - 1;
+	    }
+            PLCHECK(sub_learner_out<n_classes && sub_learner_out>=0);
+//if outside allowd range, will access the wrong element in the cost vector
+#ifdef BOUNDCHECK
+            if (sub_learner_out >= n_classes
+                || is_missing(sub_learner_out))
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of sub_learner: sub_learner_out=%f,  "
                         " missing or higher or egual to n_classes (%d)",
-                        sub_learner_output[confusion_matrix_target],n_classes);
-            if (desired_target[confusion_matrix_target] >= n_classes
-                ||is_missing(desired_target[confusion_matrix_target]))
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of desired_target[i]=%f, missing or higher or egual to n_classes (%d)",
+                        sub_learner_out,n_classes);
+            if (the_target >= n_classes
+                ||is_missing(the_target))
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of the_target=%f, missing or higher or egual to n_classes (%d)",
                         desired_target[confusion_matrix_target], n_classes);
 #endif
             for(int local_ind = ind_cost ; local_ind < (n_classes*n_classes+ind_cost); local_ind++){
                 costs[local_ind] = 0;
             }
-            int output_length = sub_learner_output.length();
-            int local_ind = 0;
-            if (output_length == target_length) {
-                int sub_learner_out = int(round(sub_learner_output[confusion_matrix_target]));
-//if outside allowd range, will access the wrong element in the cost vector
-                PLASSERT(sub_learner_out>=n_classes || sub_learner_out<0);
-                local_ind = ind_cost + sub_learner_out
-                    + int(round(desired_target[confusion_matrix_target]))*n_classes;
-            } else if (target_length == 1){
-                local_ind = ind_cost + argmax(sub_learner_output) + int(round(desired_target[confusion_matrix_target]))*n_classes;
-            } else {
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - Wrong "
-                        "output and/or target for the 'confusion_matrix' cost");
-            }
+            int local_ind = ind_cost + sub_learner_out + int(round(the_target))*n_classes;
+
             costs[local_ind] = 1;
             ind_cost += n_classes*n_classes - 1;//less one as the loop add one
         } else if (c == "mse") {
