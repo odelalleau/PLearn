@@ -143,8 +143,8 @@ const Profiler::Stats& Profiler::getStats(const string& name_of_piece_of_code)
 {
     map<string,Stats>::iterator it = codes_statistics.find(name_of_piece_of_code);
     if (it == codes_statistics.end())
-        PLERROR("Profiler::getStats: cannot find statistics for '%s'",
-                name_of_piece_of_code.c_str());
+        PLERROR("Profiler::getStats: cannot find statistics for '%s'. the active variable is at: %d",
+                name_of_piece_of_code.c_str(),active);
     return it->second;
 }
 
