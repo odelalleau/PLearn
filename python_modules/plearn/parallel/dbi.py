@@ -12,7 +12,7 @@ from utils import *
 from configobj import ConfigObj
 from textwrap import dedent
 import pdb
-from threading import Thread,BoundedSemaphore
+from threading import Thread,Lock
 from time import sleep
 import datetime
 
@@ -21,7 +21,50 @@ STATUS_RUNNING = 1
 STATUS_WAITING = 2
 STATUS_ERROR = 3
 
-
+#original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
+class LockedIterator:
+    def __init__( self, iterator ):
+        self._lock     = Lock()
+        self._iterator = iterator
+        
+    def __iter__( self ):
+        return self
+    
+    def next( self ):
+        try:
+            self._lock.acquire()
+            return self._iterator.next()
+        finally:
+            self._lock.release()
+            
+#original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
+class MultiThread:
+    def __init__( self, function, argsVector, maxThreads=5, print_when_finished=None):
+        self._function     = function
+        self._argsIterator = LockedIterator( iter( argsVector ) )
+        self._threadPool   = []
+        self.print_when_finish = print_when_finished
+        self.running = 0
+        for i in range( maxThreads ):
+            self._threadPool.append( Thread( target=self._tailRecurse ) )
+            
+    def _tailRecurse( self ):
+        for args in self._argsIterator:
+            self._function( args )
+        self.running-=1
+        if self.print_when_finish:
+            print self.print_when_finish,"left running:",self.running
+            
+    def start( self  ):
+        for thread in self._threadPool:
+            time.sleep( 0 ) # necessary to give other threads a chance to run
+            self.running+=1
+            thread.start()
+            
+    def join( self, timeout=None ):
+        for thread in self._threadPool:
+            thread.join( timeout )
+                    
 class DBIBase:
 
     def __init__(self, commands, **args ):
@@ -249,8 +292,15 @@ class Task:
 class DBICluster(DBIBase):
 
     def __init__(self, commands, **args ):
+        self.duree=None
+        self.arch=None
+        self.wait=None
+        self.threads=[]
+        self.started=0
+        self.nb_proc=50
         DBIBase.__init__(self, commands, **args)
         self.add_commands(commands)
+        self.nb_proc=int(self.nb_proc)
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -275,10 +325,12 @@ class DBICluster(DBIBase):
             command += " --typecpu all"
         if self.duree:
             command += " --duree "+self.duree
+        if self.wait:
+            command += " --wait"
         command += " --execute '"+string.join(task.commands,';') + "'"
-        
-        print "[DBI] "+command
-
+        self.started+=1
+        started=self.started# not thread safe!!!
+        print "[DBI,%d/%d,%s] %s"%(started,len(self.tasks),time.ctime(),command)
         if self.test:
             return
 
@@ -286,9 +338,11 @@ class DBICluster(DBIBase):
         task.set_scheduled_time()
 
         (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
-
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
-
+        ret=task.p.wait()
+        if task.p.returncode!=0:
+            print "[DBI,%d/%d,%s] Failed to launch: '%s' returned %d,%d"%(started,len(self.tasks),time.ctime(),command,task.p.returncode,ret)
+            
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
         if self.test:
@@ -298,8 +352,9 @@ class DBICluster(DBIBase):
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        for task in self.tasks:
-            self.run_one_job(task)
+        mt= MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
+        mt.start()
+        mt.join()
 
         # Execute post-batchs
         if len(self.post_batch)>0:
@@ -651,6 +706,8 @@ class DBILocal(DBIBase):
             self.nb_proc=int(self.nb_proc)
         self.args=args
         self.threads=[]
+        self.started=0
+        self.nb_proc=int(self.nb_proc)
         self.add_commands(commands)
             
     def add_commands(self,commands):
@@ -701,16 +758,10 @@ class DBILocal(DBIBase):
 
         (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
 
-        if self.nb_proc>1:
-            self.sema.acquire()
-            print "[DBI] ",time.ctime()+"::"+c
-            p = Popen(c, shell=True,stdout=output,stderr=error)
-            p.wait()
-            self.sema.release()
-        else:
-            print "[DBI] ",time.ctime()+"::"+c
-            p = Popen(c, shell=True,stdout=output,stderr=error)
-            p.wait()
+        self.started+=1
+        print "[DBI,%d/%d,%s] %s"%(self.started,len(self.tasks),time.ctime(),c)
+        p = Popen(c, shell=True,stdout=output,stderr=error)
+        p.wait()
             
     def clean(self):
         if len(self.temp_files)>0:
@@ -736,18 +787,10 @@ class DBILocal(DBIBase):
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        if not self.test and self.nb_proc>1:
-            self.sema=BoundedSemaphore(int(self.nb_proc))
-            for task in self.tasks:
-                t=Thread(target=self.run_one_job,args=(task,))
-                t.start()
-                self.threads.append(t)
-            for t in self.threads:
-                t.join()
-        else:
-            for task in self.tasks:
-                self.run_one_job(task)
-
+        mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
+        mt.start()
+        mt.join()
+        
         # Execute post-batchs
         if len(self.post_batch)>0:
             exec_post_batch()

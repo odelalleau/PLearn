@@ -2,14 +2,17 @@
 import sys,os,re,time,datetime
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--log|*--nolog] [--cluster|--local[=nb_process]|*--condor] [--test] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
+ShortHelp='Usage: cdispatch [--help|-h] [--log|*--nolog] [--cluster[=nb_process]|--local[=nb_process]|*--condor] [--nb_proc=nb_process] [--test] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
 LongHelp="""
 Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
 
 %s
-
-parameter only for cluster:--duree,--wait,--3264,--32,--64
+parameter for local and cluster:--nb_proc=INT, give the maximum number of concurent jobs running
+parameter only for cluster:--duree,--wait,--3264,--32,--64,
 parameter only for condor:--req=X
+
+parameter --local=X is the same as --local --nb_proc=X
+parameter --cluster=X is the same as --cluster --nb_proc=X
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -72,8 +75,11 @@ for argv in sys.argv[1:]:
         dbi_param["dolog"]=False
     elif argv == "--log":
         dbi_param["dolog"]=True
-    elif argv == "--cluster":
-        optionargs.append(argv[2:])
+    elif argv.startswith("--cluster"):
+        optionargs.append(argv[2:9])
+        if len(argv)>9:
+            assert(argv[9]=="=")
+            dbi_param["nb_proc"]=argv[10:]
     elif argv == "--condor":
         #it is the default
         optionargs.append(argv[2:])
@@ -83,8 +89,9 @@ for argv in sys.argv[1:]:
         optionargs.append(argv[2:7])
         if len(argv)>7:
             assert(argv[7]=="=")
-            NB_PROC=argv[8:]
             dbi_param["nb_proc"]=argv[8:]
+    elif argv.startswith("--nb_proc="):
+        dbi_param["nb_proc"]=argv[10:]
     elif argv == "--test":
         dbi_param["test"]=True
     elif argv.startswith("--file="):
