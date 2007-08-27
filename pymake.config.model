@@ -294,6 +294,7 @@ if 'autopython' in optionargs:
 
 if not 'nopython' in optionargs:
     # First find which version of python is installed.
+    python_includedirs=[]
     if domain_name.endswith('iro.umontreal.ca'):
         optionargs += [ pyoption ]
         python_version = pyver
