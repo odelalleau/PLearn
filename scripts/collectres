@@ -58,12 +58,18 @@ from numpy import *
 
 # should probably be an option
 separator = "_"
+def get_col_index(a,colspec):
+  if colspec in a.fieldnames:
+    index=a.fieldnames.index(colspec)
+  else:
+    index=int(colspec)
+  return index
 
 def selectres(loc_specs,a):
   res = []
   loc_mode = loc_specs[0]
   if loc_mode=="pos":
-    row=int(loc_specs[1])
+    row=get_col_index(a,loc_specs[1])
     if row<0:
       row = max(0,a.length+row)
     i=2
@@ -71,25 +77,21 @@ def selectres(loc_specs,a):
       while len(loc_specs[i:])>0:
         if loc_specs[i]=="all":
           res.extend(a[row])
-        elif loc_specs[i] in a.fieldnames:
-          index=a.fieldnames.index(loc_specs[i])
-          res.append(a[row,index])
         else:
-          res.append(a[row,int(loc_specs[i])])
+          index=get_col_index(a,loc_specs[i])
+          res.append(a[row,index])
         i+=1
   elif loc_mode=="mincol":
-    mcol = int(loc_specs[1])
+    mcol = get_col_index(a,loc_specs[1])
     mrow = argmin(a[:,mcol])
     print "found min row = ",mrow," for col ",mcol,", with value=",a[mrow,mcol]
     i=1
     while len(loc_specs[i:])>0:
       if loc_specs[i]=="all":
         res.extend(a[mrow])
-      elif loc_specs[i] in a.fieldnames:
-        index=a.fieldnames.index(loc_specs[i])
-        res.append(a[mrow,index])
       else:
-        res.append(a[mrow,int(loc_specs[i])])
+        index=get_col_index(a,loc_specs[i])
+        res.append(a[mrow,index])
       i+=1
   elif loc_mode=="cols":
     minrow = int(loc_specs[3])
@@ -101,7 +103,7 @@ def selectres(loc_specs,a):
     b=[]
     res = zeros([maxrow-minrow,0])
     while len(loc_specs[i:])>0:
-      col = int(loc_specs[i])
+      col = get_col_index(a,loc_specs[i])
       if col<0:
         b = array(range(minrow,maxrow))
       else:
