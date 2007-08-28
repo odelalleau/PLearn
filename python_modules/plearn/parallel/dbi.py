@@ -45,7 +45,10 @@ class MultiThread:
         self._threadPool   = []
         self.print_when_finish = print_when_finished
         self.running = 0
-        for i in range( maxThreads ):
+        nb_thread=maxThreads
+        if nb_thread>len(argsVector):
+            nb_thread=len(argsVector)
+        for i in range( nb_thread ):
             self._threadPool.append( Thread( target=self._tailRecurse ) )
             
     def _tailRecurse( self ):
