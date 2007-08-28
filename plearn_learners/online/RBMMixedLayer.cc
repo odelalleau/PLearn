@@ -592,7 +592,8 @@ void RBMMixedLayer::build_()
         layer->setExpectationsByRef(expectations.subMatColumns(init_pos,
                                                               layer_size));
 
-        layer->bias = bias.subVec(init_pos, layer_size);
+        bias.subVec(init_pos, layer_size) << layer->bias;
+        layer->bias = bias.subVec(init_pos, layer_size);        
 
         // We changed fields of layer, so we need to rebuild it (especially
         // if it is another RBMMixedLayer)
