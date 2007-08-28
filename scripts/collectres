@@ -104,14 +104,12 @@ def selectres(loc_specs,a):
       col = int(loc_specs[i])
       if col<0:
         b = array(range(minrow,maxrow))
-        b = b.resize([maxrow-minrow,1])
       else:
         b=a[minrow:maxrow,col].copy()
-        b = b.resize([maxrow-minrow,1])
         la = a.length
         if la<maxrow:
             b[la-minrow:] = float('NaN')
-      if b:
+      if b.any():
         res=concatenate([res,b],1)
       if i==5:
         i=6
