@@ -529,7 +529,7 @@ void TestImputations::computeNeighborhoodStats()
         pb->update( test_row );
     }
     delete pb;
-    for (int knnf_row = 0; knnf_row < knnf_mean_err.size(); knnf_row++) knnf_mean_err[knnf_row] = knnf_mean_err[knnf_row] /  (real) test_length;
+    knnf_mean_err/=(real) test_length;
 }
 
 void TestImputations::createHeaderFile()
