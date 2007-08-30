@@ -84,7 +84,9 @@ cpp_definitions = []
 
 # We add -fPIC, as it is requested to make a shared '.so' file, it does not
 # have any speed impact, and is ignored by the compiler if it cannot use it.
-compileflags += ' -fPIC'
+# We do not add it under Windows since it generates a useless compiler warning.
+if platform != 'win32':
+    compileflags += ' -fPIC'
 
 # The platform variable contains the type of platform from which pymake has been invoked. 
 # This is something like 'linux-i386', 'linux-alpha', 'sunos5', 'irix6', 'irix6-n32' etc...
@@ -210,14 +212,16 @@ optionalLibrary( name = 'opengl',
 #                 linkeroptions = '/u/lisa/local/'+target_platform+'/Install/wxWindows/wxGTK-2.2.9/lib/libwx_gtk-2.2.so.6.2.6 -L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lgthread -lglib -lpthread -ldl -lXi -lXext -lX11 -lm  -lpng -ljpeg -ltiff  -ldl -lpthread -lz -lm' )
 
 
-# Note: under Unix-like systems, one will probably use 'ncurses'.
-# However, 'ncurses' is not implemented under Windows, and one can instead use
-# 'pdcurses'. Currently, you need to edit this file by hand to replace 'ncurses'
-# with 'pdcurses', as it will not be detected automatically.
-optionalLibrary( name = 'ncurses',
-                 triggers = 'curses.h',
-                 linkeroptions = '-lncurses'
-                 )
+if platform == 'win32':
+    optionalLibrary( name = 'pdcurses',
+                     triggers = 'curses.h',
+                     linkeroptions = '-lpdcurses'
+                   )
+else:
+    optionalLibrary( name = 'ncurses',
+                     triggers = 'curses.h',
+                     linkeroptions = '-lncurses'
+                   )
 
 if target_platform=='linux-x86_64':
     wn_includedirs = '/u/lisa/WordNet/LINUX_64/v2.0/include'
@@ -303,11 +307,9 @@ if not 'nopython' in optionargs:
             numpy_includedirs = [ ]
             numpy_site_packages = '$HOME/local-cygwin/lib/python%s/site-packages/numarray' % pyver
         elif platform == 'win32':
-            python_version = '2.4'
-            python_lib_root = ''
-            linkeroptions_tail += '-L/cygdrive/r/python2.4_mingw'
-            numpy_site_packages = join(homedir, \
-                  'local/lib/python2.4/site-packages/numarray')
+            python_version = '2.5'
+            python_lib_root = 'C:\\Python25\\libs'
+            numpy_site_packages = []
             numpy_includedirs = []
         else:
             numpy_includedirs = [ '/u/lisa/local/' + target_platform + '/include/', '/usr/include/python'+python_version ]
@@ -395,7 +397,22 @@ if not 'nopython' in optionargs:
     if 'numpy' in optionargs:
         numpy_lib= '/_capi.so -lutil '
 
-    if platform!='darwin':
+    if platform == 'darwin':
+        optionalLibrary( name = 'python',
+                     triggers = '[Pp]ython*',
+                     includedirs = numpy_includedirs,
+                     linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
+                                       '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
+                                       '' )
+                     )
+    elif platform == 'win32':
+        optionalLibrary( name = 'python',
+                     triggers = '[Pp]ython*',
+                     includedirs = numpy_includedirs,
+                     linkeroptions = ( '-L%s -lpython%s ' % \
+                             (python_lib_root,
+                              python_version.replace('.', ''))))
+    else:
         optionalLibrary( name = 'python',
                      triggers = '[Pp]ython*',
                      includedirs = numpy_includedirs,
@@ -403,14 +420,6 @@ if not 'nopython' in optionargs:
                                        '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
                                        '-Xlinker -export-dynamic ' + 
                                        '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
-                     )
-    else:
-        optionalLibrary( name = 'python',
-                     triggers = '[Pp]ython*',
-                     includedirs = numpy_includedirs,
-                     linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
-                                       '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
-                                       '' )
                      )
 else:
     python_version = '' # should not be used anyway
