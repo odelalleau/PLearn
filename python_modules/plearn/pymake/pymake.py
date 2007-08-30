@@ -861,6 +861,9 @@ def file_info(filepath):
     "returns a FileInfo object for this file"
     "parsing the file if necessary, and remembering the result for later buffered reuse"
     absfilepath = abspath(filepath)
+    if platform == 'win32':
+        # Under Windows, file paths are case-insensitive.
+        absfilepath = absfilepath.lower()
     if file_info_map.has_key(absfilepath):
         return file_info_map[absfilepath]
     else:
@@ -1666,21 +1669,27 @@ class FileInfo:
         if self.is_ccfile:
             if self not in ccfiles_to_link:
                 ccfiles_to_link.append(self)
-#                 print self.filebase,self.fileext
+                #print 'APPENDING CC: %s%s' % (self.filebase, self.fileext)
                 for include in self.includes_from_sourcedirs:
-                    #print self.filebase
-                    include.collect_ccfiles_to_link(ccfiles_to_link, visited_hfiles)
+                    include.collect_ccfiles_to_link(ccfiles_to_link,
+                                                    visited_hfiles)
         else: # it's a .h file
             if self not in visited_hfiles:
                 visited_hfiles.append(self)
+                #print 'APPENDING H: %s%s' % (self.filebase, self.fileext)
                 if self.corresponding_ccfile:
-                    self.corresponding_ccfile.collect_ccfiles_to_link(ccfiles_to_link, visited_hfiles)
+                    #print 'HAS_CC: %s%s' % (self.corresponding_ccfile.filebase,
+                    #                        self.corresponding_ccfile.fileext)
+                    self.corresponding_ccfile.collect_ccfiles_to_link(
+                            ccfiles_to_link, visited_hfiles)
 
                 if self.hasqobject:
-                    self.corresponding_moc_cc.collect_ccfiles_to_link(ccfiles_to_link, visited_hfiles)
+                    self.corresponding_moc_cc.collect_ccfiles_to_link(
+                            ccfiles_to_link, visited_hfiles)
 
                 for include in self.includes_from_sourcedirs:
-                    include.collect_ccfiles_to_link(ccfiles_to_link, visited_hfiles)
+                    include.collect_ccfiles_to_link(ccfiles_to_link,
+                                                    visited_hfiles)
 
     def get_ccfiles_to_link(self):
         """returns the list of FileInfos of all .cc files that need to be linked together to produce the corresponding_output"""
@@ -2202,6 +2211,7 @@ digraph G
                 # actually does a copy).
                 symlink_command = 'ln -s %s %s' % (ccfile.corresponding_ofile,
                                                    dummy_obj_file)
+                #print 'LINK: ' + symlink_command
                 os.system(symlink_command)
                 objs_count += 1
                 result.append(dummy_obj_file)
