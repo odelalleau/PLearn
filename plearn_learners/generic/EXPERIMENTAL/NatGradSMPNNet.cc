@@ -99,12 +99,17 @@ NatGradSMPNNet::NatGradSMPNNet():
       cumulative_training_time(0),
       params_ptr(NULL),
       params_id(-1),
+      params_int_ptr(NULL),
+      params_int_id(-1),
       nsteps(0),
       semaphore_id(-1)
 {
     random_gen = new PRandom();
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void NatGradSMPNNet::declareOptions(OptionList& ol)
 {
     declareOption(ol, "delayed_update", &NatGradSMPNNet::delayed_update,
@@ -349,6 +354,9 @@ void NatGradSMPNNet::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void NatGradSMPNNet::build_()
 {
     if (!train_set)
@@ -410,16 +418,17 @@ void NatGradSMPNNet::build_()
     }
 
     // Allocate shared memory for parameters.
-    // First deallocate memory if needed.
-    if (params_ptr) {
-        shmctl(params_id, IPC_RMID, 0);
-        params_ptr = NULL;
-    }
+    freeSharedMemory(); // First deallocate memory if needed.
     long total_memory_needed = long(n_params) * sizeof(real);
     params_id = shmget(IPC_PRIVATE, total_memory_needed, 0666 | IPC_CREAT);
     PLCHECK( params_id != -1 );
     params_ptr = (real*) shmat(params_id, 0, 0);
-    assert( params_ptr );
+    PLCHECK( params_ptr );
+    long total_int_memory_needed = 1 * sizeof(int);
+    params_int_id = shmget(IPC_PRIVATE, total_int_memory_needed, 0666 | IPC_CREAT);
+    PLCHECK( params_int_id != -1 );
+    params_int_ptr = (int*) shmat(params_int_id, 0, 0);
+    PLCHECK( params_int_ptr );
     // We should have copied data from 'all_params' first if there were some!
     PLCHECK_MSG( all_params.isEmpty(), "Multiple builds not implemented yet" );
     all_params = Vec(n_params, params_ptr);
@@ -552,14 +561,36 @@ void NatGradSMPNNet::build_()
 
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void NatGradSMPNNet::build()
 {
     inherited::build();
     build_();
 }
 
+//////////////////////
+// freeSharedMemory //
+//////////////////////
+void NatGradSMPNNet::freeSharedMemory()
+{
+    if (params_ptr) {
+        shmctl(params_id, IPC_RMID, 0);
+        params_ptr = NULL;
+        params_id = -1;
+    }
+    if (params_int_ptr) {
+        shmctl(params_int_id, IPC_RMID, 0);
+        params_int_ptr = NULL;
+        params_int_id = -1;
+    }
+}
 
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void NatGradSMPNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -604,6 +635,10 @@ void NatGradSMPNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     if (params_ptr)
         PLERROR("In NatGradSMPNNet::makeDeepCopyFromShallowCopy - Deep copy of"
                 " 'params_ptr' not implemented");
+    if (params_int_ptr)
+        PLERROR("In NatGradSMPNNet::makeDeepCopyFromShallowCopy - Deep copy of"
+                " 'params_int_ptr' not implemented");
+
 
 
 /*
@@ -708,7 +743,7 @@ void NatGradSMPNNet::train()
     // period.
     // Finally, the last value is the current stage, i.e. the number of samples
     // with which the network has been updated so far.
-    semaphore_id = semget(IPC_PRIVATE, ncpus + 2, 0666 | IPC_CREAT);
+    semaphore_id = semget(IPC_PRIVATE, ncpus + 1, 0666 | IPC_CREAT);
     if (semaphore_id == -1)
         PLERROR("In NatGradSMPNNet::train - Could not create semaphore "
                 "(errno = %d)", errno);
@@ -721,12 +756,10 @@ void NatGradSMPNNet::train()
             PLERROR("In NatGradSMPNNet::train - Could not initialize semaphore"
                     " value (errno = %d)", errno);
     }
-    semun_v.val = stage;
-    semun_v.val = 0; // TODO Fix (pb with max semaphore value)
-    int success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
-    if (success != 0)
-        PLERROR("In NatGradSMPNNet::train - Could not initialize semaphore"
-                " value to store the stage (errno = %d)", errno);
+
+    // Initialize current stage, stored in integer shared memory.
+    int stage_idx = 0;
+    params_int_ptr[stage_idx] = stage;
 
     // Fork one process/cpu.
     int iam = 0;
@@ -762,7 +795,7 @@ void NatGradSMPNNet::train()
         {
             // Read the current stage value (will be used to compute the
             // current learning rate).
-            int cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
+            int cur_stage = params_int_ptr[stage_idx];
             PLASSERT( cur_stage >= 0 );
             onlineStep(cur_stage, targets, train_costs, example_weights );
             nsteps++;
@@ -782,20 +815,14 @@ void NatGradSMPNNet::train()
                     params_update.clear();
                 }
                 // Update the current stage.
-                cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
+                cur_stage = params_int_ptr[stage_idx];
                 PLASSERT( cur_stage >= 0 );
-                semun_v.val = cur_stage + nsteps * minibatch_size;
-                semun_v.val = 0; // TODO Fix: pb with max semaphore value.
-                success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
-                if (success != 0)
-                    PLERROR("In NatGradSMPNNet::train - Could not update "
-                            "stage value for semaphore (errno = %d, returned "
-                            "value = %d, set value = %d)", errno, success,
-                            semun_v.val);
+                int new_stage = cur_stage + nsteps * minibatch_size;
+                params_int_ptr[stage_idx] = new_stage;
                 // Give update token to next CPU.
                 sem_value = (sem_value + 1) % ncpus;
                 semun_v.val = sem_value;
-                success = semctl(semaphore_id, 0, SETVAL, semun_v);
+                int success = semctl(semaphore_id, 0, SETVAL, semun_v);
                 if (success != 0)
                     PLERROR("In NatGradSMPNNet::train - Could not update "
                             "semaphore with next CPU (errno = %d, returned "
@@ -912,7 +939,7 @@ void NatGradSMPNNet::train()
     */
 
     // Get current stage (for debug purpose).
-    int cur_stage = semctl(semaphore_id, ncpus + 1, GETVAL);
+    int cur_stage = params_int_ptr[stage_idx];
     PLASSERT( cur_stage >= 0 );
 
     // Free semaphore's ressources.
@@ -1402,10 +1429,7 @@ TVec<string> NatGradSMPNNet::getTrainCostNames() const
 
 NatGradSMPNNet::~NatGradSMPNNet()
 {
-    if (params_ptr) {
-        shmctl(params_id, IPC_RMID, 0);
-        params_ptr = NULL;
-    }
+    freeSharedMemory();
     if (semaphore_id >= 0) {
         int success = semctl(semaphore_id, 0, IPC_RMID);
         if (success < 0)

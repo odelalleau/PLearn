@@ -329,8 +329,10 @@ private:
     Vec example_weights; // one element per example in a minibatch
     Mat train_costs; // one row per example in a minibatch
 
-    real* params_ptr; // Raw pointer to the (shared) parameters.
-    int params_id; // Shared memory id for parameters.
+    real* params_ptr;       // Raw pointer to the (shared) parameters.
+    int params_id;          // Shared memory id for parameters.
+    int* params_int_ptr;    // Raw pointer to the (shared) integer parameters.
+    int params_int_id;      // Shared memory id for integer parameters.
 
     //! Number of online steps performed since the last global parameter update.
     int nsteps;
@@ -347,6 +349,9 @@ private:
     TVec<Mat> layer_params_update;
 
     //PP<CorrelationProfiler> g_corrprof, ng_corrprof;    // for optional gradient correlation profiling
+
+    //! Free shared memory that may still be allocated.
+    void freeSharedMemory();
 };
 
 // Declares a few other classes and functions related to this class
