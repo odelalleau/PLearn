@@ -334,7 +334,10 @@ private:
     int* params_int_ptr;    // Raw pointer to the (shared) integer parameters.
     int params_int_id;      // Shared memory id for integer parameters.
 
-    //! Number of online steps performed since the last global parameter update.
+    //! Number of samples seen since the last global parameter update. Note
+    //! that usually this is a multiple of 'minibatch_size', but this may
+    //! not be the case at the end of training, when the total number of
+    //! samples that must be seen is not a multiple of 'minibatch_size'.
     int nsteps;
 
     //! Semaphore used to control which CPU must perform an update.

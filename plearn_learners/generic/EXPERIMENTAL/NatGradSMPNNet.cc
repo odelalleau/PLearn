@@ -686,6 +686,9 @@ void NatGradSMPNNet::forget()
     params_update.fill(0);
 }
 
+///////////
+// train //
+///////////
 void NatGradSMPNNet::train()
 {
 
@@ -770,12 +773,29 @@ void NatGradSMPNNet::train()
         }
 
     // Each processor computes gradient over its own subset of samples (between
-    // indices 'start' and 'end' in the training set).
-    int start = (nsamples / ncpus) * iam;
-    int end = iam == ncpus - 1 ? nsamples
-                               : (nsamples / ncpus) * (iam + 1);
-    int my_n_samples = end - start;
+    // indices 'start' and 'start + my_n_samples' in the training set).
+    int n_left = nsamples % ncpus;
+    int n_per_cpu = nsamples / ncpus;
+    int start, my_n_samples;
+    if (iam < n_left) {
+        // This CPU is given one extra training sample to compensate for the
+        // fact that the number of samples is not an exact multiple of the
+        // number of CPUs.
+        start = (n_per_cpu + 1) * iam;
+        my_n_samples = n_per_cpu + 1;
+    } else {
+        start = (n_per_cpu + 1) * n_left + n_per_cpu * (iam - n_left);
+        my_n_samples = n_per_cpu;
+    }
+    if (iam == 0)
+        PLASSERT_MSG( start == 0, "First CPU must start at first sample" );
+    if (iam == ncpus - 1)
+        PLASSERT_MSG( start + my_n_samples == nsamples,
+                      "Last CPU must start at last sample" );
 
+    // The total number of examples that must be seen is given by 'stage_incr',
+    // computed as 'nstages - stage'. Each CPU is responsible for going through
+    // a fraction of 'stage_incr', denoted by 'my_stage_incr'.
     int stage_incr = nstages - stage;
     int stage_incr_per_cpu = stage_incr / ncpus;
     int stage_incr_left = stage_incr % ncpus;
@@ -791,14 +811,17 @@ void NatGradSMPNNet::train()
         //Profiler::pl_profile_start("getting_data");
         train_set->getExample(sample, input, target, example_weights[b]);
         //Profiler::pl_profile_end("getting_data");
-        if (b+1==minibatch_size) // do also special end-case || stage+1==nstages)
+        if (b == minibatch_size - 1 || i == my_stage_incr - 1 )
         {
             // Read the current stage value (will be used to compute the
             // current learning rate).
             int cur_stage = params_int_ptr[stage_idx];
             PLASSERT( cur_stage >= 0 );
+            // Note that we should actually call onlineStep only on the subset
+            // of samples that are new (compared to the previous mini-batch).
+            // This is left as a TODO since it is not a priority.
             onlineStep(cur_stage, targets, train_costs, example_weights );
-            nsteps++;
+            nsteps += b + 1;
             /*
             for (int i=0;i<minibatch_size;i++)
             {
@@ -817,7 +840,7 @@ void NatGradSMPNNet::train()
                 // Update the current stage.
                 cur_stage = params_int_ptr[stage_idx];
                 PLASSERT( cur_stage >= 0 );
-                int new_stage = cur_stage + nsteps * minibatch_size;
+                int new_stage = cur_stage + nsteps;
                 params_int_ptr[stage_idx] = new_stage;
                 // Give update token to next CPU.
                 sem_value = (sem_value + 1) % ncpus;
@@ -859,6 +882,9 @@ void NatGradSMPNNet::train()
                 all_params += params_update;
                 params_update.clear();
             }
+            // Note that the line below is not safe: if two CPUs are running it
+            // at the same time, the number of stages may not be correct.
+            params_int_ptr[stage_idx] += nsteps;
             nsteps = 0;
         }
         // Indicate this CPU is done.
@@ -885,6 +911,7 @@ void NatGradSMPNNet::train()
                         all_params += params_update;
                         params_update.clear();
                     }
+                    params_int_ptr[stage_idx] += nsteps;
                     nsteps = 0;
                 }
                 // Indicate this CPU is done.
