@@ -1,5 +1,5 @@
 import sys, os, time
-#from numarray import *
+from numarray import *
 from math import *
 from libsvm import *
 
@@ -9,7 +9,7 @@ class SVM_expert(object):
                         'parameters_names',
                         'tried_parameters',
                         'best_parameters',
-                        'error_rate'
+                        'error_rate',
                         ]
                         
       def __init__( self ):
@@ -23,6 +23,11 @@ class SVM_expert(object):
           #if self.best_parameters != None:
           #   self.add_parameter_to_tried_list(self.getBestValue('C'), self.best_parameters[1:])
           self.error_rate       = 1.
+	  self.should_be_tuned_again = 1
+
+
+      def should_be_tuned_again():
+          raise StandardError, "should_be_tuned_again is nor implemented for this class"
           
       def get_svm_parameter( self, parameters ):
           s= ', '.join([ self.parameters_names[i]+' = '+str(parameters[i]) for i in range(len(self.parameters_names)) ])
@@ -68,12 +73,12 @@ class RBF_expert(SVM_expert):
           self.parameters_names += ['gamma']
 
       def init_gamma(self, gamma):
-          return [gamma, gamma/9., gamma*9.]
+          return [gamma/9., gamma, gamma*9.]
           
       def init_parameters( self, samples ):
           dim = len(samples[0])
           std = mean_std(samples)
-          rho=sqrt(dim)*std
+          rho = sqrt(dim)*std
           gamma0 = 1/(2*rho**2)
           gamma_base = self.init_gamma(gamma0)
           return SVM_expert.init_parameters( self, gamma_base )
@@ -90,6 +95,26 @@ class RBF_expert(SVM_expert):
              proposed_gammas = self.init_gamma(best_gamma)
           return SVM_expert.init_parameters(self, proposed_gammas)
 
+      def should_be_tuned_again( self ):
+          best_gamma = self.getBestValue('gamma') 
+          tried_gamma = self.tried_parameters
+	  if tried_gamma.has_key(best_gamma):
+	     is_lower = False
+	     is_higher = False
+             for gamma in tried_gamma:
+	         if gamma<tried_gamma:
+		    is_lower = True
+	         elif gamma<tried_gamma:
+		    is_higher = True
+	     if is_lower and is_higher:
+	        best_C_for_this_gamma  = self.getBestValue('C') 
+		tried_C_for_this_gamma = self.tried_parameters[best_gamma]
+		return not ( best_C_for_this_gamma <> min(tried_C_for_this_gamma) and best_C_for_this_gamma <> max(tried_C_for_this_gamma) )
+	     else:
+	        return True
+	  else:
+	     return True
+      
 class POLY_expert(SVM_expert):
       def __init__( self ):
           SVM_expert.__init__( self )
@@ -113,7 +138,17 @@ class POLY_expert(SVM_expert):
                 return SVM_expert.choose_new_parameters(self, (self.best_parameters[1], self.best_parameters[2])  )
           else:
              return SVM_expert.init_parameters(self, self.init_degree(best_degree) )
-             
+	     
+      def should_be_tuned_again( self ):
+          best_degree = self.getBestValue('degree')
+          tried_degrees = [prms[0] for prms in self.tried_parameters]
+          if self.tried_parameters.has_key(best_degree):
+             if best_degree <> max(tried_degrees):
+	        best_C_for_this_degree  = self.getBestValue('C') 
+		tried_C_for_this_degree = self.tried_parameters[(best_degree,self.best_parameters[2])]
+		return not ( best_C_for_this_degree <> min(tried_C_for_this_degree) and best_C_for_this_degree <> max(tried_C_for_this_degree) )
+	  return True
+      
 class LINEAR_expert(SVM_expert):
       def __init__( self ):
           SVM_expert.__init__( self )
@@ -125,6 +160,12 @@ class LINEAR_expert(SVM_expert):
       def choose_new_parameters( self ):
           return SVM_expert.choose_new_parameters(self, None)
 
+      def should_be_tuned_again( self ):
+          if len(self.tried_parameters[None]) <= 3:
+	     return True
+          best_C = self.getBestValue('C') 
+          tried_C = self.tried_parameters[None]
+	  return not (best_C <> min(tried_C) and best_C <> max(tried_C) )
 
 class SVM(object):
 
@@ -136,6 +177,7 @@ class SVM(object):
 			'best_model',
 			'nr_fold'
                         'result_list',
+			'automatically_decide_when_to_stop_tuning'
                         ]
        
       def __init__( self ):
@@ -156,6 +198,8 @@ class SVM(object):
           
           # For cross-validation
           self.nr_fold        = 5
+
+	  self.automatically_decide_when_to_stop_tuning = False
 
       def reset( self ):
           self.LINEAR_expert.reset()
@@ -195,12 +239,18 @@ class SVM(object):
 
       def test(self, samples_target_list):
           check_samples_target_list([samples_target_list])
-          return test_model(self.best_model, samples_target_list[0], samples_target_list[1])
+          return test_model(self.best_model, [[x_i for x_i in x] for x in samples_target_list[0]], [float(l) for l in samples_target_list[1]])['error_rate']
 
 
       def train_and_tune(self, kernel_type, samples_target_list):
           check_samples_target_list(samples_target_list)
-          
+          if len(samples_target_list) == 1:
+             print "\nCross-validation...\n"
+          elif len(samples_target_list) == 2:
+             print "\nSimple validation...\n"
+          elif len(samples_target_list) == 3:
+             print "\nValidation + test...\n"
+           
           expert = eval( 'self.'+kernel_type+'_expert' )
           
           if len(expert.tried_parameters) == 0:
@@ -215,6 +265,7 @@ class SVM(object):
           
           best_parameters   = expert.best_parameters
           best_error_rate   = expert.error_rate
+          best_model        = None
 
           for parameters in parameters_to_try:
               if parameters != expert.best_parameters or recompute_best:
@@ -223,7 +274,7 @@ class SVM(object):
                   param = expert.get_svm_parameter( parameters )
                   
                   if len(samples_target_list) == 1: # cross-validation
-                     error_rate = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)
+                     error_rate = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)['error_rate']
                   else:
                      train_problem = svm_problem( samples_target_list[0][1] , samples_target_list[0][0] )
                      model = svm_model(train_problem, param)
@@ -242,7 +293,8 @@ class SVM(object):
                   if error_rate < best_error_rate:
                      best_parameters = parameters
                      best_error_rate = error_rate
-                     self.best_model = model
+		     if len(samples_target_list) <> 1: # in case of cross-validation, we will compute the model later
+                        best_model   = model
 
           if best_error_rate < expert.error_rate:
              expert.best_parameters = best_parameters
@@ -251,12 +303,21 @@ class SVM(object):
              if best_error_rate < self.valid_error_rate:
                 self.best_parameters = [kernel_type, best_parameters]
                 self.valid_error_rate = best_error_rate
+                if len(samples_target_list) == 1: # compute the best model in the case of cross-validation
+                   train_problem = svm_problem( [float(l) for l in samples_target_list[0][1]] , [[float(x_i) for x_i in x] for x in samples_target_list[0][0]] )
+                   param = expert.get_svm_parameter( best_parameters )
+                   best_model = svm_model(train_problem, param)
+                self.best_model = best_model
                 if len(samples_target_list) == 3: # train-valid-test
                    self.error_rate = test_model(self.best_model, samples_target_list[2][0], samples_target_list[2][1])['error_rate']
                 else:
                    self.error_rate = self.valid_error_rate
           
-          return self.error_rate
+	  if self.automatically_decide_when_to_stop_tuning:
+	     if expert.should_be_tuned_again():
+	        self.train_and_tune(kernel_type, samples_target_list)
+	  
+	  return self.error_rate
           
 
 ##
@@ -281,30 +342,50 @@ class SVM(object):
 ## - Then the error rate is simply the average error rate...
 ##
 def do_cross_validation(samples, targets, param, nr_fold):
-    samples_subsets=[]
+    arrayType=False
+    if 'array' in str(type(samples)):
+       arrayType=True
     targets_subsets=[]
+    samples_subsets=[]
     N=len(samples)
     for i in range(nr_fold):
-        samples_subsets.append(samples[i:N:nr_fold])
+        samples_subsets.append(samples[i:N:nr_fold,:])
         targets_subsets.append(targets[i:N:nr_fold])
     cum_error_rate=0.
     for i in range(nr_fold):
         test_samples = samples_subsets[i]
         test_targets = targets_subsets[i]
-        train_samples=[]
         train_targets=[]
+	if arrayType:
+           train_samples=[]
+	else:
+           train_samples=[]
         for j in range(0,i)+range(i+1,nr_fold):
-            train_samples += samples_subsets[j]
             train_targets += targets_subsets[j]
+	    if arrayType:
+	       L=len(train_samples)
+               train_samples=resize(samples,[L+len(samples_subsets[j]),len(samples_subsets[j][0])])
+	       train_samples[L:,:]=samples_subsets[j]
+	    else:
+               train_samples += samples_subsets[j]	       
         cum_error_rate += do_simple_validation(train_samples, train_targets, test_samples, test_targets, param)['error_rate']
-    ret = cum_error_rate / nr_fold
-    return {'error_rate':err}
+#        cum_error_rate += do_simple_validation(samples, targets, test_samples, test_targets, param)['error_rate']
+    av_error_rate = cum_error_rate*1.0 / nr_fold
+    print av_error_rate
+    return {'error_rate':av_error_rate}
         
+def do_simple_validation(train_samples, train_targets, test_samples, test_targets, param):    
+    train_samples = [[float(x_i) for x_i in x] for x in train_samples]
+    test_samples = [[float(x_i) for x_i in x] for x in test_samples]
+    train_problem = svm_problem( [float(l) for l in train_targets], train_samples )
+    model = svm_model(train_problem, param)
+    return test_model(model,test_samples,[float(l) for l in test_targets])
+
 def test_model(model, samples, targets):
     N = len(samples)
     diffs = {}
     for i in range(N):
-          diff = abs(model.predict(samples[i]) - targets[i])
+          diff = abs(model.predict([float(x_i) for x_i in samples[i]]) - float(targets[i]))
           if diffs.has_key(diff):
                 diffs[diff] += 1
           else:
@@ -320,18 +401,7 @@ def test_model(model, samples, targets):
     error_rate = float(error_rate) / N
     linear_class_error = float(linear_class_error) / N
     square_class_error = float(square_class_error) / N
-    
     return {'error_rate':error_rate, 'linear_class_error':linear_class_error, 'square_class_error':square_class_error }
-
-def do_simple_validation(train_samples, train_targets, test_samples, test_targets, param):
-    train_problem = svm_problem( train_targets, train_samples )
-    model = svm_model(train_problem, param)
-    return test_model(model,test_samples,test_targets)
-
-
-
-
-
 
 #
 # Some useful functions
@@ -419,13 +489,7 @@ def check_samples_target_list(samples_target_list):
               raise ValueError, "ERROR: samples_target_list has an element that has an element with an empty length"
            if len(samples_target[0]) != len(samples_target[1]):
               raise ValueError, "ERROR: samples_target_list has an element that has an elements with different len. Len are: " + len(samples_target[0])+" and " + len(samples_target[1])
-    if len(samples_target_list) == 1:
-       print "\nCross-validation...\n"
-    elif len(samples_target_list) == 2:
-       print "\nSimple validation...\n"
-    elif len(samples_target_list) == 3:
-       print "\nValidation + test...\n"
-    else:
+    if len(samples_target_list) not in [1,2,3]:
        raise TypeError, "ERROR: samples_target_list have length "+str(len(samples_target_list))+" (not in [1,2,3])\n"+"samples_target_list has to be a list of [sample, target] arrays\n"+"for example :\n\t[[TrainSet, TrainLabels]]\n"+"\tor [[TrainSamples, TrainLabels], [ValidSamples, ValidLabels]]\n"+"\tor [[TrainSamples, TrainLabels], [ValidSamples, ValidLabels], [TestSamples, TestLabels]]\n"
 
 def parameters2list(C, kernel_parameters):
