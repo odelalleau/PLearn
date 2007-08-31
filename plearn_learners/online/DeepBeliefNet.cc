@@ -66,6 +66,7 @@ DeepBeliefNet::DeepBeliefNet() :
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
     n_layers( 0 ),
+    i_output_layer( -1 ),
     online ( false ),
     background_gibbs_update_ratio(0),
     gibbs_chain_reinit_freq( INT_MAX ),
@@ -157,6 +158,13 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "layers", &DeepBeliefNet::layers,
                   OptionBase::buildoption,
                   "The layers of units in the network (including the input layer).");
+
+    declareOption(ol, "i_output_layer", &DeepBeliefNet::i_output_layer,
+                  OptionBase::buildoption,
+                  "The index of the layers from which you want to compute output"
+                  "when there is NO final_module NEITHER final_cost."
+                  "If -1, then the outputs (with this setting) will be"
+                  "the expectations of the last layer.");
 
     declareOption(ol, "connections", &DeepBeliefNet::connections,
                   OptionBase::buildoption,
@@ -293,6 +301,9 @@ void DeepBeliefNet::build_()
                 "layer through the 'layers' option");
     else
         n_layers = layers.length();
+
+    if( i_output_layer < 0)
+        i_output_layer = n_layers - 1;
 
     if( !online )
     {
@@ -2080,7 +2091,18 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             layers[ n_layers-2 ]->expectation );
         layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
         layers[ n_layers-1 ]->computeExpectation();
-        output << layers[ n_layers-1 ]->expectation;
+        output << layers[ i_output_layer ]->expectation;
+
+        //! Copy of the part above: hope it makes sense
+        if (reconstruct_layerwise)
+        {
+            layer_input.resize(layers[n_layers-2]->size);
+            layer_input << layers[n_layers-2]->expectation;
+            connections[n_layers-2]->setAsUpInput(layers[n_layers-1]->expectation);
+            layers[n_layers-2]->getAllActivations(connections[n_layers-2]);
+            real rc = reconstruction_costs[n_layers-1] = layers[n_layers-2]->fpropNLL( layer_input );
+            reconstruction_costs[0] += rc;
+        }
     }
 }
 

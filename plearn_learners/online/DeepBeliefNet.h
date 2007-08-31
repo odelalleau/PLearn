@@ -114,6 +114,10 @@ public:
     //! The layers of units in the network
     TVec< PP<RBMLayer> > layers;
 
+    //! The index of the output layer
+    //! (when the final module is external)
+    int i_output_layer;
+
     //! The weights of the connections between the layers
     TVec< PP<RBMConnection> > connections;
 
