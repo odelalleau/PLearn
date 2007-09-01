@@ -2097,7 +2097,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         if (reconstruct_layerwise)
         {
             layer_input.resize(layers[n_layers-2]->size);
-            layer_input << layers[n_layers-2]->expectation;
+            layer_input << layers[n_layers-2]->expectation.subVec(0,layers[n_layers-2]->expectation.length()-2);
             connections[n_layers-2]->setAsUpInput(layers[n_layers-1]->expectation);
             layers[n_layers-2]->getAllActivations(connections[n_layers-2]);
             real rc = reconstruction_costs[n_layers-1] = layers[n_layers-2]->fpropNLL( layer_input );
