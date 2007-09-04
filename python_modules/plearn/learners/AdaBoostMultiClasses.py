@@ -136,8 +136,8 @@ class AdaBoostMultiClasses:
             e=".psave"
             lene=len(e)
             tmp=[ x for x in os.listdir(filepath) if x.startswith(s) and x.endswith(".psave") ]
-            for x in tmp:
-                t=int(x[lens:-lene])
+            for file in tmp:
+                t=int(file[lens:-lene])
                 if t>stage1: stage1=t
         #We must split stage1 and stage2 as one learner can early stop.
         if stage2 == -1:
