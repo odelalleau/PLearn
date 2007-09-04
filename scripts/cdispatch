@@ -159,10 +159,11 @@ def generate_commands(sp):
 #generate the command
 if FILE != "":
     FD = open(FILE,'r')#|| die "couldn't open the file $FILE!";
+    commands=[]
     for line in FD.readlines():
         line = line.rstrip()
 	sp = line.split(" ")
-        commands=generate_commands(sp)
+        commands+=generate_commands(sp)
     FD.close
 else:
     commands=generate_commands(otherargs)
@@ -174,15 +175,18 @@ elif "local" in optionargs:
 else:
     launch_cmd='Condor'
 
-    
-t = [x for x in sys.argv[1:] if not x[:2]=="--"]
-t[0]=os.path.split(t[0])[1]
-tmp="_".join(t)
-tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
-tmp+=str(datetime.datetime.now()).replace(' ','_')
-print "tmp:",tmp
-dbi_param["log_dir"]=os.path.join("LOGS",tmp)
-dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
+if FILE == "":    
+    t = [x for x in sys.argv[1:] if not x[:2]=="--"]
+    t[0]=os.path.split(t[0])[1]
+    tmp="_".join(t)
+    tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
+    tmp+=str(datetime.datetime.now()).replace(' ','_')
+    print "tmp:",tmp
+    dbi_param["log_dir"]=os.path.join("LOGS",tmp)
+    dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
+else:
+    dbi_param["log_dir"]=os.path.join("LOGS",FILE)
+    dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
 if "test" in dbi_param:
     print "We generated %s command in the file"% len(commands)
