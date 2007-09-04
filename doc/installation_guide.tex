@@ -61,7 +61,9 @@
 
 \parskip=2mm
 \parindent=0mm
-
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\textwidth}{15cm}
 \title{{\Huge PLearn Installation Guide\\ \Large How to install the PLearn Machine-Learning library and tools}}
 
 \begin{document}
@@ -348,9 +350,62 @@ directives such as, for ex:
 
 \chapter{Installing PLearn}
 
-The installation of PLearn consist of three phases: installing the dependensys of PLearn, configuring the environnement and we finish with the compilation of PLearn. The compilation is done with pymake witch use python. To have more information on pymake do: \verb!pymake help!.
+The installation of PLearn consist of three phases: installing the dependensys of PLearn, configuring the environnement and we finish with the compilation of PLearn. The compilation is done with pymake witch use python. To have more information on pymake do: \verb!pymake help!. 
 
-The first section discuss the installation on linux, the second on Mac OS X, the third on windows with cygwin.
+
+The next subsection discuss some other information about pymake that is cross-platform. After that their is sections that discuss the installation on linux, on Mac OS X and on windows with cygwin.
+
+\subsection{Cross-platform information about pymake}
+To have more information on pymake do: \verb!pymake help!
+
+To clean all the file generated during the compilation do \verb!pymake -clean [dir]!. The dir parameter is optinal and if it is not there, the current directory will be used.
+
+(Not sure this is cross-platform, tested on linux)
+If PLearn is on NFS(or others non local directory), you can speed up the
+recompilation when you modified somes files, with the \verb!-tmp! or the
+\verb!-local_ofiles! options. Both will put the objects files in the
+local directory \verb!/tmp/.pymake! to speed up the linking instead of in the
+PLearn directory. 
+The \verb!-tmp! options will compile all the objects files only with the local host.
+When it is executed for the first
+time on a computer, it will compile all files. The next time, it will reuse the one
+previously compiled if it didn't change. This is usefull is you have
+limited space on the PLearn directory on the NFS, as their won't be
+any objects
+file in it, but if you change of local computer, you must recompile
+everything.
+
+The \verb!-local_ofiles! option will distribute the compilation on many computer(see
+next paragraphe). When executed the first time, it will copy the
+objects files from the PLearn directory to the \verb!/tmp/.pymake!
+directory. Then it will recompiles modified files and then link
+them in this directory. Finaly it will
+copy them in the PLearn directory. This way, if you change of
+computer, you won't need to recompile everything, but it will need
+more space in the PLearn directory.
+So the only advantage of \verb!-tmp! over \verb!-local_ofiles! is that it take less
+space in the directory of PLearn, but both will link at the same speed.
+
+\verb!pymake! support the compilation on multiple computer for faster 
+compilation. The list of host is in a file in the directory ~/.pymake/. To know the name of the file run the compile command wanted. It will give you a line that look like this: \verb!(create a linux-i386.hosts file in your .pymake directory to list hosts for parallel compilation.)! In this exemple, the file is \verb!linux-i386.hosts!.
+On this file, you must put one host by line and those hosts most be of the same architecture that the one who start the compilation. If you want the computer that start the compilation to participate in the compiling, it must be included in the file.
+
+The default compilation mode is in debug mode (-dbg). To use other mode, add it as a paramater to the compilation line like this: \verb!pymake -opt plearn_curses.cc!.
+Here is the list of compilation mode:
+\begin{itemize}
+\item -dbg: debug mode (default)
+\item -opt: optimized
+\item -pintel: parallelized for intel compiler
+\item -safeopt: safe optimized mode (includes bound checking)
+\item -safeoptdbg: safe optimized mode (includes bound checking), w/ debug info
+\item -checkopt: some variation on optimized mode
+\item -gprof: optimized mode with profiler support (-pg)
+\item -optdbggprof: optimized mode with profiler support WITH DEBUGGING (-pg)
+\item -safegprof: safe optimized mode with profiler support (-pg)',
+\item -genericvc++: 'Generic compilation options for Visual C++: the debug/opt options are actually set directly in the .vcproj project file',
+\end{itemize}
+
+
 \section{Installation on Linux}
 
 \subsection{PLearn setup and compilation}
@@ -411,29 +466,6 @@ If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
 If it does work, you can try with more dependencies to have more fonctionality with the commands \verb!pymake plearn_lapack.cc!, \verb!pymake plearn\_curses.cc! or even \verb!pymake plearn_python.cc!
-
-\subsection{Parallel compilation}
-
-\verb!pymake! support the compilation on multiple computer for faster 
-compilation. The list of host is in a file in the directory ~/.pymake/. To know the name of the file run the compile command wanted. It will give you a line that look like this: \verb!(create a linux-i386.hosts file in your .pymake directory to list hosts for parallel compilation.)! In this exemple, the file is \verb!linux-i386.hosts!.
-On this file, you must put one host by line and those hosts most be of the same architecture that the one who start the compilation. If you want the computer that start the compilation to participate in the compiling, it must be included in the file.
-
-\subsection{Compilation Mode}
-
-The default compilation mode is in debug mode. To use other mode, add it as a paramater to the compilation line like this: \verb!pymake -opt plearn_curses.cc!.
-Here is the list of compilation mode:
-\begin{itemize}
-\item dbg: debug mode (default)
-\item -opt: optimized
-\item -pintel: parallelized for intel compiler
-\item -safeopt: safe optimized mode (includes bound checking)
-\item safeoptdbg: safe optimized mode (includes bound checking), w/ debug info
-\item -checkopt: some variation on optimized mode
-\item -gprof: optimized mode with profiler support (-pg)
-\item -optdbggprof: optimized mode with profiler support WITH DEBUGGING (-pg)
-\item -safegprof: safe optimized mode with profiler support (-pg)',
-\item -genericvc++: 'Generic compilation options for Visual C++: the debug/opt options are actually set directly in the .vcproj project file',
-\end{itemize}
 
 \section{Installation on Mac OS X}
 
@@ -516,9 +548,7 @@ If it does work, you can try with more dependencies to have more fonctionality \
 with the commands \verb!pymake plearn_lapack.cc!, \verb!pymake plearn_curses.cc!\
  or even \verb!pymake plearn_python.cc!
 
-To clean all the file generated during the compilation do \verb!pymake -clean!.
 
-If you modify one file and want to recompile, to speed up the linking, you can use the \verb!-tmp! option. This options will use only the localhost for compilation and move file in the /tmp folder. This will speed up compilation when the file are on the network.
 \section{Installation on Windows with cygwin}
 \label{sec:windows}
 
@@ -758,6 +788,7 @@ modification, are permitted provided that the following conditions are met:
  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 \end{verbatim}
 
 \end{document}
