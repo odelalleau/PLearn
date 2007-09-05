@@ -239,6 +239,12 @@ void Variable::declareOptions(OptionList& ol)
     declareOption(ol, "value", &Variable::matValue, OptionBase::learntoption, 
                   "Current value of the variable\n");
 
+    declareOption(ol, "min_value", &Variable::min_value, OptionBase::buildoption, 
+                  "minimum value of the variable\n");
+
+    declareOption(ol, "max_value", &Variable::max_value, OptionBase::buildoption, 
+                  "maximum value of the variable\n");
+
     /*
       declareOption(ol, "gradient", &Variable::matGradient, OptionBase::learntoption, 
       "Current gradient of the variable\n");
