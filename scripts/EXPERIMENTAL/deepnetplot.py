@@ -53,6 +53,7 @@ def print_usage_repAndRec():
     print 'o : set the current hidden layer to its original state'
     print 'O : same as o but for every layer'
     print 't : now we have the same scale for  W, C'
+    print 'h : change the function that converts layers with 2 times the number of units of the input to layers with the same number of units of the input'
     print 'right arrow : prints the next character in the dataset and its corresponding hidden layers and reconstructions'
     print 'left arrow :same but for previous character'
     print '0,1,2,3...9 : after having pressed a digit, right and left arrows will only find this digit'
@@ -61,6 +62,7 @@ def print_usage_repAndRec():
 
 
 def appendMatrixToFile(file, matrix, matrix_name=""):
+    '''output a matrix into a file'''
     file.write("\n\n" + matrix_name + ' ('+ str(len(matrix)) + 'x' + str(len(matrix[0])) + ')\n\n')
     for i, row in enumerate(matrix):
         file.write('[')
@@ -93,7 +95,7 @@ class HiddenLayer:
     def getMatrix(self):        
         return reshape(self.hidden_layer, (-1,self.groupsize*self.nbgroups))
     
-    def matrixToLayer(self, x, y):
+    def matrixToLayer(self, x, y):        
         gs = self.groupsize
         x,y = self.correctXY(x,y)
         return x + gs*self.nbgroups*y        
@@ -149,6 +151,8 @@ class InteractiveRepRecPlotter:
         self.__linkEvents()
 
         self.same_scale = True
+        self.from1568to784function = 0
+        self.from1568to784functions = [softmaxGroup2, toMinusRow, toPlusRow, evenMinusOdd]
 
 
     def size(self):
@@ -551,7 +555,7 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     ioff()                    
                     clf()
-                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.05, softmaxGroup2, [], names, self.same_scale)
+                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
                     ion()
                     draw()
 
@@ -568,7 +572,7 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     ioff()
                     clf()
-                    plotLayer1(M, 28, .056,0,M.shape[0],.05, softmaxGroup2, [], names, self.same_scale)
+                    plotLayer1(M, 28, .056,0,M.shape[0],.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
                     ion()
                     draw()
 
@@ -608,7 +612,7 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     ioff()                    
                     clf()
-                    plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.05, softmaxGroup2, indexes,names, self.same_scale)
+                    plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.05, self.from1568to784functions[self.from1568to784function], indexes,names, self.same_scale)
                     ion()
                     draw()
                     
@@ -627,14 +631,14 @@ class InteractiveRepRecPlotter:
                         M[y] =  m[y]*w[x%hl.groupsize]
                     print M
                     
-                    plotLayer1(M, 28, .056,0,M.shape[0],.05,softmaxGroup2,[],names, self.same_scale)
+                    plotLayer1(M, 28, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
                     ion()
                     draw()
 
                     figure(4)
                     ioff()
                     clf()                    
-                    plotLayer1(M, 28, .056,0,M.shape[0],.05,softmaxGroup2,[],names, self.same_scale)
+                    plotLayer1(M, 28, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
                     ion()
                     draw()
 
@@ -643,7 +647,7 @@ class InteractiveRepRecPlotter:
                     figure(5)
                     ioff()
                     clf()
-                    plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.05,softmaxGroup2,indexes,names, self.same_scale)
+                    plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.05,self.from1568to784functions[self.from1568to784function],indexes,names, self.same_scale)
                     ion()
                     draw()
                     
@@ -658,8 +662,17 @@ class InteractiveRepRecPlotter:
                 draw()
                 print '...done'
 
-            else :
+            elif char != 'shift' and char != 'control':
+                print char
                 print_usage_repAndRec()
+
+        # change the "hack" function -- h
+
+        if char == 'h':
+            self.from1568to784function = (self.from1568to784function + 1 ) % len(self.from1568to784functions)
+            print '1568 to 784 function is now', self.from1568to784functions[self.from1568to784function]
+            
+            
 
 
         # toggle "same scale" or "individuals scales" for  'W' and 'C' -- t
