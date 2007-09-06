@@ -106,6 +106,7 @@ def selectres(loc_specs,a):
       col = get_col_index(a,loc_specs[i])
       if col<0:
         b = array(range(minrow,maxrow))
+        b.resize(res.shape[0],1)
       else:
         b=a[minrow:maxrow,col].copy()
         la = a.length
@@ -176,6 +177,9 @@ def distinct_experiment_names(filenames):
   return distinct_names
 
 def outputres(f,mode,speclist,results):
+  if not results:
+    print "ERROR: no results selected!"
+    sys.exit(0)
   if mode=="min":
     minval = 1e36
     minfile = ""
