@@ -112,7 +112,11 @@ def view_reconstruct( learner, Nim , dataSet):
        if module.name == top_RBM_name:
           top_RBM = RBMmodel.module.modules[i]
 
+  RBMmodelInit.build()
+  RBMmodel.build()
+
   reconstruct_man()
+
   while True:
  
    random_index=random.randint(0,dataSet.length)
@@ -155,7 +159,7 @@ if __name__ == "__main__":
   if 'HyperLearner' in str(type(learner)):
      learner=learner.learner
   
-  if os.path.isfile(data_filename) == False:
+  if os.path.isfile(data_filename) == False and os.path.isdir(data_filename) == False:
      raise TypeError, "Cannot find file "+data_filename
   print " loading... "+data_filename
   dataSet = pl.AutoVMatrix( specification = data_filename )

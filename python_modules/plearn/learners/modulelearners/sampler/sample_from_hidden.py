@@ -123,7 +123,10 @@ def view_sample_from_hidden(learner, Nim, init_gibbs_step):
           RBMmodel.module.modules[i].n_Gibbs_steps_per_generated_sample = init_gibbs_step
           top_RBM = RBMmodel.module.modules[i]
 
+  RBMmodel.build()
+
   sample_from_hidden_man()
+  
   while True:
  
    init_hidden=[random.randint(0,1) for i in range(NH)]

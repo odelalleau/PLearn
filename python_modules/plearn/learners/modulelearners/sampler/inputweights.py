@@ -6,7 +6,24 @@ from plearn.learners.modulelearners.sampler import *
 import sys, os.path
 
 
-def view_inputweights(learner, Nim):
+def view_inputweights(learner, Nim, save_dir):
+
+  save_image=False
+  if save_dir<>None and len(save_dir)<>0:
+    print "\nDo you want to save learner in the directory "+save_dir+"?"
+    print "1.[default] No"
+    print "2. Yes"
+    c = pause()
+    while c not in [0,1,2,EXITCODE]:
+          c = pause()
+    if c==2:
+       save_image=True
+    elif c==EXITCODE:
+       return
+       
+  if save_image:
+     print "\nChecking/creating directory "+save_dir+"\n"
+     os.system('mkdir -p '+save_dir)
   
   inputweights_man()
   #
@@ -29,6 +46,9 @@ def view_inputweights(learner, Nim):
         weights=image_RBM.connection.weights[i]
         print str(i+1)+"/"+str(len(image_RBM.connection.weights))
         c = draw_normalized_image( weights, screen, zoom_factor )
+	if save_image:
+	   fname = save_dir+'/filters-%05d.jpg' % i
+	   os.system('import -window "pygame window" ' + fname )
         if c==EXITCODE:
            return
        
@@ -39,6 +59,26 @@ def view_inputweights(learner, Nim):
     size_filter = image_RBM.connection.sub_connections[0][0].kernel.shape
     zoom_factor **= 2
 
+#
+# to complete.... see all the weights at the same time
+#
+#    N=math.ceil(math.sqrt(N_filter))
+#    print N
+#    print (size_filter[0]*N_inputim+(N_inputim-1))*N_filter
+#    print size_filter[1]*N_filter
+#    print zoom_factor
+#    return
+#    screen=init_screen( (size_filter[0]*N_inputim*N , size_filter[1]*N) , zoom_factor)
+#    for i in range(N_filter):
+#        X = math.fmod(N_filter,i)
+#	weights = image_RBM.connection.sub_connections[i][0].kernel
+#        print str(i+1)+"/"+str(N_filter)
+#        for j in range(1,N_inputim):
+#	   weights.resize( size_filter[0]*(j+1)*(i+1)+j*(i+1), size_filter[1]*(i+1) )
+#	   weights[size_filter[0]*j*i+1:]=image_RBM.connection.sub_connections[i][j].kernel
+#    draw_normalized_image( weights, screen, zoom_factor )
+#    return
+
     screen=init_screen( (size_filter[0]*N_inputim+(N_inputim-1) , size_filter[1]) , zoom_factor)
     for i in range(N_filter):
 	weights = image_RBM.connection.sub_connections[i][0].kernel
@@ -48,6 +88,11 @@ def view_inputweights(learner, Nim):
 	   weights[size_filter[0]*j]=[0]*size_filter[1]
 	   weights[size_filter[0]*j+1:]=image_RBM.connection.sub_connections[i][j].kernel
         c = draw_normalized_image( weights, screen, zoom_factor )
+	
+	if save_image:
+	   fname = save_dir+'/filters-%05d.jpg' % i
+	   os.system('import -window "pygame window" ' + fname )
+	
         if c==EXITCODE:
            return
 	   

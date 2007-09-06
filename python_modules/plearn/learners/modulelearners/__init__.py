@@ -4,7 +4,7 @@ plearn.bridgemode.interactive = False
 plearn.bridgemode.useserver= False
 from plearn.bridge import *
 #from plearn.pyplearn import *
-
+from plearn.learners.modulelearners.pyplearn_read import *
 
 tmp_file='/tmp/modulelearner.py'
 
@@ -41,7 +41,6 @@ def loadModuleLearner(filename):
     extension = os.path.splitext(filename)[1]
     
     if extension == '.pyplearn':
-       from plearn.learners.modulelearners.pyplearn_read import *
        object_dict = read_objects( filename, ['HyperLearner', 'PTester', 'MemoryVMatrix', 'AutoVMatrix'] , tmp_file)
        execfile(tmp_file)
        modules=[]

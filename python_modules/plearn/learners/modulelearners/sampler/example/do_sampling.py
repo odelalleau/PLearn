@@ -13,10 +13,20 @@ PLEARNDIR = os.environ.get('PLEARNDIR', os.getcwd())
 default_DIRECTORY = os.path.join(PLEARNDIR,'python_modules','plearn','learners','modulelearners','sampler','example')
 
 learner_filename = default_DIRECTORY + '/data/DBN-3RBM.babyAI-1obj.psave'
-data_filename = default_DIRECTORY + '/data/babyAI-1obj.dmat'
-width = 32
-imageSize = width*width
+#learner_filename = '/u/louradoj/PRGM/babyAI/convolution/expes/models/UNSUP_dbn-1RBMimage-handinit-conv_BABYAI_gray_1250000x1obj_32x32.color-size-location-shape.train.3gram01_slope1.0_N1-8-7_LRs1e-05_0.1_ns1250000_ng1/init_learner.psave'
 
+
+#plarg_defaults.width         = 32
+#plarg_defaults.imageSize     = int(plargs.width)**2
+#plarg_defaults.data_filename = default_DIRECTORY + '/data/babyAI-1obj.dmat'
+
+#width                    = plargs.width
+#imageSize                = plargs.imageSize
+#data_filename            = plargs.data_filename
+
+data_filename = default_DIRECTORY + '/data/babyAI-1obj.dmat'
+width         = 32
+imageSize = width*width
 
 if len(sys.argv)>=2:
   learner_filename = sys.argv[1]
@@ -68,17 +78,25 @@ while True:
       print "(to quit, type 'q' or 'Q')\n"
       c = pause()
 
+   # NOT to save the images...
+   #
+   save_dir=None
+   #   
+   # to save the images...
+   #
+   save_dir=None
+   save_dir='~/PRGM/babyAI/pres/'+os.path.basename(os.path.dirname(learner_filename))
 
    if c == 1:
-      view_sample_from_visible(learner, imageSize, dataSet, 1)
-#      os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample_from_visible.py '+' '.join([ learner_filename, str(Size*Size), data_filename, 'gibbs_step='+str(gibbs_step) ]))
+      view_sample_from_visible(learner, imageSize, dataSet, 1, save_dir)
+#      os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample_from_visible.py '+' '.join([ learner_filename, str(imageSize), data_filename, 'gibbs_step=1' ]))
    elif c == 2:
       view_sample_from_hidden(learner, imageSize, 1)
-#      os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample_from_hidden.py '+' '.join([ learner_filename, str(Size*Size), 'gibbs_step='+str(gibbs_step) ]))
+#      os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/sample_from_hidden.py '+' '.join([ learner_filename, str(imageSize), 'gibbs_step=1' ]))
    elif c == 3:
       view_reconstruct( learner, imageSize , dataSet)
-#      os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/reconstruct.py '+' '.join([ learner_filename, str(Size*Size), data_filename]))
+#      os.system('python '+os.path.dirname(os.path.abspath(sys.argv[0]))+'/reconstruct.py '+' '.join([ learner_filename, str(imageSize), data_filename]))
    elif c == 4:
-      view_inputweights(learner, imageSize)
+      view_inputweights(learner, imageSize, save_dir)
    elif c == EXITCODE:
       break
