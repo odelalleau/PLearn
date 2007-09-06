@@ -848,12 +848,13 @@ void TransformationLearner::mainLearnerBuild(){
     mstd_v.resize(inputSpaceDim);
     mstd_target.resize(inputSpaceDim);
     mstd_neighbor.resize(inputSpaceDim);
-
+    mstd_pivots.resize(inputSpaceDim);
+    
     //put more emphasis on diversity among transformation?
     if(emphasisOnDiversity){
         PLASSERT(!withBias);
         if(diversityFactor<=0){
-            diversityFactor = (nbTransforms - 1)*1.0/transformsVariance;  
+            diversityFactor = 1.0/transformsVariance;  
         }
     }
     else{
@@ -2266,10 +2267,12 @@ void TransformationLearner::MStepTransformationDiv(int transformIdx){
             mstd_D += transforms[t];
         }
     }
-    mstd_D *= -2*diversityFactor;
+    mstd_D *= -2*diversityFactor*noiseVariance;
    
 
-    real lambda = 1.0*noiseVariance*(1.0/transformsVariance -2*(nbTransforms - 1)*diversityFactor);
+    //real lambda = noiseVariance*(1.0/transformsVariance -2*(nbTransforms - 1)*diversityFactor);
+    real lambda = noiseVariance/transformsVariance ;
+    
     for(int idx=0 ; idx<nbReconstructions ; idx++){
         
         //catch a view on the next entry of our dataset, that is, a  triple:
@@ -2303,10 +2306,13 @@ void TransformationLearner::MStepTransformationDiv(int transformIdx){
     addToDiagonal(mstd_C,lambda);
     //transforms[t] << solveLinearSystem(C[t], B[t]); 
     mstd_B += mstd_D;
-    lapackSolveLinearSystem(mstd_C,mstd_B, mst_pivots);
+    lapackSolveLinearSystem(mstd_C,mstd_B, mstd_pivots);
     transforms[transformIdx] << mstd_B;
     
 }
+
+
+
 
 
 

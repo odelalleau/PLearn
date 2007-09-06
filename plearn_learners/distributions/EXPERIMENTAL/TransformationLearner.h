@@ -676,6 +676,7 @@ protected:
     mutable Vec mstd_v;
     mutable Vec mstd_target;
     mutable Vec mstd_neighbor;
+    mutable TVec<int> mstd_pivots;
 
 protected:
     //#####  Protected Member Functions  ######################################
