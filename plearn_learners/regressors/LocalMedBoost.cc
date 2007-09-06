@@ -256,22 +256,19 @@ void LocalMedBoost::computeBaseAwards()
     edge = 0.0;
     capacity_too_large = true;
     capacity_too_small = true;
-    real mini_base_award; 
+    real mini_base_award = INT_MAX;
+    int sample_costs_index;
+    if (objective_function == "l1") sample_costs_index=3;
+    else sample_costs_index=2;
+
     for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
     {
         train_set->getExample(each_train_sample_index, sample_input, sample_target, sample_weight);
         base_regressors[stage]->computeOutputAndCosts(sample_input, sample_target, sample_output, sample_costs);
-        if (objective_function == "l1")
-        {
-            base_rewards[each_train_sample_index] = sample_costs[3];
-        }
-        else
-        {
-            base_rewards[each_train_sample_index] = sample_costs[2];
-        }
+        base_rewards[each_train_sample_index] = sample_costs[sample_costs_index];
+
         base_confidences[each_train_sample_index] = sample_costs[1];
         base_awards[each_train_sample_index] = base_rewards[each_train_sample_index] * base_confidences[each_train_sample_index];
-        if (each_train_sample_index == 0) mini_base_award = base_awards[each_train_sample_index];
         if (base_awards[each_train_sample_index] < mini_base_award) mini_base_award = base_awards[each_train_sample_index];
         edge += sample_weight * base_awards[each_train_sample_index];
         if (base_awards[each_train_sample_index] < robustness) capacity_too_large = false;
