@@ -96,6 +96,9 @@ public:
     //! The number of fine-tunig steps is defined by nstages.
     TVec<int> training_schedule;
 
+    //! Whether to do things by stages, including fine-tuning, or on-line
+    bool online;
+
     //! The layers of units in the network
     TVec< PP<RBMLayer> > layers;
 
@@ -109,6 +112,11 @@ public:
     //! in the hidden layers. They must have the same input and
     //! output sizes, compatible with their corresponding layers.
     TVec< PP<RBMConnection> > correlation_connections;
+
+    //! Optional weights from each inputs to all other inputs'
+    //! reconstruction, which can capture simple (linear or log-linear)
+    //! correlations between inputs.
+    mutable TVec< PP<RBMConnection> > direct_connections;
 
     //! Module that takes as input the output of the last layer
     //! (layers[n_layers-1), and feeds its output to final_cost
@@ -133,6 +141,10 @@ public:
     //! Indication that, at test time, all costs for all
     //! layers (up to the currently trained layer) should be computed.
     bool compute_all_test_costs;
+
+    //! Indication that the autoassociators are also trained to
+    //! reconstruct their hidden layers (inspired from CD1 in an RBM)
+    bool reconstruct_hidden;
 
     //#####  Public Learnt Options  ###########################################
 
@@ -184,6 +196,9 @@ public:
     void fineTuningStep( const Vec& input, const Vec& target,
                          Vec& train_costs );
 
+    void onlineStep( const Vec& input, const Vec& target,
+                         Vec& train_costs );
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -224,13 +239,25 @@ protected:
     
     //! Reconstruction expectations
     mutable Vec reconstruction_expectations;
-    
+        
     //! Reconstruction activation gradients
     mutable Vec reconstruction_activation_gradients;
-    
+
     //! Reconstruction expectation gradients
     mutable Vec reconstruction_expectation_gradients;
 
+    //! Reconstruction activation gradients coming from hidden reconstruction
+    mutable Vec reconstruction_activation_gradients_from_hid_rec;
+    
+    //! Reconstruction expectation gradients coming from hidden reconstruction
+    mutable Vec reconstruction_expectation_gradients_from_hid_rec;
+
+    //! Hidden reconstruction activations
+    mutable Vec hidden_reconstruction_activations;
+    
+    //! Hidden reconstruction activation gradients
+    mutable Vec hidden_reconstruction_activation_gradients;
+    
     //! Activations before the correlation layer
     mutable TVec<Vec> correlation_activations;
     
@@ -245,6 +272,15 @@ protected:
 
     //! Hidden layers for the correlation connections
     mutable TVec< PP<RBMLayer> > correlation_layers;
+
+    //! Activations from the direct connections
+    mutable Vec direct_activations;
+
+    //! Sum of activations from the direct and reconstruction connections
+    mutable Vec direct_and_reconstruction_activations;
+
+    //! Gradient of sum of activations from the direct and reconstruction connections
+    mutable Vec direct_and_reconstruction_activation_gradients;
 
     //! Position in the total cost vector of the different partial costs
     mutable TVec<int> partial_costs_positions;
@@ -273,7 +309,7 @@ protected:
     
     //! Indication whether final_cost has learning rate
     bool final_cost_has_learning_rate;
-    
+
 protected:
     //#####  Protected Member Functions  ######################################
 
