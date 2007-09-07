@@ -50,6 +50,8 @@ def print_usage_repAndRec():
     print 'w : plot the weight matrices associated with the current pixel'
     print 'W : same as w but for all a group'
     print 'C : same as w but for the hidden unit that has the highest value in each group'
+    print 'Z : set all the pixels of the current layer to zero'
+    print 'B : set all the pixels of the current layer to 1'
     print 'o : set the current hidden layer to its original state'
     print 'O : same as o but for every layer'
     print 't : now we have the same scale for  W, C'
@@ -106,6 +108,9 @@ class HiddenLayer:
     def getElement(self, x, y):
         n = self.matrixToLayer(x,y)
         return self.hidden_layer[n]
+
+    def fill(self,value):
+        self.hidden_layer.fill(value)
 
     def setElement(self, x,y, value):
         n = self.matrixToLayer(x,y)
@@ -378,6 +383,16 @@ class InteractiveRepRecPlotter:
                 print '...done'
                 
             # set pixel -- z,x,c,v,b
+
+            elif char=='Z':
+                hl.fill(0.)
+                self.rep_axes[i].imshow(hl.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                draw()
+
+            elif char=='B':
+                hl.fill(1.)
+                self.rep_axes[i].imshow(hl.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                draw()
 
             elif char in ['z', 'x', 'c', 'v', 'b']:
                 
@@ -922,7 +937,7 @@ class EachRowPlotter:
 ### main ###
 ############
 
-server_command = "slearn server"
+server_command = "plearn_exp server"
 serv = launch_plearn_server(command = server_command)
 
 #print "Press Enter to continue"
