@@ -68,6 +68,10 @@ public:
     //! The learning rate used during contrastive divergence learning
     real cd_learning_rate;
 
+    //! The decrease constant of the learning rate used during 
+    //! contrastive divergence learning
+    real cd_decrease_ct;
+
     //! The learning rate used during the gradient descent
     real grad_learning_rate;
 
@@ -183,7 +187,6 @@ public:
     //! Concatenation of layers[n_layers-2] and the target layer (that is
     //! inside classification_module), if use_classification_cost
     PP<RBMMixedLayer> joint_layer;
-
 
 public:
     //#####  Public Member Functions  #########################################

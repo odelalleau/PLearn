@@ -58,6 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(
 ///////////////////
 DeepBeliefNet::DeepBeliefNet() :
     cd_learning_rate( 0. ),
+    cd_decrease_ct( 0. ),
     grad_learning_rate( 0. ),
     batch_size( 1 ),
     grad_decrease_ct( 0. ),
@@ -97,6 +98,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "The learning rate used during contrastive divergence"
                   " learning");
 
+    declareOption(ol, "cd_decrease_ct", &DeepBeliefNet::cd_decrease_ct,
+                  OptionBase::buildoption,
+                  "The decrease constant of the learning rate used during"
+                  " contrastive divergence");
+
     declareOption(ol, "grad_learning_rate", &DeepBeliefNet::grad_learning_rate,
                   OptionBase::buildoption,
                   "The learning rate used during gradient descent");
@@ -104,7 +110,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "grad_decrease_ct", &DeepBeliefNet::grad_decrease_ct,
                   OptionBase::buildoption,
                   "The decrease constant of the learning rate used during"
-                  "gradient descent");
+                  " gradient descent");
 
     declareOption(ol, "batch_size", &DeepBeliefNet::batch_size,
                   OptionBase::buildoption,
@@ -372,6 +378,10 @@ void DeepBeliefNet::build_costs()
     if( partial_costs )
     {
         int n_partial_costs = partial_costs.length();
+        if( n_partial_costs != n_layers - 1)
+            PLERROR("DeepBeliefNet::build_costs() - \n"
+                    "partial_costs.length() (%d) != n_layers-1 (%d).\n",
+                    n_partial_costs, n_layers-1);
         partial_costs_indices.resize(n_partial_costs);
 
         for( int i=0; i<n_partial_costs; i++ )
@@ -807,12 +817,16 @@ void DeepBeliefNet::train()
             pb = new ProgressBar( "Training "+classname(),
                                   nstages - stage );
 
+        setLearningRate( grad_learning_rate );
         for( ; stage<nstages; stage++)
         {
             initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
             // Do a step every 'minibatch_size' examples.
             if (stage % minibatch_size == 0) {
                 int sample_start = stage % nsamples;
+                if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                    setLearningRate( grad_learning_rate
+                                     / (1. + grad_decrease_ct * stage ));
                 if (batch_size > 1 || minibatch_hack) {
                     train_set->getExamples(sample_start, minibatch_size,
                                            inputs, targets, weights, NULL, true);
@@ -858,6 +872,17 @@ void DeepBeliefNet::train()
 
             for( ; stage<end_stage ; stage++ )
             {
+                 if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+                 {
+                     real lr = cd_learning_rate 
+                         / (1. + cd_decrease_ct * 
+                            (stage - cumulative_schedule[i]));
+                     
+                     layers[i]->setLearningRate( lr );
+                     connections[i]->setLearningRate( lr );
+                     layers[i+1]->setLearningRate( lr );
+                 }
+                 
                 initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
                 // Do a step every 'minibatch_size' examples.
                 if (stage % minibatch_size == 0) {
@@ -875,7 +900,6 @@ void DeepBeliefNet::train()
                         train_set->getExample(sample_start, input, target, weight);
                         greedyStep( input, target, i );
                     }
-
                 }
                 if( pb )
                     pb->update( stage - cumulative_schedule[i] + 1 );
@@ -907,6 +931,15 @@ void DeepBeliefNet::train()
             int previous_stage = cumulative_schedule[n_layers-2];
             for( ; stage<end_stage ; stage++ )
             {
+                if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+                {
+                    real lr = cd_learning_rate / 
+                        (1. + cd_decrease_ct * 
+                         (stage - cumulative_schedule[n_layers-2]));
+                    joint_layer->setLearningRate( lr );
+                    classification_module->joint_connection->setLearningRate( lr );
+                    layers[n_layers-1]->setLearningRate( lr );
+                }
                 initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
                 int sample = stage % nsamples;
                 train_set->getExample( sample, input, target, weight );
@@ -949,7 +982,8 @@ void DeepBeliefNet::train()
 
                 if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
                     setLearningRate( grad_learning_rate
-                            / (1. + grad_decrease_ct * (stage - init_stage) ) );
+                            / (1. + grad_decrease_ct * 
+                               (stage - cumulative_schedule[n_layers-1])) );
 
                 if (minibatch_size > 1 || minibatch_hack) {
                     train_set->getExamples(sample_start, minibatch_size, inputs,
@@ -999,6 +1033,7 @@ void DeepBeliefNet::train()
 void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                                 Vec& train_costs)
 {
+    real lr;
     PLASSERT(batch_size == 1);
 
     TVec<Vec> cost;
@@ -1074,8 +1109,13 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
 
     if (final_cost || (!partial_costs.isEmpty() && partial_costs[n_layers-2]))
     {
-        layers[n_layers-1]->setLearningRate( grad_learning_rate );
-        connections[n_layers-2]->setLearningRate( grad_learning_rate );
+        if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+            lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
+        else
+            lr = grad_learning_rate;
+        
+        layers[n_layers-1]->setLearningRate( lr );
+        connections[n_layers-2]->setLearningRate( lr );
 
         layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
                                            layers[ n_layers-1 ]->expectation,
@@ -1124,10 +1164,14 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
             Vec target_exp = classification_module->target_layer->expectation;
             fill_one_hot( target_exp, (int) round(target[0]), real(0.), real(1.) );
 
-            joint_layer->setLearningRate( cd_learning_rate );
-            layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
-            classification_module->joint_connection->setLearningRate(
-                cd_learning_rate );
+            if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+                lr = cd_learning_rate / (1. + cd_decrease_ct * stage );
+            else
+                lr = cd_learning_rate;
+
+            joint_layer->setLearningRate( lr );
+            layers[ n_layers-1 ]->setLearningRate( lr );
+            classification_module->joint_connection->setLearningRate( lr );
 
             save_layer_activation.resize(layers[ n_layers-2 ]->size);
             save_layer_activation << layers[ n_layers-2 ]->activation;
@@ -1150,57 +1194,66 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
     for( int i=n_layers-2 ; i>=0 ; i-- )
     {
         if (i <= n_layers - 3) {
-        connections[ i ]->setLearningRate( grad_learning_rate );
-        layers[ i+1 ]->setLearningRate( grad_learning_rate );
+            if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
+            else
+                lr = grad_learning_rate;
+            
+            connections[ i ]->setLearningRate( lr );
+            layers[ i+1 ]->setLearningRate( lr );
+            
 
-        layers[i+1]->bpropUpdate( layers[i+1]->activation,
-                                  layers[i+1]->expectation,
-                                  activation_gradients[i+1],
-                                  expectation_gradients[i+1] );
-
-        connections[i]->bpropUpdate( layers[i]->expectation,
-                                     layers[i+1]->activation,
-                                     expectation_gradients[i],
-                                     activation_gradients[i+1],
-                                     true);
+            layers[i+1]->bpropUpdate( layers[i+1]->activation,
+                                      layers[i+1]->expectation,
+                                      activation_gradients[i+1],
+                                      expectation_gradients[i+1] );
+            
+            connections[i]->bpropUpdate( layers[i]->expectation,
+                                         layers[i+1]->activation,
+                                         expectation_gradients[i],
+                                         activation_gradients[i+1],
+                                         true);
         }
 
         if (i <= n_layers - 3 || !use_classification_cost ||
-                                 !top_layer_joint_cd) {
+            !top_layer_joint_cd) {
 
-        // N.B. the contrastiveDivergenceStep changes the activation and
-        // expectation fields of top layer of the RBM, so it must be
-        // done last
-        layers[i]->setLearningRate( cd_learning_rate );
-        layers[i+1]->setLearningRate( cd_learning_rate );
-        connections[i]->setLearningRate( cd_learning_rate );
-
-        if( i > 0 )
-        {
-            save_layer_activation.resize(layers[i]->size);
-            save_layer_activation << layers[i]->activation;
-            save_layer_expectation.resize(layers[i]->size);
-            save_layer_expectation << layers[i]->expectation;
-        }
-        contrastiveDivergenceStep( layers[ i ],
-                                   connections[ i ],
-                                   layers[ i+1 ] ,
-                                   i, true);
-        if( i > 0 )
-        {
-            layers[i]->activation << save_layer_activation;
-            layers[i]->expectation << save_layer_expectation;
-        }
+            // N.B. the contrastiveDivergenceStep changes the activation and
+            // expectation fields of top layer of the RBM, so it must be
+            // done last
+            if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+                lr = cd_learning_rate / (1. + cd_decrease_ct * stage );
+            else
+                lr = cd_learning_rate;
+            
+            layers[i]->setLearningRate( lr );
+            layers[i+1]->setLearningRate( lr );
+            connections[i]->setLearningRate( lr );
+            
+            if( i > 0 )
+            {
+                save_layer_activation.resize(layers[i]->size);
+                save_layer_activation << layers[i]->activation;
+                save_layer_expectation.resize(layers[i]->size);
+                save_layer_expectation << layers[i]->expectation;
+            }
+            contrastiveDivergenceStep( layers[ i ],
+                                       connections[ i ],
+                                       layers[ i+1 ] ,
+                                       i, true);
+            if( i > 0 )
+            {
+                layers[i]->activation << save_layer_activation;
+                layers[i]->expectation << save_layer_expectation;
+            }
         }
     }
-
-
-
 }
 
 void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                                Mat& train_costs)
 {
+    real lr;
     // TODO Can we avoid this memory allocation?
     TVec<Mat> cost;
     Vec optimized_cost(inputs.length());
@@ -1280,8 +1333,13 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
 
     if (final_cost || (!partial_costs.isEmpty() && partial_costs[n_layers-2]))
     {
-        layers[n_layers-1]->setLearningRate( grad_learning_rate );
-        connections[n_layers-2]->setLearningRate( grad_learning_rate );
+        if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+            lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
+        else
+            lr = grad_learning_rate;
+
+        layers[n_layers-1]->setLearningRate( lr );
+        connections[n_layers-2]->setLearningRate( lr );
 
         layers[ n_layers-1 ]->bpropUpdate(
                 layers[ n_layers-1 ]->activations,
@@ -1335,10 +1393,14 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
             Vec target_exp = classification_module->target_layer->expectation;
             fill_one_hot( target_exp, (int) round(target[0]), real(0.), real(1.) );
 
-            joint_layer->setLearningRate( cd_learning_rate );
-            layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
-            classification_module->joint_connection->setLearningRate(
-                cd_learning_rate );
+            if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+               lr = cd_learning_rate / (1. + cd_decrease_ct * stage );
+            else
+               lr = cd_learning_rate;
+
+            joint_layer->setLearningRate( lr );
+            layers[ n_layers-1 ]->setLearningRate( lr );
+            classification_module->joint_connection->setLearningRate( lr );
 
             save_layer_activation.resize(layers[ n_layers-2 ]->size);
             save_layer_activation << layers[ n_layers-2 ]->activation;
@@ -1370,8 +1432,13 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
     for( int i=n_layers-2 ; i>=0 ; i-- )
     {
         if (i <= n_layers - 3) {
-            connections[ i ]->setLearningRate( grad_learning_rate );
-            layers[ i+1 ]->setLearningRate( grad_learning_rate );
+            if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
+            else
+                lr = grad_learning_rate;
+            
+            connections[ i ]->setLearningRate( lr );
+            layers[ i+1 ]->setLearningRate( lr );
 
             layers[i+1]->bpropUpdate( layers[i+1]->activations,
                                       layers[i+1]->getExpectations(),
@@ -1393,9 +1460,13 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
             // N.B. the contrastiveDivergenceStep changes the activation and
             // expectation fields of top layer of the RBM, so it must be
             // done last
-            layers[i]->setLearningRate( cd_learning_rate );
-            layers[i+1]->setLearningRate( cd_learning_rate );
-            connections[i]->setLearningRate( cd_learning_rate );
+            if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+                lr = cd_learning_rate / (1. + cd_decrease_ct * stage );
+            else
+                lr = cd_learning_rate;
+            layers[i]->setLearningRate( lr );
+            layers[i+1]->setLearningRate( lr );
+            connections[i]->setLearningRate( lr );
 
             if( i > 0 )
             {
@@ -1438,6 +1509,7 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
 ////////////////
 void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 {
+    real lr;
     PLASSERT( index < n_layers );
 
     layers[0]->expectation << input;
@@ -1448,12 +1520,19 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
         layers[i+1]->computeExpectation();
     }
 
-    // TODO: add another learning rate?
     if( !partial_costs.isEmpty() && partial_costs[ index ] )
     {
         // put appropriate learning rate
-        connections[ index ]->setLearningRate( grad_learning_rate );
-        layers[ index+1 ]->setLearningRate( grad_learning_rate );
+        if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+            lr = grad_learning_rate / 
+                (1. + grad_decrease_ct * 
+                 (stage - cumulative_schedule[index]));
+        else
+            lr = grad_learning_rate;
+
+        partial_costs[ index ]->setLearningRate( lr );
+        connections[ index ]->setLearningRate( lr );
+        layers[ index+1 ]->setLearningRate( lr );
 
         // Backward pass
         real cost;
@@ -1476,8 +1555,14 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
                                            activation_gradients[ index+1 ] );
 
         // put back old learning rate
-        connections[ index ]->setLearningRate( cd_learning_rate );
-        layers[ index+1 ]->setLearningRate( cd_learning_rate );
+        if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+            lr = cd_learning_rate / (1. + cd_decrease_ct * 
+                                     (stage - cumulative_schedule[index]));
+        else
+            lr = cd_learning_rate;
+
+        connections[ index ]->setLearningRate( lr );
+        layers[ index+1 ]->setLearningRate( lr );
     }
 
     contrastiveDivergenceStep( layers[ index ],
@@ -1491,6 +1576,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 /////////////////
 void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index, Mat& train_costs_m )
 {
+    real lr;
     PLASSERT( index < n_layers );
 
     layers[0]->setExpectations(inputs);
@@ -1501,12 +1587,19 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
         layers[i+1]->computeExpectations();
     }
 
-    // TODO: add another learning rate?
     if( !partial_costs.isEmpty() && partial_costs[ index ] )
     {
         // put appropriate learning rate
-        connections[ index ]->setLearningRate( grad_learning_rate );
-        layers[ index+1 ]->setLearningRate( grad_learning_rate );
+        if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+            lr = grad_learning_rate / 
+                (1. + grad_decrease_ct * 
+                 (stage - cumulative_schedule[index]));
+        else
+            lr = grad_learning_rate;
+
+        partial_costs[ index ]->setLearningRate( lr );
+        connections[ index ]->setLearningRate( lr );
+        layers[ index+1 ]->setLearningRate( lr );
 
         // Backward pass
         Vec costs;
@@ -1529,8 +1622,13 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
                                            activations_gradients[ index+1 ] );
 
         // put back old learning rate
-        connections[ index ]->setLearningRate( cd_learning_rate );
-        layers[ index+1 ]->setLearningRate( cd_learning_rate );
+        if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+            lr = cd_learning_rate / (1. + cd_decrease_ct * 
+                                     (stage - cumulative_schedule[index]));
+        else
+            lr = cd_learning_rate;
+        connections[ index ]->setLearningRate( lr );
+        layers[ index+1 ]->setLearningRate( lr );
     }
 
     if (reconstruct_layerwise)
@@ -1557,6 +1655,7 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
 /////////////////////
 void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 {
+    real lr;
     PLASSERT( joint_layer );
     PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
 
@@ -1577,8 +1676,17 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         layers[ n_layers-1 ]->computeExpectation();
 
         // put appropriate learning rate
-        connections[ n_layers-2 ]->setLearningRate( grad_learning_rate );
-        layers[ n_layers-1 ]->setLearningRate( grad_learning_rate );
+        if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+            lr = grad_learning_rate 
+                / (1. + grad_decrease_ct * 
+                   (stage - cumulative_schedule[n_layers-2]));
+        else
+            lr = grad_learning_rate;
+        
+        partial_costs[ n_layers-2 ]->setLearningRate( lr );
+        connections[ n_layers-2 ]->setLearningRate( lr );
+        layers[ n_layers-1 ]->setLearningRate( lr );
+        
 
         // Backward pass
         real cost;
@@ -1602,8 +1710,15 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
             activation_gradients[ n_layers-1 ] );
 
         // put back old learning rate
-        connections[ n_layers-2 ]->setLearningRate( cd_learning_rate );
-        layers[ n_layers-1 ]->setLearningRate( cd_learning_rate );
+        if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+            lr = cd_learning_rate 
+                / (1. + cd_decrease_ct * 
+                   (stage - cumulative_schedule[n_layers-2]));
+        else
+            lr = cd_learning_rate;
+
+        connections[ n_layers-2 ]->setLearningRate( lr );
+        layers[ n_layers-1 ]->setLearningRate( lr );
     }
 
     Vec target_exp = classification_module->target_layer->expectation;
@@ -2227,6 +2342,8 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
     {
         layers[i]->setLearningRate( the_learning_rate );
         connections[i]->setLearningRate( the_learning_rate );
+        if( partial_costs.length() != 0 && partial_costs[i] )
+            partial_costs[i]->setLearningRate( the_learning_rate );
     }
     layers[n_layers-1]->setLearningRate( the_learning_rate );
 
