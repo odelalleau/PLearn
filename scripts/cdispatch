@@ -2,17 +2,55 @@
 import sys,os,re,time,datetime
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--log|*--nolog] [--cluster[=nb_process]|--local[=nb_process]|*--condor] [--nb_proc=nb_process] [--test] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
+ShortHelp='Usage: cdispatch [--help|-h] [--dbilog|*--nodbilog] [--cluster[=nb_process]|--local[=nb_process]|--bqtools[=nb_process]|*--condor] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
 LongHelp="""
 Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
 
 %s
-parameter for local and cluster:--nb_proc=INT, give the maximum number of concurent jobs running
-parameter only for cluster:--duree,--wait,--3264,--32,--64,
-parameter only for condor:--req=X
 
-parameter --local=X is the same as --local --nb_proc=X
-parameter --cluster=X is the same as --cluster --nb_proc=X
+option not explained:
+  --help, -h
+  --dbilog, --nodbilog
+  --cluster,--local,--bqtools,--condor
+  --file=FILEPATH
+  
+common option:
+  The '--test' option make that cdispatch generate the file $ScriptName, but do not execute it. That way you can see what cdispatch generate. Also, this file make dbi in test mode, so dbi do not execute automaticaly the experiment il $ScriptName is executer
+local, bqtools and cluster parameter:
+  --nb_proc=nb_process, give the maximum number of concurent jobs running
+    --local=X is the same as --local --nb_proc=X
+    --cluster=X is the same as --cluster --nb_proc=X
+    --bqtools=X is the same as --bqtools --nb_proc=X
+
+
+bqtools and cluster option:
+  The '--duree' option tell the maximum length of the jobs. The have the cluster syntaxe of accepted value 'cluster --help'. The bqtools syntaxe is '--duree=12:13:15'. This give 12 hours, 13 minutes and 15 seconds
+
+bqtools only option:
+  The '--micro[=nb_batch]' option can be used with BqTools when launching many jobs that
+  have a very short duration. This may prevent some queue crashes. The nb_batch value
+  is the number of experience to group together in a batch.(default 20)
+
+  The '--long' option must be used with BqTools to launch jobs whose duration
+  is more than 5 days. The maximum duration of a job will be either the
+  BQ_MAX_JOB_DURATION environment variable (in the form hour:min:sec) if it is
+  set, and 1200:00:00 (50 days) otherwise.
+  Since long jobs are launched on a different queue with few nodes, please make
+  sure you are not using too many nodes at once.
+  If this option is not set, the maximum duration of each job will be 120 hours
+  (5 days).
+
+cluster only option:
+  The '--wait' is transfered to cluster. This must be enabled if their is not nb_process available compute node. Otherwise when their is no compute node available, the launch of that command fail.
+  The '--3264', '--32' or '--64' tell the type of cpu the compute node must have to execute the commands.
+
+condor only option:
+  The '--req=\"CONDOR_REQUIREMENT\"' option make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:
+
+  cdispatch \"--req=Machine==\\\\\\\"computer.example.com\\\\\\\"\"
+     or
+  cdispatch '--req=Machine==\\\"computer.example.com\\\"' 
+
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -43,14 +81,6 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.01
   aplearn myscript.plearn numhidden=25 wd=0.001
 
-The optional parameter '--test' make that cdispatch generate the file $ScriptName, but do not execute it. That way you can see what cdispatch generate.
-
-The optional parameter '--req=\"CONDOR_REQUIREMENT\"' make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:
-
-cdispatch \"--req=Machine==\\\\\\\"computer.example.com\\\\\\\"\"
-or
-cdispatch '--req=Machine==\\\"computer.example.com\\\"' 
-
 If the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
 
 cdispatch --test --file=tests
@@ -71,10 +101,17 @@ for argv in sys.argv[1:]:
     if argv == "--help" or argv == "-h":
         print LongHelp
         sys.exit(1)
-    elif argv == "--nolog":
+    elif argv == "--nodbilog":
         dbi_param["dolog"]=False
-    elif argv == "--log":
+    elif argv == "--dbilog":
         dbi_param["dolog"]=True
+    elif argv.startswith("--bqtools"):
+        optionargs.append(argv[2:9])
+        if len(argv)>9:
+            assert(argv[9]=="=")
+            dbi_param["nb_proc"]=argv[10:]
+        dbi_param["file_redirect_stderr"]=True
+        dbi_param["file_redirect_stderr"]=True
     elif argv.startswith("--cluster"):
         optionargs.append(argv[2:9])
         if len(argv)>9:
@@ -103,6 +140,15 @@ for argv in sys.argv[1:]:
         dbi_param["wait"]=True
     elif argv[0:6] == "--req=":
         dbi_param["requirements"]="\"%s\""%argv[6:]
+    elif argv == "--no_clean_up":
+        dbi_param["clean_up"]=False
+    elif argv == "long":
+        dbi_param["long"] = True
+    elif argv.startswith("--micro"):
+        dbi_param["micro"]=20
+        if len(argv)>7:
+            assert(argv[7]=="=")
+            dbi_param["micro"]=argv[8:]
     elif argv[0:1] == '-':
 	print "Unknow parameter (%s)",argv
 	print ShortHelp
@@ -172,6 +218,8 @@ if "cluster" in optionargs:
     launch_cmd='Cluster'
 elif "local" in optionargs:
     launch_cmd='Local'
+elif "bqtools" in optionargs:
+    launch_cmd='bqtools'
 else:
     launch_cmd='Condor'
 
@@ -180,8 +228,9 @@ if FILE == "":
     t[0]=os.path.split(t[0])[1]
     tmp="_".join(t)
     tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
-    tmp+=str(datetime.datetime.now()).replace(' ','_')
-    print "tmp:",tmp
+    ### We need to remove the symbols "," as this cause trouble with bqtools
+    tmp=re.sub( ',', '-', tmp )
+    tmp+='_'+str(datetime.datetime.now()).replace(' ','_')
     dbi_param["log_dir"]=os.path.join("LOGS",tmp)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 else:

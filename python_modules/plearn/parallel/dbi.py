@@ -116,6 +116,8 @@ class DBIBase:
             self.__dict__[key] = args[key]
 
         # check if log directory exists, if not create it
+        if (not os.path.exists('LOGS')):
+            os.mkdir('LOGS')
         if (not os.path.exists(self.log_dir)):
 #            if self.dolog or self.file_redirect_stdout or self.file_redirect_stderr:
             os.mkdir(self.log_dir)
@@ -143,11 +145,11 @@ class DBIBase:
         output = PIPE
         error = PIPE
         if int(self.file_redirect_stdout):
-            output = file(stdout_file, 'w')
+            output = open(stdout_file, 'w')
         if self.redirect_stderr_to_stdout:
             error = STDOUT
         elif int(self.file_redirect_stderr):
-            error = file(stderr_file, 'w')
+            error = open(stderr_file, 'w')
         return (output,error)
             
     def exec_pre_batch(self):
@@ -372,20 +374,43 @@ class DBICluster(DBIBase):
 class DBIbqtools(DBIBase):
 
     def __init__( self, commands, **args ):
+        self.nb_proc = 1
+        self.clean_up = True
+        self.micro = 1
+        self.queue = "qwork@ms"
+        self.long = False
+        self.duree = "12:00:00"
+
         DBIBase.__init__(self, commands, **args)
 
+        self.nb_proc = int(self.nb_proc)
+        self.micro = int(self.micro)
+        
+### We can't accept the symbols "," as this cause trouble with bqtools
+        if self.log_dir.find(',')!=-1 or self.log_file.find(',')!=-1:
+            print "[DBI] ERROR: The log file and the log dir should not have the symbol ','"
+            print "[DBI] log file=",self.log_file
+            print "[DBI] log dir=",self.log_dir
+            sys.exit(1)
+
         # create directory in which all the temp files will be created
-        self.temp_dir = 'batch_' + self.unique_id + '_tmp'
+        self.temp_dir = 'bqtools_tmp_' + os.path.split(self.log_dir)[1]
+        print "[DBI] All bqtools file will be in ",self.temp_dir
         os.mkdir(self.temp_dir)
         os.chdir(self.temp_dir)
-
-        # create the right symlink for parent in self.temp_dir_name
-        self.parent_dir = 'parent'
-        os.symlink( '..', self.parent_dir )
+        
+        if self.long:
+            self.queue = "qlong@ms"
+            # Get max job duration from environment variable if it is set.
+            max = os.getenv("BQ_MAX_JOB_DURATION")
+            if max:
+                self.duree = max
+            else:
+                self.duree = "1200:00:00" #50 days
 
         # create the information about the tasks
         args['temp_dir'] = self.temp_dir
-        
+        self.args=args
         self.add_commands(commands)
 
     def add_commands(self,commands):
@@ -395,9 +420,8 @@ class DBIbqtools(DBIBase):
         # create the information about the tasks
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
-                                   self.time_format,
-                                   [self.pre_tasks, 'cd parent;'],
-                                   self.post_tasks,self.dolog,False,args))
+                                   self.time_format,self.pre_tasks,
+                                   self.post_tasks,self.dolog,False,self.args))
     def run(self):
         pre_batch_command = ';'.join( self.pre_batch );
         post_batch_command = ';'.join( self.post_batch );
@@ -415,6 +439,7 @@ class DBIbqtools(DBIBase):
                 HOME=%s
                 export HOME
 
+                cd ../../../
                 (%s '~~task~~')'''
                 % (bq_cluster_home, bq_shell_cmd)
                 ) )
@@ -438,31 +463,35 @@ class DBIbqtools(DBIBase):
         # create the bqsubmit.dat, with
         bqsubmit_dat = open( 'bqsubmit.dat', 'w' )
         bqsubmit_dat.write( dedent('''\
-                batchName = dbi_batch
+                batchName = dbi_batch_%s
                 command = sh launcher
                 templateFiles = launcher
-                linkFiles = parent;parent/utils.py
-                remoteHost = ss3
+                submitOptions = -q %s -l walltime=%s
                 param1 = (task, logfile) = load tasks, logfiles
-                concurrentJobs = 200
-
-                ''') )
+                linkFiles = launcher
+                concurrentJobs = %d
+                preBatch = rm -f _*.BQ
+                microJobs = %d
+                '''%(self.unique_id[1:6],self.queue,self.duree,self.nb_proc,self.micro)) )
+        print self.unique_id
+        if self.clean_up:
+            bqsubmit_dat.write('postBatch = rm -rf dbi_batch*.BQ ; rm -f logfiles tasks launcher bqsubmit.dat ;')
         bqsubmit_dat.close()
 
         # Execute pre-batch
         if len(self.pre_batch)>0:
             exec_pre_batch()
 
+        print "[DBI] All the log will be in the directory: ",self.log_dir
         # Launch bqsubmit
         if not self.test:
-            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
             task.set_scheduled_time()
-            self.p = Popen( 'bqsubmit', shell=True, stdout=output, stderr=error)
+            self.p = Popen( 'bqsubmit', shell=True)
+            self.p.wait()
         else:
             print "[DBI] Test mode, we generate all the file, but we do not execute bqsubmit"
             if self.dolog:
                 print "[DBI] The scheduling time will not be logged when you will submit the generated file" 
-        os.chdir('parent')
 
         # Execute post-batchs
         if len(self.post_batch)>0:
