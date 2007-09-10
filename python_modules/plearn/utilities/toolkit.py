@@ -6,6 +6,8 @@ module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
 import inspect, os, popen2, shutil, string, sys, time, types
+from os.path import exists, join, abspath
+from string import split
 
 def boxed_lines(s, box_width, indent=''):
     if len(s) <= box_width:
@@ -541,6 +543,22 @@ def vsystem( cmd, prefix='+++', quiet=False ):
         print prefix, cmd
         os.system( cmd )
 
+#original version: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
+def search_file(filename, search_path):
+    """Given a search path, find file
+     Can be used with the PATH variable as search_path
+    """
+    file_found = 0
+    paths = split(search_path, os.pathsep)
+    for path in paths:
+        if exists(join(path, filename)):
+            file_found = 1
+            break
+    if file_found:
+        return abspath(join(path, filename))
+    else:
+        return None
+    
 class ListMap(dict):
     def __getitem__(self, key):
         if not key in self:

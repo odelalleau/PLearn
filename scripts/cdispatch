@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import sys,os,re,time,datetime
+from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--dbilog|*--nodbilog] [--cluster[=nb_process]|--local[=nb_process]|--bqtools[=nb_process]|*--condor] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
+ShortHelp='Usage: cdispatch [--help|-h] [--dbilog|*--nodbilog] [--cluster[=nb_process]|--local[=nb_process]|--bqtools[=nb_process]|--condor] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
 LongHelp="""
-Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools.
+Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools. If no system is selected on the command line, we try them in this order: condor, bqsubmit, cluster local
 
 %s
 
@@ -91,39 +92,46 @@ In the file, there must not be double quotes around the {{}} as they are for the
 if len(sys.argv) == 1:
     print ShortHelp
     sys.exit(1)
-optionargs = []
-otherargs = []
 FILE = ""
 dbi_param={}
 
-for argv in sys.argv[1:]:
+
+PATH=os.getenv('PATH')
+if search_file('condor_submit',PATH):
+    launch_cmd = 'Condor'
+elif search_file('bqsubmit',PATH):
+    launch_cmd = 'bqtools'
+elif search_file('cluster',PATH):
+    launch_cmd = 'Cluster'
+else:
+    launch_cmd = 'Local'
+
+command_argv = sys.argv[1:]
+for argv in command_argv:
 
     if argv == "--help" or argv == "-h":
         print LongHelp
-        sys.exit(1)
+        sys.exit(0)
     elif argv == "--nodbilog":
         dbi_param["dolog"]=False
     elif argv == "--dbilog":
         dbi_param["dolog"]=True
     elif argv.startswith("--bqtools"):
-        optionargs.append(argv[2:9])
+        launch_cmd = "bqtools"
         if len(argv)>9:
             assert(argv[9]=="=")
             dbi_param["nb_proc"]=argv[10:]
-        dbi_param["file_redirect_stderr"]=True
-        dbi_param["file_redirect_stderr"]=True
     elif argv.startswith("--cluster"):
-        optionargs.append(argv[2:9])
+        launch_cmd = "Cluster"
         if len(argv)>9:
             assert(argv[9]=="=")
             dbi_param["nb_proc"]=argv[10:]
     elif argv == "--condor":
-        #it is the default
-        optionargs.append(argv[2:])
+        launch_cmd = "Condor"
     elif argv.startswith("--duree="):
         dbi_param["duree"]=argv[8:]
     elif argv.startswith("--local"):
-        optionargs.append(argv[2:7])
+        launch_cmd = "Local"
         if len(argv)>7:
             assert(argv[7]=="=")
             dbi_param["nb_proc"]=argv[8:]
@@ -133,7 +141,6 @@ for argv in sys.argv[1:]:
         dbi_param["test"]=True
     elif argv.startswith("--file="):
         FILE = argv[7:]
-        optionargs.append(argv[2:])
     elif argv == "--32"  or argv == "--64" or argv == "--3264":
         dbi_param["arch"]=argv[2:]
     elif argv == "--wait":
@@ -154,16 +161,16 @@ for argv in sys.argv[1:]:
 	print ShortHelp
         sys.exit(1)
     else:
-        otherargs.append(argv)
-        
-if len(otherargs) == 0 and FILE == "":
+        break
+    command_argv.remove(argv)
+
+print command_argv
+print "\n\nThe jobs will be launched on the system:", launch_cmd,"\n\n"
+
+if len(command_argv) == 0 and FILE == "":
     print ShortHelp
     sys.exit(1)
 
-
-if "local" in optionargs and "cluster" in optionargs:
-    print "--cluster and --local can't be used together"
-    sys.exit(1)
 
 def generate_combination(repl):
     if repl == []:
@@ -212,16 +219,7 @@ if FILE != "":
         commands+=generate_commands(sp)
     FD.close
 else:
-    commands=generate_commands(otherargs)
-
-if "cluster" in optionargs:
-    launch_cmd='Cluster'
-elif "local" in optionargs:
-    launch_cmd='Local'
-elif "bqtools" in optionargs:
-    launch_cmd='bqtools'
-else:
-    launch_cmd='Condor'
+    commands=generate_commands(command_argv)
 
 if FILE == "":    
     t = [x for x in sys.argv[1:] if not x[:2]=="--"]

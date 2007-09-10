@@ -463,7 +463,7 @@ class DBIbqtools(DBIBase):
         # create the bqsubmit.dat, with
         bqsubmit_dat = open( 'bqsubmit.dat', 'w' )
         bqsubmit_dat.write( dedent('''\
-                batchName = dbi_batch_%s
+                batchName = dbi_%s
                 command = sh launcher
                 templateFiles = launcher
                 submitOptions = -q %s -l walltime=%s
@@ -472,7 +472,7 @@ class DBIbqtools(DBIBase):
                 concurrentJobs = %d
                 preBatch = rm -f _*.BQ
                 microJobs = %d
-                '''%(self.unique_id[1:6],self.queue,self.duree,self.nb_proc,self.micro)) )
+                '''%(self.unique_id[1:12],self.queue,self.duree,self.nb_proc,self.micro)) )
         print self.unique_id
         if self.clean_up:
             bqsubmit_dat.write('postBatch = rm -rf dbi_batch*.BQ ; rm -f logfiles tasks launcher bqsubmit.dat ;')
