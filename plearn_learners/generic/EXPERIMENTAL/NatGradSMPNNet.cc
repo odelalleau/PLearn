@@ -44,6 +44,9 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 
+#define PL_LOG_MODULE_NAME "NatGradSMPNNet"
+#include <plearn/io/pl_log.h>
+
 namespace PLearn {
 using namespace std;
 
@@ -354,6 +357,17 @@ void NatGradSMPNNet::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////////////
+// declareMethods //
+////////////////////
+void NatGradSMPNNet::declareMethods(RemoteMethodMap& rmm)
+{
+    declareMethod(rmm, "freeSharedMemory", &NatGradSMPNNet::freeSharedMemory,
+        (BodyDoc("Free shared memory ressources.")));
+
+    inherited::declareMethods(rmm);
+}
+
 ////////////
 // build_ //
 ////////////
@@ -421,11 +435,16 @@ void NatGradSMPNNet::build_()
     freeSharedMemory(); // First deallocate memory if needed.
     long total_memory_needed = long(n_params) * sizeof(real);
     params_id = shmget(IPC_PRIVATE, total_memory_needed, 0666 | IPC_CREAT);
-    PLCHECK( params_id != -1 );
+    DBG_MODULE_LOG << "params_id = " << params_id << endl;
+    if (params_id == -1) {
+        PLERROR("In NatGradSMPNNet::build_ - Error while allocating shared "
+                "memory (errno = %d)", errno);
+    }
     params_ptr = (real*) shmat(params_id, 0, 0);
     PLCHECK( params_ptr );
     long total_int_memory_needed = 1 * sizeof(int);
     params_int_id = shmget(IPC_PRIVATE, total_int_memory_needed, 0666 | IPC_CREAT);
+    DBG_MODULE_LOG << "params_int_id = " << params_int_id << endl;
     PLCHECK( params_int_id != -1 );
     params_int_ptr = (int*) shmat(params_int_id, 0, 0);
     PLCHECK( params_int_ptr );
@@ -575,6 +594,7 @@ void NatGradSMPNNet::build()
 //////////////////////
 void NatGradSMPNNet::freeSharedMemory()
 {
+    DBG_MODULE_LOG << "Freeing shared memory" << endl;
     if (params_ptr) {
         shmctl(params_id, IPC_RMID, 0);
         params_ptr = NULL;
@@ -962,7 +982,7 @@ void NatGradSMPNNet::train()
     const Profiler::Stats& synch_stats = Profiler::getStats("Synchronization");
     real synch_time = (synch_stats.user_duration + synch_stats.system_duration)
         / real(Profiler::ticksPerSecond());
-    pout << "Synch time: " << synch_time << endl;
+    DBG_MODULE_LOG << "Synch time: " << synch_time << endl;
     */
 
     // Get current stage (for debug purpose).

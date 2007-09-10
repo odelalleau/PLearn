@@ -283,8 +283,10 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Declares the class methods.
+    static void declareMethods(RemoteMethodMap& rmm);
 
     //! one minibatch training step
     void onlineStep(int t, const Mat& targets, Mat& train_costs, Vec example_weights);
