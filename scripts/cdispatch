@@ -272,6 +272,7 @@ else:
     t2=time.time()
     print "it took %f s to create the DBI objects"%(t2-t1)
     jobs.run()
+    jobs.wait()
     t3=time.time()
     print "it took %f s to launch all the commands"%(t3-t2)
 
