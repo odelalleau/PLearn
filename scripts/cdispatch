@@ -164,7 +164,6 @@ for argv in sys.argv[1:]:
         break
     command_argv.remove(argv)
 
-print command_argv
 print "\n\nThe jobs will be launched on the system:", launch_cmd,"\n\n"
 
 if len(command_argv) == 0 and FILE == "":
