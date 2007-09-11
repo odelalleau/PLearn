@@ -973,9 +973,10 @@ class DBISsh(DBIBase):
 
 # creates an object of type ('DBI' + launch_system) if it exists
 def DBI(commands, launch_system, **args):
-"""The Distributed Batch Interface is a collection of python classes
-that make it easy to execute commands in parallel using different
-systems like condor, bqtools on Mammoth, the cluster command or localy."""
+    """The Distributed Batch Interface is a collection of python classes
+    that make it easy to execute commands in parallel using different
+    systems like condor, bqtools on Mammoth, the cluster command or localy.
+    """
     try:
         jobs = eval('DBI'+launch_system+'(commands,**args)')
     except NameError:

@@ -107,7 +107,7 @@ else:
     launch_cmd = 'Local'
 
 command_argv = sys.argv[1:]
-for argv in command_argv:
+for argv in sys.argv[1:]:
 
     if argv == "--help" or argv == "-h":
         print LongHelp
