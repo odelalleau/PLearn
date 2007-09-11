@@ -144,7 +144,7 @@ for argv in command_argv:
     elif argv == "--32"  or argv == "--64" or argv == "--3264":
         dbi_param["arch"]=argv[2:]
     elif argv == "--wait":
-        dbi_param["wait"]=True
+        dbi_param["cluster_wait"]=True
     elif argv[0:6] == "--req=":
         dbi_param["requirements"]="\"%s\""%argv[6:]
     elif argv == "--no_clean_up":
@@ -257,6 +257,7 @@ jobs = DBI([
     SCRIPT.write(
 """)
 jobs.run()
+jobs.wait()
 # There is %d command in the script"""%(len(commands)))
         
     SCRIPT.close()

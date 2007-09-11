@@ -180,6 +180,9 @@ class DBIBase:
     def run(self):
         pass
 
+    def wait(self):
+        print "[DBI] WARNING the wait function was not overrided by the sub class!"
+        
 class Task:
 
     def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, gen_unique_id = True, args = {}):
@@ -299,10 +302,11 @@ class DBICluster(DBIBase):
     def __init__(self, commands, **args ):
         self.duree=None
         self.arch=None
-        self.wait=None
+        self.cluster_wait=None
         self.threads=[]
         self.started=0
         self.nb_proc=50
+        self.mt=None
         DBIBase.__init__(self, commands, **args)
         self.add_commands(commands)
         self.nb_proc=int(self.nb_proc)
@@ -330,7 +334,7 @@ class DBICluster(DBIBase):
             command += " --typecpu all"
         if self.duree:
             command += " --duree "+self.duree
-        if self.wait:
+        if self.cluster_wait:
             command += " --wait"
         command += " --execute '"+string.join(task.commands,';') + "'"
         self.started+=1
@@ -357,9 +361,8 @@ class DBICluster(DBIBase):
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        mt= MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
-        mt.start()
-        mt.join()
+        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
+        self.mt.start()
 
         # Execute post-batchs
         if len(self.post_batch)>0:
@@ -371,6 +374,12 @@ class DBICluster(DBIBase):
         #TODO: delete all log files for the current batch
         pass
 
+    def wait(self):
+        if self.mt:
+            self.mt.join()
+        else:
+            print "[DBI] WARNING jobs not started!"
+                
 class DBIbqtools(DBIBase):
 
     def __init__( self, commands, **args ):
@@ -497,7 +506,9 @@ class DBIbqtools(DBIBase):
         if len(self.post_batch)>0:
             exec_post_batch()
 
-            
+    def wait(self):
+        print "[DBI] WARNING cannot wait until all jobs are done for bqtools, use bqwatch or bqstatus"
+                
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
@@ -723,9 +734,9 @@ class DBICondor(DBIBase):
         if len(self.post_batch)>0:
             exec_post_batch()
 
-
-
-
+    def wait(self):
+        print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s/condor.log'"%(self.log_dir)
+                
     def clean(self):
         pass
 
@@ -734,10 +745,9 @@ class DBILocal(DBIBase):
     def __init__( self, commands, **args ):
         self.nb_proc=1
         DBIBase.__init__(self, commands, **args)
-        if isinstance(self.nb_proc,basestring):
-            self.nb_proc=int(self.nb_proc)
         self.args=args
         self.threads=[]
+        self.mt = None
         self.started=0
         self.nb_proc=int(self.nb_proc)
         self.add_commands(commands)
@@ -819,9 +829,8 @@ class DBILocal(DBIBase):
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
-        mt.start()
-        mt.join()
+        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
+        self.mt.start()
         
         # Execute post-batchs
         if len(self.post_batch)>0:
@@ -832,6 +841,12 @@ class DBILocal(DBIBase):
     def clean(self):
         pass
 
+    def wait(self):
+        if self.mt:
+            self.mt.join()
+        else:
+            print "[DBI] WARNING jobs not started!"
+                
 class SshHost:
     def __init__(self, hostname):
         self.hostname= hostname
@@ -936,6 +951,9 @@ class DBISsh(DBIBase):
         if len(self.pre_batch)>0:
             exec_pre_batch()
 
+        if self.test:
+            print "[DBI] In testmode, we only print the command that would be executed."
+            
         # Execute all Tasks (including pre_tasks and post_tasks if any)
         print "[DBI] tasks= ", self.tasks
         for task in self.tasks:
@@ -949,10 +967,15 @@ class DBISsh(DBIBase):
         #TODO: delete all log files for the current batch
         pass
 
-
+    def wait(self):
+        #TODO
+        print "[DBI] WARNING the wait function was not implement for the ssh backend!"
 
 # creates an object of type ('DBI' + launch_system) if it exists
 def DBI(commands, launch_system, **args):
+"""The Distributed Batch Interface is a collection of python classes
+that make it easy to execute commands in parallel using different
+systems like condor, bqtools on Mammoth, the cluster command or localy."""
     try:
         jobs = eval('DBI'+launch_system+'(commands,**args)')
     except NameError:
