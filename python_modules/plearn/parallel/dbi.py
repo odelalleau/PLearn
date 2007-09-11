@@ -157,25 +157,23 @@ class DBIBase:
             
     def exec_pre_batch(self):
         # Execute pre-batch
-        pre_batch_command = ';'.join( self.pre_batch )
-
-        (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
-            
-        if not self.test:
-            self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
-        else:
-            print "[DBI] pre_batch_command:",pre_batch_command
+        if len(self.pre_batch)>0:
+            pre_batch_command = ';'.join( self.pre_batch )
+            if not self.test:
+                (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
+                self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
+            else:
+                print "[DBI] pre_batch_command:",pre_batch_command
             
     def exec_post_batch(self):
         # Execute post-batch
-        post_batch_command = ';'.join( self.post_batch )
-        
-        (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
-        
-        if not self.test:
-            self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
-        else:
-            print "[DBI] post_batch_command:",post_batch_command
+        if len(self.post_batch)>0:
+            post_batch_command = ';'.join( self.post_batch )        
+            if not self.test:
+                (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
+                self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
+            else:
+                print "[DBI] post_batch_command:",post_batch_command
             
     def clean(self):
         pass
@@ -360,16 +358,14 @@ class DBICluster(DBIBase):
         if self.test:
             print "[DBI] Test mode, we only print the command to be executed, we don't execute them"
         # Execute pre-batch
-        if len(self.pre_batch)>0:
-            exec_pre_batch()
+        self.exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
         self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :"[DBI,%s]"%time.ctime())
         self.mt.start()
 
         # Execute post-batchs
-        if len(self.post_batch)>0:
-            exec_post_batch()
+        self.exec_post_batch()
 
         print "[DBI] The Log file are under %s"%self.log_dir
 
@@ -491,8 +487,7 @@ class DBIbqtools(DBIBase):
         bqsubmit_dat.close()
 
         # Execute pre-batch
-        if len(self.pre_batch)>0:
-            exec_pre_batch()
+        self.exec_pre_batch()
 
         print "[DBI] All the log will be in the directory: ",self.log_dir
         # Launch bqsubmit
@@ -506,8 +501,7 @@ class DBIbqtools(DBIBase):
                 print "[DBI] The scheduling time will not be logged when you will submit the generated file" 
 
         # Execute post-batchs
-        if len(self.post_batch)>0:
-            exec_post_batch()
+        self.exec_post_batch()
 
     def wait(self):
         print "[DBI] WARNING cannot wait until all jobs are done for bqtools, use bqwatch or bqstatus"
@@ -728,11 +722,11 @@ class DBICondor(DBIBase):
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
 
-        if len(self.pre_batch)>0:
-            exec_pre_batch()
+        self.exec_pre_batch()
+        
         self.run_all_job()
-        if len(self.post_batch)>0:
-            exec_post_batch()
+
+        self.exec_post_batch()
 
     def wait(self):
         print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s/condor.log'"%(self.log_dir)
@@ -825,16 +819,14 @@ class DBILocal(DBIBase):
         print "[DBI] The Log file are under %s"%self.log_dir
 
         # Execute pre-batch
-        if len(self.pre_batch)>0:
-            exec_pre_batch()
+        self.exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
         self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :("[DBI,%s]"%time.ctime()))
         self.mt.start()
         
         # Execute post-batchs
-        if len(self.post_batch)>0:
-            exec_post_batch()
+        self.exec_post_batch()
             
         print "[DBI] The Log file are under %s"%self.log_dir
         
@@ -948,8 +940,7 @@ class DBISsh(DBIBase):
         print "[DBI] The Log file are under %s"%self.log_dir
 
         # Execute pre-batch
-        if len(self.pre_batch)>0:
-            exec_pre_batch()
+        self.exec_pre_batch()
 
         if self.test:
             print "[DBI] In testmode, we only print the command that would be executed."
@@ -960,8 +951,7 @@ class DBISsh(DBIBase):
             self.run_one_job(task)
 
         # Execute post-batchs
-        if len(self.post_batch)>0:
-            exec_post_batch()
+        self.exec_post_batch()
 
     def clean(self):
         #TODO: delete all log files for the current batch
