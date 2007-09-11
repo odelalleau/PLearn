@@ -41,9 +41,11 @@ bqtools only option:
   If this option is not set, the maximum duration of each job will be 120 hours
   (5 days).
 
+cluster and condor option:
+  The '--3264', '--32' or '--64' tell the type of cpu the compute node must have to execute the commands.
+
 cluster only option:
   The '--wait' is transfered to cluster. This must be enabled if their is not nb_process available compute node. Otherwise when their is no compute node available, the launch of that command fail.
-  The '--3264', '--32' or '--64' tell the type of cpu the compute node must have to execute the commands.
 
 condor only option:
   The '--req=\"CONDOR_REQUIREMENT\"' option make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:

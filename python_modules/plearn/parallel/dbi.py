@@ -544,17 +544,25 @@ class DBICondor(DBIBase):
                 # architecture we execute on both. Otherwise we execute on the
                 # same architecture as the architecture of the launch computer
             self.cplat = get_condor_platform()
-            if c.endswith('.32'):
+            if self.arch == "32":
                 self.targetcondorplatform='INTEL'
-                self.targetplatform='linux-i386'
+                newcommand=command
+            elif self.arch == "64":
+                self.targetcondorplatform='X86_64'
+                newcommand=command
+            elif self.arch == "3264":
+                #the same executable will be executed on all computer
+                #So it should be a 32 bits executable
+                self.targetcondorplatform='BOTH'
+                newcommand=command
+            elif c.endswith('.32'):
+                self.targetcondorplatform='INTEL'
                 newcommand=command
             elif c.endswith('.64'):
                 self.targetcondorplatform='X86_64'
-                self.targetplatform='linux-x86_64'
                 newcommand=command
             elif os.path.exists(c+".32") and os.path.exists(c+".64"):
                 self.targetcondorplatform='BOTH'
-                self.targetplatform='linux-i386'
                 #newcommand=c+".32"+c2
                 newcommand='if [ $CPUTYPE == \'x86_64\' ]; then'
                 newcommand+='  '+c+'.64'+c2
@@ -566,20 +574,14 @@ class DBICondor(DBIBase):
                 c+=".32"
             elif self.cplat=="INTEL" and os.path.exists(c+".32"):
                 self.targetcondorplatform='INTEL'
-                self.targetplatform='linux-i386'
                 c+=".32"
                 newcommand=c+c2
             elif self.cplat=="X86_64" and os.path.exists(c+".64"):
                 self.targetcondorplatform='X86_64'
-                self.targetplatform='linux-x86_64'
                 c+=".64"
                 newcommand=c+c2
             else:
                 self.targetcondorplatform=self.cplat
-                if self.cplat=='INTEL':
-                    self.targetplatform='linux-i386'
-                else:
-                    self.targetplatform='linux-x86_64'
                 newcommand=command
             
             if not os.path.exists(c):
@@ -621,13 +623,8 @@ class DBICondor(DBIBase):
         req=""
         if self.targetcondorplatform == 'BOTH':
             req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
-        elif self.targetcondorplatform == 'INTEL':
-            req="(Arch == \"INTEL\")"
-        elif self.targetcondorplatform == 'X86_64':
-            req="(Arch == \"X86_64\")"
-            
-
-        tplat=self.targetplatform
+        elif :
+            req="(Arch == \"%s\")"%(self.targetcondorplatform)
 
         if self.requirements != "":
             req = req+'&&('+self.requirements+')'
