@@ -1053,12 +1053,11 @@ def sequential_link(executables_to_link, linkname):
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
             link_exit_code = ccfile.launch_linking()
-            if platform!='win32':
-                if create_so or create_pyso:
-                    so_filename = os.path.basename(ccfile.corresponding_output)
-                    ccfile.make_symbolic_link(so_filename, so_filename)
-                else:
-                    ccfile.make_symbolic_link(linkname)
+            if create_so or create_pyso:
+                so_filename = os.path.basename(ccfile.corresponding_output)
+                ccfile.make_symbolic_link(so_filename, so_filename)
+            else:
+                ccfile.make_symbolic_link(linkname)
             return link_exit_code
 
 def sequential_dll(target_file_info):
