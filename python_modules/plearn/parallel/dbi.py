@@ -56,8 +56,11 @@ class MultiThread:
             self._function( args )
         self.running-=1
         if self.print_when_finish:
-            print self.print_when_finish,"left running:",self.running
-            
+            if callable(self.print_when_finish):
+                print self.print_when_finish(),"left running:",self.running
+            else:
+                print self.print_when_finish,"left running:",self.running
+                    
     def start( self  ):
         for thread in self._threadPool:
             time.sleep( 0 ) # necessary to give other threads a chance to run
@@ -361,7 +364,7 @@ class DBICluster(DBIBase):
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
+        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :"[DBI,%s]"%time.ctime())
         self.mt.start()
 
         # Execute post-batchs
@@ -623,7 +626,7 @@ class DBICondor(DBIBase):
         req=""
         if self.targetcondorplatform == 'BOTH':
             req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
-        elif :
+        else :
             req="(Arch == \"%s\")"%(self.targetcondorplatform)
 
         if self.requirements != "":
@@ -826,7 +829,7 @@ class DBILocal(DBIBase):
             exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,"[DBI,%s]"%time.ctime())
+        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :("[DBI,%s]"%time.ctime()))
         self.mt.start()
         
         # Execute post-batchs
