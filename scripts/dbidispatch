@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: cdispatch [--help|-h] [--dbilog|*--nodbilog] [--cluster[=nb_process]|--local[=nb_process]|--bqtools[=nb_process]|--condor] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--cluster[=nb_process]|--local[=nb_process]|--bqtools[=nb_process]|--condor] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
 LongHelp="""
 Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools. If no system is selected on the command line, we try them in this order: condor, bqsubmit, cluster local
 
@@ -16,7 +16,7 @@ option not explained:
   --file=FILEPATH
   
 common option:
-  The '--test' option make that cdispatch generate the file $ScriptName, but do not execute it. That way you can see what cdispatch generate. Also, this file make dbi in test mode, so dbi do not execute automaticaly the experiment il $ScriptName is executer
+  The '--test' option make that dbidispatch generate the file $ScriptName, but do not execute it. That way you can see what dbidispatch generate. Also, this file make dbi in test mode, so dbi do not execute automaticaly the experiment il $ScriptName is executer
 local, bqtools and cluster parameter:
   --nb_proc=nb_process, give the maximum number of concurent jobs running
     --local=X is the same as --local --nb_proc=X
@@ -48,11 +48,11 @@ cluster only option:
   The '--wait' is transfered to cluster. This must be enabled if their is not nb_process available compute node. Otherwise when their is no compute node available, the launch of that command fail.
 
 condor only option:
-  The '--req=\"CONDOR_REQUIREMENT\"' option make that cdispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:
+  The '--req=\"CONDOR_REQUIREMENT\"' option make that dbidispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:
 
-  cdispatch \"--req=Machine==\\\\\\\"computer.example.com\\\\\\\"\"
+  dbidispatch \"--req=Machine==\\\\\\\"computer.example.com\\\\\\\"\"
      or
-  cdispatch '--req=Machine==\\\"computer.example.com\\\"' 
+  dbidispatch '--req=Machine==\\\"computer.example.com\\\"' 
 
 
 where <command-template> is interpreted as follows: the first argument
@@ -86,7 +86,7 @@ is equivalent to:
 
 If the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
 
-cdispatch --test --file=tests
+dbidispatch --test --file=tests
 
 In the file, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
 """%ShortHelp
