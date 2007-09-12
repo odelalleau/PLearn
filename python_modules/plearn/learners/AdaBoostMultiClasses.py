@@ -3,46 +3,37 @@ from plearn.pyplearn.plargs import *
 import time
 
 class AdaBoostMultiClasses:
-#class AdaBoost3PLearner(pl.PLearner):
-    def __init__(self,trainSet1,trainSet2):
+    def __init__(self,trainSet1,trainSet2,weakLearner):
+#        """
+#        Initialize a AdaBoost for 3 classes learner
+#        trainSet1 is used for the first sub AdaBoost learner,
+#        trainSet2 is used for the second sub learner
+#        weakLearner should be a function that return a new weak learner
+#        """
         self.trainSet1=trainSet1
         self.trainSet2=trainSet2
-        self.learner1 = self.myAdaBoostLearner(self.weakLearner(),trainSet1)
+            
+        self.learner1 = self.myAdaBoostLearner(weakLearner(),trainSet1)
         self.learner1.expdir=plargs.expdirr+"/learner1"
         self.learner1.setTrainingSet(trainSet1,True)
         
-        self.learner2 = self.myAdaBoostLearner(self.weakLearner(),trainSet2)
+        self.learner2 = self.myAdaBoostLearner(weakLearner(),trainSet2)
         self.learner2.expdir=plargs.expdirr+"/learner2"
         self.learner2.setTrainingSet(trainSet2,True)
         self.nstages = 0
         self.stage = 0
         self.train_time = 0
-#        self.confusion_target=plargs.confusion_target
+        #        self.confusion_target=plargs.confusion_target
         
-    def weakLearner(self):
-        """ Return a new instance of the weak learner to use"""
-        return pl.RegressionTree(
-            nstages = plargs.subnstages
-            ,loss_function_weight = 1
-            ,missing_is_valid = plargs.missing_is_valid
-            ,multiclass_outputs = plargs.multiclass_output
-            ,maximum_number_of_nodes = 250
-            ,compute_train_stats = 0
-            ,complexity_penalty_factor = 0.0
-            ,verbosity = 0
-            ,report_progress = 1
-            ,forget_when_training_set_changes = 1
-            ,conf_rated_adaboost = plargs.conf_rated_adaboost
-            ,leave_template = pl.RegressionTreeLeave( )
-            )
-    
     def myAdaBoostLearner(self,sublearner,trainSet):
         l = pl.AdaBoost()
         l.weak_learner_template=sublearner
-        l.pseudo_loss_adaboost=True
+        l.pseudo_loss_adaboost=plargs.pseudo_loss_adaboost
         l.weight_by_resampling=plargs.weight_by_resampling
         l.setTrainingSet(trainSet,True)
         l.setTrainStatsCollector(VecStatsCollector())
+        l.early_stopping=False
+        l.compute_training_error=False
         return l
 
     def train(self):
@@ -104,7 +95,12 @@ class AdaBoostMultiClasses:
             costs.append(0)
         
         return costs
-        
+
+    def computeOutputAndCosts(self,input,target):
+        output=self.computeOutput(input)
+        costs=self.computeCostsFromOutput(input,output,target)
+        return (output,costs)
+
     def outputsize(self):
         return len(self.getTestCostNames())
 
