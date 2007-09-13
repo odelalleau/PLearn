@@ -3,26 +3,27 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--cluster[=nb_process]|--local[=nb_process]|--bqtools[=nb_process]|--condor] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
-LongHelp="""
-Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, cluster, local, ssh and bqtools. If no system is selected on the command line, we try them in this order: condor, bqsubmit, cluster local
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
+LongHelp="""Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the gived order. ssh is never automaticaly selected.
 
 %s
 
-option not explained:
-  --help, -h
-  --dbilog, --nodbilog
-  --cluster,--local,--bqtools,--condor
-  --file=FILEPATH
-  
 common option:
+  The -h, --help print the long help(this)
+  The --condor, --bqtools, --cluster, --local or --ssh option tell witch on system the jobs will be send. If not present, we will use the first available in the order gived. ssh is never automaticaly selected.
+  The --dbilog (--nodbilog) ask dbi to (to don't) generate additional log
   The '--test' option make that dbidispatch generate the file $ScriptName, but do not execute it. That way you can see what dbidispatch generate. Also, this file make dbi in test mode, so dbi do not execute automaticaly the experiment il $ScriptName is executer
-local, bqtools and cluster parameter:
+  The --file=FILEPATH option make this script use the jobs to expand in the file instead of the command line. Their must be one jobs by line.
+
+dbidispatch --test --file=tests
+
+
+bqtools, cluster, local and ssh parameter:
   --nb_proc=nb_process, give the maximum number of concurent jobs running
     --local=X is the same as --local --nb_proc=X
     --cluster=X is the same as --cluster --nb_proc=X
     --bqtools=X is the same as --bqtools --nb_proc=X
-
+    --ssh=X is the same as --ssh --nb_proc=X
 
 bqtools and cluster option:
   The '--duree' option tell the maximum length of the jobs. The have the cluster syntaxe of accepted value 'cluster --help'. The bqtools syntaxe is '--duree=12:13:15'. This give 12 hours, 13 minutes and 15 seconds
@@ -84,11 +85,7 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.01
   aplearn myscript.plearn numhidden=25 wd=0.001
 
-If the optinal parameter '--file=FILEPATH' is set, the script will take commands from the file instead of taking one as parameter. This file must have one command to execute by line and each of them will be expended.
-
-dbidispatch --test --file=tests
-
-In the file, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
+In the file of the parameter --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
 """%ShortHelp
 
 if len(sys.argv) == 1:
@@ -139,6 +136,13 @@ for argv in sys.argv[1:]:
             dbi_param["nb_proc"]=argv[8:]
     elif argv.startswith("--nb_proc="):
         dbi_param["nb_proc"]=argv[10:]
+    elif argv.startswith("--ssh"):
+        launch_cmd = "Ssh"
+        if len(argv)>5:
+            assert(argv[5]=="=")
+            dbi_param["nb_proc"]=argv[6:]
+        dbi_param["file_redirect_stdout"]=False
+        dbi_param["file_redirect_stderr"]=False
     elif argv == "--test":
         dbi_param["test"]=True
     elif argv.startswith("--file="):
@@ -235,6 +239,11 @@ if FILE == "":
 else:
     dbi_param["log_dir"]=os.path.join("LOGS",FILE)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
+
+
+SCRIPT=open(os.getenv("HOME")+"/.dbidispatch.launched",'a');
+SCRIPT.write("["+time.ctime()+"] "+str(sys.argv)+"\n")
+SCRIPT.close()
 
 if "test" in dbi_param:
     print "We generated %s command in the file"% len(commands)
