@@ -2155,6 +2155,12 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         layers[i+1]->getAllActivations( connections[i] );
         layers[i+1]->computeExpectation();
 
+        if( i_output_layer==i && (!use_classification_cost && !final_module))
+        {
+            output.resize(outputsize());
+            output << layers[ i ]->expectation;
+        }
+
         if (reconstruct_layerwise)
         {
             layer_input.resize(layers[i]->size);
@@ -2165,7 +2171,18 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             reconstruction_costs[0] += rc;
         }
     }
-
+    if( i_output_layer>=n_layers-2 && (!use_classification_cost && !final_module))
+    {
+        //! We haven't computed the expectations of the top layer
+	if(i_output_layer==n_layers-1)
+	{
+            connections[ n_layers-2 ]->setAsDownInput(layers[ n_layers-2 ]->expectation );
+            layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
+            layers[ n_layers-1 ]->computeExpectation();
+        }
+        output.resize(outputsize());
+        output << layers[ i_output_layer ]->expectation;
+    }	    
 
     if( use_classification_cost )
         classification_module->fprop( layers[ n_layers-2 ]->expectation,
@@ -2200,17 +2217,9 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         }
     }
 
-    if( !use_classification_cost && !final_module)
+    if(!use_classification_cost && !final_module)
     {
-        output.resize(outputsize());
-	
-	connections[ n_layers-2 ]->setAsDownInput(
-            layers[ n_layers-2 ]->expectation );
-        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
-        layers[ n_layers-1 ]->computeExpectation();
-        output << layers[ i_output_layer ]->expectation;
-
-        //! Copy of the part above: hope it makes sense
+        //! Reconstruction error of the top layer
         if (reconstruct_layerwise)
         {
             layer_input.resize(layers[n_layers-2]->size);
