@@ -1059,13 +1059,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             hidden->resize(hidden_layer->samples.length(),
                            hidden_layer->samples.width());
-            *hidden << hidden_layer->samples;
+            *hidden << hidden_layer->getExpectations();
         }
         if (hidden_act && hidden_act_is_output)
         {
             hidden_act->resize(hidden_layer->samples.length(),
                                hidden_layer->samples.width());
-            *hidden_act << hidden_layer->getExpectations();
+            *hidden_act << hidden_layer->activations;
         }
         found_a_valid_configuration = true;
     }// END SAMPLING
