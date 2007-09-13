@@ -153,8 +153,11 @@ public:
     //! Initial size of steps in parameter space
     real pv_initial_stepsize;
 
-    //! Coefficient by which to multiply/divide the step sizes  
-    real pv_acceleration;
+    //! Bounds for the step sizes
+    real pv_min_stepsize, pv_max_stepsize;
+
+    //! Coefficients by which to multiply the step sizes  
+    real pv_acceleration, pv_deceleration;
 
     //! PV's gradient minimum number of samples to estimate confidence
     int pv_min_samples;

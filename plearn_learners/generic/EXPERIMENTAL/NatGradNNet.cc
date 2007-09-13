@@ -75,8 +75,12 @@ NatGradNNet::NatGradNNet()
       //corr_profiling_start(0), 
       //corr_profiling_end(0),
       use_pvgrad(false),
-      pv_initial_stepsize(1e-6),
-      pv_acceleration(2),
+      // Next 5 values based on those used in the '94 rprop tech report
+      pv_initial_stepsize(1e-1),
+      pv_min_stepsize(1e-6),
+      pv_max_stepsize(50.0),
+      pv_acceleration(1.2),
+      pv_deceleration(0.5),
       pv_min_samples(2),
       pv_required_confidence(0.80),
       pv_random_sample_step(false),
@@ -295,7 +299,12 @@ void NatGradNNet::declareOptions(OptionList& ol)
     declareOption(ol, "pv_acceleration",
                   &NatGradNNet::pv_acceleration,
                   OptionBase::buildoption,
-                  "Coefficient by which to multiply/divide the step sizes");
+                  "Coefficient by which to multiply the step sizes.");
+
+    declareOption(ol, "pv_deceleration",
+                  &NatGradNNet::pv_deceleration,
+                  OptionBase::buildoption,
+                  "Coefficient by which to multiply the step sizes.");
 
     declareOption(ol, "pv_min_samples",
                   &NatGradNNet::pv_min_samples,
@@ -823,39 +832,54 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
 
 void NatGradNNet::pvGradUpdate()
 {
-    int n = all_params_gradient.length();
+    int np = all_params_gradient.length();
     if(pv_stepsizes.length()==0)
     {
-        pv_stepsizes.resize(n);
+        pv_stepsizes.resize(np);
         pv_stepsizes.fill(pv_initial_stepsize);
-        pv_stepsigns.resize(n);
+        pv_stepsigns.resize(np);
         pv_stepsigns.fill(true);
     }
     pv_gradstats->update(all_params_gradient);
-    real pv_deceleration = 1.0/pv_acceleration;
-    for(int k=0; k<n; k++)
+    for(int k=0; k<np; k++)
     {
         StatsCollector& st = pv_gradstats->getStats(k);
-        int n = (int)st.nnonmissing();
-        if(n>pv_min_samples)
+        int ns = (int)st.nnonmissing();
+        if(ns>pv_min_samples)
         {
             real m = st.mean();
             real e = st.stderror();
+
+            // test to see if solve numerical problems
+            if( fabs(m) < 1e-15 || e < 1e-15 )
+                continue;
+
             real prob_pos = gauss_01_cum(m/e);
             real prob_neg = 1.-prob_pos;
             if(!pv_random_sample_step)
             {
+                // We adapt the stepsize before taking the step
+                // gradient is positive
                 if(prob_pos>=pv_required_confidence)
                 {
-                    all_params[k] += pv_stepsizes[k];
                     pv_stepsizes[k] *= (pv_stepsigns[k]?pv_acceleration:pv_deceleration);
+                    if( pv_stepsizes[k] > pv_max_stepsize )
+                        pv_stepsizes[k] = pv_max_stepsize;
+                    else if( pv_stepsizes[k] < pv_min_stepsize )
+                        pv_stepsizes[k] = pv_min_stepsize;
+                    all_params[k] += pv_stepsizes[k];
                     pv_stepsigns[k] = true;
                     st.forget();
                 }
+                // gradient is negative
                 else if(prob_neg>=pv_required_confidence)
                 {
-                    all_params[k] -= pv_stepsizes[k];
                     pv_stepsizes[k] *= ((!pv_stepsigns[k])?pv_acceleration:pv_deceleration);
+                    if( pv_stepsizes[k] > pv_max_stepsize )
+                        pv_stepsizes[k] = pv_max_stepsize;
+                    else if( pv_stepsizes[k] < pv_min_stepsize )
+                        pv_stepsizes[k] = pv_min_stepsize;
+                    all_params[k] -= pv_stepsizes[k];
                     pv_stepsigns[k] = false;
                     st.forget();
                 }
@@ -873,6 +897,14 @@ void NatGradNNet::pvGradUpdate()
             }
         }
     }
+
+    // Ouput for profiling: step sizes and number of samples
+    // horribly inefficient!
+//    ofstream fd_ss;
+//    fd_ss.open("step_sizes.txt", ios::app);
+//    fd_ss << pv_stepsizes << endl;
+//    fd_ss.close();
+
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
