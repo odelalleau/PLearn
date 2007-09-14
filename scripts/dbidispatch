@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- mean that it is the default'
 LongHelp="""Dispatches jobs with dbi.py. dbi allow to dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the gived order. ssh is never automaticaly selected.
 
 %s
@@ -47,7 +47,8 @@ cluster and condor option:
 
 cluster only option:
   The '--wait' is transfered to cluster. This must be enabled if their is not nb_process available compute node. Otherwise when their is no compute node available, the launch of that command fail.
-
+  The '--nowait' make that the --wait option is not gived to cluster as is the default
+  
 condor only option:
   The '--req=\"CONDOR_REQUIREMENT\"' option make that dbidispatch send additional option to DBI that will be used to generate addtional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writed like that:
 
@@ -151,6 +152,8 @@ for argv in sys.argv[1:]:
         dbi_param["arch"]=argv[2:]
     elif argv == "--wait":
         dbi_param["cluster_wait"]=True
+    elif argv == "--nowait":
+        dbi_param["cluster_wait"]=False
     elif argv[0:6] == "--req=":
         dbi_param["requirements"]="\"%s\""%argv[6:]
     elif argv == "--no_clean_up":

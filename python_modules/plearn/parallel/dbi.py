@@ -303,7 +303,7 @@ class DBICluster(DBIBase):
     def __init__(self, commands, **args ):
         self.duree=None
         self.arch=None
-        self.cluster_wait=None
+        self.cluster_wai=True
         self.threads=[]
         self.started=0
         self.nb_proc=50
