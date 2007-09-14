@@ -55,6 +55,7 @@ class AdaBoostMultiClasses:
                 costnames.append("conf_matrix_%d_%d"%(i,j))
         costnames.append("train_time")
         costnames.append("conflict")
+        costnames.extend(["class0","class1","class2"])
         return costnames
     
     def computeOutput(self,example):
@@ -89,11 +90,18 @@ class AdaBoostMultiClasses:
                 costs.append(0)
         costs[output[0]*3+target+3]=1
         costs.append(self.train_time)
+        if output[0]==0:
+            costs.extend([0,1,0,0])
+        if output[0]==1:
+            costs.extend([0,0,1,0])
+        if output[0]==2:
+            costs.extend([0,0,0,1])
         if output[0]==3:
             costs.append(1)
-        else:
-            costs.append(0)
-        
+            t=[0,0,0]
+            t[plargs.confusion_target]=1
+            costs.extend(t)
+            
         return costs
 
     def computeOutputAndCosts(self,input,target):
