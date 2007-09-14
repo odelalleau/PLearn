@@ -181,6 +181,9 @@ protected:
     //! Indicates whether the previous step was positive (true) or negative (false)
     TVec<bool> pv_stepsigns;
 
+    // profiling
+    TVec<int> all_ns;
+
 public:
     //#####  Public Member Functions  #########################################
 

@@ -75,10 +75,11 @@ NatGradNNet::NatGradNNet()
       //corr_profiling_start(0), 
       //corr_profiling_end(0),
       use_pvgrad(false),
-      // Next 5 values based on those used in the '94 rprop tech report
-      pv_initial_stepsize(1e-1),
+      // Next 5 values inspired those used in the '94 rprop tech report
+      // but we are in stochastic case
+      pv_initial_stepsize(1e-3),
       pv_min_stepsize(1e-6),
-      pv_max_stepsize(50.0),
+      pv_max_stepsize(1e-1),
       pv_acceleration(1.2),
       pv_deceleration(0.5),
       pv_min_samples(2),
@@ -592,6 +593,7 @@ void NatGradNNet::forget()
         pv_stepsizes.fill(pv_initial_stepsize);
         pv_stepsigns.resize(n);
         pv_stepsigns.fill(true);
+        all_ns.resize(n);
     }
 
 }
@@ -828,6 +830,18 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
         }
     }
 
+    // Ouput for profiling: weights
+    // horribly inefficient!
+/*    ofstream fd_params;
+    fd_params.open("params.txt", ios::app);
+    fd_params << all_params << endl;
+    fd_params.close();
+
+    ofstream fd_gradients;
+    fd_gradients.open("gradients.txt", ios::app);
+    fd_gradients << all_params_gradient << endl;
+    fd_gradients.close();
+*/
 }
 
 void NatGradNNet::pvGradUpdate()
@@ -839,6 +853,8 @@ void NatGradNNet::pvGradUpdate()
         pv_stepsizes.fill(pv_initial_stepsize);
         pv_stepsigns.resize(np);
         pv_stepsigns.fill(true);
+        // profiling
+        all_ns.resize(np);
     }
     pv_gradstats->update(all_params_gradient);
     for(int k=0; k<np; k++)
@@ -867,7 +883,7 @@ void NatGradNNet::pvGradUpdate()
                         pv_stepsizes[k] = pv_max_stepsize;
                     else if( pv_stepsizes[k] < pv_min_stepsize )
                         pv_stepsizes[k] = pv_min_stepsize;
-                    all_params[k] += pv_stepsizes[k];
+                    all_params[k] -= pv_stepsizes[k];
                     pv_stepsigns[k] = true;
                     st.forget();
                 }
@@ -879,7 +895,7 @@ void NatGradNNet::pvGradUpdate()
                         pv_stepsizes[k] = pv_max_stepsize;
                     else if( pv_stepsizes[k] < pv_min_stepsize )
                         pv_stepsizes[k] = pv_min_stepsize;
-                    all_params[k] -= pv_stepsizes[k];
+                    all_params[k] += pv_stepsizes[k];
                     pv_stepsigns[k] = false;
                     st.forget();
                 }
@@ -896,14 +912,22 @@ void NatGradNNet::pvGradUpdate()
                 st.forget();
             }
         }
+
+        // profiling
+        all_ns[k] = ns;
     }
 
     // Ouput for profiling: step sizes and number of samples
     // horribly inefficient!
-//    ofstream fd_ss;
-//    fd_ss.open("step_sizes.txt", ios::app);
-//    fd_ss << pv_stepsizes << endl;
-//    fd_ss.close();
+/*    ofstream fd_ss;
+    fd_ss.open("step_sizes.txt", ios::app);
+    fd_ss << pv_stepsizes << endl;
+    fd_ss.close();
+    ofstream fd_ns;
+    fd_ns.open("nsamples.txt", ios::app);
+    fd_ns << all_ns << endl;
+    fd_ns.close();
+*/
 
 }
 
