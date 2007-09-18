@@ -77,9 +77,9 @@ NatGradNNet::NatGradNNet()
       use_pvgrad(false),
       // Next 5 values inspired those used in the '94 rprop tech report
       // but we are in stochastic case
-      pv_initial_stepsize(1e-3),
+      pv_initial_stepsize(1e-1),
       pv_min_stepsize(1e-6),
-      pv_max_stepsize(1e-1),
+      pv_max_stepsize(50.0),
       pv_acceleration(1.2),
       pv_deceleration(0.5),
       pv_min_samples(2),
@@ -296,6 +296,16 @@ void NatGradNNet::declareOptions(OptionList& ol)
                   &NatGradNNet::pv_initial_stepsize,
                   OptionBase::buildoption,
                   "Initial size of steps in parameter space");
+
+    declareOption(ol, "pv_min_stepsize",
+                  &NatGradNNet::pv_min_stepsize,
+                  OptionBase::buildoption,
+                  "Minimal size of steps in parameter space");
+
+    declareOption(ol, "pv_max_stepsize",
+                  &NatGradNNet::pv_max_stepsize,
+                  OptionBase::buildoption,
+                  "Maximal size of steps in parameter space");
 
     declareOption(ol, "pv_acceleration",
                   &NatGradNNet::pv_acceleration,
