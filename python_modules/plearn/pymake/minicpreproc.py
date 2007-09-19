@@ -6,6 +6,9 @@
 # by Yapps (http://theory.stanford.edu/~amitp/Yapps/), that should also
 # be distributed with pymake.
 #
+# The command line to build minicpreproc.py is:
+# % python yapps.py -fembed-error-printer -fembed-scanner minicpreproc.g
+#
 # Copyright (C) 2006 Pascal Lamblin
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -191,7 +194,7 @@ class MiniCPreprocScanner(Scanner):
             ('"\\("', '\\('),
             ("'[ \\t]+'", '[ \t]+'),
             ('END', '$'),
-            ('ENDLINE', '[\n\r]|$'),
+            ('ENDLINE', '\r\n|\n|\r|$'),
             ('FALSE', '0'),
             ('TRUE', '1'),
             ('UNKNOWN', '@'),
