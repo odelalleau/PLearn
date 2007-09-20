@@ -260,7 +260,8 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
 
         if (isfile(config_file_path))
         {
-            PStream ppath_config     = openFile(config_file_path, PStream::plearn_ascii );
+            PStream ppath_config = openFile(config_file_path,
+                                            PStream::plearn_ascii);
 
             string  next_metaprotocol;
             PPath   next_metapath;    
