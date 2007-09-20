@@ -1088,8 +1088,10 @@ void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& ex
             costs(i,0) = -outp[target_class];
             costs(i,1) = (target_class == argmax(outp))?0:1;
             grad[target_class]-=1;
-            if (example_weight[i]!=1.0)
-                costs(i,0) *= example_weight[i];
+
+            costs(i,0) *= example_weight[i];
+            costs(i,2) = costs(i,1) * example_weight[i];
+            grad *= example_weight[i];
         }
     }
     else if(output_type=="cross_entropy")   {
@@ -1107,8 +1109,10 @@ void NatGradNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& ex
                 costs(i,1) = (grad[0]>0.5)?1:0;
             }
             grad[0] -= (real)target_class;
-            if (example_weight[i]!=1.0)
-                costs(i,0) *= example_weight[i];
+
+            costs(i,0) *= example_weight[i];
+            costs(i,2) = costs(i,1) * example_weight[i];
+            grad *= example_weight[i];
         }
 //cout << "costs\t" << costs(0) << endl;
 //cout << "gradient\t" << out_grad(0) << endl;
@@ -1186,14 +1190,16 @@ TVec<string> NatGradNNet::getTestCostNames() const
     TVec<string> costs;
     if (output_type=="NLL")
     {
-        costs.resize(2);
+        costs.resize(3);
         costs[0]="NLL";
         costs[1]="class_error";
+        costs[2]="weighted_class_error";
     }
     else if (output_type=="cross_entropy")  {
-        costs.resize(2);
+        costs.resize(3);
         costs[0]="cross_entropy";
         costs[1]="class_error";
+        costs[2]="weighted_class_error";
     }
     else if (output_type=="MSE")
     {
