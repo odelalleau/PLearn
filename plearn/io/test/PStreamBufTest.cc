@@ -211,6 +211,13 @@ void test_read() {
     s.unread("1234");
     s.read(temp, 8);
     test("Unread after EOF", temp, "1234");
+
+    // Test bug fixed in r8087 when reading a quoted string whose last
+    // character is also the last quote.
+    string quoted_str("\"123\"");
+    s = PLearn::openString(quoted_str, PLearn::PStream::plearn_ascii);
+    s >> temp;
+    test("EOF at end of quoted string", s.peek(), EOF);
 }
 
 
