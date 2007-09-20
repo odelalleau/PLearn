@@ -1067,7 +1067,7 @@ PStream& PStream::operator>>(string& x)
                 PLERROR("In read(istream&, string&) unterminated quoted string");
             c = get();
             if(!isspace(c)) // skip following blank if any
-                putback(c);
+                unget();
         }
         else // it's a single word without quotes
         {
