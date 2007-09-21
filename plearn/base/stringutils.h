@@ -140,9 +140,14 @@ string backslash_to_slash(string str);
 inline bool string_begins_with(const string& s, const string& beginning)
 {
     string::size_type n = beginning.size();
-    return (s.size() >= n && s.substr(0,n) == beginning);
+    return (s.size() >= n  &&  beginning == s.substr(0,n-1) );
 }
-
+inline bool string_ends_with(const string& s, const string& end)
+{
+    string::size_type n = end.size();
+    string::size_type m = s.size();
+    return (m >= n  &&  end == s.substr(m-n,m) );
+}
   
 //! replaces all occurences of searchstr in the text by replacestr
 //! returns the number of matches that got replaced

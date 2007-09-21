@@ -46,7 +46,7 @@
 namespace PLearn {
 
 /**
- * Computes a cost function for a (hidden) representation, given two "expectation" vectors. Backpropagates it.
+ * Computes a cost function for a (hidden) representation. Backpropagates it.
  */
 class LayerCostModule : public OnlineLearningModule
 {
@@ -62,6 +62,24 @@ public:
     real alpha;
     
     real momentum;
+
+    //#####  Public Learnt Options  ###########################################
+
+    //! Histograms of inputs (estimated empiricially on some data)
+    //! Computed only when cost_function == 'kl_div' or 'kl_div_simpe'
+    Mat inputs_histo;
+
+    //! Statistics on inputs (estimated empiricially on some data)
+    //! Computed only when cost_function == 'correlation'
+    //! or (for some) 'pascal'
+    Vec inputs_expectation;
+    Vec inputs_stds;         //! only for 'correlation' cost function
+    
+    Mat inputs_correlations; //! only for 'correlation' cost function
+    Mat inputs_cross_quadratic_mean;
+
+    //! The generic name of the cost function
+    string cost_function_completename;
     
 public:
     //#####  Public Member Functions  #########################################
@@ -69,10 +87,9 @@ public:
     //! Default constructor
     LayerCostModule();
 
-
     //! given the input and target, compute the cost
-    virtual void fprop(const Vec& expectation, real& cost) const;
-    virtual void fprop(const Mat& expectations, Mat& costs);
+    virtual void fprop(const Vec& input, real& cost) const;
+    virtual void fprop(const Mat& inputs, Mat& costs);
     //! Overridden.
     virtual void fprop(const TVec<Mat*>& ports_value);
     
@@ -81,17 +98,26 @@ public:
                                 const TVec<Mat*>& ports_gradient);
 
     //! Some auxiliary function to deal with empirical histograms
-    virtual void computeHisto(const Mat& expectations);
-    virtual void computeSafeHisto(const Mat& expectations);
-    virtual real delta_KLdivTerm(int i, int j, int index_i, real over_dq, real one_count);
-    virtual real delta_KLdivTerm_2(int i, int j, int index_i, real over_dq, real one_count);
-    virtual real delta_SafeKLdivTerm(int i, int j, int index_i, real over_dq, real one_count);
+    virtual void computeHisto(const Mat& inputs);
+    virtual void computeSafeHisto(const Mat& inputs);
+    virtual real delta_KLdivTerm(int i, int j, int index_i, real over_dq);
+    virtual real delta_SafeKLdivTerm(int i, int j, int index_i, real over_dq);
     virtual real KLdivTerm(real pi, real pj);
+    virtual real computeKLdiv();
     virtual int histo_index(real q);
     virtual real dq(real q);
 
     //! Auxiliary function for the pascal's cost function
-    virtual void computePascalStatistics(const Mat& expectations, bool duringTraining);
+    virtual void computePascalStatistics(const Mat& inputs);
+    virtual string func_pascal_prefix();
+    virtual real   func_pascal(real correlation);
+    virtual real   deriv_func_pascal(real correlation);
+
+    //! Auxiliary function for the correlation's cost function
+    virtual void computeCorrelationStatistics(const Mat& inputs);
+    virtual string func_correlation_prefix();
+    virtual real   func_correlation(real correlation);
+    virtual real   deriv_func_correlation(real correlation);
 
     //! Overridden to do nothing (in particular, no warning).
     virtual void setLearningRate(real dynamic_learning_rate) {}
@@ -127,23 +153,23 @@ protected:
     //! Does stochastic gradient makes sense with our cost function?
     bool is_cost_function_stochastic;
 
-    //! Histograms of expectations (estimated empiricially on the data)
-    Mat expectations_histo;
+    //! Normalizing factor applied to the cost function
+    //! to take into acount the number of weights
+    real norm_factor;
 
-    //! Some features of the histogram of expectations
-    real LINHISTO_STEP;
-    real LOGHISTO_BASE;
-    real LOGHISTO_MIN;
+    //! Variables for (non stochastic) KL Div cost function
+    //! ---------------------------------------------------
+    //! Range of a histogram's bin ( HISTO_STEP = 1/histo_size )
+    real HISTO_STEP;
+    //! the weight of a sample within a batch (usually, 1/n_samples)
+    real one_count; 
 
-    //! Statistics on matrix of expectations (estimated empiricially on the data)
-    Vec expectations_expectation;
-    Mat expectations_cross_quadratic_mean;
-    Vec expectations_expectation_trainMemory;
-    Mat expectations_cross_quadratic_mean_trainMemory;
-    Vec expectations_expectation_testMemory;
-    Mat expectations_cross_quadratic_mean_testMemory;
-    int ntest;
-
+    //! Variables for (non stochastic) Pascal's/correlation function
+    //! -------------------------------------------------------------
+    //! Statistics on outputs (estimated empiricially on the data)    
+    Vec inputs_expectation_trainMemory;
+    Mat inputs_cross_quadratic_mean_trainMemory;
+        
     //! Map from a port name to its index in the 'ports' vector.
     map<string, int> portname_to_index;
 
