@@ -178,8 +178,10 @@ void TextFilesVMatrix::buildIdx()
 // isValidNonSkipFieldType //
 /////////////////////////////
 bool TextFilesVMatrix::isValidNonSkipFieldType(const string& ftype) const {
-    return (ftype=="auto" || ftype=="date" || ftype=="jdate" || ftype=="postal" ||
-            ftype=="dollar" || ftype=="YYYYMM" || ftype=="sas_date" || ftype == "bell_range");
+    return (ftype=="auto" || ftype=="num" || ftype=="date" || ftype=="jdate" ||
+            ftype=="postal" || ftype=="dollar" || ftype=="dollar-comma" ||
+            ftype=="YYYYMM" || ftype=="sas_date" || ftype == "bell_range" ||
+            ftype == "char" );
 }
 
 void TextFilesVMatrix::setColumnNamesAndWidth()
@@ -222,11 +224,11 @@ void TextFilesVMatrix::build_()
 
         metadatadir = metadatapath;
         setMetaDataDir(metadatapath);
-
-        if(!force_mkdir(getMetaDataDir()))
-            PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
-                    getMetaDataDir().absolute().c_str());
     }
+
+    if(!force_mkdir(getMetaDataDir()))
+        PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
+                getMetaDataDir().absolute().c_str());
     
     PPath metadir = getMetaDataDir();
     PPath idxfname = metadir/"txtmat.idx";
@@ -294,7 +296,7 @@ void TextFilesVMatrix::loadMappings()
                 string real_val_str = map_line.substr(end_of_string + 1);
                 real real_val;
                 if (!pl_isnumber(real_val_str, &real_val))
-                    PLERROR("In TextFilesVMatrix::loadMappings - Found a mapping to something that is not a number");
+                    PLERROR("In TextFilesVMatrix::loadMappings - Found a mapping to something that is not a number (%s) in file %s at non-black line %d", map_line.c_str(), fname.c_str(), i);
                 mapping[k][strval] = real_val;
             }
         }
@@ -309,12 +311,15 @@ void TextFilesVMatrix::autoBuildMappings() {
     // For now we just create them if they do not exist yet.
 
     // First make sure there is no existing mapping.
-    bool already_exist = false;
-    for (int i = 0; !already_exist && i < mapping.length(); i++) {
+    int nb_already_exist = 0;
+    int nb_type_no_mapping = 0;
+    for (int i = 0;  i < mapping.length(); i++) {
         if (!mapping[i].empty())
-            already_exist = true;
+            nb_already_exist++;
+        else if(fieldspec[i].second!="char")//should add auto when it is char that are selected
+            nb_type_no_mapping++;
     }
-    if (!already_exist) {
+    if(nb_already_exist == 0){
         // Mappings need to be built.
         // We do this by reading the whole data.
         Vec row(width());
@@ -326,7 +331,13 @@ void TextFilesVMatrix::autoBuildMappings() {
             pb.update(i + 1);
         }
         auto_extend_map = auto_extend_map_backup;
-    }
+    }else if (nb_already_exist+nb_type_no_mapping < mapping.length()) {
+        for (int i = 0;  i < mapping.length(); i++) 
+            if(fieldspec[i].second=="char" && mapping[i].empty())//should add auto when it is char that are selected
+                PLWARNING("In TextFilesVMatrix::autoBuildMappings - mapping already existing but not for field %d (%s)",i,fieldspec[i].first.c_str());
+
+        PLWARNING("In TextFilesVMatrix::autoBuildMappings - The existing mapping is not complete! Their is %d fields with build mapping and their is %d fields that do not need mapping with a total of %d fields. Erase the mapping directory in the metadatadir to have it regenerated next time!",nb_already_exist,nb_type_no_mapping,mapping.length());
+    }//else already build
 }
 
 void TextFilesVMatrix::generateMapCounts()
@@ -524,6 +535,23 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
         else
             dest[0] = getMapping(k, strval);
     }
+    else if(fieldtype=="char")
+    {
+        if(strval=="")  // missing
+            dest[0] = MISSING_VALUE;
+        else
+            dest[0] = getMapping(k, strval);
+    }
+    else if(fieldtype=="num")
+    {
+        if(strval=="")  // missing
+            dest[0] = MISSING_VALUE;
+        else if(pl_isnumber(strval,&val))
+            dest[0] = real(val);
+        else
+            PLERROR("In TextFilesVMatrix::transformStringToValue - expedted a number as the value for field %d(%s). Got %s",k,fieldname.c_str(),strval.c_str());
+                
+    }
     else if(fieldtype=="date")
     {
         if(strval=="")  // missing
@@ -566,24 +594,27 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
     {
         dest[0] = getPostalEncoding(strval);
     }
-    else if(fieldtype=="dollar")
+    else if(fieldtype=="dollar" || fieldtype=="dollar-comma")
     {
+        char char_torm = ' ';
+        if(fieldtype=="dollar-comma")
+            char_torm = ',';
         if(strval=="")  // missing
             dest[0] = MISSING_VALUE;
         else if(strval[0]=='$')
         {
             string s = "";
             for(unsigned int pos=1; pos<strval.size(); pos++)
-                if(!isspace(strval[pos]))
+                if(strval[pos]!=char_torm)
                     s += strval[pos];
 
             if(pl_isnumber(s,&val))
                 dest[0] = real(val);
             else
-                dest[0] = getMapping(k, strval);
+                PLERROR("In TextFilesVMatrix::transformStringToValue - Goat as value '%s' while parsing field %d (%s) with fieldtype %s",strval.c_str(),k,fieldname.c_str(),fieldtype.c_str());
         }
         else
-            dest[0] = getMapping(k, strval);
+            PLERROR("In TextFilesVMatrix::transformStringToValue - Got as value '%s' while expecting a value beggining with '$' while parsing field %d (%s) with fieldtype %s",strval.c_str(),k,fieldname.c_str(),fieldtype.c_str());
     }
     else if(fieldtype=="bell_range") {
         if (strval == "") {
@@ -671,6 +702,8 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "Currently supported types: \n"
                   "- skip       : Ignore the content of the field, won't be inserted in the resulting VMat\n"
                   "- auto       : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
+                  "- num        : numeric value, keep as is\n"
+                  "- char       : look it up in the mapping (possibly inserting a new mapping if it's not there)\n"
                   "- date       : date of the form 25DEC2003 or 25-dec-2003 or 2003/12/25 or 20031225, will be mapped to float date format 1031225\n"
                   "- jdate      : date of the form 25DEC2003 or 25-dec-2003 or 2003/12/25 or 20031225, will be mapped to *julian* date format\n"
                   "- sas_date   : date used by SAS = number of days since Jan. 1st, 1960 (with 0 = missing)\n"
@@ -678,6 +711,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "               other than a number or lower than 197000 is considered as nan\n"
                   "- postal     : canadian postal code \n"
                   "- dollar     : strangely formatted field with dollar amount. Format is sth like '$12 003'\n"
+                  "- dollar-comma : strangely formatted field with dollar amount. Format is sth like '$12,003'\n"
                   "- bell_range : a range like \"A: $0- 250\", replaced by the average of the two bounds;\n"
                   "               if the \"Negative Value\" string is found, it is replaced by -100\n"
         );
