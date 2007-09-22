@@ -15,6 +15,20 @@ import pdb
 from threading import Thread,Lock
 from time import sleep
 import datetime
+from plearn.pymake.pymake import get_list_of_hosts
+#from plearn.pymake.pymake import get_distcc_hosts
+from plearn.pymake.pymake import locateconfigfile
+from plearn.pymake.pymake import get_platform
+
+try:
+    from random import shuffle
+except ImportError:
+    import whrandom
+    def shuffle(list):
+        l = len(list)
+        for i in range(0,l-1):
+            j = whrandom.randint(i+1,l-1)
+            list[i], list[j] = list[j], list[i]
 
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
@@ -29,6 +43,14 @@ class LockedIterator:
         
     def __iter__( self ):
         return self
+
+    def get(self):
+        try:
+            self._lock.acquire()
+            return self._iterator.next()
+        finally:
+            self._lock.release()
+ 
     
     def next( self ):
         try:
@@ -36,7 +58,36 @@ class LockedIterator:
             return self._iterator.next()
         finally:
             self._lock.release()
+
+class LockedListIter:
+    def __init__( self, list ):
+        self._lock     = Lock()
+        self._list     = list
+        self._last     = -1
+
+    def __iter__( self ):
+        return self
+
+    def next(self):
+        try:
+            self._lock.acquire()
+            self._last+=1
+            if len(self._list)>self._last:
+                return 
+            else:
+                return self._list[self._last]
+        finally:
+            self._lock.release()
+ 
+    
+    def append( self, a ):
+        try:
+            self._lock.acquire()
+            list.append(a)
+        finally:
+            self._lock.release()
             
+
 #original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
 class MultiThread:
     def __init__( self, function, argsVector, maxThreads=5, print_when_finished=None):
@@ -840,51 +891,91 @@ class DBILocal(DBIBase):
             print "[DBI] WARNING jobs not started!"
                 
 class SshHost:
-    def __init__(self, hostname):
+    def __init__(self, hostname,nice=19,get_avail=True):
         self.hostname= hostname
-        self.lastupd= -16
-        self.getAvailability()
+        self.minupdate=15
+        self.lastupd= -1-self.minupdate
+        self.working=True
+        (self.bogomips,self.ncores,self.loadavg)=(-1.,-1,-1.)
+        self.nice=nice
+        if get_avail:
+            self.getAvailability()
         
     def getAvailability(self):
         # simple heuristic: mips / load
         t= time.time()
-        if t - self.lastupd > 15: # min. 15 sec. before update
-            self.bogomips= self.getBogomips()
-            self.loadavg= self.getLoadavg()
+        if t - self.lastupd > self.minupdate: # min. 15 sec. before update
+            (self.bogomips,self.ncores,self.loadavg)=self.getAllHostInfo()
             self.lastupd= t
             #print  self.hostname, self.bogomips, self.loadavg, (self.bogomips / (self.loadavg + 0.5))
         return self.bogomips / (self.loadavg + 0.5)
         
-    def getBogomips(self):
-        cmd= ["ssh", self.hostname ,"cat /proc/cpuinfo"]
+    def getAllHostInfo(self):
+        cmd= ["ssh", self.hostname ,"cat /proc/cpuinfo;cat /proc/loadavg"]
         p= Popen(cmd, stdout=PIPE)
-        bogomips= 0.0
+        bogomips= -1
+        ncores=-1
+        loadavg=-1
+        returncode = p.returncode
+        wait = p.wait()
+        if returncode:
+            self.working=False
+            return (-1.,-1,-1.)
+        elif wait!=0:
+            self.working=False
+            return (-1.,-1,-1.)
+
         for l in p.stdout:
             if l.startswith('bogomips'):
                 s= l.split(' ')
                 bogomips+= float(s[-1])
-        return bogomips
+            if l.startswith('processor'):
+                s= l.split(' ')
+                ncores=int(s[-1])+1
 
-    def getLoadavg(self):
-        cmd= ["ssh", self.hostname,"cat /proc/loadavg"]
-        p= Popen(cmd, stdout=PIPE)
-        l= p.stdout.readline().split(' ')
-        return float(l[0])
-        
+        if l:
+            loadavg=float(l[0])
+        #(bogomips,ncores,load average)
+        return (bogomips,ncores,loadavg)
+
     def addToLoadavg(self,n):
         self.loadavg+= n
         self.lastupd= time.time()
 
     def __str__(self):
-        return "SshHost("+self.hostname+" <"+str(self.bogomips) \
-               +','+str(self.loadavg) +','+str(self.getAvailability()) \
-               +','+str(self.lastupd) + '>)'
+        return "SshHost("+self.hostname+" <nice: "+str(self.nice)\
+               +"bogomips:"+str(self.bogomips)\
+               +',ncores:'+str(self.ncores)\
+               +',loadavg'+str(self.loadavg)\
+               +',avail:'+str(self.getAvailability())\
+               +',lastupd:'+str(self.lastupd) + '>)'
 
     def __repr__(self):
         return str(self)
         
 def find_all_ssh_hosts():
-    return [SshHost(h) for h in set(pymake.get_distcc_hosts())]
+    hostspath_list = [os.path.join(os.getenv("HOME"),".pymake",get_platform()+'.hosts')]
+    if os.path.exists(hostspath_list[0])==0:
+        print "[DBI] no host file %s for the ssh backend"%(hostspath_list[0])
+        sys.exit(1)
+    print "[DBI] using file %s for the list of host"%(hostspath_list[0])
+    from plearn.pymake.pymake import process_hostspath_list
+    from plearn.pymake.pymake import get_hostname
+    (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list,19,get_hostname())
+    shuffle(list_of_hosts)
+    print list_of_hosts
+    print nice_values
+    h=[]
+    for host in list_of_hosts:
+        print "connecting to",host
+        s=SshHost(host,nice_values[host],False)
+        if s.working:
+            h.append(s)
+        else:
+            print "[DBI] host not working:",s.hostname            
+        print s
+    print h
+    return h
 
 def cmp_ssh_hosts(h1, h2):
     return cmp(h2.getAvailability(), h1.getAvailability())
@@ -894,11 +985,13 @@ class DBISsh(DBIBase):
     def __init__(self, commands, **args ):
         print "[DBI] WARNING: The SSH DBI is not fully implemented!"
         print "[DBI] Use at your own risk!"
+        self.nb_proc=1
         DBIBase.__init__(self, commands, **args)
 
         self.add_commands(commands)
         self.hosts= find_all_ssh_hosts()
-        
+        print "[DBI] hosts: ",self.hosts
+
     def add_commands(self,commands):
         if not isinstance(commands, list):
             commands=[commands]
@@ -911,8 +1004,8 @@ class DBISsh(DBIBase):
             
     def getHost(self):
         self.hosts.sort(cmp= cmp_ssh_hosts)
-        #print "hosts= "
-        #for h in self.hosts: print h
+        print "hosts= "
+        for h in self.hosts: print h
         self.hosts[0].addToLoadavg(1.0)
         return self.hosts[0]
     
@@ -920,8 +1013,7 @@ class DBISsh(DBIBase):
         DBIBase.run(self)
 
         host= self.getHost()
-
-
+        
         cwd= os.getcwd()
         command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + "'"
         print "[DBI] "+command
@@ -935,20 +1027,69 @@ class DBISsh(DBIBase):
         (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
         
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
+        task.p.wait()
 
+
+    def run_one_job2(self, host):
+        DBIBase.run(self)
+
+        cwd= os.getcwd()
+        print self._locked_iter
+        for task in self._locked_iter:
+            print "task",task
+            command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + " ; echo $?'"
+            print "[DBI, %s] %s"%(time.ctime(),command)
+            
+            if self.test:
+                return
+        
+            task.launch_time = time.time()
+            task.set_scheduled_time()
+        
+###            (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
+        
+            task.p = Popen(command, shell=True,stdout=PIPE,stderr=PIPE)
+            wait = task.p.wait()
+            returncode = p.returncode
+            if returncode:
+                self.working=False
+                
+            elif wait!=0:
+                self.working=False
+                #redo it
+            return -1.
+
+            out=task.p.stdout.readlines()
+            err=task.p.stderr.readlines()
+            self.echo_result=None
+            if out:
+                self.echo_result=int(out[-1])
+                del out[-1]
+            print "out",out
+            print "err",err
+            print "echo result",self.echo_result
+            if err:
+                task.return_status = int(err[-1])  # last line was an echo $? (because rsh doesn't transmit the status byte correctly)
+                del err[-1]
+                print "return status", task.return_status
+            sleep(1)
+      
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
+        if not self.file_redirect_stdout and self.nb_proc>1:
+            print "[DBI] WARNING: many process but all their stdout are redirected to the parent"
+        if not self.file_redirect_stderr and self.nb_proc>1:
+            print "[DBI] WARNING: many process but all their stderr are redirected to the parent"
 
         # Execute pre-batch
         self.exec_pre_batch()
-
+        self._locked_iter=LockedListIter(iter(self.tasks))
         if self.test:
             print "[DBI] In testmode, we only print the command that would be executed."
-            
+        print "in run",self.hosts
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        print "[DBI] tasks= ", self.tasks
-        for task in self.tasks:
-            self.run_one_job(task)
+        self.mt=MultiThread(self.run_one_job2,self.hosts,self.nb_proc,lambda :("[DBI,%s]"%time.ctime()))
+        self.mt.start()
 
         # Execute post-batchs
         self.exec_post_batch()
@@ -959,7 +1100,8 @@ class DBISsh(DBIBase):
 
     def wait(self):
         #TODO
-        print "[DBI] WARNING the wait function was not implement for the ssh backend!"
+        self.mt.join()
+
 
 # creates an object of type ('DBI' + launch_system) if it exists
 def DBI(commands, launch_system, **args):
