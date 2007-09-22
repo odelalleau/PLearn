@@ -19,7 +19,7 @@ dbidispatch --test --file=tests
 
 
 bqtools, cluster, local and ssh parameter:
-  --nb_proc=nb_process, give the maximum number of concurent jobs running
+  --nb_proc=nb_process, give the maximum number of concurent jobs running. The valud -1 will try to execute all jobs concurently. Use with care as some back-end or configuration do not handle this correctly.
     --local=X is the same as --local --nb_proc=X
     --cluster=X is the same as --cluster --nb_proc=X
     --bqtools=X is the same as --bqtools --nb_proc=X

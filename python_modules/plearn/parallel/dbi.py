@@ -96,7 +96,13 @@ class MultiThread:
         self._threadPool   = []
         self.print_when_finish = print_when_finished
         self.running = 0
-        nb_thread=maxThreads
+        if maxThreads==-1:
+            nb_thread=len(argsVector)
+        elif maxThreads<=0:
+            print "[DBI] you set %d concurent jobs. Must be higher then 0!!"%(maxThreads)
+            sys.exit(1)
+        else:
+            nb_thread=maxThreads
         if nb_thread>len(argsVector):
             nb_thread=len(argsVector)
         for i in range( nb_thread ):
