@@ -360,6 +360,8 @@ class DBICluster(DBIBase):
         self.nb_proc=50
         self.mt=None
         DBIBase.__init__(self, commands, **args)
+        self.pre_tasks=["echo '[DBI] executing on host' $HOSTNAME"]+self.pre_tasks
+        self.post_tasks=["echo '[DBI] exit status' $?"]+self.post_tasks
         self.add_commands(commands)
         self.nb_proc=int(self.nb_proc)
 
@@ -400,9 +402,18 @@ class DBICluster(DBIBase):
 
         (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
-        ret=task.p.wait()
-        if task.p.returncode!=0:
-            print "[DBI,%d/%d,%s] Failed to launch: '%s' returned %d,%d"%(started,len(self.tasks),time.ctime(),command,task.p.returncode,ret)
+        task.p_wait_ret=task.p.wait()
+        task.dbi_return_status=None
+        if output!=PIPE:#TODO what do to if = PIPE?
+            fd=open(task.log_file+'.out','r')
+            last=""
+            for l in fd.readlines():
+                last=l
+            if last.startswith("[DBI] exit status "):
+                task.dbi_return_status=int(last.split()[-1])
+#        print "[DBI,%d/%d,%s] Job ended, popen returncode:%d, popen.wait.return:%d, dbi echo return code:%s"%(started,len(self.tasks),time.ctime(),task.p.returncode,task.p_wait_ret,task.dbi_return_status)
+        if task.dbi_return_status==None:
+            print "[DBI,%d/%d,%s] Trouble with launching/executing '%s'. Its execution did not finished. Probable cause is the back-end itself. Meaby you want to rerun it. popen returncode:%d, popen.wait.return:%d, dbi echo return code:%s"%(started,len(self.tasks),time.ctime(),command,task.p.returncode,task.p_wait_ret,task.dbi_return_status)
             
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
