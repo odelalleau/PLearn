@@ -3,7 +3,7 @@ from plearn.pyplearn.plargs import *
 import time
 
 class AdaBoostMultiClasses:
-    def __init__(self,trainSet1,trainSet2,weakLearner):
+    def __init__(self,trainSet1,trainSet2,weakLearner,confusion_target=1):
 #        """
 #        Initialize a AdaBoost for 3 classes learner
 #        trainSet1 is used for the first sub AdaBoost learner,
@@ -23,7 +23,7 @@ class AdaBoostMultiClasses:
         self.nstages = 0
         self.stage = 0
         self.train_time = 0
-        #        self.confusion_target=plargs.confusion_target
+        self.confusion_target=confusion_target
         
     def myAdaBoostLearner(self,sublearner,trainSet):
         l = pl.AdaBoost()
@@ -31,9 +31,12 @@ class AdaBoostMultiClasses:
         l.pseudo_loss_adaboost=plargs.pseudo_loss_adaboost
         l.weight_by_resampling=plargs.weight_by_resampling
         l.setTrainingSet(trainSet,True)
-        l.setTrainStatsCollector(VecStatsCollector())
+        tmp=VecStatsCollector()
+        tmp.setFieldNames(l.getTrainCostNames())
+        l.setTrainStatsCollector(tmp)
         l.early_stopping=False
-        l.compute_training_error=False
+        l.compute_training_error=True
+        l.forward_sub_learner_costs=True
         return l
 
     def train(self):
@@ -48,14 +51,17 @@ class AdaBoostMultiClasses:
         
     def getTestCostNames(self):
         costnames = ["class_error","linear_class_error","square_class_error"]
-        #    for i in range(len(conf_matrix)):
-        #        for j in range(len(conf_matrix[i])):
-        for i in range(4):
+        for i in range(3):
             for j in range(3):
                 costnames.append("conf_matrix_%d_%d"%(i,j))
         costnames.append("train_time")
         costnames.append("conflict")
         costnames.extend(["class0","class1","class2"])
+
+        for c in self.learner1.getTestCostNames():
+            costnames.append("subweaklearner1."+c)
+        for c in self.learner2.getTestCostNames():
+            costnames.append("subweaklearner2."+c)
         return costnames
     
     def computeOutput(self,example):
@@ -74,7 +80,7 @@ class AdaBoostMultiClasses:
         elif ind1==ind2==1:
             ind=2
         else:
-            ind=3
+            ind=self.confusion_target
         return (ind,out1,out2)
     
     def computeCostsFromOutput(self,input,output,target,costs=[]):
@@ -85,23 +91,36 @@ class AdaBoostMultiClasses:
         costs.append(class_error)
         costs.append(linear_class_error)
         costs.append(square_class_error)
-        for i in range(4):
+        for i in range(3):
             for j in range(3):
                 costs.append(0)
         costs[output[0]*3+target+3]=1
         costs.append(self.train_time)
-        if output[0]==0:
-            costs.extend([0,1,0,0])
-        if output[0]==1:
-            costs.extend([0,0,1,0])
-        if output[0]==2:
-            costs.extend([0,0,0,1])
-        if output[0]==3:
+
+        #append conflict cost
+        if int(round(output[1]))==0 and int(round(output[2]))==1:
             costs.append(1)
-            t=[0,0,0]
-            t[plargs.confusion_target]=1
-            costs.extend(t)
-            
+        else:
+            costs.append(0)
+        
+        #append class output cost
+        t=[0,0,0]
+        t[output[0]]=1
+        costs.extend(t)
+        if target==0:
+            t1=array([0.])
+        else:
+            t1=array([1.])
+        if target==2:
+            t2=array([1.])
+        else:
+            t2=array([0.])
+        o1=array([output[1]])
+        o2=[output[2]]
+        c1=self.learner1.computeCostsFromOutputs(input,o1,t1)
+        c2=self.learner2.computeCostsFromOutputs(input,o2,t2)
+        costs.extend(c1)
+        costs.extend(c2)
         return costs
 
     def computeOutputAndCosts(self,input,target):
@@ -109,6 +128,34 @@ class AdaBoostMultiClasses:
         costs=self.computeCostsFromOutput(input,output,target)
         return (output,costs)
 
+    def test(self,testset,test_stats,return_outputs,return_costs):
+        print "In AdaBoostMultiClasses.py::test Not implemented"
+        sys.exit(1)
+        
+        stats1=pl.VecStatsCollector()
+        stats2=pl.VecStatsCollector()
+        (test_stats1, testoutputs1, testcosts1)=self.learner1.test(test_stats,stats1,True,return_costs)
+        (test_stats2, testoutputs2, testcosts2)=self.learner2.test(test_stats,stats2,True,return_costs)
+        outputs=[]
+        costs=[]
+        #calculate stats, outputs, costs
+        test_mat=testset.getMat()
+        for i in range(testset.length()):
+            out1=testoutputs1[i][0]
+            out2=testoutputs2[i][0]
+            ind1=int(round(out1))
+            ind2=int(round(out2))
+            if ind1==ind2==0:
+                ind=0
+            elif ind1==1 and ind2==0:
+                ind=1
+            elif ind1==ind2==1:
+                ind=2
+            else:
+                ind=self.confusion_target
+            outputs.append([ind,out1,out2])
+            self.computeCostsFromOutput(test_mat[i][:-2],ind,test_mat[i][-1])
+        
     def outputsize(self):
         return len(self.getTestCostNames())
 
