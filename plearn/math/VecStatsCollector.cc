@@ -213,6 +213,10 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
                  "A vector of strings corresponding to the names of each field"
                  " in the VecStatsCollector.\n")));
 
+    declareMethod(
+        rmm, "getFieldNames", &VecStatsCollector::getFieldNames,
+        (BodyDoc("Get field names.\n")));
+
    declareMethod(
         rmm, "length", &VecStatsCollector::length,
         (BodyDoc("Returns the number of statistics collected.\n"),
