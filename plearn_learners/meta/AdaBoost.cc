@@ -65,7 +65,8 @@ AdaBoost::AdaBoost()
       weight_by_resampling(1), 
       early_stopping(1),
       save_often(0),
-      forward_sub_learner_test_costs(false)
+      forward_sub_learner_test_costs(false),
+      provide_learner_expdir(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
