@@ -64,7 +64,8 @@ AdaBoost::AdaBoost()
       conf_rated_adaboost(0), 
       weight_by_resampling(1), 
       early_stopping(1),
-      save_often(0)
+      save_often(0),
+      forward_sub_learner_test_costs(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -432,7 +433,7 @@ void AdaBoost::train()
                 if(report_progress) pb->update(i);
                 train_set->getExample(i, input, target, weight);
 #ifdef BOUNDCHECK
-                if(!(target[0]==0||target[0]==1))
+                if(!(is_equal(target[0],0)||is_equal(target[0],1)))
                     PLERROR("In AdaBoost::train() - target is not 0 or 1 in the training set. We implement only two class boosting.");
 #endif
                 new_weak_learner->computeOutput(input,output);
