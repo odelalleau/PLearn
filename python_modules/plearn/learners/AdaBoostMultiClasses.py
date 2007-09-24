@@ -14,11 +14,11 @@ class AdaBoostMultiClasses:
         self.trainSet2=trainSet2
             
         self.learner1 = self.myAdaBoostLearner(weakLearner(),trainSet1)
-        self.learner1.expdir=plargs.expdirr+"/learner1"
+        self.learner1.setExperimentDirectory(plargs.expdirr+"/learner1")
         self.learner1.setTrainingSet(trainSet1,True)
         
         self.learner2 = self.myAdaBoostLearner(weakLearner(),trainSet2)
-        self.learner2.expdir=plargs.expdirr+"/learner2"
+        self.learner2.setExperimentDirectory(plargs.expdirr+"/learner2")
         self.learner2.setTrainingSet(trainSet2,True)
         self.nstages = 0
         self.stage = 0
@@ -36,7 +36,8 @@ class AdaBoostMultiClasses:
         l.setTrainStatsCollector(tmp)
         l.early_stopping=False
         l.compute_training_error=True
-        l.forward_sub_learner_costs=True
+        l.forward_sub_learner_test_costs=True
+        l.provide_learner_expdir=True
         return l
 
     def train(self):
