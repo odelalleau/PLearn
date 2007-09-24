@@ -119,6 +119,9 @@ public:
     // save model after each stage into <expdir>/model.psave
     bool save_often;
 
+    // Did we add the sub_learner_costs to our costs
+    bool forward_sub_learner_test_costs;
+
     // ****************
     // * Constructors *
     // ****************

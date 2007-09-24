@@ -194,6 +194,10 @@ void AdaBoost::declareOptions(OptionList& ol)
                   &AdaBoost::compute_training_error, OptionBase::buildoption,
                   "Whether to compute training error at each stage.\n");
 
+    declareOption(ol, "forward_sub_learner_test_costs", 
+                  &AdaBoost::forward_sub_learner_test_costs, OptionBase::buildoption,
+                  "Did we add the sub_learner_costs to our costs.\n");
+
     declareOption(ol, "found_zero_error_weak_learner", 
                   &AdaBoost::found_zero_error_weak_learner, 
                   OptionBase::learntoption,
@@ -699,11 +703,25 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
                  "either 0 or 1; current target=%f", target[0]);
     costs[1] = exp(-1.0*sum_voting_weights*(2*output[0]-1)*(2*target[0]-1));
     costs[2] = costs[0];
+    Vec tmp(weak_learner_template->nTestCosts());
+    if(forward_sub_learner_test_costs){
+        weak_learners.last()->computeCostsFromOutputs(input,output,target,tmp);
+        costs.append(tmp);
+    }
 }
 
 TVec<string> AdaBoost::getTestCostNames() const
 {
-    return getTrainCostNames();
+    TVec<string> costs=getTrainCostNames();
+
+    if(forward_sub_learner_test_costs){
+        TVec<string> subcosts=weak_learner_template->getTestCostNames();
+        for(int i=0;i<subcosts.length();i++){
+            subcosts[i]="weak_learner."+subcosts[i];
+        }
+        costs.append(subcosts);
+    }
+    return costs;
 }
 
 TVec<string> AdaBoost::getTrainCostNames() const
