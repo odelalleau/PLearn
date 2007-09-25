@@ -73,7 +73,8 @@ void EarlyStoppingOracle::declareOptions(OptionList& ol)
     declareOption(ol, "values", &EarlyStoppingOracle::values, OptionBase::buildoption,
                   "a list of values to try in sequence ");
     declareOption(ol, "range", &EarlyStoppingOracle::range, OptionBase::buildoption,
-                  "a numerical range of the form [ start, end ] or [ start, end, step ] ");
+                  "a numerical range of the form [ start, end ] or [ start, end, step ]\n"
+                  "WARNING: end is not included! ");
 
     declareOption(ol, "min_value", &EarlyStoppingOracle::min_value, OptionBase::buildoption,
                   "minimum allowed error beyond which we stop\n");
@@ -119,6 +120,8 @@ void EarlyStoppingOracle::build_()
             step = range[2];
         for(real x = range[0]; x<range[1]; x+=step)
             option_values.append(tostring(x));
+        if(range[0]==range[1])
+            PLWARNING("In EarlyStoppingOracle::build_ - no range selected. Meaby you forgot that the end part of the range is not included!");
     }
 }
 
