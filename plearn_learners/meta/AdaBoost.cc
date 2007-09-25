@@ -649,12 +649,26 @@ void AdaBoost::train()
                 PP<ProgressBar> pb;
                 if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
                 train_stats->forget();
-                static Vec err(1);
+                static Vec err(nTrainCosts());
+                int nb_class_0=0;
+                int nb_class_1=0;
+                real cum_weights_0=0;
+                real cum_weights_1=0;
+
                 for (int i=0;i<n;i++)
                 {
                     if(report_progress) pb->update(i);
                     train_set->getExample(i, input, target, weight);
                     computeCostsOnly(input,target,err);
+                    if(fast_is_equal(target[0],0.)){
+                        cum_weights_0 += example_weights[i];
+                        nb_class_0++;
+                    }else{
+                        cum_weights_1 += example_weights[i];
+                        nb_class_1++;
+                    }
+                    err[3]=cum_weights_0/nb_class_0;
+                    err[4]=cum_weights_1/nb_class_1;
                     train_stats->update(err);
                 }
                 train_stats->finalize();
@@ -690,7 +704,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const
 {
-    costs.resize(3);
+    costs.resize(5);
 
     // First cost is negative log-likelihood...  output[0] is the likelihood
     // of the first class
@@ -707,6 +721,8 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
                  "either 0 or 1; current target=%f", target[0]);
     costs[1] = exp(-1.0*sum_voting_weights*(2*output[0]-1)*(2*target[0]-1));
     costs[2] = costs[0];
+    costs[3] = train_stats->getStat("E[avg_weight_class_0]");
+    costs[4] = train_stats->getStat("E[avg_weight_class_1]");
     Vec tmp(weak_learner_template->nTestCosts());
     if(forward_sub_learner_test_costs){
         weak_learners.last()->computeCostsFromOutputs(input,output,target,tmp);
@@ -730,10 +746,12 @@ TVec<string> AdaBoost::getTestCostNames() const
 
 TVec<string> AdaBoost::getTrainCostNames() const
 {
-    TVec<string> costs(3);
+    TVec<string> costs(5);
     costs[0] = "binary_class_error";
     costs[1] = "exp_neg_margin";
     costs[2] = "class_error";
+    costs[3] = "avg_weight_class_0";
+    costs[4] = "avg_weight_class_1";
     return costs;
 }
 
