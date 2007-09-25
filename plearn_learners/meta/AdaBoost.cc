@@ -435,13 +435,14 @@ void AdaBoost::train()
                 train_set->getExample(i, input, target, weight);
 #ifdef BOUNDCHECK
                 if(!(is_equal(target[0],0)||is_equal(target[0],1)))
-                    PLERROR("In AdaBoost::train() - target is not 0 or 1 in the training set. We implement only two class boosting.");
+                    PLERROR("In AdaBoost::train() - target is %f in the training set. It should be 0 or 1 as we implement only two class boosting.",target[0]);
 #endif
                 new_weak_learner->computeOutput(input,output);
                 real y_i=target[0];
                 real f_i=output[0];
                 if(conf_rated_adaboost)
                 {
+                    PLASSERT_MSG(f_i>=0,"In AdaBoost.cc::train() - output[0] should be >= 0 ");
                     // an error between 0 and 1 (before weighting)
                     examples_error[i] = 2*(f_i+y_i-2*f_i*y_i);
                     learners_error[stage] += example_weights[i]*
@@ -452,6 +453,7 @@ void AdaBoost::train()
                     // an error between 0 and 1 (before weighting)
                     if (pseudo_loss_adaboost) 
                     {
+                        PLASSERT_MSG(f_i>=0,"In AdaBoost.cc::train() - output[0] should be >= 0 ");
                         examples_error[i] = 2*(f_i+y_i-2*f_i*y_i);
                         learners_error[stage] += example_weights[i]*
                             examples_error[i]/2;
