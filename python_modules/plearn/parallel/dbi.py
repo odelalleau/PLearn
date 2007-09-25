@@ -372,6 +372,8 @@ class DBICluster(DBIBase):
         self.post_tasks=["echo '[DBI] exit status' $?"]+self.post_tasks
         self.add_commands(commands)
         self.nb_proc=int(self.nb_proc)
+        self.backend_failed=0
+        self.jobs_failed=0
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -422,6 +424,9 @@ class DBICluster(DBIBase):
 #        print "[DBI,%d/%d,%s] Job ended, popen returncode:%d, popen.wait.return:%d, dbi echo return code:%s"%(started,len(self.tasks),time.ctime(),task.p.returncode,task.p_wait_ret,task.dbi_return_status)
         if task.dbi_return_status==None:
             print "[DBI,%d/%d,%s] Trouble with launching/executing '%s'. Its execution did not finished. Probable cause is the back-end itself. Meaby you want to rerun it. popen returncode:%d, popen.wait.return:%d, dbi echo return code:%s"%(started,len(self.tasks),time.ctime(),command,task.p.returncode,task.p_wait_ret,task.dbi_return_status)
+            self.backend_failed+=1
+        elif task.dbi_return_status!=0:
+            self.jobs_failed+=1
             
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
@@ -448,7 +453,9 @@ class DBICluster(DBIBase):
             self.mt.join()
         else:
             print "[DBI] WARNING jobs not started!"
-                
+        print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
+        print "[DBI] Their was %d jobs that returned a failure status."%(self.jobs_failed)
+        
 class DBIbqtools(DBIBase):
 
     def __init__( self, commands, **args ):
