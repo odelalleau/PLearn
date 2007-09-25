@@ -220,6 +220,23 @@ void AdaBoost::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////////////
+// declareMethods //
+////////////////////
+void AdaBoost::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "computeOutput_at_stage", &AdaBoost::remote_computeOutput_at_stage,
+        (BodyDoc("On a trained learner, this computes the output from the input with the first stage weaklearner. Their must be enought weaklearner that have been trained"),
+         ArgDoc ("input", "Input vector (should have width inputsize)"),
+         ArgDoc ("stage", "The number of stage to use to calculate the output"),
+         RetDoc ("Computed output (will have width outputsize)")));
+
+}
 void AdaBoost::build_()
 {
     if(conf_rated_adaboost && pseudo_loss_adaboost)
@@ -685,10 +702,26 @@ void AdaBoost::train()
 
 void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
+    computeOutput(input,output,voting_weights.length());
+}
+void AdaBoost::computeOutput(const Vec& input, Vec& output, int nb_learner) const
+{
+    PLASSERT(nb_learner>0);
+    real local_sum_weight = sum_voting_weights;
+    if (nb_learner>voting_weights.length() and not found_zero_error_weak_learner){
+        PLERROR("AdaBoost::computeOutput - Asked to compute the output with more learner(%d) then currently learned %d",
+                nb_learner,voting_weights.length());
+    }else if(nb_learner>voting_weights.length()){
+        nb_learner=voting_weights.length();
+    }else if(nb_learner != voting_weights.length()){
+        local_sum_weight = 0;
+        for (int i=0;i<nb_learner;i++)
+            local_sum_weight += voting_weights[i];
+    }
     output.resize(weak_learner_template->outputsize());
     real sum_out=0;
     weak_learner_output.resize(output.size());
-    for (int i=0;i<voting_weights.length();i++)
+    for (int i=0;i<nb_learner;i++)
     {
         weak_learners[i]->computeOutput(input,weak_learner_output);
         if(!pseudo_loss_adaboost && !conf_rated_adaboost)
@@ -697,7 +730,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
         else
             sum_out += weak_learner_output[0]*voting_weights[i];
     }
-    output[0] = sum_out/sum_voting_weights;
+    output[0] = sum_out/local_sum_weight;
     output.resize(1);
 }
 
@@ -753,6 +786,14 @@ TVec<string> AdaBoost::getTrainCostNames() const
     costs[3] = "avg_weight_class_0";
     costs[4] = "avg_weight_class_1";
     return costs;
+}
+
+//! Version of computeOutput that returns a result by value
+Vec AdaBoost::remote_computeOutput_at_stage(const Vec& input,const int stage) const
+{
+    tmp_output2.resize(outputsize());
+    computeOutput(input, tmp_output2, stage);
+    return tmp_output2;
 }
 
 } // end of namespace PLearn

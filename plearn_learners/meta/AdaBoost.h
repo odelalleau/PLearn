@@ -52,7 +52,10 @@ using namespace std;
 class AdaBoost: public PLearner
 {
     typedef PLearner inherited;
-  
+
+    //! Global storage to save memory allocations.
+    mutable Vec tmp_output2;
+    
 protected:
     // average weighted error of each learner
     Vec learners_error;
@@ -140,10 +143,17 @@ private:
     // (Please implement in .cc)
     void build_();
 
+    // List of methods that are called by Remote Method Invocation.  Our
+    // convention is to have them start with the remote_ prefix.
+    Vec remote_computeOutput_at_stage(const Vec& input,const int stage) const;
+
 protected: 
     //! Declares this class' options
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
 public:
 
@@ -185,6 +195,10 @@ public:
 
     //! Computes the output from the input
     virtual void computeOutput(const Vec& input, Vec& output) const;
+
+    //! Computes the output from the input with a specific number of learner
+    //! This way we don't need to save the learner at each stage, we can save just the last one
+    void computeOutput(const Vec& input, Vec& output, int nb_learner) const;
 
     //! Computes the costs from already computed output. 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
