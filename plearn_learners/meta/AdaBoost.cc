@@ -58,6 +58,7 @@ AdaBoost::AdaBoost()
       initial_sum_weights(0.0),
       found_zero_error_weak_learner(0),
       target_error(0.5), 
+      provide_learner_expdir(false),
       output_threshold(0.5), 
       compute_training_error(1), 
       pseudo_loss_adaboost(1), 
@@ -65,8 +66,7 @@ AdaBoost::AdaBoost()
       weight_by_resampling(1), 
       early_stopping(1),
       save_often(0),
-      forward_sub_learner_test_costs(false),
-      provide_learner_expdir(false)
+      forward_sub_learner_test_costs(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
