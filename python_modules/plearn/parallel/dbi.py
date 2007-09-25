@@ -96,6 +96,8 @@ class MultiThread:
         self._threadPool   = []
         self.print_when_finish = print_when_finished
         self.running = 0
+        self.init_len_list = len(argsVector)
+        
         if maxThreads==-1:
             nb_thread=len(argsVector)
         elif maxThreads<=0:
@@ -114,9 +116,9 @@ class MultiThread:
         self.running-=1
         if self.print_when_finish:
             if callable(self.print_when_finish):
-                print self.print_when_finish(),"left running:",self.running
+                print self.print_when_finish(),"left running: %d/%d"%(self.running,self.init_len_list)
             else:
-                print self.print_when_finish,"left running:",self.running
+                print self.print_when_finish,"left running: %d/%d"%(self.running,self.init_len_list)
                     
     def start( self  ):
         for thread in self._threadPool:
