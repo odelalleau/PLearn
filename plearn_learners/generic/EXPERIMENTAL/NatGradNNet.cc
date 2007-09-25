@@ -634,6 +634,7 @@ void NatGradNNet::train()
     if( report_progress && stage < nstages )
         pb = new ProgressBar( "Training "+classname(),
                               nstages - stage );
+    int start_stage=stage;
 
     Vec costs_plus_time(train_costs.width()+2);
     costs_plus_time[train_costs.width()] = MISSING_VALUE;
@@ -666,7 +667,7 @@ void NatGradNNet::train()
             multiplyScaledAdd(all_params, 1-params_averaging_coeff,
                               params_averaging_coeff, all_mparams);
         if( pb )
-            pb->update( stage + 1 );
+            pb->update( stage + 1 - start_stage);
     }
     Profiler::end("training");
     Profiler::pl_profile_end("Totaltraining");
