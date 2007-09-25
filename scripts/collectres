@@ -118,7 +118,7 @@ def selectres(loc_specs,a):
         i=6
       else:
         i+=2 # skip the column name
-    if not res:
+    if not res.any():
       raise ValueError("No value selected for this file")
   else:
     raise ValueError("Invalid <location-spec> mode, expected 'pos', 'mincol', or 'col', got "+loc_mode)    
