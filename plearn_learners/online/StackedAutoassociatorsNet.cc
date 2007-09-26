@@ -680,6 +680,12 @@ void StackedAutoassociatorsNet::train()
 
     PP<ProgressBar> pb;
 
+    if( !train_stats )
+    {
+        train_stats = new VecStatsCollector();
+        train_stats->setFieldNames(getTrainCostNames());
+    }
+    
     // clear stats of previous epoch
     train_stats->forget();
 
