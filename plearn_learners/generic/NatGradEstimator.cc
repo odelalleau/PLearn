@@ -71,6 +71,7 @@ NatGradEstimator::NatGradEstimator()
     /* ### Initialize all fields to their default value */
     : cov_minibatch_size(10),
       init_lambda(1.),
+      min_lambda(0.001),
       n_eigen(10),
       gamma(0.99),
       renormalize(true),
@@ -126,6 +127,10 @@ void NatGradEstimator::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Initial variance. The first covariance is assumed to be\n"
                   "init_lambda times the identity. Default = 1.\n");
+    declareOption(ol, "min_lambda", &NatGradEstimator::min_lambda,
+                  OptionBase::buildoption,
+                  "Minimal lambda value allowed in lambda's update from an eigendecomposition.\n");
+
     declareOption(ol, "regularizer", &NatGradEstimator::init_lambda,
                   OptionBase::buildoption,
                   "Proxy for option init_lambda (different name to avoid python problems).\n");
@@ -258,9 +263,15 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         // get eigen-decomposition, with one more eigen-x than necessary to check if coherent with lambda
         //if (save_G)
         //    saveAscii("G.amat",G);
-        eigenVecOfSymmMat(G,n_eigen+1,D,Vt);
+
+        // try to regularize G
+//        for (int j=0;j<n+1;j++)
+//            G(j,j) += 0.001;
+
+
+//        eigenVecOfSymmMat(G,n_eigen,D,Vt);
         // Get all eigenvalues -> this resizes D and Vt, but it doesn't matter
-//        eigenVecOfSymmMat(G,G.width(),D,Vt);
+        eigenVecOfSymmMat(G,G.width(),D,Vt);
 //        cout << "-= " << t << " =-" << endl;
 //        cout << D.length() << " eigenvalues = " << D << endl;
 
@@ -302,6 +313,7 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
         if( update_lambda_from_eigen )    {
 //            if (D[n_eigen-1]>lambda)
 //                cout << " *** Last lambda too small? *** lambda, last eigen : " << lambda << ", " << D[n_eigen-1] << endl;
+
 /*            float big_eig = D[0];
             bool cont = true;
             for (int j=0;j<n_eigen && cont;j++) {
@@ -310,8 +322,19 @@ void NatGradEstimator::operator()(int t, const Vec& g, Vec v)
                     cont = false;
                 }
             }
-            if(cont)*/
+            if(cont)
                 lambda = D[n_eigen-1];
+
+*/
+            
+            lambda =  D[n_eigen-1];
+
+
+
+            if( lambda < min_lambda )
+                lambda = min_lambda;
+
+
 //          if (D[n_eigen]<1e-6)
 //              PLWARNING("NatGradEstimator: updating lambda with small value %g\n",D[n_eigen]);
 //          lambda = D[n_eigen-1];

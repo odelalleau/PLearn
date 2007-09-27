@@ -67,6 +67,9 @@ public:
 
     //! regularization coefficient of covariance matrix (initial values on diagonal)
     real init_lambda;
+    //! Minimal value allowed for lambda in its update from an
+    //eigendecomposition
+    real min_lambda;
 
     //! number of eigenvectors-eigenvalues that is preserved of the covariance matrix
     int n_eigen;
