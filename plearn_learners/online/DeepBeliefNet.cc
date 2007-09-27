@@ -2223,7 +2223,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
         if (reconstruct_layerwise)
         {
             layer_input.resize(layers[n_layers-2]->size);
-            layer_input << layers[n_layers-2]->expectation.subVec(0,layers[n_layers-2]->expectation.length()-2);
+            layer_input << layers[n_layers-2]->expectation;
             connections[n_layers-2]->setAsUpInput(layers[n_layers-1]->expectation);
             layers[n_layers-2]->getAllActivations(connections[n_layers-2]);
             real rc = reconstruction_costs[n_layers-1] = layers[n_layers-2]->fpropNLL( layer_input );
@@ -2317,6 +2317,11 @@ void DeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, VMat te
         // We just need to put a value in one of the rows of that column.
         testcosts->put(0,cumulative_testing_time_cost_index,cumulative_testing_time);
 
+    if( !test_stats )
+    {
+        test_stats = new VecStatsCollector();
+        test_stats->setFieldNames(getTestCostNames());
+    }
     if (test_stats) {
         // Here we simply update the corresponding stat index
         Vec test_time_stats(test_stats->length(), MISSING_VALUE);
