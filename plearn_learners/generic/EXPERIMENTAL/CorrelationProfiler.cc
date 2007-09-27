@@ -87,7 +87,7 @@ void CorrelationProfiler::operator()(Vec& v)
 void CorrelationProfiler::printAndReset()
 {
 
-    cout << its_name << " - correlation based on " << n << " samples." << endl;
+    cout << its_name << " - stats based on " << n << " samples." << endl;
 
     // *** Get mean
     sum_v /= n;
@@ -98,7 +98,15 @@ void CorrelationProfiler::printAndReset()
     // *** Get the centered covariance
     externalProductScaleAcc(A, sum_v, sum_v, -1.0);
 
-    // *** Get correlation by dividing by the product of the standard deviations
+    // TODO check opening
+    string file_name;
+    file_name = its_name + "_covariance.txt";
+    ofstream fd;
+    fd.open( file_name.c_str() );
+    A.print(fd);
+    fd.close();
+
+/*    // *** Get correlation by dividing by the product of the standard deviations
     Vec diagA = diag( A );
     // TODO Not very efficient. Isn't there a lapack function for this. 
     for(int i=0; i<A.length(); i++)   {
@@ -117,7 +125,7 @@ void CorrelationProfiler::printAndReset()
     ofstream fd;
     fd.open( file_name.c_str() );
     A.print(fd);
-    fd.close();
+    fd.close();*/
 
     // *** Reset
     reset();
