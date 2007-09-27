@@ -54,6 +54,7 @@
  * PTest *
  *********/
 #include <plearn/base/test/PLCheckTest.h>
+#include <plearn/base/test/PLStringutilsTest.h>
 #include <plearn/base/test/PP/PPTest.h>
 #include <plearn/base/test/ObjectGraphIterator/ObjectGraphIteratorTest.h>
 #include <plearn/io/test/PLLogTest.h>
