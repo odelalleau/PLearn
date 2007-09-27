@@ -231,9 +231,11 @@ void AdaBoost::declareMethods(RemoteMethodMap& rmm)
 
     declareMethod(
         rmm, "computeOutput_at_stage", &AdaBoost::remote_computeOutput_at_stage,
-        (BodyDoc("On a trained learner, this computes the output from the input with the first stage weaklearner. Their must be enought weaklearner that have been trained"),
+        (BodyDoc("On a trained learner, this computes the output from the "
+                 "input with the first stage weak learner. There must be "
+                 "enough weak learners that have been trained"),
          ArgDoc ("input", "Input vector (should have width inputsize)"),
-         ArgDoc ("stage", "The number of stage to use to calculate the output"),
+         ArgDoc ("stage", "The number of stage to use to compute the output"),
          RetDoc ("Computed output (will have width outputsize)")));
 
 }
@@ -255,6 +257,7 @@ void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(tmp_output2,              copies);
     deepCopyField(learners_error,           copies);
     deepCopyField(example_weights,          copies);
     deepCopyField(weak_learner_output,      copies);
@@ -789,7 +792,8 @@ TVec<string> AdaBoost::getTrainCostNames() const
 }
 
 //! Version of computeOutput that returns a result by value
-Vec AdaBoost::remote_computeOutput_at_stage(const Vec& input,const int stage) const
+Vec AdaBoost::remote_computeOutput_at_stage(const Vec& input,
+                                            const int stage) const
 {
     tmp_output2.resize(outputsize());
     computeOutput(input, tmp_output2, stage);

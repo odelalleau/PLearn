@@ -140,12 +140,15 @@ public:
 
 private: 
     //! This does the actual building. 
-    // (Please implement in .cc)
     void build_();
 
     // List of methods that are called by Remote Method Invocation.  Our
     // convention is to have them start with the remote_ prefix.
-    Vec remote_computeOutput_at_stage(const Vec& input,const int stage) const;
+
+    //! Compute output at a given stage. Note that the returned vector may
+    //! be modified by subsequent use of this object, and thus should be copied
+    //! if it needs to be stored safely.
+    Vec remote_computeOutput_at_stage(const Vec& input, const int stage) const;
 
 protected: 
     //! Declares this class' options
