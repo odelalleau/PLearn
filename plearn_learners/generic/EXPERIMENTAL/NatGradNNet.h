@@ -43,7 +43,7 @@
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/generic/GradientCorrector.h>
 #include <plearn/sys/Profiler.h>
-//#include "CorrelationProfiler.h"
+//#include "CorrelationProfiler.h" // *stat*
 
 namespace PLearn {
 
@@ -140,8 +140,27 @@ public:
     // average with this coefficient (near 0 for very slow averaging)
     real activation_statistics_moving_average_coefficient;
 
+    // *stat*
+    // Temporary stuff for getting a clue as to what's going on
+    // Look for the marker '*stat*' in the code
+
+    // -Options-
     //! Stages for profiling the correlation between the gradients' elements
     //int corr_profiling_start, corr_profiling_end;
+
+    // -Not options-
+    //PP<CorrelationProfiler> g_corrprof, ng_corrprof;    // for optional gradient correlation profiling
+    //real sum_gradient_norms;     // holds sum of the gradient norms - reset at each epoch
+    //Vec all_params_cum_gradient; // holds the sum of the gradients - reset at each epoch
+
+    //! To see differences between class gradient covariances
+    //TVec<VecStatsCollector> pa_gradstats;   // one VecStatsCollector per output class
+
+    //! Holds the number of samples gathered for each weight
+    //TVec<int> pv_all_nsamples;
+    //TVec< TMat<int> > pv_layer_nsamples;
+
+    // *stat* end
 
 public:
     //*************************************************************
@@ -169,20 +188,23 @@ public:
     // each parameter based on the estimated probability of it being positive or
     // negative.
     bool pv_random_sample_step;
-    
 
 protected:
     //! accumulated statistics of gradients on each parameter.
     PP<VecStatsCollector> pv_gradstats;
 
     //! The step size (absolute value) to be taken for each parameter.
-    Vec pv_stepsizes;
+    Vec pv_all_stepsizes;
+    TVec<Mat> pv_layer_stepsizes;
 
     //! Indicates whether the previous step was positive (true) or negative (false)
-    TVec<bool> pv_stepsigns;
+    TVec<bool> pv_all_stepsigns;
+    TVec< TMat<bool> > pv_layer_stepsigns;
 
-    // profiling
-    TVec<int> all_ns;
+    //! Temporary add-on. Allows an undetermined signed value (zero).
+    TVec<int> pv_all_intstepsigns;
+    TVec< TMat<int> > pv_layer_intstepsigns;
+
 
 public:
     //#####  Public Member Functions  #########################################
@@ -304,6 +326,10 @@ protected:
     //! gradient computation and weight update in Pascal Vincent's gradient technique
     void pvGradUpdate();
 
+    //! a related idea 
+    void paGradUpdate();
+
+
 private:
     //#####  Private Member Functions  ########################################
 
@@ -333,7 +359,8 @@ private:
     Vec example_weights; // one element per example in a minibatch
     Mat train_costs; // one row per example in a minibatch
 
-    //PP<CorrelationProfiler> g_corrprof, ng_corrprof;    // for optional gradient correlation profiling
+
+    
 };
 
 // Declares a few other classes and functions related to this class
