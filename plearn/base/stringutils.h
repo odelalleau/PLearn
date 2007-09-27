@@ -137,16 +137,19 @@ string underscore_to_space(string str);
 //! replaces all backslashes with slash
 string backslash_to_slash(string str);
 
+//! Return true iff string 's' begins with string 'beginning'.
 inline bool string_begins_with(const string& s, const string& beginning)
 {
     string::size_type n = beginning.size();
-    return (s.size() >= n  &&  beginning == s.substr(0,n-1) );
+    return (s.size() >= n && beginning == s.substr(0, n));
 }
+
+//! Return true iff string 's' ends with string 'end'.
 inline bool string_ends_with(const string& s, const string& end)
 {
     string::size_type n = end.size();
     string::size_type m = s.size();
-    return (m >= n  &&  end == s.substr(m-n,m) );
+    return (m >= n  &&  end == s.substr(m-n, n) );
 }
   
 //! replaces all occurences of searchstr in the text by replacestr
