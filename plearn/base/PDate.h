@@ -87,7 +87,8 @@ public:
 
     //!  Initialize a date from a string. 
     //!  Currently recognized formats are: "2003/01/27", "27JAN2003"
-    PDate(string date);
+    //!  if invalid_value_as_missing is true and the string is an invalid date, we set the date as missing
+    PDate(string date,bool invalid_value_as_missing=false);
 
     //!  Missing date handling
     bool isMissing() const;

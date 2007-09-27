@@ -112,7 +112,7 @@ PDate::PDate(int julian_day)
     PLASSERT( isValid() );
 }
 
-PDate::PDate(string date)
+PDate::PDate(string date,bool invalid_value_as_missing)
 {
     date = removeblanks(date);
     search_replace(date, "-", "");      // remove dashes
@@ -169,6 +169,8 @@ PDate::PDate(string date)
             month = 11;
         else if(mo=="DEC")
             month = 12;
+        else if(invalid_value_as_missing)
+            setMissing();
         else
             PLERROR("Invalid month string: '%s'",mo.c_str());
     }
@@ -195,11 +197,17 @@ PDate::PDate(string date)
         month = toint(date.substr(2,2));
         day = toint(date.substr(4,2));
     }
+    else if(invalid_value_as_missing)
+        setMissing();
     else
         PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
 
     if( !isValid() )
-        PLERROR("Invalid date string: %s",date.c_str());
+        if(invalid_value_as_missing){
+            setMissing();
+            PLWARNING("Invalid date string: %s",date.c_str());
+        }else
+            PLERROR("Invalid date string: %s",date.c_str());
 }
 
 bool PDate::isMissing() const
@@ -226,7 +234,7 @@ bool PDate::isValid() const
         return valid;
     }
 
-    return year  >= 1900  &&  year  <= 3000 &&
+    return year  >= 1582  &&  year  <= 3000 &&
            month >=    1  &&  month <=   12 &&
            day   >=    1  &&  day   <= lastDayOfMonth();
 }
