@@ -138,10 +138,10 @@ void NxProfileLearner::build_()
 
     if( L1_penalty_factor < 0. )
         PLWARNING("NxProfileLearner::build:\n"
-                    "L1_penalty_factor is negative!\n", slr);
+                    "L1_penalty_factor is negative!\n");
     if( L2_penalty_factor < 0. )
         PLWARNING("NxProfileLearner::build:\n"
-                    "L2_penalty_factor is negative!\n", slr);
+                    "L2_penalty_factor is negative!\n");
     if( (slr*L2_penalty_factor) > 1. )
         PLWARNING("NxProfileLearner::build:\n"
                     "slr = %f is too large for L2_penalty_factor!\n", slr);
