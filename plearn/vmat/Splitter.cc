@@ -70,6 +70,25 @@ void Splitter::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+void Splitter::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "nSetsPerSplit", &Splitter::nSetsPerSplit,
+        (BodyDoc("Returns the number of sets per split\n"),
+         RetDoc ("the numer of sets per split")));
+    declareMethod(
+        rmm, "nsplits", &Splitter::nsplits,
+        (BodyDoc(" Returns the number of available different 'splits'\n"),
+         RetDoc (" the numer of available splits")));
+
+
+///TODO export    virtual TVec<VMat> getSplit(int i=0) = 0;
+
+}
 void Splitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
