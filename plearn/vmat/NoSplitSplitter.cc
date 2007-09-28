@@ -104,15 +104,6 @@ void NoSplitSplitter::build_()
 void NoSplitSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("NoSplitSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////
@@ -136,6 +127,7 @@ int NoSplitSplitter::nSetsPerSplit() const
 //////////////
 TVec<VMat> NoSplitSplitter::getSplit(int k)
 {
+    PLASSERT_MSG(k==0,"In NoSplitSplitter::getSplit - asked for a split that don't exist!");
     TVec<VMat> result(1);
     result[0] = dataset;
     return result;
