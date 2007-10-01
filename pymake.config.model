@@ -63,7 +63,7 @@ homedir   = ppath('HOME')
 # Force use of ssh @ Apstat & Lisa
 domain_name = socket.getfqdn();
 if domain_name.endswith('apstat.com') or domain_name.endswith('iro.umontreal.ca') or domain_name.endswith('public'):
-    rshcommand= 'ssh -x -o ConnecTimeout=30'
+    rshcommand= 'ssh -x -o ConnectTimeout=30'
 
 default_nice_value = 1
 
