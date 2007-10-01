@@ -63,7 +63,7 @@ homedir   = ppath('HOME')
 # Force use of ssh @ Apstat & Lisa
 domain_name = socket.getfqdn();
 if domain_name.endswith('apstat.com') or domain_name.endswith('iro.umontreal.ca') or domain_name.endswith('public'):
-    rshcommand= 'ssh -x'
+    rshcommand= 'ssh -x -o ConnecTimeout=30'
 
 default_nice_value = 1
 
@@ -254,7 +254,7 @@ linkeroptions_tail = ''
 # do not specify any option from that group.
 options_choices = [
   [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi',
-    'purify', 'quantify', 'vc++' ],
+    'purify', 'quantify', 'vc++', 'condor' ],
   
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
     'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg' ],
@@ -528,6 +528,15 @@ pymakeOption( name = 'g++',
                       + gcc_opt_options,
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++' )
+
+pymakeOption( name = 'condor',
+              description = 'compiling with g++, with no MPI support',
+              compiler = 'g++',
+              compileroptions = '-Wno-deprecated '+pedantic_mode+'-Wno-long-long -ftemplate-depth-100 ' \
+                      + gcc_opt_options,
+              cpp_definitions = ['USING_MPI=0'],
+              linker = 'condor_compile g++',
+              linkeroptions = '-static')
 
 pymakeOption( name = 'g++3',
               description = 'compiling with g++3 (version 3.0), with no MPI support',
