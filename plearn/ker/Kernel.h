@@ -45,7 +45,6 @@
 
 #include <plearn/base/Object.h>
 #include <plearn/vmat/VMat.h>
-//#include "PLMPI.h"
 
 namespace PLearn {
 using namespace std;
@@ -74,6 +73,9 @@ protected:
     int n_examples;
 
     static void declareOptions(OptionList& ol);
+    
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
 public:
 
@@ -148,6 +150,7 @@ public:
 
     //! Call evaluate_i_j to fill each of the entries (i,j) of symmetric matrix K.
     virtual void computeGramMatrix(Mat K) const;
+    virtual Mat returnComputedGramMatrix() const;
 
     /**
      *  Fill K[i] with the non-zero elements of row i of the Gram matrix.

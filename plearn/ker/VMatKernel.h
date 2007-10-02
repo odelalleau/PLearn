@@ -44,10 +44,11 @@
 #ifndef VMatKernel_INC
 #define VMatKernel_INC
 
-#include <plearn/ker/Kernel.h>
+#include "Kernel.h"
 #include <plearn/vmat/VMat.h>
 
 namespace PLearn {
+using namespace std;
 
 class VMatKernel: public Kernel
 {
@@ -62,8 +63,11 @@ protected:
     // * Protected options *
     // *********************
 
-    // ### declare protected option fields (such as learnt parameters) here
-    // ...
+    // *************************
+    // * Public learnt options *
+    // *************************
+
+    Vec train_indices;
     
 public:
 
@@ -72,6 +76,7 @@ public:
     // ************************ 
 
     VMat source;
+
 
     // ### declare public option fields (such as build options) here
     // ...
@@ -124,25 +129,20 @@ public:
 
     //! Compute K(x1,x2).
     virtual real evaluate(const Vec& x1, const Vec& x2) const;
+    virtual real evaluate(real x1, real x2) const;
+    virtual real evaluate(int x1, int x2) const;
 
-    //! Overridden for efficiency.
-    virtual real evaluate_i_j(int i, int j) const;
-    virtual void computeGramMatrix(Mat K) const;
-
-    // *** SUBCLASS WRITING: ***
-    // While in general not necessary, in case of particular needs 
-    // (efficiency concerns for ex) you may also want to overload
-    // some of the following methods:
-    // virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
-    // virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
-    // virtual real evaluate_i_x_again(int i, const Vec& x, real squared_norm_of_x=-1, bool first_time = false) const;
-    // virtual real evaluate_x_i_again(const Vec& x, int i, real squared_norm_of_x=-1, bool first_time = false) const;
-    // virtual void setDataForKernelMatrix(VMat the_data);
-    // virtual void addDataForKernelMatrix(const Vec& newRow);
+    //! Overridden methods
+    virtual void setDataForKernelMatrix(VMat the_data);
+    virtual void addDataForKernelMatrix(const Vec& newRow);
+    virtual real evaluate_i_j(int i, int j) const; //! Compute K(xi,xj) on training samples
+    virtual real evaluate_i_x(int i, const Vec& x, real squared_norm_of_x=-1) const;
+    virtual real evaluate_x_i(const Vec& x, int i, real squared_norm_of_x=-1) const;
+    virtual void computeGramMatrix(Mat K) const;   //! Overridden for more efficiency
+    
+    //! Maybe later someone wants to implement a special behaviours with these functions
     // virtual void setParameters(Vec paramvec);
     // virtual Vec getParameters() const;
-  
-
 };
 
 // Declares a few other classes and functions related to this class.

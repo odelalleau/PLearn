@@ -201,6 +201,7 @@ void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& outp
 ///////////////////
 void KernelProjection::computeOutput(const Vec& input, Vec& output) const
 {
+    PLASSERT( outputsize() > 0 );
     static real* result_ptr;
     if (first_output) {
         // Initialize k_x_xi, used_eigenvectors and result correctly.
@@ -243,7 +244,9 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
 void KernelProjection::forget()
 {
     stage = 0;
+    cout << "forget: n_comp_kept = " << n_comp_kept << endl;
     n_comp_kept = n_comp;
+    cout << "forget: n_comp_kept = " << n_comp_kept << endl;
     n_examples = 0;
     first_output = true;
     last_input.resize(0);
@@ -338,7 +341,6 @@ void KernelProjection::train()
     time_for_gram = clock() - time_for_gram;
     if (verbosity >= 3) {
         cout << flush;
-        cout << "Time to compute the Gram matrix: " << real(time_for_gram) / real(CLOCKS_PER_SEC) << endl;
     }
     // (2) Compute its eigenvectors and eigenvalues.
     eigenVecOfSymmMat(gram, n_comp + ignore_n_first, eigenvalues, eigenvectors);
@@ -346,12 +348,14 @@ void KernelProjection::train()
         eigenvalues = eigenvalues.subVec(ignore_n_first, eigenvalues.length() - ignore_n_first);
         eigenvectors = eigenvectors.subMatRows(ignore_n_first, eigenvectors.length() - ignore_n_first);
     }
+    
     n_comp_kept = eigenvalues.length(); // Could be different of n_comp.
     // (3) Discard low eigenvalues.
     int p = 0;
     while (p < n_comp_kept && eigenvalues[p] > min_eigenvalue)
         p++;
     n_comp_kept = p;
+
     // (4) Optionally remove the discarded components.
     if (free_extra_components) {
         eigenvalues.resize(n_comp_kept);

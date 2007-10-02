@@ -48,11 +48,11 @@
 #include <plearn/base/tostring.h>
 #include <plearn/base/ProgressBar.h>
 #include <plearn/math/TMat_maths.h>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;
 
-using namespace std;
   
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Kernel,
                                  "A Kernel is a real-valued function K(x,y).",
@@ -110,6 +110,21 @@ void Kernel::declareOptions(OptionList &ol)
                   "The number of examples in 'data'.");
   
     inherited::declareOptions(ol);
+}
+
+////////////////////
+// declareMethods //
+////////////////////
+void Kernel::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "returnComputedGramMatrix", &Kernel::returnComputedGramMatrix,
+        (BodyDoc("\n"),
+         RetDoc ("Returns the Gram Matrix")));
 }
 
 ///////////
@@ -370,6 +385,15 @@ void Kernel::computeGramMatrix(Mat K) const
     }
 }
 
+Mat Kernel::returnComputedGramMatrix() const
+{
+    if (!data)
+        PLERROR("Kernel::returnComputedGramMatrix should be called only after setDataForKernelMatrix");
+    int l=data.length();
+    Mat K(l,l);
+    computeGramMatrix(K);
+    return K;
+}
 /////////////////////////////
 // computeSparseGramMatrix //
 /////////////////////////////

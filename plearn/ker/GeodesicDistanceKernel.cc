@@ -71,6 +71,19 @@ GeodesicDistanceKernel::GeodesicDistanceKernel(Ker the_distance_kernel, int the_
     build();
 }
 
+GeodesicDistanceKernel::GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn,
+                                               string the_geodesic_file, bool the_pow_distance,
+					       string the_method)
+    : geodesic_file(the_geodesic_file),
+      knn(the_knn),
+      pow_distance(the_pow_distance),
+      shortest_algo(the_method)
+{
+    distance_kernel = the_distance_kernel;
+    build();
+}
+
+
 PLEARN_IMPLEMENT_OBJECT(GeodesicDistanceKernel,
                         "Computes the geodesic distance based on k nearest neighbors.",
                         ""

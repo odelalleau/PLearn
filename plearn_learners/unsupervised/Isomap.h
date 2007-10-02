@@ -74,6 +74,7 @@ public:
 
     Ker distance_kernel;
     string geodesic_file;
+    string geodesic_method;
     int knn;
 
     // ****************

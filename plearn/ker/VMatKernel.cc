@@ -2,7 +2,7 @@
 
 // VMatKernel.cc
 //
-// Copyright (C) 2005 Benoit Cromp 
+// Copyright (C) 2005 Benoit Cromp
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
  * $Id$ 
  ******************************************************* */
 
-// Authors: Benoit Cromp
+// Authors: Benoit Cromp, Jerome Louradour
 
 /*! \file VMatKernel.cc */
 
@@ -49,8 +49,8 @@ using namespace std;
 //////////////////
 // VMatKernel //
 //////////////////
+// ### Initialize all fields to their default value here
 VMatKernel::VMatKernel() 
-/* ### Initialize all fields to their default value here */
 {
     // ...
 
@@ -69,19 +69,13 @@ PLEARN_IMPLEMENT_OBJECT(VMatKernel,
 ////////////////////
 void VMatKernel::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here
-    // ### For the "flags" of each option, you should typically specify  
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or 
-    // ### OptionBase::tuningoption. Another possible flag to be combined with
-    // ### is OptionBase::nosave
+    declareOption(ol,"source",&VMatKernel::source,
+                  OptionBase::buildoption,
+        "Gram matrix");
 
-    // ### ex:
-    // declareOption(ol, "myoption", &VMatKernel::myoption, OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
-    declareOption(ol,"source",&VMatKernel::source,OptionBase::buildoption,
-                  "Gram matrix");
+    declareOption(ol,"train_indices",&VMatKernel::train_indices,
+                  OptionBase::learntoption,
+        "List of (real)indices corresponding to training samples");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -102,38 +96,108 @@ void VMatKernel::build()
 ////////////
 void VMatKernel::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation. 
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+    PLASSERT( !(source) || ( source->length() == source->width() ) );
+    if ( !specify_dataset )
+        train_indices.resize(0);
 }
 
 //////////////
 // evaluate //
 //////////////
-real VMatKernel::evaluate(const Vec& x1, const Vec& x2) const {
-    PLASSERT( source );
+real VMatKernel::evaluate(const Vec& x1, const Vec& x2) const
+{
     PLASSERT( x1.size()==1 && x2.size()==1 );
-    return source->get(int(x1[0]),int(x2[0]));
+    return evaluate( x1[0], x2[0] );
 }
 
-void VMatKernel::computeGramMatrix(Mat K) const
+real VMatKernel::evaluate(real x1, real x2) const
+{
+    PLASSERT( fabs(x1-(real)((int)x1)) < 0.1 );
+    PLASSERT( fabs(x2-(real)((int)x2)) < 0.1 );
+    return evaluate( int(x1), int(x2) );
+}
+
+real VMatKernel::evaluate(int x1, int x2) const
 {
     PLASSERT( source );
-    K << source->toMat();
+    PLASSERT( x1 >= 0 );
+    PLASSERT( x1 < source->length() );
+    PLASSERT( x2 >= 0 );
+    PLASSERT( x2 < source->width() );
+    return source->get( x1, x2);
 }
-
 
 //////////////////
 // evaluate_i_j //
 //////////////////
-real VMatKernel::evaluate_i_j(int i, int j) const {
+real VMatKernel::evaluate_i_j(int i, int j) const
+{
     PLASSERT( source );
-    return source->get(i,j);
+    if( train_indices.length() == 0 )
+        return evaluate( i, j );
+    PLASSERT( i >= 0 );
+    PLASSERT( i < n_examples );
+    PLASSERT( j >= 0 );
+    PLASSERT( j < n_examples );
+    return evaluate( train_indices[i], train_indices[j] );
 }
+
+//////////////////
+// evaluate_i_x //
+//////////////////
+real VMatKernel::evaluate_i_x(int i, const Vec& x, real squared_norm_of_x) const
+{
+    if( train_indices.length() == 0 )
+        return evaluate( i, (int)x[0] );
+    PLASSERT( i >= 0 );
+    PLASSERT( i < n_examples );
+    PLASSERT( x.size() == 1 );
+    return evaluate( train_indices[i], x[0] );
+}
+
+//////////////////
+// evaluate_x_i //
+//////////////////
+real VMatKernel::evaluate_x_i(const Vec& x, int i, real squared_norm_of_x) const
+{
+//    if( is_symmetric )
+//        return evaluate_i_x( i, x, squared_norm_of_x);
+    if( train_indices.length() == 0 )
+        return evaluate( (int)x[0], i);
+    PLASSERT( i >= 0 );
+    PLASSERT( i < n_examples );
+    PLASSERT( x.size() == 1 );
+    return evaluate( x[0], train_indices[i]);
+}
+
+///////////////////////
+// computeGramMatrix //
+///////////////////////
+void VMatKernel::computeGramMatrix(Mat K) const
+{
+    PLASSERT( source );
+    if( train_indices.length() > 0 )
+    {
+        K.resize(n_examples, n_examples);
+        if( is_symmetric )
+            for(int i = 0; i < n_examples; i++ )
+	    {
+	        K(i,i) = evaluate( train_indices[i], train_indices[i] );
+                for(int j = 0; j < i; j++ )
+                {
+	            K(i,j) = evaluate( train_indices[i], train_indices[j] );
+		    K(j,i) = K(i,j);
+	        }
+            }
+        else
+            for(int i = 0; i < n_examples; i++ )
+                for(int j = 0; j < n_examples; j++ )
+	            K(i,j) = evaluate( train_indices[i], train_indices[j] );
+    }
+    else
+        K << source->toMat();
+}
+
 
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
@@ -142,26 +206,59 @@ void VMatKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields 
-    // ### that you wish to be deepCopied rather than 
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("VMatKernel::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(source, copies);
+    deepCopyField(train_indices, copies);
 }
 
-/* ### This method will be overridden if computations need to be done,
-   ### or to forward the call to another object.
-   ### In this case, be careful that it may be called BEFORE the build_()
-   ### method has been called, if the 'specify_dataset' option is used.
 ////////////////////////////
 // setDataForKernelMatrix //
 ////////////////////////////
-void VMatKernel::setDataForKernelMatrix(VMat the_data) {
+void VMatKernel::setDataForKernelMatrix(VMat the_data)
+{
+    inherited::setDataForKernelMatrix(the_data);
+
+    if( n_examples > 1 )
+    {
+        PLASSERT( data_inputsize == 1 );
+        train_indices.resize(n_examples);
+        for(int i = 0; i < n_examples; i++)
+        {
+            PLASSERT( the_data->get(i,0) >= 0 );
+            PLASSERT( !(source) || ( the_data->get(i,0) < (real)source->width() ) );
+            train_indices[i] = the_data->get(i,0);
+        }
+    }
+    else
+    {
+	PLASSERT( source );
+        PLWARNING("in VMatKernel::setDataForKernelMatrix: all values in the VMatKernel source are taken into acount for training");
+	n_examples = source->width();
+	train_indices.resize(0);
+    }
 }
-*/
+
+////////////////////////////
+// addDataForKernelMatrix //
+////////////////////////////
+void VMatKernel::addDataForKernelMatrix(const Vec& newRow)
+{
+    PLASSERT( newRow.size() == 1 );
+    inherited::addDataForKernelMatrix( newRow );
+    if( train_indices.length() == 0 )
+    {
+        PLASSERT( source );
+	n_examples = source->width();
+        train_indices.resize( n_examples );
+        for(int i = 0; i < n_examples; i++)
+	    train_indices[i] = (real)i;
+    }
+    PLASSERT( newRow[0] > 0 );
+    PLASSERT( !(source) || ( newRow[0] < source->width() ) );
+    train_indices.resize( n_examples + 1 );
+    train_indices[ n_examples ] = newRow[0];
+    n_examples += 1;
+}
+
 
 } // end of namespace PLearn
 

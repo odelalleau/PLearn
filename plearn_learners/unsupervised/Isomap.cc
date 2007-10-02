@@ -52,11 +52,13 @@ using namespace std;
 ////////////
 Isomap::Isomap() 
     : geodesic_file(""),
+      geodesic_method("djikstra"),
       knn(10)
 {
     kernel_is_distance = true;
     // Default distance kernel is the classical Euclidean distance.
     distance_kernel = new DistanceKernel(2);
+    min_eigenvalue = 0;
 }
 
 PLEARN_IMPLEMENT_OBJECT(Isomap,
@@ -92,6 +94,10 @@ void Isomap::declareOptions(OptionList& ol)
 
     declareOption(ol, "geodesic_file", &Isomap::geodesic_file, OptionBase::buildoption,
                   "If provided, the geodesic distances will be saved in this file in binary format.");
+
+    declareOption(ol, "geodesic_method", &Isomap::geodesic_method, OptionBase::buildoption,
+                  "'floyd' or 'djikstra': the method to compute the geodesic distances."
+		  "(cf. GeodesicDistanceKernel)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -130,7 +136,7 @@ void Isomap::build_()
     if (distance_kernel &&
         (!kpca_kernel ||
          (dynamic_cast<GeodesicDistanceKernel*>((Kernel*) kpca_kernel))->distance_kernel != distance_kernel)) {
-        this->kpca_kernel = new GeodesicDistanceKernel(distance_kernel, knn, geodesic_file, true);
+        this->kpca_kernel = new GeodesicDistanceKernel(distance_kernel, knn, geodesic_file, true, geodesic_method);
         // We have modified the KPCA kernel, we must rebuild the KPCA.
         inherited::build();
     }
