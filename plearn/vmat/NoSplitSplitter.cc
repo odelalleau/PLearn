@@ -127,7 +127,8 @@ int NoSplitSplitter::nSetsPerSplit() const
 //////////////
 TVec<VMat> NoSplitSplitter::getSplit(int k)
 {
-    PLASSERT_MSG(k==0,"In NoSplitSplitter::getSplit - asked for a split that don't exist!");
+    PLASSERT_MSG(k==0,"In NoSplitSplitter::getSplit - Asked for a split that "
+                      "does not exist");
     TVec<VMat> result(1);
     result[0] = dataset;
     return result;
