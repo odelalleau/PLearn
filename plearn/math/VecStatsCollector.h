@@ -278,6 +278,10 @@ public:
     void append(const VecStatsCollector& vsc, const string fieldname_prefix="",
                 const TVec<string>& new_fieldnames = TVec<string>() );
 
+    //! remote version of append: takes pointer to other VecStatsCollector
+    void remote_append(const VecStatsCollector* vsc, const string fieldname_prefix,
+                       const TVec<string>& new_fieldnames);
+
     //! sets the size of the observation window
     virtual void setWindowSize(int sz);
 

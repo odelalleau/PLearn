@@ -228,7 +228,16 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("x"," the new data\n"),
          ArgDoc ("weight"," the weight of the data")));
 
- }
+   declareMethod(
+       rmm, "append", &VecStatsCollector::remote_append,
+       (BodyDoc("Appends all the StatsCollectors of an "
+                "existing VecStatsCollector into this one.\n"),
+        ArgDoc ("vsc","the other VecStatsCollector\n"),
+        ArgDoc ("fieldname_prefix","prefix concatenated "
+                "to the existing field names\n"),
+        ArgDoc ("new_fieldnames","new name for appended fields (overrides prefix)\n")));
+   
+}
 
 int VecStatsCollector::length() const
 {
@@ -795,6 +804,13 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
         sum_cross_weights        = new_sum_cross_weights;
         sum_cross_square_weights = new_sum_cross_square_weights;
     }
+}
+
+void VecStatsCollector::remote_append(const VecStatsCollector* vsc, 
+                                      const string fieldname_prefix,
+                                      const TVec<string>& new_fieldnames)
+{
+    append(*vsc, fieldname_prefix, new_fieldnames);
 }
 
 void VecStatsCollector::merge(VecStatsCollector& other)
