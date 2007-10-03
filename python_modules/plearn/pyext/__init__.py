@@ -37,7 +37,15 @@ from plearn.pyplearn.plargs import *
 import cgitb
 cgitb.enable(format='PLearn')
 
+import atexit
+def cleanupWrappedObjects():
+    import gc
+    gc.collect()
+    ramassePoubelles()
+atexit.register(cleanupWrappedObjects)
+
 print versionString()
+
 
 # Redefines function TMat to emulate pyplearn behaviour
 def TMat( *args ):
