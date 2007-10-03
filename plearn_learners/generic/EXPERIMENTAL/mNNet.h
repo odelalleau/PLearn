@@ -199,6 +199,11 @@ protected:
     //! and write into neuron_gradients_per_layer[n_layers-2], gradient on pre-non-linearity activation
     virtual void fbpropLoss(const Mat& output, const Mat& target, const Vec& example_weights, Mat& train_costs) const;
 
+    virtual void bpropUpdateNet(const int t);
+    virtual void bpropNet(const int t);
+    
+    void l1regularizeOutputs();
+
 private:
     //#####  Private Member Functions  ########################################
 

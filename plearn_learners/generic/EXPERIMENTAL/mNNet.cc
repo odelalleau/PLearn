@@ -210,6 +210,8 @@ void mNNet::build_()
         }
     }
 
+    Profiler::activate();
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -335,58 +337,9 @@ void mNNet::onlineStep(int t, const Mat& targets,
 
     fpropNet(minibatch_size);
     fbpropLoss(neuron_outputs_per_layer[n_layers-1],targets,example_weights,train_costs);
+    bpropUpdateNet(t);
 
-    // mean gradient over minibatch_size examples has less variance
-    // can afford larger learning rate (divide by sqrt(minibatch) 
-    // instead of minibatch)
-    real lrate = init_lrate/(1 + t*lrate_decay);
-    lrate /= sqrt(real(minibatch_size));
-
-    for (int i=n_layers-1;i>0;i--)
-    {
-        // here neuron_gradients_per_layer[i] contains the gradient on activations (weighted sums)
-        //      (minibatch_size x layer_size[i])
-        Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
-        Mat next_neurons_gradient = neuron_gradients_per_layer[i];
-        Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
-
-        if (i>1) // if not first hidden layer then compute gradient on previous layer
-        {
-            // propagate gradients
-            productScaleAcc(previous_neurons_gradient,next_neurons_gradient,false,
-                            weights[i-1],false,1,0);
-            // propagate through tanh non-linearity
-            // TODO IN NEED OF OPTIMIZATION
-            for (int j=0;j<previous_neurons_gradient.length();j++)
-            {
-                real* grad = previous_neurons_gradient[j];
-                real* out = previous_neurons_output[j];
-                for (int k=0;k<previous_neurons_gradient.width();k++,out++)
-                    grad[k] *= (1 - *out * *out); // gradient through tanh derivative
-            }
-        }
-        // compute gradient on parameters and update them in one go (more efficient)
-        productScaleAcc(layer_params[i-1],next_neurons_gradient,true,
-                            neuron_extended_outputs_per_layer[i-1],false,
-                            -lrate,1);
-    }
-
-    // Output layer L1 regularization
-    if( output_layer_L1_penalty_factor != 0. )    {
-        real L1_delta = lrate * output_layer_L1_penalty_factor;
-        real* m_i = layer_params[n_layers-2].data();
-        for(int i=0; i<layer_params[n_layers-2].length(); i++,m_i+=layer_params[n_layers-2].mod())  {
-            for(int j=0; j<layer_params[n_layers-2].width(); j++)   {
-                if( m_i[j] > L1_delta )
-                    m_i[j] -= L1_delta;
-                else if( m_i[j] < -L1_delta )
-                    m_i[j] += L1_delta;
-                else
-                    m_i[j] = 0.;
-            }
-        }
-    }
-
+    l1regularizeOutputs();
 }
 
 void mNNet::computeOutput(const Vec& input, Vec& output) const
@@ -485,6 +438,103 @@ void mNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& example_
             if (example_weight[i]!=1.0) {
                 out_grad(i) *= example_weight[i];
                 costs(i,0) *= example_weight[i];
+            }
+        }
+    }
+}
+
+//! Performs the backprop update. Must be called after the fbpropNet.
+void mNNet::bpropUpdateNet(int t)
+{
+    // mean gradient over minibatch_size examples has less variance
+    // can afford larger learning rate (divide by sqrt(minibatch)
+    // instead of minibatch)
+    real lrate = init_lrate/(1 + t*lrate_decay);
+    lrate /= sqrt(real(minibatch_size));
+
+    for (int i=n_layers-1;i>0;i--)  {
+        // here neuron_gradients_per_layer[i] contains the gradient on
+        // activations (weighted sums)
+        //      (minibatch_size x layer_size[i])
+        Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
+        Mat next_neurons_gradient = neuron_gradients_per_layer[i];
+        Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
+
+        if (i>1) // if not first hidden layer then compute gradient on previous layer
+        {
+            // propagate gradients
+            productScaleAcc(previous_neurons_gradient,next_neurons_gradient,false,
+                            weights[i-1],false,1,0);
+            // propagate through tanh non-linearity
+            // TODO IN NEED OF OPTIMIZATION
+            for (int j=0;j<previous_neurons_gradient.length();j++)  {
+                real* grad = previous_neurons_gradient[j];
+                real* out = previous_neurons_output[j];
+                for (int k=0;k<previous_neurons_gradient.width();k++,out++)
+                    grad[k] *= (1 - *out * *out); // gradient through tanh derivative
+            }
+        }
+        // compute gradient on parameters and update them in one go (more
+        // efficient)
+        productScaleAcc(layer_params[i-1],next_neurons_gradient,true,
+                            neuron_extended_outputs_per_layer[i-1],false,
+                            -lrate,1);
+    }
+}
+
+//! Computes the gradients without doing the update.
+//! Must be called after fbpropLoss
+void mNNet::bpropNet(int t)
+{
+    for (int i=n_layers-1;i>0;i--)  {
+        // here neuron_gradients_per_layer[i] contains the gradient on
+        // activations (weighted sums)
+        //      (minibatch_size x layer_size[i])
+        Mat previous_neurons_gradient = neuron_gradients_per_layer[i-1];
+        Mat next_neurons_gradient = neuron_gradients_per_layer[i];
+        Mat previous_neurons_output = neuron_outputs_per_layer[i-1];
+
+        if (i>1) // if not first hidden layer then compute gradient on previous layer
+        {
+            // propagate gradients
+            productScaleAcc(previous_neurons_gradient,next_neurons_gradient,false,
+                            weights[i-1],false,1,0);
+            // propagate through tanh non-linearity
+            // TODO IN NEED OF OPTIMIZATION
+            for (int j=0;j<previous_neurons_gradient.length();j++)  {
+                real* grad = previous_neurons_gradient[j];
+                real* out = previous_neurons_output[j];
+                for (int k=0;k<previous_neurons_gradient.width();k++,out++)
+                    grad[k] *= (1 - *out * *out); // gradient through tanh derivative
+            }
+        }
+        // compute gradient on parameters 
+        productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
+                            neuron_extended_outputs_per_layer[i-1],false,
+                            1,0);
+    }
+}
+
+void mNNet::l1regularizeOutputs()
+{
+    // mean gradient over minibatch_size examples has less variance
+    // can afford larger learning rate (divide by sqrt(minibatch)
+    // instead of minibatch)
+    real lrate = init_lrate/(1 + stage*lrate_decay);
+    lrate /= sqrt(real(minibatch_size));
+
+    // Output layer L1 regularization
+    if( output_layer_L1_penalty_factor != 0. )    {
+        real L1_delta = lrate * output_layer_L1_penalty_factor;
+        real* m_i = layer_params[n_layers-2].data();
+        for(int i=0; i<layer_params[n_layers-2].length();i++,m_i+=layer_params[n_layers-2].mod())  {
+            for(int j=0; j<layer_params[n_layers-2].width(); j++)   {
+                if( m_i[j] > L1_delta )
+                    m_i[j] -= L1_delta;
+                else if( m_i[j] < -L1_delta )
+                    m_i[j] += L1_delta;
+                else
+                    m_i[j] = 0.;
             }
         }
     }
