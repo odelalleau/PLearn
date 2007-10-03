@@ -57,6 +57,7 @@ PvGradNNet::PvGradNNet()
       pv_deceleration(0.5),
       pv_min_samples(2),
       pv_required_confidence(0.80),
+      pv_strategy(1),
       pv_random_sample_step(false)
 
 {
@@ -101,6 +102,11 @@ void PvGradNNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Minimum required confidence (probability of being positive or negative) for taking a step.");
 
+    declareOption(ol, "pv_strategy",
+                  &PvGradNNet::pv_strategy,
+                  OptionBase::buildoption,
+                  "Strategy to use for the weight updates (number from 1 to 4).");
+
     declareOption(ol, "pv_random_sample_step",
                   &PvGradNNet::pv_random_sample_step,
                   OptionBase::buildoption,
@@ -115,24 +121,31 @@ void PvGradNNet::declareOptions(OptionList& ol)
 // TODO - reloading an object will not work! layer_params will juste get lost.
 void PvGradNNet::build_()
 {
-    pv_gradstats = new VecStatsCollector();
-
     int n = all_params.length();
+    pv_all_nsamples.resize(n);
+    pv_all_sum.resize(n);
+    pv_all_sumsquare.resize(n);
     pv_all_stepsigns.resize(n);
     pv_all_stepsizes.resize(n);
-    //pv_all_nsamples.resize(n);    // *stat*
 
     // Get some structure on the previous Vecs
+    pv_layer_nsamples.resize(n_layers-1);
+    pv_layer_sum.resize(n_layers-1);
+    pv_layer_sumsquare.resize(n_layers-1);
     pv_layer_stepsigns.resize(n_layers-1);
     pv_layer_stepsizes.resize(n_layers-1);
-    //pv_layer_nsamples.resize(n_layers-1); // *stat*
+    int np;
     for (int i=0,p=0;i<n_layers-1;i++)  {
-        int np=layer_sizes[i+1]*(1+layer_sizes[i]);
+        np=layer_sizes[i+1]*(1+layer_sizes[i]);
+        pv_layer_nsamples.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+        pv_layer_sum.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
+        pv_layer_sumsquare.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
         pv_layer_stepsigns[i]=pv_all_stepsigns.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
         pv_layer_stepsizes[i]=pv_all_stepsizes.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-        //pv_layer_nsamples[i]=pv_all_nsamples.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1); // *stat*
         p+=np;
     }
+
+//    pv_gradstats = new VecStatsCollector();
 
 }
 
@@ -148,14 +161,18 @@ void PvGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(pv_gradstats, copies);
+    deepCopyField(pv_all_nsamples, copies); 
+    deepCopyField(pv_layer_nsamples, copies);
+    deepCopyField(pv_all_sum, copies); 
+    deepCopyField(pv_layer_sum, copies);
+    deepCopyField(pv_all_sumsquare, copies);
+    deepCopyField(pv_layer_sumsquare, copies);
     deepCopyField(pv_all_stepsigns, copies);
     deepCopyField(pv_layer_stepsigns, copies);
     deepCopyField(pv_all_stepsizes, copies);
     deepCopyField(pv_layer_stepsizes, copies);
-    //deepCopyField(pv_all_nsamples, copies); // *stat*
-    //deepCopyField(pv_layer_nsamples, copies); // *stat*
 
+//    deepCopyField(pv_gradstats, copies);
 }
 
 void PvGradNNet::forget()
@@ -165,28 +182,58 @@ void PvGradNNet::forget()
     //! a fresh learner!)
     inherited::forget();
 
-    pv_gradstats->forget();
+    pv_all_nsamples.fill(0);
+    pv_all_sum.fill(0.0);
+    pv_all_sumsquare.fill(0.0);
     pv_all_stepsigns.fill(0);
     pv_all_stepsizes.fill(pv_initial_stepsize);
-    //pv_all_nsamples.fill(0);
+
+//    pv_gradstats->forget();
 }
 
 //! Performs the backprop update. Must be called after the fbpropNet.
 void PvGradNNet::bpropUpdateNet(int t)
 {
     bpropNet(t);
-    pv_gradstats->update(all_params_gradient);
 
+    switch( pv_strategy )   {
+        case 1 :
+            pvGrad();
+            break;
+        case 2 :
+            discountGrad();
+            break;
+        case 3 :
+            globalSyncGrad();
+            break;
+        case 4 :
+            neuronSyncGrad();
+            break;
+        default :
+            PLERROR("PvGradNNet::bpropUpdateNet() - No such pv_strategy.");
+    }
+}
+
+void PvGradNNet::pvGrad()   
+{
     int np = all_params.length();
-    int ns;
     real m, e, prob_pos, prob_neg;
 
     for(int k=0; k<np; k++) {
-        StatsCollector& st = pv_gradstats->getStats(k);
-        ns = (int)st.nnonmissing();
-        if(ns>pv_min_samples)   {
-            m = st.mean();
-            e = st.stderror();
+        // update stats
+        pv_all_nsamples[k]++;
+        pv_all_sum[k] += all_params_gradient[k];
+        pv_all_sumsquare[k] += all_params_gradient[k] * all_params_gradient[k];
+
+        if(pv_all_nsamples[k]>pv_min_samples)   {
+            m = pv_all_sum[k] / pv_all_nsamples[k];
+            // e is the standard error
+            //e = sqrt( (pv_all_sumsquare[k] - (pv_all_sum[k]*pv_all_sum[k])/pv_all_nsamples[k]) / (real)(pv_all_nsamples[k]*(pv_all_nsamples[k]-1)) );
+            // variance
+            e = real((pv_all_sumsquare[k] - square(pv_all_sum[k])/pv_all_nsamples[k])/(pv_all_nsamples[k]-1));
+            // standard error 
+            e = sqrt(e/pv_all_nsamples[k]);
+
             // test to see if numerical problems
             if( fabs(m) < 1e-15 || e < 1e-15 )  {
                 cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
@@ -216,7 +263,9 @@ void PvGradNNet::bpropUpdateNet(int t)
                     }
                     all_params[k] -= pv_all_stepsizes[k];
                     pv_all_stepsigns[k] = 1;
-                    st.forget();
+                    pv_all_nsamples[k]=0;
+                    pv_all_sum[k]=0.0;
+                    pv_all_sumsquare[k]=0.0;
                 }
                 // gradient is negative
                 else if(prob_neg>=pv_required_confidence)   {
@@ -233,7 +282,9 @@ void PvGradNNet::bpropUpdateNet(int t)
                     }
                     all_params[k] += pv_all_stepsizes[k];
                     pv_all_stepsigns[k] = -1;
-                    st.forget();
+                    pv_all_nsamples[k]=0;
+                    pv_all_sum[k]=0.0;
+                    pv_all_sumsquare[k]=0.0;
                 }
             }
             /*else  // random sample update direction (sign)
@@ -251,6 +302,18 @@ void PvGradNNet::bpropUpdateNet(int t)
         //pv_all_nsamples[k] = ns; // *stat*
     }
 
+}
+
+void PvGradNNet::discountGrad()
+{
+}
+
+void PvGradNNet::globalSyncGrad()
+{
+}
+
+void PvGradNNet::neuronSyncGrad()
+{
 }
 
 } // end of namespace PLearn

@@ -69,6 +69,8 @@ public:
     //! for taking a step.
     real pv_required_confidence;
 
+    int pv_strategy;
+
     //! If this is set to true, then we will randomly choose the step sign for
     // each parameter based on the estimated probability of it being positive
     // or negative.
@@ -113,7 +115,11 @@ protected:
     static void declareOptions(OptionList& ol);
 
     virtual void bpropUpdateNet(const int t);
-//    virtual void bpropNet(const int t);
+
+    void pvGrad(); 
+    void discountGrad();
+    void globalSyncGrad();
+    void neuronSyncGrad();
     
 private:
     //#####  Private Member Functions  ########################################
@@ -124,8 +130,15 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
-    //! accumulated statistics of gradients on each parameter.
-    PP<VecStatsCollector> pv_gradstats;
+    //! Holds the number of samples gathered for each weight
+    TVec<int> pv_all_nsamples;
+    TVec< TMat<int> > pv_layer_nsamples;
+    //! Sum of collected gradients 
+    Vec pv_all_sum;
+    TVec<Mat> pv_layer_sum;
+    //! Sum of squares of collected gradients 
+    Vec pv_all_sumsquare;
+    TVec<Mat> pv_layer_sumsquare;
 
     //! Temporary add-on. Allows an undetermined signed value (zero).
     TVec<int> pv_all_stepsigns;
@@ -135,10 +148,9 @@ private:
     Vec pv_all_stepsizes;
     TVec<Mat> pv_layer_stepsizes;
 
-    //! Holds the number of samples gathered for each weight
-    //! This is purely for outputing stats.
-    //TVec<int> pv_all_nsamples;
-    //TVec< TMat<int> > pv_layer_nsamples;
+    //! accumulated statistics of gradients on each parameter.
+    //PP<VecStatsCollector> pv_gradstats;
+
 
 };
 
