@@ -119,7 +119,9 @@ void HyperOptimize::declareOptions(OptionList& ol)
 {
     declareOption(
         ol, "which_cost", &HyperOptimize::which_cost, OptionBase::buildoption,
-        "An index or a name in the tester's statnames to be used as the objective cost to minimize");
+        "An index or a name in the tester's statnames to be used as the"
+        " objective cost to minimize. If the index <0, we will take the last"
+        " learner.");
 
     declareOption(
         ol, "min_n_trials", &HyperOptimize::min_n_trials, OptionBase::buildoption,
@@ -330,7 +332,9 @@ Vec HyperOptimize::optimize()
             results = runTest(trialnum);
 
         reportResult(trialnum,results);
-        real objective = results[which_cost_pos];
+        real objective = MISSING_VALUE;
+        if (which_cost_pos>=0)
+            objective = results[which_cost_pos];
 
         option_vals = oracle->generateNextTrial(option_vals,objective);
 
@@ -351,13 +355,14 @@ Vec HyperOptimize::optimize()
         PLWARNING("In HyperOptimize::optimize - No trials at all were completed;\n"
                   "perhaps the oracle settings are wrong?");
 
-    // revert to best_learner
-    hlearner->setLearner(best_learner);
+    // revert to best_learner if one found. Otherwise take the last.
+    if(best_learner!=NULL)
+        hlearner->setLearner(best_learner);
 
-    if (best_results.isEmpty())
+    if (best_results.isEmpty() && which_cost_pos>=0)
         // This could happen for instance if all results are NaN.
-        PLWARNING("In HyperOptimize::optimize - Could not find a best result, something "
-                  "must be wrong");
+        PLWARNING("In HyperOptimize::optimize - Could not find a best result,"
+                  " something must be wrong");
     else
         // report best result again, if not empty
         reportResult(-1,best_results);
