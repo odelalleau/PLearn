@@ -159,6 +159,7 @@
 #include <plearn_learners/generic/ChainedLearners.h>
 #include <plearn_learners/generic/StackedLearner.h>
 #include <plearn_learners/generic/TestingLearner.h>
+#include <plearn_learners/generic/TransformOutputLearner.h>
 #include <plearn_learners/generic/VPLPreprocessedLearner.h>
 #include <plearn_learners/generic/VPLPreprocessedLearner2.h>
 #include <plearn_learners/generic/VPLCombinedLearner.h>
