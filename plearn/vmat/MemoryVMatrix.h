@@ -74,6 +74,7 @@ public:
 
     Mat data;
     VMat source;
+    bool deep_copy_memory_data;
 
 private:
 

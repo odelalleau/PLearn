@@ -55,14 +55,16 @@ PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
 
 MemoryVMatrix::MemoryVMatrix()
     : synch_data(true),
-      data(Mat())
+      data(Mat()),
+      deep_copy_memory_data(true)
 {
     memory_data = data;
 }
 
 MemoryVMatrix::MemoryVMatrix(int l, int w)
     : inherited(l, w),
-      synch_data(false)
+      synch_data(false),
+      deep_copy_memory_data(true)
 {
     data.resize(l,w);
     memory_data = data;
@@ -72,7 +74,9 @@ MemoryVMatrix::MemoryVMatrix(int l, int w)
 MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
     : inherited(the_data.length(), the_data.width()),
       synch_data(true),
-      data(the_data)
+      data(the_data),
+      deep_copy_memory_data(true)
+
 {
     memory_data = the_data;
     defineSizes(the_data.width(), 0, 0);
@@ -81,7 +85,9 @@ MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
 MemoryVMatrix::MemoryVMatrix(VMat the_source)
     : inherited(the_source->length(), the_source->width()),
       memory_data(the_source->toMat()),
-      synch_data(false)
+      synch_data(false),
+      deep_copy_memory_data(true)
+
 {
     copySizesFrom(the_source);
     setMetaInfoFrom(the_source);
@@ -109,6 +115,10 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
                    "If provided, will be used to set this VMatrix's"
                    " fieldnames." );
 
+    declareOption( ol, "deep_copy_memory_data", &MemoryVMatrix::deep_copy_memory_data,
+                   OptionBase::buildoption,
+                   "If true, when this object is deep copied, we will deep copy the memory_data");
+
     /* This field was declared as an option, but the author does not remember
      * why. The problem is that we do not want it to be a learnt option, since
      * it may save the whole dataset pointed by 'source', which could waste a
@@ -127,9 +137,11 @@ void MemoryVMatrix::declareOptions(OptionList& ol)
 void MemoryVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(memory_data,  copies);
+    if(deep_copy_memory_data){
+        deepCopyField(memory_data,  copies);
+        deepCopyField(data,         copies);
+    }
     deepCopyField(fieldnames,   copies);
-    deepCopyField(data,         copies);
     deepCopyField(source,       copies);
 }
 
@@ -281,9 +293,10 @@ Mat MemoryVMatrix::toMat() const
 ////////////
 VMat MemoryVMatrix::subMat(int i, int j, int l, int w)
 {
-    VMat result = new MemoryVMatrix(memory_data.subMat(i,j,l,w));
+    MemoryVMatrix* result = new MemoryVMatrix(memory_data.subMat(i,j,l,w));
+    result->deep_copy_memory_data=deep_copy_memory_data;
     result->setMetaInfoFrom(this);
-    return result;
+    return (VMat)result;
 }
 
 /////////
