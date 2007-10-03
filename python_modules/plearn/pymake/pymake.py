@@ -697,7 +697,7 @@ def get_distcc_hosts():
     else:
         return _process_distcc_hosts(contents)
 
-def process_hostspath_list(hostspath_list):
+def process_hostspath_list(hostspath_list, default_nice_value, local_hostname):
     list_of_hosts = []
     nice_values = {} # dictionary containing hostname:nice_value
     for hostspath in hostspath_list:
@@ -733,7 +733,7 @@ def process_hostspath_list(hostspath_list):
 
         f.close()
 
-    if 'localhost' not in list_of_hosts and myhostname not in list_of_hosts:
+    if 'localhost' not in list_of_hosts and local_hostname not in list_of_hosts:
         list_of_hosts.extend(['localhost'] * nprocesses_on_localhost)
 
     return (list_of_hosts, nice_values)
@@ -757,7 +757,7 @@ def get_list_of_hosts():
         if distcc_list_of_hosts is not None:
             print '*** Overriding distcc settings. (Remove pymake *.hosts file to use distcc settings.)'
         print '*** Parallel compilation using list of hosts from file(s): ' + string.join( hostspath_list, ', ' )
-        (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list)
+        (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list, default_nice_value,myhostname)
     elif distcc_list_of_hosts is not None:
         print '*** Parallel compilation using distcc list of hosts (%d)' % len(distcc_list_of_hosts)
         list_of_hosts = distcc_list_of_hosts
