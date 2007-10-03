@@ -669,12 +669,15 @@ void AdaBoost::train()
                 PP<ProgressBar> pb;
                 if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
                 train_stats->forget();
-                static Vec err(nTrainCosts());
+                Vec err(nTrainCosts());
                 int nb_class_0=0;
                 int nb_class_1=0;
                 real cum_weights_0=0;
                 real cum_weights_1=0;
 
+                bool save_forward_sub_learner_test_costs = 
+                    forward_sub_learner_test_costs;
+                forward_sub_learner_test_costs=false;
                 for (int i=0;i<n;i++)
                 {
                     if(report_progress) pb->update(i);
@@ -692,6 +695,9 @@ void AdaBoost::train()
                     train_stats->update(err);
                 }
                 train_stats->finalize();
+                forward_sub_learner_test_costs = 
+                    save_forward_sub_learner_test_costs;
+
             }
             if (verbosity>2)
                 cout << "At stage " << stage << 
