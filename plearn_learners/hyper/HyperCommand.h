@@ -68,6 +68,13 @@ public:
 
     PLEARN_DECLARE_ABSTRACT_OBJECT(HyperCommand);
 
+    /**
+     *  Level of verbosity. If 0, should not write anything on cerr. If >0 may
+     *  write some info on the steps performed (the amount of detail written
+     *  depends on the value of this option).
+     */
+    int verbosity; 
+
     // ****************
     // * Constructors *
     // ****************

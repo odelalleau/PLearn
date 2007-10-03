@@ -48,6 +48,7 @@ namespace PLearn {
 using namespace std;
 
 HyperCommand::HyperCommand()
+    : verbosity(0)
 {
 }
 

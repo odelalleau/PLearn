@@ -302,6 +302,9 @@ Vec HyperOptimize::optimize()
     Vec results;
     while(option_vals)
     {
+        if(verbosity>0)
+            cerr<<"In HyperOptimize::optimize() We optimize with parameters "<<option_names<<" with value "<<option_vals<<endl;
+
         // This will also call build and forget on the learner unless unnecessary
         // because the modified options don't require it.
         hlearner->setLearnerOptions(option_names, option_vals);
