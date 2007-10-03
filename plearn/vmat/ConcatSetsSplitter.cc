@@ -95,15 +95,8 @@ void ConcatSetsSplitter::build()
 void ConcatSetsSplitter::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(splitters, copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ConcatSetsSplitter::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 /////////////
