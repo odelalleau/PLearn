@@ -169,12 +169,12 @@ void BaseRegressorConfidence::computeOutput(const Vec& inputv, Vec& outputv) con
     real train_set_weight;
     train_set_inputv.resize(train_set->inputsize());
     train_set_targetv.resize(1);
-    real distance = -1.0;
-    int nearest_neighbor;
+    real distance = REAL_MAX;
+    int nearest_neighbor = -1;
     for (int row = 0; row < train_set->length(); row++)
     {
         train_set->getExample(row, train_set_inputv, train_set_targetv, train_set_weight);
-        if (distance < 0 || powdistance(inputv, train_set_inputv) < distance)
+        if (powdistance(inputv, train_set_inputv) < distance)
         {
             distance = powdistance(inputv, train_set_inputv);
             nearest_neighbor = row;
