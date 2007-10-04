@@ -140,8 +140,9 @@ float pl_strtof(const char* nptr, char** endptr)
 #endif
 }
 
-// this function handle numbers with exponents (such as 10.2E09)
-// as well as Nans. String can have trailing whitespaces on both sides
+/////////////////
+// pl_isnumber //
+/////////////////
 bool pl_isnumber(const string& str, double* dbl)
 {
     double d;
@@ -150,6 +151,8 @@ bool pl_isnumber(const string& str, double* dbl)
     d = pl_strtod(s.c_str(),&l);
     if(s=="")d=MISSING_VALUE;
     if(dbl!=NULL)*dbl=d;
+    if(s=="")
+        return false;
     return ((unsigned char)(l-s.c_str())==s.length());
 }
 
@@ -160,6 +163,8 @@ bool pl_isnumber(const string& str, float* dbl) {
     d = pl_strtof(s.c_str(),&l);
     if(s=="")d=MISSING_VALUE;
     if(dbl!=NULL)*dbl=d;
+    if(s=="")
+        return false;
     return ((unsigned char)(l-s.c_str())==s.length());
 }
 

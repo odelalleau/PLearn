@@ -60,8 +60,9 @@ using namespace std;
 double pl_strtod(const char* nptr, char** endptr);
 float  pl_strtof(const char* nptr, char** endptr);
 
-// this function handle numbers with exponents (such as 10.2E09)
-// as well as Nans. String can have trailing whitespaces on both sides
+//! This function handle numbers with exponents (such as 10.2E09)
+//! as well as Nans. String can have trailing whitespaces on both sides
+//! return true for empty string!
 bool pl_isnumber(const string& s,double* dbl=NULL);
 bool pl_isnumber(const string& s,float* dbl);
 
