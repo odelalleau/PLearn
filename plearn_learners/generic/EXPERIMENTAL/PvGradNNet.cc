@@ -234,7 +234,9 @@ void PvGradNNet::bpropUpdateNet(int t)
 void PvGradNNet::pvGrad()   
 {
     int np = all_params.length();
-    real m, e, prob_pos, prob_neg;
+    real m, e;//, prob_pos, prob_neg;
+    real ratio;
+    real limit_ratio = gauss_01_quantile(pv_required_confidence);
 
     for(int k=0; k<np; k++) {
         // update stats
@@ -259,14 +261,16 @@ void PvGradNNet::pvGrad()
 
             // TODO - for current treatment, not necessary to compute actual prob.
             // Comparing the ratio would be sufficient.
-            prob_pos = gauss_01_cum(m/e);
-            prob_neg = 1.-prob_pos;
+            //prob_pos = gauss_01_cum(m/e);
+            //prob_neg = 1.-prob_pos;
+            ratio = m/e;
 
             if(!pv_random_sample_step)  {
     
                 // We adapt the stepsize before taking the step
                 // gradient is positive
-                if(prob_pos>=pv_required_confidence)    {
+                //if(prob_pos>=pv_required_confidence)    {
+                if(ratio>=limit_ratio)  {
                     //pv_all_stepsizes[k] *= (pv_all_stepsigns[k]?pv_acceleration:pv_deceleration);
                     if(pv_all_stepsigns[k]>0)   {
                         pv_all_stepsizes[k]*=pv_acceleration;
@@ -285,7 +289,8 @@ void PvGradNNet::pvGrad()
                     pv_all_sumsquare[k]=0.0;
                 }
                 // gradient is negative
-                else if(prob_neg>=pv_required_confidence)   {
+                //else if(prob_neg>=pv_required_confidence)   {
+                if(ratio<=-limit_ratio) {
                     //pv_all_stepsizes[k] *= ((!pv_all_stepsigns[k])?pv_acceleration:pv_deceleration);
                     if(pv_all_stepsigns[k]<0)   {
                         pv_all_stepsizes[k]*=pv_acceleration;
@@ -330,8 +335,11 @@ void PvGradNNet::pvGrad()
 void PvGradNNet::discountGrad()
 {
     int np = all_params.length();
-    real m, e, prob_pos, prob_neg;
+    real m, e;//, prob_pos, prob_neg;
     int stepsign;
+
+    real ratio;
+    real limit_ratio = gauss_01_quantile(pv_required_confidence);
 
     // 
     real discount = pow(pv_other_discount,n_updates);
@@ -365,12 +373,19 @@ void PvGradNNet::discountGrad()
 
             // TODO - for current treatment, not necessary to compute actual
             // prob. Comparing the ratio would be sufficient.
-            prob_pos = gauss_01_cum(m/e);
+/*            prob_pos = gauss_01_cum(m/e);
             prob_neg = 1.-prob_pos;
 
             if(prob_pos>=pv_required_confidence)
                 stepsign = 1;
             else if(prob_neg>=pv_required_confidence)
+                stepsign = -1;
+            else
+                continue;*/
+            ratio=m/e;
+            if(ratio>=limit_ratio)
+                stepsign = 1;
+            else if(ratio<=-limit_ratio)
                 stepsign = -1;
             else
                 continue;
