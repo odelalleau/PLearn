@@ -149,11 +149,14 @@ bool pl_isnumber(const string& str, double* dbl)
     string s=removeblanks(str);
     char* l;
     d = pl_strtod(s.c_str(),&l);
-    if(s=="")d=MISSING_VALUE;
-    if(dbl!=NULL)*dbl=d;
-    if(s=="")
+    if(s.empty())
+        d = MISSING_VALUE;
+    if(dbl)
+        *dbl=d;
+    if(s.empty())
         return false;
-    return ((unsigned char)(l-s.c_str())==s.length());
+    else
+        return ((unsigned char)(l-s.c_str())==s.length());
 }
 
 bool pl_isnumber(const string& str, float* dbl) {
@@ -161,11 +164,14 @@ bool pl_isnumber(const string& str, float* dbl) {
     string s=removeblanks(str);
     char* l;
     d = pl_strtof(s.c_str(),&l);
-    if(s=="")d=MISSING_VALUE;
-    if(dbl!=NULL)*dbl=d;
-    if(s=="")
+    if(s.empty())
+        d = MISSING_VALUE;
+    if(dbl)
+        *dbl=d;
+    if(s.empty())
         return false;
-    return ((unsigned char)(l-s.c_str())==s.length());
+    else
+        return ((unsigned char)(l-s.c_str())==s.length());
 }
 
 // Return true if conversion to a long is possible

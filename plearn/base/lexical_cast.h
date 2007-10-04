@@ -60,11 +60,11 @@ using namespace std;
 double pl_strtod(const char* nptr, char** endptr);
 float  pl_strtof(const char* nptr, char** endptr);
 
-//! This function handle numbers with exponents (such as 10.2E09)
-//! as well as Nans. String can have trailing whitespaces on both sides
-//! return true for empty string!
-bool pl_isnumber(const string& s,double* dbl=NULL);
-bool pl_isnumber(const string& s,float* dbl);
+//! This function handles numbers with exponents (such as 10.2E09)
+//! as well as Nans. String can have trailing whitespaces on both sides.
+//! Returns false for an empty string.
+bool pl_isnumber(const string& s, double* dbl=NULL);
+bool pl_isnumber(const string& s, float* dbl);
 
 // Return true if the number can be converted to a long
 bool pl_islong(const string& s);
