@@ -76,6 +76,10 @@ public:
     // or negative.
     bool pv_random_sample_step;
 
+    //! For the discounting strategy. Used to discount stats when there are
+    //! updates
+    real pv_self_discount, pv_other_discount;
+
 public:
     //#####  Public Not Build Options  ########################################
 
@@ -131,8 +135,8 @@ private:
     //#####  Private Data Members  ############################################
 
     //! Holds the number of samples gathered for each weight
-    TVec<int> pv_all_nsamples;
-    TVec< TMat<int> > pv_layer_nsamples;
+    Vec pv_all_nsamples;
+    TVec< Mat > pv_layer_nsamples;
     //! Sum of collected gradients 
     Vec pv_all_sum;
     TVec<Mat> pv_layer_sum;
@@ -147,6 +151,10 @@ private:
     //! The step size (absolute value) to be taken for each parameter.
     Vec pv_all_stepsizes;
     TVec<Mat> pv_layer_stepsizes;
+
+    //! Number of weight updates performed during a call to bpropUpdateNet
+    // int is enough?
+    int n_updates;
 
     //! accumulated statistics of gradients on each parameter.
     //PP<VecStatsCollector> pv_gradstats;

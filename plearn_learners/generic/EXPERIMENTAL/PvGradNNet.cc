@@ -58,8 +58,10 @@ PvGradNNet::PvGradNNet()
       pv_min_samples(2),
       pv_required_confidence(0.80),
       pv_strategy(1),
-      pv_random_sample_step(false)
-
+      pv_random_sample_step(false),
+      pv_self_discount(0.5),
+      pv_other_discount(0.95),
+      n_updates(0)
 {
     random_gen = new PRandom();
 }
@@ -113,6 +115,18 @@ void PvGradNNet::declareOptions(OptionList& ol)
                   "If this is set to true, then we will randomly choose the step sign\n"
                   "for each parameter based on the estimated probability of it being\n"
                   "positive or negative.");
+
+    declareOption(ol, "pv_self_discount",
+                  &PvGradNNet::pv_self_discount,
+                  OptionBase::buildoption,
+                  "Discount used to perform soft invalidation of a weight's statistics\n"
+                  "after its update.");
+
+    declareOption(ol, "pv_other_discount",
+                  &PvGradNNet::pv_other_discount,
+                  OptionBase::buildoption,
+                  "Discount used to perform soft invalidation of other weights'\n" 
+                  "statistics after a weight update.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -188,6 +202,9 @@ void PvGradNNet::forget()
     pv_all_stepsigns.fill(0);
     pv_all_stepsizes.fill(pv_initial_stepsize);
 
+    // used in the discountGrad() strategy
+    n_updates = 0; 
+    
 //    pv_gradstats->forget();
 }
 
@@ -304,8 +321,85 @@ void PvGradNNet::pvGrad()
 
 }
 
+//! This gradient strategy is much like the one from PvGrad, however:
+//!     - there is no hard statistic invalidation, it's soft with discounts.
+//!     - a weight update will also affect other weights' statistics.
+//! Note that discounting is applied after the update, never during.
+//! With pv_self_discount=0.0 and pv_other_discount=1.0, should be same as
+//! PvGrad().
 void PvGradNNet::discountGrad()
 {
+    int np = all_params.length();
+    real m, e, prob_pos, prob_neg;
+    int stepsign;
+
+    // 
+    real discount = pow(pv_other_discount,n_updates);
+    n_updates = 0;
+    if( discount < 0.001 )
+        PLWARNING("PvGradNNet::discountGrad() - discount < 0.001 - that seems small...");
+    real sd = pv_self_discount / pv_other_discount; // trick: apply this self discount
+                                                    // and then discount
+                                                    // everyone the same
+    for(int k=0; k<np; k++) {
+        // Perform soft invalidation
+        pv_all_nsamples[k] *= discount;
+        pv_all_sum[k] *= discount;
+        pv_all_sumsquare[k] *= discount;
+
+        // update stats
+        pv_all_nsamples[k]++;
+        pv_all_sum[k] += all_params_gradient[k];
+        pv_all_sumsquare[k] += all_params_gradient[k] * all_params_gradient[k];
+
+        if(pv_all_nsamples[k]>pv_min_samples)   {
+            m = pv_all_sum[k] / pv_all_nsamples[k];
+            e = real((pv_all_sumsquare[k] - square(pv_all_sum[k])/pv_all_nsamples[k])/(pv_all_nsamples[k]-1));
+            e = sqrt(e/pv_all_nsamples[k]);
+
+            // test to see if numerical problems
+            if( fabs(m) < 1e-15 || e < 1e-15 )  {
+                cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
+                continue;
+            }
+
+            // TODO - for current treatment, not necessary to compute actual
+            // prob. Comparing the ratio would be sufficient.
+            prob_pos = gauss_01_cum(m/e);
+            prob_neg = 1.-prob_pos;
+
+            if(prob_pos>=pv_required_confidence)
+                stepsign = 1;
+            else if(prob_neg>=pv_required_confidence)
+                stepsign = -1;
+            else
+                continue;
+
+            // consecutive steps of same sign, accelerate
+            if( stepsign*pv_all_stepsigns[k]>0 )  {
+                pv_all_stepsizes[k]*=pv_acceleration;
+                if( pv_all_stepsizes[k] > pv_max_stepsize )
+                    pv_all_stepsizes[k] = pv_max_stepsize;            
+            // else if different signs decelerate
+            }   else if( stepsign*pv_all_stepsigns[k]<0 )   {
+                pv_all_stepsizes[k]*=pv_deceleration;
+                if( pv_all_stepsizes[k] < pv_min_stepsize )
+                    pv_all_stepsizes[k] = pv_min_stepsize;
+            // else (previous sign was undetermined
+            }//   else    {
+            //}
+            // step
+            if( stepsign > 0 )
+                all_params[k] -= pv_all_stepsizes[k];
+            else
+                all_params[k] += pv_all_stepsizes[k];
+            pv_all_stepsigns[k] = stepsign;
+            // soft invalidation of self
+            pv_all_nsamples[k]*=sd;
+            pv_all_sum[k]*=sd;
+            pv_all_sumsquare[k]*=sd;
+        }
+    }
 }
 
 void PvGradNNet::globalSyncGrad()
