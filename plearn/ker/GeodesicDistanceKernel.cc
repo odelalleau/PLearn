@@ -55,34 +55,23 @@ GeodesicDistanceKernel::GeodesicDistanceKernel()
     : geodesic_file(""),
       knn(10),
       pow_distance(false),
-      shortest_algo("djikstra")
+      shortest_algo("floyd")
 {
     distance_kernel = new DistanceKernel(2);
 }
 
-GeodesicDistanceKernel::GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn,
-                                               string the_geodesic_file, bool the_pow_distance)
-    : geodesic_file(the_geodesic_file),
-      knn(the_knn),
-      pow_distance(the_pow_distance),
-      shortest_algo("djikstra")
+GeodesicDistanceKernel::GeodesicDistanceKernel(
+        Ker the_distance_kernel, int the_knn,
+        const PPath& the_geodesic_file, bool the_pow_distance,
+        const string& the_method):
+    geodesic_file(the_geodesic_file),
+    knn(the_knn),
+    pow_distance(the_pow_distance),
+    shortest_algo(the_method)
 {
     distance_kernel = the_distance_kernel;
     build();
 }
-
-GeodesicDistanceKernel::GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn,
-                                               string the_geodesic_file, bool the_pow_distance,
-					       string the_method)
-    : geodesic_file(the_geodesic_file),
-      knn(the_knn),
-      pow_distance(the_pow_distance),
-      shortest_algo(the_method)
-{
-    distance_kernel = the_distance_kernel;
-    build();
-}
-
 
 PLEARN_IMPLEMENT_OBJECT(GeodesicDistanceKernel,
                         "Computes the geodesic distance based on k nearest neighbors.",
@@ -111,7 +100,7 @@ void GeodesicDistanceKernel::declareOptions(OptionList& ol)
     declareOption(ol, "shortest_algo", &GeodesicDistanceKernel::shortest_algo, OptionBase::buildoption,
                   "The algorithm used to compute the geodesic distances:\n"
                   " - floyd     : Floyd's algorithm\n"
-                  " - djikstra  : Djikstra's algorithm");
+                  " - dijkstra  : Dijkstra's algorithm");
 
     // Learnt options.
 
@@ -264,7 +253,7 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
     TMat<int> neighborhoods =
         Kernel::computeKNNeighbourMatrixFromDistanceMatrix(
             distances, knn, true, report_progress != 0);
-    // Compute geodesic distance by Floyd or Djikstra's algorithm.
+    // Compute geodesic distance by Floyd or Dijkstra's algorithm.
     Mat geodesic(n,n);
     real big_value = REAL_MAX / 3.0; // To make sure no overflow.
     PP<ProgressBar> pb;
@@ -298,7 +287,7 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
             if (report_progress)
                 pb->update(k + 1);
         }
-    } else if (shortest_algo == "djikstra") {
+    } else if (shortest_algo == "dijkstra") {
         // First build a symmetric neighborhoods matrix
         // (j is a neighbor of i if it was already a neighbor, or if i was a
         // neighbor of j).
@@ -347,7 +336,7 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
         PLERROR("In GeodesicDistanceKernel::setDataForKernelMatrix - Unknown value for 'shortest_algo'");
     }
     // Save the result in geo_distances.
-    if (geodesic_file == "") {
+    if (geodesic_file.isEmpty()) {
         geo_distances = VMat(geodesic);
     } else {
         // Use a FileVMatrix to save on disk.

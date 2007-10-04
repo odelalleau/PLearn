@@ -72,7 +72,7 @@ public:
     // ************************
 
     Ker distance_kernel;
-    string geodesic_file;
+    PPath geodesic_file;
     int knn;
     bool pow_distance;
     string shortest_algo;
@@ -87,10 +87,9 @@ public:
 
     //! Convenient constructor.
     GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn = 10,
-                           string the_geodesic_file = "", bool the_pow_distance = false);
-    GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn = 10,
-                           string the_geodesic_file = "", bool the_pow_distance = false,
-			   string the_method = "floyd");
+                           const PPath& the_geodesic_file = "",
+                           bool the_pow_distance = false,
+                           const string& the_method = "floyd");
 
     // ******************
     // * Kernel methods *
