@@ -394,16 +394,18 @@ void PTester::build_()
     }
 
     //Check if all the statnames_processed have their splits present
-    int nb_testset=splitter->nSetsPerSplit()-1;
-    for(int i=0;i<statnames_processed.length();i++){
-        int id = statnames_processed[i].find('[');
-        char c=statnames_processed[i][id+5];
-        if(c=='n'){}
-        else if(c>(nb_testset+'0'))
-            PLWARNING("In PTester::build_() - the statnames %s ask for"
-                      " test set %c while their is only %d test set.",
-                      statnames_processed[i].c_str(),
-                      c,nb_testset);
+    if(splitter!=NULL){
+        int nb_testset=splitter->nSetsPerSplit()-1;
+        for(int i=0;i<statnames_processed.length();i++){
+            int id = statnames_processed[i].find('[');
+            char c=statnames_processed[i][id+5];
+            if(c=='n'){}
+            else if(c>(nb_testset+'0'))
+                PLWARNING("In PTester::build_() - the statnames %s ask for"
+                          " test set %c while their is only %d test set.",
+                          statnames_processed[i].c_str(),
+                          c,nb_testset);
+        }
     }
 }
 
