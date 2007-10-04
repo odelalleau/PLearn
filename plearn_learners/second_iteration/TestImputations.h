@@ -130,13 +130,13 @@ private:
 
     //! This does the actual building.
     void build_();
-    void build_ball_tree();
+    void build_ball_tree(int nb_neighbors);
     void initialize();
     void computeMeanMedianModeStats();
     void computeTreeCondMeanStats();
     void computeCovPresStats();
     real covariancePreservationValue(int col);
-    void computeNeighborhoodStats();
+    void computeNeighborhoodStats(int nb_neighbors,int max_miss_neigbors);
     void createHeaderFile();
     void getHeaderRecord();
     void updateHeaderRecord(int var_col);
@@ -157,9 +157,9 @@ private:
     TVec<string> train_names;
     PPath train_metadata;
     StatsCollector train_stats;
-    real train_total;
-    real train_missing;
-    real train_present;
+    int train_total;
+    int train_missing;
+    int train_present;
     PPath header_file_name;
     VMat header_file;
     Vec header_record;
@@ -182,7 +182,9 @@ private:
     real cvpf_mean_err;
     Vec knnf_input;
     Vec knnf_neighbors;
-    Vec knnf_mean_err;
+    Vec knnf_mean_cov_err;
+    Vec knnf_mean_miss_err;
+    Vec knnf_nmiss_value_count;
     Vec weights;
     WeightedDistance* weighted_distance_kernel;
     PPath output_file_name;
