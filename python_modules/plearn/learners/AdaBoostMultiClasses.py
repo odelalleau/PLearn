@@ -8,18 +8,21 @@ class AdaBoostMultiClasses:
 #        Initialize a AdaBoost for 3 classes learner
 #        trainSet1 is used for the first sub AdaBoost learner,
 #        trainSet2 is used for the second sub learner
-#        weakLearner should be a function that return a new weak learner
+#        weakLearner should be a function that take the class number for the one vs other
+#                and should return a new weak learner
 #        """
         self.trainSet1=trainSet1
         self.trainSet2=trainSet2
+
+        if weakLearner:
+            self.learner1 = self.myAdaBoostLearner(weakLearner(0),trainSet1)
+            self.learner1.setExperimentDirectory(plargs.expdirr+"/learner1")
+            self.learner1.setTrainingSet(trainSet1,True)
             
-        self.learner1 = self.myAdaBoostLearner(weakLearner(),trainSet1)
-        self.learner1.setExperimentDirectory(plargs.expdirr+"/learner1")
-        self.learner1.setTrainingSet(trainSet1,True)
-        
-        self.learner2 = self.myAdaBoostLearner(weakLearner(),trainSet2)
-        self.learner2.setExperimentDirectory(plargs.expdirr+"/learner2")
-        self.learner2.setTrainingSet(trainSet2,True)
+            self.learner2 = self.myAdaBoostLearner(weakLearner(2),trainSet2)
+            self.learner2.setExperimentDirectory(plargs.expdirr+"/learner2")
+            self.learner2.setTrainingSet(trainSet2,True)
+
         self.nstages = 0
         self.stage = 0
         self.train_time = 0
@@ -31,13 +34,14 @@ class AdaBoostMultiClasses:
         l.pseudo_loss_adaboost=plargs.pseudo_loss_adaboost
         l.weight_by_resampling=plargs.weight_by_resampling
         l.setTrainingSet(trainSet,True)
-        tmp=VecStatsCollector()
-        tmp.setFieldNames(l.getTrainCostNames())
-        l.setTrainStatsCollector(tmp)
         l.early_stopping=False
         l.compute_training_error=True
         l.forward_sub_learner_test_costs=True
         l.provide_learner_expdir=True
+#        l.save_often=True
+        tmp=VecStatsCollector()
+        tmp.setFieldNames(l.getTrainCostNames())
+        l.setTrainStatsCollector(tmp)
         return l
 
     def train(self):
@@ -49,6 +53,12 @@ class AdaBoostMultiClasses:
         self.stage=self.learner1.stage
         t2=time.time()
         self.train_time+=t2-t1
+        self.train_stats=VecStatsCollector()
+        self.train_stats.append(self.learner1.getTrainStatsCollector(),
+                                "sublearner1.",[])
+        self.train_stats.append(self.learner2.getTrainStatsCollector(),
+                                "sublearner2.",[])
+
         
     def getTestCostNames(self):
         costnames = ["class_error","linear_class_error","square_class_error"]
@@ -65,13 +75,37 @@ class AdaBoostMultiClasses:
             costnames.append("subweaklearner2."+c)
         return costnames
     
-    def computeOutput(self,example):
-        """ compute the output for the example in the parameter
+    def getTrainCostNames(self):
+        costnames = ["sublearner1."+x for x in self.learner1.getTrainCostNames()]
+        costnames += ["sublearner2."+x for x in self.learner2.getTrainCostNames()]                                
+        return costnames
+
+    def computeOutput_at_stage(self,input,stage):
+        """ compute the output for the input with the first stage weak learner
         
         return a tuple: (predicted result, output of sub learner1,output of sub learner2)
         """
-        out1=self.learner1.computeOutput(example)[0]
-        out2=self.learner2.computeOutput(example)[0]
+        out1=self.learner1.computeOutput_at_stage(input,stage)[0]
+        out2=self.learner2.computeOutput_at_stage(input,stage)[0]
+        ind1=int(round(out1))
+        ind2=int(round(out2))
+        if ind1==ind2==0:
+            ind=0
+        elif ind1==1 and ind2==0:
+            ind=1
+        elif ind1==ind2==1:
+            ind=2
+        else:
+            ind=self.confusion_target
+        return (ind,out1,out2)
+
+    def computeOutput(self,input):
+        """ compute the output for the input
+        
+        return a tuple: (predicted result, output of sub learner1,output of sub learner2)
+        """
+        out1=self.learner1.computeOutput(input)[0]
+        out2=self.learner2.computeOutput(input)[0]
         ind1=int(round(out1))
         ind2=int(round(out2))
         if ind1==ind2==0:
@@ -84,7 +118,8 @@ class AdaBoostMultiClasses:
             ind=self.confusion_target
         return (ind,out1,out2)
     
-    def computeCostsFromOutput(self,input,output,target,costs=[]):
+    def computeCostsFromOutput(self,input,output,target_,costs=[],forward_sub_learner_costs=True):
+        target=int(target_)
         del costs[:]
         class_error=int(output[0] != target)
         linear_class_error=abs(output[0]-target)
@@ -118,10 +153,11 @@ class AdaBoostMultiClasses:
             t2=array([0.])
         o1=array([output[1]])
         o2=[output[2]]
-        c1=self.learner1.computeCostsFromOutputs(input,o1,t1)
-        c2=self.learner2.computeCostsFromOutputs(input,o2,t2)
-        costs.extend(c1)
-        costs.extend(c2)
+        if forward_sub_learner_costs:
+            c1=self.learner1.computeCostsFromOutputs(input,o1,t1)
+            c2=self.learner2.computeCostsFromOutputs(input,o2,t2)
+            costs.extend(c1)
+            costs.extend(c2)
         return costs
 
     def computeOutputAndCosts(self,input,target):
@@ -129,19 +165,25 @@ class AdaBoostMultiClasses:
         costs=self.computeCostsFromOutput(input,output,target)
         return (output,costs)
 
-    def test(self,testset,test_stats,return_outputs,return_costs):
-        print "In AdaBoostMultiClasses.py::test Not implemented"
-        sys.exit(1)
-        
+    def test(self,testSet,test_stats,return_outputs,return_costs):
+        testSet1=pl.ProcessingVMatrix(source=testSet,
+                               prg = "[%0:%"+str(testSet.inputsize-1)+"] @CLASSE_REEL 1 0 ifelse :CLASSE_REEL")
+        testSet2=pl.ProcessingVMatrix(source=testSet,
+                               prg = "[%0:%"+str(testSet.inputsize-1)+"] @CLASSE_REEL 2 - 0 1 ifelse :CLASSE_REEL")
+
         stats1=pl.VecStatsCollector()
         stats2=pl.VecStatsCollector()
-        (test_stats1, testoutputs1, testcosts1)=self.learner1.test(test_stats,stats1,True,return_costs)
-        (test_stats2, testoutputs2, testcosts2)=self.learner2.test(test_stats,stats2,True,return_costs)
+        (test_stats1, testoutputs1, testcosts1)=self.learner1.test(testSet1,
+                                                                   stats1,
+                                                                   True,True)
+        (test_stats2, testoutputs2, testcosts2)=self.learner2.test(testSet2,
+                                                                   stats2,
+                                                                   True,True)
         outputs=[]
         costs=[]
         #calculate stats, outputs, costs
-        test_mat=testset.getMat()
-        for i in range(testset.length()):
+        test_mat=testSet.getMat()
+        for i in range(len(test_mat)):
             out1=testoutputs1[i][0]
             out2=testoutputs2[i][0]
             ind1=int(round(out1))
@@ -154,9 +196,20 @@ class AdaBoostMultiClasses:
                 ind=2
             else:
                 ind=self.confusion_target
-            outputs.append([ind,out1,out2])
-            self.computeCostsFromOutput(test_mat[i][:-2],ind,test_mat[i][-1])
-        
+            output=[ind,out1,out2]
+            if return_outputs:
+                outputs.append(output)
+            input=test_mat[i][:-1]
+            target=test_mat[i][-1]
+            cost=self.computeCostsFromOutput(input,output,target,
+                                             forward_sub_learner_costs=False)
+            cost.extend(testcosts1[i])
+            cost.extend(testcosts2[i])
+            test_stats.update(cost,1)
+            if return_costs:
+                costs.append(cost)
+        return(test_stats,outputs,costs)
+    
     def outputsize(self):
         return len(self.getTestCostNames())
 
