@@ -251,7 +251,11 @@ double VecStatsCollector::getStat(const string& statspec)
     in.smartReadUntilNext("[", statname);
     string fieldname;
     in.smartReadUntilNext("]", fieldname);
-    int fieldnum = getFieldNum(fieldname);  
+    if(fieldname.size()==0)
+        PLERROR("In VecStatsCollector::getStat - the stat asked is invalid."
+                "Parsed stat name '%s' and field name '%d'",
+                statname.c_str(),fieldname.c_str());
+    int fieldnum = getFieldNum(fieldname);
     if(fieldnum<0)
         PLERROR("In VecStatsCollector::getStat invalid fieldname: %s;\n"
                 "valid fieldnames are: %s",fieldname.c_str(),
