@@ -148,11 +148,9 @@ private:
     int sec_length;
     int sec_width;
     int sec_row;
-    int sec_col;
     Vec sec_input;
     TVec<string> sec_names;
     TVec<string> sec_ins;
-    int ins_col;
     int extension_width;
     int ext_col;
     TVec<int> extension_pos;
@@ -162,18 +160,15 @@ private:
     TVec<int> sec_value_ind;
     bool sec_value_found;
     real sec_value_count_max;
-    int sec_value_col;
     
     // primary dataset variables
     int main_length;
     int main_width;
     int main_row;
-    int main_col;
     Vec main_input;
     TVec<string> main_names;
     TVec<string> main_ins;
     int primary_width;
-    int prim_col;
     TVec<string> primary_names;
     
     // merge dataset variables

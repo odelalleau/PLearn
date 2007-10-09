@@ -163,21 +163,20 @@ void MergeDond2Files::mergeFiles()
 {
     // initialization with merge instructions
     sec_row = 0;
-    sec_col = 0;
     sec_length = external_dataset->length();
     sec_width = external_dataset->width();
     sec_names.resize(sec_width);
     sec_ins.resize(sec_width);
     sec_input.resize(sec_width);
-    ins_col = 0;
     extension_width = 0;
     sec_names << external_dataset->fieldNames();
-    for (sec_col = 0; sec_col < sec_width; sec_col++)
+    for (int sec_col = 0; sec_col < sec_width; sec_col++)
     {
         sec_ins[sec_col] = "mean";
     }
-    for (ins_col = 0; ins_col < merge_instructions.size(); ins_col++)
+    for (int ins_col = 0; ins_col < merge_instructions.size(); ins_col++)
     {
+        int sec_col;
         for (sec_col = 0; sec_col < sec_width; sec_col++)
         {
             if (merge_instructions[ins_col].first == sec_names[sec_col]) break;
@@ -190,10 +189,9 @@ void MergeDond2Files::mergeFiles()
         else PLERROR("In MergeDond2Files: unsupported merge instruction: %", (merge_instructions[ins_col].second).c_str());
         if (sec_ins[sec_col] != "skip") extension_width += 1;
     }
-    ext_col = 0;
     extension_pos.resize(sec_width);
     extension_names.resize(extension_width);
-    for (sec_col = 0; sec_col < sec_width; sec_col++)
+    for (int ext_col = 0, sec_col = 0; sec_col < sec_width; sec_col++)
     {
         if (sec_ins[sec_col] == "skip")
         {
@@ -216,7 +214,6 @@ void MergeDond2Files::mergeFiles()
     
     // initialize primary dataset
     main_row = 0;
-    main_col = 0;
     main_length = train_set->length();
     main_width = train_set->width();
     main_input.resize(main_width);
@@ -224,12 +221,13 @@ void MergeDond2Files::mergeFiles()
     main_ins.resize(main_width);
     main_names << train_set->fieldNames();
     primary_width = 0;
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         main_ins[main_col] = "as_is";
     }
-    for (ins_col = 0; ins_col < missing_instructions.size(); ins_col++)
+    for (int ins_col = 0; ins_col < missing_instructions.size(); ins_col++)
     {
+        int main_col = 0;
         for (main_col = 0; main_col < main_width; main_col++)
         {
             if (missing_instructions[ins_col].first == main_names[main_col]) break;
@@ -243,9 +241,8 @@ void MergeDond2Files::mergeFiles()
         else PLERROR("In MergeDond2Files: unsupported merge instruction: %", (missing_instructions[ins_col].second).c_str());
         if (main_ins[main_col] != "skip") primary_width += 1;
     }
-    prim_col = 0;
     primary_names.resize(primary_width);
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0, prim_col = 0; main_col < main_width; main_col++)
     {
         if (main_ins[main_col] != "skip")
         {
@@ -259,12 +256,12 @@ void MergeDond2Files::mergeFiles()
     merge_width = primary_width + extension_width;
     merge_output.resize(merge_width);
     merge_names.resize(merge_width);
-    for (prim_col = 0; prim_col < primary_width; prim_col++)
+    for (int prim_col = 0; prim_col < primary_width; prim_col++)
     {
        merge_names[merge_col] = primary_names[prim_col];
        merge_col +=1;
     }
-    for (ext_col = 0; ext_col < extension_width; ext_col++)
+    for (int ext_col = 0; ext_col < extension_width; ext_col++)
     {
        merge_names[merge_col] = extension_names[ext_col];
        merge_col +=1;
@@ -324,20 +321,20 @@ void MergeDond2Files::mergeFiles()
 
 void MergeDond2Files::accumulateVec()
 {
-    for (sec_col = 0; sec_col < sec_width; sec_col++)
+    for (int sec_col = 0; sec_col < sec_width; sec_col++)
     {
         if (is_missing(sec_input[sec_col])) continue;
-        if (sec_ins[sec_col] == "skip") continue;
-        ext_col = extension_pos[sec_col];
+        else if (sec_ins[sec_col] == "skip") continue;
+        int ext_col = extension_pos[sec_col];
         if (sec_ins[sec_col] == "mean")
         {
             sec_values(ext_col, 0) += sec_input[sec_col];
             sec_value_cnt(ext_col, 0) += 1.0;
         }
-        if (sec_ins[sec_col] == "mode")
+        else if (sec_ins[sec_col] == "mode")
         {
             sec_value_found = false;
-            for (sec_value_col = 0; sec_value_col < sec_value_ind[sec_col]; sec_value_col++)
+            for (int sec_value_col = 0; sec_value_col < sec_value_ind[sec_col]; sec_value_col++)
             {
                 if (sec_values(ext_col, sec_value_col) == sec_input[sec_col])
                 {
@@ -357,7 +354,7 @@ void MergeDond2Files::accumulateVec()
                 sec_value_ind[sec_col] += 1;
             }
         }
-        if (sec_ins[sec_col] == "present")
+        else if (sec_ins[sec_col] == "present")
         {
             sec_value_cnt(ext_col, 0) = 1.0;
         }
@@ -367,59 +364,49 @@ void MergeDond2Files::accumulateVec()
 void MergeDond2Files::combineAndPut()
 {
     merge_col = 0;
-    for (main_col = 0; main_col < main_width; main_col++)
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (main_ins[main_col] == "skip") continue;
-        if (main_ins[main_col] == "as_is")
+        else if (main_ins[main_col] == "as_is")
         {
             merge_output[merge_col] = main_input[main_col];
-            merge_col +=1;
-            continue;
         }
-        if (main_ins[main_col] == "zero_is_missing")
+        else if (main_ins[main_col] == "zero_is_missing")
         {
             if (main_input[main_col] == 0.0) merge_output[merge_col] = MISSING_VALUE;
             else merge_output[merge_col] = main_input[main_col];
-            merge_col +=1;
-            continue;
         }
-        if (main_ins[main_col] == "2436935_is_missing")
+        else if (main_ins[main_col] == "2436935_is_missing")
         {
             if (main_input[main_col] == 2436935.0) merge_output[merge_col] = MISSING_VALUE;
             else merge_output[merge_col] = main_input[main_col];
-            merge_col +=1;
-            continue;
         }
-        if (main_ins[main_col] == "present")
+        else if (main_ins[main_col] == "present")
         {
             if (is_missing(main_input[main_col])) merge_output[merge_col] = 0.0;
             else merge_output[merge_col] = 1.0;
-            merge_col +=1;
-            continue;
         }
+        merge_col +=1;
     }
-    for (sec_col = 0; sec_col < sec_width; sec_col++)
+    for (int sec_col = 0; sec_col < sec_width; sec_col++)
     {
         if (sec_ins[sec_col] == "skip") continue;
-        ext_col = extension_pos[sec_col];
+        int ext_col = extension_pos[sec_col];
         if (sec_ins[sec_col] == "mean")
         {
             if (sec_value_cnt(ext_col, 0) <= 0.0)  merge_output[merge_col] = MISSING_VALUE;
             else merge_output[merge_col] = sec_values(ext_col, 0) / sec_value_cnt(ext_col, 0);
-            merge_col +=1;
-            continue;
         }
-        if (sec_ins[sec_col] == "mode")
+        else if (sec_ins[sec_col] == "mode")
         {
             if (sec_value_ind[sec_col] <= 0.0)
             {
                 merge_output[merge_col] = MISSING_VALUE;
-                merge_col +=1;
                 continue;
             }
             merge_output[merge_col] = sec_values(ext_col, 0);
             sec_value_count_max = sec_value_cnt(ext_col, 0);
-            for (sec_value_col = 1; sec_value_col < sec_value_ind[sec_col]; sec_value_col++)
+            for (int sec_value_col = 1; sec_value_col < sec_value_ind[sec_col]; sec_value_col++)
             {
                 if (sec_value_cnt(ext_col, sec_value_col) >= sec_value_count_max)
                 {
@@ -427,15 +414,12 @@ void MergeDond2Files::combineAndPut()
                     sec_value_count_max = sec_value_cnt(ext_col, sec_value_col);
                 }
             }
-            merge_col +=1;
-            continue;
         }
-        if (sec_ins[sec_col] == "present")
+        else if (sec_ins[sec_col] == "present")
         {
             merge_output[merge_col] = sec_value_cnt(ext_col, 0);
-            merge_col +=1;
-            continue;
         }
+        merge_col +=1;
     }
     if (main_input[train_ind] > 0.0)
     {
