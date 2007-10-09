@@ -50,7 +50,7 @@
 # Finally I could display the curves (after possibly editing the gnuplot command in the output file) using
 #
 #   smartplot letter-sgrad-vs-BlockNatGrad-best-valid-NLL-plot.eps letter-sgrad-vs-BlockNatGrad-best-valid-NLL-plot
-#    
+#
 
 import sys,string
 from plearn.vmat.smartReadMat import *
@@ -66,12 +66,9 @@ def get_col_index(fieldnames,colspec):
   return index
 
 def selectres(loc_specs,a,fieldnames):
-  print 'b'
   res = []
   loc_mode = loc_specs[0]
-  print 'c'
   if loc_mode=="pos":
-    print 'd'
     row=get_col_index(fieldnames,loc_specs[1])
     if row<0:
       row = max(0,a.shape[0]+row)
@@ -85,7 +82,6 @@ def selectres(loc_specs,a,fieldnames):
           res.append(a[row,index])
         i+=1
   elif loc_mode=="mincol":
-    print 'e'
     mcol = get_col_index(fieldnames,loc_specs[1])
     mrow = argmin(a[:,mcol])
     print "found min row = ",mrow," for col ",mcol,", with value=",a[mrow,mcol]
@@ -98,37 +94,26 @@ def selectres(loc_specs,a,fieldnames):
         res.append(a[mrow,index])
       i+=1
   elif loc_mode=="cols":
-    print 'f'
     minrow = int(loc_specs[3])
     maxrow = int(loc_specs[4])
-    print 'g'
     if maxrow<0:
       maxrow = a.shape[0]+maxrow
     maxrow += 1
     i=5
     b=[]
     res = zeros([maxrow-minrow,0])
-    print 'h'
     while len(loc_specs[i:])>0:
       col = get_col_index(fieldnames,loc_specs[i])
-      print 'i'
       if col<0:
-        print 'i1'
         b = array(range(minrow,maxrow))
       else:
-        print 'i2'
         b=a[minrow:maxrow,col].copy()
         la = a.shape[0]
         if la<maxrow:
             b[la-minrow:] = float('NaN')
-      print 'j'
       if b.any():
         b.resize(res.shape[0],1)
-        print 'k'
-        print 'res.shape =', res.shape
-        print 'b.shape =', b.shape
         res=concatenate([res,b],1)
-        print 'l'
       if i==5:
         i=6
       else:
@@ -143,15 +128,9 @@ def getres(loc_specs,filenames):
   all_results = []
   for filename in filenames:
     try:
-      print 'a'
-      spouik = smartReadMat(filename)
-      print 'a1'
       file_res = selectres(loc_specs,
-                           *spouik)
-      print 'a2'
-      print 'x'
+                           *smartReadMat(filename))
       all_results.append([file_res,filename])
-      print 'y'
     except ValueError,v:
       print >>sys.stderr, "caught ValueError exception in", filename
       print >>sys.stderr, v
@@ -164,7 +143,6 @@ def getres(loc_specs,filenames):
       print >>sys.stderr, "caught IOError exception in", filename
       print >>sys.stderr, v
       print >>sys.stderr, ""
-  print 'z'
   return all_results
 
 def compare_res(x,y):
