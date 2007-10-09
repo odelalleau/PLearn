@@ -103,6 +103,10 @@ public:
     //! - ';'  : used for a variant of CSV files
     string delimiter;
 
+    //! The escate caractere where the delimiter is not considered.
+    //! - '"' : used frequently
+    string quote_delimiter;
+
     //! An (optional) list of integers, one for each of the txtfilenames
     //! indicating the number of header lines at the top of the file to be skipped.
     TVec<int> skipheader;

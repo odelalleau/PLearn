@@ -366,6 +366,41 @@ vector<string> split(const string& s, char delimiter)
     return res;
 }
 
+// One version where we allow to quote a delimiter so that it is not considered as a delimiter.
+// TODO: optimize...
+// the double_quote are only considered if at the boundary of deliminer.
+// should execute in O(n+k) where n is the number of character in s and k is the number of field in k.
+vector<string> split_quoted_delimiter(const string& s, char delimiter, string double_quote){
+    if(double_quote.length()==1)
+        PLASSERT(delimiter!=double_quote[0]);
+    vector<string> ret = split(s, delimiter);
+    vector<string> ret2;
+    int delim_size=double_quote.size();
+    for(uint i=0; i<ret.size();i++){
+        bool bw=string_begins_with(ret[i],double_quote);
+        bool ew=string_ends_with(ret[i],double_quote);
+        if(bw && ew){
+            ret2.push_back(ret[i].substr(delim_size,
+                                         ret[i].size()-delim_size)); 
+        }else if(bw){
+            string tmp=ret[i].substr(delim_size);
+            tmp+=delimiter;
+            for(uint j=i+1;j<ret.size();j++){
+                if(string_ends_with(ret[j],double_quote)){
+                    tmp+=ret[j].substr(0,ret[j].size()-delim_size);
+                    ret2.push_back(tmp);
+                    i=j;
+                    break;
+                }
+                tmp+=ret[j];
+                tmp+=delimiter;
+            }
+        }else
+            ret2.push_back(ret[i]);
+    }
+    return ret2;
+    
+}
 vector<string> split(const string& s, const string& delimiters, bool keep_delimiters)
 {
     vector<string> result;

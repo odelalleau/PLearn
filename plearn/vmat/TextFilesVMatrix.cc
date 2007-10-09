@@ -52,6 +52,7 @@ char TextFilesVMatrix::buf[50000];
 TextFilesVMatrix::TextFilesVMatrix()
     : idxfile(0),
       delimiter("\t"),
+      quote_delimiter(""),
       auto_build_map(false),
       auto_extend_map(true),
       build_vmatrix_stringmap(false)
@@ -160,6 +161,8 @@ void TextFilesVMatrix::buildIdx()
                     length_++;
                 }
             }
+            else
+                PLWARNING("In TextFilesVMatrix::buildIdx() - The line %d is blank",lineno);
         } // end of loop over lines of file
     } // end of loop over files
 
@@ -242,6 +245,10 @@ void TextFilesVMatrix::build_()
     {
         string fnam = txtfilenames[k];
         txtfiles[k] = fopen(fnam.c_str(),"r");
+        if(txtfiles[k]==NULL){
+            perror("Can't open file");
+            PLERROR("In TextFilesVMatrix::build_ - Can't open file %s",fnam.c_str());
+        }
     }
 
     // open the index file
@@ -434,7 +441,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
 
 TVec<string> TextFilesVMatrix::splitIntoFields(const string& raw_row) const
 {
-    return split(raw_row, delimiter[0]);
+    return split_quoted_delimiter(raw_row, delimiter[0],quote_delimiter);
 }
 
 TVec<string> TextFilesVMatrix::getTextFields(int i) const
@@ -692,6 +699,10 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "- \"\\t\" : used for SAS files (the default)\n"
                   "- \",\"  : used for CSV files\n"
                   "- \";\"  : used for a variant of CSV files");
+
+    declareOption(ol, "quote_delimiter", &TextFilesVMatrix::quote_delimiter, OptionBase::buildoption,
+                  "The escate caractere where the delimiter is not considered."
+                  " //! - '\"' : used frequently.");
 
     declareOption(ol, "skipheader", &TextFilesVMatrix::skipheader, OptionBase::buildoption,
                   "An (optional) list of integers, one for each of the txtfilenames,\n"

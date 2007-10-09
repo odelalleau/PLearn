@@ -169,6 +169,8 @@ vector<string> split(const string& s, char delimiter);
 */
 vector<string> split(const string& s, const string& delimiters=" \t\n\r", bool keepdelimiters=false);
 
+vector<string> split_quoted_delimiter(const string& s, char delimiter, string double_quote);
+
 /*!     Split the string on the first occurence of a delimiter and returns 
   what was left of the delimitor and what was right of it.
   If no delimitor character is found, the original string is returned 
