@@ -33,7 +33,7 @@ except ImportError:
 STATUS_FINISHED = 0
 STATUS_RUNNING = 1
 STATUS_WAITING = 2
-STATUS_ERROR = 3
+STATUS_INIT = 3
 
 #original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
 class LockedIterator:
@@ -247,25 +247,24 @@ class DBIBase:
         finished=0
         running=0
         waiting=0
-        error=0
         init=0
         unfinished=[]        
         for t in self.tasks:
             if t.status==STATUS_INIT:
                 init+=1
-                unfinished+=t.id
+                unfinished.append(t.id)
             elif t.status==STATUS_RUNNING:
                 running+=1
-                unfinished+=t.id
+                unfinished.append(t.id)
             elif t.status==STATUS_FINISHED:
                 finished+=1
             elif t.status==STATUS_WAITING:
                 waiting+=i
-                unfinished+=t.id
+                unfinished.append(t.id)
             else:
                 print "[DBI] jobs %i have a bad status: %d",t.id
-            print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, error: %d, init: %d"%(len(self.tasks),finished, running, waiting, error, init)
-            print "[DBI] jobs unfinished: ",[i.id for i in unfinished]
+            print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, init: %d"%(len(self.tasks),finished, running, waiting, init)
+            print "[DBI] jobs unfinished (starting at 1): ",unfinished
                                 
 class Task:
 
@@ -323,7 +322,7 @@ class Task:
                 string.join([self.log_file,'FINISHED_TIME',time_format],' '))
 
         #print "self.commands =", self.commands
-
+        self.status=STATUS_INIT
     def get_status(self):
         #TODO: catch exception if value not available
         status = get_config_value(self.log_file,'STATUS')
@@ -420,6 +419,7 @@ class DBICluster(DBIBase):
 
     def run_one_job(self, task):
         DBIBase.run(self)
+        task.status=STATUS_RUNNING
         
         remote_command=string.join(task.commands,';')
         filename=os.path.join(self.tmp_dir,task.unique_id)
@@ -447,6 +447,7 @@ class DBICluster(DBIBase):
         started=self.started# not thread safe!!!
         print "[DBI,%d/%d,%s] %s"%(started,len(self.tasks),time.ctime(),command)
         if self.test:
+            task.status=STATUS_FINISHED
             return
 
         task.launch_time = time.time()
@@ -469,7 +470,8 @@ class DBICluster(DBIBase):
             self.backend_failed+=1
         elif task.dbi_return_status!=0:
             self.jobs_failed+=1
-            
+        task.status=STATUS_FINISHED
+  
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
         if self.test:
@@ -502,7 +504,7 @@ class DBICluster(DBIBase):
             
         else:
             print "[DBI] WARNING jobs not started!"
-
+        self.print_jobs_status()
         print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
         print "[DBI] Their was %d jobs that returned a failure status."%(self.jobs_failed)
         
@@ -622,7 +624,8 @@ class DBIbqtools(DBIBase):
         print "[DBI] All the log will be in the directory: ",self.log_dir
         # Launch bqsubmit
         if not self.test:
-            task.set_scheduled_time()
+            for t in self.tasks:
+                t.set_scheduled_time()
             self.p = Popen( 'bqsubmit', shell=True)
             self.p.wait()
         else:
@@ -833,7 +836,8 @@ class DBICondor(DBIBase):
         if self.test == False:
             (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
             print "[DBI] Executing: condor_submit " + condor_file
-            task.set_scheduled_time()
+            for task in self.tasks:
+                task.set_scheduled_time()
             self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
         else:
             print "[DBI] Created condor file: " + condor_file
@@ -932,6 +936,7 @@ class DBILocal(DBIBase):
         print "[DBI,%d/%d,%s] %s"%(self.started,len(self.tasks),time.ctime(),c)
         p = Popen(c, shell=True,stdout=output,stderr=error)
         p.wait()
+        task.status=STATUS_FINISHED
             
     def clean(self):
         if len(self.temp_files)>0:
@@ -977,6 +982,7 @@ class DBILocal(DBIBase):
                 raise
         else:
             print "[DBI] WARNING jobs not started!"
+        self.print_jobs_status()
         print "[DBI] The Log file are under %s"%self.log_dir
                 
 class SshHost:
@@ -1120,6 +1126,7 @@ class DBISsh(DBIBase):
         
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
         task.p.wait()
+        task.status=STATUS_FINISHED
 
 
     def run_one_job2(self, host):
@@ -1165,6 +1172,7 @@ class DBISsh(DBIBase):
                 del err[-1]
                 print "return status", task.return_status
             sleep(1)
+            task.status=STATUS_FINISHED
       
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
@@ -1193,6 +1201,7 @@ class DBISsh(DBIBase):
     def wait(self):
         #TODO
         self.mt.join()
+        self.print_jobs_status()
 
 
 # creates an object of type ('DBI' + launch_system) if it exists
