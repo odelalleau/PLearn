@@ -594,6 +594,7 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(expectation_gradients, copies);
     deepCopyField(reconstruction_activations, copies);
     deepCopyField(reconstruction_activation_gradients, copies);
+    deepCopyField(reconstruction_expectation_gradients, copies);
     deepCopyField(reconstruction_activation_gradients_from_hid_rec, copies);
     deepCopyField(reconstruction_expectation_gradients_from_hid_rec, copies);
     deepCopyField(hidden_reconstruction_activations, copies);
