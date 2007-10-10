@@ -43,41 +43,41 @@
 #include <plearn/var/NllGeneralGaussianVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/math/plapack.h>
-//#include "Var_utils.h"
 
 namespace PLearn {
 using namespace std;
 
-// R += alpa ( M - v1 v2')
-template<class T>
-void my_weird_product(const TMat<T>& R, const TMat<T>& M, const TVec<T>& v1, const TVec<T>& v2,T alpha)
-{
-#ifdef BOUNDCHECK
-    if (M.length() != R.length() || M.width() != R.width() || v1.length()!=M.length() || M.width()!=v2.length() )
-        PLERROR("my_weird_product: incompatible arguments' sizes");
-#endif
-    const T* v_1=v1.data();
-    const T* v_2=v2.data();
-    for (int i=0;i<M.length();i++)
-    {
-        T* mi = M[i];
-        T* ri = R[i];
-        T v1i = v_1[i];
-        for (int j=0;j<M.width();j++)
-            ri[j] += alpha*(mi[j] - v1i * v_2[j]);
-    }
-}
-
 /** NllGeneralGaussianVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(NllGeneralGaussianVariable,
-                        "to do.",
-                        " I said TO DO.\n");
+                        "Computes the NLL under a Gaussian distribution centered "
+                        "around a data point.",
+                        "This variable computes the negative log-likelihood "
+                        "under a Gaussian distribution\n"
+                        "centered near a data point. The likelihood is computed "
+                        "for some given neighbors\n"
+                        "of the data point. A set of bases defining the "
+                        "principal components of the\n"
+                        "covariance matrix, the difference mu between "
+                        "the data point and the center of \n"
+                        "the Gaussian and the noise variance in all directions "
+                        "of the space must be\n"
+                        "specified. Gradient is propagated in all these "
+                        "parameters. Optionally, the \n"
+                        "gradient for mu can be computed based on the likelihood "
+                        "of less nearest neighbors.\n"
+                        "It is assumed that this Gaussian is part of a mixture "
+                        "model with L components.\n"
+    );
   
-NllGeneralGaussianVariable::NllGeneralGaussianVariable(const VarArray& the_varray, real thelogL, int the_mu_nneighbors) 
+NllGeneralGaussianVariable::NllGeneralGaussianVariable(const VarArray& the_varray, real thelogL, bool the_use_mu, int the_mu_nneighbors) 
     : inherited(the_varray,the_varray[3]->length(),1), 
-      n(varray[0]->width()), log_L(thelogL),ncomponents(varray[0]->length()),
-      nneighbors(varray[3]->length()), mu_nneighbors(the_mu_nneighbors)
+      n(varray[3]->size()), 
+      ncomponents(varray[0]->length()%varray[3]->size()),
+      nneighbors(varray[4]->length()),
+      log_L(thelogL),
+      use_mu(the_use_mu),
+      mu_nneighbors(the_mu_nneighbors)
 {
     build_();
 }
@@ -95,54 +95,65 @@ NllGeneralGaussianVariable::build_()
 {
     
     // The VarArray constaints the following variables:
-    //    - varray[0] = the tangent plane (ncomponents x n)
+    //    - varray[0] = the tangent plane (ncomponents x n sized vector)
     //    - varray[1] = mu(data_point) (n x 1)
     //    - varray[2] = sigma_noise (1 x 1)
-    //    - varray[3] = neighbor_distances (nneighbors x n)
+    //    - varray[3] = input data point around which the Gaussian is centered
+    //    - varray[4] = nearest neighbors (nneighbors x n)
      
-    if(varray.length() != 4 && varray.length() != 6)
-        PLERROR("In NllGeneralGaussianVariable constructor: varray is of length %d but should be of length %d", varray.length(), 4);
+    if(varray.length() != 5)
+        PLERROR("In NllGeneralGaussianVariable::build_(): varray is of "
+                "length %d but should be of length %d", varray.length(), 5);
     
-    if(varray[1]->length() != n || varray[1]->width() != 1) PLERROR("In NllGeneralGaussianVariable constructor: varray[1] is of size (%d,%d), but should be of size (%d,%d)",
-                                                                    varray[1]->length(), varray[1]->width(),
-                                                                    ncomponents, 1);
-    if(varray[2]->length() != 1 || varray[2]->width() != 1) PLERROR("In NllGeneralGaussianVariable constructor: varray[2] is of size (%d,%d), but should be of size (%d,%d)",
-                                                                    varray[2]->length(), varray[2]->width(),
-                                                                    1, 1);
-    if(varray[3]->width() != n) PLERROR("In NllGeneralGaussianVariable constructor: varray[3] is of size (%d,%d), but should be of size (%d,%d)",
-                                        varray[3]->length(), varray[3]->width(),
-                                        nneighbors, n);
+    if(varray[1]->length() != n || varray[1]->width() != 1) 
+        PLERROR("In NllGeneralGaussianVariable::build_(): varray[1] "
+                "is of size (%d,%d), but should be of size (%d,%d)",
+                varray[1]->length(), varray[1]->width(),
+                ncomponents, 1);
+
+    if(varray[2]->length() != 1 || varray[2]->width() != 1) 
+        PLERROR("In NllGeneralGaussianVariable::build_(): varray[2] "
+                "is of size (%d,%d), but should be of size (%d,%d)",
+                varray[2]->length(), varray[2]->width(),
+                1, 1);
+    
+    if(varray[3]->length() != n || varray[3]->width() != 1) 
+        PLERROR("In NllGeneralGaussianVariable::build_(): varray[3] "
+                "is of size (%d,%d), but should be of size (%d,%d)",
+                varray[3]->length(), varray[3]->width(),
+                n,1);
+
+    if(varray[4]->width() != n) 
+        PLERROR("In NllGeneralGaussianVariable::build_(): varray[4] "
+                "is of size (%d,%d), but should be of size (%d,%d)",
+                varray[3]->length(), varray[3]->width(),
+                nneighbors, n);
 
     if(mu_nneighbors < 0) mu_nneighbors = nneighbors;
-    use_noise = (varray.length() == 6);
+    if(mu_nneighbors > nneighbors)
+        PLERROR("In NllGeneralGaussianVariable::build_(): mu_nneighbors "
+            "cannot be > than number of provided neighbors");
 
-    F = varray[0]->matValue;
-    mu = varray[1]->value;
+    F = varray[0]->value.toMat(ncomponents,n);
+    if(use_mu) mu = varray[1]->value;
     sn = varray[2]->value;
-    diff_y_x = varray[3]->matValue;
-    if(use_noise)
-    {
-        noise_var = varray[4]->value;
-        mu_noisy = varray[5]->value;
-    }
+    input = varray[3]->value;
+    neighbors = varray[4]->matValue;
+
+    diff_neighbor_input.resize(n);
     z.resize(nneighbors,n);
     U.resize(ncomponents,n);
     Ut.resize(n,n);
     V.resize(ncomponents,ncomponents);
     inv_Sigma_F.resize(ncomponents,n);
     inv_Sigma_z.resize(nneighbors,n);
-    if(use_noise) 
-    {
-        inv_Sigma_z_noisy.resize(nneighbors,n);
-        zj_noisy.resize(n);
-    } 
     temp_ncomp.resize(ncomponents);
 }
 
 
 void NllGeneralGaussianVariable::recomputeSize(int& len, int& wid) const
 {
-    len = varray[3]->length();
+    len = varray[4]->length();
     wid = 1;
 }
 
@@ -157,22 +168,29 @@ void NllGeneralGaussianVariable::fprop()
     {
         sm_svd[k] = mypow(S[k],2);
         U(k) << Ut(k);
-    }  
+    }
 
     real mahal = 0;
     real norm_term = 0;
     real dotp = 0;
     real coef = 0;
     inv_Sigma_z.clear();
-    if(use_noise) inv_Sigma_z_noisy.clear();
     tr_inv_Sigma = 0;
     for(int j=0; j<nneighbors;j++)
     {
         zj = z(j);
-        substract(diff_y_x(j),mu,zj); // z = y - x - mu(x)
+        if(use_mu)
+        {
+            substract(neighbors(j),input,diff_neighbor_input); 
+            substract(diff_neighbor_input,mu,zj); 
+        }
+        else
+        {
+            substract(neighbors(j),input,zj); 
+        }
       
         mahal = -0.5*pownorm(zj)/sn[0];      
-        norm_term = - n/2.0 * Log2Pi - 0.5*(n-ncomponents)*log(sn[0]);
+        norm_term = - n/2.0 * Log2Pi - 0.5*(n-ncomponents)*pl_log(sn[0]);
 
         inv_sigma_zj = inv_Sigma_z(j);
         inv_sigma_zj << zj; 
@@ -186,32 +204,14 @@ void NllGeneralGaussianVariable::fprop()
             uk = U(k);
             dotp = dot(zj,uk);
             coef = (1.0/(sm_svd[k]+sn[0]) - 1.0/sn[0]);
-            //inv_sigma_zj += dotp*coef*uk;
             multiplyAcc(inv_sigma_zj,uk,dotp*coef);
             mahal -= square(dotp)*0.5*coef;
-            norm_term -= 0.5*log(sm_svd[k]);
+            norm_term -= 0.5*pl_log(sm_svd[k]);
             if(j==0)
-                tr_inv_Sigma += coef;//*pownorm(uk,2);
-        }      
+                tr_inv_Sigma += coef;
+        }
 
         value[j] = -1*(norm_term + mahal);
-
-        if(use_noise)
-        {
-            substract(zj,noise_var,zj_noisy);
-        
-            inv_sigma_zj_noisy = inv_Sigma_z_noisy(j);
-            inv_sigma_zj_noisy << zj_noisy; 
-            inv_sigma_zj_noisy /= sn[0];
-
-            for(int k=0; k<ncomponents; k++)
-            { 
-                uk = U(k);
-                dotp = dot(zj_noisy,uk);
-                coef = (1.0/(sm_svd[k]+sn[0]) - 1.0/sn[0]);
-                multiplyAcc(inv_sigma_zj_noisy,uk,dotp*coef);
-            }      
-        }
     }
 
     inv_Sigma_F.clear();
@@ -224,12 +224,35 @@ void NllGeneralGaussianVariable::fprop()
         for(int k2=0; k2<ncomponents;k2++)
         {
             uk2 = U(k2);
-            //inv_sigma_fk += (1.0/(sm_svd[k2]+sn[0]) - 1.0/sn[0])*dot(fk,uk2)*uk2; 
-            multiplyAcc(inv_sigma_fk,uk2,(1.0/(sm_svd[k2]+sn[0]) - 1.0/sn[0])*dot(fk,uk2));
+            multiplyAcc(inv_sigma_fk,uk2,
+                        (1.0/(sm_svd[k2]+sn[0]) - 1.0/sn[0])*dot(fk,uk2));
         }
     }
 }
 
+// grad_F += alpa ( M - v1 v2')
+void NllGeneralGaussianVariable::bprop_to_bases(const Mat& R, const Mat& M, 
+                                                const Vec& v1, 
+                                                const Vec& v2, real alpha)
+{
+#ifdef BOUNDCHECK
+    if (M.length() != R.length() || M.width() != R.width() 
+        || v1.length()!=M.length() || M.width()!=v2.length() )
+        PLERROR("NllGeneralGaussianVariable::bprop_to_bases(): incompatible "
+                "arguments' sizes");
+#endif
+
+    const real* v_1=v1.data();
+    const real* v_2=v2.data();
+    for (int i=0;i<M.length();i++)
+    {
+        real* mi = M[i];
+        real* ri = R[i];
+        real v1i = v_1[i];
+        for (int j=0;j<M.width();j++)
+            ri[j] += alpha*(mi[j] - v1i * v_2[j]);
+    }
+}
 
 void NllGeneralGaussianVariable::bprop()
 {
@@ -239,21 +262,22 @@ void NllGeneralGaussianVariable::bprop()
         // dNLL/dF
 
         product(temp_ncomp,F,inv_Sigma_z(neighbor));
-        my_weird_product(varray[0]->matGradient,inv_Sigma_F,temp_ncomp,inv_Sigma_z(neighbor),gradient[neighbor]*coef);
+        bprop_to_bases(varray[0]->matGradient,inv_Sigma_F,
+                         temp_ncomp,inv_Sigma_z(neighbor),
+                         gradient[neighbor]*coef);
 
-        if(neighbor < mu_nneighbors)
+        if(use_mu && neighbor < mu_nneighbors)
         {
             // dNLL/dmu
 
-            multiplyAcc(varray[1]->gradient, inv_Sigma_z(neighbor),-1.0*gradient[neighbor] *coef) ;
-        
-            if(use_noise)
-                multiplyAcc(varray[5]->gradient, inv_Sigma_z_noisy(neighbor),-1.0*gradient[neighbor] *coef) ;
+            multiplyAcc(varray[1]->gradient, inv_Sigma_z(neighbor),
+                        -1.0*gradient[neighbor] *coef) ;
         }
 
         // dNLL/dsn
 
-        varray[2]->gradient[0] += gradient[neighbor]*coef* 0.5*(tr_inv_Sigma - pownorm(inv_Sigma_z(neighbor)));
+        varray[2]->gradient[0] += gradient[neighbor]*coef* 
+            0.5*(tr_inv_Sigma - pownorm(inv_Sigma_z(neighbor)));
       
     }
 }
@@ -261,7 +285,35 @@ void NllGeneralGaussianVariable::bprop()
 
 void NllGeneralGaussianVariable::symbolicBprop()
 {
-    PLERROR("Not implemented");
+    PLERROR("In NllGeneralGaussianVariable::symbolicBprop(): Not implemented");
+}
+
+void NllGeneralGaussianVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+{
+    NaryVariable::makeDeepCopyFromShallowCopy(copies);
+    
+    deepCopyField(input, copies);
+    deepCopyField(neighbors, copies);
+    deepCopyField(diff_neighbor_input, copies);
+    deepCopyField(mu, copies);
+    deepCopyField(sm_svd, copies);
+    deepCopyField(sn, copies);
+    deepCopyField(S, copies);
+    deepCopyField(uk, copies);
+    deepCopyField(fk, copies);
+    deepCopyField(uk2, copies);
+    deepCopyField(inv_sigma_zj, copies);
+    deepCopyField(zj, copies);
+    deepCopyField(inv_sigma_fk, copies);
+    deepCopyField(temp_ncomp, copies);
+    deepCopyField(F, copies);
+    deepCopyField(F_copy, copies);
+    deepCopyField(z, copies);
+    deepCopyField(U, copies);
+    deepCopyField(Ut, copies);
+    deepCopyField(V, copies);
+    deepCopyField(inv_Sigma_F, copies);
+    deepCopyField(inv_Sigma_z, copies);
 }
 
 } // end of namespace PLearn
