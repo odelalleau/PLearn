@@ -104,7 +104,7 @@ protected:
     //! Gradient on feature input (useless for now)
     Vec gradient_feat_input;
     //! Input vector to NNet (after mapping into distributed representations)
-    Vec nnet_input;
+    mutable Vec nnet_input;
     //! Gradient for vector to NNet
     Vec gradient_nnet_input;
     //! First hidden layer value
@@ -179,6 +179,9 @@ public:
     //! Gradient on bias of output layer for distributed
     //! representation predictor
     Vec gradient_bout_dist_rep;
+    //! Proposal distribution for importance sampling
+    //! estimation of the gradient.
+    Vec output_empirical_distribution;
 
 public:
 
@@ -258,12 +261,16 @@ public:
     bool possible_targets_vary;
     //! FeatureSets to apply on input
     TVec<PP<FeatureSet> > feat_sets;
-    //! Indication that the input IDs should be used as the feature ID.
-    //! The ID/string mapping provided by the input VMatrix Dictionary
-    //! objects is hence used.
-    //! This implies that all VMatrices (even those at test time) that
-    //! provide the input vectors should use the same Dictionary objects.
-    bool use_input_as_feature;
+    //  //! Indication that the input IDs should be used as the feature ID.
+    //  //! The ID/string mapping provided by the input VMatrix Dictionary
+    //  //! objects is hence used.
+    //  //! This implies that all VMatrices (even those at test time) that
+    //  //! provide the input vectors should use the same Dictionary objects.
+    //  bool use_input_as_feature;
+    //  //! Indication that an estimate of the gradient using
+    //  //! importance sampling should be used.
+    //  //! See (Bengio and Sénécal, 2003) for more details.
+    //  bool use_importance_sampling_gradient;
 
 private:
     void build_();

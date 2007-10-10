@@ -377,6 +377,8 @@ void FeatureSetNNet::fpropOutput(const Vec& inputv, Vec& outputv) const
     }
     
     feat_input.resize(nfeats);
+    if(dist_rep_dim<=0) nnet_input = feat_input; // Keep sizes synchronized
+
     offset = 0;
     id = 0;
     for(int i=0; i<ni; i++)
