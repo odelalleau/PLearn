@@ -6661,7 +6661,7 @@ void transpose(const TMat<T> src, TMat<T> dest)
     int w=src.width();
 #ifdef BOUNDCHECK
     if (w!=dest.length() || l!=dest.width())
-        PLERROR("tranpose(TMat<T>(%d,%d),T,TMat<T>(%d,%d)) args of unequal dimensions",
+        PLERROR("transpose(TMat<T>(%d,%d),T,TMat<T>(%d,%d)) args of unequal dimensions",
                 src.length(),src.width(),dest.length(),dest.width());
 #endif
     int dmod=dest.mod();
