@@ -52,7 +52,12 @@ using namespace std;
 // NGramDistribution //
 ///////////////////////
 NGramDistribution::NGramDistribution() :
-    nan_replace(false),n(2),additive_constant(0),discount_constant(0.01), validation_proportion(0.10), smoothing("no_smoothing"),lambda_estimation("manual")
+    nan_replace(false),
+    n(2),
+    additive_constant(0),
+    discount_constant(0.01), 
+    smoothing("no_smoothing"),
+    lambda_estimation("manual")
 {
     forget();
     // In a N-Gram, the predicted size is always one.
@@ -78,7 +83,8 @@ void NGramDistribution::declareOptions(OptionList& ol)
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
 
-    declareOption(ol, "nan_replace", &NGramDistribution::nan_replace, OptionBase::buildoption,
+    declareOption(ol, "nan_replace", &NGramDistribution::nan_replace, 
+                  OptionBase::buildoption,
                   "Indication that the missing values in context (nan) should be\n"
                   "replaced by a default value (-1). nan fields should correspond\n"
                   "to context not accessible (like in the beginning of a sentence).\n"
@@ -91,13 +97,16 @@ void NGramDistribution::declareOptions(OptionList& ol)
         "'predictor_size' and 'predicted_size', i.e. predictor_size = n-1\n"
         "and predicted_size = 1.");
 
-    declareOption(ol, "additive_constant", &NGramDistribution::additive_constant, OptionBase::buildoption,
+    declareOption(ol, "additive_constant", &NGramDistribution::additive_constant, 
+                  OptionBase::buildoption,
                   "Additive constant for add-delta smoothing");
-    declareOption(ol, "discount_constant", &NGramDistribution::discount_constant, OptionBase::buildoption,
+
+    declareOption(ol, "discount_constant", &NGramDistribution::discount_constant, 
+                  OptionBase::buildoption,
                   "Discount constant for absolut discounting smoothing");
-    declareOption(ol, "validation_proportion", &NGramDistribution::validation_proportion, OptionBase::buildoption,
-                  "Proportion of the training set used for validation (EM)");
-    declareOption(ol, "smoothing", &NGramDistribution::smoothing, OptionBase::buildoption,
+
+    declareOption(ol, "smoothing", &NGramDistribution::smoothing, 
+                  OptionBase::buildoption,
                   "Smoothing method. Choose among:\n"
                   "- \"no_smoothing\"\n"
                   "- \"add-delta\"\n"
@@ -105,17 +114,26 @@ void NGramDistribution::declareOptions(OptionList& ol)
                   "- \"witten-bell\"\n"
                   "- \"absolute-discounting\"\n"
         );
-    declareOption(ol, "lambda_estimation", &NGramDistribution::lambda_estimation, OptionBase::buildoption,
+    declareOption(ol, "lambda_estimation", &NGramDistribution::lambda_estimation, 
+                  OptionBase::buildoption,
                   "Lambdas estimation method. Choose among:\n"
                   "- \"manual\" (lambdas field should be specified)\n"
                   "- \"EM\"\n"
         );
-    declareOption(ol, "lambdas", &NGramDistribution::lambdas, OptionBase::buildoption,
+    declareOption(ol, "lambdas", &NGramDistribution::lambdas, 
+                  OptionBase::buildoption,
                   "Lambdas of the interpolated ngram");
-    declareOption(ol, "tree", &NGramDistribution::tree, OptionBase::buildoption,
+
+    declareOption(ol, "validation_set", &NGramDistribution::validation_set, 
+                  OptionBase::buildoption,
+                  "Validation set used to estimate the lambdas with the\n"
+                  "EM algorithm.");
+
+    declareOption(ol, "tree", &NGramDistribution::tree, OptionBase::learntoption,
                   "NGramTree of the frequencies");
 
-    declareOption(ol, "voc_size", &NGramDistribution::voc_size, OptionBase::learntoption,
+    declareOption(ol, "voc_size", &NGramDistribution::voc_size, 
+                  OptionBase::learntoption,
                   "Vocabulary size");
 
     // Now call the parent class' declareOptions().
@@ -136,7 +154,7 @@ void NGramDistribution::declareOptions(OptionList& ol)
 void NGramDistribution::build()
 {
     // now set in the constructor to -1
-    //predictor_size = n - 1;
+    predictor_size = n - 1;
     inherited::build();
     build_();
 }
@@ -350,51 +368,53 @@ void NGramDistribution::getNGrams(Vec row, TVec<int>& ngram) const
 
 void NGramDistribution::train()
 {
-    VMat contexts_train;
-    VMat contexts_validation;
 
+//    if(smoothing == "jelinek-mercer" && lambda_estimation == "EM")
+//    {
+//        if(validation_proportion <= 0 || validation_proportion >= 1)
+//            PLERROR("In NGramDistribution:build_() : validation_proportion should be in (0,1)");
+//        // Making FractionSplitter
+//        PP<FractionSplitter> fsplit = new FractionSplitter();
+//        TMat<pair<real,real> > splits(1,2);
+//        splits(0,0).first = 0; splits(0,0).second = 1-validation_proportion;
+//        splits(0,1).first = 1-validation_proportion; splits(0,1).second = 1;
+//        fsplit->splits = splits;
+//        fsplit->build();
+//
+//        // Making RepeatSplitter
+//        PP<RepeatSplitter> rsplit = new RepeatSplitter();
+//        rsplit->n = 1;
+//        rsplit->shuffle = true;
+//        rsplit->seed = 123456;
+//        rsplit->to_repeat = fsplit;
+//        rsplit->setDataSet(train_set);
+//        rsplit->build();
+//
+//        TVec<VMat> vmat_splits = rsplit->getSplit();
+//        contexts_train = vmat_splits[0];
+//        contexts_validation = vmat_splits[1];
+//    }
+//    else
 
-    if(smoothing == "jelinek-mercer" && lambda_estimation == "EM")
-    {
-        if(validation_proportion <= 0 || validation_proportion >= 1)
-            PLERROR("In NGramDistribution:build_() : validation_proportion should be in (0,1)");
-        // Making FractionSplitter
-        PP<FractionSplitter> fsplit = new FractionSplitter();
-        TMat<pair<real,real> > splits(1,2);
-        splits(0,0).first = 0; splits(0,0).second = 1-validation_proportion;
-        splits(0,1).first = 1-validation_proportion; splits(0,1).second = 1;
-        fsplit->splits = splits;
-        fsplit->build();
-
-        // Making RepeatSplitter
-        PP<RepeatSplitter> rsplit = new RepeatSplitter();
-        rsplit->n = 1;
-        rsplit->shuffle = true;
-        rsplit->seed = 123456;
-        rsplit->to_repeat = fsplit;
-        rsplit->setDataSet(train_set);
-        rsplit->build();
-
-        TVec<VMat> vmat_splits = rsplit->getSplit();
-        contexts_train = vmat_splits[0];
-        contexts_validation = vmat_splits[1];
-    }
-    else
-        contexts_train = train_set;
 
     //Putting ngrams in the tree
     Vec row(n);
     TVec<int> int_row(n);
 
-
-    PP<ProgressBar> pb =  new ProgressBar("Inserting ngrams in NGramTree", contexts_train->length());
-    for(int i=0; i<contexts_train->length(); i++)
+    if(stage == 0 && nstages>0)
     {
-        contexts_train->getRow(i,row);
-        getNGrams(row,int_row);
-        tree->add(int_row);
-
-        pb->update(i+1);
+        PP<ProgressBar> pb =  new ProgressBar("Inserting ngrams in NGramTree", train_set->length());
+        for(int i=0; i<train_set->length(); i++)
+        {
+            train_set->getRow(i,row);
+            getNGrams(row,int_row);
+            tree->add(int_row);
+            
+            pb->update(i+1);
+        }
+        stage++;
+        if(smoothing == "jelinek-mercer" && lambda_estimation == "EM")
+            stage--; //Will be incremented in EM estimation
     }
 
     // Smoothing techniques parameter estimation
@@ -403,7 +423,12 @@ void NGramDistribution::train()
         //Jelinek-Mercer: EM estimation of lambdas
         if(lambda_estimation == "EM")
         {
-            lambdas.resize(n+1); lambdas.fill(1.0/(n+1));
+            if(stage == 0) 
+            {
+                lambdas.resize(n+1); lambdas.fill(1.0/(n+1));
+            }
+            if(!validation_set) PLERROR("In NGramDistribution:build_() : "
+                                        "validation_set needs to be provided");
             real diff = EM_PRECISION+1;
             real l_old = 0, l_new = -REAL_MAX;
             Vec e(n+1);
@@ -411,7 +436,8 @@ void NGramDistribution::train()
             TVec<int> ngram(n);
             real p_sum = 0;
             int n_ngram = 0;
-            while(diff > EM_PRECISION)
+            //while(diff > EM_PRECISION)
+            while(stage < nstages)
             {
                 if(verbosity > 2)
                     cout << "EM diff: " << diff << endl;
@@ -421,13 +447,15 @@ void NGramDistribution::train()
                 // E step
 
                 e.fill(0);
-                for(int t=0; t<contexts_validation->length(); t++)
+                //for(int t=0; t<contexts_validation->length(); t++)
+                for(int t=0; t<validation_set->length(); t++)
                 {
                     p_sum = 0;
 
                     // get w_{t-n+1}^t
 
-                    contexts_validation->getRow(t,row);
+                    //contexts_validation->getRow(t,row);
+                    validation_set->getRow(t,row);
                     getNGrams(row,ngram);
 
                     TVec<int> freq = tree->freq(ngram);
@@ -455,6 +483,7 @@ void NGramDistribution::train()
                     lambdas[j] = e[j]/n_ngram;
 
                 diff = l_new-l_old;
+                stage++;
             }
 
             //Test

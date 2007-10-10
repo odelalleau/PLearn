@@ -88,9 +88,6 @@ public:
     //! Discount constant for absolute discounting smoothing
     real discount_constant;
 
-    //! Proportion of the training set used for validation
-    real validation_proportion;
-
     //! Smoothing parameter
     string smoothing;
 
