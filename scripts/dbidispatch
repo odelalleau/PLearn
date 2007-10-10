@@ -272,7 +272,10 @@ jobs = DBI([
 jobs.run()
 jobs.wait()
 # There is %d command in the script"""%(len(commands)))
-        
+    if "test" in dbi_param:
+        print "[DBI dispatch] In test mode, we do not make dbi errase temp file"
+    else:
+        SCRIPT.write("jobs.clean()") 
     SCRIPT.close()
     os.system("chmod +x %s"%(ScriptName));
 
@@ -285,7 +288,11 @@ else:
     t2=time.time()
     print "it took %f s to create the DBI objects"%(t2-t1)
     jobs.run()
-    jobs.wait()
     t3=time.time()
+    jobs.wait()
+    if "test" in dbi_param:
+        print "[DBI dispatch] In test mode, we do not make dbi errase temp file"
+    else:
+        jobs.clean()
     print "it took %f s to launch all the commands"%(t3-t2)
 

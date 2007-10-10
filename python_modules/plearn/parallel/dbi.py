@@ -235,7 +235,7 @@ class DBIBase:
                 print "[DBI] post_batch_command:",post_batch_command
             
     def clean(self):
-        pass
+        print "[DBI] WARNING the clean function was not overrided by the sub class!"
 
     def run(self):
         pass
@@ -400,6 +400,9 @@ class DBICluster(DBIBase):
         self.nb_proc=int(self.nb_proc)
         self.backend_failed=0
         self.jobs_failed=0
+        
+        if not os.path.exists(self.tmp_dir):
+            os.mkdir(self.tmp_dir)
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -418,6 +421,15 @@ class DBICluster(DBIBase):
     def run_one_job(self, task):
         DBIBase.run(self)
         
+        remote_command=string.join(task.commands,';')
+        filename=os.path.join(self.tmp_dir,task.unique_id)
+        filename=os.path.abspath(filename)
+        f=open(filename,'w')
+        f.write(remote_command+'\n')
+        f.close()
+        os.chmod(filename, 0750)
+        self.temp_files.append(filename)
+        
         command = "cluster" 
         if self.arch == "32":
             command += " --typecpu 32bits"
@@ -429,7 +441,8 @@ class DBICluster(DBIBase):
             command += " --duree "+self.duree
         if self.cluster_wait:
             command += " --wait"
-        command += " --execute '"+string.join(task.commands,';') + "'"
+        command += " --execute '"+ filename + "'"
+
         self.started+=1
         started=self.started# not thread safe!!!
         print "[DBI,%d/%d,%s] %s"%(started,len(self.tasks),time.ctime(),command)
@@ -475,7 +488,8 @@ class DBICluster(DBIBase):
 
     def clean(self):
         #TODO: delete all log files for the current batch
-        pass
+        for f in self.temp_files:
+            os.remove(f)
 
     def wait(self):
         if self.mt:
@@ -488,6 +502,7 @@ class DBICluster(DBIBase):
             
         else:
             print "[DBI] WARNING jobs not started!"
+
         print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
         print "[DBI] Their was %d jobs that returned a failure status."%(self.jobs_failed)
         
