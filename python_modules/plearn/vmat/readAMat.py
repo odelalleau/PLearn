@@ -70,7 +70,8 @@ def readAMat(amatname):
         elif not line.startswith('#'):
             # Add all non-comment lines.
             row = [ safefloat(x) for x in line.strip().split() ]
-            a.append(row)
+            if row:
+                a.append(row)
 
     f.close()
     return array(a), fieldnames
