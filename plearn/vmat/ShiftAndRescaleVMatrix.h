@@ -68,6 +68,9 @@ public:
     Vec scale;
     Vec min_max;
 
+    real shared_shift;
+    real shared_scale;
+
     //! find shift and scale automatically?
     bool automatic;
 

@@ -60,6 +60,8 @@ PLEARN_IMPLEMENT_OBJECT(ShiftAndRescaleVMatrix,
 
 ShiftAndRescaleVMatrix::ShiftAndRescaleVMatrix(bool call_build_)
     : inherited(call_build_),
+      shared_shift(0),
+      shared_scale(1),
       automatic(1),
       n_train(0),
       n_inputs(-1),
@@ -170,6 +172,18 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Quantity multiplied to each shifted element of a row of the"
                   " source vmatrix.");
+
+    declareOption(ol, "shared_shift", &ShiftAndRescaleVMatrix::shared_shift,
+                  OptionBase::buildoption,
+                  "Quantity added to ALL INPUT elements of a row of the source\n"
+                  "vmatrix. This option is ignored if 'shift' is provided\n"
+                  "or 'automatic' is true.\n");
+
+    declareOption(ol, "shared_scale", &ShiftAndRescaleVMatrix::shared_scale,
+                  OptionBase::buildoption,
+                  "Quantity multiplied to ALL shifted INPUT elements of a row of the"
+                  "source vmatrix. This option is ignored if 'scale' is provided,\n"
+                  "'automatic' is true or 'no_scale' is true.\n");
 
     declareOption(ol, "automatic", &ShiftAndRescaleVMatrix::automatic,
                   OptionBase::buildoption,
@@ -300,6 +314,33 @@ void ShiftAndRescaleVMatrix::build_()
                     scale[i] = (min_max[1] - min_max[0]) / (max_col[i] - min_col[i]) ; 
                 }
 
+            }
+            else
+            {
+                n_inputs = source->inputsize();
+                if (n_inputs<0)
+                {
+                    n_inputs = source->inputsize();
+                    if (n_inputs<0)
+                        PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be"
+                                " provided explicitly\n"
+                                "or the source VMatrix should have a set value of"
+                                " inputsize.\n");
+                }
+                
+                if( shift.length() == 0)
+                {
+                    shift.resize(source->width()) ; 
+                    shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
+                    shift.subVec(0,n_inputs).fill(shared_shift);
+                }
+                
+                if( scale.length() == 0)
+                {
+                    scale.resize(source->width()) ; 
+                    scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
+                    scale.subVec(0,n_inputs).fill(shared_scale);
+                }
             }
         }
         reset_dimensions();
