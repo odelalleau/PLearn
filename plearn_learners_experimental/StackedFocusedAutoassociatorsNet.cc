@@ -42,6 +42,7 @@
 
 #include "StackedFocusedAutoassociatorsNet.h"
 #include <plearn/vmat/VMat_computeNearestNeighbors.h>
+#include <plearn/vmat/GetInputVMatrix.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMMixedConnection.h>
 
@@ -260,22 +261,30 @@ void StackedFocusedAutoassociatorsNet::build_layers_and_connections()
                 "there should be %d connections.\n",
                 n_layers-1);
 
-    if( reconstruction_connections.length() != n_layers-1 )
+    if( !fast_exact_is_equal( greedy_learning_rate, 0 ) 
+        && reconstruction_connections.length() != n_layers-1 )
         PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() - \n"
                 "there should be %d reconstruction connections.\n",
                 n_layers-1);
-
-    if(unsupervised_layers.length() != n_layers-2 
+    
+    if(  !( reconstruction_connections.length() == 0
+            || reconstruction_connections.length() == n_layers-1 ) )
+        PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() - \n"
+                "there should be either 0 or %d reconstruction connections.\n",
+                n_layers-1);
+    
+    
+    if(unsupervised_layers.length() != n_layers-1 
        && unsupervised_layers.length() != 0)
         PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() - \n"
                 "there should be either 0 of %d unsupervised_layers.\n",
-                n_layers-2);
+                n_layers-1);
         
-    if(unsupervised_connections.length() != n_layers-2 
+    if(unsupervised_connections.length() != n_layers-1 
        && unsupervised_connections.length() != 0)
         PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() - \n"
                 "there should be either 0 of %d unsupervised_connections.\n",
-                n_layers-2);
+                n_layers-1);
         
     if(unsupervised_connections.length() != unsupervised_layers.length())
         PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() - \n"
@@ -328,21 +337,24 @@ void StackedFocusedAutoassociatorsNet::build_layers_and_connections()
                         "connections[%i] should have a up_size of %d.\n",
                         i, unsupervised_layers[i+1]->size);
             
-            if( layers[i+1]->size + unsupervised_layers[i]->size != 
-                reconstruction_connections[i]->down_size )
-                PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
-                        "- \n"
-                        "recontruction_connections[%i] should have a down_size of "
-                        "%d.\n",
-                        i, layers[i+1]->size + unsupervised_layers[i]->size);
-            
-            if( reconstruction_connections[i]->up_size != 
-                layers[i]->size )
-                PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
-                        "- \n"
-                        "recontruction_connections[%i] should have a up_size of "
-                        "%d.\n",
-                        i, layers[i]->size);
+            if( reconstruction_connections.length() != 0 )
+            {
+                if( layers[i+1]->size + unsupervised_layers[i]->size != 
+                    reconstruction_connections[i]->down_size )
+                    PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
+                            "- \n"
+                            "recontruction_connections[%i] should have a down_size of "
+                            "%d.\n",
+                            i, layers[i+1]->size + unsupervised_layers[i]->size);
+                
+                if( reconstruction_connections[i]->up_size != 
+                    layers[i]->size )
+                    PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
+                            "- \n"
+                            "recontruction_connections[%i] should have a up_size of "
+                            "%d.\n",
+                            i, layers[i]->size);
+            }
 
             if( !(unsupervised_layers[i]->random_gen) )
             {
@@ -360,12 +372,13 @@ void StackedFocusedAutoassociatorsNet::build_layers_and_connections()
             greedy_layer->sub_layers.resize(2);
             greedy_layer->sub_layers[0] = layers[i+1];
             greedy_layer->sub_layers[1] = unsupervised_layers[i];
+            greedy_layer->size = layers[i+1]->size + unsupervised_layers[i]->size;
             greedy_layer->build();
 
             PP<RBMMixedConnection> greedy_connection = new RBMMixedConnection();
             greedy_connection->sub_connections.resize(2,1);
-            greedy_connection->sub_connections(1,0) = connections[i];
-            greedy_connection->sub_connections(2,0) = unsupervised_connections[i];
+            greedy_connection->sub_connections(0,0) = connections[i];
+            greedy_connection->sub_connections(1,0) = unsupervised_connections[i];
             greedy_connection->build();
             
             greedy_layers[i] = greedy_layer;
@@ -373,20 +386,22 @@ void StackedFocusedAutoassociatorsNet::build_layers_and_connections()
         }
         else
         {
-            if( layers[i+1]->size != reconstruction_connections[i]->down_size )
-                PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
-                        "- \n"
-                        "recontruction_connections[%i] should have a down_size of "
-                        "%d.\n",
-                        i, layers[i+1]->size);
+            if( reconstruction_connections.length() != 0 )
+            {
+                if( layers[i+1]->size != reconstruction_connections[i]->down_size )
+                    PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
+                            "- \n"
+                            "recontruction_connections[%i] should have a down_size of "
+                            "%d.\n",
+                            i, layers[i+1]->size);
             
-            if( reconstruction_connections[i]->up_size != layers[i]->size )
-                PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
-                        "- \n"
-                        "recontruction_connections[%i] should have a up_size of "
-                        "%d.\n",
-                        i, layers[i]->size);
- 
+                if( reconstruction_connections[i]->up_size != layers[i]->size )
+                    PLERROR("StackedFocusedAutoassociatorsNet::build_layers_and_connections() "
+                            "- \n"
+                            "recontruction_connections[%i] should have a up_size of "
+                            "%d.\n",
+                            i, layers[i]->size);
+            }
             greedy_layers[i] = layers[i+1];
             greedy_connections[i] = connections[i];
         }
@@ -403,7 +418,8 @@ void StackedFocusedAutoassociatorsNet::build_layers_and_connections()
             connections[i]->forget();
         }
 
-        if( !(reconstruction_connections[i]->random_gen) )
+        if( reconstruction_connections.length() != 0
+            && !(reconstruction_connections[i]->random_gen) )
         {
             reconstruction_connections[i]->random_gen = random_gen;
             reconstruction_connections[i]->forget();
@@ -508,11 +524,11 @@ void StackedFocusedAutoassociatorsNet::forget()
     train_set_representations_up_to_date = false;
 
     for( int i=0 ; i<n_layers-1 ; i++ )
-    {
         connections[i]->forget();
-        reconstruction_connections[i]->forget();
-    }
     
+    for( int i=0; i<reconstruction_connections.length(); i++)
+        reconstruction_connections[i]->forget();
+
     stage = 0;
     greedy_stages.clear();
 }
@@ -593,8 +609,9 @@ void StackedFocusedAutoassociatorsNet::train()
             // Find similar example
 
             int sim_index = random_gen->uniform_multinomial_sample(k_neighbors);
-            train_set->getExample(nearest_neighbors_indices(sample,sim_index),
-                                  similar_example, target2, weight2);
+            class_datasets[(int)round(target[0])]->getExample(
+                nearest_neighbors_indices(sample,sim_index),
+                similar_example, target2, weight2);
 
             if(round(target[0]) != round(target2[0]))
                 PLERROR("StackedFocusedAutoassociatorsNet::train(): similar"
@@ -603,7 +620,7 @@ void StackedFocusedAutoassociatorsNet::train()
             // Find dissimilar example
 
             int dissim_class_index = random_gen->multinomial_sample(
-                other_classes_proportions(round(target[0])));
+                other_classes_proportions((int)round(target[0])));
 
             int dissim_index = random_gen->uniform_multinomial_sample(
                 class_datasets[dissim_class_index]->length());
@@ -611,7 +628,7 @@ void StackedFocusedAutoassociatorsNet::train()
             class_datasets[dissim_class_index]->getExample(dissim_index,
                                   dissimilar_example, target2, weight2);
 
-            if(round(target[0]) == round(target2[0]))
+            if(((int)round(target[0])) == ((int)round(target2[0])))
                 PLERROR("StackedFocusedAutoassociatorsNet::train(): dissimilar"
                     " example is from same class!");
 
@@ -664,17 +681,18 @@ void StackedFocusedAutoassociatorsNet::train()
             // Find similar example
 
             int sim_index = random_gen->uniform_multinomial_sample(k_neighbors);
-            train_set->getExample(nearest_neighbors_indices(sample,sim_index),
-                                  similar_example, target2, weight2);
+            class_datasets[(int)round(target[0])]->getExample(
+                nearest_neighbors_indices(sample,sim_index),
+                similar_example, target2, weight2);
 
-            if(round(target[0]) != round(target2[0]))
+            if(((int)round(target[0])) != ((int)round(target2[0])))
                 PLERROR("StackedFocusedAutoassociatorsNet::train(): similar"
                     " example is not from same class!");
 
             // Find dissimilar example
 
             int dissim_class_index = random_gen->multinomial_sample(
-                other_classes_proportions(round(target[0])));
+                other_classes_proportions((int)round(target[0])));
 
             int dissim_index = random_gen->uniform_multinomial_sample(
                 class_datasets[dissim_class_index]->length());
@@ -682,7 +700,7 @@ void StackedFocusedAutoassociatorsNet::train()
             class_datasets[dissim_class_index]->getExample(dissim_index,
                                   dissimilar_example, target2, weight2);
 
-            if(round(target[0]) == round(target2[0]))
+            if(((int)round(target[0])) == ((int)round(target2[0])))
                 PLERROR("StackedFocusedAutoassociatorsNet::train(): dissimilar"
                     " example is from same class!");
 
@@ -759,7 +777,7 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
                                 layers[ index ]->expectation);
         
         layers[ index ]->activation << reconstruction_activations;
-        layers[ index ]->expectation_is_up_to_date = true;
+        layers[ index ]->setExpectationByRef(layers[ index ]->expectation);
         real rec_err = layers[ index ]->fpropNLL(previous_input_representation);
         train_costs[index] = rec_err;
         
@@ -790,8 +808,7 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
     // RBM learning
     if( !fast_exact_is_equal( cd_learning_rate, 0 ) )
     {
-        greedy_layers[index]->expectation << greedy_expectation;
-        greedy_layers[index]->expectation_is_up_to_date = true;
+        greedy_layers[index]->setExpectation( greedy_expectation );
         greedy_layers[index]->generateSample();
         
         // accumulate positive stats using the expectation
@@ -969,7 +986,7 @@ void StackedFocusedAutoassociatorsNet::computeOutput(const Vec& input, Vec& outp
     updateTrainSetRepresentations();
 
     computeRepresentation(input,input_representation, 
-                          max(currently_trained_layer,n_layers-1));
+                          min(currently_trained_layer,n_layers-1));
 
     computeNearestNeighbors(train_set_representations_vmat,input_representation,
                             test_nearest_neighbors_indices);
@@ -991,7 +1008,8 @@ void StackedFocusedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input,
     costs.resize( getTestCostNames().length() );
     costs.fill( MISSING_VALUE );
 
-    if( currently_trained_layer<n_layers )
+    if( currently_trained_layer<n_layers 
+        && reconstruction_connections.length() != 0 )
     {
         greedy_connections[currently_trained_layer-1]->fprop(
             expectations[currently_trained_layer-1],
@@ -1009,13 +1027,14 @@ void StackedFocusedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input,
         
         layers[ currently_trained_layer-1 ]->activation << 
             reconstruction_activations;
-        layers[ currently_trained_layer-1 ]->expectation_is_up_to_date = true;
+        layers[ currently_trained_layer-1 ]->setExpectationByRef( 
+            layers[ currently_trained_layer-1 ]->expectation);
         costs[ currently_trained_layer-1 ]  = 
             layers[ currently_trained_layer-1 ]->fpropNLL(
                 expectations[currently_trained_layer-1]);
     }
 
-    if( round(output[0]) == round(target[0]) )
+    if( ((int)round(output[0])) == ((int)round(target[0])) )
         costs[n_layers-1] = 0;
     else
         costs[n_layers-1] = 1;
@@ -1029,7 +1048,7 @@ void StackedFocusedAutoassociatorsNet::updateTrainSetRepresentations() const
     if(!train_set_representations_up_to_date)
     {
         // Precompute training set examples' representation
-        int l = max(currently_trained_layer,n_layers-1);
+        int l = min(currently_trained_layer,n_layers-1);
         Vec input( inputsize() );
         Vec target( targetsize() );
         Vec train_set_representation;
@@ -1043,7 +1062,7 @@ void StackedFocusedAutoassociatorsNet::updateTrainSetRepresentations() const
             train_set->getExample(i,input,target,weight);
             computeRepresentation(input,train_set_representation,l);
             train_set_representations(i) << train_set_representation;
-            train_set_targets[i] = round(target[0]);
+            train_set_targets[i] = (int)round(target[0]);
         }
         train_set_representations_vmat = VMat(train_set_representations);
 
@@ -1083,6 +1102,7 @@ void StackedFocusedAutoassociatorsNet::setTrainingSet(VMat training_set, bool ca
     real weight; // unused
 
     // Separate classes
+    class_datasets.resize(n_classes);
     for(int k=0; k<n_classes; k++)
     {
         class_datasets[k] = new ClassSubsetVMatrix();
@@ -1093,6 +1113,7 @@ void StackedFocusedAutoassociatorsNet::setTrainingSet(VMat training_set, bool ca
     }
 
     // Find other classes proportions
+    other_classes_proportions.resize(n_classes,n_classes);
     other_classes_proportions.fill(0);
     for(int k=0; k<n_classes; k++)
     {
@@ -1118,9 +1139,10 @@ void StackedFocusedAutoassociatorsNet::setTrainingSet(VMat training_set, bool ca
             class_datasets[k]->getExample(i,input,target,weight);
             nearest_neighbors_indices_row = nearest_neighbors_indices(
                 class_datasets[k]->indices[i]);
-            computeNearestNeighbors((VMatrix *)class_datasets[k],input,
-                                    nearest_neighbors_indices_row,
-                                    i);
+            computeNearestNeighbors(
+                new GetInputVMatrix((VMatrix *)class_datasets[k]),input,
+                nearest_neighbors_indices_row,
+                i);
         }
     }
 }
