@@ -78,7 +78,7 @@ public:
 
     //! For the discounting strategy. Used to discount stats when there are
     //! updates
-    real pv_self_discount, pv_other_discount;
+    real pv_self_discount, pv_other_discount, pv_within_neuron_discount;
 
 public:
     //#####  Public Not Build Options  ########################################
@@ -122,6 +122,7 @@ protected:
 
     void pvGrad(); 
     void discountGrad();
+    void neuronDiscountGrad();
     void globalSyncGrad();
     void neuronSyncGrad();
     
@@ -155,6 +156,8 @@ private:
     //! Number of weight updates performed during a call to bpropUpdateNet
     // int is enough?
     int n_updates;
+
+    TVec<int> n_neuron_updates;
 
     //! accumulated statistics of gradients on each parameter.
     //PP<VecStatsCollector> pv_gradstats;

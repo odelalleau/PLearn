@@ -61,6 +61,7 @@ PvGradNNet::PvGradNNet()
       pv_random_sample_step(false),
       pv_self_discount(0.5),
       pv_other_discount(0.95),
+      pv_within_neuron_discount(0.95),
       n_updates(0)
 {
     random_gen = new PRandom();
@@ -128,6 +129,12 @@ void PvGradNNet::declareOptions(OptionList& ol)
                   "Discount used to perform soft invalidation of other weights'\n" 
                   "statistics after a weight update.");
 
+    declareOption(ol, "pv_within_neuron_discount",
+                  &PvGradNNet::pv_within_neuron_discount,
+                  OptionBase::buildoption,
+                  "Discount used to perform soft invalidation of other weights'\n"
+                  "(same neuron) statistics after a weight update.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -149,6 +156,7 @@ void PvGradNNet::build_()
     pv_layer_stepsigns.resize(n_layers-1);
     pv_layer_stepsizes.resize(n_layers-1);
     int np;
+    int n_neurons=0;
     for (int i=0,p=0;i<n_layers-1;i++)  {
         np=layer_sizes[i+1]*(1+layer_sizes[i]);
         pv_layer_nsamples.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
@@ -157,9 +165,9 @@ void PvGradNNet::build_()
         pv_layer_stepsigns[i]=pv_all_stepsigns.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
         pv_layer_stepsizes[i]=pv_all_stepsizes.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
         p+=np;
+        n_neurons+=layer_sizes[i+1];
     }
-
-//    pv_gradstats = new VecStatsCollector();
+    n_neuron_updates.resize(n_neurons);
 
 }
 
@@ -185,7 +193,7 @@ void PvGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(pv_layer_stepsigns, copies);
     deepCopyField(pv_all_stepsizes, copies);
     deepCopyField(pv_layer_stepsizes, copies);
-
+    deepCopyField(n_neuron_updates, copies);
 //    deepCopyField(pv_gradstats, copies);
 }
 
@@ -204,7 +212,8 @@ void PvGradNNet::forget()
 
     // used in the discountGrad() strategy
     n_updates = 0; 
-    
+    n_neuron_updates.fill(0);    
+
 //    pv_gradstats->forget();
 }
 
@@ -221,9 +230,12 @@ void PvGradNNet::bpropUpdateNet(int t)
             discountGrad();
             break;
         case 3 :
-            globalSyncGrad();
+            neuronDiscountGrad();
             break;
         case 4 :
+            globalSyncGrad();
+            break;
+        case 5 :
             neuronSyncGrad();
             break;
         default :
@@ -373,9 +385,8 @@ void PvGradNNet::discountGrad()
 
             // TODO - for current treatment, not necessary to compute actual
             // prob. Comparing the ratio would be sufficient.
-/*            prob_pos = gauss_01_cum(m/e);
+            /*prob_pos = gauss_01_cum(m/e);
             prob_neg = 1.-prob_pos;
-
             if(prob_pos>=pv_required_confidence)
                 stepsign = 1;
             else if(prob_neg>=pv_required_confidence)
@@ -413,8 +424,101 @@ void PvGradNNet::discountGrad()
             pv_all_nsamples[k]*=sd;
             pv_all_sum[k]*=sd;
             pv_all_sumsquare[k]*=sd;
+            n_updates++;
+
         }
     }
+}
+
+//! Same as discountGrad but also performs discount based on within neuron 
+//! relationships
+void PvGradNNet::neuronDiscountGrad()
+{
+    real m, e;//, prob_pos, prob_neg;
+    int stepsign;
+
+    real ratio;
+    real limit_ratio = gauss_01_quantile(pv_required_confidence);
+
+    //
+    real discount = pow(pv_other_discount,n_updates);
+    real d;
+    n_updates = 0;
+    if( discount < 0.001 )
+        PLWARNING("PvGradNNet::discountGrad() - discount < 0.001 - that seems small...");
+    real sd = pv_self_discount / pv_other_discount; // trick: apply this self discount
+                                                    // and then discount
+                                                    // everyone the same
+    sd /= pv_within_neuron_discount;
+
+    // k is an index on all the parameters.
+    // kk is an index on all neurons.
+    for(int l=0,k=0,kk=0; l<n_layers-1; l++)    {
+        for(int n=0; n<layer_sizes[l+1]; n++,kk++)   {
+            d = discount * pow(pv_within_neuron_discount,n_neuron_updates[kk]);
+            n_neuron_updates[kk]=0;
+            for(int w=0; w<1+layer_sizes[l]; w++,k++)   {
+
+                // Perform soft invalidation
+                pv_all_nsamples[k] *= d;
+                pv_all_sum[k] *= d;
+                pv_all_sumsquare[k] *= d;
+
+                // update stats
+                pv_all_nsamples[k]++;
+                pv_all_sum[k] += all_params_gradient[k];
+                pv_all_sumsquare[k] += all_params_gradient[k] * all_params_gradient[k];
+
+                if(pv_all_nsamples[k]>pv_min_samples)   {
+                    m = pv_all_sum[k] / pv_all_nsamples[k];
+                    e = real((pv_all_sumsquare[k] - square(pv_all_sum[k])/pv_all_nsamples[k])/(pv_all_nsamples[k]-1));
+                    e = sqrt(e/pv_all_nsamples[k]);
+
+                    // test to see if numerical problems
+                    if( fabs(m) < 1e-15 || e < 1e-15 )  {
+                        cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
+                        continue;
+                    }
+
+                    ratio=m/e;
+                    if(ratio>=limit_ratio)
+                        stepsign = 1;
+                    else if(ratio<=-limit_ratio)
+                        stepsign = -1;
+                    else
+                        continue;
+
+                    // consecutive steps of same sign, accelerate
+                    if( stepsign*pv_all_stepsigns[k]>0 )  {
+                        pv_all_stepsizes[k]*=pv_acceleration;
+                        if( pv_all_stepsizes[k] > pv_max_stepsize )
+                            pv_all_stepsizes[k] = pv_max_stepsize;
+                    // else if different signs decelerate
+                    }   else if( stepsign*pv_all_stepsigns[k]<0 )   {
+                        pv_all_stepsizes[k]*=pv_deceleration;
+                        if( pv_all_stepsizes[k] < pv_min_stepsize )
+                            pv_all_stepsizes[k] = pv_min_stepsize;
+                    // else (previous sign was undetermined
+                    }//   else    {
+                    //}
+                    // step
+                    if( stepsign > 0 )
+                        all_params[k] -= pv_all_stepsizes[k];
+                    else
+                        all_params[k] += pv_all_stepsizes[k];
+                    pv_all_stepsigns[k] = stepsign;
+                    // soft invalidation of self
+                    pv_all_nsamples[k]*=sd;
+                    pv_all_sum[k]*=sd;
+                    pv_all_sumsquare[k]*=sd;
+                    n_updates++;
+                    n_neuron_updates[kk]++;
+                }
+            //////////////////////////////////
+            }
+        }
+    }
+
 }
 
 void PvGradNNet::globalSyncGrad()
