@@ -107,6 +107,10 @@ public:
 
     // Your other public member functions go here
 
+    //! Perform one CD_k update, given the Markov chain statistics
+    virtual void CDUpdate(const Mat& v_0, const Mat& h_0,
+                          const Mat& v_k, const Mat& h_k);
+
     //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
 
@@ -328,6 +332,10 @@ public:
     void computePartitionFunction();
 
     void computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat& neg_log_pvisible_given_phidden);
+
+protected:
+    static void declareMethods(RemoteMethodMap& rmm);
+
 
 private:
     //#####  Private Member Functions  ########################################

@@ -142,6 +142,11 @@ public:
     //! the OTHER layer of an RBM, from which unit_activations was computed.
     virtual real freeEnergyContribution(const Vec& unit_activations) const;
 
+    virtual int getConfigurationCount()
+    {
+        return INFINITE_CONFIGURATIONS;
+    }
+
     //! Computes the negative log-likelihood of target given the
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);

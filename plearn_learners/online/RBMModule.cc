@@ -265,6 +265,29 @@ void RBMModule::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+void RBMModule::declareMethods(RemoteMethodMap& rmm)
+{
+    // Make sure that inherited methods are declared
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(rmm, "CDUpdate", &RBMModule::CDUpdate,
+                  (BodyDoc("Perform one CD_k update"),
+                   ArgDoc ("v_0", "Positive phase statistics on visible layer"),
+                   ArgDoc ("h_0", "Positive phase statistics on hidden layer"),
+                   ArgDoc ("v_k", "Negative phase statistics on visible layer"),
+                   ArgDoc ("h_k", "Negative phase statistics on hidden layer")
+                  ));
+}
+
+void RBMModule::CDUpdate(const Mat& v_0, const Mat& h_0,
+                         const Mat& v_k, const Mat& h_k)
+{
+    visible_layer->update(v_0, v_k);
+    hidden_layer->update(h_0, h_k);
+    connection->update(v_0, h_0, v_k, h_k);
+    partition_function_is_stale = true;
+}
+
 ////////////
 // build_ //
 ////////////
@@ -804,7 +827,38 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     {
         if (partition_function_is_stale && !during_training)
         {
+            // Save layers' state
+            Mat visible_activations = visible_layer->activations.copy();
+            Mat visible_expectations = visible_layer->getExpectations().copy();
+            Mat visible_samples = visible_layer->samples.copy();
+
+            Mat hidden_activations = hidden_layer->activations.copy();
+            Mat hidden_expectations = hidden_layer->getExpectations().copy();
+            Mat hidden_samples = hidden_layer->samples.copy();
+
             computePartitionFunction();
+
+            // Restore layers' state
+            visible_layer->activations.resize(visible_activations.length(),
+                                              visible_activations.width());
+            visible_layer->activations << visible_activations;
+
+            visible_layer->setExpectations(visible_expectations);
+
+            visible_layer->samples.resize(visible_samples.length(),
+                                          visible_samples.width());
+            visible_layer->samples << visible_samples;
+
+            hidden_layer->activations.resize(hidden_activations.length(),
+                                              hidden_activations.width());
+            hidden_layer->activations << hidden_activations;
+
+            hidden_layer->setExpectations(hidden_expectations);
+
+            hidden_layer->samples.resize(hidden_samples.length(),
+                                          hidden_samples.width());
+            hidden_layer->samples << hidden_samples;
+
             partition_function_is_stale=false;
         }
         if (visible && !visible_is_output
@@ -1057,14 +1111,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         if (hidden && hidden_is_output)
         {
-            hidden->resize(hidden_layer->samples.length(),
-                           hidden_layer->samples.width());
+            hidden->resize(hidden_layer->getExpectations().length(),
+                           hidden_layer->getExpectations().width());
             *hidden << hidden_layer->getExpectations();
         }
         if (hidden_act && hidden_act_is_output)
         {
-            hidden_act->resize(hidden_layer->samples.length(),
-                               hidden_layer->samples.width());
+            hidden_act->resize(hidden_layer->activations.length(),
+                               hidden_layer->activations.width());
             *hidden_act << hidden_layer->activations;
         }
         found_a_valid_configuration = true;
