@@ -575,6 +575,24 @@ void RBMLayer::setAllBias(const Vec& rbm_bias)
     bias << rbm_bias;
 }
 
+////////////////////
+// setExpectation //
+////////////////////
+void RBMLayer::setExpectation(const Vec& the_expectation)
+{
+    expectation << the_expectation;
+    expectation_is_up_to_date=true;
+}
+
+/////////////////////////
+// setExpectationByRef //
+/////////////////////////
+void RBMLayer::setExpectationByRef(const Vec& the_expectation)
+{
+    expectation = the_expectation;
+    expectation_is_up_to_date=true;
+}
+
 /////////////////////
 // setExpectations //
 /////////////////////

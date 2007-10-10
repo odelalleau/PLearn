@@ -93,6 +93,74 @@ void RBMMixedLayer::setBatchSize( int the_batch_size )
         sub_layers[i]->setBatchSize( the_batch_size );
 }
 
+////////////////////
+// setExpectation //
+////////////////////
+void RBMMixedLayer::setExpectation(const Vec& the_expectation)
+{
+    expectation << the_expectation;
+    expectation_is_up_to_date=true;
+    for( int i = 0; i < n_layers; i++ )
+        sub_layers[i]->expectation_is_up_to_date=true;
+}
+
+/////////////////////////
+// setExpectationByRef //
+/////////////////////////
+void RBMMixedLayer::setExpectationByRef(const Vec& the_expectation)
+{
+    expectation = the_expectation;
+    expectation_is_up_to_date=true;
+
+     // Rearrange pointers
+    for( int i = 0; i < n_layers; i++ )
+    {
+        int init_pos = init_positions[i];
+        PP<RBMLayer> layer = sub_layers[i];
+        int layer_size = layer->size;
+        
+        layer->setExpectationByRef( expectation.subVec(init_pos, layer_size) );
+    }
+
+}
+
+/////////////////////
+// setExpectations //
+/////////////////////
+void RBMMixedLayer::setExpectations(const Mat& the_expectations)
+{
+    batch_size = the_expectations.length();
+    setBatchSize( batch_size );
+    expectations << the_expectations;
+    expectations_are_up_to_date=true;
+    for( int i = 0; i < n_layers; i++ )
+        sub_layers[i]->expectations_are_up_to_date=true;
+}
+
+//////////////////////////
+// setExpectationsByRef //
+//////////////////////////
+void RBMMixedLayer::setExpectationsByRef(const Mat& the_expectations)
+{
+    batch_size = the_expectations.length();
+    setBatchSize( batch_size );
+    expectations = the_expectations;
+    expectations_are_up_to_date=true;
+
+    // Rearrange pointers
+    for( int i = 0; i < n_layers; i++ )
+    {
+        int init_pos = init_positions[i];
+        PP<RBMLayer> layer = sub_layers[i];
+        int layer_size = layer->size;
+
+        layer->setExpectationsByRef(expectations.subMatColumns(init_pos,
+                                                              layer_size));
+    }
+}
+
+
+
 ///////////////////////
 // getUnitActivation //
 ///////////////////////
@@ -588,7 +656,7 @@ void RBMMixedLayer::build_()
         layer->sample = sample.subVec(init_pos, layer_size);
         layer->samples = samples.subMatColumns(init_pos, layer_size);
 
-        layer->expectation = expectation.subVec(init_pos, layer_size);
+        layer->setExpectationByRef( expectation.subVec(init_pos, layer_size) );
         layer->setExpectationsByRef(expectations.subMatColumns(init_pos,
                                                               layer_size));
 
@@ -612,6 +680,9 @@ void RBMMixedLayer::build_()
             layer->forget();
         }
     }
+
+    input_size = size;
+    output_size = size;
 }
 
 void RBMMixedLayer::build()

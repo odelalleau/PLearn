@@ -132,12 +132,19 @@ public:
     //! Sets batch_size and resize activations, expectations, and samples
     virtual void setBatchSize( int the_batch_size );
 
+    //! Copy the given expectation in the 'expectation' vector.
+    virtual void setExpectation(const Vec& the_expectation);
+
+    //! Make the 'expectation' vector point to the given data vector (so no
+    //! copy is performed).
+    virtual void setExpectationByRef(const Vec& the_expectation);
+
     //! Copy the given expectations in the 'expectations' matrix.
-    void setExpectations(const Mat& the_expectations);
+    virtual void setExpectations(const Mat& the_expectations);
 
     //! Make the 'expectations' matrix point to the given data matrix (so no
     //! copy is performed).
-    void setExpectationsByRef(const Mat& the_expectations);
+    virtual void setExpectationsByRef(const Mat& the_expectations);
 
     //! Accessor to the 'expectations' matrix.
     const Mat& getExpectations();
