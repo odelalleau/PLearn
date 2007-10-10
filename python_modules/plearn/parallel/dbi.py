@@ -242,11 +242,36 @@ class DBIBase:
 
     def wait(self):
         print "[DBI] WARNING the wait function was not overrided by the sub class!"
-        
+
+    def print_jobs_status(self):
+        finished=0
+        running=0
+        waiting=0
+        error=0
+        init=0
+        unfinished=[]        
+        for t in self.tasks:
+            if t.status==STATUS_INIT:
+                init+=1
+                unfinished+=t.id
+            elif t.status==STATUS_RUNNING:
+                running+=1
+                unfinished+=t.id
+            elif t.status==STATUS_FINISHED:
+                finished+=1
+            elif t.status==STATUS_WAITING:
+                waiting+=i
+                unfinished+=t.id
+            else:
+                print "[DBI] jobs %i have a bad status: %d",t.id
+            print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, error: %d, init: %d"%(len(self.tasks),finished, running, waiting, error, init)
+            print "[DBI] jobs unfinished: ",[i.id for i in unfinished]
+                                
 class Task:
 
-    def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, gen_unique_id = True, args = {}):
+    def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, id=-1, gen_unique_id = True, args = {}):
         self.add_unique_id = 0
+        self.id=id
         # The "python utils.py..." command is not exactly the same for every
         # task in a batch, so it cannot be considered a "pre-command", and
         # has to be actually part of the command.  Since the user-provided
@@ -367,6 +392,7 @@ class DBICluster(DBIBase):
         self.started=0
         self.nb_proc=50
         self.mt=None
+        self.args=args
         DBIBase.__init__(self, commands, **args)
         self.pre_tasks=["echo '[DBI] executing on host' $HOSTNAME"]+self.pre_tasks
         self.post_tasks=["echo '[DBI] exit status' $?"]+self.post_tasks
@@ -380,10 +406,13 @@ class DBICluster(DBIBase):
             commands=[commands]
 
         # create the information about the tasks
+        id=len(self.tasks)+1
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,self.pre_tasks,
-                                   self.post_tasks,self.dolog,False))
+                                   self.post_tasks,self.dolog,id,False,
+                                   self.args))
+            id+=1
 
 
     def run_one_job(self, task):
@@ -450,7 +479,13 @@ class DBICluster(DBIBase):
 
     def wait(self):
         if self.mt:
-            self.mt.join()
+            try:
+                self.mt.join()
+            except KeyboardInterrupt, e:
+                print "[DBI] Catched KeyboardInterrupt"
+                self.print_jobs_status()
+                raise
+            
         else:
             print "[DBI] WARNING jobs not started!"
         print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
@@ -504,9 +539,12 @@ class DBIbqtools(DBIBase):
 
         # create the information about the tasks
         for command in commands:
+            id=len(self.tasks)+1
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format,self.pre_tasks,
-                                   self.post_tasks,self.dolog,False,self.args))
+                                   self.post_tasks,self.dolog,id,False,
+                                   self.args))
+            id+=1
     def run(self):
         pre_batch_command = ';'.join( self.pre_batch );
         post_batch_command = ';'.join( self.post_batch );
@@ -592,7 +630,7 @@ class DBICondor(DBIBase):
         
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
-
+        self.args = args
         self.add_commands(commands)
 
     def add_commands(self,commands):
@@ -600,6 +638,7 @@ class DBICondor(DBIBase):
             commands=[commands]
 
         # create the information about the tasks
+        id=len(self.tasks)+1
         for command in commands:
             pos = string.find(command,' ')
             if pos>=0:
@@ -665,8 +704,9 @@ class DBICondor(DBIBase):
 
             self.tasks.append(Task(newcommand, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
-                                   self.post_tasks,self.dolog,False,args))
-
+                                   self.post_tasks,self.dolog,id,False,
+                                   self.args))
+            id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will            
 
     def run_all_job(self):
@@ -836,6 +876,7 @@ class DBILocal(DBIBase):
         post_tasks=self.post_tasks
         dolog=self.dolog
         args=self.args
+        id=len(self.tasks)+1
         for command in commands:
             pos = string.find(command,' ')
             if pos>=0:
@@ -858,7 +899,8 @@ class DBILocal(DBIBase):
                 raise Exception("The command '"+c+"' do not exist or have execution permission!")
             self.tasks.append(Task(command, tmp_dir, log_dir,
                                    time_format, pre_tasks,
-                                   post_tasks,dolog,False,args))
+                                   post_tasks,dolog,id,False,self.args))
+            id+=1
         #keeps a list of the temporary files created, so that they can be deleted at will            
 
     def run_one_job(self,task):
@@ -905,16 +947,22 @@ class DBILocal(DBIBase):
         # Execute post-batchs
         self.exec_post_batch()
             
-        print "[DBI] The Log file are under %s"%self.log_dir
         
     def clean(self):
         pass
 
     def wait(self):
         if self.mt:
-            self.mt.join()
+            try:
+                self.mt.join()
+            except KeyboardInterrupt, e:
+                print "[DBI] Catched KeyboardInterrupt"
+                self.print_jobs_status()
+                print "[DBI] The Log file are under %s"%self.log_dir
+                raise
         else:
             print "[DBI] WARNING jobs not started!"
+        print "[DBI] The Log file are under %s"%self.log_dir
                 
 class SshHost:
     def __init__(self, hostname,nice=19,get_avail=True):
@@ -1013,7 +1061,7 @@ class DBISsh(DBIBase):
         print "[DBI] Use at your own risk!"
         self.nb_proc=1
         DBIBase.__init__(self, commands, **args)
-
+        self.args=args
         self.add_commands(commands)
         self.hosts= find_all_ssh_hosts()
         print "[DBI] hosts: ",self.hosts
@@ -1023,10 +1071,13 @@ class DBISsh(DBIBase):
             commands=[commands]
             
         # create the information about the tasks
+        id=len(self.tasks)+1
         for command in commands:
             self.tasks.append(Task(command, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
-                                   self.post_tasks,self.dolog,False))
+                                   self.post_tasks,self.dolog,id,False,
+                                   self.args))
+            id+=1
             
     def getHost(self):
         self.hosts.sort(cmp= cmp_ssh_hosts)
