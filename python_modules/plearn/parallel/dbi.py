@@ -90,13 +90,14 @@ class LockedListIter:
 
 #original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
 class MultiThread:
-    def __init__( self, function, argsVector, maxThreads=5, print_when_finished=None):
+    def __init__( self, function, argsVector, maxThreads=5, print_when_finished=None, sleep_time = 0):
         self._function     = function
         self._argsIterator = LockedIterator( iter( argsVector ) )
         self._threadPool   = []
         self.print_when_finish = print_when_finished
         self.running = 0
         self.init_len_list = len(argsVector)
+        self.sleep_time = sleep_time
         
         if maxThreads==-1:
             nb_thread=len(argsVector)
@@ -122,7 +123,7 @@ class MultiThread:
                     
     def start( self  ):
         for thread in self._threadPool:
-            time.sleep( 0 ) # necessary to give other threads a chance to run
+            time.sleep( self.sleep_time ) # necessary to give other threads a chance to run
             self.running+=1
             thread.start()
             
@@ -480,7 +481,9 @@ class DBICluster(DBIBase):
         self.exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :"[DBI,%s]"%time.ctime())
+        self.mt=MultiThread(self.run_one_job,self.tasks,
+                            self.nb_proc,lambda :"[DBI,%s]"%time.ctime(),
+                            sleep_time=2)
         self.mt.start()
 
         # Execute post-batchs
