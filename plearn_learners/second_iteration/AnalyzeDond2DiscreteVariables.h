@@ -117,33 +117,6 @@ private:
 
     // The rest of the private stuff goes here
     
-    // input instructions variables
-    int value_col;
-    int number_of_values;
-    int variable_col;
-    int target_col;
-    Vec value_target_sum;
-    Vec value_present_count;
-    real target_sum;
-    real target_squared_sum;
-    real variable_present_count;
-    real ssxy;
-    real ss2xy;
-    real ssxx;
-    real ssyy;
-    real correlation_coefficient;
-    
-    // primary dataset variables
-    int main_length;
-    int main_width;
-    int main_row;
-    int main_col;
-    Vec main_input;
-    TVec<string> main_names;
-    real variable_value;
-    real target_value;
-    real target_mean;
-    
 };
 
 // Declares a few other classes and functions related to this class

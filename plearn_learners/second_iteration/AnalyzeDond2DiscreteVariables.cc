@@ -36,8 +36,6 @@
 
 /*! \file AnalyzeDond2DiscreteVariables.cc */
 
-#define PL_LOG_MODULE_NAME "AnalyzeDond2DiscreteVariables"
-#include <plearn/io/pl_log.h>
 
 #include "AnalyzeDond2DiscreteVariables.h"
 
@@ -106,7 +104,6 @@ void AnalyzeDond2DiscreteVariables::build()
 ////////////
 void AnalyzeDond2DiscreteVariables::build_()
 {
-    MODULE_LOG << "build_() called" << endl;
     if (train_set)
     {
         analyzeDiscreteVariable();
@@ -117,19 +114,17 @@ void AnalyzeDond2DiscreteVariables::build_()
 void AnalyzeDond2DiscreteVariables::analyzeDiscreteVariable()
 {    
     // initialize primary dataset
-    main_row = 0;
-    main_col = 0;
-    main_length = train_set->length();
-    main_width = train_set->width();
-    main_input.resize(main_width);
-    main_names.resize(main_width);
+    int main_length = train_set->length();
+    int main_width = train_set->width();
+    Vec main_input(main_width);
+    TVec<string> main_names(main_width);
     main_names << train_set->fieldNames();
     
     // check for valid options
-    number_of_values = values_to_analyze.size();
-    variable_col = -1;
-    target_col = -1;
-    for (main_col = 0; main_col < main_width; main_col++)
+    int number_of_values = values_to_analyze.size();
+    int variable_col = -1;
+    int target_col = -1;
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (variable_name == main_names[main_col]) variable_col = main_col;
         if (target_name == main_names[main_col]) target_col = main_col;
@@ -139,27 +134,27 @@ void AnalyzeDond2DiscreteVariables::analyzeDiscreteVariable()
     if (number_of_values <= 0) PLERROR("In AnalyzeDond2DiscreteVariables: invalid values_to_analyze");
     
     // initialize working variables
-    value_target_sum.resize(number_of_values);
-    value_present_count.resize(number_of_values);
+    Vec value_target_sum(number_of_values);
+    Vec value_present_count(number_of_values);
     value_target_sum.clear();
     value_present_count.clear();
-    target_sum = 0.0;
-    target_squared_sum = 0.0;
-    variable_present_count = 0.0;
+    real target_sum = 0.0;
+    real target_squared_sum = 0.0;
+    real variable_present_count = 0.0;
     
     //Now, we can process the discrete variable.
     ProgressBar* pb = 0;
     pb = new ProgressBar( "Analyzing discrete variable " + variable_name, main_length);
-    for (main_row = 0; main_row < main_length; main_row++)
+    for (int main_row = 0; main_row < main_length; main_row++)
     {
         train_set->getRow(main_row, main_input);
-        variable_value = main_input[variable_col];
+        real variable_value = main_input[variable_col];
         if (is_missing(variable_value)) continue;
-        target_value = main_input[target_col];
+        real target_value = main_input[target_col];
         target_sum += target_value;
         target_squared_sum += target_value * target_value;
         variable_present_count += 1.0;
-        for (value_col = 0; value_col < number_of_values; value_col++)
+        for (int value_col = 0; value_col < number_of_values; value_col++)
         {
             if (variable_value < values_to_analyze[value_col].first || variable_value > values_to_analyze[value_col].second) continue;
             value_target_sum[value_col] += target_value;
@@ -173,16 +168,16 @@ void AnalyzeDond2DiscreteVariables::analyzeDiscreteVariable()
         cout << "In AnalyzeDond2DiscreteVariables: no value present for this variable" << endl;
         return;
     }
-    target_mean = target_sum / variable_present_count;
+    real target_mean = target_sum / variable_present_count;
     cout << "In AnalyzeDond2DiscreteVariables, for variable:  " << variable_name << endl;
     cout << variable_present_count << " values are present out of " << main_length << " samples." << endl;
-    for (value_col = 0; value_col < number_of_values; value_col++)
+    for (int value_col = 0; value_col < number_of_values; value_col++)
     {
-        ssxy = value_target_sum[value_col] - value_present_count[value_col] * target_mean;
-        ss2xy = ssxy * ssxy;
-        ssxx = value_present_count[value_col] * (1.0 -  value_present_count[value_col] / variable_present_count);
-        ssyy = target_squared_sum - target_sum * target_mean;
-        correlation_coefficient = ss2xy / (ssxx * ssyy);
+        real ssxy = value_target_sum[value_col] - value_present_count[value_col] * target_mean;
+        real ss2xy = ssxy * ssxy;
+        real ssxx = value_present_count[value_col] * (1.0 -  value_present_count[value_col] / variable_present_count);
+        real ssyy = target_squared_sum - target_sum * target_mean;
+        real correlation_coefficient = ss2xy / (ssxx * ssyy);
         cout << "For value from: " << values_to_analyze[value_col].first << " to: " << values_to_analyze[value_col].second 
              << " occurence: " << value_present_count[value_col] << " correlation coefficient: " << correlation_coefficient << endl;
     }
