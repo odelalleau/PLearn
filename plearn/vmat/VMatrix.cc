@@ -1373,15 +1373,15 @@ TVec<StatsCollector> VMatrix::getStats() const
     return field_stats;
 }
 
-TVec<StatsCollector*> VMatrix::remote_getStats() const
+TVec<PP<StatsCollector> > VMatrix::remote_getStats() const
 {
-    static TVec<StatsCollector*> field_p_stats;
     if(field_p_stats.isEmpty())
     {
         TVec<StatsCollector> st= getStats();
         field_p_stats.resize(st.length());
+        CopiesMap cm;
         for(int i= 0; i < st.length(); ++i)
-            field_p_stats[i]= &st[i];
+            field_p_stats[i]= st[i].deepCopy(cm);
     }
     return field_p_stats;
 }

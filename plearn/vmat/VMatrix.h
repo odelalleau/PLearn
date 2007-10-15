@@ -113,6 +113,7 @@ protected:
 
     /// Statistics for each field.
     mutable TVec<StatsCollector> field_stats;  ///< stats[i] contains stats for field #i
+    mutable TVec<PP<StatsCollector> > field_p_stats; //same, for remote calls
 
     /// The string mapping for each field, in both directions.
     mutable TVec<map<string,real> > map_sr;
@@ -588,7 +589,7 @@ public:
      *  created).
      */
     TVec<StatsCollector> getStats() const;
-    TVec<StatsCollector*> remote_getStats() const;
+    TVec<PP<StatsCollector> > remote_getStats() const;
 
     StatsCollector& getStats(int fieldnum) const
     { return getStats()[fieldnum]; }
