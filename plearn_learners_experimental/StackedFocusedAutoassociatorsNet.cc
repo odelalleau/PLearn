@@ -796,14 +796,22 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
     real dist = sqrt(powdistance(input_representation,
                                  dissimilar_example_representation,
                                  2));
-    
-    substract(input_representation,dissimilar_example_representation,
-              dissimilar_gradient_contribution);
 
-    dissimilar_gradient_contribution *= -5.54*
-        safeexp(-2.77*dist/layers[index+1]->size)/dist;
-    
-    expectation_gradients[index+1] += dissimilar_gradient_contribution;
+    if( dist == 0 )
+        PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
+                  " example representation is exactly the sample as the"
+                  " input example. Gradient would be infinite! Skipping this"
+                  " example...");
+    else
+    {
+        substract(input_representation,dissimilar_example_representation,
+                  dissimilar_gradient_contribution);
+        
+        dissimilar_gradient_contribution *= -5.54*
+            safeexp(-2.77*dist/layers[index+1]->size)/dist;
+
+        expectation_gradients[index+1] += dissimilar_gradient_contribution;
+    }
 
     // RBM learning
     if( !fast_exact_is_equal( cd_learning_rate, 0 ) )
@@ -936,14 +944,22 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
                                  dissimilar_example_representation,
                                  2));
     
-    substract(input_representation,dissimilar_example_representation,
-              dissimilar_gradient_contribution);
+    if( dist == 0 )
+        PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
+                  " example representation is exactly the sample as the"
+                  " input example. Gradient would be infinite! Skipping this"
+                  " example...");
+    else
+    {
 
-    dissimilar_gradient_contribution *= -5.54*
-        safeexp(-2.77*dist/layers[n_layers-1]->size)/dist;
-    
-    expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
+        substract(input_representation,dissimilar_example_representation,
+                  dissimilar_gradient_contribution);
 
+        dissimilar_gradient_contribution *= -5.54*
+            safeexp(-2.77*dist/layers[n_layers-1]->size)/dist;
+        
+        expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
+    }
 
     for( int i=n_layers-1 ; i>0 ; i-- )
     {
