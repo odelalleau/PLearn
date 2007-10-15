@@ -163,54 +163,9 @@ public:
     // *stat* end
 
 public:
-    //*************************************************************
-    //*** Members used for Pascal Vincent's gradient technique  ***
-
-    //! Use Pascal's gradient 
-    bool use_pvgrad;
-
-    //! Initial size of steps in parameter space
-    real pv_initial_stepsize;
-
-    //! Bounds for the step sizes
-    real pv_min_stepsize, pv_max_stepsize;
-
-    //! Coefficients by which to multiply the step sizes  
-    real pv_acceleration, pv_deceleration;
-
-    //! PV's gradient minimum number of samples to estimate confidence
-    int pv_min_samples;
-
-    //! Minimum required confidence (probability of being positive or negative) for taking a step. 
-    real pv_required_confidence;
-
-    //! If this is set to true, then we will randomly choose the step sign for
-    // each parameter based on the estimated probability of it being positive or
-    // negative.
-    bool pv_random_sample_step;
-
-protected:
-    //! accumulated statistics of gradients on each parameter.
-    PP<VecStatsCollector> pv_gradstats;
-
-    //! The step size (absolute value) to be taken for each parameter.
-    Vec pv_all_stepsizes;
-    TVec<Mat> pv_layer_stepsizes;
-
-    //! Indicates whether the previous step was positive (true) or negative (false)
-    TVec<bool> pv_all_stepsigns;
-    TVec< TMat<bool> > pv_layer_stepsigns;
-
-    //! Temporary add-on. Allows an undetermined signed value (zero).
-    TVec<int> pv_all_intstepsigns;
-    TVec< TMat<int> > pv_layer_intstepsigns;
-
-
-public:
     //#####  Public Member Functions  #########################################
 
     NatGradNNet();
-
 
     //#####  PLearner Member Functions  #######################################
 
@@ -323,12 +278,6 @@ protected:
     //! and write into neuron_gradients_per_layer[n_layers-2], gradient on pre-non-linearity activation
     void fbpropLoss(const Mat& output, const Mat& target, const Vec& example_weights, Mat& train_costs) const;
 
-    //! gradient computation and weight update in Pascal Vincent's gradient technique
-    void pvGradUpdate();
-
-    //! a related idea 
-    void paGradUpdate();
-
 
 private:
     //#####  Private Member Functions  ########################################
@@ -358,8 +307,6 @@ private:
     Mat targets; // one target row per example in a minibatch
     Vec example_weights; // one element per example in a minibatch
     Mat train_costs; // one row per example in a minibatch
-
-
     
 };
 

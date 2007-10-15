@@ -74,18 +74,6 @@ NatGradNNet::NatGradNNet()
       target_stdev_activation(3), // 2.5% of the time we are above 1
       //corr_profiling_start(0), 
       //corr_profiling_end(0),
-      use_pvgrad(false),
-      // Next 5 values inspired those used in the '94 rprop tech report
-      // but we are in stochastic case
-      pv_initial_stepsize(1e-1),
-      pv_min_stepsize(1e-6),
-      pv_max_stepsize(50.0),
-      pv_acceleration(1.2),
-      pv_deceleration(0.5),
-      pv_min_samples(2),
-      pv_required_confidence(0.80),
-      pv_random_sample_step(false),
-      pv_gradstats(new VecStatsCollector()),
       n_layers(-1),
       cumulative_training_time(0)
 {
@@ -284,57 +272,6 @@ void NatGradNNet::declareOptions(OptionList& ol)
     //              "Stage to end the profiling of the gradients' and the\n"
     //              "natural gradients' correlations.\n");
 
-    declareOption(ol, "use_pvgrad",
-                  &NatGradNNet::use_pvgrad,
-                  OptionBase::buildoption,
-                  "Use Pascal Vincent's gradient technique.\n"
-                  "All options specific to this technique start with pv_...\n"
-                  "This is currently very experimental. Current code is \n"
-                  "NOT YET optimised for speed (nor supports minibatch).");
-
-    declareOption(ol, "pv_initial_stepsize",
-                  &NatGradNNet::pv_initial_stepsize,
-                  OptionBase::buildoption,
-                  "Initial size of steps in parameter space");
-
-    declareOption(ol, "pv_min_stepsize",
-                  &NatGradNNet::pv_min_stepsize,
-                  OptionBase::buildoption,
-                  "Minimal size of steps in parameter space");
-
-    declareOption(ol, "pv_max_stepsize",
-                  &NatGradNNet::pv_max_stepsize,
-                  OptionBase::buildoption,
-                  "Maximal size of steps in parameter space");
-
-    declareOption(ol, "pv_acceleration",
-                  &NatGradNNet::pv_acceleration,
-                  OptionBase::buildoption,
-                  "Coefficient by which to multiply the step sizes.");
-
-    declareOption(ol, "pv_deceleration",
-                  &NatGradNNet::pv_deceleration,
-                  OptionBase::buildoption,
-                  "Coefficient by which to multiply the step sizes.");
-
-    declareOption(ol, "pv_min_samples",
-                  &NatGradNNet::pv_min_samples,
-                  OptionBase::buildoption,
-                  "PV's minimum number of samples to estimate gradient sign.\n"
-                  "This should at least be 2.");
-
-    declareOption(ol, "pv_required_confidence",
-                  &NatGradNNet::pv_required_confidence,
-                  OptionBase::buildoption,
-                  "Minimum required confidence (probability of being positive or negative) for taking a step.");
-
-    declareOption(ol, "pv_random_sample_step",
-                  &NatGradNNet::pv_random_sample_step,
-                  OptionBase::buildoption,
-                  "If this is set to true, then we will randomly choose the step sign\n"
-                  "for each parameter based on the estimated probability of it being\n"
-                  "positive or negative.");
-
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -367,9 +304,6 @@ void NatGradNNet::build_()
     if( output_layer_L1_penalty_factor < 0. )
         PLWARNING("NatGradNNet::build_ - output_layer_L1_penalty_factor is negative!\n");
 
-    if(use_pvgrad && minibatch_size!=1)
-        PLERROR("PV's gradient technique (triggered by use_pvgrad): support for minibatch not yet implemented (must have minibatch_size=1)");
-    
     while (hidden_layer_sizes.length()>0 && hidden_layer_sizes[hidden_layer_sizes.length()-1]==0)
         hidden_layer_sizes.resize(hidden_layer_sizes.length()-1);
     n_layers = hidden_layer_sizes.length()+2;
@@ -560,12 +494,6 @@ void NatGradNNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(group_params_delta, copies);
     deepCopyField(layer_params_delta, copies);
 
-    deepCopyField(pv_gradstats, copies);
-    deepCopyField(pv_all_stepsizes, copies);
-    deepCopyField(pv_all_stepsigns, copies);
-    deepCopyField(pv_all_intstepsigns, copies);
-    //deepCopyField(pv_all_nsamples, copies); // *stat*
-
 /*
     deepCopyField(, copies);
 */
@@ -597,34 +525,6 @@ void NatGradNNet::forget()
     if (params_averaging_coeff!=1.0)
         all_mparams << all_params;
     
-    if(use_pvgrad)
-    {
-        pv_gradstats->forget();
-        int n = all_params.length();
-        pv_all_stepsizes.resize(n);
-        pv_all_stepsizes.fill(pv_initial_stepsize);
-        pv_all_stepsigns.resize(n);
-        pv_all_stepsigns.fill(true);    // TODO should be init to undetermined
-        pv_all_intstepsigns.resize(n);
-        pv_all_intstepsigns.fill(0);
-        //pv_all_nsamples.resize(n);    // *stat*
-
-        // Get some structure on the previous Vecs
-        pv_layer_stepsizes.resize(n_layers-1);
-        pv_layer_stepsigns.resize(n_layers-1);
-        pv_layer_intstepsigns.resize(n_layers-1);
-        //pv_layer_nsamples.resize(n_layers-1); // *stat*
-        for (int i=0,p=0;i<n_layers-1;i++)
-        {
-            int np=layer_sizes[i+1]*(1+layer_sizes[i]);
-            pv_layer_stepsizes[i]=pv_all_stepsizes.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-            pv_layer_stepsigns[i]=pv_all_stepsigns.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-            pv_layer_intstepsigns[i]=pv_all_intstepsigns.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);
-            //pv_layer_nsamples[i]=pv_all_nsamples.subVec(p,np).toMat(layer_sizes[i+1],layer_sizes[i]+1);   // *stat*
-            p+=np;
-        }
-    }
-
     // *stat*
     /*if( pa_gradstats.length() == 0 )    {
         pa_gradstats.resize(noutputs);
@@ -673,7 +573,7 @@ void NatGradNNet::train()
     Vec costs = costs_plus_time.subVec(0,train_costs.width());
     int nsamples = train_set->length();
 
-    // *stat* - Need some stats for pvgrad analysis
+    // *stat* - Need some stats for grad analysis
     //sum_gradient_norms = 0.0;
     //all_params_cum_gradient.fill(0.0);
     
@@ -730,7 +630,7 @@ void NatGradNNet::train()
     //    ng_corrprof->printAndReset();
     //}
 
-    // *stat* - Need some stats for pvgrad analysis
+    // *stat* - Need some stats for grad analysis
     // The SGrad stats include the learning rate.
     //cout << "sum_gradient_norms " << sum_gradient_norms 
     //     << " norm(all_params_cum_gradient,2.0) " << norm(all_params_cum_gradient,2.0) << endl;
@@ -813,12 +713,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
             }
         }
         // compute gradient on parameters, possibly update them
-        if (use_pvgrad)
-        {
-            productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
-                            neuron_extended_outputs_per_layer[i-1],false,1,0);
-        }
-        else if (full_natgrad || params_natgrad_template || params_natgrad_per_input_template) 
+        if (full_natgrad || params_natgrad_template || params_natgrad_per_input_template) 
         {
 //alternate
             if( params_natgrad_per_input_template && i==1 ){ // parameters are transposed
@@ -857,11 +752,7 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
                             1,0);*/
         }
     }
-    if (use_pvgrad)
-    {
-        pvGradUpdate();
-    }
-    else if (full_natgrad)
+    if (full_natgrad)
     {
         (*full_natgrad)(t/minibatch_size,all_params_gradient,all_params_delta); // compute update direction by natural gradient
         if (output_layer_lrate_scale!=1.0)
@@ -932,126 +823,6 @@ void NatGradNNet::onlineStep(int t, const Mat& targets,
     fd_gradients << layer_params_gradient[0](0) << " " <<layer_params_gradient[1](0) << endl;
     fd_gradients.close();
 */
-}
-
-void NatGradNNet::paGradUpdate()
-{
-
-}
-
-void NatGradNNet::pvGradUpdate()
-{
-    int np = all_params_gradient.length();
-    if(pv_all_stepsizes.length()==0)
-    {
-        pv_all_stepsizes.resize(np);
-        pv_all_stepsizes.fill(pv_initial_stepsize);
-        pv_all_stepsigns.resize(np);
-        pv_all_stepsigns.fill(true);
-        pv_all_intstepsigns.resize(np);
-        pv_all_intstepsigns.fill(0);
-        //pv_all_nsamples.resize(np);   // *stat*
-    }
-    pv_gradstats->update(all_params_gradient);
-
-    // *stat* - Need some stats for pvgrad analysis
-    //real gradient_squared_sum = 0.0;
-
-    for(int k=0; k<np; k++)
-    {
-        StatsCollector& st = pv_gradstats->getStats(k);
-        int ns = (int)st.nnonmissing();
-        if(ns>pv_min_samples)
-        {
-            real m = st.mean();
-            real e = st.stderror();
-
-            // test to see if solve numerical problems
-            if( fabs(m) < 1e-15 || e < 1e-15 )  {
-                cout << "small mean and error ratio." << endl;
-                continue;
-            }
-
-            real prob_pos = gauss_01_cum(m/e);
-            real prob_neg = 1.-prob_pos;
-            if(!pv_random_sample_step)
-            {
-                // We adapt the stepsize before taking the step
-                // gradient is positive
-                if(prob_pos>=pv_required_confidence)
-                {
-                    pv_all_stepsizes[k] *= (pv_all_stepsigns[k]?pv_acceleration:pv_deceleration);
-                    if( pv_all_stepsizes[k] > pv_max_stepsize )
-                        pv_all_stepsizes[k] = pv_max_stepsize;
-                    else if( pv_all_stepsizes[k] < pv_min_stepsize )
-                        pv_all_stepsizes[k] = pv_min_stepsize;
-                    all_params[k] -= pv_all_stepsizes[k];
-                    pv_all_stepsigns[k] = true;
-                    pv_all_intstepsigns[k] = -1;
-                    st.forget();
-
-                    // *stat* - Need some stats for pvgrad analysis
-                    //gradient_squared_sum += pv_all_stepsizes[k]*pv_all_stepsizes[k];
-                    //all_params_cum_gradient[k] -= pv_all_stepsizes[k];
-
-                }
-                // gradient is negative
-                else if(prob_neg>=pv_required_confidence)
-                {
-                    pv_all_stepsizes[k] *= ((!pv_all_stepsigns[k])?pv_acceleration:pv_deceleration);
-                    if( pv_all_stepsizes[k] > pv_max_stepsize )
-                        pv_all_stepsizes[k] = pv_max_stepsize;
-                    else if( pv_all_stepsizes[k] < pv_min_stepsize )
-                        pv_all_stepsizes[k] = pv_min_stepsize;
-                    all_params[k] += pv_all_stepsizes[k];
-                    pv_all_stepsigns[k] = false;
-                    pv_all_intstepsigns[k] = 1;
-                    st.forget();
-
-                    // *stat* - Need some stats for pvgrad analysis
-                    //gradient_squared_sum += pv_all_stepsizes[k]*pv_all_stepsizes[k];
-                    //all_params_cum_gradient[k] += pv_all_stepsizes[k];
-                
-                }   
-                // no step
-                else    {
-                    pv_all_intstepsigns[k] = 0;
-                }
-            }
-            else  // random sample update direction (sign)
-            {
-                bool ispos = (random_gen->binomial_sample(prob_pos)>0);
-                if(ispos) // picked positive
-                    all_params[k] += pv_all_stepsizes[k];
-                else  // picked negative
-                    all_params[k] -= pv_all_stepsizes[k];
-                pv_all_stepsizes[k] *= (pv_all_stepsigns[k]==ispos) ?pv_acceleration :pv_deceleration;
-                pv_all_stepsigns[k] = ispos;
-                st.forget();
-            }
-        }
-        //pv_all_nsamples[k] = ns; // *stat*
-    }
-
-    // *stat* - Need some stats for pvgrad analysis
-    //sum_gradient_norms += sqrt( gradient_squared_sum );
-
-    // Ouput for profiling: step sizes and number of samples
-    // horribly inefficient!
-/*    ofstream fd_ss;
-    fd_ss.open("step_sizes.txt", ios::app);
-    fd_ss << pv_layer_stepsizes[0](0) << " " << pv_layer_stepsizes[1](0) << endl;
-    fd_ss.close();
-    ofstream fd_ns;
-    fd_ns.open("nsamples.txt", ios::app);
-    fd_ns << pv_layer_nsamples[0](0) << " " << pv_layer_nsamples[1](0) << endl;
-    fd_ns.close();
-    ofstream fd_ssgn;
-    fd_ssgn.open("step_signs.txt", ios::app);
-    fd_ssgn << pv_layer_intstepsigns[0](0) << " " << pv_layer_intstepsigns[1](0) << endl;
-    fd_ssgn.close();
-*/
-
 }
 
 void NatGradNNet::computeOutput(const Vec& input, Vec& output) const
