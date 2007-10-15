@@ -42,13 +42,13 @@
 #ifndef ExhaustiveNearestNeighbors_INC
 #define ExhaustiveNearestNeighbors_INC
 
-// From C++ stdlib
-#include <utility>                           //!< for pair
-#include <queue>                             //!< for priority_queue<>
-
 // From PLearn
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
 #include <plearn/ker/Kernel.h>
+
+// From C++ stdlib
+#include <utility>                           //!< for pair
+#include <queue>                             //!< for priority_queue<>
 
 namespace PLearn {
 

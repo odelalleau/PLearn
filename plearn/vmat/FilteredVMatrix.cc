@@ -40,8 +40,8 @@
 
 /*! \file FilteredVMatrix.cc */
 
-#include <plearn/base/ProgressBar.h>
 #include "FilteredVMatrix.h"
+#include <plearn/base/ProgressBar.h>
 
 namespace PLearn {
 using namespace std;

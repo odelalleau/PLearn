@@ -38,9 +38,9 @@
 
 
 #define PL_LOG_MODULE_NAME "StackedAutoassociatorsNet"
-#include <plearn/io/pl_log.h>
 
 #include "StackedAutoassociatorsNet.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

@@ -45,8 +45,8 @@
 #define TO_STRING(s) #s
 #define MACRO_TO_STRING(s) TO_STRING(s)
 
-#include "pl_repository_revision.h"
 #include <plearn/base/RemoteDeclareMethod.h>
+#include "pl_repository_revision.h"
 
 namespace PLearn {
 using namespace std;

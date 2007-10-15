@@ -44,9 +44,9 @@
 #ifndef MultiInstanceVMatrix_INC
 #define MultiInstanceVMatrix_INC
 
+#include "RowBufferedVMatrix.h"
 #include <vector>
 #include <utility>
-#include "RowBufferedVMatrix.h"
 #include <plearn/io/PPath.h>
 
 namespace PLearn {

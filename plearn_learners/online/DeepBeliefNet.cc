@@ -38,9 +38,9 @@
 
 
 #define PL_LOG_MODULE_NAME "DeepBeliefNet"
-#include <plearn/io/pl_log.h>
 
 #include "DeepBeliefNet.h"
+#include <plearn/io/pl_log.h>
 
 #define minibatch_hack 0 // Do we force the minibatch setting? (debug hack)
 

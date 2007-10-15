@@ -37,14 +37,14 @@
 #ifndef ObservationWindow_INC
 #define ObservationWindow_INC
 
-// From C++ stdlib
-#include <map>
-
 // From PLearn
 #include <plearn/base/Object.h>
 #include <plearn/base/PP.h>
 #include <plearn/base/tuple.h>
 #include <plearn/math/TVec.h>
+
+// From C++ stdlib
+#include <map>
 
 namespace PLearn {
 using namespace std;

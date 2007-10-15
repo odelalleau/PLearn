@@ -43,15 +43,14 @@
 #define PL_LOG_MODULE_NAME "GaussianProcessRegressor"
 
 // From PLearn
+#include "GaussianProcessRegressor.h"
 #include <plearn/base/stringutils.h>
-#include <plearn/io/pl_log.h>
 #include <plearn/vmat/ExtendedVMatrix.h>
 #include <plearn/math/pl_erf.h>
 #include <plearn/var/GaussianProcessNLLVariable.h>
 #include <plearn/var/ObjectOptionVariable.h>
 #include <plearn/opt/Optimizer.h>
-
-#include "GaussianProcessRegressor.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

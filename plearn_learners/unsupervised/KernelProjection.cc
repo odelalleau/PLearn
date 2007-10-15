@@ -40,8 +40,8 @@
 
 /*! \file KernelProjection.cc */
 
-#include <time.h>               //!< For clock().
 #include "KernelProjection.h"
+#include <time.h>               //!< For clock().
 #include <plearn/math/plapack.h>            //!< For eigenVecOfSymmMat.
 
 namespace PLearn {

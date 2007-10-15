@@ -36,10 +36,10 @@
 
 /*! \file SummationKernel.cc */
 
+#include "SummationKernel.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/base/lexical_cast.h>
 #include <plearn/vmat/SelectColumnsVMatrix.h>
-#include "SummationKernel.h"
 
 namespace PLearn {
 using namespace std;

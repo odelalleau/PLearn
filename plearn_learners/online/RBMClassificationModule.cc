@@ -38,10 +38,9 @@
 
 
 #define PL_LOG_MODULE_NAME "RBMClassificationModule"
-#include <plearn/io/pl_log.h>
 
 #include "RBMClassificationModule.h"
-
+#include <plearn/io/pl_log.h>
 #include <plearn/math/TMat_maths.h>
 
 namespace PLearn {

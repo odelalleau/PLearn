@@ -38,9 +38,9 @@
 
 
 #define PL_LOG_MODULE_NAME "MaxSubsampling2DModule"
-#include <plearn/io/pl_log.h>
 
 #include "MaxSubsampling2DModule.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

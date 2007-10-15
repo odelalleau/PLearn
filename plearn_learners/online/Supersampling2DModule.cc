@@ -38,11 +38,11 @@
 
 
 #define PL_LOG_MODULE_NAME "Supersampling2DModule"
-#include <plearn/io/pl_log.h>
 
 #include "Supersampling2DModule.h"
 #include <plearn/math/convolutions.h>
 #include <plearn/math/TMat_maths.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

@@ -39,9 +39,10 @@
 #ifndef LayerCostModule_INC
 #define LayerCostModule_INC
 
-#include <map>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn/vmat/VMat.h>
+
+#include <map>
 
 namespace PLearn {
 

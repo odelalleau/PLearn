@@ -40,16 +40,15 @@
 #ifndef RemoteMethodMap_INC
 #define RemoteMethodMap_INC
 
+// From PLearn
+#include "RemoteTrampoline.h"
+#include "PP.h"
+
 // From C++ stdlib
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
-
-// From PLearn
-#include "PP.h"
-
-#include "RemoteTrampoline.h"
 
 namespace PLearn {
 

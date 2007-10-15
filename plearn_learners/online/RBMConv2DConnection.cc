@@ -37,11 +37,11 @@
 /*! \file RBMConv2DConnection.cc */
 
 #define PL_LOG_MODULE_NAME "RBMConv2DConnection"
-#include <plearn/io/pl_log.h>
 
 #include "RBMConv2DConnection.h"
 #include <plearn/math/TMat_maths.h>
 #include <plearn/math/convolutions.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

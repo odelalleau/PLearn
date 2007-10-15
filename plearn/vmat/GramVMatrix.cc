@@ -41,8 +41,8 @@
 /*! \file GramVMatrix.cc */
 
 
-#include <time.h>         //!< For clock().
 #include "GramVMatrix.h"
+#include <time.h>         //!< For clock().
 
 namespace PLearn {
 using namespace std;

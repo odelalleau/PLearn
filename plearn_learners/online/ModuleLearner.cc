@@ -38,10 +38,10 @@
 
 
 #define PL_LOG_MODULE_NAME "ModuleLearner"
-#include <plearn/io/pl_log.h>
 
 #include "ModuleLearner.h"
 #include <plearn_learners/online/NullModule.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

@@ -41,10 +41,10 @@
 /*! \file StatefulLearner.cc */
 
 
+#include "ExhaustiveNearestNeighbors.h"
 #include <assert.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/ker/DistanceKernel.h>
-#include "ExhaustiveNearestNeighbors.h"
 
 namespace PLearn {
 using namespace std;

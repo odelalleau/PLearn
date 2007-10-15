@@ -44,14 +44,14 @@
 #ifndef BallTreeNearestNeighbors_INC
 #define BallTreeNearestNeighbors_INC
 
-#include <queue>
 
+#include "BinaryBallTree.h"
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/nearest_neighbors/GenericNearestNeighbors.h>
 #include <plearn/vmat/SelectRowsVMatrix.h>
 #include <plearn/ker/DistanceKernel.h>
 
-#include "BinaryBallTree.h"
+#include <queue>
 
 namespace PLearn {
 using namespace std;

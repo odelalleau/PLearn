@@ -40,10 +40,10 @@
 #ifndef RBMModule_INC
 #define RBMModule_INC
 
-#include <map>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/RBMConnection.h>
 #include <plearn_learners/online/RBMLayer.h>
+#include <map>
 
 namespace PLearn {
 

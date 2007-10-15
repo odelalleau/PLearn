@@ -38,13 +38,13 @@
 
 /*! \file PTester.cc */
 
+#include "PTester.h"
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/openString.h>
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <assert.h>
-#include "PTester.h"
 #include <plearn/base/RemoteDeclareMethod.h>
 
 #include <plearn/misc/PLearnService.h>

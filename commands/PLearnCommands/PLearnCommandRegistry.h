@@ -40,9 +40,9 @@
 #ifndef PLearnCommandRegistry_INC
 #define PLearnCommandRegistry_INC
 
+#include "PLearnCommand.h"
 #include <map>
 #include <string>
-#include "PLearnCommand.h"
 
 
 namespace PLearn {

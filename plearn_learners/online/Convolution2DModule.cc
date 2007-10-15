@@ -38,12 +38,12 @@
 
 
 #define PL_LOG_MODULE_NAME "Convolution2DModule"
-#include <plearn/io/pl_log.h>
 
 #include "Convolution2DModule.h"
 #include <plearn/math/convolutions.h>
 #include <plearn/math/TMat_maths.h>
 #include <plearn/sys/Profiler.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

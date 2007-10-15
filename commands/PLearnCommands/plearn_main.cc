@@ -36,10 +36,8 @@
  * $Id$
  ******************************************************* */
 
-// From C++ stdlib
-#include <exception>
-
 // From PLearn
+#include <plearn/base/RemoteDeclareMethod.h>
 #include "plearn_main.h"
 #include "PLearnCommandRegistry.h"
 #include <plearn/base/ProgressBar.h>
@@ -52,7 +50,9 @@
 #include <plearn/misc/Calendar.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/vmat/VMat.h>
-#include <plearn/base/RemoteDeclareMethod.h>
+
+// From C++ stdlib
+#include <exception>
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>

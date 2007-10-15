@@ -40,8 +40,8 @@
 
 /*! \file PLearnServer.h */
 
-#include <plearn/io/PStream.h>
 #include <plearn/base/Object.h>
+#include <plearn/io/PStream.h>
 #include <map>
 
 #ifndef PLearnServer_INC

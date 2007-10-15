@@ -44,13 +44,13 @@
 #ifndef Calendar_H
 #define Calendar_H
 
-// C++ stdlib
-#include <map>
-#include <limits.h>
-
 #include <plearn/base/Object.h>
 #include <plearn/base/PDate.h>
 #include "PRange.h"
+
+// C++ stdlib
+#include <map>
+#include <limits.h>
 
 namespace PLearn {
 using namespace std;

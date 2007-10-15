@@ -40,9 +40,9 @@
 
 /*! \file FilterSplitter.cc */
 
-#include <plearn/io/fileutils.h>   //!< For newFilename.
 #include "FilterSplitter.h"
 #include "FilteredVMatrix.h"
+#include <plearn/io/fileutils.h>   //!< For newFilename.
 
 namespace PLearn {
 using namespace std;

@@ -42,8 +42,8 @@
 
 #define PL_LOG_MODULE_NAME "DisregardRowsVMatrix"
 
-#include <plearn/io/pl_log.h>
 #include "DisregardRowsVMatrix.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

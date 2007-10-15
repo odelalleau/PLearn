@@ -40,19 +40,19 @@
 
 /*! \file PairwiseDiffsCommand.cc */
 
-// From C++ stdlib
-#include <deque>
-#include <iomanip>
-
-// From Boost
-#include <boost/format.hpp>
-
 // From PLearn
 #include "PairwiseDiffsCommand.h"
 #include <plearn/base/stringutils.h>
 #include <plearn/math/StatsCollector.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/db/getDataSet.h>
+
+// From C++ stdlib
+#include <deque>
+#include <iomanip>
+
+// From Boost
+#include <boost/format.hpp>
 
 namespace PLearn {
 using namespace std;

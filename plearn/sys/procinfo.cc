@@ -1,12 +1,13 @@
-#include <sys/types.h>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
+#include <plearn/base/RemoteDeclareMethod.h>  
 #include "procinfo.h"
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/base/tostring.h>  
-#include <plearn/base/RemoteDeclareMethod.h>  
+
+#include <sys/types.h>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
 #if defined(WIN32) && defined(_MSC_VER)
 // unistd.h is not available under Microsoft Visual Studio, and some function

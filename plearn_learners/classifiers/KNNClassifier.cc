@@ -41,11 +41,11 @@
 /*! \file KNNClassifier.cc */
 
 
+#include "KNNClassifier.h"
 #include <assert.h>
 #include <math.h>
 #include <plearn_learners/nearest_neighbors/ExhaustiveNearestNeighbors.h>
 #include <plearn/ker/GaussianKernel.h>
-#include "KNNClassifier.h"
 
 namespace PLearn {
 using namespace std;

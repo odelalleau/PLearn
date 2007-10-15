@@ -38,8 +38,6 @@
  ******************************************************* */
 
 /*! \file RunCommand.cc */
-#include <algorithm>
-
 #include "RunCommand.h"
 #include <plearn/base/general.h>
 #include <plearn/io/fileutils.h>
@@ -52,6 +50,8 @@
 
 #include <plearn/io/openString.h>
 #include <plearn/io/openFile.h>
+
+#include <algorithm>
 
 namespace PLearn {
 using namespace std;

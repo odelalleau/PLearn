@@ -40,14 +40,14 @@
 
 /*! \file StatefulLearner.cc */
 
+// From PLearn
+#include "GenericNearestNeighbors.h"
+#include <plearn/ker/DistanceKernel.h>
+
 #include <assert.h>
 
 // From C++ stdlib
 #include <algorithm>
-
-// From PLearn
-#include "GenericNearestNeighbors.h"
-#include <plearn/ker/DistanceKernel.h>
 
 namespace PLearn {
 using namespace std;

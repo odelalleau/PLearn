@@ -39,10 +39,10 @@
 #define PL_LOG_MODULE_NAME "PCA"
 
 /*! \file PCA.cc */
+#include "PCA.h"
 #include <plearn/io/pl_log.h>
 #include <plearn/vmat/CenteredVMatrix.h>
 #include <plearn/vmat/GetInputVMatrix.h>
-#include "PCA.h"
 #include <plearn/math/plapack.h>
 #include <plearn/math/random.h>     //!< For fill_random_normal.
 #include <plearn/vmat/VMat_basic_stats.h>

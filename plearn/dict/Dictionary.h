@@ -43,8 +43,8 @@
 
 #ifndef Dictionary_INC
 #define Dictionary_INC
-#include <plearn/base/stringutils.h>
 #include <plearn/base/Object.h>
+#include <plearn/base/stringutils.h>
 #include <map>
 #include <string>
 

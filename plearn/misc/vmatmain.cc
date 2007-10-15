@@ -35,10 +35,6 @@
  * $Id$
  ******************************************************* */
 
-#include <algorithm>                         // for max
-#include <iostream>
-#include <iomanip>                           // for setw and such
-
 #include "vmatmain.h"
 #include <commands/PLearnCommands/PLearnCommandRegistry.h>
 #include <plearn/base/general.h>
@@ -57,6 +53,10 @@
 #include <plearn/display/Gnuplot.h>
 #include <plearn/io/openFile.h>
 #include <plearn/base/HelpSystem.h>
+
+#include <algorithm>                         // for max
+#include <iostream>
+#include <iomanip>                           // for setw and such
 
 namespace PLearn {
 using namespace std;

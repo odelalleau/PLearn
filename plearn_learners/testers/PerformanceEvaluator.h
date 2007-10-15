@@ -40,8 +40,8 @@
 #ifndef PerformanceEvaluator_INC
 #define PerformanceEvaluator_INC
 
-#include <plearn/base/PP.h>
 #include <plearn/base/Object.h>
+#include <plearn/base/PP.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn_learners/generic/PLearner.h>
 

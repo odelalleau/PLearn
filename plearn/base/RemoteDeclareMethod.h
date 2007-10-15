@@ -40,14 +40,14 @@
 #ifndef RemoteDeclareMethod_INC
 #define RemoteDeclareMethod_INC
 
-// From C++ stdlib
-#include <string>
-
 // From PLearn
 #include "RemoteMethodMap.h"
 #include "RemoteMethodDoc.h"
 #include "RemoteTrampoline.h"
 #include <plearn/base/StaticInitializer.h>
+
+// From C++ stdlib
+#include <string>
 
 namespace PLearn {
 

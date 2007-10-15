@@ -41,12 +41,12 @@
 #ifndef JulianizeVMatrix_INC
 #define JulianizeVMatrix_INC
 
+#include "SourceVMatrix.h"
+#include "VMat.h"
+
 #include <utility>
 #include <vector>
 #include <algorithm>
-
-#include "SourceVMatrix.h"
-#include "VMat.h"
 
 namespace PLearn {
 using namespace std;

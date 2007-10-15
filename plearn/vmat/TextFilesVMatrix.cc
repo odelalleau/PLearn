@@ -37,11 +37,11 @@
 // Author: Pascal Vincent, Christian Hudon
 
 /*! \file TextFilesVMatrix.cc */
+#include "TextFilesVMatrix.h"
 #include <plearn/base/PDate.h>
 #include <plearn/base/ProgressBar.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/io/load_and_save.h>
-#include "TextFilesVMatrix.h"
 
 namespace PLearn {
 using namespace std;

@@ -45,14 +45,14 @@
 #define diff_INC
 
 //#include <plearn/base/Object.h>
-#include <map>
-#include <string>
 #include <plearn/base/OptionBase.h>
 #include <plearn/base/tostring.h>
 #include <plearn/io/openString.h>
 #include <plearn/io/PStream.h>
 #include <plearn/math/pl_math.h>    //!< For 'real'.
 #include <plearn/math/TVec_decl.h>
+#include <map>
+#include <string>
 
 using namespace std;
 
