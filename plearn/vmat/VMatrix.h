@@ -588,6 +588,7 @@ public:
      *  created).
      */
     TVec<StatsCollector> getStats() const;
+    TVec<StatsCollector*> remote_getStats() const;
 
     StatsCollector& getStats(int fieldnum) const
     { return getStats()[fieldnum]; }

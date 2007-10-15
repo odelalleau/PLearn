@@ -233,6 +233,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("l", "length"),
          ArgDoc ("w", "width"),
          RetDoc ("The sub-VMatrix")));
+
+
+    declareMethod(
+        rmm, "getStats", &VMatrix::remote_getStats,
+        (BodyDoc("Returns the unconditonal statistics for all fields\n"),
+         RetDoc ("Stats vector")));
+
 }
 
 
@@ -1364,6 +1371,19 @@ TVec<StatsCollector> VMatrix::getStats() const
         }
     }
     return field_stats;
+}
+
+TVec<StatsCollector*> VMatrix::remote_getStats() const
+{
+    static TVec<StatsCollector*> field_p_stats;
+    if(field_p_stats.isEmpty())
+    {
+        TVec<StatsCollector> st= getStats();
+        field_p_stats.resize(st.length());
+        for(int i= 0; i < st.length(); ++i)
+            field_p_stats[i]= &st[i];
+    }
+    return field_p_stats;
 }
 
 ////////////////////
