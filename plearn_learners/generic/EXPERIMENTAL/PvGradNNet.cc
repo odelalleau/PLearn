@@ -212,8 +212,8 @@ void PvGradNNet::forget()
 
     // used in the discountGrad() strategy
     n_updates = 0; 
+    n_small_ratios=0.0;
     n_neuron_updates.fill(0);    
-
 //    pv_gradstats->forget();
 }
 
@@ -241,6 +241,12 @@ void PvGradNNet::bpropUpdateNet(int t)
         default :
             PLERROR("PvGradNNet::bpropUpdateNet() - No such pv_strategy.");
     }
+    // hack
+    if( (t%160000)==0 )  {
+        cout << n_small_ratios << " small ratios." << endl;
+        n_small_ratios = 0.0;
+    }
+        
 }
 
 void PvGradNNet::pvGrad()   
@@ -267,7 +273,8 @@ void PvGradNNet::pvGrad()
 
             // test to see if numerical problems
             if( fabs(m) < 1e-15 || e < 1e-15 )  {
-                cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
+                //cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
+                n_small_ratios++;
                 continue;
             }
 
@@ -335,7 +342,6 @@ void PvGradNNet::pvGrad()
         }
         //pv_all_nsamples[k] = ns; // *stat*
     }
-
 }
 
 //! This gradient strategy is much like the one from PvGrad, however:
@@ -379,7 +385,8 @@ void PvGradNNet::discountGrad()
 
             // test to see if numerical problems
             if( fabs(m) < 1e-15 || e < 1e-15 )  {
-                cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
+                //cout << "PvGradNNet::bpropUpdateNet() - small mean-error ratio." << endl;
+                n_small_ratios++;
                 continue;
             }
 
@@ -514,7 +521,6 @@ void PvGradNNet::neuronDiscountGrad()
                     n_updates++;
                     n_neuron_updates[kk]++;
                 }
-            //////////////////////////////////
             }
         }
     }

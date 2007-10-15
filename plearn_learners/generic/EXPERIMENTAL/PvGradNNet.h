@@ -162,7 +162,7 @@ private:
     //! accumulated statistics of gradients on each parameter.
     //PP<VecStatsCollector> pv_gradstats;
 
-
+    real n_small_ratios;
 };
 
 // Declares a few other classes and functions related to this class
