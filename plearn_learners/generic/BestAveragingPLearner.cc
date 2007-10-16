@@ -36,12 +36,12 @@
 
 /*! \file BestAveragingPLearner.cc */
 
+// From PLearn
+#include "BestAveragingPLearner.h"
+#include <plearn/base/ProgressBar.h>
+
 // From C++ stdlib
 #include <algorithm>
-
-// From PLearn
-#include <plearn/base/ProgressBar.h>
-#include "BestAveragingPLearner.h"
 
 namespace PLearn {
 using namespace std;
