@@ -393,6 +393,8 @@ class DBICluster(DBIBase):
         self.nb_proc=50
         self.mt=None
         self.args=args
+        self.mem=None
+        self.os=None
         DBIBase.__init__(self, commands, **args)
         self.pre_tasks=["echo '[DBI] executing on host' $HOSTNAME"]+self.pre_tasks
         self.post_tasks=["echo '[DBI] exit status' $?"]+self.post_tasks
@@ -442,6 +444,10 @@ class DBICluster(DBIBase):
             command += " --duree "+self.duree
         if self.cluster_wait:
             command += " --wait"
+        if self.mem:
+            command += " --memoire "+self.mem
+        if self.os:
+            command += " --os "+self.os
         command += " --execute '"+ filename + "'"
 
         self.started+=1
@@ -520,7 +526,7 @@ class DBIbqtools(DBIBase):
         self.queue = "qwork@ms"
         self.long = False
         self.duree = "12:00:00"
-
+        self.mem = None
         DBIBase.__init__(self, commands, **args)
 
         self.nb_proc = int(self.nb_proc)

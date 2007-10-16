@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value.'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--mem=X] [--os=X] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value.'
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
 %(ShortHelp)s
@@ -48,6 +48,8 @@ cluster and condor options:
 cluster only options:
   The '--wait' is transfered to cluster. This must be enabled if there is not nb_process available nodes. Otherwise when there are no nodes available, the launch of that command fails.
   The '--nowait' means the --wait option is not given to the cluster command, as in the default.
+  The '--mem=X' speficify the number of meg the program need to execute.
+  The '--os=X' speficify the os of the server: fc4 or fc7. Default: fc4
   
 condor only options:
   The '--req=\"CONDOR_REQUIREMENT\"' option makes dbidispatch send additional option to DBI that will be used to generate additional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writen in the following way:
@@ -130,6 +132,10 @@ for argv in sys.argv[1:]:
         launch_cmd = "Condor"
     elif argv.startswith("--duree="):
         dbi_param["duree"]=argv[8:]
+    elif argv.startswith("--mem="):
+        dbi_param["mem"]=argv[6:]
+    elif argv.startswith("--os="):
+        dbi_param["os"]=argv[5:]
     elif argv.startswith("--local"):
         launch_cmd = "Local"
         if len(argv)>7:
