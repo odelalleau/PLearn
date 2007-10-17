@@ -115,8 +115,8 @@ Options that will not affect the final compiled file:
                   N.B. this option is not related to -local_ofiles.
   -v[...]: specify the verbosity level, '-vvv' is equivalent to '-v3'.
            1 -> get *** Running ... / ++++ Computing
-           2 -> get Launched / Finished / Still waiting
-           3 -> get lauched command (default)
+           2 -> get Launched / Finished / Still waiting (default)
+           3 -> get lauched command
            4 -> get extra information
 
 There exist special options that will not compile or link the target, but
@@ -2476,7 +2476,7 @@ def main( args ):
     # nice default command and value
     nice_command = 'env nice -n'
     default_nice_value = 10
-    verbose=3
+    verbose=2
 
     ######## Regular pymake processing
 
