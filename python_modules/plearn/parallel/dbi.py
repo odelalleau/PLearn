@@ -40,7 +40,7 @@ class LockedIterator:
     def __init__( self, iterator ):
         self._lock     = Lock()
         self._iterator = iterator
-        
+
     def __iter__( self ):
         return self
 
@@ -50,8 +50,8 @@ class LockedIterator:
             return self._iterator.next()
         finally:
             self._lock.release()
- 
-    
+
+
     def next( self ):
         try:
             self._lock.acquire()
@@ -73,20 +73,20 @@ class LockedListIter:
             self._lock.acquire()
             self._last+=1
             if len(self._list)>self._last:
-                return 
+                return
             else:
                 return self._list[self._last]
         finally:
             self._lock.release()
- 
-    
+
+
     def append( self, a ):
         try:
             self._lock.acquire()
             list.append(a)
         finally:
             self._lock.release()
-            
+
 
 #original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
 class MultiThread:
@@ -98,7 +98,7 @@ class MultiThread:
         self.running = 0
         self.init_len_list = len(argsVector)
         self.sleep_time = sleep_time
-        
+
         if maxThreads==-1:
             nb_thread=len(argsVector)
         elif maxThreads<=0:
@@ -110,7 +110,7 @@ class MultiThread:
             nb_thread=len(argsVector)
         for i in range( nb_thread ):
             self._threadPool.append( Thread( target=self._tailRecurse ) )
-            
+
     def _tailRecurse( self ):
         for args in self._argsIterator:
             self._function( args )
@@ -120,17 +120,18 @@ class MultiThread:
                 print self.print_when_finish(),"left running: %d/%d"%(self.running,self.init_len_list)
             else:
                 print self.print_when_finish,"left running: %d/%d"%(self.running,self.init_len_list)
-                    
+
     def start( self  ):
         for thread in self._threadPool:
-            time.sleep( self.sleep_time ) # necessary to give other threads a chance to run
+            # necessary to give other threads a chance to run
+            time.sleep( self.sleep_time )
             self.running+=1
             thread.start()
-            
+
     def join( self, timeout=None ):
         for thread in self._threadPool:
             thread.join( timeout )
-                    
+
 class DBIBase:
 
     def __init__(self, commands, **args ):
@@ -198,9 +199,9 @@ class DBIBase:
             self.post_batch = [self.post_batch]
 
     def n_avail_machines(self): raise NotImplementedError, "DBIBase.n_avail_machines()"
-    
+
     def add_commands(self,commands): raise NotImplementedError, "DBIBase.add_commands()"
-    
+
     def get_redirection(self,stdout_file,stderr_file):
         """Calcule the needed redirection based of the objects attribute
         return a tuple (stdout,stderr) that can be used with popen
@@ -214,7 +215,7 @@ class DBIBase:
         elif int(self.file_redirect_stderr):
             error = open(stderr_file, 'w')
         return (output,error)
-            
+
     def exec_pre_batch(self):
         # Execute pre-batch
         if len(self.pre_batch)>0:
@@ -224,17 +225,17 @@ class DBIBase:
                 self.pre = Popen(pre_batch_command, shell=True, stdout=output, stderr=error)
             else:
                 print "[DBI] pre_batch_command:",pre_batch_command
-            
+
     def exec_post_batch(self):
         # Execute post-batch
         if len(self.post_batch)>0:
-            post_batch_command = ';'.join( self.post_batch )        
+            post_batch_command = ';'.join( self.post_batch )
             if not self.test:
                 (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
                 self.post = Popen(post_batch_command, shell=True, stdout=output, stderr=error)
             else:
                 print "[DBI] post_batch_command:",post_batch_command
-            
+
     def clean(self):
         print "[DBI] WARNING the clean function was not overrided by the sub class!"
 
@@ -249,7 +250,7 @@ class DBIBase:
         running=0
         waiting=0
         init=0
-        unfinished=[]        
+        unfinished=[]
         for t in self.tasks:
             if t.status==STATUS_INIT:
                 init+=1
@@ -266,7 +267,7 @@ class DBIBase:
                 print "[DBI] jobs %i have a bad status: %d",t.id
             print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, init: %d"%(len(self.tasks),finished, running, waiting, init)
             print "[DBI] jobs unfinished (starting at 1): ",unfinished
-                                
+
 class Task:
 
     def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, id=-1, gen_unique_id = True, args = {}):
@@ -285,7 +286,7 @@ class Task:
         for key in args.keys():
             self.__dict__[key] = args[key]
         self.dolog = dolog
-        
+
         formatted_command = re.sub( '[^a-zA-Z0-9]', '_', command );
         if gen_unique_id:
             self.unique_id = get_new_sid('')#compation intense
@@ -338,7 +339,7 @@ class Task:
         except:
             pass
         return None
-        
+
     def get_stderr(self):
         try:
             if isinstance(self.p.stderr, file):
@@ -354,7 +355,7 @@ class Task:
             set_config_value(self.log_file, 'STATUS',str(STATUS_WAITING))
             set_config_value(self.log_file, 'SCHEDULED_TIME',
                              time.strftime(self.time_format, time.localtime(time.time())))
-            
+
     def get_waiting_time(self):
         # get the string representation
         str_sched = get_config_value(self.log_file,'SCHEDULED_TIME')
@@ -402,7 +403,7 @@ class DBICluster(DBIBase):
         self.nb_proc=int(self.nb_proc)
         self.backend_failed=0
         self.jobs_failed=0
-        
+
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
 
@@ -423,7 +424,7 @@ class DBICluster(DBIBase):
     def run_one_job(self, task):
         DBIBase.run(self)
         task.status=STATUS_RUNNING
-        
+
         remote_command=string.join(task.commands,';')
         filename=os.path.join(self.tmp_dir,task.unique_id)
         filename=os.path.abspath(filename)
@@ -432,8 +433,8 @@ class DBICluster(DBIBase):
         f.close()
         os.chmod(filename, 0750)
         self.temp_files.append(filename)
-        
-        command = "cluster" 
+
+        command = "cluster"
         if self.arch == "32":
             command += " --typecpu 32bits"
         elif self.arch == "64":
@@ -478,7 +479,7 @@ class DBICluster(DBIBase):
         elif task.dbi_return_status!=0:
             self.jobs_failed+=1
         task.status=STATUS_FINISHED
-  
+
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
         if self.test:
@@ -510,13 +511,13 @@ class DBICluster(DBIBase):
                 print "[DBI] Catched KeyboardInterrupt"
                 self.print_jobs_status()
                 raise
-            
+
         else:
             print "[DBI] WARNING jobs not started!"
         self.print_jobs_status()
         print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
         print "[DBI] Their was %d jobs that returned a failure status."%(self.jobs_failed)
-        
+
 class DBIbqtools(DBIBase):
 
     def __init__( self, commands, **args ):
@@ -531,7 +532,7 @@ class DBIbqtools(DBIBase):
 
         self.nb_proc = int(self.nb_proc)
         self.micro = int(self.micro)
-        
+
 ### We can't accept the symbols "," as this cause trouble with bqtools
         if self.log_dir.find(',')!=-1 or self.log_file.find(',')!=-1:
             print "[DBI] ERROR: The log file and the log dir should not have the symbol ','"
@@ -544,7 +545,7 @@ class DBIbqtools(DBIBase):
         print "[DBI] All bqtools file will be in ",self.temp_dir
         os.mkdir(self.temp_dir)
         os.chdir(self.temp_dir)
-        
+
         if self.long:
             self.queue = "qlong@ms"
             # Get max job duration from environment variable if it is set.
@@ -640,21 +641,21 @@ class DBIbqtools(DBIBase):
         else:
             print "[DBI] Test mode, we generate all the file, but we do not execute bqsubmit"
             if self.dolog:
-                print "[DBI] The scheduling time will not be logged when you will submit the generated file" 
+                print "[DBI] The scheduling time will not be logged when you will submit the generated file"
 
         # Execute post-batchs
         self.exec_post_batch()
 
     def wait(self):
         print "[DBI] WARNING cannot wait until all jobs are done for bqtools, use bqwatch or bqstatus"
-                
+
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
-        
+
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
         self.args = args
@@ -675,10 +676,10 @@ class DBICondor(DBIBase):
                 c=command
                 c2=""
 
-            # We use the absolute path so that we don't have corner case as with ./ 
+            # We use the absolute path so that we don't have corner case as with ./
             c = os.path.normpath(os.path.join(os.getcwd(), c))
             command = "".join([c,c2])
-            
+
                 # We will execute the command on the specified architecture
                 # if it is specified. If the executable exist for both
                 # architecture we execute on both. Otherwise we execute on the
@@ -723,7 +724,7 @@ class DBICondor(DBIBase):
             else:
                 self.targetcondorplatform=self.cplat
                 newcommand=command
-            
+
             if not os.path.exists(c):
                 raise Exception("The command '"+c+"' do not exist!")
             elif not os.access(c, os.X_OK):
@@ -734,7 +735,7 @@ class DBICondor(DBIBase):
                                    self.post_tasks,self.dolog,id,False,
                                    self.args))
             id+=1
-            #keeps a list of the temporary files created, so that they can be deleted at will            
+            #keeps a list of the temporary files created, so that they can be deleted at will
 
     def run_all_job(self):
         if len(self.tasks)==0:
@@ -750,17 +751,17 @@ class DBICondor(DBIBase):
                 condor_datas.append(condor_data)
                 self.temp_files.append(condor_data)
                 param_dat = open(condor_data, 'w')
-                
+
                 param_dat.write( dedent('''\
                 #!/bin/bash
                 %s''' %('\n'.join(task.commands))))
                 param_dat.close()
-        
+
 
         condor_file = os.path.join(self.tmp_dir, self.unique_id + ".condor")
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
-        
+
         req=""
         if self.targetcondorplatform == 'BOTH':
             req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
@@ -802,7 +803,7 @@ class DBICondor(DBIBase):
                 if mtimed>mtimel:
                     print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
                     overwrite_launch_file=True
-        
+
         if not os.path.exists(launch_file) or overwrite_launch_file:
             self.temp_files.append(launch_file)
             launch_dat = open(launch_file,'w')
@@ -838,7 +839,7 @@ class DBICondor(DBIBase):
         if not os.path.exists('configobj.py'):
             shutil.copy( get_plearndir()+
                          '/python_modules/plearn/parallel/configobj.py',  configobj_file)
-            self.temp_files.append(configobj_file)            
+            self.temp_files.append(configobj_file)
             os.chmod(configobj_file, 0755)
 
         # Launch condor
@@ -851,8 +852,8 @@ class DBICondor(DBIBase):
         else:
             print "[DBI] Created condor file: " + condor_file
             if self.dolog:
-                print "[DBI] The scheduling time will not be logged when you will submit the condor file" 
-            
+                print "[DBI] The scheduling time will not be logged when you will submit the condor file"
+
     def clean(self):
         if len(self.temp_files)>0:
             sleep(20)
@@ -861,21 +862,21 @@ class DBICondor(DBIBase):
                     os.remove(file_name)
                 except os.error:
                     pass
-                pass    
+                pass
 
 
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
 
         self.exec_pre_batch()
-        
+
         self.run_all_job()
 
         self.exec_post_batch()
 
     def wait(self):
         print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s/condor.log'"%(self.log_dir)
-                
+
     def clean(self):
         pass
 
@@ -890,7 +891,7 @@ class DBILocal(DBIBase):
         self.started=0
         self.nb_proc=int(self.nb_proc)
         self.add_commands(commands)
-            
+
     def add_commands(self,commands):
         if not isinstance(commands, list):
             commands=[commands]
@@ -913,23 +914,23 @@ class DBILocal(DBIBase):
             else:
                 c=command
                 c2=""
-                
-            # We use the absolute path so that we don't have corner case as with ./ 
+
+            # We use the absolute path so that we don't have corner case as with ./
             c = os.path.normpath(os.path.join(os.getcwd(), c))
             command = "".join([c,c2])
-            
+
             # We will execute the command on the specified architecture
             # if it is specified. If the executable exist for both
             # architecture we execute on both. Otherwise we execute on the
             # same architecture as the architecture of the launch computer
-            
+
             if not os.access(c, os.X_OK):
                 raise Exception("The command '"+c+"' do not exist or have execution permission!")
             self.tasks.append(Task(command, tmp_dir, log_dir,
                                    time_format, pre_tasks,
                                    post_tasks,dolog,id,False,self.args))
             id+=1
-        #keeps a list of the temporary files created, so that they can be deleted at will            
+        #keeps a list of the temporary files created, so that they can be deleted at will
 
     def run_one_job(self,task):
         c = (';'.join(task.commands))
@@ -946,7 +947,7 @@ class DBILocal(DBIBase):
         p = Popen(c, shell=True,stdout=output,stderr=error)
         p.wait()
         task.status=STATUS_FINISHED
-            
+
     def clean(self):
         if len(self.temp_files)>0:
             sleep(20)
@@ -955,7 +956,7 @@ class DBILocal(DBIBase):
                     os.remove(file_name)
                 except os.error:
                     pass
-                pass    
+                pass
 
     def run(self):
         if self.test:
@@ -972,11 +973,11 @@ class DBILocal(DBIBase):
         # Execute all Tasks (including pre_tasks and post_tasks if any)
         self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :("[DBI,%s]"%time.ctime()))
         self.mt.start()
-        
+
         # Execute post-batchs
         self.exec_post_batch()
-            
-        
+
+
     def clean(self):
         pass
 
@@ -993,7 +994,7 @@ class DBILocal(DBIBase):
             print "[DBI] WARNING jobs not started!"
         self.print_jobs_status()
         print "[DBI] The Log file are under %s"%self.log_dir
-                
+
 class SshHost:
     def __init__(self, hostname,nice=19,get_avail=True):
         self.hostname= hostname
@@ -1004,7 +1005,7 @@ class SshHost:
         self.nice=nice
         if get_avail:
             self.getAvailability()
-        
+
     def getAvailability(self):
         # simple heuristic: mips / load
         t= time.time()
@@ -1013,7 +1014,7 @@ class SshHost:
             self.lastupd= t
             #print  self.hostname, self.bogomips, self.loadavg, (self.bogomips / (self.loadavg + 0.5))
         return self.bogomips / (self.loadavg + 0.5)
-        
+
     def getAllHostInfo(self):
         cmd= ["ssh", self.hostname ,"cat /proc/cpuinfo;cat /proc/loadavg"]
         p= Popen(cmd, stdout=PIPE)
@@ -1056,7 +1057,7 @@ class SshHost:
 
     def __repr__(self):
         return str(self)
-        
+
 def find_all_ssh_hosts():
     hostspath_list = [os.path.join(os.getenv("HOME"),".pymake",get_platform()+'.hosts')]
     if os.path.exists(hostspath_list[0])==0:
@@ -1076,7 +1077,7 @@ def find_all_ssh_hosts():
         if s.working:
             h.append(s)
         else:
-            print "[DBI] host not working:",s.hostname            
+            print "[DBI] host not working:",s.hostname
         print s
     print h
     return h
@@ -1099,7 +1100,7 @@ class DBISsh(DBIBase):
     def add_commands(self,commands):
         if not isinstance(commands, list):
             commands=[commands]
-            
+
         # create the information about the tasks
         id=len(self.tasks)+1
         for command in commands:
@@ -1108,31 +1109,31 @@ class DBISsh(DBIBase):
                                    self.post_tasks,self.dolog,id,False,
                                    self.args))
             id+=1
-            
+
     def getHost(self):
         self.hosts.sort(cmp= cmp_ssh_hosts)
         print "hosts= "
         for h in self.hosts: print h
         self.hosts[0].addToLoadavg(1.0)
         return self.hosts[0]
-    
+
     def run_one_job(self, task):
         DBIBase.run(self)
 
         host= self.getHost()
-        
+
         cwd= os.getcwd()
         command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + "'"
         print "[DBI] "+command
 
         if self.test:
             return
-        
+
         task.launch_time = time.time()
         task.set_scheduled_time()
-        
+
         (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
-        
+
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
         task.p.wait()
         task.status=STATUS_FINISHED
@@ -1147,21 +1148,21 @@ class DBISsh(DBIBase):
             print "task",task
             command = "ssh " + host.hostname + " 'cd " + cwd + "; " + string.join(task.commands,';') + " ; echo $?'"
             print "[DBI, %s] %s"%(time.ctime(),command)
-            
+
             if self.test:
                 return
-        
+
             task.launch_time = time.time()
             task.set_scheduled_time()
-        
+
 ###            (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
-        
+
             task.p = Popen(command, shell=True,stdout=PIPE,stderr=PIPE)
             wait = task.p.wait()
             returncode = p.returncode
             if returncode:
                 self.working=False
-                
+
             elif wait!=0:
                 self.working=False
                 #redo it
@@ -1182,7 +1183,7 @@ class DBISsh(DBIBase):
                 print "return status", task.return_status
             sleep(1)
             task.status=STATUS_FINISHED
-      
+
     def run(self):
         print "[DBI] The Log file are under %s"%self.log_dir
         if not self.file_redirect_stdout and self.nb_proc>1:
