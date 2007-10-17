@@ -57,11 +57,11 @@ public:
     //#####  Public Build Options  ############################################
 
     string cost_function;
-    
+
     int histo_size;
-    
+
     real alpha;
-    
+
     real momentum;
 
     //#####  Public Learnt Options  ###########################################
@@ -75,13 +75,13 @@ public:
     //! or (for some) 'pascal'
     Vec inputs_expectation;
     Vec inputs_stds;         //! only for 'correlation' cost function
-    
+
     Mat inputs_correlations; //! only for 'correlation' cost function
     Mat inputs_cross_quadratic_mean;
 
     //! The generic name of the cost function
     string cost_function_completename;
-    
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -93,7 +93,7 @@ public:
     virtual void fprop(const Mat& inputs, Mat& costs);
     //! Overridden.
     virtual void fprop(const TVec<Mat*>& ports_value);
-    
+
     //! backpropagate the derivative w.r.t. activation
     virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
                                 const TVec<Mat*>& ports_gradient);
@@ -163,14 +163,14 @@ protected:
     //! Range of a histogram's bin ( HISTO_STEP = 1/histo_size )
     real HISTO_STEP;
     //! the weight of a sample within a batch (usually, 1/n_samples)
-    real one_count; 
+    real one_count;
 
     //! Variables for (non stochastic) Pascal's/correlation function
     //! -------------------------------------------------------------
-    //! Statistics on outputs (estimated empiricially on the data)    
+    //! Statistics on outputs (estimated empiricially on the data)
     Vec inputs_expectation_trainMemory;
     Mat inputs_cross_quadratic_mean_trainMemory;
-        
+
     //! Map from a port name to its index in the 'ports' vector.
     map<string, int> portname_to_index;
 

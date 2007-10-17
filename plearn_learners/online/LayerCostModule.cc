@@ -55,10 +55,10 @@ PLEARN_IMPLEMENT_OBJECT(
     "Some only apply for binomial layers. \n");
 
 LayerCostModule::LayerCostModule():
+    cost_function(""),
     histo_size(10),
     alpha(0.0),
     momentum(0.0),
-    cost_function(""),
     cost_function_completename("")
 {
     output_size = 1;
@@ -77,18 +77,18 @@ void LayerCostModule::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "The cost function applied to the layer:\n"
         "- \"pascal\":"
-	                    " Pascal Vincent's God given cost function.\n"
+        " Pascal Vincent's God given cost function.\n"
         "- \"correlation\":"
-	                    " average of a function applied to the correlations between outputs.\n"
+        " average of a function applied to the correlations between outputs.\n"
         "- \"kl_div\":"
-	                    " KL divergence between distrubution of outputs (sampled with x)\n"
+        " KL divergence between distrubution of outputs (sampled with x)\n"
         "- \"kl_div_simple\":"
-	                    " simple version of kl_div where we count at least one sample per histogram's bin\n"
+        " simple version of kl_div where we count at least one sample per histogram's bin\n"
         "- \"stochastic_cross_entropy\" [default]:"
-	                    " average cross-entropy between pairs of binomial units\n"
+        " average cross-entropy between pairs of binomial units\n"
         "- \"stochastic_kl_div\":"
-	                    " average KL divergence between pairs of binomial units\n"
-                 );
+        " average KL divergence between pairs of binomial units\n"
+        );
 
     declareOption(ol, "histo_size", &LayerCostModule::histo_size,
                   OptionBase::buildoption,
@@ -144,9 +144,9 @@ void LayerCostModule::build_()
     PLASSERT( histo_size > 1 );
     PLASSERT( momentum >= 0.0);
     PLASSERT( momentum < 1);
-    
+
     norm_factor = 1./(real)(input_size*(input_size-1));
-    
+
     string im = lowerstring( cost_function );
     // choose HERE the *default* cost function
     if( im == "" )
@@ -160,7 +160,7 @@ void LayerCostModule::build_()
     if( ( cost_function == "stochastic_cross_entropy")
      || ( cost_function == "stochastic_kl_div") )
         is_cost_function_stochastic = true;
-        
+
     // list HERE all *non stochastic* cost functions
     // and the specific initialization
     else if( ( cost_function == "kl_div")
@@ -225,16 +225,16 @@ void LayerCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(inputs_histo, copies);
-    
+
     deepCopyField(inputs_expectation, copies);
     deepCopyField(inputs_stds, copies);
-    
+
     deepCopyField(inputs_correlations, copies);
     deepCopyField(inputs_cross_quadratic_mean, copies);
-    
+
     deepCopyField(inputs_expectation_trainMemory, copies);
     deepCopyField(inputs_cross_quadratic_mean_trainMemory, copies);
-    
+
     deepCopyField(ports, copies);
 }
 
@@ -267,7 +267,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
 {
     int n_samples = inputs.length();
     costs.resize( n_samples, output_size );
-    
+
     if( !is_cost_function_stochastic )
     {
         costs.clear(); // costs(i,0) = 0
@@ -278,7 +278,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
         //! (non stochastic) SYMETRIC *** K-L DIVERGENCE ***
         //! between probabilities of outputs vectors for all units
         //! ************************************************************
-        //! 
+        //!
         //!      cost = - MEAN_{i,j#i} Div_{KL}[ Px(q{i}) | Px(q{j}) ]
         //!
         //!           = - MEAN_{i,j#i} SUM_Q (Nx_j(Q) - Nx_j(Q)) log( Nx_i(Q) / Nx_j(Q) )
@@ -300,7 +300,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
         //! ************************************************************
 
             computeHisto(inputs);
-            
+
             costs(0,0) = computeKLdiv();
         }
         else if( cost_function == "kl_div_simple" )
@@ -315,7 +315,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
         //! ************************************************************
 
             computeSafeHisto(inputs);
-            
+
             // Computing the KL divergence
             for (int i = 0; i < input_size; i++)
                 for (int j = 0; j < i; j++)
@@ -331,7 +331,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
         //! a Pascal Vincent's god-given similarity measure
         //! between outputs vectors for all units
         //! ************************************************************
-        //! 
+        //!
         //!      cost = MEAN_{i,j#i} f( Ex[q{i}.q{j}] ) - alpha. MEAN_{i} f( Ex[q{i}] )
         //!
         //! where  q{i} = P(h{i}=1|x): output of the i^th units of the layer
@@ -340,7 +340,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
         //! ************************************************************
 
             computePascalStatistics(inputs);
-                                    
+
             // Computing the cost
             for (int i = 0; i < input_size; i++)
             {
@@ -370,7 +370,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
         //! ************************************************************
 
             computeCorrelationStatistics(inputs);
-                        
+
             // Computing the cost
             for (int i = 0; i < input_size; i++)
                 for (int j = 0; j < i; j++)
@@ -379,10 +379,10 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs)
             costs(0,0) *= norm_factor;
         }
 
-        
+
         return; // Do not fprop with the conventional stochastic fprop...
     }
-    
+
     for (int isample = 0; isample < n_samples; isample++)
         fprop(inputs(isample), costs(isample,0));
 }
@@ -394,8 +394,8 @@ void LayerCostModule::fprop(const Vec& input, real& cost) const
 
     cost = 0.0;
     real  qi, qj, comp_qi, comp_qj; // The outputs (units i,j)
-                                    // and some basic operations on it (e.g.: 1-qi, qi/(1-qi)) 
-                                      
+                                    // and some basic operations on it (e.g.: 1-qi, qi/(1-qi))
+
     if( cost_function == "stochastic_cross_entropy" )
     {
     //! ************************************************************
@@ -421,10 +421,10 @@ void LayerCostModule::fprop(const Vec& input, real& cost) const
            {
                qj = input[j];
                comp_qj = 1.0 - qj;
-               
+
                // H(pi||pj) = H(pi) + D_{KL}(pi||pj)
                cost += qi*safeflog(qj) + comp_qi*safeflog(comp_qj);
-               
+
                // The symetric part (loop  j=i+1...size)
                cost += qj*safeflog(qi) + comp_qj*safeflog(comp_qi);
            }
@@ -432,7 +432,7 @@ void LayerCostModule::fprop(const Vec& input, real& cost) const
         // Normalization w.r.t. number of units
         cost *= norm_factor;
     }
-    
+
     else if( cost_function == "stochastic_kl_div" )
     {
     //! ************************************************************
@@ -457,7 +457,7 @@ void LayerCostModule::fprop(const Vec& input, real& cost) const
                comp_qi = REAL_MAX;
            else
                comp_qi = qi/(1.0 - qi);
-       
+
            for( int j = 0; j < i; j++ )
            {
                qj = input[j];
@@ -465,13 +465,13 @@ void LayerCostModule::fprop(const Vec& input, real& cost) const
                    comp_qj = REAL_MAX;
                else
                    comp_qj = qj/(1.0 - qj);
-               
+
                //     - D_{KL}(pi||pj) - D_{KL}(pj||pi)
                cost += (qj-qi)*safeflog(comp_qi/comp_qj);
            }
         }
         // Normalization w.r.t. number of units
-        cost *= norm_factor;   
+        cost *= norm_factor;
     }
 
     else
@@ -598,7 +598,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         else if( cost_function == "kl_div" )
         {
             computeHisto(*p_inputs);
-            
+
             for (int isample = 0; isample < n_samples; isample++)
             {
 
@@ -607,7 +607,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 for (int i = 0; i < input_size; i++)
                 {
                     (*p_inputs_grad)(isample, i) = 0.0;
-                    
+
                     qi = (*p_inputs)(isample,i);
                     int index_i = histo_index(qi);
                     if( ( index_i == histo_size-1 ) ) // we do not care about this...
@@ -620,11 +620,11 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         shift_i = -1;
                     // qi + dq(qi) ==> | p_inputs_histo(i,index_i)   - one_count
                     //                 \ p_inputs_histo(i,index_i+shift_i) + one_count
-                    
+
                     for (int j = 0; j < i; j++)
                     {
                         (*p_inputs_grad)(isample, i) += delta_KLdivTerm(i, j, index_i, over_dqi);
-                        
+
                         qj = (*p_inputs)(isample,j);
                         int index_j = histo_index(qj);
                         if( ( index_j == histo_size-1 ) || ( index_j == 0 ) )
@@ -637,7 +637,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                             shift_j = -1;
                             // qj + dq(qj) ==> | p_inputs_histo(j,index_j)   - one_count
                           //                 \ p_inputs_histo(j,index_j+shift_j) + one_count
-                        
+
                         (*p_inputs_grad)(isample, j) += delta_KLdivTerm(j, i, index_j, over_dqj);
                     }
                 }
@@ -648,8 +648,8 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     (*p_inputs_grad)(isample, i) *= (*p_cost_grad)(isample,0) * norm_factor;
                 }
             }
-            
-            
+
+
             // debug Check
             int i=0;
             real cost_before = computeKLdiv();
@@ -661,19 +661,19 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                   (*p_inputs)(isample,i) += dq(qi);
                   computeHisto(*p_inputs);
                   real cost_after = computeKLdiv();
-                  (*p_inputs)(isample,i) -= dq(qi);                  
+                  (*p_inputs)(isample,i) -= dq(qi);
                   cout << "\tglobal cost comparison:" << cost_after - cost_before;
                   cout << "  <?>  " << (*p_inputs_grad)(isample, i)*dq(qi) << endl;
                 }
             }
-            
-            
+
+
         }
 
         else if( cost_function == "kl_div_simple" )
         {
             computeSafeHisto(*p_inputs);
-            
+
             for (int isample = 0; isample < n_samples; isample++)
             {
 
@@ -682,7 +682,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 for (int i = 0; i < input_size; i++)
                 {
                     (*p_inputs_grad)(isample, i) = 0.0;
-                    
+
                     qi = (*p_inputs)(isample,i);
                     int index_i = histo_index(qi);
                     if( ( index_i == histo_size-1 ) ) // we do not care about this...
@@ -695,11 +695,11 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         shift_i = -1;
                     // qi + dq(qi) ==> | p_inputs_histo(i,index_i)   - one_count
                     //                 \ p_inputs_histo(i,index_i+shift_i) + one_count
-                    
+
                     for (int j = 0; j < i; j++)
                     {
                         (*p_inputs_grad)(isample, i) += delta_SafeKLdivTerm(i, j, index_i, over_dqi);
-                        
+
                         qj = (*p_inputs)(isample,j);
                         int index_j = histo_index(qj);
                         if( ( index_j == histo_size-1 ) || ( index_j == 0 ) )
@@ -712,7 +712,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                             shift_j = -1;
                             // qj + dq(qj) ==> | p_inputs_histo(j,index_j)   - one_count
                           //                 \ p_inputs_histo(j,index_j+shift_j) + one_count
-                        
+
                         (*p_inputs_grad)(isample, j) += delta_SafeKLdivTerm(j, i, index_j, over_dqj);
                     }
                 }
@@ -728,7 +728,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         else if( cost_function == "pascal" )
         {
             computePascalStatistics(*p_inputs);
-            
+
             if( momentum > 0.0 )
                 for (int isample = 0; isample < n_samples; isample++)
                 {
@@ -780,7 +780,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         else if( cost_function == "correlation")
         {
             computeCorrelationStatistics(*p_inputs);
-            
+
             if( momentum > 0.0 )
                 PLERROR( "not implemented yet");
             else
@@ -789,13 +789,13 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                     Vec dSTDi_dqi, dCROSSij_dqj;
                     dSTDi_dqi.resize( input_size );
                     dCROSSij_dqj.resize( input_size );
-                    
+
                     for (int i = 0; i < input_size; i++)
                     {
                         qi = (*p_inputs)(isample, i);
 
                         //!  dCROSSij_dqj[i] = d[ E(QiQj)-E(Qi)E(Qj) ]/d[qj(t)]
-                        //!                  = ( qi(t) - E(Qi) ) / n_samples 
+                        //!                  = ( qi(t) - E(Qi) ) / n_samples
                         //!
                         //!  dSTDi_dqi[i] = d[ STD(Qi) ]/d[qi(t)]
                         //!               = d[ sqrt( E(Qi^2) -E(Qi)^2 ]/d[qi(t)]
@@ -806,7 +806,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                         //!
                         dCROSSij_dqj[i] = ( qi - inputs_expectation[i] )*one_count;
                         dSTDi_dqi[i] = dCROSSij_dqj[i] / inputs_stds[i];
-                        
+
                         for (int j = 0; j < i; j++)
                         {
                             qj = (*p_inputs)(isample,j);
@@ -815,13 +815,13 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                             real dfunc_dCorr = deriv_func_correlation( inputs_correlations(i,j) );
                             real correlation_num = ( inputs_cross_quadratic_mean(i,j)
                                                      - inputs_expectation[i]*inputs_expectation[j] );
-                                  
-                            (*p_inputs_grad)(isample, i) += dfunc_dCorr * ( 
+
+                            (*p_inputs_grad)(isample, i) += dfunc_dCorr * (
                                                                     correlation_denum * dCROSSij_dqj[j]
                                                                   - correlation_num * dSTDi_dqi[i] * inputs_stds[j]
                                                                     ) / (correlation_denum * correlation_denum);
 
-                            (*p_inputs_grad)(isample, j) += dfunc_dCorr * ( 
+                            (*p_inputs_grad)(isample, j) += dfunc_dCorr * (
                                                                     correlation_denum * dCROSSij_dqj[i]
                                                                   - correlation_num * dSTDi_dqi[j] * inputs_stds[i]
                                                                     ) / (correlation_denum * correlation_denum);
@@ -853,9 +853,9 @@ void LayerCostModule::computePascalStatistics(const Mat& inputs)
     int n_samples = inputs.length();
     one_count = 1. / (real)n_samples;
     Vec input;
-    
-    inputs_expectation.clear(); 
-    inputs_cross_quadratic_mean.clear(); 
+
+    inputs_expectation.clear();
+    inputs_cross_quadratic_mean.clear();
 
     for (int isample = 0; isample < n_samples; isample++)
     {
@@ -867,7 +867,7 @@ void LayerCostModule::computePascalStatistics(const Mat& inputs)
                  inputs_cross_quadratic_mean(i,j) += input[i] * input[j];
         }
     }
-    
+
     for (int i = 0; i < input_size; i++)
     {
         inputs_expectation[i] *= one_count;
@@ -912,9 +912,9 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs)
     int n_samples = inputs.length();
     one_count = 1. / (real)n_samples;
     Vec input;
-    
+
     inputs_expectation.clear();
-    inputs_cross_quadratic_mean.clear(); 
+    inputs_cross_quadratic_mean.clear();
     inputs_correlations.clear();
 
     for (int isample = 0; isample < n_samples; isample++)
@@ -928,7 +928,7 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs)
                  inputs_cross_quadratic_mean(i,j) += input[i] * input[j];
         }
     }
-    
+
     for (int i = 0; i < input_size; i++)
     {
         //! Normalization
@@ -951,7 +951,7 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs)
         }
     }
     //! Be careful: 'inputs_correlations' matrix is only computed
-    //!  on the triangle subpart 'i' > 'j' 
+    //!  on the triangle subpart 'i' > 'j'
     //!  ('i'/'j': first/second argument)
 
     if(  during_training )
@@ -985,7 +985,7 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
     real grad_update = 0.0;
 
     real Ni_ki = inputs_histo(i,index_i);
-    real Ni_ki_shift1 = inputs_histo(i,index_i+1);            
+    real Ni_ki_shift1 = inputs_histo(i,index_i+1);
     real Nj_ki        = inputs_histo(j,index_i);
     real Nj_ki_shift1 = inputs_histo(j,index_i+1);
 
@@ -1009,7 +1009,7 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
     {
         // removing the term of the sum that will be modified
         grad_update -= KLdivTerm( Ni_ki, Nj_ki ) *over_dq;
-                                                               
+
         if( fast_exact_is_equal(Ni_ki, one_count) )
         {
             differ_count_j_after = Nj_ki;
@@ -1018,19 +1018,19 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
         else
             // adding the term of the sum with its modified value
             grad_update += KLdivTerm( Ni_ki-one_count, Nj_ki )
-	                   *over_dq;
+                           *over_dq;
 
         if( !fast_exact_is_equal(Nj_ki_shift1,0.0) )
         {
             // adding the term of the sum with its modified value
             grad_update += KLdivTerm( Ni_ki_shift1+one_count, Nj_ki_shift1+differ_count_j_after )
-	                  *(real)(1+n_differ_j_after)*over_dq ;
+                          *(real)(1+n_differ_j_after)*over_dq ;
 
             if( !fast_exact_is_equal(Ni_ki_shift1, 0.0) ) // "cas ou on regroupe avec le dernier";
             {
                 // removing the term of the sum that will be modified
                 grad_update -= KLdivTerm( Ni_ki_shift1, Nj_ki_shift1 )
-		               *over_dq;                
+                               *over_dq;
             }
             else
             {
@@ -1048,15 +1048,17 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
                 if( ki < histo_size )
                 {
                     grad_update -= KLdivTerm( inputs_histo( i, ki ), differ_count_j_before )
-		                   *(real)(1+n_differ_j_before)*over_dq;
+                                   *(real)(1+n_differ_j_before)*over_dq;
 
-                    if( differ_count_j_before > Nj_ki_shift1 )                
+                    if( differ_count_j_before > Nj_ki_shift1 )
                         grad_update += KLdivTerm( inputs_histo( i, ki ), differ_count_j_before - Nj_ki_shift1 )
-			               *(real)(n_differ_j_before)*over_dq;
+                                       *(real)(n_differ_j_before)*over_dq;
                         // pb avec differ_count_j_after plus haut??? semble pas
                 }
                 else
-                    "cas ou on regroupe avec le dernier (easy)";
+                {
+                    // cas ou on regroupe avec le dernier (easy)
+                }
             }
         }
         else
@@ -1081,14 +1083,16 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
             if( kj < histo_size )
             {
                 grad_update += KLdivTerm( differ_count_i_after, inputs_histo( j, kj ) )
-		               *(real)(1+n_differ_i_after)*over_dq;
+                               *(real)(1+n_differ_i_after)*over_dq;
 
                 if( differ_count_i_before > 0 )
                     grad_update -= KLdivTerm( differ_count_i_before, inputs_histo( j, kj ) )
-		                   *(real)(1+n_differ_i_before)*over_dq;
+                                   *(real)(1+n_differ_i_before)*over_dq;
             }
             else
-                "cas ou on regroupe avec le dernier";   
+            {
+                // cas ou on regroupe avec le dernier
+            }
         }
     }
     return grad_update*over_dq;
@@ -1099,25 +1103,25 @@ real LayerCostModule::delta_SafeKLdivTerm(int i, int j, int index_i, real over_d
     //PLASSERT( over_dq > 0.0 )
 
     real grad_update = 0.0;
-                    
+
     real Ni_ki = inputs_histo(i,index_i);
     PLASSERT( !fast_exact_is_equal(Ni_ki, 0.0) ); // Verification:
                                                   // if inputs_histo is up to date,
                                                   // the input(isample,i) has been counted
     real Ni_ki_shift1 = inputs_histo(i,index_i+1);
-                    
+
     real Nj_ki        = inputs_histo(j,index_i);
     real Nj_ki_shift1 = inputs_histo(j,index_i+1);
 
 
         // removing the term of the sum that will be modified
         grad_update -= KLdivTerm( Ni_ki, Nj_ki );
-                                                               
+
         // adding the term of the sum with its modified value
         grad_update += KLdivTerm( Ni_ki-one_count, Nj_ki );
 
         grad_update += KLdivTerm( Ni_ki_shift1+one_count, Nj_ki_shift1 );
-        
+
         grad_update -= KLdivTerm( Ni_ki_shift1, Nj_ki_shift1 );
 
     return grad_update *over_dq;
@@ -1135,7 +1139,7 @@ real LayerCostModule::computeKLdiv()
             for (int i = 0; i < input_size; i++)
                 for (int j = 0; j < i; j++)
                 {
-                    // These variables are used in case one bin of 
+                    // These variables are used in case one bin of
                     // the histogram is empty for one unit
                     // and not for another one ( (Nj-Ni).log(Ni/Nj) = nan ).
                     // In such case, we ''differ'' the count for the next bin and so on.
@@ -1171,22 +1175,22 @@ real LayerCostModule::computeKLdiv()
                         }
                     }
                     if( differ_count_i > 0.0 )
-                    {   
-                        "cas ou on regroupe avec le dernier";   
+                    {
+                        // cas ou on regroupe avec le dernier
 //                        cost -= KLdivTerm(last_positive_Ni_k,last_positive_Nj_k)
 //                                  *(real)(1+last_n_differ) *HISTO_STEP;
 //                        cost += KLdivTerm(last_positive_Ni_k+differ_count_i,last_positive_Nj_k)
-//                                 *(real)(1+last_n_differ+n_differ) *HISTO_STEP; 
+//                                 *(real)(1+last_n_differ+n_differ) *HISTO_STEP;
                     }
-                     
+
                     else if ( differ_count_j > 0.0 )
                     {
-                        "cas ou on regroupe avec le dernier";
+                        // cas ou on regroupe avec le dernier
 //                        cost -= KLdivTerm(last_positive_Ni_k,last_positive_Nj_k)
 //                                 *(real)(1+last_n_differ) *HISTO_STEP;
 //                        cost += KLdivTerm(last_positive_Ni_k,last_positive_Nj_k+differ_count_j)
 //                                 *(real)(1+last_n_differ+n_differ) *HISTO_STEP;
-                    }    
+                    }
                 }
             // Normalization w.r.t. number of units
             return cost *norm_factor;
@@ -1197,8 +1201,8 @@ void LayerCostModule::computeHisto(const Mat& inputs)
     int n_samples = inputs.length();
     one_count = 1. / (real)n_samples;
     Vec input;
-    
-    inputs_histo.clear(); 
+
+    inputs_histo.clear();
     for (int isample = 0; isample < n_samples; isample++)
     {
         input = inputs(isample);
@@ -1214,7 +1218,7 @@ void LayerCostModule::computeSafeHisto(const Mat& inputs)
     int n_samples = inputs.length();
     one_count = 1. / (real)(n_samples+histo_size);
     Vec input;
-    
+
     inputs_histo.fill(one_count);
 
     for (int isample = 0; isample < n_samples; isample++)
@@ -1272,7 +1276,7 @@ void LayerCostModule::forget()
 
     inputs_expectation.clear();
     inputs_stds.clear();
-    
+
     inputs_correlations.clear();
     inputs_cross_quadratic_mean.clear();
     if( momentum > 0.0)
