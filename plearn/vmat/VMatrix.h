@@ -45,15 +45,15 @@
 
 //#include <cstdlib>
 #include <plearn/base/Object.h>
-#include <map>
 #include <plearn/base/PP.h>
 #include <plearn/math/TMat.h>
 #include <plearn/math/StatsCollector.h>
 #include "VMField.h"
 #include <plearn/dict/Dictionary.h>
 #include <plearn/math/TMat_maths.h>
-
 #include <plearn/io/PPath.h>
+
+#include <map>
 
 namespace PLearn {
 using namespace std;

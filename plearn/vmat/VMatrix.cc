@@ -38,8 +38,6 @@
  * $Id$
  ******************************************************* */
 
-#include <sstream>
-#include <iomanip>
 #include "VMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
