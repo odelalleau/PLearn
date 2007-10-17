@@ -54,6 +54,9 @@ using namespace std;
 // PRandom //
 /////////////
 PRandom::PRandom(int32_t seed):
+#ifdef BOUNDCHECK
+    samples_count(0),
+#endif
     exponential_distribution(0),
     normal_distribution(0),
     uniform_01(0),
@@ -66,6 +69,9 @@ PRandom::PRandom(int32_t seed):
 }
 
 PRandom::PRandom(const PRandom& rhs):
+#ifdef BOUNDCHECK
+    samples_count           (rhs.get_samples_count()),
+#endif
     rgen                    (*(rhs.get_rgen())),
     the_seed                (rhs.get_the_seed()),
     fixed_seed              (rhs.get_fixed_seed()),
@@ -86,6 +92,9 @@ PRandom::PRandom(const PRandom& rhs):
 
 PRandom PRandom::operator=(const PRandom& rhs)
 {
+#ifdef BOUNDCHECK
+    samples_count = rhs.get_samples_count();
+#endif
     rgen =          *(rhs.get_rgen());
     the_seed =      rhs.get_the_seed();
     fixed_seed =    rhs.get_fixed_seed();
@@ -206,6 +215,9 @@ PP<PRandom> PRandom::common(bool random_seed)
 ////////////////
 real PRandom::exp_sample() {
     ensure_exponential_distribution();
+#ifdef BOUNDCHECK
+    samples_count++;
+#endif
     return real((*exponential_distribution)(*uniform_01));
 }
 
@@ -255,6 +267,11 @@ void PRandom::fill_random_uniform(const Mat& dest, real min, real max)
 /////////////////
 real PRandom::gaussian_01() {
     ensure_normal_distribution();
+#ifdef BOUNDCHECK
+    // Drawing one Gaussian sample has the same effect on the underlying
+    // generator as drawing two uniform or exponential samples
+    samples_count += 2;
+#endif
     return real((*normal_distribution)(*uniform_01));
 }
 
@@ -304,6 +321,9 @@ void PRandom::manual_seed_(int32_t x)
     // Systematically construct the uniform_01 member, which is the basis for most
     // of the random operations.
     ensure_uniform_01();
+#ifdef BOUNDCHECK
+    samples_count = 0;
+#endif
 }
 
 ////////////////////////
@@ -359,6 +379,9 @@ void PRandom::time_seed_()
 // uniform_sample //
 ////////////////////
 real PRandom::uniform_sample() {
+#ifdef BOUNDCHECK
+    samples_count++;
+#endif
     return real((*uniform_01)());
 }
 
@@ -416,4 +439,3 @@ PRandom::~PRandom() {
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
-        

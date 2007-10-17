@@ -65,10 +65,15 @@ class PRandom: public Object
 {
 
 private:
-  
+
     typedef Object inherited;
 
 protected:
+
+#ifdef BOUNDCHECK
+    //! Number of samples drawn from the underlying generator.
+    int samples_count;
+#endif
 
     //! The underlying Boost random number generator used.
     boost::mt19937 rgen;
@@ -135,6 +140,9 @@ public:
     uint32_t get_the_seed()   const { return the_seed; }
     int32_t  get_fixed_seed() const { return fixed_seed; }
     int32_t  get_seed()       const { return seed_; }
+#ifdef BOUNDCHECK
+    int get_samples_count()   const { return samples_count; }
+#endif
 
 private:
 
@@ -358,7 +366,7 @@ TVec<T> PRandom::weightedShuffleElements(const TVec<T>& vec, const Vec& weights,
             w /= (1. - old_w); // New sum of weights is 1 minus what we took out
         }
     }
-    
+
     return r;
 }
 
