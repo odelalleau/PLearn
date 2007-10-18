@@ -822,7 +822,7 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_val = expectations[index];
-        pos_up_val = greedy_layers[index]->expectation;
+        pos_up_val << greedy_layers[index]->expectation;
         
         // down propagation, starting from a sample of layers[index+1]
         greedy_connections[index]->setAsUpInput( greedy_layers[index]->sample );
@@ -983,6 +983,7 @@ void StackedFocusedAutoassociatorsNet::computeRepresentation(const Vec& input,
     if(layer == 0)
     {
         representation.resize(input.length());
+        expectations[0] << input;
         representation << input;
         return;
     }
