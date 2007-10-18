@@ -242,6 +242,7 @@ if FILE == "":
     tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
     ### We need to remove the symbols "," as this cause trouble with bqtools
     tmp=re.sub( ',', '-', tmp )
+    tmp=truncate( tmp, 200)
     tmp+='_'+str(datetime.datetime.now()).replace(' ','_')
     dbi_param["log_dir"]=os.path.join("LOGS",tmp)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
