@@ -292,7 +292,7 @@ class Task:
             self.unique_id = get_new_sid('')#compation intense
             self.log_file = truncate( os.path.join(log_dir, self.unique_id +'_'+ formatted_command), 200) + ".log"
         else:
-            self.unique_id = formatted_command+'_'+str(datetime.datetime.now()).replace(' ','_')
+            self.unique_id = formatted_command[:200]+'_'+str(datetime.datetime.now()).replace(' ','_')
             self.log_file = os.path.join(log_dir, self.unique_id) + ".log"
 
         if self.add_unique_id:
