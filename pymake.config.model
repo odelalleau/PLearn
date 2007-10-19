@@ -93,7 +93,7 @@ if platform != 'win32':
 # Feel free to use it to adapt configuration to that platform.
 
 # (sys.byteorder does not exist in older versions of python)
-if platform=='linux-i386':
+if platform.startswith('linux-i386'):
     cpp_definitions += [ 'LINUX', 'LITTLEENDIAN' ]
 elif platform=='linux-ppc':
     cpp_definitions += [ 'LINUXPPC', 'BIGENDIAN' ]
@@ -101,7 +101,7 @@ elif platform=='linux-alpha':
     cpp_definitions += [ 'SPARC', 'BIGENDIAN' ]
 elif platform=='linux-ia64':
     cpp_definitions += [ 'LINUX', 'LITTLEENDIAN' ]
-elif platform=='linux-x86_64':
+elif platform.startswith('linux-x86_64'):
     cpp_definitions += [ 'LINUX', 'LITTLEENDIAN' ]
 elif platform=='sunos5' :
     cpp_definitions += [ 'SPARC', 'BIGENDIAN' ]

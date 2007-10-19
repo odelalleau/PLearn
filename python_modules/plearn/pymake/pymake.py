@@ -209,6 +209,9 @@ def cygwin_to_win_paths(paths):
     return result
 
 def get_platform():
+    pymake_osarch = os.getenv('PYMAKE_OSARCH')
+    if pymake_osarch:
+        return pymake_osarch
     platform = sys.platform
     if platform=='linux2':
         linux_type = os.uname()[4]
