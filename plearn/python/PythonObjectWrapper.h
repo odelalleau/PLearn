@@ -574,7 +574,7 @@ template<> struct ConvertToPyObject<Mat>
 //! and then bridge to using numarray.  Fieldnames and other metainfos
 //! are lost when converting to Python.
 //!
-//! @TODO  Must provide a complete Python wrapper over VMatrix objects
+//! @todo  Must provide a complete Python wrapper over VMatrix objects
 template<> struct ConvertToPyObject<PP<VMatrix> >
 { static PyObject* newPyObject(const PP<VMatrix>& vm); };
 
