@@ -39,8 +39,7 @@
 #ifndef LayerCostModule_INC
 #define LayerCostModule_INC
 
-#include <plearn_learners/online/OnlineLearningModule.h>
-#include <plearn/vmat/VMat.h>
+#include <plearn_learners/online/CostModule.h>
 
 #include <map>
 
@@ -49,20 +48,28 @@ namespace PLearn {
 /**
  * Computes a cost function for a (hidden) representation. Backpropagates it.
  */
-class LayerCostModule : public OnlineLearningModule
+class LayerCostModule : public CostModule
 {
-    typedef OnlineLearningModule inherited;
+    typedef CostModule inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
+    //! Generic name of the cost function
     string cost_function;
 
+    //! Maximum number of stages we want to propagate the gradient    
+    int nstages_max;
+
+    //! Parameter in pascal's cost function
+    real alpha;
+    
+    //! Parameter to compute moving means in non stochastic cost functions
+    real momentum;
+
+    //! For non stochastic KL divergence cost function
     int histo_size;
 
-    real alpha;
-
-    real momentum;
 
     //#####  Public Learnt Options  ###########################################
 
@@ -79,6 +86,12 @@ public:
     Mat inputs_correlations; //! only for 'correlation' cost function
     Mat inputs_cross_quadratic_mean;
 
+    //! Variables for (non stochastic) Pascal's/correlation function with momentum
+    //! -------------------------------------------------------------
+    //! Statistics on outputs (estimated empiricially on the data)    
+    Vec inputs_expectation_trainMemory;
+    Mat inputs_cross_quadratic_mean_trainMemory;
+
     //! The generic name of the cost function
     string cost_function_completename;
 
@@ -90,38 +103,47 @@ public:
 
     //! given the input and target, compute the cost
     virtual void fprop(const Vec& input, real& cost) const;
-    virtual void fprop(const Mat& inputs, Mat& costs);
-    //! Overridden.
+    virtual void fprop(const Mat& inputs, Mat& costs) const;
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs) const;
     virtual void fprop(const TVec<Mat*>& ports_value);
 
     //! backpropagate the derivative w.r.t. activation
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+                             const Vec& costs, Mat& input_gradients, bool accumulate=false);
+    virtual void bpropUpdate(const Mat& inputs, Mat& inputs_grad);
     virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
                                 const TVec<Mat*>& ports_gradient);
 
     //! Some auxiliary function to deal with empirical histograms
     virtual void computeHisto(const Mat& inputs);
-    virtual void computeSafeHisto(const Mat& inputs);
+    virtual void computeHisto(const Mat& inputs, Mat& histo) const;
     virtual real delta_KLdivTerm(int i, int j, int index_i, real over_dq);
+    virtual real KLdivTerm(real pi, real pj) const;
+    virtual real computeKLdiv(bool store_in_cache);
+    virtual real computeKLdiv(const Mat& histo) const;
+    virtual int histo_index(real q) const;
+    virtual real dq(real q) const;
+    //! Auxiliary functions for kl_div_simple cost function
+    virtual void computeSafeHisto(const Mat& inputs);
+    virtual void computeSafeHisto(const Mat& inputs, Mat& histo) const;
     virtual real delta_SafeKLdivTerm(int i, int j, int index_i, real over_dq);
-    virtual real KLdivTerm(real pi, real pj);
-    virtual real computeKLdiv();
-    virtual int histo_index(real q);
-    virtual real dq(real q);
 
     //! Auxiliary function for the pascal's cost function
     virtual void computePascalStatistics(const Mat& inputs);
-    virtual string func_pascal_prefix();
-    virtual real   func_pascal(real correlation);
-    virtual real   deriv_func_pascal(real correlation);
+    virtual void computePascalStatistics(const Mat& inputs,
+                                         Vec& expectation, Mat& cross_quadratic_mean) const;
+    virtual string func_pascal_prefix() const;
+    virtual real   func_pascal(real correlation) const;
+    virtual real   deriv_func_pascal(real correlation) const;
 
     //! Auxiliary function for the correlation's cost function
     virtual void computeCorrelationStatistics(const Mat& inputs);
-    virtual string func_correlation_prefix();
-    virtual real   func_correlation(real correlation);
-    virtual real   deriv_func_correlation(real correlation);
-
-    //! Overridden to do nothing (in particular, no warning).
-    virtual void setLearningRate(real dynamic_learning_rate) {}
+    virtual void computeCorrelationStatistics(const Mat& inputs,
+                                              Vec& expectation, Mat& cross_quadratic_mean,
+                                              Vec& stds, Mat& correlations) const;
+    virtual string func_correlation_prefix() const;
+    virtual real   func_correlation(real correlation) const;
+    virtual real   deriv_func_correlation(real correlation) const;
 
     //! Returns all ports in a RBMModule.
     virtual const TVec<string>& getPorts();
@@ -133,6 +155,12 @@ public:
     //! a given port.
     //! If 'port' does not exist, -1 is returned.
     virtual int getPortIndex(const string& port);
+
+    //! Overridden to do nothing (in particular, no warning).
+    virtual void setLearningRate(real dynamic_learning_rate) {}
+
+    //! Indicates the name of the computed costs
+    virtual TVec<string> name();
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -151,25 +179,29 @@ public:
 
 protected:
 
-    //! Does stochastic gradient makes sense with our cost function?
+    //! Number of stage the BPropAccUpdate function was called
+    int stage;
+
+    //! Does stochastic gradient (without memory of the past)
+    //! makes sense with our cost function?
     bool is_cost_function_stochastic;
 
     //! Normalizing factor applied to the cost function
     //! to take into acount the number of weights
     real norm_factor;
 
+    real average_deriv;
+
     //! Variables for (non stochastic) KL Div cost function
     //! ---------------------------------------------------
     //! Range of a histogram's bin ( HISTO_STEP = 1/histo_size )
     real HISTO_STEP;
     //! the weight of a sample within a batch (usually, 1/n_samples)
-    real one_count;
 
-    //! Variables for (non stochastic) Pascal's/correlation function
-    //! -------------------------------------------------------------
-    //! Statistics on outputs (estimated empiricially on the data)
-    Vec inputs_expectation_trainMemory;
-    Mat inputs_cross_quadratic_mean_trainMemory;
+    mutable real one_count; 
+    TVec< TVec< Vec > > cache_differ_count_i;
+    TVec< TVec< Vec > > cache_differ_count_j;
+    TVec< TVec< Vec > > cache_n_differ;
 
     //! Map from a port name to its index in the 'ports' vector.
     map<string, int> portname_to_index;
