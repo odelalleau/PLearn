@@ -96,8 +96,6 @@ private:
   int          train_inputsize;
   int          train_targetsize;
   int          train_weightsize;
-  int          train_row;
-  int          train_col;
   Vec          train_input;
   TVec<string> train_field_names;
   TVec<int>    train_var_missing;
@@ -105,13 +103,8 @@ private:
   int          source_width;
   int          source_inputsize;
   int          source_targetsize;
-  int          source_weightsize;
   Vec          source_input;
   TVec<int>    source_rel_pos;
-  int          new_width;
-  int          new_inputsize;
-  int          new_col;
-  TVec<string> new_field_names;
 
           void         build_();
           void         buildNewRecordFormat();

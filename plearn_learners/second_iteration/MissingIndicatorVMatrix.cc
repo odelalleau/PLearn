@@ -105,8 +105,8 @@ void MissingIndicatorVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void MissingIndicatorVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
 {
     source->getExample(i, source_input, target, weight);
-    new_col = 0;
-    for (int source_col = 0; source_col < source_inputsize; source_col++)
+    for (int source_col = 0, new_col = 0; source_col < source_inputsize;
+	 source_col++)
     {
       input[new_col] = source_input[source_col];
       new_col += 1;
@@ -197,36 +197,35 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
     if(train_inputsize < 1) PLERROR("In MissingIndicatorVMatrix::inputsize of the train vmat must be supplied, got : %i", train_inputsize);
     source_width = source->width();
     source_targetsize = source->targetsize();
-    source_weightsize = source->weightsize();
     source_inputsize = source->inputsize();
     if (train_width != source_width) PLERROR("In MissingIndicatorVMatrix::train set and source width must agree, got : %i, %i", train_width, source_width);
     if (train_targetsize != source_targetsize) PLERROR("In MissingIndicatorVMatrix::train set and source targetsize must agree, got : %i, %i", train_targetsize, source_targetsize);
-    if (train_weightsize != source_weightsize) PLERROR("In MissingIndicatorVMatrix::train set and source weightsize must agree, got : %i, %i", train_weightsize, source_weightsize);
+    if (train_weightsize != source->weightsize()) PLERROR("In MissingIndicatorVMatrix::train set and source weightsize must agree, got : %i, %i", train_weightsize, source->weightsize());
     if (train_inputsize != source_inputsize) PLERROR("In MissingIndicatorVMatrix::train set and source inputsize must agree, got : %i, %i", train_inputsize, source_inputsize);
     train_input.resize(train_width);
     train_var_missing.resize(train_inputsize);
     train_var_missing.clear();
-    for (train_row = 0; train_row < train_length; train_row++)
+    for (int train_row = 0; train_row < train_length; train_row++)
     {
         train_set->getRow(train_row, train_input);
-        for (train_col = 0; train_col < train_inputsize; train_col++)
+        for (int train_col = 0; train_col < train_inputsize; train_col++)
         {
             if (is_missing(train_input[train_col])) train_var_missing[train_col] = 1;
         }
     }
-    new_width = train_width;
-    new_inputsize = train_inputsize;
-    for (train_col = 0; train_col < train_inputsize; train_col++)
+    int new_width = train_width;
+    int new_inputsize = train_inputsize;
+    for (int train_col = 0; train_col < train_inputsize; train_col++)
     {
         new_width += train_var_missing[train_col];
         new_inputsize += train_var_missing[train_col];
     }
     train_field_names.resize(train_width);
     source_rel_pos.resize(new_width);
-    new_field_names.resize(new_width);
+    TVec<string> new_field_names(new_width);
     train_field_names = train_set->fieldNames();
-    new_col = 0;
-    for (train_col = 0; train_col < train_inputsize; train_col++)
+    int new_col = 0;
+    for (int train_col = 0; train_col < train_inputsize; train_col++)
     {
       new_field_names[new_col] = train_field_names[train_col];
       source_rel_pos[new_col] = train_col;
@@ -238,7 +237,7 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
           new_col += 1;
       }
     }
-    for (train_col = train_inputsize; train_col < train_width; train_col++)
+    for (int train_col = train_inputsize; train_col < train_width; train_col++)
     {
       new_field_names[new_col] = train_field_names[train_col];
       source_rel_pos[new_col] = train_col;
