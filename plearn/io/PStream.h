@@ -1523,7 +1523,7 @@ template <class T> inline PStream &
 operator<<(PStream &out, const set<T> &v)
 { writeSet(out, v); return out; }
 
-/// @deprected Use openFile instead.
+/// @deprecated Use openFile instead.
 class PIFStream: public PStream
 {
 public:
