@@ -492,7 +492,7 @@ void DeepBeliefNet::build_classification_cost()
 {
     MODULE_LOG << "build_classification_cost() called" << endl;
 
-    PLASSERT_MSG(batch_size > 1, "DeepBeliefNet::build_classification_cost - "
+    PLASSERT_MSG(batch_size == 1, "DeepBeliefNet::build_classification_cost - "
             "This method has not been verified yet for minibatch "
             "compatibility");
 
@@ -897,7 +897,7 @@ void DeepBeliefNet::train()
         int end_stage = min(cumulative_schedule[n_layers-1], nstages);
         if( use_classification_cost && (stage < end_stage) )
         {
-            PLASSERT_MSG(batch_size > 1, "'use_classification_cost' code not "
+            PLASSERT_MSG(batch_size == 1, "'use_classification_cost' code not "
                     "verified with mini-batch learning yet");
 
             MODULE_LOG << "Training the classification module" << endl;
@@ -1644,7 +1644,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 {
     real lr;
     PLASSERT( joint_layer );
-    PLASSERT_MSG(batch_size > 1, "Not implemented for mini-batches");
+    PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
 
     layers[0]->expectation << input;
     for( int i=0 ; i<n_layers-2 ; i++ )
