@@ -18,7 +18,7 @@ using namespace PLearn;
 using namespace std;
 
 /**
-@descr : calculates the nodekernel...note that more the similarity more the nodekernel.its computing the exp(-distance).distance is computed taking into account the deviation and an additional scaling factor sigma
+calculates the nodekernel...note that more the similarity more the nodekernel.its computing the exp(-distance).distance is computed taking into account the deviation and an additional scaling factor sigma
 @param : x : property matrix of first molecule
 @param : y : property matrix of the model (template)
 @param : sigma : additional scaling factor. 
@@ -69,10 +69,11 @@ void static sortedIndexList(const Vec& tosort,vector<int>& slist){
 }
 
 /**
+given a node kernel it picks the top n node kernels in each row and column . only these weights need to considered as all other weights will probably come out to be zero anyway. this way we can reduce the number of variables in our optimization problem 
 @param : nkmat : node kernel matrix
 @param : weights : this is a boolean matrix which will contain which weights are to be considered
 @param : n : minimum number of weights to be considered in a row or column
-@descr : given a node kernel it picks the top n node kernels in each row and column . only these weights need to considered as all other weights will probably come out to be zero anyway. this way we can reduce the number of variables in our optimization problem */
+*/
 void static findRelevantWeights(const Mat& nkmat,vector< vector<bool> >& weights , int n){
 	const int nx = nkmat.nrows();
 	const int ny = nkmat.ncols();
@@ -154,6 +155,7 @@ void static calculateEuclDist(const Mat& coords,Mat& dist){
 
 
 /**
+see documenation about the alignment procedure. this is the function being used to align
 @param : xmat : coordinates of molecule x (to be transformed)
 @param : ymat : coordinates of molecule y
 @param : wij : weight matrix
@@ -161,7 +163,7 @@ void static calculateEuclDist(const Mat& coords,Mat& dist){
 @param : xm : weighted centroid of x
 @param : ym : weighted centroid of y
 @return : the error which gives an estimate of how well the molecules were aligned 
-@descr : see documenation about the alignment procedure. this is the function being used to align*/
+*/
 real static calcTransformation4(const Mat &xmat,const Mat& ymat,const Mat& wij,const Mat &nk,Mat& rot,Vec& xm,Vec& ym){
 	int newn = xmat.nrows()+ymat.nrows();
 	Mat xmat2(newn,xmat.ncols());
@@ -211,7 +213,7 @@ real static calcTransformation4(const Mat &xmat,const Mat& ymat,const Mat& wij,c
 
 
 /**
-@descr : extension of calcLinearWeights ... uses fixed sigma and automatically selects suitable thresh from a fixed list. this is the version used for all calculations.
+extension of calcLinearWeights ... uses fixed sigma and automatically selects suitable thresh from a fixed list. this is the version used for all calculations.
 @see : calcLinearWeights */
 void static autoThreshLP(const Mat& dist1,const Mat& dist2,const Mat& nk,const vector< pair<int,int> >& wlist,const vector< vector<bool> >& wfilter,Mat& wm){
 	int nterms = 0;
@@ -340,11 +342,11 @@ void static autoThreshLP(const Mat& dist1,const Mat& dist2,const Mat& nk,const v
 }
 
 /**
+given the molecule names , reads the vrml files and the properties and passes on the appropriate data to autoThreshLP. this is the front end that is used.
 @param : name1 : name of molecule to be aligned
 @param : name2 : name of molecule with which to align
 @param : wm : weight matrix
 @param : isweighted : take into account deviations ?
-@descr : given the molecule names , reads the vrml files and the properties and passes on the appropriate data to autoThreshLP. this is the front end that is used.
 @see : autoThreshLP */
 void static performLP(PMolecule name1,MoleculeTemplate name2,Mat& wm,bool isweighted){
 try{	
