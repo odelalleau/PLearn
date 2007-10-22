@@ -36,7 +36,6 @@
 
 /*! \file DeepBeliefNet.h */
 
-
 #ifndef DeepBeliefNet_INC
 #define DeepBeliefNet_INC
 
@@ -52,6 +51,7 @@
 #include <plearn/sys/Profiler.h>
 
 namespace PLearn {
+using namespace std;
 
 /**
  * Neural net, learned layer-wise in a greedy fashion.
@@ -221,10 +221,15 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
+    virtual void computeOutputsAndCosts(const Mat& inputs, const Mat& targets, 
+                                        Mat& outputs, Mat& costs) const;
+
     //! Computes the costs from already computed output.
     // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
+    virtual void computeClassifAndFinalCostsFromOutputs(const Mat& inputs, const Mat& outputs,
+                                                        const Mat& targets, Mat& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
@@ -403,6 +408,9 @@ protected:
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
 private:
     //#####  Private Member Functions  ########################################

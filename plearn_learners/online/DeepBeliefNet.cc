@@ -38,7 +38,6 @@
 
 
 #define PL_LOG_MODULE_NAME "DeepBeliefNet"
-
 #include "DeepBeliefNet.h"
 #include <plearn/io/pl_log.h>
 
@@ -66,7 +65,6 @@ DeepBeliefNet::DeepBeliefNet() :
     n_classes( -1 ),
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
-    n_layers( 0 ),
     i_output_layer( -1 ),
     online ( false ),
     background_gibbs_update_ratio(0),
@@ -86,6 +84,7 @@ DeepBeliefNet::DeepBeliefNet() :
     cumulative_testing_time( 0 )
 {
     random_gen = new PRandom();
+    n_layers = 0;
 }
 
 ////////////////////
@@ -274,19 +273,6 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
     declareOption(ol, "cumulative_testing_time", &DeepBeliefNet::cumulative_testing_time,
                   OptionBase::learntoption | OptionBase::nosave,
                   "Cumulative testing time since age=0, in seconds.\n");
-
-
-    /*
-    declareOption(ol, "n_final_costs", &DeepBeliefNet::n_final_costs,
-                  OptionBase::learntoption,
-                  "Number of final costs");
-     */
-
-    /*
-    declareOption(ol, "", &DeepBeliefNet::,
-                  OptionBase::learntoption,
-                  "");
-     */
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -506,7 +492,7 @@ void DeepBeliefNet::build_classification_cost()
 {
     MODULE_LOG << "build_classification_cost() called" << endl;
 
-    PLASSERT_MSG(batch_size == 1, "DeepBeliefNet::build_classification_cost - "
+    PLASSERT_MSG(batch_size > 1, "DeepBeliefNet::build_classification_cost - "
             "This method has not been verified yet for minibatch "
             "compatibility");
 
@@ -594,6 +580,30 @@ void DeepBeliefNet::build_final_cost()
             final_module->random_gen = random_gen;
             final_module->forget();
         }
+
+        // check target size and final_cost->input_size
+        if( n_classes == 0 ) // regression
+        {
+            if( final_cost->input_size != targetsize() )
+                PLERROR("DeepBeliefNet::build_final_cost() - "
+                    "final_cost->input_size (%d) != targetsize() (%d), "
+                    "although we are doing regression (n_classes == 0).\n",
+                    final_cost->input_size, targetsize());
+        }
+        else
+        {
+            if( final_cost->input_size != n_classes )
+                PLERROR("DeepBeliefNet::build_final_cost() - "
+                    "final_cost->input_size (%d) != n_classes (%d), "
+                    "although we are doing classification (n_classes != 0).\n",
+                    final_cost->input_size, n_classes);
+
+            if( targetsize_ >= 0 && targetsize() != 1 )
+                PLERROR("DeepBeliefNet::build_final_cost() - "
+                    "targetsize() (%d) != 1, "
+                    "although we are doing classification (n_classes != 0).\n",
+                    targetsize());
+        }
     }
     else
     {
@@ -604,29 +614,6 @@ void DeepBeliefNet::build_final_cost()
                     final_cost->input_size);
     }
 
-    // check target size and final_cost->input_size
-    if( n_classes == 0 ) // regression
-    {
-        if( final_cost->input_size != targetsize() )
-            PLERROR("DeepBeliefNet::build_final_cost() - "
-                    "final_cost->input_size (%d) != targetsize() (%d), "
-                    "although we are doing regression (n_classes == 0).\n",
-                    final_cost->input_size, targetsize());
-    }
-    else
-    {
-        if( final_cost->input_size != n_classes )
-            PLERROR("DeepBeliefNet::build_final_cost() - "
-                    "final_cost->input_size (%d) != n_classes (%d), "
-                    "although we are doing classification (n_classes != 0).\n",
-                    final_cost->input_size, n_classes);
-
-        if( targetsize_ >= 0 && targetsize() != 1 )
-            PLERROR("DeepBeliefNet::build_final_cost() - "
-                    "targetsize() (%d) != 1, "
-                    "although we are doing classification (n_classes != 0).\n",
-                    targetsize());
-    }
 
     // Share random_gen with final_cost, unless it already has one
     if( !(final_cost->random_gen) )
@@ -910,7 +897,7 @@ void DeepBeliefNet::train()
         int end_stage = min(cumulative_schedule[n_layers-1], nstages);
         if( use_classification_cost && (stage < end_stage) )
         {
-            PLASSERT_MSG(batch_size == 1, "'use_classification_cost' code not "
+            PLASSERT_MSG(batch_size > 1, "'use_classification_cost' code not "
                     "verified with mini-batch learning yet");
 
             MODULE_LOG << "Training the classification module" << endl;
@@ -949,7 +936,6 @@ void DeepBeliefNet::train()
                     pb->update( stage - previous_stage + 1 );
             }
         }
-
 
         /***** fine-tuning by gradient descent *****/
         end_stage = min(cumulative_schedule[n_layers], nstages);
@@ -1474,11 +1460,11 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                 save_layer_activations.resize(source_act.length(),
                                               source_act.width());
                 save_layer_activations << source_act;
-                const Mat& source_exp = layers[i]->getExpectations();
-                save_layer_expectations.resize(source_exp.length(),
-                                               source_exp.width());
-                save_layer_expectations << source_exp;
             }
+            const Mat& source_exp = layers[i]->getExpectations();
+            save_layer_expectations.resize(source_exp.length(),
+                                           source_exp.width());
+            save_layer_expectations << source_exp;
 
             if (reconstruct_layerwise)
             {
@@ -1497,8 +1483,9 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
             if( i > 0 )
             {
                 layers[i]->activations << save_layer_activations;
-                layers[i]->getExpectations() << save_layer_expectations;
             }
+            layers[i]->getExpectations() << save_layer_expectations;
+
         }
     }
 
@@ -1657,7 +1644,7 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 {
     real lr;
     PLASSERT( joint_layer );
-    PLASSERT_MSG(batch_size == 1, "Not implemented for mini-batches");
+    PLASSERT_MSG(batch_size > 1, "Not implemented for mini-batches");
 
     layers[0]->expectation << input;
     for( int i=0 ; i<n_layers-2 ; i++ )
@@ -1956,7 +1943,7 @@ void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
     // do it AFTER the bprop to avoid interfering with activations used in bprop
     // (and do not worry that the weights have changed a bit). This is incoherent
     // with the current implementation in the greedy stage.
-    if (reconstruct_layerwise)
+    if ( reconstruct_layerwise )
     {
         Mat rc = train_costs.column(reconstruction_cost_index);
         rc.clear();
@@ -2232,6 +2219,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
     }
 }
 
+
 void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
@@ -2248,8 +2236,7 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                 target, costs[nll_cost_index] );
 
         costs[class_cost_index] =
-            (argmax(output.subVec(0, n_classes)) == (int) round(target[0]))? 0
-            : 1;
+            (argmax(output.subVec(0, n_classes)) == (int) round(target[0]))? 0 : 1;
     }
 
     if( final_cost )
@@ -2281,6 +2268,82 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
         costs.subVec(reconstruction_cost_index, reconstruction_costs.length())
             << reconstruction_costs;
 
+}
+
+//! This function is usefull when the NLL CostModule AND/OR the final_cost Module
+//! are more efficient with batch computation (or need to be computed on a bunch of examples, as LayerCostModule)
+void DeepBeliefNet::computeOutputsAndCosts(const Mat& inputs, const Mat& targets, 
+                                      Mat& outputs, Mat& costs) const
+{
+    int nsamples = inputs.length();
+    PLASSERT( targets.length() == nsamples );
+    outputs.resize( nsamples, outputsize() );
+    costs.resize( nsamples, cost_names.length() );
+    costs.fill( MISSING_VALUE );
+    for (int isample = 0; isample < nsamples; isample++ )
+    {
+        Vec in_i = inputs(isample);
+        Vec out_i = outputs(isample); 
+	computeOutput(in_i, out_i);
+        if( !partial_costs.isEmpty() )
+        {
+            Vec pcosts;
+            for( int i=0 ; i<n_layers-1 ; i++ )
+                // propagate into local cost associated to output of layer i+1
+                if( partial_costs[ i ] )
+                {
+                    partial_costs[ i ]->fprop( layers[ i+1 ]->expectation,
+                                               targets(isample), pcosts);
+
+                    costs(isample).subVec(partial_costs_indices[i], pcosts.length())
+                        << pcosts;
+                }
+        }
+	if (reconstruct_layerwise)
+           costs(isample).subVec(reconstruction_cost_index, reconstruction_costs.length())
+                << reconstruction_costs;
+    }
+    computeClassifAndFinalCostsFromOutputs(inputs, outputs, targets, costs);
+}
+
+void DeepBeliefNet::computeClassifAndFinalCostsFromOutputs(const Mat& inputs, const Mat& outputs,
+                                           const Mat& targets, Mat& costs) const
+{
+    // Compute the costs from *already* computed output.
+
+    int nsamples = inputs.length();
+    PLASSERT( nsamples > 0 );
+    PLASSERT( targets.length() == nsamples );
+    PLASSERT( targets.width() == 1 );
+    PLASSERT( outputs.length() == nsamples );
+    PLASSERT( costs.length() == nsamples );
+
+
+    if( use_classification_cost )
+    {
+        Vec pcosts;
+        classification_cost->CostModule::fprop( outputs.subMat(0, 0, nsamples, n_classes),
+                                                targets, pcosts );
+        costs.subMat( 0, nll_cost_index, nsamples, 1) << pcosts;
+
+        for (int isample = 0; isample < nsamples; isample++ )
+	    costs(isample,class_cost_index) =
+                (argmax(outputs(isample).subVec(0, n_classes)) == (int) round(targets(isample,0))) ? 0 : 1;
+    }
+
+    if( final_cost )
+    {
+        int init = use_classification_cost ? n_classes : 0;
+        final_cost->fprop( outputs.subMat(0, init, nsamples, outputs(0).size() - init ),
+                           targets, final_cost_values );
+
+        costs.subMat(0, final_cost_index, nsamples, final_cost_values.width())
+            << final_cost_values;
+    }
+
+    if( !partial_costs.isEmpty() )
+        PLERROR("cannot compute partial costs in DeepBeliefNet::computeCostsFromOutputs(Mat&, Mat&, Mat&, Mat&)"
+	        "(expectations are not up to date in the batch version)");
 }
 
 void DeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
@@ -2374,7 +2437,6 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
     if( final_cost )
         final_cost->setLearningRate( the_learning_rate );
 }
-
 
 } // end of namespace PLearn
 
