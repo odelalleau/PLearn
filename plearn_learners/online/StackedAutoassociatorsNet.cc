@@ -637,6 +637,9 @@ void StackedAutoassociatorsNet::forget()
     */
     inherited::forget();
 
+    for( int i=0 ; i<n_layers ; i++ )
+        layers[i]->forget();
+    
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         connections[i]->forget();
@@ -657,6 +660,12 @@ void StackedAutoassociatorsNet::forget()
             correlation_connections[i]->forget();
             correlation_layers[i]->forget();
         }        
+    }
+
+    if(direct_connections.length() != 0)
+    {        
+        for( int i=0 ; i<n_layers-1 ; i++)
+            direct_connections[i]->forget();
     }
 
     stage = 0;
@@ -776,7 +785,6 @@ void StackedAutoassociatorsNet::train()
                     if(partial_costs.length() != 0 && partial_costs[i])
                         partial_costs[i]->setLearningRate( lr );
                 }
-
                 sample = *this_stage % nsamples;
                 train_set->getExample(sample, input, target, weight);
                 greedyStep( input, target, i, train_costs );
@@ -1662,8 +1670,8 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
     }
     layers[n_layers-1]->setLearningRate( the_learning_rate );
 
-    final_cost->setLearningRate( fine_tuning_learning_rate );
-    final_module->setLearningRate( fine_tuning_learning_rate );
+    final_cost->setLearningRate( the_learning_rate );
+    final_module->setLearningRate( the_learning_rate );
 }
 
 

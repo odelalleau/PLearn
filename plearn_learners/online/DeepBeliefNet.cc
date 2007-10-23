@@ -706,6 +706,9 @@ void DeepBeliefNet::forget()
 {
     inherited::forget();
 
+    for( int i=0 ; i<n_layers ; i++ )
+        layers[i]->forget();
+
     for( int i=0 ; i<n_layers-1 ; i++ )
         connections[i]->forget();
 
