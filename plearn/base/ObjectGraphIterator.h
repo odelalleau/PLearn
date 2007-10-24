@@ -298,7 +298,6 @@ protected:
 //#####  Broadcast  ###########################################################
 
 /**
- *  @function memfun_broadcast
  *  @brief    Call a specific member function across a graph of \c Objects.
  *
  *  The global function memfun_broadcast is used to call a member function on a
@@ -424,7 +423,6 @@ void memfun_broadcast(Object* o, U (T::*func)(V,W,X),
 
 
 /**
- *  @function memfun_broadcast_optname
  *  @brief    Call a specific member function across a graph of \c Objects with
  *            the option name as argument.
  *
@@ -531,7 +529,6 @@ void memfun_broadcast_optname(Object* o, U (T::*func)(V,W,X),
 
 
 /**
- *  @function setoption_broadcast
  *  @brief    Broadcast a call to setOption only for specific classes
  *
  *  This function recursively calls Object::setOption (with a constant

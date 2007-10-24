@@ -851,7 +851,6 @@ public:
     //#####  Low-Level PyObject Creation  #####################################
 
     /**
-     *  @function newPyObject
      *  @brief    Create a raw \c PyObject* from various types
      */
 

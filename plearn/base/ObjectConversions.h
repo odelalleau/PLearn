@@ -59,8 +59,6 @@ class Object;
 //#####  isConvertibleToObjectPtr  ############################################
 
 /**
- * @function isConvertibleToObjectPtr
- *
  * @brief Return true if \c toObjectPtr() or \c toIndexedObjectPtr would
  * succeed.
  */
@@ -107,8 +105,6 @@ inline bool isConvertibleToObjectPtr(const TVec< PP<T> >& x)
 //#####  indexableObjectSize  #################################################
 
 /**
- *  @function indexableObjectSize
- *
  *  @brief Return 0 if the object is not indexable; otherwise, return one more
  *  than the maximum index allowed by \c toIndexedObjectPtr(); in other words,
  *  return the equivalent of the \c size() accessor on a vector.
@@ -163,8 +159,6 @@ Object* toObjectPtrImpl(const T& x, const boost_true_type&)
 
 
 /**
- * @function toObjectPtr
- *
  * @brief Attempt to return a pointer to \c Object (or an error if the passed
  * argument cannot be considered an \c Object subclass)
  *
@@ -200,8 +194,6 @@ inline Object* toObjectPtr(const PP<T>& x)
 //#####  toIndexedObjectPtr  ##################################################
 
 /**
- * @function toIndexedObjectPtr
- *
  * @brief Return the \c Object* at index \c i of an \c Array or \c TVec
  *
  * Produces a PLError if the conversion cannot be done.
