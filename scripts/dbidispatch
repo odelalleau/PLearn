@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--mem=X] [--os=X] [--test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value.'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--mem=X] [--os=X] [--test|--notest] [--long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value.'
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
 %(ShortHelp)s
@@ -13,6 +13,7 @@ common options:
   The --condor, --bqtools, --cluster, --local or --ssh option specify on which system the jobs will be sent. If not present, we will use the first available in the previously given order. ssh is never automaticaly selected.
   The --dbilog (--nodbilog) tells dbi to generate (or not) an additional log
   The '--test' option makes dbidispatch generate the file %(ScriptName)s, without executing it. That way you can see what dbidispatch generates. Also, this file calls dbi in test mode, so dbi executes everything in the script except the experiment in %(ScriptName)s (so you can check the script).
+  The '--notest' option cancel the '--test' option.
   The --file=FILEPATH specifies a file containing the jobs to execute, one per line. This is instead of specifying only one job on the command line.
 
 dbidispatch --test --file=tests
@@ -88,7 +89,9 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.01
   aplearn myscript.plearn numhidden=25 wd=0.001
 
-In the file of the parameter --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
+In the file of the option --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
+
+The environnement variable DBIDISPATCH_DEFAULT_OPTION can contain default option that you always want to pass to dbidispatch. You can override them on the command line.
 """%{'ShortHelp':ShortHelp,'ScriptName':ScriptName}
 
 if len(sys.argv) == 1:
@@ -107,9 +110,13 @@ elif search_file('cluster',PATH):
     launch_cmd = 'Cluster'
 else:
     launch_cmd = 'Local'
-
-command_argv = sys.argv[1:]
-for argv in sys.argv[1:]:
+to_parse=[]
+env=os.getenv("DBIDISPATCH_DEFAULT_OPTION")
+if env:
+    to_parse=env.split()
+to_parse.extend(sys.argv[1:])
+command_argv = to_parse[:]
+for argv in to_parse:
 
     if argv == "--help" or argv == "-h":
         print LongHelp
@@ -152,6 +159,8 @@ for argv in sys.argv[1:]:
         dbi_param["file_redirect_stderr"]=False
     elif argv == "--test":
         dbi_param["test"]=True
+    elif argv == "--notest":
+        dbi_param["test"]=False
     elif argv.startswith("--file="):
         FILE = argv[7:]
     elif argv == "--32"  or argv == "--64" or argv == "--3264":
@@ -172,19 +181,20 @@ for argv in sys.argv[1:]:
             assert(argv[7]=="=")
             dbi_param["micro"]=argv[8:]
     elif argv[0:1] == '-':
-	print "Unknow parameter (%s)",argv
+	print "Unknow option (%s)",argv
 	print ShortHelp
         sys.exit(1)
     else:
         break
     command_argv.remove(argv)
 
-print "\n\nThe jobs will be launched on the system:", launch_cmd,"\n\n"
-
 if len(command_argv) == 0 and FILE == "":
     print ShortHelp
     sys.exit(1)
 
+print "\n\nThe jobs will be launched on the system:", launch_cmd
+print "With options: ",dbi_param
+print "With the command to be expended:"," ".join(command_argv),"\n\n"
 
 def generate_combination(repl):
     if repl == []:
@@ -208,18 +218,14 @@ def generate_commands(sp):
         p = re.compile('\{\{\S*\}\}')
         reg = p.search(arg)
         if reg:
-#            print "reg:",reg.group()[2:-2]
             curargs = reg.group()[2:-2].split(",")# if arg =~ /{{(.*)}}/
-#            print "curargs:",curargs
             newcurargs = []
             for curarg in curargs:
                 new = p.sub(curarg,arg)
-#                print "new:",new
                 newcurargs.append(new)
             repl.append(newcurargs)
         else:
             repl.append([arg])
-#    print "repl: ",repl
     argscombination = generate_combination(repl)
     return argscombination
 
