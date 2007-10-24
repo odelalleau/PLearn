@@ -88,8 +88,8 @@ void PLPythonConversionError(const char* function_name, PyObject* pyobj,
 
 //! Used to retrieve integer values from python if possible without precision
 //! loss, and convert them to requested type.
-//! @TODO: put I's name in error message?
-//! @TODO: call PyErr_Print() before PyErr_Clear()?
+//! @todo: put I's name in error message?
+//! @todo: call PyErr_Print() before PyErr_Clear()?
 template <class I>
 I integerFromPyObject(PyObject* pyobj, bool print_traceback)
 {
@@ -334,7 +334,7 @@ struct ConvertFromPyObject<Object*>
 
 ///***///***
 // PARTIAL specialisation from T*.  Assume Object*.
-// TODO: fix this assumption
+// todo: fix this assumption
 template <class T>
 struct ConvertFromPyObject<T*>
 {
