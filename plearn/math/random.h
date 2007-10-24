@@ -58,6 +58,7 @@ real  log_gamma(real x);
 real log_beta(real x, real y);
 
 /*! returns the incomplete beta function B_z(x,y)  (BUGGED?)*/
+/*! Note that z must be in [0,1] */
 real incomplete_beta(real z, real x, real y);
 /*! returns the incomplete beta function B_z(x,y)  */
 //double incbet(double x, double y, double z);
@@ -77,7 +78,15 @@ void  manual_seed(int32_t x);
 /*!   returns the current seed used by the random number generator   */
 int32_t  get_seed();
 
-/*!   returns a random number uniformly distributed between 0 and 1   */
+/*! Long period ramdom number generator from the 'numerical recipes'.
+
+    Rem: - It is a long period (> 2 x 10^18) random number generator of L'Ecuyer
+    with Bays-Durham shuffle and added safeguards.
+
+    - Initialized with a negative seed.
+   @returns a random number uniformly distributed between 0 and 1 \
+   (exclusive of the endpoint values).
+*/
 real  uniform_sample();
 /*!   returns a random number uniformly distributed between a and b   */
 real  bounded_uniform(real a,real b);
@@ -96,9 +105,10 @@ real  gaussian_mu_sigma(real mu, real sigma);
   of means and standard deviations for each gaussian   */
 real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma);
 
-/*!   returns a gamma distributed random number   */
+/*!   @returns a deviate distributed as a gamma distribution from the 'numerical recipes'. */
 real  gamdev(int ia);
-/*!   returns a poisson random number with lambda = "xm"   */
+/*!   @returns returns a deviate distributed as a poisson distribution of mean (lambda) 'xm'\
+    from the 'numerical recipes'.  */
 real  poidev(real xm);
 /*!   returns a binomial random number with probability = 'pp' and trials number = 'n'   */
 real  bnldev(real pp, int n=1);

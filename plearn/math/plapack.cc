@@ -873,14 +873,6 @@ real GCV(Mat X, Mat Y, real weight_decay, bool X_is_transposed, Mat* W)
     return sum_GCV;
 }
 
-//! Estimator of generalization error estimator called Generalized Cross-Validation (Craven & Wahba 1979),
-//! computed from the SVD of the input matrix X in the ridge regression. See the comments
-//! for GCV. This function implements the formula:
-//!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
-//!    GCV = ------------------------------------------------------------------------------------
-//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
-//! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X, with X = U D V' the SVD.
-//! The vector s with s_i = (weight_decay  / (d_j^2 + weight_decay)) must also be pre-computed.
 real GCVfromSVD(real n, real Y2minusZ2, Vec Z, Vec s)
 {
     int p = s.length();
@@ -895,27 +887,6 @@ real GCVfromSVD(real n, real Y2minusZ2, Vec Z, Vec s)
     return GCV;
 }
 
-//! Perform ridge regression WITH model selection (i.e. choosing the weight decay).
-//! The selection of weight decay is done in order to minimize the Generalized Cross Validation
-//! (GCV) criterion(Craven & Wahba 1979). The ridge regression weights minimize
-//!    min ||Y - X*W'||^2 + weight_decay ||W||^2.
-//! where Y is nxm, X is nxp, W is mxp, and this procedure ALSO selects a weight_decay value.
-//! The GCV is obtained by performing and SVD of X = U D V' and using the formula from
-//! (Bates, Lindstrom, Wahba, Yandell 1986) [tech report at http://www.stat.wisc.edu/~wahba/ftp1/oldie/775r.pdf]
-//! (here for m=1):
-//!          n ( ||Y||^2 - ||Z||^2 + sum_{j=1}^p z_j^2 (weight_decay / (d_j^2 + weight_decay))^2 )
-//!    GCV = ------------------------------------------------------------------------------------
-//!                   ( n - p + sum_{j=1}^p (weight_decay  / (d_j^2 + weight_decay)) )^2
-//! where Z = U' Y, z_j is the j-th element of Z and d_j is the j-th singular value of X.
-//! This formula can be efficiently re-computed for different values of weight decay.
-//! For this purpose, pre-compute the SVD can call GCVfromSVD. Once a weight decay
-//! has been selected, the SVD can also be used (optionally) to obtain the minimizing weights:
-//!    W = V inv(D^2 + weight_decay I) D Z
-//! If a positve initial_weight_decay_guess is provided, then instead of trying all the eigenvalues
-//! the algorithm searches from this initial guess, never going more than explore_threshold steps
-//! from the best weight decay found up to now. The weight decays tried are intermediate values
-//! (geometric average) between consecutive eigenvalues.
-//! Set best_GCV to the GCV of the selected weight decay and return that selected weight decay.
 real ridgeRegressionByGCV(Mat X, Mat Y, Mat W, real& best_gcv, bool X_is_transposed, 
                           real initial_weight_decay_guess, int explore_threshold, real min_weight_decay)
 {
@@ -1248,11 +1219,6 @@ real weightedRidgeRegressionByGCV(Mat X, Mat Y, Vec gamma, Mat W, real& best_gcv
 }
 
 #if 0
-//! Auxiliary function used by generalizedCFRidgeRegression in order to compute the estimated generalization error
-//! associated with a given choice of weight decay. The eigenvalues and eigenvectors are those of the squared design matrix.
-//! The eigenvectors are in the ROWS of the matrix.
-//! The RHS_matrix is eigenvectors*inputs'*targets, pre-computed.
-//! The computational cost of this call is O((rank+n_examples)*n_outputs*n_inputs)
 real LOOMSEofRidgeRegression(Mat inputs, Mat targets, Mat weights, real weight_decay, Vec eigenvalues, Mat eigenvectors, Mat predictions, 
                              Mat RHS_matrix, bool inputs_are_transposed)
 {

@@ -61,10 +61,6 @@ static real gset;
     =================
 */
 
-/*  
-    log_gamma(): 
-    returns the natural logarithm of the gamma function
-*/
 
 real  log_gamma(real xx)
 {
@@ -85,7 +81,6 @@ real  log_gamma(real xx)
     return -tmp+pl_log(2.5066282746310005*ser/x);
 }
 
-/*! returns the natural logarithm of the beta function */
 real log_beta(real x, real y)
 {
     return log_gamma(x) + log_gamma(y) - log_gamma(x+y);
@@ -141,8 +136,6 @@ real incomplete_beta_continued_fraction(real z, real x, real y)
     return frac;
 }
 
-/*! returns the incomplete beta function B_z(x,y)  */
-/*! Note that z must be in [0,1] */
 real incomplete_beta(real z, real x, real y)
 {
     if (z>1 || z<0) PLERROR("incomplete_beta(z,x,y): z =%f must be in [0,1]",z);
@@ -154,7 +147,6 @@ real incomplete_beta(real z, real x, real y)
     return 1-coeff*incomplete_beta_continued_fraction(1-z,y,x)/y;
 }
 
-/*! Student-t cumulative distribution function */
 real student_t_cdf(real t, int nb_degrees_of_freedom)
 {
     real p_t = 0.5*incomplete_beta(nb_degrees_of_freedom/(nb_degrees_of_freedom+t*t),0.5*nb_degrees_of_freedom,0.5);
@@ -188,10 +180,6 @@ void  manual_seed(int32_t x)
     iset     = 0;
 }
 
-/*  
-    seed(): generates a seed for random number generators, using the cpu time.
-*/
-
 void  seed()
 {
     time_t  ltime;
@@ -204,10 +192,6 @@ void  seed()
                 60*60*24*today->tm_mday);
 }
 
-/*  
-    get_seed(): returns the current value of the 'seed'.
-*/
-
 int32_t get_seed()
 {
     int32_t seed = the_seed;
@@ -218,32 +202,20 @@ int32_t get_seed()
     Constants used by the 'numerical recipes' random number generators.
 */
 
-#define NTAB 32                 /*   needs for ran1 & ran2   */
-#define EPS 1.2e-7              /*   needs for ran1 & ran2   */
-#define RNMX (1.0-EPS)          /*   needs for ran1 & ran2   */
-#define IM1 2147483563          /*   needs for ran2          */
-#define IM2 2147483399          /*   needs for ran2          */
-#define AM1 (1.0/IM1)           /*   needs for ran2          */
-#define IMM1 (IM1-1)            /*   needs for ran2          */
-#define IA1 40014               /*   needs for ran2          */
-#define IA2 40692               /*   needs for ran2          */
-#define IQ1 53668               /*   needs for ran2          */
-#define IQ2 52774               /*   needs for ran2          */
-#define IR1 12211               /*   needs for ran2          */
-#define IR2 3791                /*   needs for ran2          */
-#define NDIV1 (1+IMM1/NTAB)     /*   needs for ran2          */
-
-/*  
-    ran2(): long period ramdom number generator from the 'numerical recipes'.
-
-    Rem: - It is a long period (> 2 x 10^18) random number generator of L'Ecuyer
-    with Bays-Durham shuffle and added safeguards.
-
-    - Returns a uniform random deviate between 0.0 and 1.0
-    (exclusive of the endpoint values).
-
-    - Initialized with a negative seed.
-*/
+#define NTAB 32                 /*   needs for ran1 & uniform_sample()   */
+#define EPS 1.2e-7              /*   needs for ran1 & uniform_sample()   */
+#define RNMX (1.0-EPS)          /*   needs for ran1 & uniform_sample()   */
+#define IM1 2147483563          /*   needs for uniform_sample()          */
+#define IM2 2147483399          /*   needs for uniform_sample()          */
+#define AM1 (1.0/IM1)           /*   needs for uniform_sample()          */
+#define IMM1 (IM1-1)            /*   needs for uniform_sample()          */
+#define IA1 40014               /*   needs for uniform_sample()          */
+#define IA2 40692               /*   needs for uniform_sample()          */
+#define IQ1 53668               /*   needs for uniform_sample()          */
+#define IQ2 52774               /*   needs for uniform_sample()          */
+#define IR1 12211               /*   needs for uniform_sample()          */
+#define IR2 3791                /*   needs for uniform_sample()          */
+#define NDIV1 (1+IMM1/NTAB)     /*   needs for uniform_sample()          */
 
 real uniform_sample()  
 {
@@ -386,10 +358,6 @@ real  gaussian_mixture_mu_sigma(Vec& w, const Vec& mu, const Vec& sigma)
     ----------------
 */
 
-/*  
-    gamdev(): returns a deviate distributed as a gamma distribution from the 'numerical recipes'.
-*/
-
 real  gamdev(int ia)
 {
     int j;
@@ -417,11 +385,6 @@ real  gamdev(int ia)
     }
     return x;
 }
-
-/*  
-    poidev(): returns a deviate distributed as a poisson distribution of mean (lambda) 'xm'
-    from the 'numerical recipes'.
-*/
 
 real  poidev(real xm)
 {
@@ -556,7 +519,6 @@ int uniform_multinomial_sample(int N)
     return int(N*uniform_sample());
 }
 
-//!  sample each element from uniform distribution U[minval,maxval]
 void fill_random_uniform(const Vec& dest, real minval, real maxval)
 {
     Vec::iterator it = dest.begin();
@@ -566,7 +528,6 @@ void fill_random_uniform(const Vec& dest, real minval, real maxval)
         *it = real(uniform_sample()*scale+minval);
 }
 
-//!  sample each element from the given set
 void fill_random_discrete(const Vec& dest, const Vec& set)
 {
     Vec::iterator it = dest.begin();
@@ -576,7 +537,6 @@ void fill_random_discrete(const Vec& dest, const Vec& set)
         *it = set[uniform_multinomial_sample(n)];
 }
 
-//!  sample each element from Normal(mean,sdev^2) distribution
 void fill_random_normal(const Vec& dest, real mean, real stdev)
 {
     Vec::iterator it = dest.begin();
@@ -585,7 +545,6 @@ void fill_random_normal(const Vec& dest, real mean, real stdev)
         *it = real(gaussian_mu_sigma(mean,stdev));
 }
 
-//!  sample each element from multivariate Normal(mean,diag(sdev^2)) distribution
 void fill_random_normal(const Vec& dest, const Vec& mean, const Vec& stdev)
 {
 #ifdef BOUNDCHECK

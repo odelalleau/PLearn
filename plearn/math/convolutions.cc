@@ -49,11 +49,6 @@
 namespace PLearn {
 using namespace std;
 
-//! Convolve a source signal of length NS with a kernel of length NK
-//! with steps S, and put result in a destination signal which should
-//! be of length NS-NK+1.
-//! The destination signal is
-//!    dest_signal[i] = sum_{j=0}^{NK-1} source_signal[i*step+j]*kernel[j]
 void convolve1D(const Vec& source_signal, const Vec& kernel,
                 const Vec& dest_signal, int step, bool accumulate)
 {
@@ -83,17 +78,6 @@ void convolve1D(const Vec& source_signal, const Vec& kernel,
     }
 }
 
-//! Back-convolve INTO a "source" signal of length NS with a kernel of length
-//! NK and FROM a "destination" signal which should be of length NS-NK+1
-//! This is EXACTLY the TRANSPOSE operation of a convolve1D with the same
-//! arguments, with computations flowing in the other direction.
-//! for i=0 to nd-1:
-//!   for j=0 to nk-1:
-//!    source_signal[i*step+j] += dest_signal[i]*kernel[j]
-//! If the accumulate flag is not set, then source_signal is first cleared.
-//! N.B. THIS IS THE SAME AS COMPUTING dC/dsource_signal (into the
-//! source_signal argument), GIVEN dC/ddest_signal, i.e. this function
-//! does part of the work done by convolve1Dbackprop.
 void backConvolve1D(const Vec& source_signal, const Vec& kernel,
                     const Vec& dest_signal, int step, bool accumulate)
 {
@@ -127,11 +111,6 @@ void backConvolve1D(const Vec& source_signal, const Vec& kernel,
 }
 
 
-//! Increment dC/dsource_signal and dC/dkernel, given dC/ddest_signal, with
-//! dest_signal computed as per convolve1D(source_signal, kernel, dest_signal):
-//!    dC/dsource_signal[k] += sum_{j=0}^{NK-1} 1_{k>=j && k-j<ND} dC_ddest_signal[k-j]*kernel[j]
-//!    dC/dkernel[j] += sum_{k=0}^{ND-1} 1_{k>=j && k-j<ND} dC_ddest_signal[k-j]*source_signal[k]
-//! (consider the equivalence: k = i+j)
 void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
                         const Vec& dC_ddest_signal,
                         const Vec& dC_dsource_signal, const Vec& dC_dkernel,
@@ -186,9 +165,6 @@ void convolve1Dbackprop(const Vec& source_signal, const Vec& kernel,
     }
 }
 
-//! Same as above, but increments only dC/dkernel, not dC/dsource_signal
-//!    dC/dkernel[j] += sum_{k=0}^{ND-1} 1_{k>=j && k-j<ND} dC_ddest_signal[k-j]*source_signal[k]
-//! (consider the equivalence: k = i+j)
 void convolve1Dbackprop(const Vec& source_signal,
                         const Vec& dC_ddest_signal,
                         const Vec& dC_dkernel,
@@ -227,11 +203,6 @@ void convolve1Dbackprop(const Vec& source_signal,
 }
 
 
-//! Increment dC/ddest_signal and dC/dkernel, given dC/ddest_signal, with
-//! source_signal computed as per
-//! backConvolve1D(source_signal, kernel, dest_signal):
-//!    dC/ddest_signal[i] += sum_{j=0}^{NK-1} dC_dsource_signal[i+j]*kernel[j]
-//!    dC/dkernel[j] += sum_{i=0}^{ND-1} dC_dsource_signal[i+j]*dest_signal[i]
 void backConvolve1Dbackprop(const Vec& kernel, const Vec& dest_signal,
                             const Vec& dC_ddest_signal,
                             const Vec& dC_dsource_signal,
@@ -291,8 +262,6 @@ void backConvolve1Dbackprop(const Vec& kernel, const Vec& dest_signal,
 }
 
 
-//! Same as above, but increments only dC/dkernel, not  dC/ddest_signal
-//!    dC/dkernel[j] += sum_{i=0}^{ND-1} dC_dsource_signal[i+j]*dest_signal[i]
 void backConvolve1Dbackprop(const Vec& dest_signal,
                             const Vec& dC_dsource_signal,
                             const Vec& dC_dkernel,
@@ -332,12 +301,6 @@ void backConvolve1Dbackprop(const Vec& dest_signal,
 }
 
 
-//! Convolve a (N1S x N2S) source image with a (N1K x N2K) kernel matrix,
-//! and put result in a destination matrix of dimensions (N1D x N2D), stepping
-//! by (step1,step2) in each direction, with NiS = NiD*stepi + NiK - 1.
-//! The destination image is
-//!    dest_image[i,j] = 
-//!      sum_{k1=0}^{N1K-1} sum_{k2=0}^{N2K-1} source_image[i*step1+k1,j*step2+k2]*kernel[k1,k2]
 void convolve2D(const Mat& source_image, const Mat& kernel,
                 const Mat& dest_image,
                 int step1, int step2, bool accumulate)
@@ -390,24 +353,6 @@ void convolve2D(const Mat& source_image, const Mat& kernel,
     }
 }
 
-//! Back-convolve INTO a (N1S x N2S) "source" image with a (N1K x N2K)
-//! kernel matrix, and FROM a "destination" image of dimensions (N1D x
-//! N2D), with NiS = NiD + NiK - 1.
-//! This is EXACTLY the TRANSPOSE of convolve2D(source_image, kernel,
-//! dest_image, 1, 1) with the same arguments, computations flowing in
-//! the other direction.
-//! The kernel window is stepped by one in both directions. The
-//! destination image is
-//! for i1=0 to N1D-1:
-//!  for i2=0 to N2D-1:
-//!   for j1=0 to N1K-1:
-//!    for j2=0 to N2K-1:
-//!     source_image[i1+j1,i2+j2] += dest_image[i1,i2]*kernel[j1,j2]
-//! If the accumulate flag is not set, then source_image is first cleared.
-//! N.B. When dest_image has been computed from kernel and source_image
-//! using convolve2D, THIS IS THE SAME AS COMPUTING dC/dsource_image
-//! (into the source_image argument), GIVEN dC/ddest_image, i.e.
-//! this function does part of the work done by convolve2Dbackprop.
 void backConvolve2D(const Mat& source_image, const Mat& kernel,
                     const Mat& dest_image,
                     int step1, int step2, bool accumulate)
@@ -461,14 +406,6 @@ void backConvolve2D(const Mat& source_image, const Mat& kernel,
     }
 }
 
-//! Increment dC/dsource_image and dC/dkernel, given dC/ddest_image, with
-//! dest_image computed as per convolve2D(source_image, kernel, dest_image):
-//! for i1=0 to N1D-1:
-//!  for i2=0 to N2D-1:
-//!   for j1=0 to N1K-1:
-//!    for j2=0 to N2K-1:
-//!     dC/dsource_image[i1+j1,i2+j2] += dC/dest_image[i1,i2]*kernel[j1,j2]
-//!     dC/dkernel[j1,j2] += dC/dest_image[i1,i2]*source_image[i1+j1,i2+j2]
 void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
                         const Mat& dC_ddest_image,
                         const Mat& dC_dsource_image, const Mat& dC_dkernel,
@@ -558,12 +495,6 @@ void convolve2Dbackprop(const Mat& source_image, const Mat& kernel,
 }
 
 
-//! As above, but increments only dC/dkernel, not dC/dsource_image
-//! for i1=0 to N1D-1:
-//!  for i2=0 to N2D-1:
-//!   for j1=0 to N1K-1:
-//!    for j2=0 to N2K-1:
-//!     dC/dkernel[j1,j2] += dC/dest_image[i1,i2]*source_image[i1+j1,i2+j2]
 void convolve2Dbackprop(const Mat& source_image,
                         const Mat& dC_ddest_image,
                         const Mat& dC_dkernel,
@@ -622,15 +553,6 @@ void convolve2Dbackprop(const Mat& source_image,
 }
 
 
-//! Increment dC/ddest_image and dC/dkernel, given dC/dsource_image, with
-//! source_image computed as per
-//! backConvolve2D(source_image, kernel, dest_image):
-//! for i1=0 to N1D-1:
-//!  for i2=0 to N2D-1:
-//!   for j1=0 to N1K-1:
-//!    for j2=0 to N2K-1:
-//!     dC/ddest_image[i1,i2] += dC/dsource_image[i1+j1,i2+j2]*kernel[j1,j2]
-//!     dC/dkernel[j1,j2] += dC/dsource_image[i1+j1,i2+j2]*dest_image[i1,i2]
 void backConvolve2Dbackprop(const Mat& kernel, const Mat& dest_image,
                             const Mat& dC_ddest_image,
                             const Mat& dC_dsource_image, const Mat& dC_dkernel,
@@ -721,12 +643,6 @@ void backConvolve2Dbackprop(const Mat& kernel, const Mat& dest_image,
     }
 }
 
-//! As above, but increments only dC/dkernel, not dC/ddest_image
-//! for i1=0 to N1D-1:
-//!  for i2=0 to N2D-1:
-//!   for j1=0 to N1K-1:
-//!    for j2=0 to N2K-1:
-//!     dC/dkernel[j1,j2] += dC/dsource_image[i1+j1,i2+j2]*dest_image[i1,i2]
 void backConvolve2Dbackprop(const Mat& dest_image,
                             const Mat& dC_dsource_image,
                             const Mat& dC_dkernel,
