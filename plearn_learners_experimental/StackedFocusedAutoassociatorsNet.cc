@@ -67,6 +67,9 @@ StackedFocusedAutoassociatorsNet::StackedFocusedAutoassociatorsNet() :
     fine_tuning_decrease_ct( 0. ),
     k_neighbors( 1 ),
     n_classes( -1 ),
+    do_not_use_knn_classifier(false),
+    output_weights_l1_penalty_factor(0),
+    output_weights_l2_penalty_factor(0),
     n_layers( 0 ),
     train_set_representations_up_to_date(false),
     currently_trained_layer( 0 )
@@ -174,6 +177,12 @@ void StackedFocusedAutoassociatorsNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Number of classes.");
 
+    declareOption(ol, "do_not_use_knn_classifier", 
+                  &StackedFocusedAutoassociatorsNet::do_not_use_knn_classifier,
+                  OptionBase::buildoption,
+                  "Use standard neural net architecture, not the nearest "
+                  "neighbor model.");
+
     declareOption(ol, "greedy_stages", 
                   &StackedFocusedAutoassociatorsNet::greedy_stages,
                   OptionBase::learntoption,
@@ -184,6 +193,18 @@ void StackedFocusedAutoassociatorsNet::declareOptions(OptionList& ol)
     declareOption(ol, "n_layers", &StackedFocusedAutoassociatorsNet::n_layers,
                   OptionBase::learntoption,
                   "Number of layers"
+        );
+
+    declareOption(ol, "final_module", 
+                  &StackedFocusedAutoassociatorsNet::final_module,
+                  OptionBase::learntoption,
+                  "Output layer of neural net"
+        );
+
+    declareOption(ol, "final_cost", 
+                  &StackedFocusedAutoassociatorsNet::final_cost,
+                  OptionBase::learntoption,
+                  "Cost on output layer of neural net"
         );
 
     // Now call the parent class' declareOptions
@@ -249,7 +270,57 @@ void StackedFocusedAutoassociatorsNet::build_()
         }
 
         build_layers_and_connections();
+
+        if( do_not_use_knn_classifier & (!final_module || !final_cost) )
+            build_output_layer_and_cost();
     }
+}
+
+void StackedFocusedAutoassociatorsNet::build_output_layer_and_cost()
+{
+    GradNNetLayerModule* gnl = new GradNNetLayerModule();
+    gnl->input_size = layers[n_layers-1]->size;
+    gnl->output_size = n_classes;
+    gnl->L1_penalty_factor = output_weights_l1_penalty_factor;
+    gnl->L2_penalty_factor = output_weights_l2_penalty_factor;
+    gnl->random_gen = random_gen;
+    gnl->build();
+
+    SoftmaxModule* sm = new SoftmaxModule();
+    sm->input_size = n_classes;
+    sm->random_gen = random_gen;
+    sm->build();
+
+    ModuleStackModule* msm = new ModuleStackModule();
+    msm->modules.resize(2);
+    msm->modules[0] = gnl;
+    msm->modules[1] = sm;
+    msm->random_gen = random_gen;
+    msm->build();
+    final_module = msm;
+
+    final_module->forget();
+
+    NLLCostModule* nll = new NLLCostModule();
+    nll->input_size = n_classes;
+    nll->random_gen = random_gen;
+    nll->build();
+    
+    ClassErrorCostModule* class_error = new ClassErrorCostModule();
+    class_error->input_size = n_classes;
+    class_error->random_gen = random_gen;
+    class_error->build();
+
+    CombiningCostsModule* comb_costs = new CombiningCostsModule();
+    comb_costs->cost_weights.resize(2);
+    comb_costs->cost_weights[0] = 1;
+    comb_costs->cost_weights[1] = 0;
+    comb_costs->sub_costs.resize(2);
+    comb_costs->sub_costs[0] = nll;
+    comb_costs->sub_costs[1] = class_error;
+
+    final_cost = comb_costs;
+    final_cost->forget();
 }
 
 void StackedFocusedAutoassociatorsNet::build_layers_and_connections()
@@ -487,6 +558,9 @@ void StackedFocusedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& co
     deepCopyField(pos_up_val, copies);
     deepCopyField(neg_down_val, copies);
     deepCopyField(neg_up_val, copies);
+    deepCopyField(final_cost_input, copies);
+    deepCopyField(final_cost_value, copies);
+    deepCopyField(final_cost_gradient, copies);
     deepCopyField(class_datasets, copies);
     deepCopyField(other_classes_proportions, copies);
     deepCopyField(nearest_neighbors_indices, copies);
@@ -496,6 +570,8 @@ void StackedFocusedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& co
     deepCopyField(train_set_representations_vmat, copies);
     deepCopyField(train_set_targets, copies);
     deepCopyField(greedy_stages, copies);
+    deepCopyField(final_module, copies);
+    deepCopyField(final_cost, copies);
 }
 
 
@@ -523,11 +599,25 @@ void StackedFocusedAutoassociatorsNet::forget()
 
     train_set_representations_up_to_date = false;
 
+    for( int i=0 ; i<n_layers ; i++ )
+        layers[i]->forget();
+    
     for( int i=0 ; i<n_layers-1 ; i++ )
         connections[i]->forget();
     
+    if(unsupervised_layers.length() != 0)
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            unsupervised_layers[i]->forget();
+    
+    if(unsupervised_connections.length() != 0)
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            unsupervised_connections[i]->forget();
+    
     for( int i=0; i<reconstruction_connections.length(); i++)
         reconstruction_connections[i]->forget();
+
+    if( do_not_use_knn_classifier )
+        build_output_layer_and_cost();
 
     stage = 0;
     greedy_stages.clear();
@@ -669,6 +759,10 @@ void StackedFocusedAutoassociatorsNet::train()
         similar_example.resize(inputsize());
         dissimilar_example.resize(inputsize());
 
+        final_cost_input.resize(n_classes);
+        final_cost_value.resize(2); // Should be resized anyways
+        final_cost_gradient.resize(n_classes);
+
         for( ; stage<nstages ; stage++ )
         {
             sample = stage % nsamples;
@@ -790,7 +884,7 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
     // Similar example contribution
     substract(input_representation,similar_example_representation,
               expectation_gradients[index+1]);
-    expectation_gradients[index+1] *= 4/layers[index+1]->size;
+    expectation_gradients[index+1] *= 4/sqrt(layers[index+1]->size);
     
     // Dissimilar example contribution
     real dist = sqrt(powdistance(input_representation,
@@ -808,7 +902,7 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
                   dissimilar_gradient_contribution);
         
         dissimilar_gradient_contribution *= -5.54*
-            safeexp(-2.77*dist/layers[index+1]->size)/dist;
+            safeexp(-2.77*dist/sqrt(layers[index+1]->size));
 
         expectation_gradients[index+1] += dissimilar_gradient_contribution;
     }
@@ -917,15 +1011,18 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
 {
     train_set_representations_up_to_date = false;
 
-    // Get similar example representation
-    
-    computeRepresentation(similar_example, similar_example_representation, 
-                          n_layers-1);
-
-    // Get dissimilar example representation
-
-    computeRepresentation(dissimilar_example, dissimilar_example_representation, 
-                          n_layers-1);
+    if( !do_not_use_knn_classifier )
+    {
+        // Get similar example representation
+        
+        computeRepresentation(similar_example, similar_example_representation, 
+                              n_layers-1);
+        
+        // Get dissimilar example representation
+        
+        computeRepresentation(dissimilar_example, dissimilar_example_representation,
+                              n_layers-1);
+    }
 
     // Get example representation
 
@@ -934,31 +1031,48 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
 
     // Compute supervised gradient
 
-    // Similar example contribution
-    substract(input_representation,similar_example_representation,
-              expectation_gradients[n_layers-1]);
-    expectation_gradients[n_layers-1] *= 4/layers[n_layers-1]->size;
+
+    if( do_not_use_knn_classifier )
+    {
+        // Similar example contribution
+        substract(input_representation,similar_example_representation,
+                  expectation_gradients[n_layers-1]);
+        expectation_gradients[n_layers-1] *= 4/sqrt(layers[n_layers-1]->size);
     
-    // Dissimilar example contribution
-    real dist = sqrt(powdistance(input_representation,
-                                 dissimilar_example_representation,
-                                 2));
+        // Dissimilar example contribution
+        real dist = sqrt(powdistance(input_representation,
+                                     dissimilar_example_representation,
+                                     2));
     
-    if( dist == 0 )
-        PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
-                  " example representation is exactly the sample as the"
-                  " input example. Gradient would be infinite! Skipping this"
-                  " example...");
+        if( dist == 0 )
+            PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
+                      " example representation is exactly the sample as the"
+                      " input example. Gradient would be infinite! Skipping this"
+                      " example...");
+        else
+        {
+
+            substract(input_representation,dissimilar_example_representation,
+                      dissimilar_gradient_contribution);
+
+            dissimilar_gradient_contribution *= -5.54*
+                safeexp(-2.77*dist/sqrt(layers[n_layers-1]->size));
+        
+            expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
+        }
+    }
     else
     {
-
-        substract(input_representation,dissimilar_example_representation,
-                  dissimilar_gradient_contribution);
-
-        dissimilar_gradient_contribution *= -5.54*
-            safeexp(-2.77*dist/layers[n_layers-1]->size)/dist;
+        final_module->fprop( input_representation, final_cost_input );
+        final_cost->fprop( final_cost_input, target, final_cost_value );
         
-        expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
+        final_cost->bpropUpdate( final_cost_input, target,
+                                 final_cost_value[0],
+                                 final_cost_gradient );
+        final_module->bpropUpdate( input_representation,
+                                   final_cost_input,
+                                   expectation_gradients[ n_layers-1 ],
+                                   final_cost_gradient );
     }
 
     for( int i=n_layers-1 ; i>0 ; i-- )
@@ -1000,20 +1114,29 @@ void StackedFocusedAutoassociatorsNet::computeRepresentation(const Vec& input,
 
 void StackedFocusedAutoassociatorsNet::computeOutput(const Vec& input, Vec& output) const
 {
-    updateTrainSetRepresentations();
-
-    computeRepresentation(input,input_representation, 
-                          min(currently_trained_layer,n_layers-1));
-
-    computeNearestNeighbors(train_set_representations_vmat,input_representation,
-                            test_nearest_neighbors_indices);
-
-    test_votes.clear();
-    for(int i=0; i<test_nearest_neighbors_indices.length(); i++)
-        test_votes[train_set_targets[test_nearest_neighbors_indices[i]]]++;
-
-    output[0] = argmax(test_votes);
-
+    if( do_not_use_knn_classifier & currently_trained_layer>n_layers-1 )
+    {
+        computeRepresentation(input,input_representation, 
+                              min(currently_trained_layer,n_layers-1));
+        final_module->fprop( input_representation, final_cost_input );
+        output[0] = argmax(final_cost_input);
+    }
+    else
+    {
+        updateTrainSetRepresentations();
+        
+        computeRepresentation(input,input_representation, 
+                              min(currently_trained_layer,n_layers-1));
+        
+        computeNearestNeighbors(train_set_representations_vmat,input_representation,
+                                test_nearest_neighbors_indices);
+        
+        test_votes.clear();
+        for(int i=0; i<test_nearest_neighbors_indices.length(); i++)
+            test_votes[train_set_targets[test_nearest_neighbors_indices[i]]]++;
+        
+        output[0] = argmax(test_votes);
+    }
 }
 
 void StackedFocusedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
@@ -1175,6 +1298,12 @@ void StackedFocusedAutoassociatorsNet::setLearningRate( real the_learning_rate )
         connections[i]->setLearningRate( the_learning_rate );
     }
     layers[n_layers-1]->setLearningRate( the_learning_rate );
+
+    if( do_not_use_knn_classifier )
+    {
+        final_module->setLearningRate( the_learning_rate );
+        final_cost->setLearningRate( the_learning_rate );
+    }
 }
 
 

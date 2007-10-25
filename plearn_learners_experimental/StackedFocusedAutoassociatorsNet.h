@@ -42,13 +42,18 @@
 
 #include <plearn/vmat/ClassSubsetVMatrix.h>
 #include <plearn_learners/generic/PLearner.h>
+#include <plearn_learners/online/GradNNetLayerModule.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/CostModule.h>
+#include <plearn_learners/online/ModuleStackModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
+#include <plearn_learners/online/ClassErrorCostModule.h>
+#include <plearn_learners/online/CombiningCostsModule.h>
 #include <plearn_learners/online/RBMClassificationModule.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
+#include <plearn_learners/online/SoftmaxModule.h>
 #include <plearn/misc/PTimer.h>
 
 namespace PLearn {
@@ -118,6 +123,16 @@ public:
 
     //! Number of classes
     int n_classes;
+
+    //! Use standard neural net architecture, not 
+    //! the nearest neighbor model.
+    bool do_not_use_knn_classifier;
+
+    //! Output weights l1_penalty_factor
+    real output_weights_l1_penalty_factor;
+
+    //! Output weights l2_penalty_factor
+    real output_weights_l2_penalty_factor;
 
     //#####  Public Learnt Options  ###########################################
 
@@ -275,6 +290,13 @@ protected:
     //! Negative up statistic
     Vec neg_up_val;
 
+    //! Input of cost function
+    mutable Vec final_cost_input;
+    //! Cost value
+    mutable Vec final_cost_value;
+    //! Cost gradient on output layer
+    mutable Vec final_cost_gradient;
+
     //! Datasets for each class
     TVec< PP<ClassSubsetVMatrix> > class_datasets;
 
@@ -306,6 +328,12 @@ protected:
     //! n_layers means the output layer)
     int currently_trained_layer;
 
+    //! Output layer of neural net
+    PP<OnlineLearningModule> final_module;
+
+    //! Cost on output layer of neural net
+    PP<CostModule> final_cost;
+
 protected:
     //#####  Protected Member Functions  ######################################
 
@@ -320,7 +348,7 @@ private:
 
     void build_layers_and_connections();
 
-    void build_classification_cost();
+    void build_output_layer_and_cost();
 
     void setLearningRate( real the_learning_rate );
 
