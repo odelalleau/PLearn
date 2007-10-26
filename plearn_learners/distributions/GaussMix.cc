@@ -2831,7 +2831,7 @@ void GaussMix::setPredictor(const Vec& predictor, bool call_parent) const {
             // appropriate data elsewhere so that there is no need to recompute
             // it again.
             if (previous_predictor_part_had_missing)
-                setPredictorPredictedSizes_const(n_predictor, n_predicted);
+                setPredictorPredictedSizes_const();
 
             previous_predictor_part_had_missing = false;
             x_minus_mu_x.resize(n_predictor);
@@ -3086,18 +3086,18 @@ TVec<string> GaussMix::getTrainCostNames() const
 bool GaussMix::setPredictorPredictedSizes(int n_i, int n_t,
                                    bool call_parent)
 {
-    bool sizes_changed = true;
+    bool sizes_changed = false;
     if (call_parent)
         sizes_changed =
             inherited::setPredictorPredictedSizes(n_i, n_t, call_parent);
-    setPredictorPredictedSizes_const(n_i, n_t);
+    setPredictorPredictedSizes_const();
     return sizes_changed;
 }
 
 //////////////////////////////////////
 // setPredictorPredictedSizes_const //
 //////////////////////////////////////
-void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
+void GaussMix::setPredictorPredictedSizes_const() const
 {
     static Mat inv_cov_x;
     static Mat full_cov;
@@ -3211,6 +3211,11 @@ void GaussMix::setPredictorPredictedSizes_const(int n_i, int n_t) const
                 y_x_mat[j] << work_mat1;
             }
             // Compute SVD of the covariance of y|x.
+            // TODO Note that if n_predictor == 0 (e.g. when using the Manifold
+            // Parzen algorithm), the covariance of y|x is also the full
+            // covariance, and thus we should instead re-use directly the
+            // (possibly few) eigenvectors of the full covariance matrix
+            // instead of wasting time and memory in the computations below.
             eigenvectors_y_x[j].resize(n_predicted, n_predicted);
             eigenvals = eigenvalues_y_x(j);
             // Ensure covariance matrix is perfectly symmetric.

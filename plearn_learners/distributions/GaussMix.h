@@ -331,8 +331,9 @@ protected:
 
     //! Main implementation of 'setPredictorPredictedSizes', that needs to be
     //! 'const' as it currently needs to be called in setPredictor(..).
-    void setPredictorPredictedSizes_const(int the_predictor_size,
-                                          int the_predicted_size) const;
+    //! It does not take any parameter since it assumes the predictor and
+    //! predicted sizes have been set already.
+    void setPredictorPredictedSizes_const() const;
 
     //! Fill the 'initial_weights' vector with the weights from the given
     //! VMatrix (which must have a weights column).
