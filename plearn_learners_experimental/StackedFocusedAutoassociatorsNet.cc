@@ -67,6 +67,7 @@ StackedFocusedAutoassociatorsNet::StackedFocusedAutoassociatorsNet() :
     fine_tuning_decrease_ct( 0. ),
     k_neighbors( 1 ),
     n_classes( -1 ),
+    dissimilar_example_cost_precision(2.77), // Value taken from original paper
     do_not_use_knn_classifier(false),
     output_weights_l1_penalty_factor(0),
     output_weights_l2_penalty_factor(0),
@@ -176,6 +177,11 @@ void StackedFocusedAutoassociatorsNet::declareOptions(OptionList& ol)
                   &StackedFocusedAutoassociatorsNet::n_classes,
                   OptionBase::buildoption,
                   "Number of classes.");
+
+    declareOption(ol, "dissimilar_example_cost_precision", 
+                  &StackedFocusedAutoassociatorsNet::dissimilar_example_cost_precision,
+                  OptionBase::buildoption,
+                  "Parameter that constrols the importance of the dissimilar example cost.");
 
     declareOption(ol, "do_not_use_knn_classifier", 
                   &StackedFocusedAutoassociatorsNet::do_not_use_knn_classifier,
@@ -636,7 +642,7 @@ void StackedFocusedAutoassociatorsNet::train()
     Vec target2( targetsize() );
     real weight; // unused
     real weight2; // unused
-
+    
     Vec similar_example_index(1);
 
     TVec<string> train_cost_names = getTrainCostNames() ;
@@ -806,10 +812,19 @@ void StackedFocusedAutoassociatorsNet::train()
             if( pb )
                 pb->update( stage - init_stage + 1 );
         }
+
+        if(verbosity>2)
+        {
+            Vec train_stats_vec = train_stats->getMean();
+            cout << "similarity_cost = " << train_stats_vec[train_stats_vec.length()-3] << endl;
+            cout << "dissimilarity_cost = " << train_stats_vec[train_stats_vec.length()-2] << endl;
+            cout << "metric_cost = " << train_stats_vec[train_stats_vec.length()-1] << endl;
+        }
     }
     
     train_stats->finalize();
     MODULE_LOG << "  train costs = " << train_stats->getMean() << endl;
+
 
     // Update currently_trained_layer
     if(stage > 0)
@@ -902,8 +917,8 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
     substract(input_representation,dissimilar_example_representation,
               dissimilar_gradient_contribution);
     
-    dissimilar_gradient_contribution *= -5.54*
-        safeexp(-2.77*dist/sqrt(layers[index+1]->size));
+    dissimilar_gradient_contribution *= -2* dissimilar_example_cost_precision*
+        safeexp(-dissimilar_example_cost_precision*dist/sqrt(layers[index+1]->size));
     
     expectation_gradients[index+1] += dissimilar_gradient_contribution;
         //}
@@ -1040,11 +1055,21 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
                   expectation_gradients[n_layers-1]);
         expectation_gradients[n_layers-1] *= 4/sqrt(layers[n_layers-1]->size);
     
+        train_costs[train_costs.length()-3] = 
+            2 * sqrt(powdistance(previous_input_representation,
+                                 similar_example_representation,
+                                 2)) / sqrt(layers[n_layers-1]->size);
+        
         // Dissimilar example contribution
         real dist = sqrt(powdistance(previous_input_representation,
                                      dissimilar_example_representation,
                                      2));
-    
+
+        train_costs[train_costs.length()-2] = 
+            2 * sqrt(layers[n_layers-1]->size) * safeexp( -dissimilar_example_cost_precision
+                                                          *dist/sqrt(layers[n_layers-1]->size));
+        train_costs.last() = train_costs[train_costs.length()-3] + 
+            train_costs[train_costs.length()-2];
         //if( dist == 0 )
         //    PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
         //              " example representation is exactly the sample as the"
@@ -1057,8 +1082,8 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
                   dissimilar_example_representation,
                   dissimilar_gradient_contribution);
         
-        dissimilar_gradient_contribution *= -5.54*
-            safeexp(-2.77*dist/sqrt(layers[n_layers-1]->size));
+        dissimilar_gradient_contribution *= -2 * dissimilar_example_cost_precision*
+            safeexp(-dissimilar_example_cost_precision*dist/sqrt(layers[n_layers-1]->size));
         
         expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
         //}
@@ -1230,7 +1255,11 @@ TVec<string> StackedFocusedAutoassociatorsNet::getTestCostNames() const
 
 TVec<string> StackedFocusedAutoassociatorsNet::getTrainCostNames() const
 {
-    return getTestCostNames() ;    
+    TVec<string> cost_names = getTestCostNames();
+    cost_names.push_back("similarity_cost");
+    cost_names.push_back("dissimilarity_cost");
+    cost_names.push_back("metric_cost");
+    return cost_names;    
 }
 
 void StackedFocusedAutoassociatorsNet::setTrainingSet(VMat training_set, bool call_forget)

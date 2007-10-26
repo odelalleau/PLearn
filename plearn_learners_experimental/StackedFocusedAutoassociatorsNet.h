@@ -124,6 +124,9 @@ public:
     //! Number of classes
     int n_classes;
 
+    //! Parameter that constrols the importance of the dissimilar example cost
+    real dissimilar_example_cost_precision;
+
     //! Use standard neural net architecture, not 
     //! the nearest neighbor model.
     bool do_not_use_knn_classifier;
