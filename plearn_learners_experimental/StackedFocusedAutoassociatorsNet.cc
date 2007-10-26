@@ -318,6 +318,7 @@ void StackedFocusedAutoassociatorsNet::build_output_layer_and_cost()
     comb_costs->sub_costs.resize(2);
     comb_costs->sub_costs[0] = nll;
     comb_costs->sub_costs[1] = class_error;
+    comb_costs->build();
 
     final_cost = comb_costs;
     final_cost->forget();
@@ -891,21 +892,21 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
                                  dissimilar_example_representation,
                                  2));
 
-    if( dist == 0 )
-        PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
-                  " example representation is exactly the sample as the"
-                  " input example. Gradient would be infinite! Skipping this"
-                  " example...");
-    else
-    {
-        substract(input_representation,dissimilar_example_representation,
-                  dissimilar_gradient_contribution);
-        
-        dissimilar_gradient_contribution *= -5.54*
-            safeexp(-2.77*dist/sqrt(layers[index+1]->size));
-
-        expectation_gradients[index+1] += dissimilar_gradient_contribution;
-    }
+    //if( dist == 0 )
+    //    PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
+    //              " example representation is exactly the sample as the"
+    //              " input example. Gradient would be infinite! Skipping this"
+    //              " example...");
+    //else
+    //{
+    substract(input_representation,dissimilar_example_representation,
+              dissimilar_gradient_contribution);
+    
+    dissimilar_gradient_contribution *= -5.54*
+        safeexp(-2.77*dist/sqrt(layers[index+1]->size));
+    
+    expectation_gradients[index+1] += dissimilar_gradient_contribution;
+        //}
 
     // RBM learning
     if( !fast_exact_is_equal( cd_learning_rate, 0 ) )
@@ -1032,44 +1033,45 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
     // Compute supervised gradient
 
 
-    if( do_not_use_knn_classifier )
+    if( !do_not_use_knn_classifier )
     {
         // Similar example contribution
-        substract(input_representation,similar_example_representation,
+        substract(previous_input_representation,similar_example_representation,
                   expectation_gradients[n_layers-1]);
         expectation_gradients[n_layers-1] *= 4/sqrt(layers[n_layers-1]->size);
     
         // Dissimilar example contribution
-        real dist = sqrt(powdistance(input_representation,
+        real dist = sqrt(powdistance(previous_input_representation,
                                      dissimilar_example_representation,
                                      2));
     
-        if( dist == 0 )
-            PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
-                      " example representation is exactly the sample as the"
-                      " input example. Gradient would be infinite! Skipping this"
-                      " example...");
-        else
-        {
+        //if( dist == 0 )
+        //    PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
+        //              " example representation is exactly the sample as the"
+        //              " input example. Gradient would be infinite! Skipping this"
+        //              " example...");
+        //else
+        //{
 
-            substract(input_representation,dissimilar_example_representation,
-                      dissimilar_gradient_contribution);
-
-            dissimilar_gradient_contribution *= -5.54*
-                safeexp(-2.77*dist/sqrt(layers[n_layers-1]->size));
+        substract(previous_input_representation,
+                  dissimilar_example_representation,
+                  dissimilar_gradient_contribution);
         
-            expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
-        }
+        dissimilar_gradient_contribution *= -5.54*
+            safeexp(-2.77*dist/sqrt(layers[n_layers-1]->size));
+        
+        expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
+        //}
     }
     else
     {
-        final_module->fprop( input_representation, final_cost_input );
+        final_module->fprop( previous_input_representation, final_cost_input );
         final_cost->fprop( final_cost_input, target, final_cost_value );
         
         final_cost->bpropUpdate( final_cost_input, target,
                                  final_cost_value[0],
                                  final_cost_gradient );
-        final_module->bpropUpdate( input_representation,
+        final_module->bpropUpdate( previous_input_representation,
                                    final_cost_input,
                                    expectation_gradients[ n_layers-1 ],
                                    final_cost_gradient );
