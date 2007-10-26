@@ -264,9 +264,9 @@ class DBIBase:
                 waiting+=i
                 unfinished.append(t.id)
             else:
-                print "[DBI] jobs %i have a bad status: %d",t.id
-            print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, init: %d"%(len(self.tasks),finished, running, waiting, init)
-            print "[DBI] jobs unfinished (starting at 1): ",unfinished
+                print "[DBI] jobs %i have an unknow status: %d",t.id
+        print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, init: %d"%(len(self.tasks),finished, running, waiting, init)
+        print "[DBI] jobs unfinished (starting at 1): ",unfinished
 
 class Task:
 
