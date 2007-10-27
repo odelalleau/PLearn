@@ -62,6 +62,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     online( false ),
     compute_all_test_costs( false ),
     reconstruct_hidden( false ),
+    fraction_of_masked_inputs( 0 ),
     n_layers( 0 ),
     currently_trained_layer( 0 )
 {
@@ -202,6 +203,13 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "reconstruct their hidden layers (inspired from CD1 in an RBM).\n"
         );
 
+    declareOption(ol, "fraction_of_masked_inputs", 
+                  &StackedAutoassociatorsNet::fraction_of_masked_inputs,
+                  OptionBase::buildoption,
+                  "Random fraction of the autoassociators' input components that\n"
+                  "masked, i.e. unsused to reconstruct the input.\n"
+        );
+
     declareOption(ol, "greedy_stages", 
                   &StackedAutoassociatorsNet::greedy_stages,
                   OptionBase::learntoption,
@@ -269,6 +277,16 @@ void StackedAutoassociatorsNet::build_()
             PLERROR("StackedAutoassociatorsNet::build_()"
                     " - \n"
                     "cannot use online setting with reconstruct_hidden=true.\n");
+
+        if( fraction_of_masked_inputs < 0 )
+            PLERROR("StackedAutoassociatorsNet::build_()"
+                    " - \n"
+                    "fraction_of_masked_inputs should be > or equal to 0.\n");
+
+        if( online && fraction_of_masked_inputs > 0)
+            PLERROR("StackedAutoassociatorsNet::build_()"
+                    " - \n"
+                    "masked inputs has not been implemented for online option.\n");
 
         if( !online )
         {
@@ -612,6 +630,7 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_input, copies);
     deepCopyField(final_cost_value, copies);
     deepCopyField(final_cost_gradient, copies);
+    deepCopyField(masked_autoassociator_input, copies);
     deepCopyField(greedy_stages, copies);
 }
 
@@ -746,6 +765,10 @@ void StackedAutoassociatorsNet::train()
             reconstruction_activations.resize(layers[i]->size);
             reconstruction_activation_gradients.resize(layers[i]->size);
             reconstruction_expectation_gradients.resize(layers[i]->size);
+            masked_autoassociator_input.resize(layers[i]->size);
+            autoassociator_input_indices.resize(layers[i]->size);
+            for( int j=0 ; j < autoassociator_input_indices.length() ; j++ )
+                autoassociator_input_indices[j] = j;
 
             if(reconstruct_hidden)
             {
@@ -891,12 +914,23 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
 {
     PLASSERT( index < n_layers );
 
+    if( fraction_of_masked_inputs > 0 )
+        random_gen->shuffleElements(autoassociator_input_indices);
+
     expectations[0] << input;
     if(correlation_connections.length() != 0)
     {
         for( int i=0 ; i<index + 1; i++ )
         {
-            connections[i]->fprop( expectations[i], correlation_activations[i] );
+            if( i == index && fraction_of_masked_inputs > 0 )
+            {
+                masked_autoassociator_input << expectations[i];
+                for( int j=0 ; j < round(fraction_of_masked_inputs*layers[index]->size) ; j++)
+                    masked_autoassociator_input[ autoassociator_input_indices[j] ] = 0; 
+                connections[i]->fprop( masked_autoassociator_input, correlation_activations[i] );
+            }
+            else
+                connections[i]->fprop( expectations[i], correlation_activations[i] );
             layers[i+1]->fprop( correlation_activations[i],
                                 correlation_expectations[i] );
             correlation_connections[i]->fprop( correlation_expectations[i], 
@@ -909,10 +943,19 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
     {
         for( int i=0 ; i<index + 1; i++ )
         {
-            connections[i]->fprop( expectations[i], activations[i+1] );
+            if( i == index && fraction_of_masked_inputs > 0 )
+            {
+                masked_autoassociator_input << expectations[i];
+                for( int j=0 ; j < round(fraction_of_masked_inputs*layers[index]->size) ; j++)
+                    masked_autoassociator_input[ autoassociator_input_indices[j] ] = 0; 
+                connections[i]->fprop( masked_autoassociator_input, activations[i+1] );
+            }
+            else
+                connections[i]->fprop( expectations[i], activations[i+1] );
             layers[i+1]->fprop(activations[i+1],expectations[i+1]);
         }
     }
+
 
     if( partial_costs && partial_costs[ index ] )
     {
@@ -937,7 +980,13 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                         activation_gradients[ index + 1 ],
                                         expectation_gradients[ index + 1 ] );
 
-        connections[ index ]->bpropUpdate( expectations[ index ],
+        if( fraction_of_masked_inputs > 0 )
+            connections[ index ]->bpropUpdate( masked_autoassociator_input,
+                                               activations[ index + 1 ],
+                                               expectation_gradients[ index ],
+                                               activation_gradients[ index + 1 ] );
+        else
+            connections[ index ]->bpropUpdate( expectations[ index ],
                                            activations[ index + 1 ],
                                            expectation_gradients[ index ],
                                            activation_gradients[ index + 1 ] );
@@ -947,8 +996,12 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                                 reconstruction_activations);
     if(direct_connections.length() != 0)
     {
-        direct_connections[ index ]->fprop( expectations[ index ], 
-                                            direct_activations );
+        if( fraction_of_masked_inputs > 0 )
+            direct_connections[ index ]->fprop( masked_autoassociator_input, 
+                                                direct_activations );
+        else
+            direct_connections[ index ]->fprop( expectations[ index ], 
+                                                direct_activations );            
         direct_and_reconstruction_activations.clear();
         direct_and_reconstruction_activations += direct_activations;
         direct_and_reconstruction_activations += reconstruction_activations;
@@ -957,7 +1010,8 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                 layers[ index ]->expectation);
         
         layers[ index ]->activation << direct_and_reconstruction_activations;
-        layers[ index ]->expectation_is_up_to_date = true;
+        //layers[ index ]->expectation_is_up_to_date = true;  // Won't work for certain RBMLayers
+        layers[ index ]->setExpectationByRef( layers[ index ]->expectation );
         train_costs[index] = layers[ index ]->fpropNLL(expectations[index]);
         
         layers[ index ]->bpropNLL(expectations[index], train_costs[index],
@@ -965,12 +1019,19 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
 
         layers[ index ]->update(direct_and_reconstruction_activation_gradients);
 
-        direct_connections[ index ]->bpropUpdate( 
-            expectations[ index ],
-            direct_activations,
-            reconstruction_expectation_gradients, // Will be overwritten later
-            direct_and_reconstruction_activation_gradients);
-        
+        if( fraction_of_masked_inputs > 0 )
+            direct_connections[ index ]->bpropUpdate( 
+                masked_autoassociator_input,
+                direct_activations,
+                reconstruction_expectation_gradients, // Will be overwritten later
+                direct_and_reconstruction_activation_gradients);
+        else
+            direct_connections[ index ]->bpropUpdate( 
+                expectations[ index ],
+                direct_activations,
+                reconstruction_expectation_gradients, // Will be overwritten later
+                direct_and_reconstruction_activation_gradients);
+            
         reconstruction_connections[ index ]->bpropUpdate( 
             expectations[ index + 1], 
             reconstruction_activations, 
@@ -983,7 +1044,8 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                 layers[ index ]->expectation);
         
         layers[ index ]->activation << reconstruction_activations;
-        layers[ index ]->expectation_is_up_to_date = true;
+        //layers[ index ]->expectation_is_up_to_date = true;
+        layers[ index ]->setExpectationByRef( layers[ index ]->expectation );
         real rec_err = layers[ index ]->fpropNLL(expectations[index]);
         train_costs[index] = rec_err;
 
@@ -997,7 +1059,8 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
             layers[ index+1 ]->fprop( hidden_reconstruction_activations,
                 layers[ index+1 ]->expectation );
             layers[ index+1 ]->activation << hidden_reconstruction_activations;
-            layers[ index+1 ]->expectation_is_up_to_date = true;
+            //layers[ index+1 ]->expectation_is_up_to_date = true;
+            layers[ index+1 ]->setExpectationByRef( layers[ index+1 ]->expectation );
             real hid_rec_err = layers[ index+1 ]->fpropNLL(expectations[index+1]);
             train_costs[index] += hid_rec_err;
 
@@ -1078,11 +1141,18 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
             correlation_activation_gradients [ index ],
             correlation_expectation_gradients [ index ]);    
         
-        connections[ index ]->bpropUpdate( 
-            expectations[ index ],
-            correlation_activations[ index ],
-            reconstruction_expectation_gradients, //reused
-            correlation_activation_gradients [ index ]);
+        if( fraction_of_masked_inputs > 0 )
+            connections[ index ]->bpropUpdate( 
+                masked_autoassociator_input,
+                correlation_activations[ index ],
+                reconstruction_expectation_gradients, //reused
+                correlation_activation_gradients [ index ]);
+        else
+            connections[ index ]->bpropUpdate( 
+                expectations[ index ],
+                correlation_activations[ index ],
+                reconstruction_expectation_gradients, //reused
+                correlation_activation_gradients [ index ]);
     }
     else
     {
@@ -1092,11 +1162,18 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                         reconstruction_activation_gradients, 
                                         reconstruction_expectation_gradients);    
         
-        connections[ index ]->bpropUpdate( 
-            expectations[ index ],
-            activations[ index + 1 ],
-            reconstruction_expectation_gradients, //reused
-            reconstruction_activation_gradients);
+        if( fraction_of_masked_inputs > 0 )
+            connections[ index ]->bpropUpdate( 
+                masked_autoassociator_input,
+                activations[ index + 1 ],
+                reconstruction_expectation_gradients, //reused
+                reconstruction_activation_gradients);
+        else
+            connections[ index ]->bpropUpdate( 
+                expectations[ index ],
+                activations[ index + 1 ],
+                reconstruction_expectation_gradients, //reused
+                reconstruction_activation_gradients);
     }
 
 }
@@ -1319,8 +1396,9 @@ void StackedAutoassociatorsNet::onlineStep( const Vec& input,
                                 layers[ i-1 ]->expectation);
         
         layers[ i-1 ]->activation << reconstruction_activations;
-        layers[ i-1 ]->expectation_is_up_to_date = true;
-        real rec_err = layers[ i-1 ]->fpropNLL(expectations[i-1]);
+        //layers[ i-1 ]->expectation_is_up_to_date = true;
+        layers[ i-1 ]->setExpectationByRef( layers[ i-1 ]->expectation );
+        real rec_err = layers[ i-1 ]->fpropNLL( expectations[i-1] );
         train_costs[i-1] = rec_err;
 
         layers[ i-1 ]->bpropNLL(expectations[i-1], rec_err,
@@ -1548,7 +1626,8 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
                                 layers[ i ]->expectation);
             
             layers[ i ]->activation << reconstruction_activations;
-            layers[ i ]->expectation_is_up_to_date = true;
+            //layers[ i ]->expectation_is_up_to_date = true;
+            layers[ i ]->setExpectationByRef( layers[ i ]->expectation );
 
             costs[i] = layers[ i ]->fpropNLL(expectations[ i ]);
 
@@ -1581,7 +1660,9 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
         
         layers[ currently_trained_layer-1 ]->activation << 
             reconstruction_activations;
-        layers[ currently_trained_layer-1 ]->expectation_is_up_to_date = true;
+        //layers[ currently_trained_layer-1 ]->expectation_is_up_to_date = true;
+        layers[ currently_trained_layer-1 ]->setExpectationByRef( 
+            layers[ currently_trained_layer-1 ]->expectation );
         costs[ currently_trained_layer-1 ] = 
             layers[ currently_trained_layer-1 ]->fpropNLL(
                 expectations[ currently_trained_layer-1 ]);
@@ -1596,7 +1677,9 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
                 layers[ currently_trained_layer ]->expectation );
             layers[ currently_trained_layer ]->activation << 
                 hidden_reconstruction_activations;
-            layers[ currently_trained_layer ]->expectation_is_up_to_date = true;
+            //layers[ currently_trained_layer ]->expectation_is_up_to_date = true;
+            layers[ currently_trained_layer ]->setExpectationByRef( 
+                layers[ currently_trained_layer ]->expectation );
             costs[ currently_trained_layer-1 ] += 
                 layers[ currently_trained_layer ]->fpropNLL(
                     output);

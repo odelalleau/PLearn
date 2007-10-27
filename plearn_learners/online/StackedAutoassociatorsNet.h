@@ -146,6 +146,10 @@ public:
     //! reconstruct their hidden layers (inspired from CD1 in an RBM)
     bool reconstruct_hidden;
 
+    //! Random fraction of the autoassociators' input components that
+    //! masked, i.e. unsused to reconstruct the input.
+    real fraction_of_masked_inputs;
+
     //#####  Public Learnt Options  ###########################################
 
     //! Number of layers
@@ -296,6 +300,13 @@ protected:
 
     //! Stores the gradient of the cost at the input of final_cost
     mutable Vec final_cost_gradient;
+
+    //! Input of autoassociator where some of the components
+    //! have been masked (set to 0) randomly.
+    Vec masked_autoassociator_input;
+
+    //! Indices of the input components
+    TVec<int> autoassociator_input_indices;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
