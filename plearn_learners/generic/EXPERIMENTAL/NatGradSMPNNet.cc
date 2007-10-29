@@ -73,6 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(
 NatGradSMPNNet::NatGradSMPNNet():
       delayed_update(true),
       wait_for_final_update(true),
+      synchronize_update(false),
       noutputs(-1),
       params_averaging_coeff(1.0),
       params_averaging_freq(5),
@@ -128,6 +129,14 @@ void NatGradSMPNNet::declareOptions(OptionList& ol)
         "If true, each CPU will wait its turn before performing its final\n"
         "update. It should impact performance only when 'delayed_update' is\n"
         "also true.");
+
+    declareOption(ol, "synchronize_update", &NatGradSMPNNet::synchronize_update,
+                  OptionBase::buildoption,
+        "If true, then processors will in turn update the shared paremeters\n"
+        "after each mini-batch and will wait until all processors did their\n"
+        "update before processing the next mini-batch. Otherwise, no\n"
+        "synchronization is performed and a processor may process multiple\n"
+        "mini-batches before doing a parameter update.");
 
     declareOption(ol, "noutputs", &NatGradSMPNNet::noutputs,
                   OptionBase::buildoption,
@@ -458,6 +467,7 @@ void NatGradSMPNNet::build_()
     all_params_gradient.resize(n_params);
     all_params_delta.resize(n_params);
     params_update.resize(n_params);
+    params_update.fill(0);
 
     // depending on how parameters are grouped on the first layer
     int n_groups = params_natgrad_per_input_template ? (n_neurons-layer_sizes[1]+layer_sizes[0]+1) : n_neurons;
@@ -579,6 +589,9 @@ void NatGradSMPNNet::build_()
     //    ng_corrprof->build();
     //}
 
+    if (synchronize_update && !delayed_update)
+        PLERROR("NatGradSMPNNet::build_ - 'synchronize_update' cannot be used "
+                "when 'delayed_update' is false");
 }
 
 ///////////
@@ -777,22 +790,26 @@ void NatGradSMPNNet::train()
                     "semaphore (errno = %d)", errno);
         semaphore_id = -1;
     }
-    // The semaphore has 'ncpus' + 1 values.
+    // The semaphore has 'ncpus' + 2 values.
     // The first one is the index of the CPU that will be next to update
     // weights.
     // The other ones are 0/1 values that are initialized with 0, and take 1
     // once the corresponding CPU has finished all updates for this training
     // period.
-    // Finally, the last value is the current stage, i.e. the number of samples
-    // with which the network has been updated so far.
-    semaphore_id = semget(IPC_PRIVATE, ncpus + 1, 0666 | IPC_CREAT);
+    // Finally, the last value is 0 when 'synchronize_update' is false, and
+    // otherwise is:
+    // - in a first step, the number of CPUs that have finished performing
+    // their mini-batch computation,
+    // - in a second step, the number of CPUs that have finished updating the
+    // shared parameters.
+    semaphore_id = semget(IPC_PRIVATE, ncpus + 2, 0666 | IPC_CREAT);
     if (semaphore_id == -1)
         PLERROR("In NatGradSMPNNet::train - Could not create semaphore "
                 "(errno = %d)", errno);
     // Initialize all values in the semaphore to zero.
     semun semun_v;
     semun_v.val = 0;
-    for (int i = 0; i < ncpus + 1; i++) {
+    for (int i = 0; i < ncpus + 2; i++) {
         int success = semctl(semaphore_id, i, SETVAL, semun_v);
         if (success != 0)
             PLERROR("In NatGradSMPNNet::train - Could not initialize semaphore"
@@ -876,7 +893,17 @@ void NatGradSMPNNet::train()
             // Note that we should actually call onlineStep only on the subset
             // of samples that are new (compared to the previous mini-batch).
             // This is left as a TODO since it is not a priority.
+            /*
+            string samples_str = tostring(samples);
+            printf("CPU %d computing (cur_stage = %d) on samples: %s\n",
+                    iam, cur_stage, samples_str.c_str());
+                    */
             onlineStep(cur_stage, targets, train_costs, example_weights );
+            /*
+            sleep(iam);
+            string update = tostring(params_update);
+            printf("\nCPU %d's current update: %s\n", iam, update.c_str());
+            */
             nsteps += b + 1;
             /*
             for (int i=0;i<minibatch_size;i++)
@@ -886,18 +913,35 @@ void NatGradSMPNNet::train()
             }
             */
             // Update weights if it is this cpu's turn.
+            bool performed_update = false; // True when this CPU has updated.
+            while (true) {
             int sem_value = semctl(semaphore_id, 0, GETVAL);
             if (sem_value == iam) {
-                //printf("CPU %d updating (nsteps =%d)\n", iam, nsteps);
-                if (delayed_update) {
+                int n_ready = 2 * ncpus;
+                if (synchronize_update && !performed_update) {
+                    // We first indicate that this CPU is ready to perform his
+                    // update.
+                    n_ready = semctl(semaphore_id, ncpus + 1, GETVAL);
+                    n_ready++;
+                    semun_v.val = n_ready;
+                    int success = semctl(semaphore_id, ncpus + 1, SETVAL,
+                                         semun_v);
+                    PLCHECK( success == 0 );
+                }
+                if (delayed_update && n_ready > ncpus && !performed_update) {
+                    //printf("CPU %d updating (nsteps = %d)\n", iam, nsteps);
                     all_params += params_update;
                     params_update.clear();
+                    performed_update = true;
                 }
-                // Update the current stage.
-                cur_stage = params_int_ptr[stage_idx];
-                PLASSERT( cur_stage >= 0 );
-                int new_stage = cur_stage + nsteps;
-                params_int_ptr[stage_idx] = new_stage;
+                if (nsteps > 0) {
+                    // Update the current stage.
+                    cur_stage = params_int_ptr[stage_idx];
+                    PLASSERT( cur_stage >= 0 );
+                    int new_stage = cur_stage + nsteps;
+                    params_int_ptr[stage_idx] = new_stage;
+                    nsteps = 0;
+                }
                 // Give update token to next CPU.
                 sem_value = (sem_value + 1) % ncpus;
                 semun_v.val = sem_value;
@@ -907,13 +951,19 @@ void NatGradSMPNNet::train()
                             "semaphore with next CPU (errno = %d, returned "
                             "value = %d, set value = %d)", errno, success,
                             semun_v.val);
-                nsteps = 0;
-            } else {
-#if 0
-                printf("CPU %d NOT updating (sem_value = %d)\n",
-                        iam, sem_value);
-#endif
+                if (!delayed_update || n_ready >= 2 * ncpus)
+                    // If 'synchronize_update' is false this is always true.
+                    // If 'synchronize_update' is true this means all CPUs have
+                    // updated the parameters.
+                    break;
             }
+            }
+        }
+        if (synchronize_update && iam == 0) {
+            // Reset the 'ready' semaphore.
+            semun_v.val = 0;
+            int success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
+            PLCHECK( success == 0 );
         }
         /*
         if (params_averaging_coeff!=1.0 && 

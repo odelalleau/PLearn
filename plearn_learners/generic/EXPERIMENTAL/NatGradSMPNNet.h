@@ -59,6 +59,7 @@ public:
 
     bool delayed_update;
     bool wait_for_final_update;
+    bool synchronize_update;
 
     int noutputs;
 
