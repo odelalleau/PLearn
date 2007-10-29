@@ -38,6 +38,7 @@
 
 
 #include "NatGradSMPNNet.h"
+#include <plearn/io/openFile.h>
 #include <plearn/math/pl_erf.h>
 
 #include <sys/ipc.h>
@@ -711,9 +712,24 @@ void NatGradSMPNNet::forget()
 ///////////
 void NatGradSMPNNet::train()
 {
+    static int log_idx = -1;
+    log_idx = (log_idx + 1) % 50;
 
-    if (inputsize_<0)
+    /*
+    PStream tmp_log = openFile("/u/delallea/tmp/tmp_log" + tostring(log_idx),
+                               PStream::raw_ascii, "w");
+
+    tmp_log << "Starting train " << endl;
+    tmp_log.flush();
+    */
+
+    if (inputsize_<0) {
+        /*
+        tmp_log << "Calling build" << endl;
+        tmp_log.flush();
+        */
         build();
+    }
 
     targets.resize(minibatch_size,targetsize());  // the train_set's targetsize()
 
@@ -728,6 +744,9 @@ void NatGradSMPNNet::train()
     train_stats->forget();
 
     PP<ProgressBar> pb;
+
+    //tmp_log << "Beginning stuff done" << endl;
+    //tmp_log.flush();
 
     Profiler::reset("training");
     Profiler::start("training");
@@ -784,6 +803,13 @@ void NatGradSMPNNet::train()
     int stage_idx = 0;
     params_int_ptr[stage_idx] = stage;
 
+    //tmp_log << "Ready to fork" << endl;
+    //tmp_log.flush();
+
+    // No need to call wait() to acknowledge the death of a child process in
+    // order to avoid defunct processes.
+    signal(SIGCLD, SIG_IGN);
+
     // Fork one process/cpu.
     int iam = 0;
     for (int cpu = 1; cpu < ncpus ; cpu++)
@@ -791,6 +817,11 @@ void NatGradSMPNNet::train()
             iam = cpu;
             break;
         }
+
+    if (!iam) {
+        //tmp_log << "Forked" << endl;
+        //tmp_log.flush();
+    }
 
     // Each processor computes gradient over its own subset of samples (between
     // indices 'start' and 'start + my_n_samples' in the training set).
@@ -821,6 +852,11 @@ void NatGradSMPNNet::train()
     int stage_incr_left = stage_incr % ncpus;
     int my_stage_incr = iam >= stage_incr_left ? stage_incr_per_cpu
                                                : stage_incr_per_cpu + 1;
+
+    if (iam == 0) {
+        //tmp_log << "Starting loop" << endl;
+        //tmp_log.flush();
+    }
 
     for(int i = 0; i < my_stage_incr; i++)
     {
@@ -895,6 +931,11 @@ void NatGradSMPNNet::train()
         */
     }
 
+    if (iam == 0) {
+        //tmp_log << "Loop ended" << endl;
+        //tmp_log.flush();
+    }
+
     if (!wait_for_final_update) {
         if (nsteps >  0) {
             //printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
@@ -919,6 +960,9 @@ void NatGradSMPNNet::train()
 
     Profiler::reset("Synchronization");
     Profiler::start("Synchronization");
+
+    //tmp_log << "Synchronization" << endl;
+    //tmp_log.flush();
 
     // Wait until it is our turn.
     while (true) {
@@ -977,6 +1021,8 @@ void NatGradSMPNNet::train()
         }
     }
 
+    //tmp_log << "Synchronized" << endl;
+    //tmp_log.flush();
     Profiler::end("Synchronization");
     /*
     const Profiler::Stats& synch_stats = Profiler::getStats("Synchronization");
@@ -998,6 +1044,9 @@ void NatGradSMPNNet::train()
         semaphore_id = -1;
     }
 
+    //tmp_log << "Finishing stuff" << endl;
+    //tmp_log.flush();
+
     // Update the learner's stage.
     stage = nstages;
     if (stage != cur_stage)
@@ -1017,6 +1066,9 @@ void NatGradSMPNNet::train()
     costs_plus_time[train_costs.width()+1] = cumulative_training_time;
     train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
+
+    //tmp_log << "Done!" << endl;
+    //tmp_log.flush();
 
     // profiling gradient correlation
     //if( g_corrprof )    {
@@ -1252,11 +1304,23 @@ void NatGradSMPNNet::pvGradUpdate()
 
 void NatGradSMPNNet::computeOutput(const Vec& input, Vec& output) const
 {
+    /*
+    static int out_idx = -1;
+    out_idx = (out_idx + 1) % 50;
+    PStream out_log_file = openFile("/u/delallea/tmp/out_log_" +
+            tostring(out_idx), PStream::raw_ascii, "w");
+    out_log_file << "Starting to compute output on " << input << endl;
+    out_log_file.flush();
+    */
     Profiler::pl_profile_start("computeOutput");
     neuron_outputs_per_layer[0](0) << input;
     fpropNet(1,false);
     output << neuron_outputs_per_layer[n_layers-1](0);
     Profiler::pl_profile_end("computeOutput");
+    /*
+    out_log_file << "Output computed" << endl;
+    out_log_file.flush();
+    */
 }
 
 //! compute (pre-final-non-linearity) network top-layer output given input
