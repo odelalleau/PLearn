@@ -450,6 +450,24 @@ void VMatrix::printFieldInfo(PStream& out, int fieldnum, bool print_binning) con
         PLERROR("Can't write name of type");
     }
 
+    map<real,StatsCollectorCounts>::const_iterator it = s.counts.begin();
+    map<real,StatsCollectorCounts>::const_iterator countsend = s.counts.end();
+    int n_values = 0;
+    //some value(FLT_MAX, meaby others) are used for others purpose.
+    //We must not cont then.
+    while(it!=countsend)
+    {
+        real val = it->first;
+        const StatsCollectorCounts& co = it->second;
+        string str = getValString(fieldnum, val);
+        if(co.n>0)
+            n_values++;
+        ++it;
+        }
+    char plus = ' ';
+    if (n_values==s.maxnvalues)
+        plus = '+';
+
     out << "nmissing: " << s.nmissing() << '\n';
     out << "nnonmissing: " << s.nnonmissing() << '\n';
     out << "sum: " << s.sum() << '\n';
@@ -457,6 +475,7 @@ void VMatrix::printFieldInfo(PStream& out, int fieldnum, bool print_binning) con
     out << "stddev: " << s.stddev() << '\n';
     out << "min: " << s.min() << '\n';
     out << "max: " << s.max() << '\n';
+    out << "ndiffvalue: " << n_values << plus << '\n';
 
     if(!s.counts.empty() && print_binning)
     {
@@ -722,13 +741,15 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
     Array<VMField> current_fieldinfos(w);
     for(int i=0; i<w; ++i)
     {
-        vector<string> v(split(in.getline()));
+        string line = in.getline();
+        vector<string> v(split(line));
         switch(v.size())
         {
         case 1: current_fieldinfos[i] = VMField(v[0]); break;
         case 2: current_fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
         default: PLERROR("In VMatrix::getSavedFieldInfos Format not recognized in file %s.\n"
-                         "Each line should be '<name> {<type>}'.", filename.absolute().c_str());
+                         "Each line should be '<name> {<type>}'.\n"
+                         "Got: '%s'",filename.absolute().c_str(),line.c_str());
         }
     }
     return current_fieldinfos;
