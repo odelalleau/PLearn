@@ -306,9 +306,9 @@ TVec<string> RegressionTree::getTrainCostNames() const
 {
     TVec<string> return_msg(4);
     return_msg[0] = "mse";
-    return_msg[1] = "base confidence";
-    return_msg[2] = "base reward - l2";
-    return_msg[3] = "base reward - l1";
+    return_msg[1] = "base_confidence";
+    return_msg[2] = "base_reward_l2";
+    return_msg[3] = "base_reward_l1";
     return return_msg;
 }
 
