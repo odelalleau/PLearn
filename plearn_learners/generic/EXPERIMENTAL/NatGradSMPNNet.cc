@@ -928,7 +928,9 @@ void NatGradSMPNNet::train()
                                          semun_v);
                     PLCHECK( success == 0 );
                 }
-                if (delayed_update && n_ready > ncpus && !performed_update) {
+                if (delayed_update && (!synchronize_update ||
+                                       (!performed_update && n_ready > ncpus)))
+                {
                     // Once all CPUs are ready we can actually perform the
                     // updates.
                     //printf("CPU %d updating (nsteps = %d)\n", iam, nsteps);
