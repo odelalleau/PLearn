@@ -917,7 +917,7 @@ void NatGradSMPNNet::train()
             while (true) {
             int sem_value = semctl(semaphore_id, 0, GETVAL);
             if (sem_value == iam) {
-                int n_ready = 2 * ncpus;
+                int n_ready = 0;
                 if (synchronize_update && !performed_update) {
                     // We first indicate that this CPU is ready to perform his
                     // update.
@@ -929,6 +929,8 @@ void NatGradSMPNNet::train()
                     PLCHECK( success == 0 );
                 }
                 if (delayed_update && n_ready > ncpus && !performed_update) {
+                    // Once all CPUs are ready we can actually perform the
+                    // updates.
                     //printf("CPU %d updating (nsteps = %d)\n", iam, nsteps);
                     all_params += params_update;
                     params_update.clear();
@@ -942,6 +944,14 @@ void NatGradSMPNNet::train()
                     params_int_ptr[stage_idx] = new_stage;
                     nsteps = 0;
                 }
+                if (n_ready == 2 * ncpus) {
+                    // The last CPU has updated the parameters. All CPUs can
+                    // now break out of this loop.
+                    n_ready = semun_v.val = 0;
+                    int success = semctl(semaphore_id, ncpus + 1, SETVAL,
+                                         semun_v);
+                    PLCHECK( success == 0 );
+                }
                 // Give update token to next CPU.
                 sem_value = (sem_value + 1) % ncpus;
                 semun_v.val = sem_value;
@@ -951,19 +961,17 @@ void NatGradSMPNNet::train()
                             "semaphore with next CPU (errno = %d, returned "
                             "value = %d, set value = %d)", errno, success,
                             semun_v.val);
-                if (!delayed_update || n_ready >= 2 * ncpus)
+                if (!delayed_update || n_ready == 0)
                     // If 'synchronize_update' is false this is always true.
                     // If 'synchronize_update' is true this means all CPUs have
                     // updated the parameters.
                     break;
+            } else if (performed_update) {
+                // TODO We could break here by checking the 'n_ready'
+                // semaphore: once it is reset to zero everyone can exit at
+                // once without necessarily doing it in turn.
             }
             }
-        }
-        if (synchronize_update && iam == 0) {
-            // Reset the 'ready' semaphore.
-            semun_v.val = 0;
-            int success = semctl(semaphore_id, ncpus + 1, SETVAL, semun_v);
-            PLCHECK( success == 0 );
         }
         /*
         if (params_averaging_coeff!=1.0 && 
