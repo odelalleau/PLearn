@@ -185,7 +185,6 @@ string removenewline(const string& s)
     return s.substr(0,pos);
 }
 
-//! Utility function to strip a string of leading and trailing quotes
 string removequotes(const string& s)
 {
     const int n = int(s.size());
@@ -197,7 +196,6 @@ string removequotes(const string& s)
     return s;
 }
 
-//! Quote the provided string 's'
 string quote_string(const string& s)
 {
     string quoted(s);
