@@ -184,13 +184,85 @@ bool TextFilesVMatrix::isValidNonSkipFieldType(const string& ftype) const {
     return (ftype=="auto" || ftype=="num" || ftype=="date" || ftype=="jdate" ||
             ftype=="postal" || ftype=="dollar" || ftype=="dollar-comma" ||
             ftype=="YYYYMM" || ftype=="sas_date" || ftype == "bell_range" ||
-            ftype == "char" );
+            ftype == "char" || ftype=="num-comma" );
 }
 
 void TextFilesVMatrix::setColumnNamesAndWidth()
 {
     width_ = 0;
     TVec<string> fnames;
+    if(reorder_fieldspec_from_headers)
+    {
+        //the fieldnames read from the files.
+        TVec<string> fn;
+        for(int i=0; i<txtfiles.size(); i++)
+        {
+            FILE* f = txtfiles[i];
+            fseek(f,0,SEEK_SET);
+            if(!fgets(buf, sizeof(buf), f))
+                PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                        "Couldn't read the fiedls names from file '%s'",
+                        txtfilenames[i].c_str());
+            fseek(f,0,SEEK_SET);
+
+            TVec<string> fields = splitIntoFields(buf);
+            fields.append(removeblanks(fields.pop()));
+
+            fn.append(fields);
+        }
+        if(fn.size()!=fieldspec.size())
+        {
+            PLWARNING("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                    "We read %d field names from the header but have %d"
+                    "fieldspec",fn.size(),fieldspec.size());
+        }
+
+        //check that all field names from the header have a spec
+        TVec<string> not_used_fn;
+        for(int i=0;i<fn.size();i++)
+        {
+            string name=fn[i];
+            int j=0;
+            for(;j<fieldspec.size();j++)
+                if(fieldspec[j].first==name)
+                    break;
+            if(j>=fieldspec.size())
+                not_used_fn.append(name);
+        }
+        //check that all fieldspec names are also in the header
+        TVec<string> not_used_fs;
+        for(int i=0;i<fieldspec.size();i++)
+        {
+            string name=fieldspec[i].first;
+            int j=0;
+            for(;j<fn.size();j++)
+                if(fn[j]==name)
+                    break;
+            if(j>=fn.size())
+                not_used_fs.append(name);
+        }
+        if(not_used_fs.size()!=0 || not_used_fn.size()!=0)
+            PLERROR("UNUSUED field names from header: %s\n"
+                    "UNUSUED fieldspec %s",tostring(not_used_fn).c_str(),
+                    tostring(not_used_fs).c_str());
+
+        //the new order for fieldspecs
+        TVec< pair<string, string> > fs(fn.size());
+        for(int i=0;i<fn.size();i++)
+        {
+            string name=fn[i];
+            int j=0;
+            for(;j<fieldspec.size();j++)
+                if(fieldspec[j].first==name)
+                    break;
+            if(j>=fieldspec.size())
+                PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                        "fieldspec do not contain spec for field '%s'",
+                        name.c_str());
+            fs[i]=fieldspec[j];
+        }
+        fieldspec=fs;
+    }
     for(int k=0; k<fieldspec.length(); k++)
     {
         string fname = fieldspec[k].first;
@@ -215,12 +287,6 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 
 void TextFilesVMatrix::build_()
 {
-    // Initialize some sizespp
-    int n = fieldspec.size();
-    mapping.resize(n);
-    mapfiles.resize(n);
-    mapfiles.fill(0);
-
     if (metadatapath != "") {
         PLWARNING("In TextFilesVMatrix::build_: metadatapath option is deprecated. "
                   "You should use metadatadir instead.\n");
@@ -236,8 +302,6 @@ void TextFilesVMatrix::build_()
     PPath metadir = getMetaDataDir();
     PPath idxfname = metadir/"txtmat.idx";
 
-    setColumnNamesAndWidth();
-
     // Now open txtfiles
     int nf = txtfilenames.length();
     txtfiles.resize(nf);
@@ -251,6 +315,8 @@ void TextFilesVMatrix::build_()
         }
     }
 
+    setColumnNamesAndWidth();
+
     // open the index file
     if(!isfile(idxfname))
         buildIdx(); // (re)build it first!
@@ -258,6 +324,12 @@ void TextFilesVMatrix::build_()
     if(fgetc(idxfile) != byte_order())
         PLERROR("Wrong endianness. Remove the index file for it to be automatically rebuilt");
     fread(&length_, 4, 1, idxfile);
+
+    // Initialize some sizes
+    int n = fieldspec.size();
+    mapping.resize(n);
+    mapfiles.resize(n);
+    mapfiles.fill(0);
 
     // Handle string mapping
     loadMappings();
@@ -656,6 +728,22 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
             dest[0] = (number_1 + number_2) / (real) 2;
         }
     }
+    else if(fieldtype=="num-comma")
+    {
+        string s="";
+        for(uint i=0;i<strval.length();i++)
+        {
+            if(strval[i]!=',')
+                s=s+strval[i];
+        }
+        if(s=="")  // missing
+            dest[0] = MISSING_VALUE;
+        else if(pl_isnumber(s,&val))
+            dest[0] = real(val);
+        else
+            PLERROR("In TextFilesVMatrix::transformStringToValue - expedted a number as the value for field %d(%s). Got %s",k,fieldname.c_str(),strval.c_str());
+                
+    }
 
     else
     {
@@ -714,6 +802,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "- skip       : Ignore the content of the field, won't be inserted in the resulting VMat\n"
                   "- auto       : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
                   "- num        : numeric value, keep as is\n"
+                  "- num-comma  : numeric value where thousands are separeted by comma\n"
                   "- char       : look it up in the mapping (possibly inserting a new mapping if it's not there)\n"
                   "- date       : date of the form 25DEC2003 or 25-dec-2003 or 2003/12/25 or 20031225, will be mapped to float date format 1031225\n"
                   "- jdate      : date of the form 25DEC2003 or 25-dec-2003 or 2003/12/25 or 20031225, will be mapped to *julian* date format\n"
@@ -737,7 +826,11 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "If true, standard vmatrix stringmap will be built from the txtmat specific stringmap");
 
-
+    declareOption(ol, "reorder_fieldspec_from_headers", 
+                  &TextFilesVMatrix::reorder_fieldspec_from_headers,
+                  OptionBase::buildoption,
+                  "If true, will reorder the fieldspec in the order gived "
+                  "by the field names taken from txtfilenames");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }

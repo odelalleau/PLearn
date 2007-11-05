@@ -126,6 +126,10 @@ public:
     //! specific stringmap
     bool build_vmatrix_stringmap;
 
+    //! If true, will reorder the fieldspec in the order gived
+    //! by the field names taken from txtfilenames
+    bool reorder_fieldspec_from_headers;
+
     // ****************
     // * Constructors *
     // ****************
