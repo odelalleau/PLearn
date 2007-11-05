@@ -309,6 +309,8 @@
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
 #include <plearn/vmat/MeanImputationVMatrix.h>
+#include <plearn/vmat/MemoryVMatrixNoSave.h>
+#include <plearn/vmat/MissingInstructionVMatrix.h>
 //#include <plearn/vmat/MixUnlabeledNeighbourVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/MultiTargetOneHotVMatrix.h>
