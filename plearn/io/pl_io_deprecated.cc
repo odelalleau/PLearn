@@ -42,7 +42,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/pl_io.cc */
+/*! \file PLearn/plearn/io/pl_io_deprecated.cc */
 
 #include "pl_io_deprecated.h"
 #include <plearn/base/stringutils.h>

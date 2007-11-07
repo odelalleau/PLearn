@@ -45,7 +45,7 @@
 // special codes (see "rules" below).
 
 
-/*! \file PLearnLibrary/PLearnUtil/TypesNumeriques.h */
+/*! \file PLearn/plearn/io/TypesNumeriques.h */
 
 #ifndef MODULE_TYPES_NUMERIQUES
 #define MODULE_TYPES_NUMERIQUES

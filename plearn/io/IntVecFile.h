@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/IntVecFile.h */
+/*! \file PLearn/plearn/io/IntVecFile.h */
 
 #ifndef IntVecFile_INC
 #define IntVecFile_INC

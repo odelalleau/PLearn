@@ -40,7 +40,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/pl_NSPR_io.cc */
+/*! \file PLearn/plearn/io/pl_NSPR_io.cc */
 
 #include "pl_NSPR_io.h"
 #include <plearn/base/byte_order.h>   //!< For endianswap.

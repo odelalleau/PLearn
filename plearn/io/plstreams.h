@@ -46,7 +46,7 @@
 // that are used in the PLearn Library
 
 
-/*! \file PLearnLibrary/PLearnCore/plstreams.h */
+/*! \file PLearn/plearn/io/plstreams.h */
 
 #ifndef plstreams_INC
 #define plstreams_INC

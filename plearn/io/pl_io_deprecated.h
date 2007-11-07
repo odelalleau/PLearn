@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/pl_io.h */
+/*! \file PLearn/plearn/io/pl_io_deprecated.h */
 
 #ifndef pl_io_deprecated_INC
 #define pl_io_deprecated_INC

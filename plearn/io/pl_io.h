@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/pl_io.h */
+/*! \file PLearn/plearn/io/pl_io.h */
 
 #ifndef pl_io_INC
 #define pl_io_INC

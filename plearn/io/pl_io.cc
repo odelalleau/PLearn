@@ -44,7 +44,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/pl_io.cc */
+/*! \file PLearn/plearn/io/pl_io.cc */
 
 //#include <limits>
 #include "pl_io.h"

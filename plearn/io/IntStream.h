@@ -43,7 +43,7 @@ FilesIntStream subclass).
 */
 
 
-/*! \file PLearnLibrary/PLearnCore/IntStream.h */
+/*! \file PLearn/plearn/io/IntStream.h */
 
 #ifndef MODULE_INTSTREAM
 #define MODULE_INTSTREAM

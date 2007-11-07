@@ -45,7 +45,7 @@
 // that are used in the PLearn Library
 
 
-/*! \file PLearnLibrary/PLearnCore/fileutils.h */
+/*! \file PLearn/plearn/io/fileutils.h */
 
 #ifndef fileutils_INC
 #define fileutils_INC

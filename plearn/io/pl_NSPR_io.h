@@ -41,7 +41,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/pl_NSPR_io.h */
+/*! \file PLearn/plearn/io/pl_NSPR_io.h */
 
 #ifndef pl_NSPR_io_INC
 #define pl_NSPR_io_INC

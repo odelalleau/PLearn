@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/MPIStream.h */
+/*! \file PLearn/plearn/io/MPIStream.h */
 
 #ifndef MPIStream_INC
 #define MPIStream_INC

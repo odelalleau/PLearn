@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/TmpFilenames.h */
+/*! \file PLearn/plearn/io/TmpFilenames.h */
 
 #ifndef TmpFilenames_INC
 #define TmpFilenames_INC
