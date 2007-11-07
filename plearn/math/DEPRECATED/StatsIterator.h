@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/StatsIterator.h */
+/*! \file PLearn/plearn/math/DEPRECATED/StatsIterator.h */
 
 #ifndef StatsIterator_INC
 #define StatsIterator_INC

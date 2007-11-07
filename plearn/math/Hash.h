@@ -41,7 +41,7 @@
 
 /*! DEPRECATED!!!  Use <hash_map> instead.  */
 
-/*! \file PLearnLibrary/PLearnCore/Hash.h */
+/*! \file PLearn/plearn/math/Hash.h */
 
 #ifndef MODULE_HASH
 #define MODULE_HASH

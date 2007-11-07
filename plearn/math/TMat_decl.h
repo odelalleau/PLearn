@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/TMat.h */
+/*! \file PLearn/plearn/math/TMat_decl.h */
 
 #ifndef TMat_decl_INC
 #define TMat_decl_INC

@@ -38,7 +38,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/stats_utils.h */
+/*! \file PLearn/plearn/math/stats_utils.h */
 
 #include "stats_utils.h"
 #include "TMat_maths.h"

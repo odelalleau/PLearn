@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/pl_math.h */
+/*! \file PLearn/plearn/math/pl_math.h */
 
 #ifndef pl_math_INC
 #define pl_math_INC

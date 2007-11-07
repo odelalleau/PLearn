@@ -38,7 +38,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/plapack.h */
+/*! \file PLearn/plearn/math/plapack.h */
 
 #ifndef plapack_h
 #define plapack_h

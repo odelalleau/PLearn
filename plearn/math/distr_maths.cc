@@ -40,7 +40,7 @@
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnAlgo/distr_maths.cc */
+/*! \file PLearn/plearn/math/distr_maths.cc */
 
 
 #include "distr_maths.h"

@@ -44,7 +44,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Mat_maths.h */
+/*! \file PLearn/plearn/math/GenMat.h */
 
 #ifndef GenMat_INC
 #define GenMat_INC

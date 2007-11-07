@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/TMat.h */
+/*! \file PLearn/plearn/math/TMatColRowsIterator_impl.h */
 
 #ifndef TMatColRowsIterator_impl_INC
 #define TMatColRowsIterator_impl_INC

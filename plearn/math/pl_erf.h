@@ -33,7 +33,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file PLearnLibrary/PLearnCore/pl_erf.h */
+/*! \file PLearn/plearn/math/pl_erf.h */
 
 #ifndef PL_ERF_H
 #define PL_ERF_H

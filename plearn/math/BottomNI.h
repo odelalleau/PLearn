@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/BottomNI.h */
+/*! \file PLearn/plearn/math/BottomNI.h */
 
 #ifndef BottomNI_INC
 #define BottomNI_INC

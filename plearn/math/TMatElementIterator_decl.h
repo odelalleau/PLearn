@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/TMat.h */
+/*! \file PLearn/plearn/math/TMatTMatElementIterator_decl.h */
 
 #ifndef TMatTMatElementIterator_decl_INC
 #define TMatTMatElementIterator_decl_INC

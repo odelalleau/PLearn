@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/pl_io.cc */
+/*! \file PLearn/plearn/math/pl_math.cc */
 
 #include "pl_math.h"
 

@@ -39,7 +39,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/Mat.h */
+/*! \file PLearn/plearn/math/Mat.h */
 
 #ifndef MAT_INC
 #define MAT_INC

@@ -42,7 +42,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/TMat_maths.h */
+/*! \file PLearn/plearn/math/TMat_maths.h */
 
 #ifndef TMat_maths_INC
 #define TMat_maths_INC
