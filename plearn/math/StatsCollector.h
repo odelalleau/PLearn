@@ -213,6 +213,9 @@ protected:
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
 
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
+
     //! Sort values stored in 'counts' by magnitude, so as to fill 'sorted_values'.
     void sort_values_by_magnitude() const;
 

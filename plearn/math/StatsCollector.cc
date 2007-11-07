@@ -50,6 +50,7 @@
 #include <assert.h>
 #include <plearn/io/openString.h>
 #include <plearn/math/random.h>   //!< For shuffleRows().
+#include <plearn/base/RemoteDeclareMethod.h>
 
 
 namespace PLearn {
@@ -317,6 +318,127 @@ void StatsCollector::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+void StatsCollector::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+    declareMethod(
+        rmm, "n", &StatsCollector::n,
+        (BodyDoc("Returns the total number of value seen\n"),
+         RetDoc ("n")));
+
+    declareMethod(
+        rmm, "nmissing", &StatsCollector::nmissing,
+        (BodyDoc("Return the total number of missing value seen\n"),
+         RetDoc ("nmissing")));
+
+    declareMethod(
+        rmm, "nnonmissing", &StatsCollector::nnonmissing,
+        (BodyDoc("Return the total number of non missing value seen\n"),
+         RetDoc ("nnonmissing")));
+
+    declareMethod(
+        rmm, "sumsquarew", &StatsCollector::sumsquarew,
+        (BodyDoc("Return sumsquarew of the seen value\n"),
+         RetDoc ("sumsquarew")));
+
+    declareMethod(
+        rmm, "sum", &StatsCollector::sum,
+        (BodyDoc("Return sum of the seen value\n"),
+         RetDoc ("sum")));
+
+    declareMethod(
+        rmm, "sumsquare", &StatsCollector::sumsquare,
+        (BodyDoc("Return sumsquare of the seen value\n"),
+         RetDoc ("sumsquare")));
+
+    declareMethod(
+        rmm, "min", &StatsCollector::min,
+        (BodyDoc("Return the minimum value seeup to date\n"),
+         RetDoc ("the minimum")));
+
+    declareMethod(
+        rmm, "max", &StatsCollector::max,
+        (BodyDoc("Return the maximum value see up to date\n"),
+         RetDoc ("the maximum")));
+
+    declareMethod(
+        rmm, "agemin", &StatsCollector::agemin,
+        (BodyDoc("Return the agemin value\n"),
+         RetDoc ("agemin")));
+
+    declareMethod(
+        rmm, "agemax", &StatsCollector::agemax,
+        (BodyDoc("Return the agemax value\n"),
+         RetDoc ("agemax")));
+
+    declareMethod(
+        rmm, "range", &StatsCollector::range,
+        (BodyDoc("Return min - max\n"),
+         RetDoc ("min - max")));
+
+    declareMethod(
+        rmm, "mean", &StatsCollector::mean,
+        (BodyDoc("Return mean of the seen value\n"),
+         RetDoc ("sum/nnonmissing")));
+
+    declareMethod(
+        rmm, "variance", &StatsCollector::variance,
+        (BodyDoc("Return the variance of the seen value\n"),
+         RetDoc ("variance")));
+
+    declareMethod(
+        rmm, "stddev", &StatsCollector::stddev,
+        (BodyDoc("Return stddev of the seen value\n"),
+         RetDoc ("stddev")));
+
+    declareMethod(
+        rmm, "skewness", &StatsCollector::skewness,
+        (BodyDoc("Return skewness of the seen value\n"),
+         RetDoc ("skewness")));
+
+    declareMethod(
+        rmm, "kurtosis", &StatsCollector::kurtosis,
+        (BodyDoc("Return kurtosis of the seen value\n"),
+         RetDoc ("kurtosis")));
+
+    declareMethod(
+        rmm, "stderror", &StatsCollector::stderror,
+        (BodyDoc("Return stderror of the seen value\n"),
+         RetDoc ("stderror")));
+
+    declareMethod(
+        rmm, "first_obs", &StatsCollector::first_obs,
+        (BodyDoc("Return first_obs of the seen value\n"),
+         RetDoc ("first_obs")));
+
+    declareMethod(
+        rmm, "last_obs", &StatsCollector::last_obs,
+        (BodyDoc("Return last_obs of the seen value\n"),
+         RetDoc ("last_obs")));
+
+    declareMethod(
+        rmm, "sharperatio", &StatsCollector::sharperatio,
+        (BodyDoc("Return sharperatio of the seen value\n"),
+         RetDoc ("sharperatio")));
+
+    declareMethod(
+        rmm, "mean_over_skewness", &StatsCollector::mean_over_skewness,
+        (BodyDoc("Return mean_over_skewness of the seen value\n"),
+         RetDoc ("mean_over_skewness")));
+
+    declareMethod(
+        rmm, "mean_over_skewness_ms", &StatsCollector::mean_over_skewness_ms,
+        (BodyDoc("Return mean_over_skewness_ms of the seen value\n"),
+         RetDoc ("mean_over_skewness_ms")));
+
+    declareMethod(
+        rmm, "mean_over_kurtosis", &StatsCollector::mean_over_kurtosis,
+        (BodyDoc("Return mean_over_kurtosis of the seen value\n"),
+         RetDoc ("mean_over_kurtosis")));
+
+}
 ////////////
 // build_ //
 ////////////
