@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file PLearnLibrary/PLearnUtil/SDBVMat.h */
+/*! \file PLearn/plearn/db/SDBVMat.h */
 
 #ifndef NGSDBVMAT_H
 #define NGSDBVMAT_H

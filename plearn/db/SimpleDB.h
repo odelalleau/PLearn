@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file PLearnLibrary/PLearnUtil/SimpleDB.h */
+/*! \file PLearn/plearn/db/SimpleDB.h */
 
 #ifndef SIMPLEDB_H
 #define SIMPLEDB_H

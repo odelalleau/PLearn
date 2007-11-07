@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/SDBWithStats.h */
+/*! \file PLearn/plearn/db/SDBWithStats.h */
 
 #ifndef SDBWithStats_INC
 #define SDBWithStats_INC

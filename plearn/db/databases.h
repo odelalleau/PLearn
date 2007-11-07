@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file Databases/databases.h */
+/*! \file PLearn/plearn/db/databases.h */
 
 #ifndef DATABASES_INC
 #define DATABASES_INC

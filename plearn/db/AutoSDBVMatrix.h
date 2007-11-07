@@ -42,7 +42,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file PLearn/plearn/db/AutoSDBVMatrix.h */
 
 #ifndef AutoSDBVMatrix_INC
 #define AutoSDBVMatrix_INC

@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file Databases/NistDB.h */
+/*! \file PLearn/plearn/db/NistDB.h */
 
 #ifndef NistDB_INC
 #define NistDB_INC
