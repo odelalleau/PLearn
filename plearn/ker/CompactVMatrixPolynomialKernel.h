@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Kernel.h */
+/*! \file PLearn/plearn/ker/CompactVMatrixPolynomialKernel.h */
 
 #ifndef CompactVMatrixPolynomialKernel_INC
 #define CompactVMatrixPolynomialKernel_INC

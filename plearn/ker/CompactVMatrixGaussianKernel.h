@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Kernel.h */
+/*! \file PLearn/plearn/ker/CompactVMatrixGaussianKernel.h */
 
 #ifndef CompactVMatrixGaussianKernel_INC
 #define CompactVMatrixGaussianKernel_INC
