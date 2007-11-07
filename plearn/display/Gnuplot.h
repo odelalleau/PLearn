@@ -43,7 +43,7 @@
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/Gnuplot.h */
+/*! \file PLearn/plearn/display/Gnuplot.h */
 
 #ifndef GNUPLOT_INC
 #define GNUPLOT_INC

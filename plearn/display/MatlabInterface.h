@@ -41,7 +41,7 @@
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/MatlabInterface.h */
+/*! \file PLearn/plearn/display/MatlabInterface.h */
 
 #ifndef MATLAB_INTERFACE_INC
 #define MATLAB_INTERFACE_INC

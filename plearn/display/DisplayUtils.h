@@ -44,7 +44,7 @@
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/DisplayUtils.h */
+/*! \file PLearn/plearn/display/DisplayUtils.h */
 
 #ifndef DISPLAYUTILS_INC
 #define DISPLAYUTILS_INC

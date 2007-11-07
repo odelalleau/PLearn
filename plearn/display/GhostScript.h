@@ -43,7 +43,7 @@
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/GhostScript.h */
+/*! \file PLearn/plearn/display/GhostScript.h */
 
 #ifndef GHOSTSCRIPT_INC
 #define GHOSTSCRIPT_INC

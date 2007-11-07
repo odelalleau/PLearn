@@ -43,7 +43,7 @@
    ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnUtil/RGBImage.h */
+/*! \file PLearn/plearn/display/RGBImage.h */
 
 #ifndef RGBIMAGE_INC
 #define RGBIMAGE_INC
