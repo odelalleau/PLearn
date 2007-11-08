@@ -37,9 +37,9 @@
 /*! \file DichotomizeDond2DiscreteVariables.cc */
 
 #define PL_LOG_MODULE_NAME "DichotomizeDond2DiscreteVariables"
-#include <plearn/io/pl_log.h>
 
 #include "DichotomizeDond2DiscreteVariables.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

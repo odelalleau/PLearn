@@ -37,9 +37,9 @@
 /*! \file CheckDond2FileSequence.cc */
 
 #define PL_LOG_MODULE_NAME "CheckDond2FileSequence"
-#include <plearn/io/pl_log.h>
 
 #include "CheckDond2FileSequence.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

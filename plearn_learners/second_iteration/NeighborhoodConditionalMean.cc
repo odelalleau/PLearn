@@ -37,9 +37,9 @@
 /*! \file NeighborhoodConditionalMean.cc */
 
 #define PL_LOG_MODULE_NAME "NeighborhoodConditionalMean"
-#include <plearn/io/pl_log.h>
 
 #include "NeighborhoodConditionalMean.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

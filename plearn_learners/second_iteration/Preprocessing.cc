@@ -37,9 +37,9 @@
 /*! \file Preprocessing.cc */
 
 #define PL_LOG_MODULE_NAME "Preprocessing"
-#include <plearn/io/pl_log.h>
 
 #include "Preprocessing.h"
+#include <plearn/io/pl_log.h>
 #include <plearn/io/load_and_save.h>                 //!<  For save
 #include <plearn/io/fileutils.h>                     //!<  For isfile()
 #include <plearn/math/random.h>                      //!<  For the seed stuff.

@@ -37,9 +37,9 @@
 /*! \file TestImputations.cc */
 
 #define PL_LOG_MODULE_NAME "TestImputations"
-#include <plearn/io/pl_log.h>
 
 #include "TestImputations.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

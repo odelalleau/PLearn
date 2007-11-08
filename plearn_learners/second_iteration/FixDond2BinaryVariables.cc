@@ -37,9 +37,9 @@
 /*! \file FixDond2BinaryVariables.cc */
 
 #define PL_LOG_MODULE_NAME "FixDond2BinaryVariables"
-#include <plearn/io/pl_log.h>
 
 #include "FixDond2BinaryVariables.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

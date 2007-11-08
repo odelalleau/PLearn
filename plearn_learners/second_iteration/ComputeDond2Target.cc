@@ -37,9 +37,9 @@
 /*! \file ComputeDond2Target.cc */
 
 #define PL_LOG_MODULE_NAME "ComputeDond2Target"
-#include <plearn/io/pl_log.h>
 
 #include "ComputeDond2Target.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;

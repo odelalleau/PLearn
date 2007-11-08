@@ -37,9 +37,9 @@
 /*! \file MergeDond2Files.cc */
 
 #define PL_LOG_MODULE_NAME "MergeDond2Files"
-#include <plearn/io/pl_log.h>
 
 #include "MergeDond2Files.h"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
