@@ -91,18 +91,9 @@ public:
 
 private:
   
-  int          train_length;
-  int          train_width;
-  int          train_inputsize;
-  int          train_targetsize;
-  int          train_weightsize;
   Vec          train_input;
-  TVec<string> train_field_names;
   TVec<int>    train_var_missing;
-  int          source_length;
-  int          source_width;
   int          source_inputsize;
-  int          source_targetsize;
   Vec          source_input;
   TVec<int>    source_rel_pos;
 
