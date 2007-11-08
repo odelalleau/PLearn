@@ -238,18 +238,26 @@ void MeanMedianModeImputationVMatrix::build_()
     variable_mode.resize(train_width);
     variable_imputation_instruction.resize(train_width);
     variable_imputation_instruction.clear();
+    TVec<string> nofields;
     for (int spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
     {
         for (train_col = 0; train_col < train_width; train_col++)
         {
             if (imputation_spec[spec_col].first == train_field_names[train_col]) break;
         }
-        if (train_col >= train_width) PLERROR("In MeanMedianModeImputationVMatrix: no field with this name in train data set: %s", (imputation_spec[spec_col].first).c_str());
+        if (train_col >= train_width){
+	  nofields.append((imputation_spec[spec_col].first).c_str());
+	  continue;
+	}
         if (imputation_spec[spec_col].second == "mean") variable_imputation_instruction[train_col] = 1;
         else if (imputation_spec[spec_col].second == "median") variable_imputation_instruction[train_col] = 2;
         else if (imputation_spec[spec_col].second == "mode") variable_imputation_instruction[train_col] = 3;
-        else PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s", (imputation_spec[spec_col].first).c_str(), (imputation_spec[spec_col].second).c_str());
+        else PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s",
+		     (imputation_spec[spec_col].first).c_str(), (imputation_spec[spec_col].second).c_str());
     }
+    if(nofields.length()>0)
+      PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
+	      tostring(nofields).c_str());
     train_metadata = train_set->getMetaDataDir();
     mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     
