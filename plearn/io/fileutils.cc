@@ -65,6 +65,7 @@
 #include <nspr/prtime.h>
 #include <nspr/prerror.h>
 #include <nspr/prlong.h>
+#include <nspr/prenv.h>
 
 namespace PLearn {
 using namespace std;
@@ -875,7 +876,8 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables, bool ski
                     PLERROR("$GETENV syntax is: $GETENV{expr}");
                 PStream expr_stream = openString(expr, PStream::raw_ascii);
                 string var_name = readAndMacroProcess(expr_stream, variables);
-                char* var = getenv(var_name.c_str());
+                const char* var = PR_GetEnv(var_name.c_str());
+
                 if (!var)
                     PLERROR("In readAndMacroProcess - The environment variable %s is not defined", var_name.c_str());
                 text += string(var);

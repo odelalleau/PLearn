@@ -50,6 +50,7 @@
 //#include "stringutils.h"
 #include <plearn/sys/Popen.h>
 #include <plearn/math/RowMapSparseMatrix.h>
+#include <nspr/prenv.h>
 
 namespace PLearn {
 using namespace std;
@@ -141,7 +142,7 @@ using namespace std;
     //! will be appended to the matlab path
     static string path() 
     {
-      char* plearndir = getenv("PLEARNDIR");
+      const char* plearndir = PR_GetEnv("PLEARNDIR");
       if(!plearndir)
         PLERROR("PLEARNDIR environment variable not defined");
       return string(plearndir)+"/Contrib/matlab/";

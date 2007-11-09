@@ -44,6 +44,7 @@
 #include "general.h"
 #include <sys/stat.h>
 #include <nspr/prsystem.h>
+#include <nspr/prenv.h>
 #include <plearn/base/tostring.h>
 #ifdef _MSC_VER
 #include <io.h>
@@ -117,9 +118,9 @@ string hostname()
     if(PR_GetSystemInfo(PR_SI_HOSTNAME,tmp,500)==PR_SUCCESS)
         return tostring(tmp);
     else{
-        char* h = getenv("HOSTNAME");
+        const char* h = PR_GetEnv("HOSTNAME");
         if (!h)
-            h = getenv("HOST");
+            h = PR_GetEnv("HOST");
         if (!h)
             PLERROR("hostname: could not find the host name from NSPR"
                     " or from the variable $HOSTNAME or $HOST in environment!");
