@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file RowBufferedVMatrix.h */
 
 #ifndef RowBufferedRowBufferedVMatrix_INC
 #define RowBufferedRowBufferedVMatrix_INC

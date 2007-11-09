@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file PairsVMatrix.h */
 
 #ifndef PairsVMatrix_INC
 #define PairsVMatrix_INC

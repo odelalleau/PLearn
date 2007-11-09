@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file VMat.h */
 
 #ifndef VMat_INC
 #define VMat_INC

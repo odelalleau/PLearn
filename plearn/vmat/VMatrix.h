@@ -38,7 +38,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file VMatrix.h */
 
 #ifndef VMatrix_INC
 #define VMatrix_INC

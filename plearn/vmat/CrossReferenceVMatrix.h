@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file CrossReferenceVMatrix.h */
 
 #ifndef CrossReferenceVMatrix_INC
 #define CrossReferenceVMatrix_INC

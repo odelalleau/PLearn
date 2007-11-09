@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file OneHotVMatrix.h */
 
 #ifndef OneHotVMatrix_INC
 #define OneHotVMatrix_INC

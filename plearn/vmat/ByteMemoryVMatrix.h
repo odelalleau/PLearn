@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file ByteMemoryVMatrix.h */
 
 #ifndef ByteMemoryVMatrix_INC
 #define ByteMemoryVMatrix_INC

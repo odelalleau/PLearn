@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file ForwardVMatrix.h */
 
 #ifndef ForwardVMatrix_INC
 #define ForwardVMatrix_INC

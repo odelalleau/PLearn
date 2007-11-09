@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file SelectColumnsVMatrix.h */
 
 #ifndef SelectColumnsVMatrix_INC
 #define SelectColumnsVMatrix_INC

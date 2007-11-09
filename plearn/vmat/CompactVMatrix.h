@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file CompactVMatrix.h */
 
 #ifndef CompactCompactVMatrix_INC
 #define CompactCompactVMatrix_INC

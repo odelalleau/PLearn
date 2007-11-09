@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMField.h */
+/*! \file VMField.h */
 
 #ifndef VMField_INC
 #define VMField_INC

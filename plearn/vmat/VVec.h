@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VVec.h */
+/*! \file VVec.h */
 
 #ifndef VVec_INC
 #define VVec_INC

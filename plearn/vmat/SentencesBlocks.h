@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file SentencesBlocks.h */
 
 #ifndef SentencesBlocks_INC
 #define SentencesBlocks_INC

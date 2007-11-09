@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file UniformVMatrix.h */
 
 #ifndef UniformVMatrix_INC
 #define UniformVMatrix_INC

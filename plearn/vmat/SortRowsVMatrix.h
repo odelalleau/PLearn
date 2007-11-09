@@ -37,7 +37,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file SortRowsVMatrix.h */
 
 #ifndef SortRowsVMatrix_INC
 #define SortRowsVMatrix_INC

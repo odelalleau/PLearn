@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file RangeVMatrix.h */
 
 #ifndef RangeVMatrix_INC
 #define RangeVMatrix_INC

@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file CompressedVMatrix.h */
 
 #ifndef CompressedVMatrix_INC
 #define CompressedVMatrix_INC

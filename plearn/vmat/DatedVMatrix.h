@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file DatedVMatrix.h */
 
 #ifndef DatedVMatrix_INC
 #define DatedVMatrix_INC

@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file SelectRowsVMatrix.h */
 
 #ifndef SelectRowsVMatrix_INC
 #define SelectRowsVMatrix_INC

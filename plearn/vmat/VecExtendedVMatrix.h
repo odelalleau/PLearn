@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file VecExtendedVMatrix.h */
 
 #ifndef VecExtendedVMatrix_INC
 #define VecExtendedVMatrix_INC

@@ -40,7 +40,7 @@
  ****************************************************************** */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file MeanImputationVMatrix.h */
 
 #ifndef MeanImputationVMatrix_INC
 #define MeanImputationVMatrix_INC

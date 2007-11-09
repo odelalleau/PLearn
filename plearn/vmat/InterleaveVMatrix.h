@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file InterleaveVMatrix.h */
 
 #ifndef InterleaveVMatrix_INC
 #define InterleaveVMatrix_INC

@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file DiskVMatrix.h */
 
 #ifndef DiskVMatrix_INC
 #define DiskVMatrix_INC

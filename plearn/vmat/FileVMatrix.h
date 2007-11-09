@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file FileVMatrix.h */
 
 #ifndef FileVMatrix_INC
 #define FileVMatrix_INC

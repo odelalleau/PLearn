@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file ConcatRowsSubVMatrix.h */
 
 #ifndef ConcatRowsSubVMatrix_INC
 #define ConcatRowsSubVMatrix_INC

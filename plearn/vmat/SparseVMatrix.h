@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file SparseVMatrix.h */
 
 #ifndef SparseVMatrix_INC
 #define SparseVMatrix_INC

@@ -33,7 +33,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file CompactFileVMatrix.h */
 
 #ifndef CompactFileVMatrix_INC
 #define CompactFileVMatrix_INC

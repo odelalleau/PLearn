@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file RemapLastColumnVMatrix.h */
 
 #ifndef RemapLastColumnVMatrix_INC
 #define RemapLastColumnVMatrix_INC

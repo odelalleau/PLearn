@@ -37,7 +37,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file BootstrapVMatrix.h */
 
 #ifndef BootstrapVMatrix_INC
 #define BootstrapVMatrix_INC
