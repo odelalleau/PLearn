@@ -43,6 +43,8 @@
 
 #include "general.h"
 #include <sys/stat.h>
+#include <nspr/prsystem.h>
+#include <plearn/base/tostring.h>
 #ifdef _MSC_VER
 #include <io.h>
 #endif
@@ -111,12 +113,18 @@ bool isMapKeysAreInt(map<real,int>& m)
 
 string hostname()
 {
-    char* h = getenv("HOSTNAME");
-    if (!h)
-        h = getenv("HOST");
-    if (!h)
-        PLERROR("hostname: could not find $HOSTNAME nor $HOST in environment!");
-    return h;
+    char tmp[1024];
+    if(PR_GetSystemInfo(PR_SI_HOSTNAME,tmp,500)==PR_SUCCESS)
+        return tostring(tmp);
+    else{
+        char* h = getenv("HOSTNAME");
+        if (!h)
+            h = getenv("HOST");
+        if (!h)
+            PLERROR("hostname: could not find the host name from NSPR"
+                    " or from the variable $HOSTNAME or $HOST in environment!");
+        return h;
+    }
 }
 
 string prgname(const string& setname)

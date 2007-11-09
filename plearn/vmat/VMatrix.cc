@@ -1219,14 +1219,6 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
         || this->extrasize()  != m->extrasize() );
 }
 
-/////////////
-// getHost //
-/////////////
-string getHost()
-{
-    return "TODO";
-}
-
 ////////////
 // getPid //
 ////////////
@@ -1272,7 +1264,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
         sleep(uniform_multinomial_sample(10) + 1); // Random wait for more safety.
     }
     lockf_ = openFile(lockfile, PStream::raw_ascii, "w");
-    string lock_content = "host " + getHost() + ", pid " + tostring(getPid()) + ", user " + getUser();
+    string lock_content = "host " + hostname() + ", pid " + tostring(getPid()) + ", user " + getUser();
     lockf_ << lock_content;
     lockf_.flush();
 }
