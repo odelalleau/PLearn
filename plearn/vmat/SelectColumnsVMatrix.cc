@@ -101,6 +101,12 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
 // get //
 /////////
 real SelectColumnsVMatrix::get(int i, int j) const {
+#ifdef BOUNDCHECK
+    if(i>=length_ ||j>=width_||i<0||j<0)
+        PLERROR("In SelectColumnsVMatrix::getSubRow - "
+                "requested index: (%d,%d) but width of %d and length of %d",
+                i,j,width_,length_);
+#endif
     static int col;
     col = indices[j];
     if (col == -1)
@@ -113,6 +119,12 @@ real SelectColumnsVMatrix::get(int i, int j) const {
 ///////////////
 void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 {
+#ifdef BOUNDCHECK
+    if(i>=length_ ||j>=width_||i<0||j<0)
+        PLERROR("In SelectColumnsVMatrix::getSubRow - "
+                "requested index: (%d,%d) but width of %d and length of %d",
+                i,j,width_,length_);
+#endif
     static int col;
     for(int jj=0; jj<v.length(); jj++) {
         col = indices[j+jj];
