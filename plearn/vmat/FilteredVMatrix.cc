@@ -89,6 +89,7 @@ void FilteredVMatrix::openIndex()
         PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
 
 
+    lockMetaDataDir();
     if(isfile(idxfname) && mtime(idxfname)>=getMtime())
         indexes.open(idxfname);
     else  // let's (re)create the index
@@ -118,6 +119,7 @@ void FilteredVMatrix::openIndex()
         indexes.close();
         indexes.open(idxfname);
     }
+    unlockMetaDataDir();
 
     length_ = indexes.length();
 }
