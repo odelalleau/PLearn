@@ -326,7 +326,7 @@
 */
 
 
-/*! \file PLearnLibrary/PLearnCore/RandomVar.h */
+/*! \file RandomVar.h */
 
 #ifndef RANDOMVAR_INC
 #define RANDOMVAR_INC

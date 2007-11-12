@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file Array.h */
+/*! \file Array_impl.h */
 
 #ifndef Array_impl_INC
 #define Array_impl_INC

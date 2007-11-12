@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/general.h */
+/*! \file general.h */
 
 #ifndef GENERAL_INC
 #define GENERAL_INC

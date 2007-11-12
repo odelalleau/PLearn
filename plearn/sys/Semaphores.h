@@ -56,7 +56,7 @@
 //
 
 
-/*! \file PLearnLibrary/PLearnCore/Semaphores.h */
+/*! \file Semaphores.h */
 
 #ifndef SEMAPHORES_INC
 #define SEMAPHORES_INC

@@ -38,7 +38,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/stats_utils.h */
+/*! \file stats_utils.h */
 
 #ifndef stats_utils_INC
 #define stats_utils_INC

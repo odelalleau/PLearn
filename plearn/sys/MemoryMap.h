@@ -1,5 +1,5 @@
 
-/*! \file PLearnLibrary/PLearnCore/MemoryMap.h */
+/*! \file MemoryMap.h */
 
 #ifndef MODULE_MEMORY_MAP
 #define MODULE_MEMORY_MAP

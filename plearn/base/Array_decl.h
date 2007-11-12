@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file Array.h */
+/*! \file Array_decl.h */
 
 #ifndef Array_decl_INC
 #define Array_decl_INC

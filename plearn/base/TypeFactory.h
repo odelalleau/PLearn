@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file PLearnLibrary/PLearnCore/TypeFactory.h */
+/*! \file TypeFactory.h */
 
 #ifndef TYPEFACTORY_H
 #define TYPEFACTORY_H

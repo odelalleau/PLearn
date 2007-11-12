@@ -42,7 +42,7 @@
 // that are used in the PLearn Library
 
 
-/*! \file PLearnLibrary/PLearnCore/Popen.h */
+/*! \file Popen.h */
 
 #ifndef Popen_INC
 #define Popen_INC

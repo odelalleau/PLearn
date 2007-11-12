@@ -32,7 +32,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
-/*! \file PLearnLibrary/PLearnCore/SmallVector.h */
+/*! \file SmallVector.h */
 
 #ifndef SMALLVECTOR
 #define SMALLVECTOR

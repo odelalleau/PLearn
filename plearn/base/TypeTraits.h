@@ -40,7 +40,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/TypeTraits.h */
+/*! \file TypeTraits.h */
 
 #ifndef TypeTraits_INC
 #define TypeTraits_INC

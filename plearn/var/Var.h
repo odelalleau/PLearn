@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Var.h */
+/*! \file Var.h */
 
 #ifndef Var_INC
 #define Var_INC

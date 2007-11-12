@@ -41,7 +41,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/GradientOptimizer.h */
+/*! \file GradientOptimizer.h */
 
 #ifndef GRADIENTOPTIMIZER_INC
 #define GRADIENTOPTIMIZER_INC

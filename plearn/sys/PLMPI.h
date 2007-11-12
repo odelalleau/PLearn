@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/PLMPI.h */
+/*! \file PLMPI.h */
 
 #ifndef PLMPI_INC
 #define PLMPI_INC

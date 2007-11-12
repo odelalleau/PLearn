@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/SampleVariable.h */
+/*! \file SampleVariable.h */
 
 #ifndef SampleVariable_INC
 #define SampleVariable_INC

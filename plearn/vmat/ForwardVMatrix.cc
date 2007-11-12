@@ -41,7 +41,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file ForwardVMatrix.cc */
 
 #include "ForwardVMatrix.h"
 

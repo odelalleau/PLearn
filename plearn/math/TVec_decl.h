@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/TMat.h */
+/*! \file TMat_decl.h */
 
 #ifndef TVec_decl_INC
 #define TVec_decl_INC

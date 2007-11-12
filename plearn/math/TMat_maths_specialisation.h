@@ -40,7 +40,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnCore/TMat_maths_specialisation.h */
+/*! \file TMat_maths_specialisation.h */
 
 #ifndef TMat_maths_specialisation_INC
 #define TMat_maths_specialisation_INC

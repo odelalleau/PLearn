@@ -38,7 +38,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnAlgo/distr_maths.h */
+/*! \file distr_maths.h */
 
 #ifndef distr_maths_INC
 #define distr_maths_INC

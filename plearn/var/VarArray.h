@@ -41,7 +41,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VarArray.h */
+/*! \file VarArray.h */
 
 #ifndef VARARRAY_INC
 #define VARARRAY_INC

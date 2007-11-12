@@ -37,7 +37,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnUtil/Profiler.h */
+/*! \file Profiler.h */
 
 #ifndef PROFILER_INC
 #define PROFILER_INC

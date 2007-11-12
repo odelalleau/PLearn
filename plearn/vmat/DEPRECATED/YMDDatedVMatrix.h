@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file VMat.h */
 
 #ifndef YMDDatedVMatrix_INC
 #define YMDDatedVMatrix_INC

@@ -38,7 +38,7 @@
 
 // Authors: Pascal Vincent
 
-/*! \file computeConditionalStats.cc */
+/*! \file VMat_computeConditionalStats.cc */
 
 
 #include "VMat_computeConditionalStats.h"

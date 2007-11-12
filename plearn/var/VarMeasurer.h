@@ -38,7 +38,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VarMeasurer.h */
+/*! \file VarMeasurer.h */
 
 #ifndef VARMEASURER_INC
 #define VARMEASURER_INC

@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Storage.h */
+/*! \file Storage.h */
 
 #ifndef STORAGE_INC
 #define STORAGE_INC

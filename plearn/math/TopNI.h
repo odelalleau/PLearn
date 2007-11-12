@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/TopNI.h */
+/*! \file TopNI.h */
 
 #ifndef TopNI_INC
 #define TopNI_INC

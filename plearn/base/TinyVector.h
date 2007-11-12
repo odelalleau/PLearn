@@ -41,7 +41,7 @@
 
 #include "plerror.h"
 
-/*! \file PLearnLibrary/PLearnCore/TinyVector.h */
+/*! \file TinyVector.h */
 
 namespace PLearn {
 using namespace std;

@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file VMat.h */
 
 #ifndef RemoveRowsVMatrix_INC
 #define RemoveRowsVMatrix_INC
