@@ -138,14 +138,19 @@ void MissingInstructionVMatrix::build_()
     TVec<string> source_names = source->fieldNames();
 
     //set default instruction
-    for (int col = 0; col < source->width(); col++)
-    {
-        ins[col] = default_instruction;
-    }
+    ins.fill(default_instruction);
+
+    int skip_instruction_input = 0;
+    int skip_instruction_target = 0;
+    int skip_instruction_weight = 0;
     if(default_instruction!="skip")
         width_=source->width();
-    else
+    else{
         width_=missing_instructions.size();
+        PLWARNING("MissingInstructionVMatrix::build_() - "
+                  "we suppose that the default instruction apply only to input fields");
+        skip_instruction_input = source->width() - missing_instructions.size();
+    }
     int missing_field = 0;
     for (int ins_col = 0; ins_col < missing_instructions.size(); ins_col++)
     {
@@ -175,8 +180,18 @@ void MissingInstructionVMatrix::build_()
             PLWARNING("In MergeDond2Files::build_() - merge instruction empty for field '%s', we keep the previous instruction who could be the default_instruction",(missing_instructions[source_col].first).c_str());
         else PLERROR("In MergeDond2Files::build_() - unsupported merge instruction: '%s'", 
                      (missing_instructions[ins_col].second).c_str());
-        if (ins[source_col] == "skip") width_--;
+        if (ins[source_col] == "skip")
+            if(source_col<source->inputsize())
+                skip_instruction_input++;
+            else if(source_col<(source->inputsize()+source->targetsize()))
+                skip_instruction_target++;
+            else skip_instruction_weight++;
     }
+    setMetaInfoFromSource();
+    inputsize_ = source->inputsize() - skip_instruction_input;
+    targetsize_ = source->targetsize() - skip_instruction_target;
+    weightsize_ = source->weightsize() - skip_instruction_weight;
+    width_ = inputsize_ + targetsize_ + weightsize_;
     int missing_instruction = 0;
     for (int col = 0; col < source->width(); col++)
     {
