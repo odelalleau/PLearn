@@ -37,7 +37,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/PDateTime.h */
+/*! \file PDateTime.h */
 
 #ifndef PDateTime_INC
 #define PDateTime_INC

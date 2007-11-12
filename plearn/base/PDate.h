@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/PDate.h */
+/*! \file PDate.h */
 
 #ifndef PDate_INC
 #define PDate_INC

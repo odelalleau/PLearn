@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Array.h */
+/*! \file Array.h */
 
 #include "Array_impl.h"
 

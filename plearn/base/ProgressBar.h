@@ -47,7 +47,7 @@
 // that are used in the PLearn Library
 
 
-/*! \file PLearnLibrary/PLearnCore/ProgressBar.h */
+/*! \file ProgressBar.h */
 
 #ifndef ProgressBar_INC
 #define ProgressBar_INC

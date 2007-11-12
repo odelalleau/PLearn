@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Object.h */
+/*! \file Object.h */
 
 #ifndef Object_INC
 #define Object_INC

@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Array.h */
+/*! \file Array.h */
 
 #ifndef Array_impl_INC
 #define Array_impl_INC

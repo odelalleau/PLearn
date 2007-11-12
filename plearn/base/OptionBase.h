@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Option.h */
+/*! \file Option.h */
 
 #ifndef OptionBase_INC
 #define OptionBase_INC

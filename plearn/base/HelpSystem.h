@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file PLearnLibrary/PLearnCore/HelpSystem.h */
+/*! \file HelpSystem.h */
 
 #ifndef HelpSystem_INC
 #define HelpSystem_INC

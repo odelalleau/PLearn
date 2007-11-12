@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/SmartPointer.h */
+/*! \file SmartPointer.h */
 
 #ifndef SMART_POINTER_INC
 #define SMART_POINTER_INC

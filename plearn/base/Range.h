@@ -45,7 +45,7 @@
 // See Mat.h for a description the PLearn native binary file format for matrices and vectors (.pmat .pvec)
 
 
-/*! \file PLearnLibrary/PLearnCore/Range.h */
+/*! \file Range.h */
 
 #ifndef Range_INC
 #define Range_INC
