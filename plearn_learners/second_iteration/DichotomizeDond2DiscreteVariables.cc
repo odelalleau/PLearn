@@ -48,6 +48,7 @@ PLEARN_IMPLEMENT_OBJECT(
     DichotomizeDond2DiscreteVariables,
     "Dichotomize variables with discrete values.",
     "Instructions are provided with the discrete_variable_instructions option.\n"
+    "DEPRECATED use DichotomizeVMatrix.cc instead"
 );
 
 /////////////////////////
@@ -111,18 +112,17 @@ void DichotomizeDond2DiscreteVariables::build_()
 void DichotomizeDond2DiscreteVariables::dichotomizeDiscreteVariables()
 {    
     // initialize primary dataset
-    main_row = 0;
-    main_col = 0;
-    main_length = train_set->length();
-    main_width = train_set->width();
-    main_input.resize(main_width);
-    main_names.resize(main_width);
-    main_ins.resize(main_width);
-    ins_width = discrete_variable_instructions.size();
-    main_names << train_set->fieldNames();
+    int main_length = train_set->length();
+    int main_width = train_set->width();
+    Vec main_input(main_width);
+    TVec<string> main_names(main_width);
+    TVec<int> main_ins(main_width);
     main_ins.fill(-1);
-    for (ins_col = 0; ins_col < ins_width; ins_col++)
+    int ins_width = discrete_variable_instructions.size();
+    main_names << train_set->fieldNames();
+    for (int ins_col = 0; ins_col < ins_width; ins_col++)
     {
+        int main_col;
         for (main_col = 0; main_col < main_width; main_col++)
         {
             if (discrete_variable_instructions[ins_col].first == main_names[main_col]) break;
@@ -132,21 +132,20 @@ void DichotomizeDond2DiscreteVariables::dichotomizeDiscreteVariables()
     }
     
     // initialize output datasets
-    output_length = main_length;
-    output_width = 0;
-    for (main_col = 0; main_col < main_width; main_col++)
+    int output_length = main_length;
+    int output_width = 0;
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (main_ins[main_col] < 0) output_width += 1;
         else
         {
-            instruction_ptr = discrete_variable_instructions[main_ins[main_col]].second;
+            TVec<pair<real, real> > instruction_ptr = discrete_variable_instructions[main_ins[main_col]].second;
             output_width += instruction_ptr.size();
         }
     }
-    output_record.resize(output_width);
-    output_names.resize(output_width);
-    output_col = 0;
-    for (main_col = 0; main_col < main_width; main_col++)
+    TVec<string> output_names(output_width);
+    int output_col = 0;
+    for (int main_col = 0; main_col < main_width; main_col++)
     {
         if (main_ins[main_col] < 0)
         {
@@ -155,9 +154,9 @@ void DichotomizeDond2DiscreteVariables::dichotomizeDiscreteVariables()
         }
         else
         {
-           instruction_ptr = discrete_variable_instructions[main_ins[main_col]].second;
+           TVec<pair<real, real> > instruction_ptr = discrete_variable_instructions[main_ins[main_col]].second;
            if (instruction_ptr.size() == 0) continue;
-           for (ins_col = 0; ins_col < instruction_ptr.size(); ins_col++)
+           for (int ins_col = 0; ins_col < instruction_ptr.size(); ins_col++)
            {
                output_names[output_col] = main_names[main_col] + "_"
                                         + tostring(instruction_ptr[ins_col].first) + "_" 
@@ -172,11 +171,13 @@ void DichotomizeDond2DiscreteVariables::dichotomizeDiscreteVariables()
     //Now, we can process the discrete variables.
     ProgressBar* pb = 0;
     pb = new ProgressBar( "Dichotomizing the discrete variables", main_length);
-    for (main_row = 0; main_row < main_length; main_row++)
+    Vec output_record(output_width);
+
+    for (int main_row = 0; main_row < main_length; main_row++)
     {
         train_set->getRow(main_row, main_input);
         output_col = 0;
-        for (main_col = 0; main_col < main_width; main_col++)
+        for (int main_col = 0; main_col < main_width; main_col++)
         {
             if (main_ins[main_col] < 0)
             {
@@ -185,9 +186,9 @@ void DichotomizeDond2DiscreteVariables::dichotomizeDiscreteVariables()
             }
             else
             {
-               instruction_ptr = discrete_variable_instructions[main_ins[main_col]].second;
+               TVec<pair<real, real> > instruction_ptr = discrete_variable_instructions[main_ins[main_col]].second;
                if (instruction_ptr.size() == 0) continue;
-               for (ins_col = 0; ins_col < instruction_ptr.size(); ins_col++)
+               for (int ins_col = 0; ins_col < instruction_ptr.size(); ins_col++)
                {
                    if (is_missing(main_input[main_col])) output_record[output_col] = MISSING_VALUE;
                    else if (main_input[main_col] < instruction_ptr[ins_col].first || main_input[main_col] > instruction_ptr[ins_col].second) output_record[output_col] = 0.0;

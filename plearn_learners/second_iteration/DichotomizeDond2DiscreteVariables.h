@@ -116,26 +116,7 @@ private:
 
     // The rest of the private stuff goes here
     
-    // input instructions variables
-    int ins_width;
-    int ins_col;
-    TVec<pair<real, real> > instruction_ptr;
-    
-    // primary dataset variables
-    int main_length;
-    int main_width;
-    int main_row;
-    int main_col;
-    Vec main_input;
-    TVec<string> main_names;
-    TVec<int> main_ins;
-    
     // output dataset variables
-    int output_length;
-    int output_width;
-    int output_col;
-    Vec output_record;
-    TVec<string> output_names;
     VMat output_file;
 };
 
