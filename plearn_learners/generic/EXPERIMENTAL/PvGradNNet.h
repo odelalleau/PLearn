@@ -68,6 +68,7 @@ public:
     //! Minimum required confidence (probability of being positive or negative)
     //! for taking a step.
     real pv_required_confidence;
+    real pv_conf_ct;
 
     int pv_strategy;
 
@@ -162,6 +163,7 @@ private:
     //! accumulated statistics of gradients on each parameter.
     //PP<VecStatsCollector> pv_gradstats;
 
+    real limit_ratio;
     real n_small_ratios;
 };
 

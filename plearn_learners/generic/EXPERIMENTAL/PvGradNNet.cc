@@ -57,12 +57,15 @@ PvGradNNet::PvGradNNet()
       pv_deceleration(0.5),
       pv_min_samples(2),
       pv_required_confidence(0.80),
+      pv_conf_ct(0.0),
       pv_strategy(1),
       pv_random_sample_step(false),
       pv_self_discount(0.5),
       pv_other_discount(0.95),
       pv_within_neuron_discount(0.95),
-      n_updates(0)
+      n_updates(0),
+      limit_ratio(0.0),
+      n_small_ratios(0.0)
 {
     random_gen = new PRandom();
 }
@@ -104,6 +107,11 @@ void PvGradNNet::declareOptions(OptionList& ol)
                   &PvGradNNet::pv_required_confidence,
                   OptionBase::buildoption,
                   "Minimum required confidence (probability of being positive or negative) for taking a step.");
+
+    declareOption(ol, "pv_conf_ct",
+                  &PvGradNNet::pv_conf_ct,
+                  OptionBase::buildoption,
+                  "Used for confidence adaptation.");
 
     declareOption(ol, "pv_strategy",
                   &PvGradNNet::pv_strategy,
@@ -215,6 +223,8 @@ void PvGradNNet::forget()
     n_small_ratios=0.0;
     n_neuron_updates.fill(0);    
 //    pv_gradstats->forget();
+
+    limit_ratio = gauss_01_quantile(pv_required_confidence);
 }
 
 //! Performs the backprop update. Must be called after the fbpropNet.
@@ -249,12 +259,17 @@ void PvGradNNet::bpropUpdateNet(int t)
         
 }
 
-void PvGradNNet::pvGrad()   
+void PvGradNNet::pvGrad()  
 {
     int np = all_params.length();
     real m, e;//, prob_pos, prob_neg;
-    real ratio;
-    real limit_ratio = gauss_01_quantile(pv_required_confidence);
+    //real ratio;
+    // move this stuff to a train function to avoid repeated computations
+    if( pv_conf_ct != 0.0 ) {     
+        real conf = pv_required_confidence; 
+        conf += (1.0-pv_required_confidence) * (stage/stage+pv_conf_ct);
+        limit_ratio = gauss_01_quantile(conf);
+    }
 
     for(int k=0; k<np; k++) {
         // update stats
@@ -263,13 +278,16 @@ void PvGradNNet::pvGrad()
         pv_all_sumsquare[k] += all_params_gradient[k] * all_params_gradient[k];
 
         if(pv_all_nsamples[k]>pv_min_samples)   {
-            m = pv_all_sum[k] / pv_all_nsamples[k];
+            real inv_pv_all_nsamples_k = 1./pv_all_nsamples[k];
+            real pv_all_sum_k = pv_all_sum[k];
+            m = pv_all_sum_k * inv_pv_all_nsamples_k;
             // e is the standard error
-            //e = sqrt( (pv_all_sumsquare[k] - (pv_all_sum[k]*pv_all_sum[k])/pv_all_nsamples[k]) / (real)(pv_all_nsamples[k]*(pv_all_nsamples[k]-1)) );
             // variance
-            e = real((pv_all_sumsquare[k] - square(pv_all_sum[k])/pv_all_nsamples[k])/(pv_all_nsamples[k]-1));
+            //e = real((pv_all_sumsquare[k] - square(pv_all_sum[k])/pv_all_nsamples[k])/(pv_all_nsamples[k]-1));
             // standard error 
-            e = sqrt(e/pv_all_nsamples[k]);
+            //e = sqrt(e*inv_pv_all_nsamples_k);
+            // This is an approxiamtion where we've raplaced a (nsamples-1) by nsamples
+            e = sqrt(pv_all_sumsquare[k]-pv_all_sum_k*m)*inv_pv_all_nsamples_k;
 
             // test to see if numerical problems
             if( fabs(m) < 1e-15 || e < 1e-15 )  {
@@ -282,14 +300,15 @@ void PvGradNNet::pvGrad()
             // Comparing the ratio would be sufficient.
             //prob_pos = gauss_01_cum(m/e);
             //prob_neg = 1.-prob_pos;
-            ratio = m/e;
+            //ratio = m/e;
 
             if(!pv_random_sample_step)  {
-    
+                real threshold = limit_ratio*e;
                 // We adapt the stepsize before taking the step
                 // gradient is positive
                 //if(prob_pos>=pv_required_confidence)    {
-                if(ratio>=limit_ratio)  {
+                //if(ratio>=limit_ratio)  {
+                if(m>=threshold)  {
                     //pv_all_stepsizes[k] *= (pv_all_stepsigns[k]?pv_acceleration:pv_deceleration);
                     if(pv_all_stepsigns[k]>0)   {
                         pv_all_stepsizes[k]*=pv_acceleration;
@@ -309,7 +328,7 @@ void PvGradNNet::pvGrad()
                 }
                 // gradient is negative
                 //else if(prob_neg>=pv_required_confidence)   {
-                if(ratio<=-limit_ratio) {
+                else if(m<=-threshold) {
                     //pv_all_stepsizes[k] *= ((!pv_all_stepsigns[k])?pv_acceleration:pv_deceleration);
                     if(pv_all_stepsigns[k]<0)   {
                         pv_all_stepsizes[k]*=pv_acceleration;
@@ -356,8 +375,13 @@ void PvGradNNet::discountGrad()
     real m, e;//, prob_pos, prob_neg;
     int stepsign;
 
+    // TODO bring the confidenca treatment up to date (see pvGrad)
     real ratio;
-    real limit_ratio = gauss_01_quantile(pv_required_confidence);
+    real conf = pv_required_confidence;
+    if( pv_conf_ct != 0.0 ) {
+        conf += (1.0-pv_required_confidence) * (stage/stage+pv_conf_ct);
+    }
+    real limit_ratio = gauss_01_quantile(conf);
 
     // 
     real discount = pow(pv_other_discount,n_updates);
@@ -444,8 +468,13 @@ void PvGradNNet::neuronDiscountGrad()
     real m, e;//, prob_pos, prob_neg;
     int stepsign;
 
+    // TODO bring the confidenca treatment up to date (see pvGrad)
     real ratio;
-    real limit_ratio = gauss_01_quantile(pv_required_confidence);
+    real conf = pv_required_confidence;
+    if( pv_conf_ct != 0.0 ) {
+        conf += (1.0-pv_required_confidence) * (stage/stage+pv_conf_ct);
+    }
+    real limit_ratio = gauss_01_quantile(conf);
 
     //
     real discount = pow(pv_other_discount,n_updates);
