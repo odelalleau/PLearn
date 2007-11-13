@@ -39,7 +39,7 @@
  * This file is part of the PLearn library.                                     *
  ******************************************************************************** */
 
-/*! \file PLearnLibrary/PLearnAlgo/ComputePurenneError.h */
+/*! \file ComputePurenneError.h */
 
 #ifndef ComputePurenneError_INC
 #define ComputePurenneError_INC

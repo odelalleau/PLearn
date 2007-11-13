@@ -39,7 +39,7 @@
  * This file is part of the PLearn library.                                     *
  ******************************************************************************** */
 
-/*! \file PLearnLibrary/PLearnAlgo/SecondIterationWrapper.h */
+/*! \file SecondIterationWrapper.h */
 
 #ifndef SecondIterationWrapper_INC
 #define SecondIterationWrapper_INC

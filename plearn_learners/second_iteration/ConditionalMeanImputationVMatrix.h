@@ -39,7 +39,7 @@
    * $Id: ConditionalMeanImputationVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
    ****************************************************************** */
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file ConditionalMeanImputationVMatrix.h */
 
 #ifndef ConditionalMeanImputationVMatrix_INC
 #define ConditionalMeanImputationVMatrix_INC

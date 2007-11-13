@@ -39,7 +39,7 @@
    * $Id: MissingIndicatorVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
    ****************************************************************** */
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file MissingIndicatorVMatrix.h */
 
 #ifndef MissingIndicatorVMatrix_INC
 #define MissingIndicatorVMatrix_INC

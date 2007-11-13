@@ -39,7 +39,7 @@
    * $Id: CovariancePreservationImputationVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
    ****************************************************************** */
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file CovariancePreservationImputationVMatrix.h */
 
 #ifndef CovariancePreservationImputationVMatrix_INC
 #define CovariancePreservationImputationVMatrix_INC

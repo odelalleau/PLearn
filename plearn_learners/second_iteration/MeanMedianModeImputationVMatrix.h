@@ -39,7 +39,7 @@
    * $Id: MeanMedianModeImputationVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
    ****************************************************************** */
 
-/*! \file PLearnLibrary/PLearnCore/VMat.h */
+/*! \file MeanMedianModeImputationVMatrix.h */
 
 #ifndef MeanMedianModeImputationVMatrix_INC
 #define MeanMedianModeImputationVMatrix_INC
