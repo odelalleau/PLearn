@@ -95,7 +95,7 @@ public:
     PPath metadatapath; 
 
     //! A list of paths to raw text files containing the records
-    TVec<string> txtfilenames;
+    TVec<PPath> txtfilenames;
 
     //! Delimiter to use to split the fields.  Common delimiters are:
     //! - '\t' : used for SAS files (the default)

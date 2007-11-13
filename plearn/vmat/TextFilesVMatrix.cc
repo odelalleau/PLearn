@@ -193,7 +193,7 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
     TVec<string> fnames;
     if(reorder_fieldspec_from_headers)
     {
-        //the fieldnames read from the files.
+        //read the fieldnames from the files.
         TVec<string> fn;
         for(int i=0; i<txtfiles.size(); i++)
         {
@@ -241,10 +241,17 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
             if(j>=fn.size())
                 not_used_fs.append(name);
         }
-        if(not_used_fs.size()!=0 || not_used_fn.size()!=0)
-            PLERROR("UNUSUED field names from header: %s\n"
-                    "UNUSUED fieldspec %s",tostring(not_used_fn).c_str(),
-                    tostring(not_used_fs).c_str());
+        if(not_used_fs.size()!=0)
+            PLWARNING("TextFilesVMatrix::setColumnNamesAndWidth() - "
+                      "Fieldspecs do not exist in source for field(s): %s\n"
+                      "They will be skipped.",
+                      tostring(not_used_fs).c_str());
+        if(not_used_fn.size()!=0)
+            PLWARNING("TextFilesVMatrix::setColumnNamesAndWidth() - "
+                      "Fieldnames in source that don't have fieldspec: %s\n"
+                      "They will be skipped.",
+                      tostring(not_used_fn).c_str());
+    
 
         //the new order for fieldspecs
         TVec< pair<string, string> > fs(fn.size());
@@ -256,10 +263,9 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
                 if(fieldspec[j].first==name)
                     break;
             if(j>=fieldspec.size())
-                PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
-                        "fieldspec do not contain spec for field '%s'",
-                        name.c_str());
-            fs[i]=fieldspec[j];
+                fs[i]=pair<string,string>(name,"skip");
+            else
+                fs[i]=fieldspec[j];
         }
         fieldspec=fs;
     }
