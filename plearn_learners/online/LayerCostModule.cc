@@ -54,14 +54,14 @@ PLEARN_IMPLEMENT_OBJECT(
     "Be careful: some are valid only for binomial layers. \n");
 
 LayerCostModule::LayerCostModule():
+    cost_function(""),
     nstages_max(-1),
-    stage(0),
+    alpha(0.),
     momentum(0.),
     histo_size(10),
-    alpha(0.),
-    average_deriv(0.),
-    cost_function(""),
-    cost_function_completename("")
+    cost_function_completename(""),
+    stage(0),
+    average_deriv(0.)
 {
     output_size = 1;
 }
