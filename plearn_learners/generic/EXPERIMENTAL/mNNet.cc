@@ -443,7 +443,8 @@ void mNNet::fbpropLoss(const Mat& output, const Mat& target, const Vec& example_
     }
 }
 
-//! Performs the backprop update. Must be called after the fbpropNet.
+//! Performs the backprop update. Must be called after the fbpropNet and
+//! fbpropLoss.
 void mNNet::bpropUpdateNet(int t)
 {
     // mean gradient over minibatch_size examples has less variance
