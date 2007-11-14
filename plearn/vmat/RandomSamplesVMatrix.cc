@@ -48,11 +48,11 @@ PLEARN_IMPLEMENT_OBJECT(
     "VMat that samples on-the-fly random examples from its source.",
     "More precisely, this VMat will:\n"
     "- contain all examples from its source that match the 'is_preserved'\n"
-    "  VPL program\n"
-    "- fill the rest of the data with random examples that do not match that\n"
-    "  program\n"
+    "  VPL program (by default, no example is systematically preserved)\n"
+    "- fill the rest of the data with random source examples that do not\n"
+    "  match that program\n"
     "\n"
-    "It is important to note that a random example is sampled at each call\n"
+    "It is important to note that random examples are sampled at each call\n"
     "of the 'getNewRow(..)' method, so that the data viewed by this VMatrix\n"
     "is not constant (except for the rows that are preserved).\n"
     "\n"
@@ -65,9 +65,9 @@ PLEARN_IMPLEMENT_OBJECT(
 // RandomSamplesVMatrix //
 //////////////////////////////
 RandomSamplesVMatrix::RandomSamplesVMatrix():
-    is_preserved(""),
+    is_preserved("0"),
     n_non_preserved(-1),
-    seed(-1),
+    seed(1827),
     random_gen(new PRandom())
 {
 }
@@ -155,6 +155,8 @@ void RandomSamplesVMatrix::build_()
         length_ = indices.length() + n_non_preserved;
     else if (n_non_preserved == -2)
         length_ = indices.length() * 2;
+    else if (length_ < 0)
+        length_ = source->length();
 
     // Fill in 'indices' with as many -1 as necessary.
     if (indices.length() > length_)
