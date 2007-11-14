@@ -212,33 +212,37 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
 
 void RegressionTreeNode::lookForBestSplit()
 {
+    TVec<int> candidate;//list of candidate row to split
     for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
         left_leave->initStats();
         right_leave->initStats();
-        for (int row = train_set->getNextRegisteredRow(leave_id, col, -1); row < length; row = train_set->getNextRegisteredRow(leave_id, col, row))
+        for (int row = train_set->getNextRegisteredRow(leave_id, col, -1);
+             row < length; row = train_set->getNextRegisteredRow(leave_id, col, row))
         {
-            if (is_missing(train_set->get(row, col))) missing_leave->addRow(row, missing_output, missing_error);
-            else right_leave->addRow(row, right_output, right_error);
+            if (is_missing(train_set->get(row, col)))
+                missing_leave->addRow(row, missing_output, missing_error);
+            else {
+                left_leave->addRow(row, right_output, right_error);
+                candidate.append(row);
+            }
         }
-        int row = train_set->getNextCandidateRow(right_leave_id, col, -1);
-        int next_row = train_set->getNextCandidateRow(right_leave_id, col, row);
-
-        while (true)
+        int row = candidate.pop();
+        while (candidate.size()>0)
         {
-            if (next_row >= length) break;
-            right_leave->removeRow(row, right_output, right_error);
-            left_leave->addRow(row, left_output, left_error);
-            compareSplit(col, train_set->get(row, col), train_set->get(next_row, col));
+            int next_row = candidate.pop();
+            left_leave->removeRow(row, left_output, left_error);
+            right_leave->addRow(row, right_output, right_error);
+            compareSplit(col, train_set->get(next_row, col), train_set->get(row, col));
             row = next_row;
-            next_row = train_set->getNextCandidateRow(right_leave_id, col, row);
         }
     }
 }
 
 void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature)
 {
+    PLASSERT(left_leave_last_feature<=right_leave_first_feature);
     if (left_leave_last_feature >= right_leave_first_feature) return;
     real work_error = missing_error[0] + missing_error[1] + left_error[0] + left_error[1] + right_error[0] + right_error[1];
     int work_balance = abs(left_leave->getLength() - right_leave->getLength());

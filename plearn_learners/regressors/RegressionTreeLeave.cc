@@ -144,7 +144,6 @@ void RegressionTreeLeave::addRow(int row, Vec outputv, Vec errorv)
     weighted_squared_targets_sum += weight * squared_target;  
     computeOutputAndError();
     getOutputAndError(outputv,errorv);
-    train_set->applyForRow(id, row);
 }
 
 void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)

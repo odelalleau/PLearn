@@ -143,7 +143,6 @@ void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
         PLERROR("RegressionTreeMultilassLeave: Unknown target: %d row: %d\n", target,row);
     computeOutputAndError();
     getOutputAndError(outputv,errorv);
-    train_set->applyForRow(id, row);
 }
 
 void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)

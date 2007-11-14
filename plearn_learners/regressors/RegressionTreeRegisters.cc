@@ -77,8 +77,6 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
                   "The next id for creating a new leave\n");
     declareOption(ol, "leave_register", &RegressionTreeRegisters::leave_register, OptionBase::learntoption,
                   "The vector identifying the leave to which, each row belongs\n");
-    declareOption(ol, "leave_candidate", &RegressionTreeRegisters::leave_candidate, OptionBase::learntoption,
-                  "The vector identifying the candidate leave to which, each row could belong after split\n");
 
     //too big to save
     declareOption(ol, "sorted_row", &RegressionTreeRegisters::sorted_row, OptionBase::nosave,
@@ -96,7 +94,6 @@ void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sorted_row, copies);
     deepCopyField(inverted_sorted_row, copies);
     deepCopyField(leave_register, copies);
-    deepCopyField(leave_candidate, copies);
     deepCopyField(getExample_tmp, copies);
 }
 
@@ -119,7 +116,6 @@ void RegressionTreeRegisters::initRegisters(VMat the_train_set)
     targetsize_ = the_train_set->targetsize();
     weightsize_ = the_train_set->weightsize();
     leave_register.resize(length());
-    leave_candidate.resize(length());
     sortRows();
 }
 
@@ -129,11 +125,6 @@ void RegressionTreeRegisters::reinitRegisters()
 
     //in case we don't save the sorted data
     sortRows();
-}
-
-void RegressionTreeRegisters::applyForRow(int leave_id, int row)
-{
-    leave_candidate[row] = leave_id;
 }
 
 void RegressionTreeRegisters::registerLeave(int leave_id, int row)
@@ -179,21 +170,6 @@ int RegressionTreeRegisters::getNextRegisteredRow(int leave_id, int col, int pre
     {
         if (each_train_sample_index >= length()) return length();
         if (leave_register[sorted_row(each_train_sample_index, col)] == leave_id) break;
-        each_train_sample_index += 1;
-    }
-    return sorted_row(each_train_sample_index, col);
-}
-
-int RegressionTreeRegisters::getNextCandidateRow(int leave_id, int col, int previous_row)
-{
-    if (previous_row >= length()) return length();
-    int each_train_sample_index;
-    if (previous_row < 0) each_train_sample_index = 0;
-    else each_train_sample_index = inverted_sorted_row(previous_row, col) + 1;
-    while (true)
-    {
-        if (each_train_sample_index >= length()) return length();
-        if (leave_candidate[sorted_row(each_train_sample_index, col)] == leave_id) break;
         each_train_sample_index += 1;
     }
     return sorted_row(each_train_sample_index, col);
@@ -341,9 +317,6 @@ real RegressionTreeRegisters::compare(real field1, real field2)
 
 void RegressionTreeRegisters::printRegisters()
 {
-    cout << "candidate: ";
-    for (int ii = 0; ii < leave_candidate.length(); ii++) 
-        cout << " " << tostring(leave_candidate[ii]);
     cout << " register:  ";
     for (int ii = 0; ii < leave_register.length(); ii++) 
         cout << " " << tostring(leave_register[ii]);
@@ -373,7 +346,7 @@ void RegressionTreeRegisters::getExample(int i, Vec& input, Vec& target, real& w
 
     target.resize(targetsize_);
     if (targetsize_ > 0) {
-        target<<getExample_tmp.subVecSelf(inputsize(),targetsize());
+        target<<getExample_tmp.subVec(inputsize(),targetsize());
     }
 
     if(weightsize()==0)

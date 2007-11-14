@@ -72,7 +72,6 @@ private:
     TMat<int> sorted_row;
     TMat<int> inverted_sorted_row;
     TVec<int> leave_register;
-    TVec<int> leave_candidate;
     VMat tsource;
  
 public:
@@ -87,7 +86,6 @@ public:
     virtual void         build();
     void         initRegisters(VMat train_set);
     void         reinitRegisters();
-    void         applyForRow(int leave_id, int row);
     void         registerLeave(int leave_id, int row);
     virtual real get(int row, int col) const;
     real         getTarget(int row);
@@ -95,7 +93,6 @@ public:
     void         setWeight(int row,real val);
     int          getNextId();
     int          getNextRegisteredRow(int leave_id, int col, int previous_row);
-    int          getNextCandidateRow(int leave_id, int col, int previous_row);
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
