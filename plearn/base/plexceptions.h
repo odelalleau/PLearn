@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/plexceptions.h */
+/*! \file plexceptions.h */
 
 #ifndef pexceptions_INC
 #define pexceptions_INC

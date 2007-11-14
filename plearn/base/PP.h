@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file SmartPointer.h */
+/*! \file PP.h */
 
 #ifndef SMART_POINTER_INC
 #define SMART_POINTER_INC

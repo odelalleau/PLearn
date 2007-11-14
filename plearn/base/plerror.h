@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/plerror.h */
+/*! \file plerror.h */
 
 #ifndef perror_INC
 #define perror_INC

@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file VMat.h */
+/*! \file YMDDatedVMatrix.h */
 
 #ifndef YMDDatedVMatrix_INC
 #define YMDDatedVMatrix_INC

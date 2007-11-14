@@ -43,7 +43,7 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnCore/Measurer.h */
+/*! \file Measurer.h */
 
 #ifndef MEASURER_INC
 #define MEASURER_INC
