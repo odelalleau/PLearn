@@ -73,10 +73,10 @@ private:
     TMat<int> inverted_sorted_row;
     TVec<int> leave_register;
     TVec<int> leave_candidate;
+    VMat tsource;
  
 public:
 
-    VMat source;
     RegressionTreeRegisters();
     virtual              ~RegressionTreeRegisters();
     
@@ -108,6 +108,9 @@ private:
     void         swapIndex(int index_i, int index_j, int dim);
     real         compare(real field1, real field2);
     void         verbose(string msg, int level);
+
+    mutable Vec  getExample_tmp;
+
 };
 
 DECLARE_OBJECT_PTR(RegressionTreeRegisters);

@@ -40,6 +40,8 @@
  ********************************************************************************** */
 
 #include "RegressionTreeRegisters.h"
+#include <plearn/vmat/TransposeVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -68,8 +70,8 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
                   "The indicator to report progress through a progress bar\n");
     declareOption(ol, "verbosity", &RegressionTreeRegisters::verbosity, OptionBase::buildoption,
                   "The desired level of verbosity\n");
-    declareOption(ol, "source", &RegressionTreeRegisters::source, OptionBase::buildoption,
-                  "The source VMatrix");
+    declareOption(ol, "tsource", &RegressionTreeRegisters::tsource, OptionBase::learntoption,
+                  "The source VMatrix transposed");
 
     declareOption(ol, "next_id", &RegressionTreeRegisters::next_id, OptionBase::learntoption,
                   "The next id for creating a new leave\n");
@@ -95,6 +97,7 @@ void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(inverted_sorted_row, copies);
     deepCopyField(leave_register, copies);
     deepCopyField(leave_candidate, copies);
+    deepCopyField(getExample_tmp, copies);
 }
 
 void RegressionTreeRegisters::build()
@@ -109,12 +112,12 @@ void RegressionTreeRegisters::build_()
 
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {
-    source = the_train_set;
-    length_ = source->length();
-    width_ = source->width();
-    inputsize_ = source->inputsize();
-    targetsize_ = source->targetsize();
-    weightsize_ = source->weightsize();
+    tsource = VMat(MemoryVMatrix(TransposeVMatrix(the_train_set)));
+    length_ = the_train_set->length();
+    width_ = the_train_set->width();
+    inputsize_ = the_train_set->inputsize();
+    targetsize_ = the_train_set->targetsize();
+    weightsize_ = the_train_set->weightsize();
     leave_register.resize(length());
     leave_candidate.resize(length());
     sortRows();
@@ -140,24 +143,24 @@ void RegressionTreeRegisters::registerLeave(int leave_id, int row)
 
 real RegressionTreeRegisters::get(int i, int j) const
 {
-    return source->get(i,j);
+    return tsource->get(j,i);
 }
 
 real RegressionTreeRegisters::getTarget(int row)
 {
-    return source->get(row, inputsize());
+    return tsource->get(inputsize(), row);
 }
 
 real RegressionTreeRegisters::getWeight(int row)
 {
     if (weightsize() <= 0) return 1.0 / length();
-    else return source->get(row, inputsize() + targetsize() );
+    else return tsource->get(inputsize() + targetsize(), row );
 }
 
 void RegressionTreeRegisters::setWeight(int row, real val)
 {
     PLASSERT(weightsize() > 0);
-    source->put(row, inputsize() + targetsize(), val );
+    tsource->put( inputsize() + targetsize(), row, val );
 }
 
 int RegressionTreeRegisters::getNextId()
@@ -227,7 +230,7 @@ void RegressionTreeRegisters::sortRows()
         {
             inverted_sorted_row(sorted_row(each_train_sample_index, sample_dim), sample_dim) = each_train_sample_index;
         }
-    }  
+    }
 }
   
 void RegressionTreeRegisters::sortEachDim(int dim)
@@ -256,22 +259,22 @@ void RegressionTreeRegisters::sortEachDim(int dim)
         else
         {
             swapIndex(start_index + 1, (start_index + end_index) / 2, dim);
-            if (compare(source->get(sorted_row(start_index, dim), dim),
-                        source->get(sorted_row(end_index, dim), dim)) > 0.0)
+            if (compare(tsource->get(dim, sorted_row(start_index, dim)),
+                        tsource->get(dim, sorted_row(end_index, dim))) > 0.0)
                 swapIndex(start_index, end_index, dim);
-            if (compare(source->get(sorted_row(start_index + 1, dim), dim),
-                        source->get(sorted_row(end_index, dim), dim)) > 0.0)
+            if (compare(tsource->get(dim, sorted_row(start_index + 1, dim)),
+                        tsource->get(dim, sorted_row(end_index, dim))) > 0.0)
                 swapIndex(start_index + 1, end_index, dim);
-            if (compare(source->get(sorted_row(start_index, dim), dim),
-                        source->get(sorted_row(start_index + 1, dim), dim)) > 0.0)
+            if (compare(tsource->get(dim, sorted_row(start_index, dim)),
+                        tsource->get(dim, sorted_row(start_index + 1, dim))) > 0.0)
                 swapIndex(start_index, start_index + 1, dim);
             forward_index = start_index + 1;
             backward_index = end_index;
-            real sample_feature = source->get(sorted_row(start_index + 1, dim), dim);
+            real sample_feature = tsource->get(dim, sorted_row(start_index + 1, dim));
             for (;;)
             {
-                do forward_index++; while (compare(source->get(sorted_row(forward_index, dim), dim), sample_feature) < 0.0);
-                do backward_index--; while (compare(source->get(sorted_row(backward_index, dim), dim), sample_feature) > 0.0);
+                do forward_index++; while (compare(tsource->get(dim, sorted_row(forward_index, dim)), sample_feature) < 0.0);
+                do backward_index--; while (compare(tsource->get(dim, sorted_row(backward_index, dim)), sample_feature) > 0.0);
                 if (backward_index < forward_index)
                 {
                     break;
@@ -305,13 +308,13 @@ void RegressionTreeRegisters::sortSmallSubArray(int the_start_index, int the_end
          next_train_sample_index++)
     {
         int saved_index = sorted_row(next_train_sample_index, dim);
-        real sample_feature = source->get(saved_index, dim);
+        real sample_feature = tsource->get(dim,saved_index);
         int each_train_sample_index;
         for (each_train_sample_index = next_train_sample_index - 1;
              each_train_sample_index >= the_start_index;
              each_train_sample_index--)
         {
-            if (compare(source->get(sorted_row(each_train_sample_index, dim), dim), sample_feature) <= 0.0)
+            if (compare(tsource->get(dim,sorted_row(each_train_sample_index, dim)), sample_feature) <= 0.0)
             {
                 break;
             }
@@ -339,9 +342,11 @@ real RegressionTreeRegisters::compare(real field1, real field2)
 void RegressionTreeRegisters::printRegisters()
 {
     cout << "candidate: ";
-    for (int ii = 0; ii < length(); ii++) cout << " " << tostring(leave_candidate[ii]);
+    for (int ii = 0; ii < leave_candidate.length(); ii++) 
+        cout << " " << tostring(leave_candidate[ii]);
     cout << " register:  ";
-    for (int ii = 0; ii < length(); ii++) cout << " " << tostring(leave_register[ii]);
+    for (int ii = 0; ii < leave_register.length(); ii++) 
+        cout << " " << tostring(leave_register[ii]);
     cout << endl;
 }
 
@@ -353,25 +358,30 @@ void RegressionTreeRegisters::verbose(string the_msg, int the_level)
 
 void RegressionTreeRegisters::getExample(int i, Vec& input, Vec& target, real& weight)
 {
+#ifdef BOUNDCHECK
     if(inputsize_<0)
-        PLERROR("In VMatrix::getExample, inputsize_ not defined for this vmat");
-    input.resize(inputsize_);
-    source->getSubRow(i,0,input);
+        PLERROR("In RegressionTreeRegisters::getExample, inputsize_ not defined for this vmat");
     if(targetsize_<0)
-        PLERROR("In VMatrix::getExample, targetsize_ not defined for this vmat");
+        PLERROR("In RegressionTreeRegisters::getExample, targetsize_ not defined for this vmat");
+    if(weightsize()<0)
+        PLERROR("In RegressionTreeRegisters::getExample, weightsize_ not defined for this vmat");
+#endif
+    input.resize(inputsize_);
+    getExample_tmp.resize(width());
+    tsource->getColumn(i,getExample_tmp);
+    input << getExample_tmp.subVec(0,input.size());
+
     target.resize(targetsize_);
     if (targetsize_ > 0) {
-        source->getSubRow(i,inputsize_,target);
+        target<<getExample_tmp.subVecSelf(inputsize(),targetsize());
     }
 
     if(weightsize()==0)
         weight = 1;
-    else if(weightsize()<0)
-        PLERROR("In VMatrix::getExample, weightsize_ not defined for this vmat");
     else if(weightsize()>1)
         PLERROR("In VMatrix::getExample, weightsize_ >1 not supported by this call");
     else
-        weight = source->get(i,inputsize()+targetsize());
+        weight = tsource->get(inputsize()+targetsize(),i);
 }
 
 
