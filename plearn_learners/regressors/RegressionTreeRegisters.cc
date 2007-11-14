@@ -73,16 +73,6 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
 
     declareOption(ol, "next_id", &RegressionTreeRegisters::next_id, OptionBase::learntoption,
                   "The next id for creating a new leave\n");
-    declareOption(ol, "length", &RegressionTreeRegisters::length_, OptionBase::learntoption,
-                  "The length of the train set\n");
-    declareOption(ol, "width", &RegressionTreeRegisters::width_, OptionBase::learntoption,
-                  "The width of the train set\n");
-    declareOption(ol, "inputsize", &RegressionTreeRegisters::inputsize_, OptionBase::learntoption,
-                  "The input size of the train set\n");
-    declareOption(ol, "targetsize", &RegressionTreeRegisters::targetsize_, OptionBase::learntoption,
-                  "The target size of the train set\n");
-    declareOption(ol, "weightsize", &RegressionTreeRegisters::weightsize_, OptionBase::learntoption,
-                  "The weight of each sample in the train set\n");
     declareOption(ol, "leave_register", &RegressionTreeRegisters::leave_register, OptionBase::learntoption,
                   "The vector identifying the leave to which, each row belongs\n");
     declareOption(ol, "leave_candidate", &RegressionTreeRegisters::leave_candidate, OptionBase::learntoption,
