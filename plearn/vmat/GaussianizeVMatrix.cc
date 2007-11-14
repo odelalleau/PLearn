@@ -140,8 +140,8 @@ void GaussianizeVMatrix::build_()
         return;
 
     if (train_source) {
-        PLASSERT( train_source->width() == source->width() );
-        PLASSERT( train_source->inputsize()  == source->inputsize() &&
+        PLCHECK( train_source->width() == source->width() );
+        PLCHECK( train_source->inputsize()  == source->inputsize() &&
                 train_source->targetsize() == source->targetsize() &&
                 train_source->weightsize() == source->weightsize() &&
                 train_source->extrasize()  == source->extrasize() );
@@ -149,7 +149,7 @@ void GaussianizeVMatrix::build_()
 
     VMat the_source = train_source ? train_source : source;
 
-    PLASSERT( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
+    PLCHECK( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
             the_source->weightsize() >= 0 && the_source->extrasize() >= 0 );
 
     // Find which dimensions to Gaussianize.
