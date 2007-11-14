@@ -795,8 +795,8 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "- \";\"  : used for a variant of CSV files");
 
     declareOption(ol, "quote_delimiter", &TextFilesVMatrix::quote_delimiter, OptionBase::buildoption,
-                  "The escate caractere where the delimiter is not considered."
-                  " //! - '\"' : used frequently.");
+        "The escape character to indicate the delimiter is not considered.\n"
+        "For instance, '\"' is frequently used.");
 
     declareOption(ol, "skipheader", &TextFilesVMatrix::skipheader, OptionBase::buildoption,
                   "An (optional) list of integers, one for each of the txtfilenames,\n"
