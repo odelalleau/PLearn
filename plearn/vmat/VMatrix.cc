@@ -50,6 +50,7 @@
 #include <plearn/io/load_and_save.h>
 #include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
 #include <plearn/base/RemoteDeclareMethod.h>
+#include <nspr/prenv.h>
 
 namespace PLearn {
 using namespace std;
@@ -1232,7 +1233,13 @@ int getPid()
 /////////////
 string getUser()
 {
-    return "TODO";
+    const char* h = PR_GetEnv("USER");
+    if (!h)
+        h = PR_GetEnv("LOGNAME");
+    if (!h)
+        return "USERNAME_NOT_FOUND";
+    return tostring(h);
+        
 }
 
 /////////////////////
