@@ -843,7 +843,7 @@ public:
      *  Subclasses may override this method to provide different outputs
      *  depending on \c out's mode (\c plearn_ascii, \c raw_ascii, ...).
      *
-     *  @param in  Stream onto which serialize the object
+     *  @param out  Stream onto which serialize the object
      */
     virtual void newwrite(PStream& out) const;
 

@@ -1706,10 +1706,8 @@ featureMask) const
 *       '00000100' means return only features for the position we're making the
 *       prediction at
 *
-* @returns 
 *
 * @note 
-* @todo 
 **/
 void StructuralLearner::updateFeatures(const Vec& input, const Vec& target,  TVec< TVec<unsigned int> >& theFeatureGroups, char
 featureMask) const
@@ -1777,11 +1775,8 @@ featureMask) const
 * @brief Determines 1000 most frequent words and builds 2 TVecs of indices of examples that have respetively
 * a frequent word at current and left positions.
 * 
-* @param 
-* @returns 
 *
 * @note 
-* @todo 
 **/
 void StructuralLearner::initWordProblemsStructures()
 {
@@ -1874,11 +1869,8 @@ void StructuralLearner::initWordProblemsStructures()
 * @brief Determines which "previous label - current word" bigrams are in the
 * training set and indexes them is a stl map.
 * OOV's are ignored.
-* @param 
-* @returns 
 *
 * @note 
-* @todo 
 **/
 void StructuralLearner::initPreviousLabelCurrentWordBigramMapping()
 {
