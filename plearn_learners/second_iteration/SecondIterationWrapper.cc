@@ -123,12 +123,16 @@ void SecondIterationWrapper::build_()
         base_regressor->setTrainingSet(train_set, true);
         base_regressor->setTrainStatsCollector(new VecStatsCollector);
         if (class_prediction == 0) search_table = ref_sales->toMat();
+        sample_input.resize(train_set->inputsize());
+        sample_target.resize(train_set->targetsize());
+        sample_output.resize(base_regressor->outputsize());
+        sample_costs.resize(4);
     }
 }
 
 void SecondIterationWrapper::train()
 {
-    base_regressor->setOption("nstages", tostring(nstages));
+    base_regressor->nstages = nstages;
     base_regressor->train();
     if (class_prediction == 1) computeClassStatistics();
     else computeSalesStatistics();
@@ -136,19 +140,14 @@ void SecondIterationWrapper::train()
 
 void SecondIterationWrapper::computeClassStatistics()
 {
-    int row;
-    Vec sample_input(train_set->inputsize());
-    Vec sample_target(train_set->targetsize());
     real sample_weight;
-    Vec sample_output(base_regressor->outputsize());
-    Vec sample_costs(4);
     ProgressBar* pb = NULL;
     if (report_progress)
-    {
-        pb = new ProgressBar("Second Iteration : computing the train statistics: ", train_set->length());
-    } 
+        pb = new ProgressBar("Second Iteration : computing the train statistics: ",
+                             train_set->length());
+
     train_stats->forget();
-    for (row = 0; row < train_set->length(); row++)
+    for (int row = 0; row < train_set->length(); row++)
     {  
         train_set->getExample(row, sample_input, sample_target, sample_weight);
         computeOutput(sample_input, sample_output);

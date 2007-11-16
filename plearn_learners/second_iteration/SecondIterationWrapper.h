@@ -84,7 +84,11 @@ private:
     int tclass;
     Mat search_table;
     
-   
+    Vec sample_input;
+    Vec sample_target;
+    Vec sample_output;
+    Vec sample_costs;
+
   
 public:
     SecondIterationWrapper();
