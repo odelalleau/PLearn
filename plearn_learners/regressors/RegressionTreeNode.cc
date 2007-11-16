@@ -213,14 +213,17 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
 void RegressionTreeNode::lookForBestSplit()
 {
     TVec<int> candidate;//list of candidate row to split
+    TVec<int> registered_row;
     for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
         left_leave->initStats();
         right_leave->initStats();
-        for (int row = train_set->getNextRegisteredRow(leave_id, col, -1);
-             row < length; row = train_set->getNextRegisteredRow(leave_id, col, row))
+        registered_row.resize(0);
+        train_set->getAllRegisteredRow(leave_id,col,registered_row);
+        for(int row_idx = 0;row_idx<registered_row.size();row_idx++)
         {
+            int row=registered_row[row_idx];
             if (is_missing(train_set->get(row, col)))
                 missing_leave->addRow(row, missing_output, missing_error);
             else {
@@ -265,8 +268,12 @@ int RegressionTreeNode::expandNode()
     missing_leave->initStats();
     left_leave->initStats();
     right_leave->initStats();
-    for (int row = train_set->getNextRegisteredRow(leave_id, split_col, -1); row < length; row = train_set->getNextRegisteredRow(leave_id, split_col, row))
+    TVec<int>registered_row;
+    train_set->getAllRegisteredRow(leave_id,split_col,registered_row);
+
+    for (int row_index = 0;row_index<registered_row.size();row_index++)
     {
+        int row=registered_row[row_index];
         if (is_missing(train_set->get(row, split_col)))
         {
             missing_leave->addRow(row, missing_output, missing_error);
@@ -277,12 +284,12 @@ int RegressionTreeNode::expandNode()
             if (train_set->get(row, split_col) < split_feature_value)
             {
                 left_leave->addRow(row, left_output, left_error);
-                left_leave->registerRow(row);    
+                left_leave->registerRow(row);
             }
             else
             {
                 right_leave->addRow(row, right_output, right_error);
-                right_leave->registerRow(row); 
+                right_leave->registerRow(row);
             }
         }
     }

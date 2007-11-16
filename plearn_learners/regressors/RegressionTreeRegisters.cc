@@ -73,17 +73,18 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
     declareOption(ol, "tsource", &RegressionTreeRegisters::tsource, OptionBase::learntoption,
                   "The source VMatrix transposed");
 
+    declareOption(ol, "source", &RegressionTreeRegisters::source,
+                  OptionBase::buildoption|OptionBase::nosave,
+                  "DEPRECATED The source VMatrix");
+
     declareOption(ol, "next_id", &RegressionTreeRegisters::next_id, OptionBase::learntoption,
                   "The next id for creating a new leave\n");
     declareOption(ol, "leave_register", &RegressionTreeRegisters::leave_register, OptionBase::learntoption,
                   "The vector identifying the leave to which, each row belongs\n");
 
     //too big to save
-    declareOption(ol, "sorted_row", &RegressionTreeRegisters::sorted_row, OptionBase::nosave,
+    declareOption(ol, "tsorted_row", &RegressionTreeRegisters::tsorted_row, OptionBase::nosave,
                   "The matrix holding the sequence of samples in ascending value order for each dimension\n");
-    //too big to save
-    declareOption(ol, "inverted_sorted_row", &RegressionTreeRegisters::inverted_sorted_row, OptionBase::nosave,
-                  "The matrix holding the position of a given entry in the sorted row matrix\n");
 
     inherited::declareOptions(ol);
 }
@@ -91,8 +92,7 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
 void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(sorted_row, copies);
-    deepCopyField(inverted_sorted_row, copies);
+    deepCopyField(tsorted_row, copies);
     deepCopyField(leave_register, copies);
     deepCopyField(getExample_tmp, copies);
 }
@@ -160,52 +160,43 @@ int RegressionTreeRegisters::getNextId()
     return next_id;
 }
 
-int RegressionTreeRegisters::getNextRegisteredRow(int leave_id, int col, int previous_row)
+void RegressionTreeRegisters::getAllRegisteredRow(int leave_id, int col, TVec<int> &reg)
 {
-    if (previous_row >= length()) return length();
-    int each_train_sample_index;
-    if (previous_row < 0) each_train_sample_index = 0;
-    else each_train_sample_index = inverted_sorted_row(previous_row, col) + 1;
-    while (true)
+    for(int i=0;i<length();i++)
     {
-        if (each_train_sample_index >= length()) return length();
-        if (leave_register[sorted_row(each_train_sample_index, col)] == leave_id) break;
-        each_train_sample_index += 1;
+        int srow = tsorted_row(col, i);
+        if ( leave_register[srow] == leave_id)
+            reg.append(srow);
     }
-    return sorted_row(each_train_sample_index, col);
 }
 
 void RegressionTreeRegisters::sortRows()
 {
     next_id = 0;
-    if (sorted_row.length() == length() && sorted_row.width() == inputsize())
+    if (tsorted_row.length() == length() && tsorted_row.width() == inputsize())
     {
         verbose("RegressionTreeRegisters: Sorted train set indices are present, no sort required", 3);
         return;
     }
     verbose("RegressionTreeRegisters: The train set is being sorted", 3);
-    sorted_row.resize(length(), inputsize());
+    tsorted_row.resize(inputsize(), length());
     PP<ProgressBar> pb;
     if (report_progress)
     {
         pb = new ProgressBar("RegressionTreeRegisters : sorting the train set on input dimensions: ", inputsize());
     }
-    for (int each_train_sample_index = 0; each_train_sample_index < length(); each_train_sample_index++)
-    {
-        sorted_row(each_train_sample_index).fill(each_train_sample_index);
-    }
+    for(int row=0;row<tsorted_row.length();row++)
+        for(int col=0;col<tsorted_row.width(); col++)
+            tsorted_row(row,col)=col;
+            
+//     for (int each_train_sample_index = 0; each_train_sample_index < length(); each_train_sample_index++)
+//     {
+//         sorted_row(each_train_sample_index).fill(each_train_sample_index);
+//     }
     for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
     {
         sortEachDim(sample_dim);
         if (report_progress) pb->update(sample_dim);
-    }
-    inverted_sorted_row.resize(length(), inputsize());
-    for (int each_train_sample_index = 0; each_train_sample_index < length(); each_train_sample_index++)
-    {
-        for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
-        {
-            inverted_sorted_row(sorted_row(each_train_sample_index, sample_dim), sample_dim) = each_train_sample_index;
-        }
     }
 }
   
@@ -235,22 +226,22 @@ void RegressionTreeRegisters::sortEachDim(int dim)
         else
         {
             swapIndex(start_index + 1, (start_index + end_index) / 2, dim);
-            if (compare(tsource->get(dim, sorted_row(start_index, dim)),
-                        tsource->get(dim, sorted_row(end_index, dim))) > 0.0)
+            if (compare(tsource->get(dim, tsorted_row(dim, start_index)),
+                        tsource->get(dim, tsorted_row(dim, end_index))) > 0.0)
                 swapIndex(start_index, end_index, dim);
-            if (compare(tsource->get(dim, sorted_row(start_index + 1, dim)),
-                        tsource->get(dim, sorted_row(end_index, dim))) > 0.0)
+            if (compare(tsource->get(dim, tsorted_row(dim, start_index + 1)),
+                        tsource->get(dim, tsorted_row(dim, end_index))) > 0.0)
                 swapIndex(start_index + 1, end_index, dim);
-            if (compare(tsource->get(dim, sorted_row(start_index, dim)),
-                        tsource->get(dim, sorted_row(start_index + 1, dim))) > 0.0)
+            if (compare(tsource->get(dim, tsorted_row(dim, start_index)),
+                        tsource->get(dim, tsorted_row(dim, start_index + 1))) > 0.0)
                 swapIndex(start_index, start_index + 1, dim);
             forward_index = start_index + 1;
             backward_index = end_index;
-            real sample_feature = tsource->get(dim, sorted_row(start_index + 1, dim));
+            real sample_feature = tsource->get(dim, tsorted_row(dim, start_index + 1));
             for (;;)
             {
-                do forward_index++; while (compare(tsource->get(dim, sorted_row(forward_index, dim)), sample_feature) < 0.0);
-                do backward_index--; while (compare(tsource->get(dim, sorted_row(backward_index, dim)), sample_feature) > 0.0);
+                do forward_index++; while (compare(tsource->get(dim, tsorted_row(dim, forward_index)), sample_feature) < 0.0);
+                do backward_index--; while (compare(tsource->get(dim, tsorted_row(dim, backward_index)), sample_feature) > 0.0);
                 if (backward_index < forward_index)
                 {
                     break;
@@ -283,28 +274,28 @@ void RegressionTreeRegisters::sortSmallSubArray(int the_start_index, int the_end
          next_train_sample_index <= the_end_index;
          next_train_sample_index++)
     {
-        int saved_index = sorted_row(next_train_sample_index, dim);
+        int saved_index = tsorted_row(dim, next_train_sample_index);
         real sample_feature = tsource->get(dim,saved_index);
         int each_train_sample_index;
         for (each_train_sample_index = next_train_sample_index - 1;
              each_train_sample_index >= the_start_index;
              each_train_sample_index--)
         {
-            if (compare(tsource->get(dim,sorted_row(each_train_sample_index, dim)), sample_feature) <= 0.0)
+            if (compare(tsource->get(dim,tsorted_row(dim, each_train_sample_index)), sample_feature) <= 0.0)
             {
                 break;
             }
-            sorted_row(each_train_sample_index + 1, dim) = sorted_row(each_train_sample_index, dim);
+            tsorted_row(dim, each_train_sample_index + 1) = tsorted_row(dim, each_train_sample_index);
         }
-        sorted_row(each_train_sample_index + 1, dim) = saved_index;
+        tsorted_row(dim, each_train_sample_index + 1) = saved_index;
     }  
 }
 
 void RegressionTreeRegisters::swapIndex(int index_i, int index_j, int dim)
 {
-    int saved_index = sorted_row(index_i, dim);
-    sorted_row(index_i, dim) = sorted_row(index_j, dim);
-    sorted_row(index_j, dim) = saved_index;
+    int saved_index = tsorted_row(dim, index_i);
+    tsorted_row(dim, index_i) = tsorted_row(dim, index_j);
+    tsorted_row(dim, index_j) = saved_index;
 }
 
 real RegressionTreeRegisters::compare(real field1, real field2)

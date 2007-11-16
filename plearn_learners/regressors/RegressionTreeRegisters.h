@@ -69,8 +69,8 @@ private:
 */
 
     int       next_id;
-    TMat<int> sorted_row;
-    TMat<int> inverted_sorted_row;
+    //TMat<int> sorted_row;
+    TMat<int> tsorted_row;
     TVec<int> leave_register;
     VMat tsource;
  
@@ -92,11 +92,12 @@ public:
     real         getWeight(int row);
     void         setWeight(int row,real val);
     int          getNextId();
-    int          getNextRegisteredRow(int leave_id, int col, int previous_row);
+    void         getAllRegisteredRow(int leave_id, int col, TVec<int> &reg);
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
 //    virtual void getNewRow(int i, const Vec& v) const;
+    VMat source;
 
 private:
     void         build_();

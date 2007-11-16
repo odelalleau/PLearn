@@ -93,7 +93,7 @@ private:
     PP<RegressionTreeLeave> right_leave;
     Vec right_output;
     Vec right_error;
- 
+    
 public:  
     RegressionTreeNode();
     virtual              ~RegressionTreeNode();
@@ -114,7 +114,7 @@ public:
     
 private:
     void         build_();
-    void         verbose(string msg, int level);
+    void         verbose(string msg, int level);    
 };
 
 DECLARE_OBJECT_PTR(RegressionTreeNode);
