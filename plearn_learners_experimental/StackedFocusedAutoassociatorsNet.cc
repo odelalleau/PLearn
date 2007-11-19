@@ -683,11 +683,14 @@ void StackedFocusedAutoassociatorsNet::train()
         reconstruction_activation_gradients.resize(layers[i]->size);
         reconstruction_expectation_gradients.resize(layers[i]->size);
 
-        similar_example_representation.resize(layers[i+1]->size);
-        dissimilar_example_representation.resize(layers[i+1]->size);
-        dissimilar_gradient_contribution.resize(layers[i+1]->size);
-        input_representation.resize(layers[i+1]->size);
-
+        if( !fast_exact_is_equal( supervised_greedy_learning_rate, 0 ) )
+        {
+            similar_example_representation.resize(layers[i+1]->size);
+            dissimilar_example_representation.resize(layers[i+1]->size);
+            dissimilar_gradient_contribution.resize(layers[i+1]->size);
+            input_representation.resize(layers[i+1]->size);
+        }
+        
         greedy_activation.resize(greedy_layers[i]->size);
         greedy_expectation.resize(greedy_layers[i]->size);
         greedy_activation_gradient.resize(greedy_layers[i]->size);
@@ -703,32 +706,34 @@ void StackedFocusedAutoassociatorsNet::train()
             
             sample = *this_stage % nsamples;
             train_set->getExample(sample, input, target, weight);
-            // Find similar example
+            if( !fast_exact_is_equal( supervised_greedy_learning_rate, 0 ) )
+            {
+                // Find similar example
+                
+                int sim_index = random_gen->uniform_multinomial_sample(k_neighbors);
+                class_datasets[(int)round(target[0])]->getExample(
+                    nearest_neighbors_indices(sample,sim_index),
+                    similar_example, target2, weight2);
+                
+                if(round(target[0]) != round(target2[0]))
+                    PLERROR("StackedFocusedAutoassociatorsNet::train(): similar"
+                            " example is not from same class!");
+                
+                // Find dissimilar example
+                
+                int dissim_class_index = random_gen->multinomial_sample(
+                    other_classes_proportions((int)round(target[0])));
+                
+                int dissim_index = random_gen->uniform_multinomial_sample(
+                    class_datasets[dissim_class_index]->length());
+                
+                class_datasets[dissim_class_index]->getExample(dissim_index,
+                                                               dissimilar_example, target2, weight2);
 
-            int sim_index = random_gen->uniform_multinomial_sample(k_neighbors);
-            class_datasets[(int)round(target[0])]->getExample(
-                nearest_neighbors_indices(sample,sim_index),
-                similar_example, target2, weight2);
-
-            if(round(target[0]) != round(target2[0]))
-                PLERROR("StackedFocusedAutoassociatorsNet::train(): similar"
-                    " example is not from same class!");
-
-            // Find dissimilar example
-
-            int dissim_class_index = random_gen->multinomial_sample(
-                other_classes_proportions((int)round(target[0])));
-
-            int dissim_index = random_gen->uniform_multinomial_sample(
-                class_datasets[dissim_class_index]->length());
-
-            class_datasets[dissim_class_index]->getExample(dissim_index,
-                                  dissimilar_example, target2, weight2);
-
-            if(((int)round(target[0])) == ((int)round(target2[0])))
-                PLERROR("StackedFocusedAutoassociatorsNet::train(): dissimilar"
-                    " example is from same class!");
-
+                if(((int)round(target[0])) == ((int)round(target2[0])))
+                    PLERROR("StackedFocusedAutoassociatorsNet::train(): dissimilar"
+                            " example is from same class!");
+            }
             greedyStep( input, target, i, train_costs, *this_stage,
                         similar_example, dissimilar_example);
             train_stats->update( train_costs );
@@ -757,14 +762,17 @@ void StackedFocusedAutoassociatorsNet::train()
         setLearningRate( fine_tuning_learning_rate );
         train_costs.fill(MISSING_VALUE);
 
-        similar_example_representation.resize(
-            layers[n_layers-1]->size);
-        dissimilar_example_representation.resize(
-            layers[n_layers-1]->size);
-        dissimilar_gradient_contribution.resize(
-            layers[n_layers-1]->size);
-        similar_example.resize(inputsize());
-        dissimilar_example.resize(inputsize());
+        if( !do_not_use_knn_classifier )
+        {
+            similar_example_representation.resize(
+                layers[n_layers-1]->size);
+            dissimilar_example_representation.resize(
+                layers[n_layers-1]->size);
+            dissimilar_gradient_contribution.resize(
+                layers[n_layers-1]->size);
+            similar_example.resize(inputsize());
+            dissimilar_example.resize(inputsize());
+        }
 
         final_cost_input.resize(n_classes);
         final_cost_value.resize(2); // Should be resized anyways
@@ -779,31 +787,34 @@ void StackedFocusedAutoassociatorsNet::train()
 
             train_set->getExample( sample, input, target, weight );
 
-            // Find similar example
+            if( !do_not_use_knn_classifier )
+            {
+                // Find similar example
+                
+                int sim_index = random_gen->uniform_multinomial_sample(k_neighbors);
+                class_datasets[(int)round(target[0])]->getExample(
+                    nearest_neighbors_indices(sample,sim_index),
+                    similar_example, target2, weight2);
+                
+                if(((int)round(target[0])) != ((int)round(target2[0])))
+                    PLERROR("StackedFocusedAutoassociatorsNet::train(): similar"
+                            " example is not from same class!");
+                
+                // Find dissimilar example
+                
+                int dissim_class_index = random_gen->multinomial_sample(
+                    other_classes_proportions((int)round(target[0])));
 
-            int sim_index = random_gen->uniform_multinomial_sample(k_neighbors);
-            class_datasets[(int)round(target[0])]->getExample(
-                nearest_neighbors_indices(sample,sim_index),
-                similar_example, target2, weight2);
-
-            if(((int)round(target[0])) != ((int)round(target2[0])))
-                PLERROR("StackedFocusedAutoassociatorsNet::train(): similar"
-                    " example is not from same class!");
-
-            // Find dissimilar example
-
-            int dissim_class_index = random_gen->multinomial_sample(
-                other_classes_proportions((int)round(target[0])));
-
-            int dissim_index = random_gen->uniform_multinomial_sample(
-                class_datasets[dissim_class_index]->length());
-
-            class_datasets[dissim_class_index]->getExample(dissim_index,
+                int dissim_index = random_gen->uniform_multinomial_sample(
+                    class_datasets[dissim_class_index]->length());
+                
+                class_datasets[dissim_class_index]->getExample(dissim_index,
                                   dissimilar_example, target2, weight2);
-
-            if(((int)round(target[0])) == ((int)round(target2[0])))
-                PLERROR("StackedFocusedAutoassociatorsNet::train(): dissimilar"
-                    " example is from same class!");
+                
+                if(((int)round(target[0])) == ((int)round(target2[0])))
+                    PLERROR("StackedFocusedAutoassociatorsNet::train(): dissimilar"
+                            " example is from same class!");
+            }
 
             fineTuningStep( input, target, train_costs, 
                             similar_example, dissimilar_example);
@@ -846,15 +857,18 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
     real lr;
     train_set_representations_up_to_date = false;
 
-    // Get similar example representation
+    if( !fast_exact_is_equal( supervised_greedy_learning_rate, 0 ) )
+    {
+        // Get similar example representation
     
-    computeRepresentation(similar_example, similar_example_representation, 
-                          index+1);
-
-    // Get dissimilar example representation
-
-    computeRepresentation(dissimilar_example, dissimilar_example_representation, 
-                          index+1);
+        computeRepresentation(similar_example, similar_example_representation, 
+                              index+1);
+        
+        // Get dissimilar example representation
+        
+        computeRepresentation(dissimilar_example, dissimilar_example_representation, 
+                              index+1);
+    }
 
     // Get example representation
 
@@ -895,33 +909,36 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
                                   reconstruction_activation_gradients);
     }
 
-    // Compute supervised gradient
-    
-    // Similar example contribution
-    substract(input_representation,similar_example_representation,
-              expectation_gradients[index+1]);
-    expectation_gradients[index+1] *= 4/sqrt(layers[index+1]->size);
-    
-    // Dissimilar example contribution
-    real dist = sqrt(powdistance(input_representation,
-                                 dissimilar_example_representation,
-                                 2));
-
-    //if( dist == 0 )
-    //    PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
-    //              " example representation is exactly the sample as the"
-    //              " input example. Gradient would be infinite! Skipping this"
-    //              " example...");
-    //else
-    //{
-    substract(input_representation,dissimilar_example_representation,
-              dissimilar_gradient_contribution);
-    
-    dissimilar_gradient_contribution *= -2* dissimilar_example_cost_precision*
-        safeexp(-dissimilar_example_cost_precision*dist/sqrt(layers[index+1]->size));
-    
-    expectation_gradients[index+1] += dissimilar_gradient_contribution;
+    if( !fast_exact_is_equal( supervised_greedy_learning_rate, 0 ) )
+    {
+        // Compute supervised gradient
+        
+        // Similar example contribution
+        substract(input_representation,similar_example_representation,
+                  expectation_gradients[index+1]);
+        expectation_gradients[index+1] *= 4/sqrt((real)layers[index+1]->size);
+        
+        // Dissimilar example contribution
+        real dist = sqrt(powdistance(input_representation,
+                                     dissimilar_example_representation,
+                                     2));
+        
+        //if( dist == 0 )
+        //    PLWARNING("StackedFocusedAutoassociatorsNet::fineTuningStep(): dissimilar"
+        //              " example representation is exactly the sample as the"
+        //              " input example. Gradient would be infinite! Skipping this"
+        //              " example...");
+        //else
+        //{
+        substract(input_representation,dissimilar_example_representation,
+                  dissimilar_gradient_contribution);
+        
+        dissimilar_gradient_contribution *= -2* dissimilar_example_cost_precision*
+            safeexp(-dissimilar_example_cost_precision*dist/sqrt((real)layers[index+1]->size));
+        
+        expectation_gradients[index+1] += dissimilar_gradient_contribution;
         //}
+    }
 
     // RBM learning
     if( !fast_exact_is_equal( cd_learning_rate, 0 ) )
@@ -978,27 +995,30 @@ void StackedFocusedAutoassociatorsNet::greedyStep(
     }
      
 
-    if( !fast_exact_is_equal( supervised_greedy_decrease_ct , 0 ) )
-        lr = supervised_greedy_learning_rate/(1 + supervised_greedy_decrease_ct 
-                               * this_stage); 
-    else
-        lr = supervised_greedy_learning_rate;
-    
-    layers[index]->setLearningRate( lr );
-    connections[index]->setLearningRate( lr );
-    layers[index+1]->setLearningRate( lr );
-    
-    layers[ index+1 ]->bpropUpdate( 
-        greedy_activation.subVec(0,layers[index+1]->size),
-        greedy_expectation.subVec(0,layers[index+1]->size),
-        activation_gradients[index+1], 
-        expectation_gradients[index+1]);
-    
-    connections[ index ]->bpropUpdate( 
-        previous_input_representation,
-        greedy_activation.subVec(0,layers[index+1]->size),
-        expectation_gradients[index],
-        activation_gradients[index+1]);
+    if( !fast_exact_is_equal( supervised_greedy_learning_rate, 0 ) )
+    {
+        if( !fast_exact_is_equal( supervised_greedy_decrease_ct , 0 ) )
+            lr = supervised_greedy_learning_rate/(1 + supervised_greedy_decrease_ct 
+                                                  * this_stage); 
+        else
+            lr = supervised_greedy_learning_rate;
+        
+        layers[index]->setLearningRate( lr );
+        connections[index]->setLearningRate( lr );
+        layers[index+1]->setLearningRate( lr );
+        
+        layers[ index+1 ]->bpropUpdate( 
+            greedy_activation.subVec(0,layers[index+1]->size),
+            greedy_expectation.subVec(0,layers[index+1]->size),
+            activation_gradients[index+1], 
+            expectation_gradients[index+1]);
+        
+        connections[ index ]->bpropUpdate( 
+            previous_input_representation,
+            greedy_activation.subVec(0,layers[index+1]->size),
+            expectation_gradients[index],
+            activation_gradients[index+1]);
+    }
 
     // RBM updates
 
@@ -1053,12 +1073,12 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
         // Similar example contribution
         substract(previous_input_representation,similar_example_representation,
                   expectation_gradients[n_layers-1]);
-        expectation_gradients[n_layers-1] *= 4/sqrt(layers[n_layers-1]->size);
+        expectation_gradients[n_layers-1] *= 4/sqrt((real)layers[n_layers-1]->size);
     
         train_costs[train_costs.length()-3] = 
             2 * sqrt(powdistance(previous_input_representation,
                                  similar_example_representation,
-                                 2)) / sqrt(layers[n_layers-1]->size);
+                                 2)) / sqrt((real)layers[n_layers-1]->size);
         
         // Dissimilar example contribution
         real dist = sqrt(powdistance(previous_input_representation,
@@ -1066,8 +1086,8 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
                                      2));
 
         train_costs[train_costs.length()-2] = 
-            2 * sqrt(layers[n_layers-1]->size) * safeexp( -dissimilar_example_cost_precision
-                                                          *dist/sqrt(layers[n_layers-1]->size));
+            2 * sqrt((real)layers[n_layers-1]->size) * safeexp( -dissimilar_example_cost_precision
+                                                          *dist/sqrt((real)layers[n_layers-1]->size));
         train_costs.last() = train_costs[train_costs.length()-3] + 
             train_costs[train_costs.length()-2];
         //if( dist == 0 )
@@ -1083,7 +1103,7 @@ void StackedFocusedAutoassociatorsNet::fineTuningStep(
                   dissimilar_gradient_contribution);
         
         dissimilar_gradient_contribution *= -2 * dissimilar_example_cost_precision*
-            safeexp(-dissimilar_example_cost_precision*dist/sqrt(layers[n_layers-1]->size));
+            safeexp(-dissimilar_example_cost_precision*dist/sqrt((real)layers[n_layers-1]->size));
         
         expectation_gradients[n_layers-1] += dissimilar_gradient_contribution;
         //}
