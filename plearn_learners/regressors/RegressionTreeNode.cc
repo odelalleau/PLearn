@@ -221,6 +221,7 @@ void RegressionTreeNode::lookForBestSplit()
         right_leave->initStats();
         registered_row.resize(0);
         train_set->getAllRegisteredRow(leave_id,col,registered_row);
+        PLASSERT(registered_row.size()>0);
         for(int row_idx = 0;row_idx<registered_row.size();row_idx++)
         {
             int row=registered_row[row_idx];
@@ -293,6 +294,9 @@ int RegressionTreeNode::expandNode()
             }
         }
     }
+    PLASSERT(missing_leave->length>0);
+    PLASSERT(left_leave->length>0);
+    PLASSERT(right_leave->length>0);
 //  leave->printStats();
 //  left_leave->printStats();
 //  right_leave->printStats();
