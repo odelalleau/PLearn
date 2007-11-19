@@ -688,9 +688,9 @@ void StackedFocusedAutoassociatorsNet::train()
             similar_example_representation.resize(layers[i+1]->size);
             dissimilar_example_representation.resize(layers[i+1]->size);
             dissimilar_gradient_contribution.resize(layers[i+1]->size);
-            input_representation.resize(layers[i+1]->size);
         }
         
+        input_representation.resize(layers[i+1]->size);
         greedy_activation.resize(greedy_layers[i]->size);
         greedy_expectation.resize(greedy_layers[i]->size);
         greedy_activation_gradient.resize(greedy_layers[i]->size);
@@ -1288,6 +1288,8 @@ void StackedFocusedAutoassociatorsNet::setTrainingSet(VMat training_set, bool ca
     
     train_set_representations_up_to_date = false;
 
+    if( do_not_use_knn_classifier && fast_exact_is_equal( supervised_greedy_learning_rate, 0 ) )
+        return;
     Vec input( inputsize() );
     Vec target( targetsize() );
     real weight; // unused
