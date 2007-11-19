@@ -69,8 +69,6 @@ protected:
 */
 
     int  length;
-    Vec  output;
-    Vec  error;
     real weights_sum;
     real targets_sum;
     real weighted_targets_sum;
@@ -90,11 +88,10 @@ public:
     virtual void         initStats();
     virtual void         addRow(int row, Vec outputv, Vec errorv);
     virtual void         removeRow(int row, Vec outputv, Vec errorv);
-    virtual void         computeOutputAndError();
     void         registerRow(int row);
     int          getId();
     int          getLength();
-    void         getOutputAndError(Vec outputv, Vec errorv);
+    virtual void         getOutputAndError(Vec output, Vec error);
     virtual void         printStats();
   
 private:

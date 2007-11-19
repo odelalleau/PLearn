@@ -101,13 +101,6 @@ void RegressionTreeMulticlassLeave::build_()
 void RegressionTreeMulticlassLeave::initStats()
 {
     length = 0;
-    output.resize(2);
-    output[0] = 0.0;
-    output[1] = 0.0;
-    error.resize(3);
-    error[0]  = 0.0;
-    error[1]  = 0.0;
-    error[2] = 0.0;
     weights_sum = 0.0;
     if (loss_function_weight != 0.0)
     {
@@ -141,7 +134,6 @@ void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
     }
     if (multiclass_found < 1) 
         PLERROR("RegressionTreeMultilassLeave: Unknown target: %d row: %d\n", target,row);
-    computeOutputAndError();
     getOutputAndError(outputv,errorv);
 }
 
@@ -159,15 +151,14 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
             break;      
         }
     }
-    computeOutputAndError();
     getOutputAndError(outputv,errorv);
 }
 
-void RegressionTreeMulticlassLeave::computeOutputAndError()
+void RegressionTreeMulticlassLeave::getOutputAndError(Vec output, Vec error)
 {
 #ifdef BOUNDCHECK
     if(multiclass_outputs.length()<=0)
-        PLERROR("In RegressionTreeMulticlassLeave::computeOutputAndError() - multiclass_outputs must not be empty");
+        PLERROR("In RegressionTreeMulticlassLeave::getOutputAndError() - multiclass_outputs must not be empty");
 #endif
     multiclass_winer = 0;
     for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
@@ -213,6 +204,9 @@ void RegressionTreeMulticlassLeave::computeOutputAndError()
 void RegressionTreeMulticlassLeave::printStats()
 {
     cout << " l " << length;
+    Vec output(2);
+    Vec error(3);
+    getOutputAndError(output,error);
     cout << " o0 " << output[0];
     cout << " o1 " << output[1];
     cout << " e0 " << error[0];

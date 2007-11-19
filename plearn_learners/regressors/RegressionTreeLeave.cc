@@ -74,10 +74,6 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
       
     declareOption(ol, "length", &RegressionTreeLeave::length, OptionBase::learntoption,
                   "The number of rows in this leave\n");
-    declareOption(ol, "output", &RegressionTreeLeave::output, OptionBase::learntoption,
-                  "The regression output for this leave\n");
-    declareOption(ol, "error", &RegressionTreeLeave::error, OptionBase::learntoption,
-                  "The error on this leave\n");
     declareOption(ol, "weights_sum", &RegressionTreeLeave::weights_sum, OptionBase::learntoption,
                   "The sum of weights for the samples in this leave\n");
     declareOption(ol, "targets_sum", &RegressionTreeLeave::targets_sum, OptionBase::learntoption,
@@ -95,8 +91,6 @@ void RegressionTreeLeave::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(train_set, copies);
-    deepCopyField(output, copies);
-    deepCopyField(error, copies);
 }
 
 void RegressionTreeLeave::build()
@@ -117,13 +111,6 @@ void RegressionTreeLeave::initLeave(PP<RegressionTreeRegisters> the_train_set)
 void RegressionTreeLeave::initStats()
 {
     length = 0;
-    output.resize(2);
-    output[0] = 0.0;
-    output[1] = 0.0;
-    error.resize(3);
-    error[0]  = 0.0;
-    error[1]  = 0.0;
-    error[2] = 0.0;
     weights_sum= 0.0;
     targets_sum = 0.0;
     weighted_targets_sum = 0.0;
@@ -142,7 +129,6 @@ void RegressionTreeLeave::addRow(int row, Vec outputv, Vec errorv)
     real squared_target = pow(target, 2);
     weighted_targets_sum += weight * target;
     weighted_squared_targets_sum += weight * squared_target;  
-    computeOutputAndError();
     getOutputAndError(outputv,errorv);
 }
 
@@ -156,11 +142,10 @@ void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
     real squared_target = pow(target, 2);
     weighted_targets_sum -= weight * target;
     weighted_squared_targets_sum -= weight * squared_target; 
-    computeOutputAndError();
     getOutputAndError(outputv,errorv);
 }
 
-void RegressionTreeLeave::computeOutputAndError()
+void RegressionTreeLeave::getOutputAndError(Vec output, Vec error)
 {
     output[0] = weighted_targets_sum / weights_sum;
     if (missing_leave == true)
@@ -196,18 +181,12 @@ int RegressionTreeLeave::getLength()
     return length;
 }
 
-void RegressionTreeLeave::getOutputAndError(Vec outputv, Vec errorv)
-{
-    outputv[0] = output[0];
-    outputv[1] = output[1];
-    errorv[0] = error[0];
-    errorv[1] = error[1];  
-    errorv[2] = error[2]; 
-}
-
 void RegressionTreeLeave::printStats()
 {
     cout << " l " << length;
+    Vec output(2);
+    Vec error(3);
+    getOutputAndError(output,error);
     cout << " o0 " << output[0];
     cout << " o1 " << output[1];
     cout << " e0 " << error[0];
