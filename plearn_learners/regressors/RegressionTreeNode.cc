@@ -96,8 +96,6 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   "The error after split\n");
     declareOption(ol, "missing_node", &RegressionTreeNode::missing_node, OptionBase::learntoption,
                   "The node for the missing values when missing_is_valid is set to 1\n");
-    declareOption(ol, "missing_leave_id", &RegressionTreeNode::missing_leave_id, OptionBase::learntoption,
-                  "The id of the missing leave\n");
     declareOption(ol, "missing_leave", &RegressionTreeNode::missing_leave, OptionBase::learntoption,
                   "The leave containing rows with missing values after split\n");
     declareOption(ol, "missing_output", &RegressionTreeNode::missing_output, OptionBase::learntoption,
@@ -106,8 +104,6 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   "The missing leave error vector\n");
     declareOption(ol, "left_node", &RegressionTreeNode::left_node, OptionBase::learntoption,
                   "The node on the left of the split decision\n");
-    declareOption(ol, "left_leave_id", &RegressionTreeNode::left_leave_id, OptionBase::learntoption,
-                  "The id of the left leave\n");
     declareOption(ol, "left_leave", &RegressionTreeNode::left_leave, OptionBase::learntoption,
                   "The leave with the rows lower than the split feature value after split\n");
     declareOption(ol, "left_output", &RegressionTreeNode::left_output, OptionBase::learntoption,
@@ -116,14 +112,23 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   "The left leave error vector\n");
     declareOption(ol, "right_node", &RegressionTreeNode::right_node, OptionBase::learntoption,
                   "The node on the right of the split decision\n"); 
-    declareOption(ol, "right_leave_id", &RegressionTreeNode::right_leave_id, OptionBase::learntoption,
-                  "The id of the right leave\n");     
     declareOption(ol, "right_leave", &RegressionTreeNode::right_leave, OptionBase::learntoption,
                   "The leave with the rows greater thean the split feature value after split\n");
     declareOption(ol, "right_output", &RegressionTreeNode::right_output, OptionBase::learntoption,
                   "The right leave output vector\n");
     declareOption(ol, "right_error", &RegressionTreeNode::right_error, OptionBase::learntoption,
                   "The right leave error vector\n");
+
+    declareOption(ol, "right_leave_id", &RegressionTreeNode::dummy_int,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED The id of the right leave\n");     
+    declareOption(ol, "left_leave_id", &RegressionTreeNode::dummy_int,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED The id of the left leave\n");
+    declareOption(ol, "missing_leave_id", &RegressionTreeNode::dummy_int,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED The id of the missing leave\n");
+
     inherited::declareOptions(ol);
 }
 
@@ -146,17 +151,14 @@ void RegressionTreeNode::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(split_feature_value, copies);
     deepCopyField(after_split_error, copies);
     deepCopyField(missing_node, copies);
-    deepCopyField(missing_leave_id, copies);
     deepCopyField(missing_leave, copies);
     deepCopyField(missing_output, copies);
     deepCopyField(missing_error, copies);
     deepCopyField(left_node, copies);
-    deepCopyField(left_leave_id, copies);
     deepCopyField(left_leave, copies);
     deepCopyField(left_output, copies);
     deepCopyField(left_error, copies);
     deepCopyField(right_node, copies);
-    deepCopyField(right_leave_id, copies);  
     deepCopyField(right_leave, copies);
     deepCopyField(right_output, copies);
     deepCopyField(right_error, copies);
@@ -179,9 +181,9 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
     leave_template = the_leave_template;
     split_col = -1;
     leave_id = leave->getId();
-    missing_leave_id = train_set->getNextId();
-    left_leave_id =  train_set->getNextId();
-    right_leave_id =  train_set->getNextId();
+    int missing_leave_id = train_set->getNextId();
+    int left_leave_id =  train_set->getNextId();
+    int right_leave_id =  train_set->getNextId();
     length = train_set->length();
     inputsize = train_set->inputsize();
 

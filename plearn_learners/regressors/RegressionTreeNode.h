@@ -79,21 +79,19 @@ private:
     real split_feature_value;
     real after_split_error;
     PP<RegressionTreeNode> missing_node;
-    int missing_leave_id;
     PP<RegressionTreeLeave> missing_leave;
     Vec missing_output;
     Vec missing_error;
     PP<RegressionTreeNode> left_node;
-    int left_leave_id;
     PP<RegressionTreeLeave> left_leave;
     Vec left_output;
     Vec left_error;
     PP<RegressionTreeNode> right_node;
-    int right_leave_id;
     PP<RegressionTreeLeave> right_leave;
     Vec right_output;
     Vec right_error;
     
+    int dummy_int;
 public:  
     RegressionTreeNode();
     virtual              ~RegressionTreeNode();
