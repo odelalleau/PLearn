@@ -765,9 +765,12 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
     costs[2] = costs[0];
     costs[3] = train_stats->getStat("E[avg_weight_class_0]");
     costs[4] = train_stats->getStat("E[avg_weight_class_1]");
-    Vec tmp(weak_learner_template->nTestCosts());
     if(forward_sub_learner_test_costs){
-        weak_learners.last()->computeCostsFromOutputs(input,output,target,tmp);
+        //TODO: is this the good beavior to have?
+        //We can't reuse the output from parameter as it is not the same
+        //as the one from the sub learner
+        Vec tmp(weak_learner_template->nTestCosts());
+        weak_learners.last()->computeCostsOnly(input,target,tmp);
         costs.append(tmp);
     }
 }
