@@ -71,7 +71,6 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
                   "The desired level of verbosity\n");
     declareOption(ol, "train_set", &RegressionTreeLeave::train_set, OptionBase::buildoption,
                   "The train set with the sorted row index matrix and the leave id vector\n");
-      
     declareOption(ol, "length", &RegressionTreeLeave::length, OptionBase::learntoption,
                   "The number of rows in this leave\n");
     declareOption(ol, "weights_sum", &RegressionTreeLeave::weights_sum, OptionBase::learntoption,
@@ -84,6 +83,12 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
                   "The sum of squared weighted target values for the samples in this leave\n");
     declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
+
+    declareOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::buildoption,
+                  "DEPRECATED");
+    declareOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::buildoption,
+                  "DEPRECATED");
+
     inherited::declareOptions(ol);
 }
 

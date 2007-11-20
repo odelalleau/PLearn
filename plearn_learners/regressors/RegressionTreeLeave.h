@@ -47,11 +47,15 @@
 namespace PLearn {
 using namespace std;
 
+
 class RegressionTreeLeave: public Object
 {
     typedef Object inherited;
  
     friend class RegressionTreeNode;
+
+    Vec dummy_vec;
+
 protected:
 
 /*
@@ -75,7 +79,6 @@ protected:
     real weighted_squared_targets_sum;
     real loss_function_factor;
  
-
 public:
     RegressionTreeLeave();
     virtual              ~RegressionTreeLeave();
