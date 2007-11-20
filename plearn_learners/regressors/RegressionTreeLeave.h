@@ -94,7 +94,7 @@ public:
     void         registerRow(int row);
     int          getId();
     int          getLength();
-    virtual void         getOutputAndError(Vec output, Vec error);
+    virtual void         getOutputAndError(Vec& output, Vec& error);
     virtual void         printStats();
   
 private:

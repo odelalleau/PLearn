@@ -150,7 +150,7 @@ void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
     getOutputAndError(outputv,errorv);
 }
 
-void RegressionTreeLeave::getOutputAndError(Vec output, Vec error)
+void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)
 {
     output[0] = weighted_targets_sum / weights_sum;
     if (missing_leave == true)
