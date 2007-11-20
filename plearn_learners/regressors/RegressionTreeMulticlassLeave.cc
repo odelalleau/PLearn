@@ -116,7 +116,7 @@ void RegressionTreeMulticlassLeave::initStats()
     multiclass_weights_sum.fill(0);
 }
 
-void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
+void RegressionTreeMulticlassLeave::addRow(int row)
 {
     real weight = train_set->getWeight(row);
     real target = train_set->getTarget(row);
@@ -134,7 +134,12 @@ void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
     }
     if (multiclass_found < 1) 
         PLERROR("RegressionTreeMultilassLeave: Unknown target: %d row: %d\n", target,row);
-    getOutputAndError(outputv,errorv);
+}
+
+void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
+{
+    addRow(row);
+    getOutputAndError(outputv,errorv);    
 }
 
 void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)

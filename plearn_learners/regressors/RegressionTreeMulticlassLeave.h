@@ -84,6 +84,7 @@ public:
     virtual void         build();
     void         initStats();
     void         addRow(int row, Vec outputv, Vec errorv);
+    void         addRow(int row);
     void         removeRow(int row, Vec outputv, Vec errorv);
     virtual void getOutputAndError(Vec output, Vec error);
     void         printStats();
