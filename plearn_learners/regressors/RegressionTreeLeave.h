@@ -90,6 +90,7 @@ public:
     void         initLeave(PP<RegressionTreeRegisters> the_train_set);
     virtual void         initStats();
     virtual void         addRow(int row, Vec outputv, Vec errorv);
+    virtual void         addRow(int row);
     virtual void         removeRow(int row, Vec outputv, Vec errorv);
     void         registerRow(int row);
     int          getId();

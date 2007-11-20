@@ -69,29 +69,23 @@ private:
   Learnt options: they are sized and initialized if need be, in initNode(...)
 */
  
-    int length;
-    int inputsize;
-    int leave_id;
     Vec leave_output;
     Vec leave_error;
+    Vec missing_output;
+    Vec missing_error;
     int split_col;
     int split_balance;
     real split_feature_value;
     real after_split_error;
     PP<RegressionTreeNode> missing_node;
     PP<RegressionTreeLeave> missing_leave;
-    Vec missing_output;
-    Vec missing_error;
     PP<RegressionTreeNode> left_node;
     PP<RegressionTreeLeave> left_leave;
-    Vec left_output;
-    Vec left_error;
     PP<RegressionTreeNode> right_node;
     PP<RegressionTreeLeave> right_leave;
-    Vec right_output;
-    Vec right_error;
     
     int dummy_int;
+    Vec tmp_vec;
 public:  
     RegressionTreeNode();
     virtual              ~RegressionTreeNode();
@@ -103,7 +97,8 @@ public:
     virtual void         build();
     void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave, PP<RegressionTreeLeave> leave_template);
     void         lookForBestSplit();
-    void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature);
+    void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature,
+                              Vec left_error, Vec right_error);
     int          expandNode();
     int          getSplitBalance();
     real         getErrorImprovment();
