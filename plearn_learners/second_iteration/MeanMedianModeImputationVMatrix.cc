@@ -112,18 +112,6 @@ void MeanMedianModeImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& cop
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-void MeanMedianModeImputationVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
-{
-  source->getExample(i, input, target, weight);
-  for (int source_col = 0; source_col < input->length(); source_col++)
-  {
-    if (is_missing(input[source_col]) && variable_imputation_instruction[source_col] > 0)
-      if (variable_imputation_instruction[source_col] == 1) input[source_col] = variable_mean[source_col];
-      else if (variable_imputation_instruction[source_col] == 2) input[source_col] = variable_median[source_col];
-      else if (variable_imputation_instruction[source_col] == 3) input[source_col] = variable_mode[source_col];
-  }  
-}
-
 real MeanMedianModeImputationVMatrix::get(int i, int j) const
 { 
   real variable_value = source->get(i, j);
@@ -132,11 +120,6 @@ real MeanMedianModeImputationVMatrix::get(int i, int j) const
   if (variable_imputation_instruction[j] == 2) return variable_median[j];
   if (variable_imputation_instruction[j] == 3) return variable_mode[j];
   return variable_value;
-}
-
-void MeanMedianModeImputationVMatrix::put(int i, int j, real value)
-{
-  PLERROR("In MeanMedianModeImputationVMatrix::put not implemented");
 }
 
 void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
@@ -149,21 +132,6 @@ void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
       else if (variable_imputation_instruction[source_col + j] == 3) v[source_col] = variable_mode[source_col + j];
 }
 
-void MeanMedianModeImputationVMatrix::putSubRow(int i, int j, Vec v)
-{
-  PLERROR("In MeanMedianModeImputationVMatrix::putSubRow not implemented");
-}
-
-void MeanMedianModeImputationVMatrix::appendRow(Vec v)
-{
-  PLERROR("In MeanMedianModeImputationVMatrix::appendRow not implemented");
-}
-
-void MeanMedianModeImputationVMatrix::insertRow(int i, Vec v)
-{
-  PLERROR("In MeanMedianModeImputationVMatrix::insertRow not implemented");
-}
-
 void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
 {  
   source-> getRow(i, v);
@@ -172,11 +140,6 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
       if (variable_imputation_instruction[source_col] == 1) v[source_col] = variable_mean[source_col];
       else if (variable_imputation_instruction[source_col] == 2) v[source_col] = variable_median[source_col];
       else if (variable_imputation_instruction[source_col] == 3) v[source_col] = variable_mode[source_col]; 
-}
-
-void MeanMedianModeImputationVMatrix::putRow(int i, Vec v)
-{
-  PLERROR("In MeanMedianModeImputationVMatrix::putRow not implemented");
 }
 
 void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
@@ -193,7 +156,9 @@ void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
 
 void MeanMedianModeImputationVMatrix::build_()
 {
-    if (!train_set || !source) PLERROR("In MeanMedianModeImputationVMatrix::train set and source vmat must be supplied");
+    if (!source) PLERROR("In MeanMedianModeImputationVMatrix:: source vmat must be supplied");
+    if (!train_set)
+      train_set = source;
     int train_length = train_set->length();
     if (number_of_train_samples_to_use > 0.0)
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
@@ -249,12 +214,14 @@ void MeanMedianModeImputationVMatrix::build_()
 	      tostring(nofields).c_str());
     PPath train_metadata = train_set->getMetaDataDir();
     PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
+    train_set->lockMetaDataDir();
     if (!isfile(mean_median_mode_file_name))
     {
         computeMeanMedianModeVectors();
         createMeanMedianModeFile(mean_median_mode_file_name);
     }
     else loadMeanMedianModeFile(mean_median_mode_file_name);
+    train_set->unlockMetaDataDir();
 }
 
 void MeanMedianModeImputationVMatrix::createMeanMedianModeFile(PPath file_name)
@@ -271,6 +238,17 @@ void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
     mean_median_mode_file->getRow(0, variable_mean);
     mean_median_mode_file->getRow(1, variable_median);
     mean_median_mode_file->getRow(2, variable_mode);
+    time_t source_time = source->getMtime();
+    time_t stat_file_time = mean_median_mode_file->getMtime();
+    if(stat_file_time==0)
+      PLWARNING("In MeanMedianModeImputationVMatrix::loadMeanMedianModeFile() - "
+		"The precomputed stats file '%s'"
+		" have a modification time of 0",file_name.c_str());
+    else if(source_time>stat_file_time)
+            PLWARNING("In MeanMedianModeImputationVMatrix::loadMeanMedianModeFile()"
+		      " - The precomputed stats file '%s'"
+		      " was created before the source file. Delete it to have it recreated next time."
+		      ,file_name.c_str());
 }
 
 VMat MeanMedianModeImputationVMatrix::getMeanMedianModeFile()
