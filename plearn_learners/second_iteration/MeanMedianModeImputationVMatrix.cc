@@ -88,15 +88,6 @@ void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
   declareOption(ol, "variable_mode", &MeanMedianModeImputationVMatrix::variable_mode, OptionBase::learntoption, 
                 "The vector of variable modes observed from the train set.");
 
-  declareOption(ol, "variable_present_count", &MeanMedianModeImputationVMatrix::variable_present_count, OptionBase::learntoption, 
-                "The vector of non missing variable counts from the train set.");
-
-  declareOption(ol, "variable_missing_count", &MeanMedianModeImputationVMatrix::variable_missing_count, OptionBase::learntoption, 
-                "The vector of missing variable counts from the train set.");
-
-  declareOption(ol, "variable_mode_count", &MeanMedianModeImputationVMatrix::variable_mode_count, OptionBase::learntoption, 
-                "The vector of variable mode counts from the train set.");
-
   declareOption(ol, "variable_imputation_instruction", &MeanMedianModeImputationVMatrix::variable_imputation_instruction, OptionBase::learntoption, 
                 "The vector of coded instruction for each variables.");
 
@@ -117,8 +108,6 @@ void MeanMedianModeImputationVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& cop
   deepCopyField(variable_mean, copies);
   deepCopyField(variable_median, copies);
   deepCopyField(variable_mode, copies);
-  deepCopyField(variable_present_count, copies);
-  deepCopyField(variable_missing_count, copies);
   deepCopyField(variable_imputation_instruction, copies);
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
@@ -205,18 +194,18 @@ void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
 void MeanMedianModeImputationVMatrix::build_()
 {
     if (!train_set || !source) PLERROR("In MeanMedianModeImputationVMatrix::train set and source vmat must be supplied");
-    train_length = train_set->length();
+    int train_length = train_set->length();
     if (number_of_train_samples_to_use > 0.0)
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
         else train_length = (int) number_of_train_samples_to_use;
     if (train_length > train_set->length()) train_length = train_set->length();
     if(train_length < 1) PLERROR("In MeanMedianModeImputationVMatrix::length of the number of train samples to use must be at least 1, got: %i", train_length);
-    train_width = train_set->width();
+    int train_width = train_set->width();
     int train_targetsize = train_set->targetsize();
     int train_weightsize = train_set->weightsize();
     int train_inputsize = train_set->inputsize();
     if(train_inputsize < 1) PLERROR("In MeanMedianModeImputationVMatrix::inputsize of the train vmat must be supplied, got : %i", train_inputsize);
-    source_width = source->width();
+    int source_width = source->width();
     int source_targetsize = source->targetsize();
     int source_weightsize = source->weightsize();
     int source_inputsize = source->inputsize();
@@ -226,8 +215,7 @@ void MeanMedianModeImputationVMatrix::build_()
     if (train_inputsize != source_inputsize) PLERROR("In MeanMedianModeImputationVMatrix::train set and source inputsize must agree, got : %i, %i", train_inputsize, source_inputsize);
     train_field_names.resize(train_width);
     train_field_names = train_set->fieldNames();
-    source_length = source->length();
-    length_ = source_length;
+    length_ = source->length();
     width_ = source_width;
     inputsize_ = source_inputsize;
     targetsize_ = source_targetsize;
@@ -259,28 +247,27 @@ void MeanMedianModeImputationVMatrix::build_()
     if(nofields.length()>0)
       PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
 	      tostring(nofields).c_str());
-    train_metadata = train_set->getMetaDataDir();
-    mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
-    
+    PPath train_metadata = train_set->getMetaDataDir();
+    PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     if (!isfile(mean_median_mode_file_name))
     {
         computeMeanMedianModeVectors();
-        createMeanMedianModeFile();
+        createMeanMedianModeFile(mean_median_mode_file_name);
     }
-    else loadMeanMedianModeFile();
+    else loadMeanMedianModeFile(mean_median_mode_file_name);
 }
 
-void MeanMedianModeImputationVMatrix::createMeanMedianModeFile()
+void MeanMedianModeImputationVMatrix::createMeanMedianModeFile(PPath file_name)
 {
-    mean_median_mode_file = new FileVMatrix(mean_median_mode_file_name, 3, train_field_names);
+    mean_median_mode_file = new FileVMatrix(file_name, 3, train_field_names);
     mean_median_mode_file->putRow(0, variable_mean);
     mean_median_mode_file->putRow(1, variable_median);
     mean_median_mode_file->putRow(2, variable_mode);
 }
 
-void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile()
+void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
 {
-    mean_median_mode_file = new FileVMatrix(mean_median_mode_file_name);
+    mean_median_mode_file = new FileVMatrix(file_name);
     mean_median_mode_file->getRow(0, variable_mean);
     mean_median_mode_file->getRow(1, variable_median);
     mean_median_mode_file->getRow(2, variable_mode);
@@ -293,26 +280,26 @@ VMat MeanMedianModeImputationVMatrix::getMeanMedianModeFile()
 
 void MeanMedianModeImputationVMatrix::computeMeanMedianModeVectors()
 {
-    variable_present_count.resize(train_width);
-    variable_missing_count.resize(train_width);
-    variable_mode_count.resize(train_width);
+    TVec<int> variable_present_count(width_);
+    TVec<int> variable_missing_count(width_);
+    TVec<int> variable_mode_count(width_);
     variable_mean.clear();
     variable_median.clear();
     variable_mode.clear();
     variable_present_count.clear();
     variable_missing_count.clear();
     variable_mode_count.clear();
-    variable_vec.resize(train_set->length());
+    Vec variable_vec(train_set->length());
     cout << fixed << showpoint;
     ProgressBar* pb = 0;
-    pb = new ProgressBar("Computing the mean, median and mode vectors", train_width);
-    for (int train_col = 0; train_col < train_width; train_col++)
+    pb = new ProgressBar("Computing the mean, median and mode vectors", width_);
+    for (int train_col = 0; train_col < width_; train_col++)
     {
         real current_value = 0.0;
         int current_value_count = 0;
         train_set->getColumn(train_col, variable_vec);
-        sortColumn(variable_vec, 0, train_length);
-        for (int train_row = 0; train_row < train_length; train_row++)
+        sortColumn(variable_vec, 0, train_set->length());
+        for (int train_row = 0; train_row < train_set->length(); train_row++)
         {
             if (is_missing(variable_vec[train_row]))
             {

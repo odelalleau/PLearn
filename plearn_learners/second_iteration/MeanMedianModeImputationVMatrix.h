@@ -82,15 +82,6 @@ public:
   //! The vector of variable modes observed from the train set.
   Vec                           variable_mode;
   
-  //! The vector of non missing variable counts from the train set.
-  TVec<int>                     variable_present_count;
-  
-  //! The vector of missing variable counts from the train set.
-  TVec<int>                     variable_missing_count;
-  
-  //! The vector of variable mode counts from the train set.
-  TVec<int>                     variable_mode_count;
-  
   //! The vector of coded instruction for each variables.
   TVec<int>                     variable_imputation_instruction;
   
@@ -119,19 +110,12 @@ public:
 
 private:
   
-  int                  train_length;
-  int                  train_width;
   TVec<string>         train_field_names;
-  PPath                train_metadata;
-  int                  source_length;
-  int                  source_width;
-  Vec                  variable_vec;
-  PPath                mean_median_mode_file_name;
   VMat                 mean_median_mode_file;
 
           void         build_();
-          void         createMeanMedianModeFile(); 
-          void         loadMeanMedianModeFile(); 
+          void         createMeanMedianModeFile(PPath file_name); 
+          void         loadMeanMedianModeFile(PPath file_name); 
           void         computeMeanMedianModeVectors();  
           void         sortColumn(Vec input_vec, int start, int end);
           void         sortSmallSubArray(Vec input_vec, int start_index, int end_index);
