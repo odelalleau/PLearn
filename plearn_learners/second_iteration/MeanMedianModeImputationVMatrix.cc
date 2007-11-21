@@ -212,14 +212,14 @@ void MeanMedianModeImputationVMatrix::build_()
     if (train_length > train_set->length()) train_length = train_set->length();
     if(train_length < 1) PLERROR("In MeanMedianModeImputationVMatrix::length of the number of train samples to use must be at least 1, got: %i", train_length);
     train_width = train_set->width();
-    train_targetsize = train_set->targetsize();
-    train_weightsize = train_set->weightsize();
-    train_inputsize = train_set->inputsize();
+    int train_targetsize = train_set->targetsize();
+    int train_weightsize = train_set->weightsize();
+    int train_inputsize = train_set->inputsize();
     if(train_inputsize < 1) PLERROR("In MeanMedianModeImputationVMatrix::inputsize of the train vmat must be supplied, got : %i", train_inputsize);
     source_width = source->width();
-    source_targetsize = source->targetsize();
-    source_weightsize = source->weightsize();
-    source_inputsize = source->inputsize();
+    int source_targetsize = source->targetsize();
+    int source_weightsize = source->weightsize();
+    int source_inputsize = source->inputsize();
     if (train_width != source_width) PLERROR("In MeanMedianModeImputationVMatrix::train set and source width must agree, got : %i, %i", train_width, source_width);
     if (train_targetsize != source_targetsize) PLERROR("In MeanMedianModeImputationVMatrix::train set and source targetsize must agree, got : %i, %i", train_targetsize, source_targetsize);
     if (train_weightsize != source_weightsize) PLERROR("In MeanMedianModeImputationVMatrix::train set and source weightsize must agree, got : %i, %i", train_weightsize, source_weightsize);
@@ -241,6 +241,7 @@ void MeanMedianModeImputationVMatrix::build_()
     TVec<string> nofields;
     for (int spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
     {
+        int train_col;
         for (train_col = 0; train_col < train_width; train_col++)
         {
             if (imputation_spec[spec_col].first == train_field_names[train_col]) break;
@@ -305,13 +306,13 @@ void MeanMedianModeImputationVMatrix::computeMeanMedianModeVectors()
     cout << fixed << showpoint;
     ProgressBar* pb = 0;
     pb = new ProgressBar("Computing the mean, median and mode vectors", train_width);
-    for (train_col = 0; train_col < train_width; train_col++)
+    for (int train_col = 0; train_col < train_width; train_col++)
     {
-        current_value = 0.0;
-        current_value_count = 0;
+        real current_value = 0.0;
+        int current_value_count = 0;
         train_set->getColumn(train_col, variable_vec);
         sortColumn(variable_vec, 0, train_length);
-        for (train_row = 0; train_row < train_length; train_row++)
+        for (int train_row = 0; train_row < train_length; train_row++)
         {
             if (is_missing(variable_vec[train_row]))
             {

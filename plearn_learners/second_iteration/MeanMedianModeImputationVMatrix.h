@@ -121,21 +121,11 @@ private:
   
   int                  train_length;
   int                  train_width;
-  int                  train_inputsize;
-  int                  train_targetsize;
-  int                  train_weightsize;
-  int                  train_row;
-  int                  train_col;
   TVec<string>         train_field_names;
   PPath                train_metadata;
   int                  source_length;
   int                  source_width;
-  int                  source_inputsize;
-  int                  source_targetsize;
-  int                  source_weightsize;
   Vec                  variable_vec;
-  int                  current_value_count;
-  real                 current_value;
   PPath                mean_median_mode_file_name;
   VMat                 mean_median_mode_file;
 
