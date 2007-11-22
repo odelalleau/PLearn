@@ -61,11 +61,14 @@ public:
     //! Maximum number of stages we want to propagate the gradient    
     int nstages_max;
 
-    //! Parameter in pascal's cost function
-    real alpha;
-    
     //! Parameter to compute moving means in non stochastic cost functions
     real momentum;
+
+    //! Kind of optimization
+    string optimization_strategy;
+    
+    //! Parameter in pascal's cost function
+    real alpha;    
 
     //! For non stochastic KL divergence cost function
     int histo_size;
@@ -83,14 +86,18 @@ public:
     Vec inputs_expectation;
     Vec inputs_stds;         //! only for 'correlation' cost function
 
-    Mat inputs_correlations; //! only for 'correlation' cost function
     Mat inputs_cross_quadratic_mean;
+    Mat inputs_correlations; //! only for 'correlation' cost function
 
     //! Variables for (non stochastic) Pascal's/correlation function with momentum
     //! -------------------------------------------------------------
     //! Statistics on outputs (estimated empiricially on the data)    
     Vec inputs_expectation_trainMemory;
     Mat inputs_cross_quadratic_mean_trainMemory;
+
+    //! The function applied to the local cost between 2 inputs
+    //! to obtain the global cost (after averaging)
+    string penalty_function;
 
     //! The generic name of the cost function
     string cost_function_completename;
@@ -132,19 +139,14 @@ public:
     virtual void computePascalStatistics(const Mat& inputs);
     virtual void computePascalStatistics(const Mat& inputs,
                                          Vec& expectation, Mat& cross_quadratic_mean) const;
-    virtual string func_pascal_prefix() const;
-    virtual real   func_pascal(real correlation) const;
-    virtual real   deriv_func_pascal(real correlation) const;
+    virtual real func_(real correlation) const;
+    virtual real deriv_func_(real correlation) const;
 
     //! Auxiliary function for the correlation's cost function
     virtual void computeCorrelationStatistics(const Mat& inputs);
     virtual void computeCorrelationStatistics(const Mat& inputs,
                                               Vec& expectation, Mat& cross_quadratic_mean,
-                                              Vec& stds, Mat& correlations) const;
-    virtual string func_correlation_prefix() const;
-    virtual real   func_correlation(real correlation) const;
-    virtual real   deriv_func_correlation(real correlation) const;
-
+                                              Vec& stds, Mat& correlations) const;    
     //! Returns all ports in a RBMModule.
     virtual const TVec<string>& getPorts();
 
@@ -179,8 +181,18 @@ public:
 
 protected:
 
+    bool LINEAR_FUNC;
+    bool SQUARE_FUNC;
+    bool POW4_FUNC;
+    bool EXP_FUNC;
+    bool LOG_FUNC;
+
     //! Number of stage the BPropAccUpdate function was called
     int stage;
+
+    //! Boolean determined by the optimization_strategy
+    bool bprop_all_terms;
+    bool random_index_during_bprop;
 
     //! Does stochastic gradient (without memory of the past)
     //! makes sense with our cost function?

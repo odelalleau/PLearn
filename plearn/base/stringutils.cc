@@ -549,9 +549,9 @@ string addprepostfix(const string& prefix, const string& text, const string& pos
     {
         endpos = txt.find_first_of("\n",startpos);
         if(endpos!=string::npos)
-            res += prefix + txt.substr(startpos, endpos-startpos) + postfix + "\n";
+            res += prefix + txt.substr(startpos, endpos-startpos) + postfix;
         else
-            res += prefix + txt.substr(startpos) + postfix + "\n";
+            res += prefix + txt.substr(startpos) + postfix;
         startpos = endpos + 1;
     }
     return res;

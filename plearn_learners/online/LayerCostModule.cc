@@ -54,13 +54,17 @@ PLEARN_IMPLEMENT_OBJECT(
     "Be careful: some are valid only for binomial layers. \n");
 
 LayerCostModule::LayerCostModule():
-    cost_function(""),
+    cost_function("correlation"),
     nstages_max(-1),
-    alpha(0.),
     momentum(0.),
+    optimization_strategy("standard"),
+    alpha(0.),
     histo_size(10),
+    penalty_function("square"),
     cost_function_completename(""),
     stage(0),
+    bprop_all_terms(true),
+    random_index_during_bprop(false),
     average_deriv(0.)
 {
     output_size = 1;
@@ -74,7 +78,7 @@ void LayerCostModule::declareOptions(OptionList& ol)
     declareOption(ol, "cost_function", &LayerCostModule::cost_function,
                   OptionBase::buildoption,
         "The cost function applied to the layer:\n"
-        "- \"pascal\" [default]:"
+        "- \"pascal\" :"
         " Pascal Vincent's God given cost function.\n"
         "- \"correlation\":"
         " average of a function applied to the correlations between outputs.\n"
@@ -91,32 +95,45 @@ void LayerCostModule::declareOptions(OptionList& ol)
     declareOption(ol, "nstages_max", &LayerCostModule::nstages_max,
                   OptionBase::buildoption,
         "Maximal number of updates for which the gradient of the cost function will be propagated.\n"
-	"-1 means: always train without limit.\n");
+	"-1 means: always train without limit.\n"
+        );
+
+    declareOption(ol, "optimization_strategy", &LayerCostModule::optimization_strategy,
+                  OptionBase::buildoption,
+        "Strategy to compute the gradient:\n"
+	"- \"standard\": standard computation\n"
+	"- \"half\": we will propagate the gradient only on units tagged as i < j.\n"
+	"- \"random_half\": idem than 'half' with the order of the indices that changes randomly during training.\n"
+        );
 
     declareOption(ol, "momentum", &LayerCostModule::momentum,
                   OptionBase::buildoption,
-        "(in [0,1[) For non stochastic cost functions, momentum to compute the moving means.\n");
+        "(in [0,1[) For non stochastic cost functions, momentum to compute the moving means.\n"
+        );
 
     declareOption(ol, "histo_size", &LayerCostModule::histo_size,
                   OptionBase::buildoption,
         "For \"kl_div\" cost functions,\n"
         "number of bins for the histograms (to estimate distributions of outputs).\n"
-        "The higher is histo_size, the more precise is the estimation.\n");
+        "The higher is histo_size, the more precise is the estimation.\n"
+        );
 
     declareOption(ol, "alpha", &LayerCostModule::alpha,
                   OptionBase::buildoption,
         "(>=0) For \"pascal\" cost function,\n"
         "number of bins for the histograms (to estimate distributions of outputs).\n"
-        "The higher is histo_size, the more precise is the estimation.\n");
-
-    declareOption(ol, "inputs_expectation_trainMemory", &LayerCostModule::inputs_expectation_trainMemory,
-                  OptionBase::learntoption,
-                  "Correlation of the outputs, for all pairs of units.\n"
+        "The higher is histo_size, the more precise is the estimation.\n"
         );
 
-    declareOption(ol, "inputs_cross_quadratic_mean_trainMemory", &LayerCostModule::inputs_cross_quadratic_mean_trainMemory,
-                  OptionBase::learntoption,
-                  "Expectation of the cross products between outputs, for all pairs of units.\n"
+    declareOption(ol, "penalty_function", &LayerCostModule::penalty_function,
+                  OptionBase::buildoption,
+                  "(For non-stochastic cost functions)\n"
+                  "Function applied to the local cost between two inputs to compute\n"
+                  "the global cost on the whole set of inputs (by averaging).\n"
+                  "- \"square\": f(x)= x^2      \n"
+                  "- \"log\":    f(x)= -log( 1 - x) \n"
+                  "- \"exp\":    f(x)= exp( x )     \n"
+                  "- \"linear\": f(x)= x       \n"
         );
 
     declareOption(ol, "cost_function_completename", &LayerCostModule::cost_function_completename,
@@ -128,23 +145,45 @@ void LayerCostModule::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "number of stages that has been done during the training.\n"
         );
+
+    declareOption(ol, "inputs_expectation_trainMemory", &LayerCostModule::inputs_expectation_trainMemory,
+                  OptionBase::nosave,
+                  "Correlation of the outputs, for all pairs of units.\n"
+        );
+
+    declareOption(ol, "inputs_cross_quadratic_mean_trainMemory", &LayerCostModule::inputs_cross_quadratic_mean_trainMemory,
+                  OptionBase::nosave,
+                  "Expectation of the cross products between outputs, for all pairs of units.\n"
+        );
 }
 
 void LayerCostModule::build_()
 {
     PLASSERT( histo_size > 1 );
-    PLASSERT( momentum >= 0.0);
-    PLASSERT( momentum < 1);
+    PLASSERT( momentum >= 0.);
+    PLASSERT( momentum < 1.);
 
     if( input_size > 1 )
         norm_factor = 1./(real)(input_size*(input_size-1));
 
-    string im = lowerstring( cost_function );
+    optimization_strategy = lowerstring( optimization_strategy );
+    if( optimization_strategy == "" )
+        optimization_strategy = "standard";
+    if ( optimization_strategy == "half" )
+         bprop_all_terms = false;
+    else if ( optimization_strategy == "random_half" )
+    {
+         bprop_all_terms = false;
+         random_index_during_bprop = true;
+    }
+    else if ( optimization_strategy != "standard" )
+         PLERROR( "LayerCostModule::build() does not recognize"
+                  "optimization_strategy '%s'", optimization_strategy.c_str() );
+
+    cost_function = lowerstring( cost_function );
     // choose HERE the *default* cost function
-    if( im == "" )
+    if( cost_function == "" )
         cost_function = "pascal";
-    else
-        cost_function = im;
     if( ( cost_function_completename == "" ) || !string_ends_with(cost_function_completename, cost_function) )
         cost_function_completename = string(cost_function);
 
@@ -191,14 +230,29 @@ void LayerCostModule::build_()
             inputs_expectation_trainMemory.resize(input_size);
             inputs_cross_quadratic_mean_trainMemory.resize(input_size,input_size);
         }
-        string slink = "_";
-        if( cost_function == "pascal" )
-            cost_function_completename = "exp_pascal"; //addprepostfix( func_pascal_prefix(), slink, cost_function );
-        else if( cost_function == "correlation" )
-            cost_function_completename = "exp_correlation" ; //addprepostfix( func_correlation_prefix(), slink, cost_function );
+        cost_function_completename = addprepostfix( penalty_function, "_", cost_function );
+        LINEAR_FUNC = false;
+        SQUARE_FUNC = false;
+        POW4_FUNC = false;
+        EXP_FUNC = false;
+        LOG_FUNC = false;
+        penalty_function = lowerstring( penalty_function );
+        if( penalty_function == "linear" )
+            LINEAR_FUNC = true;
+        else if( penalty_function == "square" )
+            SQUARE_FUNC = true;
+        else if( penalty_function == "pow4" )
+            POW4_FUNC = true;
+        else if( penalty_function == "exp" )
+            EXP_FUNC = true;
+        else if( penalty_function == "log" )
+            LOG_FUNC = true;
+        else
+            PLERROR("LayerCostModule::build_() does not recognize penalty function '%s'",
+                    penalty_function.c_str());
     }
     else
-        PLERROR("LayerCostModule::build_() does not recognize cost function %s",
+        PLERROR("LayerCostModule::build_() does not recognize cost function '%s'",
                  cost_function.c_str());
 
     // The port story...
@@ -235,6 +289,7 @@ void LayerCostModule::forget()
     }
     one_count = 0.;
     stage = 0;
+    average_deriv = 0.;
 }
 
 void LayerCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
@@ -270,12 +325,13 @@ void LayerCostModule::fprop(const TVec<Mat*>& ports_value)
     Mat* p_inputs = ports_value[getPortIndex("input")];
     Mat* p_costs = ports_value[getPortIndex("cost")];
 
+
     PLASSERT( ports_value.length() == nPorts() );
 
     if ( p_costs && p_costs->isEmpty() )
     {
         PLASSERT( p_inputs && !p_inputs->isEmpty() );
-        cout << "fprop" << endl;
+        //cout << "fprop" << endl;
         fprop(*p_inputs, *p_costs);
     }
 }
@@ -381,9 +437,9 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
             for (int i = 0; i < input_size; i++)
             {
                 if (alpha > 0.0 )
-                    costs(0,0) -= alpha * func_pascal( expectation[i] ) *(real)(input_size-1);
+                    costs(0,0) -= alpha * func_( expectation[i] ) *(real)(input_size-1);
                 for (int j = 0; j < i; j++)
-                    costs(0,0) += func_pascal( cross_quadratic_mean(i,j) );
+                    costs(0,0) += func_( cross_quadratic_mean(i,j) );
             }
             costs(0,0) *= norm_factor;
         }
@@ -413,7 +469,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
             // Computing the cost
             for (int i = 0; i < input_size; i++)
                 for (int j = 0; j < i; j++)
-                    costs(0,0) += func_correlation( correlations(i,j) );
+                    costs(0,0) += func_( correlations(i,j) );
 
             costs(0,0) *= norm_factor;
         }
@@ -511,7 +567,7 @@ void LayerCostModule::fprop(const Vec& input, real& cost) const
     }
 
     else
-        PLERROR("LayerCostModule::fprop() not implemented for cost_cfunction %s\n"
+        PLERROR("LayerCostModule::fprop() not implemented for cost_cfunction '%s'\n"
                 "- It may be a printing error.\n"
                 "- You can try to call LayerCostModule::fprop(const Mat& inputs, Mat& costs)"
                 "  if your cost function is non stochastic.\n"
@@ -552,6 +608,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 	PLASSERT( p_inputs && !p_inputs->isEmpty());
         int n_samples = p_inputs->length();
 	PLASSERT( p_cost_grad->length() == n_samples );
+	PLASSERT( p_cost_grad->width() == 1 );
 
         bpropUpdate( *p_inputs, *p_inputs_grad);
 
@@ -564,7 +621,7 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     else if( !p_inputs_grad && !p_cost_grad )
         return;
     else
-        PLERROR("In LayerCostModule::bpropAccUpdate - Port configuration not implemented ");
+        PLERROR("In LayerCostModule::bpropAccUpdate - Port configuration not implemented.");
 
 }
 
@@ -574,6 +631,9 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 void LayerCostModule::bpropUpdate(const Mat& inputs,
                                   Mat& inputs_grad)
 {
+    if( random_index_during_bprop )
+        PLERROR("LayerCostModule::bpropUpdate with random_index_during_bprop not implemented yet.");
+
     PLASSERT( inputs.width() == input_size );
     inputs_grad.resize(inputs.length(), input_size );
     inputs_grad.clear();
@@ -586,16 +646,15 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
     if( (nstages_max>0) && (stage > nstages_max) )
         return;
 
-    cout << "bpropAccUpdate" << endl;
-
-    real qi, qj, comp_qi, comp_qj;
-    Vec comp_q(input_size), log_term(input_size);
+    //cout << "bpropAccUpdate" << endl;
 
     if( cost_function == "stochastic_cross_entropy" )
     {
         for (int isample = 0; isample < n_samples; isample++)
         {
-            for (int i = 0 ; i < input_size ; i++ )
+            real qi, qj, comp_qi, comp_qj;
+	    Vec comp_q(input_size), log_term(input_size);
+	    for (int i = 0 ; i < input_size ; i++ )
             {
                 qi = inputs(isample,i);
                 comp_qi = 1.0 - qi;
@@ -613,7 +672,8 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     // log(pj) - log(1-pj) + pj/pi - (1-pj)/(1-pi)
                     inputs(isample,i) += log_term[j] + qj/qi - comp_qi/comp_qj;
                     // The symetric part (loop  j=i+1...input_size)
-                    inputs(isample,j) += log_term[i] + qi/qj - comp_qj/comp_qi;
+                    if( bprop_all_terms )
+		        inputs(isample,j) += log_term[i] + qi/qj - comp_qj/comp_qi;
                 }
             }
                 for (int i = 0; i < input_size; i++ )
@@ -625,6 +685,8 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
     {
         for (int isample = 0; isample < n_samples; isample++)
         {
+            real qi, qj, comp_qi, comp_qj;
+	    Vec comp_q(input_size), log_term(input_size);
             for (int i = 0; i < input_size; i++ )
             {
                 qi = inputs(isample,i);
@@ -647,7 +709,8 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     //   [qj - qi]/[qi (1-qi)] - log[ qi/(1-qi) * (1-qj)/qj]
                     inputs_grad(isample,i) += (qj - qi)*comp_qi - log_term[i] + log_term[j];
                     // The symetric part (loop  j=i+1...input_size)
-                    inputs_grad(isample,j) += (qi - qj)*comp_qj - log_term[j] + log_term[i];
+                    if( bprop_all_terms )
+		        inputs_grad(isample,j) += (qi - qj)*comp_qj - log_term[j] + log_term[i];
                 }
             }
             for (int i = 0; i < input_size; i++ )
@@ -659,9 +722,13 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
     {
         computeHisto(inputs);
         real cost_before = computeKLdiv( true );
+
+        if( !bprop_all_terms )
+	    PLERROR("kl_div with bprop_all_terms=false not implemented yet");
     
         for (int isample = 0; isample < n_samples; isample++)
         {
+            real qi, qj;
             // Computing the difference of KL divergence
             // for d_q
             for (int i = 0; i < input_size; i++)
@@ -715,6 +782,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
         {
             // Computing the difference of KL divergence
             // for d_q
+            real qi, qj;
             for (int i = 0; i < input_size; i++)
             {
                 inputs_grad(isample, i) = 0.0;
@@ -731,15 +799,18 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                 {
                     inputs_grad(isample, i) += delta_SafeKLdivTerm(i, j, index_i, over_dqi);
 
-                    qj = inputs(isample,j);
-                    int index_j = histo_index(qj);
-                    if( ( index_j == histo_size-1 ) || ( index_j == 0 ) )
-                        continue;
-                    real over_dqj=1.0/dq(qj);
-                    // qj + dq(qj) ==> | p_inputs_histo(j,index_j)   - one_count
-                    //                 \ p_inputs_histo(j,index_j+shift_j) + one_count
+                    if( bprop_all_terms )
+		    {
+                        qj = inputs(isample,j);
+                        int index_j = histo_index(qj);
+                        if( ( index_j == histo_size-1 ) || ( index_j == 0 ) )
+                            continue;
+                        real over_dqj=1.0/dq(qj);
+                        // qj + dq(qj) ==> | p_inputs_histo(j,index_j)   - one_count
+                        //                 \ p_inputs_histo(j,index_j+shift_j) + one_count
                         
-                    inputs_grad(isample, j) += delta_SafeKLdivTerm(j, i, index_j, over_dqj);
+		        inputs_grad(isample, j) += delta_SafeKLdivTerm(j, i, index_j, over_dqj);
+		    }
                 }
             }
 
@@ -753,137 +824,121 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
     {
         computePascalStatistics( inputs );
 
-        if( momentum > 0.0 )
-            for (int isample = 0; isample < n_samples; isample++)
+        for (int isample = 0; isample < n_samples; isample++)
+        {
+            real qi, qj;
+            for (int i = 0; i < input_size; i++)
             {
-                for (int i = 0; i < input_size; i++)
+                qi = inputs(isample, i);
+                if (alpha > 0.0 )
+                    inputs_grad(isample, i) -= alpha*deriv_func_(inputs_expectation[i])
+                                                    *(real)(input_size-1);
+                for (int j = 0; j < i; j++)
                 {
-                    qi = inputs(isample, i);
-                    if (alpha > 0.0 )
-                        inputs_grad(isample, i) -= alpha*deriv_func_pascal(inputs_expectation[i])
-                                                        *(1.0-momentum)
-                                                        *(real)(input_size-1);
-                    for (int j = 0; j < i; j++)
-                    {
-                        real d_temp = deriv_func_pascal(inputs_cross_quadratic_mean(i,j));
-                        qj = inputs(isample,j);
-                        inputs_grad(isample, i) += d_temp *qj*(1.0-momentum);
-                        inputs_grad(isample, j) += d_temp *qi*(1.0-momentum);
-                    }
-                }
-                for (int i = 0; i < input_size; i++)
-                    inputs_grad(isample, i) *= norm_factor;
-            }
-        else
-            for (int isample = 0; isample < n_samples; isample++)
-            {
-                for (int i = 0; i < input_size; i++)
-                {
-                    qi = inputs(isample, i);
-                    if (alpha > 0.0 )
-                        inputs_grad(isample, i) -= alpha*deriv_func_pascal(inputs_expectation[i])
-                                                        *(real)(input_size-1);
-                    for (int j = 0; j < i; j++)
-                    {
-                        real d_temp = deriv_func_pascal(inputs_cross_quadratic_mean(i,j));
-                        qj = inputs(isample,j);
-                        inputs_grad(isample, i) += d_temp *qj;
+                    real d_temp = deriv_func_(inputs_cross_quadratic_mean(i,j));
+                    qj = inputs(isample,j);
+                    inputs_grad(isample, i) += d_temp *qj;
+	            if( bprop_all_terms )
                         inputs_grad(isample, j) += d_temp *qi;
-                    }
                 }
-                for (int i = 0; i < input_size; i++)
-                    inputs_grad(isample, i) *= norm_factor;
             }
+            for (int i = 0; i < input_size; i++)
+                inputs_grad(isample, i) *= norm_factor * (1.-momentum);
+        }
     } // END cost_function == "pascal"
 
     else if( cost_function == "correlation")
     {
         computeCorrelationStatistics( inputs );
 
-        if( momentum > 0.0 )
-            PLERROR( "not implemented yet");
-        else
+        real average_deriv_tmp = 0.;
+        for (int isample = 0; isample < n_samples; isample++)
         {
-            real average_deriv_tmp = 0.;
-            for (int isample = 0; isample < n_samples; isample++)
+            real qi, qj;
+            Vec dSTDi_dqi( input_size ), dCROSSij_dqj( input_size );
+            for (int i = 0; i < input_size; i++)
             {
-                Vec dSTDi_dqi, dCROSSij_dqj;
-                dSTDi_dqi.resize( input_size );
-                dCROSSij_dqj.resize( input_size );
-
-                for (int i = 0; i < input_size; i++)
+                if( fast_exact_is_equal( inputs_stds[i], 0. ) )
                 {
-                    if( fast_exact_is_equal( inputs_stds[i], 0. ) )
+                    if( isample == 0 )
+                        PLWARNING("wired phenomenon: the %dth output have always expectation %f ( at stage=%d )",
+                                   i, inputs_expectation[i], stage);
+                    if( inputs_expectation[i] < 0.1 )
                     {
-                        if( isample == 0 )
-                            PLWARNING("wired phenomenon: the %dth output have always expectation %f ( at stage=%d )",
-                                       i, inputs_expectation[i], stage);
-                        if( inputs_expectation[i] < 0.1 )
-                        {
-              	            // We force to switch on the neuron
-                            // (the cost increase much when the expectation is decreased \ 0)
-                            if( ( isample > 0 ) || ( n_samples == 1 ) )
-                                 inputs_grad(isample, i) -= average_deriv;
-                        }
-                        else if( inputs_expectation[i] > 0.9 )
-                        {
-                            // We force to switch off the neuron
-                            // (the cost increase much when we the expectation is increased / 1)
-                            // except for the first sample
-                            if( ( isample > 0 ) || ( n_samples == 1 ) )
-                                inputs_grad(isample, i) += average_deriv;
-                        }
-                        else
-                            if ( !(inputs_expectation[i]>-REAL_MAX) || !(inputs_expectation[i]<REAL_MAX)  )
-                               PLERROR("The %dth output have always value %f ( at stage=%d )",
-                                        i, inputs_expectation[i], stage);
+                        // We force to switch on the neuron
+                        // (the cost increase much when the expectation is decreased \ 0)
+                        if( ( isample > 0 ) || ( n_samples == 1 ) )
+                             inputs_grad(isample, i) -= average_deriv;
+                    }
+                    else if( inputs_expectation[i] > 0.9 )
+                    {
+                        // We force to switch off the neuron
+                        // (the cost increase much when we the expectation is increased / 1)
+                        // except for the first sample
+                        if( ( isample > 0 ) || ( n_samples == 1 ) )
+                            inputs_grad(isample, i) += average_deriv;
+                    }
+                    else
+                        if ( !(inputs_expectation[i]>-REAL_MAX) || !(inputs_expectation[i]<REAL_MAX)  )
+                           PLERROR("The %dth output have always value %f ( at stage=%d )",
+                                    i, inputs_expectation[i], stage);
+                    continue;
+                }
+                //!  dCROSSij_dqj[i] = d[ E(QiQj)-E(Qi)E(Qj) ]/d[qj(t)]
+                //!                  = ( qi(t) - E(Qi) ) / n_samples 
+                //!
+                //!  dSTDi_dqi[i] = d[ STD(Qi) ]/d[qi(t)]
+                //!               = d[ sqrt( E(Qi^2) -E(Qi)^2 ]/d[qi(t)]
+                //!               = 1 / [ 2.STD(Qi) ] * d[ E(Qi^2) -E(Qi)^2 ]/d[qi(t)]
+                //!               = 1 / [ 2.STD(Qi) ] * [ 2*qi(t) / n_samples - 2*E(Qi) / n_samples ]
+                //!               = ( qi(t) - E(Qi) ) / ( n_samples * STD(Qi) )
+                //!               = dCROSSij_dqj[i] / STD(Qi)
+
+                qi = inputs(isample, i);
+                dCROSSij_dqj[i] = ( qi - inputs_expectation[i] ); //*one_count;
+                dSTDi_dqi[i] = dCROSSij_dqj[i] / inputs_stds[i];
+
+                for (int j = 0; j < i; j++)
+                {
+                    if( fast_exact_is_equal( inputs_correlations(i,j), 0.) )
+		    {
+			if (isample == 0)
+			    PLWARNING("correlation(i,j)=0 for i=%d, j=%d", i, j);
                         continue;
                     }
-                    //!  dCROSSij_dqj[i] = d[ E(QiQj)-E(Qi)E(Qj) ]/d[qj(t)]
-                    //!                  = ( qi(t) - E(Qi) ) / n_samples 
-                    //!
-                    //!  dSTDi_dqi[i] = d[ STD(Qi) ]/d[qi(t)]
-                    //!               = d[ sqrt( E(Qi^2) -E(Qi)^2 ]/d[qi(t)]
-                    //!               = 1 / [ 2.STD(Qi) ] * d[ E(Qi^2) -E(Qi)^2 ]/d[qi(t)]
-                    //!               = 1 / [ 2.STD(Qi) ] * [ 2*qi(t) / n_samples - 2*E(Qi) / n_samples ]
-                    //!               = ( qi(t) - E(Qi) ) / ( n_samples * STD(Qi) )
-                    //!               = dCROSSij_dqj[i] / STD(Qi)
+                    qj = inputs(isample,j);
+                    real correlation_denum = inputs_stds[i]*inputs_stds[j];
+		    real squared_correlation_denum = correlation_denum * correlation_denum;
+                    if( fast_exact_is_equal( squared_correlation_denum, 0. ) )
+                        continue;
+                    real dfunc_dCorr = deriv_func_( inputs_correlations(i,j) );
+                    real correlation_num = ( inputs_cross_quadratic_mean(i,j)
+                                             - inputs_expectation[i]*inputs_expectation[j] );
 
-                    qi = inputs(isample, i);
-                    dCROSSij_dqj[i] = ( qi - inputs_expectation[i] ); //*one_count;
-                    dSTDi_dqi[i] = dCROSSij_dqj[i] / inputs_stds[i];
+                    if( correlation_num/correlation_denum - inputs_correlations(i,j) > 0.0000001 )
+			PLERROR( "num/denum (%f) <> correlation (%f) for (i,j)=(%d,%d)",
+				 correlation_num/correlation_denum, inputs_correlations(i,j),i,j);
 
-                    for (int j = 0; j < i; j++)
-                    {
-                        qj = inputs(isample,j);
+                    inputs_grad(isample, i) += dfunc_dCorr * ( 
+                                                 correlation_denum * dCROSSij_dqj[j]
+                                               - correlation_num * dSTDi_dqi[i] * inputs_stds[j]
+                                                 ) / squared_correlation_denum;
 
-                        real correlation_denum = inputs_stds[i]*inputs_stds[j];
-                        //if( fast_exact_is_equal( inputs_stds[j], 0 ) (but because of numerical imprecision...)
-                        if( fast_exact_is_equal( correlation_denum * correlation_denum, 0. ) )
-                            continue;
-                        real dfunc_dCorr = deriv_func_correlation( inputs_correlations(i,j) );
-                        real correlation_num = ( inputs_cross_quadratic_mean(i,j)
-                                                 - inputs_expectation[i]*inputs_expectation[j] );
-                        inputs_grad(isample, i) += dfunc_dCorr * ( 
-                                                     correlation_denum * dCROSSij_dqj[j]
-                                                   - correlation_num * dSTDi_dqi[i] * inputs_stds[j]
-                                                     ) / (correlation_denum * correlation_denum);
-
-                        inputs_grad(isample, j) += dfunc_dCorr * ( 
+                    if( bprop_all_terms )
+			inputs_grad(isample, j) += dfunc_dCorr * ( 
                                                      correlation_denum * dCROSSij_dqj[i]
                                                    - correlation_num * dSTDi_dqi[j] * inputs_stds[i]
-                                                     ) / (correlation_denum * correlation_denum);
-                    }
-                }
-                for (int i = 0; i < input_size; i++)
-                {
-                    average_deriv_tmp += fabs( inputs_grad(isample, i) );
-                    inputs_grad(isample, i) *= norm_factor;
+                                                     ) / squared_correlation_denum;
                 }
             }
-            average_deriv = average_deriv_tmp / (real)( input_size * n_samples );
-            PLASSERT( average_deriv >= 0.);
+            for (int i = 0; i < input_size; i++)
+            {
+                average_deriv_tmp += fabs( inputs_grad(isample, i) );
+                inputs_grad(isample, i) *= norm_factor * (1.-momentum);
+            }
         }
+        average_deriv = average_deriv_tmp / (real)( input_size * n_samples );
+        PLASSERT( average_deriv >= 0.);
     } // END cost_function == "correlation"
 
     else
@@ -949,18 +1004,44 @@ void LayerCostModule::computePascalStatistics(const Mat& inputs,
         }
     }
 }
-string LayerCostModule::func_pascal_prefix() const
+
+real LayerCostModule::func_(real value) const
 {
-    string prefix = "exp";
-    return prefix;
+    if( SQUARE_FUNC )
+        return value * value;
+    if( POW4_FUNC )
+        return value * value * value * value;
+    if( LOG_FUNC )
+    {
+        if( fast_is_equal( value, 1. ) || value > 1. )
+            return REAL_MAX;
+        return -safeflog( 1.-value );
+    }
+    if( EXP_FUNC )
+        return exp(value);
+    if( LINEAR_FUNC )
+        return value;
+    PLERROR("in LayerCostModule::func_() no boolean *_FUNC has been set.");
+    return REAL_MAX;
 }
-real LayerCostModule::func_pascal(real value) const
+real LayerCostModule::deriv_func_(real value) const
 {
-    return exp(value);
-}
-real LayerCostModule::deriv_func_pascal(real value) const
-{
-    return exp(value);
+    if( SQUARE_FUNC )
+        return 2. * value;
+    if( POW4_FUNC )
+        return 4. * value * value * value;
+    if( LOG_FUNC )
+    {
+        if( fast_is_equal( value, 1. ) )
+           return REAL_MAX;
+        return 1. / (1. - value);
+    }
+    if( EXP_FUNC )
+        return exp(value);
+    if( LINEAR_FUNC )
+        return 1.;
+    PLERROR("in LayerCostModule::deriv_func_() no boolean *_FUNC has been set.");
+    return REAL_MAX;
 }
 
 
@@ -971,6 +1052,10 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs)
                                  inputs_stds, inputs_correlations);
 }
 
+//! CAUTION: Be careful
+//! 'cross_quadratic_mean' and 'correlations' matrices
+//!  are computed ONLY on the triangle subpart 'i'>='j'
+//!  if we note 'i' (resp.'j') the first (reps.second) coordinate
 void LayerCostModule::computeCorrelationStatistics(const Mat& inputs,
                                                    Vec& expectation, Mat& cross_quadratic_mean,
                                                    Vec& stds, Mat& correlations) const
@@ -1002,52 +1087,70 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs,
 
     for (int i = 0; i < input_size; i++)
     {
-        //! Normalization
+        //! Normalization (1/2)
         expectation[i] *= one_count;
         cross_quadratic_mean(i,i) *= one_count;
 
-	//! Required temporary variable because of numerical imprecision !//
-	real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
-	if( tmp > 0. )
-	    stds[i] = sqrt( tmp );
-
+        if( fast_is_equal(momentum, 0.)
+	||  !during_training )
+        {
+ 	    //! Computation of the standard deviations
+	    //! requires temporary variable because of numerical imprecision
+	    real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
+	    if( tmp > 0. )  //  std[i] = 0 by default
+	        stds[i] = sqrt( tmp );
+        }
+	
         for (int j = 0; j < i; j++)
         {
-            //! Normalization
+            //! Normalization (2/2)
             cross_quadratic_mean(i,j) *= one_count;
 
-            //! Correlations
-	    tmp = stds[i] * stds[j];
-            if( tmp > 0. )
-	        correlations(i,j) = (
-                                  cross_quadratic_mean(i,j)
-                                  - expectation[i]*expectation[j]
-                                  ) / tmp;
+            if( fast_is_equal(momentum, 0.)
+	    ||  !during_training )
+            {	    
+	        //! Correlations
+	        real tmp = stds[i] * stds[j];
+                if( !fast_is_equal(tmp, 0.) )  //  correlations(i,j) = 1 by default
+	            correlations(i,j) = ( cross_quadratic_mean(i,j)
+                                          - expectation[i]*expectation[j] ) / tmp;
+            }
         }
     }
-    //! Be careful: 'correlations' matrix is only computed
-    //!  on the triangle subpart 'i' > 'j'
-    //!  ('i'/'j': first/second argument)
 
-    if(  during_training )
+    if( !fast_is_equal(momentum, 0.) && during_training )
     {
-        if( momentum > 0.0 )
-            PLERROR("not implemented yet");
+        for (int i = 0; i < input_size; i++)
+        {
+            expectation[i] = momentum*inputs_expectation_trainMemory[i]
+                             +(1.0-momentum)*expectation[i];
+
+            inputs_expectation_trainMemory[i] = expectation[i];
+
+            cross_quadratic_mean(i,i) = momentum*inputs_cross_quadratic_mean_trainMemory(i,i)
+                                        +(1.0-momentum)*cross_quadratic_mean(i,i);
+            inputs_cross_quadratic_mean_trainMemory(i,i) = cross_quadratic_mean(i,i);
+
+	    real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
+	    if( tmp > 0. )  //  std[i] = 0 by default
+	        stds[i] = sqrt( tmp );
+	    
+            for (int j = 0; j < i; j++)
+            {
+                 cross_quadratic_mean(i,j) = momentum*inputs_cross_quadratic_mean_trainMemory(i,j)
+                                             +(1.0-momentum)*cross_quadratic_mean(i,j);
+                 inputs_cross_quadratic_mean_trainMemory(i,j) = cross_quadratic_mean(i,j);
+
+	         tmp = stds[i] * stds[j];
+                 if( !fast_is_equal(tmp, 0.) )  //  correlations(i,j) = 1 by default
+	             correlations(i,j) = ( cross_quadratic_mean(i,j)
+                                         - expectation[i]*expectation[j] ) / tmp;
+
+            }
+        }
     }
 }
-string LayerCostModule::func_correlation_prefix() const
-{
-    string prefix = "exp";
-    return prefix;
-}
-real LayerCostModule::func_correlation(real correlation) const
-{
-    return exp(correlation);
-}
-real LayerCostModule::deriv_func_correlation(real correlation) const
-{
-    return exp(correlation);
-}
+
 /////////////////////////
 // Auxiliary Functions //
 /////////////////////////
