@@ -126,7 +126,7 @@ void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
 {  
   source->getSubRow(i, j, v);
   for (int source_col = 0; source_col < v->length(); source_col++) 
-    if (is_missing(v[source_col]) && variable_imputation_instruction[source_col + j] > 0)
+    if (is_missing(v[source_col]))
       if (variable_imputation_instruction[source_col + j] == 1) v[source_col] = variable_mean[source_col + j];
       else if (variable_imputation_instruction[source_col + j] == 2) v[source_col] = variable_median[source_col + j];
       else if (variable_imputation_instruction[source_col + j] == 3) v[source_col] = variable_mode[source_col + j];
@@ -136,7 +136,7 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
 {  
   source-> getRow(i, v);
   for (int source_col = 0; source_col < v->length(); source_col++)
-    if (is_missing(v[source_col]) && variable_imputation_instruction[source_col] > 0)
+    if (is_missing(v[source_col]))
       if (variable_imputation_instruction[source_col] == 1) v[source_col] = variable_mean[source_col];
       else if (variable_imputation_instruction[source_col] == 2) v[source_col] = variable_median[source_col];
       else if (variable_imputation_instruction[source_col] == 3) v[source_col] = variable_mode[source_col]; 
@@ -146,7 +146,7 @@ void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
 {  
   source-> getColumn(i, v);
   for (int source_row = 0; source_row < v->length(); source_row++)
-    if (is_missing(v[source_row]) && variable_imputation_instruction[i] > 0)
+    if (is_missing(v[source_row]))
       if (variable_imputation_instruction[i] == 1) v[source_row] = variable_mean[i];
       else if (variable_imputation_instruction[i] == 2) v[source_row] = variable_median[i];
       else if (variable_imputation_instruction[i] == 3) v[source_row] = variable_mode[i];
@@ -212,6 +212,13 @@ void MeanMedianModeImputationVMatrix::build_()
     if(nofields.length()>0)
       PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
 	      tostring(nofields).c_str());
+    TVec<string> no_instruction;
+    for(int i = 0;i<variable_imputation_instruction.size();i++)
+      if(variable_imputation_instruction[i]==0)
+	no_instruction.append(train_field_names[i]);
+    if(no_instruction.size()>0)
+      PLWARNING("In MeanMedianModeImputationVMatrix::build_() In the source VMatrix some fields do not have instruction: '%s'.",
+		tostring(no_instruction).c_str());
     PPath train_metadata = train_set->getMetaDataDir();
     PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     train_set->lockMetaDataDir();
