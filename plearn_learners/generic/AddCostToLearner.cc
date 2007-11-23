@@ -573,7 +573,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             if (the_target >= n_classes
                 ||is_missing(the_target))
                 PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of the_target=%f, missing or higher or egual to n_classes (%d)",
-                        desired_target[confusion_matrix_target], n_classes);
+                        the_target, n_classes);
 #endif
             for(int local_ind = ind_cost ; local_ind < (n_classes*n_classes+ind_cost); local_ind++){
                 costs[local_ind] = 0;
