@@ -539,15 +539,15 @@ string addprepostfix(const string& prefix, const string& text, const string& pos
 {
     size_t startpos = 0;
     size_t endpos = 0;
-    string txt = removenewline(text);
     string res;
     while(endpos!=string::npos)
     {
-        endpos = txt.find_first_of("\n",startpos);
+        endpos = text.find_first_of("\n",startpos);
         if(endpos!=string::npos)
-            res += prefix + txt.substr(startpos, endpos-startpos) + postfix;
+            res += prefix + text.substr(startpos, endpos-startpos) + postfix
+                                                                  + "\n";
         else
-            res += prefix + txt.substr(startpos) + postfix;
+            res += prefix + text.substr(startpos) + postfix;
         startpos = endpos + 1;
     }
     return res;

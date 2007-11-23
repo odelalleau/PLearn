@@ -113,11 +113,15 @@ void PLStringutilsTest::perform()
     string s4 = "Say Hello";
     string s5 = "Say Hello!";
     string s6 = "Say Jello";
+    string s7 = "Hello\n \n\nWorld\n";
+    string s8 = "\nHello\nWorld";
     pout << string_begins_with(s2, s1) << endl;
     pout << string_begins_with(s3, s1) << endl;
     pout << string_ends_with(s4, s1) << endl;
     pout << string_ends_with(s5, s1) << endl;
     pout << string_ends_with(s6, s1) << endl;
+    pout << addprepostfix("pre-", s7, "-post") << endl;
+    pout << addprepostfix("pre-", s8, "-post") << endl;
 }
 
 } // end of namespace PLearn
