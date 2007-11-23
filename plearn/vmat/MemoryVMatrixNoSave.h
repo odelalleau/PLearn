@@ -71,6 +71,9 @@ public:
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
     MemoryVMatrixNoSave();
+    MemoryVMatrixNoSave(const Mat& the_data);
+    MemoryVMatrixNoSave(int l, int w);
+    MemoryVMatrixNoSave(VMat the_source);
 
     //#####  PLearn::Object Protocol  #########################################
 

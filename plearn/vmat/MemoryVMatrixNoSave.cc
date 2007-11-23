@@ -60,6 +60,15 @@ MemoryVMatrixNoSave::MemoryVMatrixNoSave()
     // ### (doing so assumes the parent classes' build_() have been called too
     // ### in the parent classes' constructors, something that you must ensure)
 }
+MemoryVMatrixNoSave::MemoryVMatrixNoSave(int l, int w)
+    : inherited(l,w)
+{}
+MemoryVMatrixNoSave::MemoryVMatrixNoSave(const Mat& the_data)
+    : inherited(the_data)
+{}
+MemoryVMatrixNoSave::MemoryVMatrixNoSave(VMat the_source)
+    : inherited(the_source)
+{}
 
 ////////////////////
 // declareOptions //
