@@ -44,7 +44,7 @@
 #ifndef ConditionalMeanImputationVMatrix_INC
 #define ConditionalMeanImputationVMatrix_INC
 
-#include "ImputationVMatrix.h"
+#include <plearn/vmat/ImputationVMatrix.h>
 #include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {

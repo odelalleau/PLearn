@@ -44,7 +44,7 @@
 #ifndef CovariancePreservationImputationVMatrix_INC
 #define CovariancePreservationImputationVMatrix_INC
 
-#include "ImputationVMatrix.h"
+#include <plearn/vmat/ImputationVMatrix.h>
 #include <plearn/vmat/SourceVMatrix.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/io/fileutils.h>                     //!<  For isfile()

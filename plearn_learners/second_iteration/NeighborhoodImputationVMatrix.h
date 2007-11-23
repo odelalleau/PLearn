@@ -44,7 +44,7 @@
 #ifndef NeighborhoodImputationVMatrix_INC
 #define NeighborhoodImputationVMatrix_INC
 
-#include "ImputationVMatrix.h"
+#include <plearn/vmat/ImputationVMatrix.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/io/fileutils.h>                     //!<  For isfile()
 #include <plearn/math/BottomNI.h>
