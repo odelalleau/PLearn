@@ -291,9 +291,10 @@ Vec HyperOptimize::optimize()
 
     TVec<string> option_vals = oracle->generateFirstTrial();
     if (option_vals.size() != option_names.size())
-        PLERROR("HyperOptimize::optimize: the number of option values (%d) "
-                "does not match the number of option names (%d)",
-                option_vals.size(), option_names.size());
+        PLERROR("HyperOptimize::optimize: the number (%d) of option values (%s) "
+                "does not match the number (%d) of option names (%s) ",
+                option_vals.size(), tostring(option_vals).c_str(),
+                option_names.size(), tostring(option_names).c_str());
 
     int trialnum = 0;
 
