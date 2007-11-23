@@ -125,6 +125,9 @@ void EarlyStoppingOracle::build_()
                     "Maybe you forgot that the end part of the range is not "
                     "included!");
     }
+    if(option_values.length()==0)
+        PLWARNING("In EarlyStoppingOracle::build_ - no range selected.");
+  
 }
 
 // ### Nothing to add here, simply calls build_
