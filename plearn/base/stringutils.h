@@ -169,6 +169,15 @@ vector<string> split(const string& s, char delimiter);
 */
 vector<string> split(const string& s, const string& delimiters=" \t\n\r", bool keepdelimiters=false);
 
+/*! Split a string at deliminer while allowing a delimiter to be quoted so that it is not considered to be as a delimiter.
+  The double_quote are only considered at the boundary of the field.
+  The function should execute in O(n+k) where n is the number of character in s and k is the number of field in k.
+  The delimiter should not be the same as double_quote.
+  @param s the string to split
+  @param delimiter the caractere that separate the fields of s.
+  @double_quote a string that will surround a field if it containt delimiter caractere that should not consider generate a new field.
+  @todo optimize...
+*/
 vector<string> split_quoted_delimiter(const string& s, char delimiter, string double_quote);
 
 /*!     Split the string on the first occurence of a delimiter and returns 
