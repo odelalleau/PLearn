@@ -238,13 +238,14 @@ void RegressionTree::initialiseTree()
     leave_template->setOption("missing_leave", "0");
     leave_template->setOption("loss_function_weight", tostring(loss_function_weight));
     leave_template->setOption("verbosity", tostring(verbosity));
+    leave_template->initStats();
 
     first_leave_output.resize(2);
     first_leave_error.resize(3);
     first_leave = ::PLearn::deepCopy(leave_template);
     first_leave->setOption("id", tostring(sorted_train_set->getNextId()));
     first_leave->initLeave(sorted_train_set);
-    first_leave->initStats();
+
     for (each_train_sample_index = 0; each_train_sample_index < length; each_train_sample_index++)
     {
         first_leave->addRow(each_train_sample_index, first_leave_output, first_leave_error);
@@ -333,12 +334,6 @@ void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
         }
     }
     outputv[0] = closest_value;
-}
-
-void RegressionTree::computeOutputAndCosts(const Vec& inputv, const Vec& targetv, Vec& outputv, Vec& costsv) const
-{
-    computeOutput(inputv, outputv);
-    computeCostsFromOutputs(inputv, outputv, targetv, costsv);
 }
 
 void RegressionTree::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const

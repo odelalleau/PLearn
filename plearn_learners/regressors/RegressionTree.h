@@ -112,7 +112,6 @@ public:
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
     virtual void         computeOutput(const Vec& input, Vec& output) const;
-    virtual void         computeOutputAndCosts(const Vec& input, const Vec& target, Vec& output, Vec& costs) const;
     virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
     void         setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set);
   
