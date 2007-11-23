@@ -71,8 +71,6 @@ private:
  
     Vec leave_output;
     Vec leave_error;
-    Vec missing_output;
-    Vec missing_error;
     int split_col;
     int split_balance;
     real split_feature_value;
@@ -98,7 +96,7 @@ public:
     void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave, PP<RegressionTreeLeave> leave_template);
     void         lookForBestSplit();
     void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature,
-                              Vec left_error, Vec right_error);
+                              Vec left_error, Vec right_error, Vec missing_error);
     int          expandNode();
     int          getSplitBalance();
     real         getErrorImprovment();

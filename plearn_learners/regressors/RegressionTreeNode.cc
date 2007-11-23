@@ -92,10 +92,6 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   "The node for the missing values when missing_is_valid is set to 1\n");
     declareOption(ol, "missing_leave", &RegressionTreeNode::missing_leave, OptionBase::learntoption,
                   "The leave containing rows with missing values after split\n");
-    declareOption(ol, "missing_output", &RegressionTreeNode::missing_output, OptionBase::learntoption,
-                  "The mising leave output vector\n");
-    declareOption(ol, "missing_error", &RegressionTreeNode::missing_error, OptionBase::learntoption,
-                  "The missing leave error vector\n");
     declareOption(ol, "left_node", &RegressionTreeNode::left_node, OptionBase::learntoption,
                   "The node on the left of the split decision\n");
     declareOption(ol, "left_leave", &RegressionTreeNode::left_leave, OptionBase::learntoption,
@@ -111,12 +107,19 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
     declareOption(ol, "right_error", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The right leave error vector\n");
+    declareOption(ol, "missing_error", &RegressionTreeNode::tmp_vec,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED The missing leave error vector\n");
     declareOption(ol, "left_output", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The left leave output vector\n");
     declareOption(ol, "right_output", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The right leave output vector\n");
+    declareOption(ol, "missing_output", &RegressionTreeNode::tmp_vec,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED The mising leave output vector\n");
+
     declareOption(ol, "right_leave_id", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The id of the right leave\n");     
@@ -156,8 +159,6 @@ void RegressionTreeNode::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(after_split_error, copies);
     deepCopyField(missing_node, copies);
     deepCopyField(missing_leave, copies);
-    deepCopyField(missing_output, copies);
-    deepCopyField(missing_error, copies);
     deepCopyField(left_node, copies);
     deepCopyField(left_leave, copies);
     deepCopyField(right_node, copies);
@@ -199,8 +200,6 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
 
     leave_output.resize(2);
     leave_error.resize(3);
-    missing_output.resize(2);
-    missing_error.resize(3);
 
     leave->getOutputAndError(leave_output,leave_error);
 }
@@ -213,6 +212,7 @@ void RegressionTreeNode::lookForBestSplit()
     tmp_vec.resize(2);
     Vec left_error(3);
     Vec right_error(3);
+    Vec missing_error(3);
     int leave_id = leave->id;
     for (int col = 0; col < train_set->inputsize(); col++)
     {
@@ -232,6 +232,7 @@ void RegressionTreeNode::lookForBestSplit()
                 candidate.append(row);
             }
         }
+        missing_leave->getOutputAndError(tmp_vec, missing_error);
         if(candidate.size()==0)
             return;
         int row = candidate.pop();
@@ -240,14 +241,14 @@ void RegressionTreeNode::lookForBestSplit()
             int next_row = candidate.pop();
             left_leave->removeRow(row, tmp_vec, left_error);
             right_leave->addRow(row, tmp_vec, right_error);
-            compareSplit(col, train_set->get(next_row, col), train_set->get(row, col), left_error, right_error);
+            compareSplit(col, train_set->get(next_row, col), train_set->get(row, col), left_error, right_error, missing_error);
             row = next_row;
         }
     }
 }
 
 void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature,
-                                      Vec left_error, Vec right_error )
+                                      Vec left_error, Vec right_error, Vec missing_error)
 {
     PLASSERT(left_leave_last_feature<=right_leave_first_feature);
     if (left_leave_last_feature >= right_leave_first_feature) return;
@@ -297,8 +298,6 @@ int RegressionTreeNode::expandNode()
             }
         }
     }
-
-    missing_leave->getOutputAndError(missing_output, missing_error);
 
     PLASSERT(left_leave->length>0);
     PLASSERT(right_leave->length>0);
@@ -375,10 +374,7 @@ void RegressionTreeNode::computeOutput(const Vec& inputv, Vec& outputv)
             missing_node->computeOutput(inputv, outputv);
         }
         else
-        {
-            outputv[0] = missing_output[0];
-            outputv[1] = missing_output[1];
-        }
+            missing_leave->getOutputAndError(outputv,tmp_vec);
         return;
     }
     if (inputv[split_col] > split_feature_value)
