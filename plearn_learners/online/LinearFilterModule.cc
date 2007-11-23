@@ -366,12 +366,12 @@ void LinearFilterModule::forget()
     }
     else if( init_weights_random_scale < 0. )
     {
-        real r = - init_weights_random_scale / sqrt( input_size );
+        real r = - init_weights_random_scale / sqrt( (real)input_size );
         random_gen->fill_random_uniform(weights, 1.-r, 1.);
     }
     else
     {
-        real r = init_weights_random_scale / sqrt( input_size );
+        real r = init_weights_random_scale / sqrt( (real)input_size );
         random_gen->fill_random_uniform(weights, 0., r);
     }
 }
