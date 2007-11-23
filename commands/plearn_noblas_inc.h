@@ -208,6 +208,7 @@
 #include <plearn_learners/online/IdentityModule.h>
 #include <plearn_learners/online/LayerCostModule.h>
 #include <plearn_learners/online/LinearCombinationModule.h>
+#include <plearn_learners/online/LinearFilterModule.h>
 #include <plearn_learners/online/MatrixModule.h>
 #include <plearn_learners/online/MaxSubsampling2DModule.h>
 #include <plearn_learners/online/ModuleLearner.h>
