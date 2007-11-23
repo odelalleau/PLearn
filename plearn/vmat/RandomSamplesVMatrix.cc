@@ -65,6 +65,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // RandomSamplesVMatrix //
 //////////////////////////////
 RandomSamplesVMatrix::RandomSamplesVMatrix():
+    alternate_targets(false),
     is_preserved("0"),
     n_non_preserved(-1),
     seed(1827),
@@ -99,6 +100,12 @@ void RandomSamplesVMatrix::declareOptions(OptionList& ol)
         "     source's length if 'length' is not set)\n"
         " -2: the number of non-preserved examples is set exactly to match\n"
         "     the number of preserved examples.");
+
+    declareOption(ol, "alternate_targets",
+                  &RandomSamplesVMatrix::alternate_targets,
+                  OptionBase::buildoption,
+        "If set to 1, then this VMat will never sample two consecutive rows\n"
+        "having the same target.");
 
     declareOption(ol, "seed", &RandomSamplesVMatrix::seed,
                               OptionBase::buildoption,
@@ -158,6 +165,62 @@ void RandomSamplesVMatrix::build_()
     else if (length_ < 0)
         length_ = source->length();
 
+    // Specific pre-processing for the case where 'alternate_targets' is true.
+    if (alternate_targets) {
+        // Currently this feature is not implemented when we preserve examples
+        // (just because it is a bit more complex).
+        if (!indices.isEmpty())
+            PLERROR("In RandomSamplesVMatrix::build_ - The 'alternate_targets'"
+                    " option is not implemented yet in the case where some "
+                    "examples are preserved. Please implement it!");
+        if (source->targetsize() != 1)
+            PLERROR("In RandomSamplesVMatrix::build_ - The source must have "
+                    "a targetsize of 1 in order to use the "
+                    "'alternate_targets' option");
+        // First we need to find the number of targets.
+        map<real, TVec<int> > by_target_map; // Map a target to its samples.
+        Vec input, target;
+        real weight;
+        target_to_idx.clear();
+        for (int i = 0; i < source->length(); i++) {
+            source->getExample(i, input, target, weight);
+            by_target_map[target[0]].append(i);
+            if (target_to_idx.count(target[0]) == 0) {
+                int n_cur = target_to_idx.size();
+                target_to_idx[target[0]] = n_cur;
+            }
+        }
+        int n_targets = by_target_map.size();
+        // Convert from map to vector (for convenience).
+        by_target.resize(n_targets);
+        map<real, TVec<int> >::const_iterator it = by_target_map.begin();
+        for (int i = 0; i < n_targets; i++, it++)
+            by_target[i] = it->second;
+        // Build a map from a target index to all other target indices that may
+        // be used afterwards, with corresponding probabilities.
+        target_list.resize(n_targets);
+        target_distr.resize(n_targets);
+        for (int i = 0; i < n_targets; i++) {
+            TVec<int>& tl = target_list[i];
+            tl.resize(0);
+            Vec& td = target_distr[i];
+            td.resize(0);
+            int n_others = 0;
+           
+            for (int j = 0; j < n_targets; j++)
+                if (j != i) {
+                    tl.append(j); // This is the list of all targets,
+                                  // excluding 'i'.
+                    td.append(by_target[j].length());
+                    n_others += by_target[j].length();
+                }
+            td /= real(n_others); // Normalize probabilities.
+        }
+
+        // Resize 'last_targets'.
+        last_targets.resize(source->length());
+    }
+
     // Fill in 'indices' with as many -1 as necessary.
     if (indices.length() > length_)
         PLERROR("In RandomSamplesVMatrix::build_ - The number of preserved"
@@ -180,9 +243,27 @@ void RandomSamplesVMatrix::getNewRow(int i, const Vec& v) const
     if (indices[i] >= 0)
         source->getRow(indices[i], v);
     else {
-        int random_sample =
-            random_gen->uniform_multinomial_sample(non_preserved.length());
+        int random_sample;
+        if (alternate_targets && i > 0) {
+            // Note that the first sample may be any class since it has no
+            // previous sample in this VMat.
+            real previous_target = last_targets[i - 1];
+            int previous_target_idx = target_to_idx[previous_target];
+            int random_target = random_gen->multinomial_sample(
+                    target_distr[previous_target_idx]);
+            const TVec<int>& candidates =
+                by_target[target_list[previous_target_idx][random_target]];
+            int random_sample_idx = random_gen->uniform_multinomial_sample(
+                    candidates.length());
+            random_sample = candidates[random_sample_idx];
+            PLASSERT( non_preserved.length() == source->length() );
+        } else {
+            random_sample =
+                random_gen->uniform_multinomial_sample(non_preserved.length());
+        }
         source->getRow(non_preserved[random_sample], v);
+        if (alternate_targets)
+            last_targets[i] = v[source->inputsize()];
     }
 }
 
@@ -196,6 +277,10 @@ void RandomSamplesVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(random_gen,       copies);
     deepCopyField(non_preserved,    copies);
     deepCopyField(indices,          copies);
+    deepCopyField(last_targets,     copies);
+    deepCopyField(target_list,      copies);
+    deepCopyField(target_distr,     copies);
+    deepCopyField(by_target,        copies);
 }
 
 } // end of namespace PLearn

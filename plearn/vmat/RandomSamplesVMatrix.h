@@ -62,6 +62,7 @@ class RandomSamplesVMatrix : public SourceVMatrix
 public:
     //#####  Public Build Options  ############################################
 
+    bool alternate_targets;
     string is_preserved;
     int n_non_preserved;
     int32_t seed;
@@ -104,6 +105,23 @@ protected:
     //! If it is -1, this means it is a non-preserved sample, and thus should
     //! be randomly sampled from the 'non_preserved' list.
     TVec<int> indices;
+
+    //! The i-th element is the last target used for the i-th row in this VMat.
+    Vec last_targets;
+
+    //! The i-th element is the list of all target indices, except i.
+    TVec< TVec<int> > target_list;
+
+    //! The i-th element is the distribution weights of all target indices,
+    //! except i (i.e. the distribution to sample from after an example of the
+    //! i-th target).
+    TVec< Vec > target_distr;
+
+    //! Map a real-valued target to its index.
+    mutable map<real, int> target_to_idx;
+
+    //! The i-th element is the list of all samples for the i-th target.
+    TVec< TVec<int> > by_target;
 
     //#####  Protected Options  ###############################################
 
