@@ -188,7 +188,8 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                           "In SplitModule::bpropAccUpdate - When the down_port"
                           " is an input and its gradient is required, one must"
                           " provide a gradient on the up_ports" );
-            input_gradient.resize(ports_gradient[i+1]->length(), width);
+            input_gradient.resize(ports_gradient[i+1]->length(),
+                                  input_gradient.width());
             input_gradient.subMatColumns(start, width) += *ports_gradient[i+1];
             start += width;
         }
