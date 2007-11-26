@@ -395,7 +395,8 @@ int VMatrix::getFieldIndex(const string& fieldname_or_num) const
             i = -1;
     }
     if (i < 0 || i >= width())
-        PLERROR("In VMatrix::getFieldIndex - Asked for an invalid column number");
+        PLERROR("In VMatrix::getFieldIndex - Asked for an invalid column number: '%s'",
+                fieldname_or_num.c_str()));
     return i;
 }
 
