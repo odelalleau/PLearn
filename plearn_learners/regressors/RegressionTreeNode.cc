@@ -374,7 +374,10 @@ void RegressionTreeNode::computeOutput(const Vec& inputv, Vec& outputv)
             missing_node->computeOutput(inputv, outputv);
         }
         else
+        {
+            tmp_vec.resize(3);
             missing_leave->getOutputAndError(outputv,tmp_vec);
+        }
         return;
     }
     if (inputv[split_col] > split_feature_value)
