@@ -183,12 +183,13 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         for (int i=0;i<up_port_sizes.length();i++)
         {
             int width = up_port_sizes[i];
-            if (ports_gradient[i+1])
-            {
-                PLASSERT_MSG(ports_gradient[i+1]->isEmpty(),"In SplitModule, when the down_port is an input, the up_ports should either be outputs or not connected.\n");
-                input_gradient.resize(ports_gradient[i+1]->length(),width);
-                input_gradient.subMatColumns(start,width) += *ports_value[i+1];
-            }
+            PLASSERT_MSG( ports_gradient[i+1] &&
+                          !ports_gradient[i+1]->isEmpty(),
+                          "In SplitModule::bpropAccUpdate - When the down_port"
+                          " is an input and its gradient is required, one must"
+                          " provide a gradient on the up_ports" );
+            input_gradient.resize(ports_gradient[i+1]->length(), width);
+            input_gradient.subMatColumns(start, width) += *ports_gradient[i+1];
             start += width;
         }
         return;
