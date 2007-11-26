@@ -589,6 +589,8 @@ public:
      *  created).
      */
     TVec<StatsCollector> getStats() const;
+    TVec<StatsCollector> getPrecomputedStatsFromFile(const string filename, const int maxnvalues, bool progress_bar) const;
+
     TVec<PP<StatsCollector> > remote_getStats() const;
 
     StatsCollector& getStats(int fieldnum) const

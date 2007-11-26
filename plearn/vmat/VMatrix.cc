@@ -1372,24 +1372,33 @@ void VMatrix::copyStringMappingsFrom(const VMat& source) {
 TVec<StatsCollector> VMatrix::getStats() const
 {
     if(!field_stats)
-    {
-        PPath metadatadir = getMetaDataDir();
-        PPath statsfile =  metadatadir / "stats.psave";
-        if (isfile(statsfile) && getMtime()<mtime(statsfile))
-        {
-            if(getMtime()==0)
-                PLWARNING("Warning: using a saved stat file (%s) but mtime is 0.\n(cannot be sure file is up to date)",statsfile.absolute().c_str());
-            PLearn::load(statsfile, field_stats);
-        }
-        else
-        {
-            VMat vm = const_cast<VMatrix*>(this);
-            field_stats = PLearn::computeStats(vm, 2000);
-            if(!metadatadir.isEmpty())
-                PLearn::save(statsfile, field_stats);
-        }
-    }
+        field_stats = getPrecomputedStatsFromFile("stats.psave", 2000, false);
     return field_stats;
+}
+
+/////////////////////////
+// getPrecomputedStats //
+/////////////////////////
+TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(const string filename, const int maxnvalues, bool progress_bar) const
+{
+    TVec<StatsCollector> stats;
+    PPath metadatadir = getMetaDataDir();
+    PPath statsfile =  metadatadir + filename;
+    if (isfile(statsfile) && getMtime()<mtime(statsfile))
+    {
+        if(getMtime()==0)
+            PLWARNING("Warning: using a saved stat file (%s) but mtime is 0.\n(cannot be sure file is up to date)",
+                      statsfile.absolute().c_str());
+        PLearn::load(statsfile, stats);
+    }
+    else
+    {
+        VMat vm = const_cast<VMatrix*>(this);
+        stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
+        if(!metadatadir.isEmpty())
+            PLearn::save(statsfile, stats);
+    }
+    return stats;
 }
 
 TVec<PP<StatsCollector> > VMatrix::remote_getStats() const

@@ -172,8 +172,10 @@ void GaussianizeVMatrix::build_()
                 TVec<int>(col, col + the_source->extrasize() - 1, 1));
     col += the_source->extrasize();
 
-    // Compute source statistics.
-    TVec<StatsCollector> stats = PLearn::computeStats(the_source, -1, false);
+    the_source->lockMetaDataDir();
+    TVec<StatsCollector> stats = the_source->
+        getPrecomputedStatsFromFile("stats_gaussianizeVMatrix.psave", -1, true);
+    the_source->unlockMetaDataDir();
 
     // See which dimensions violate the Gaussian assumption and will be
     // actually Gaussianized, and store the corresponding list of values.
