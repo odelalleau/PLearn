@@ -80,18 +80,10 @@ public:
 
   virtual void         getExample(int i, Vec& input, Vec& target, real& weight);
   virtual real         get(int i, int j) const;
-  virtual void         put(int i, int j, real value);
-  virtual void         getSubRow(int i, int j, Vec v) const;
-  virtual void         putSubRow(int i, int j, Vec v);
-  virtual void         appendRow(Vec v);
-  virtual void         insertRow(int i, Vec v);  
-  virtual void         getRow(int i, Vec v) const;
-  virtual void         putRow(int i, Vec v);
   virtual void         getColumn(int i, Vec v) const;
 
 private:
   
-  Vec          train_input;
   TVec<int>    train_var_missing;
   int          source_inputsize;
   Vec          source_input;

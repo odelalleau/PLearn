@@ -129,41 +129,6 @@ real MissingIndicatorVMatrix::get(int i, int j) const
   return source->get(i, source_rel_pos[j]);
 }
 
-void MissingIndicatorVMatrix::put(int i, int j, real value)
-{
-  PLERROR("In MissingIndicatorVMatrix::put not implemented");
-}
-
-void MissingIndicatorVMatrix::getSubRow(int i, int j, Vec v) const
-{  
-  for (int source_col = j; source_col < j + v.length(); source_col++) v[source_col] = get(i, source_col);
-}
-
-void MissingIndicatorVMatrix::putSubRow(int i, int j, Vec v)
-{
-  PLERROR("In MissingIndicatorVMatrix::putSubRow not implemented");
-}
-
-void MissingIndicatorVMatrix::appendRow(Vec v)
-{
-  PLERROR("In MissingIndicatorVMatrix::appendRow not implemented");
-}
-
-void MissingIndicatorVMatrix::insertRow(int i, Vec v)
-{
-  PLERROR("In MissingIndicatorVMatrix::insertRow not implemented");
-}
-
-void MissingIndicatorVMatrix::getRow(int i, Vec v) const
-{  
-  for (int source_col = 0; source_col < width_; source_col++) v[source_col] = get(i, source_col); 
-}
-
-void MissingIndicatorVMatrix::putRow(int i, Vec v)
-{
-  PLERROR("In MissingIndicatorVMatrix::putRow not implemented");
-}
-
 void MissingIndicatorVMatrix::getColumn(int i, Vec v) const
 {
   if (source_rel_pos[i] < 0) source->getColumn(source_rel_pos[i - 1], v);
@@ -184,6 +149,8 @@ void MissingIndicatorVMatrix::build_()
 
 void MissingIndicatorVMatrix::buildNewRecordFormat()
 {
+    source_inputsize = source->inputsize();
+  
     int train_length = train_set->length();
     if (number_of_train_samples_to_use > 0.0)
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
@@ -193,7 +160,6 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
     int train_width = train_set->width();
     int train_inputsize = train_set->inputsize();
     int source_width = source->width();
-    source_inputsize = source->inputsize();
 
     if(train_length < 1) 
       PLERROR("In MissingIndicatorVMatrix::length of the number of train"
@@ -216,7 +182,7 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
       PLERROR("In MissingIndicatorVMatrix::train set and source inputsize"
 	      " must agree, got : %i, %i", train_inputsize, source_inputsize);
 
-    train_input.resize(train_width);
+    Vec train_input(train_width);
     train_var_missing.resize(train_inputsize);
     train_var_missing.clear();
 
