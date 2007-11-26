@@ -165,7 +165,7 @@ class AdaBoostMultiClasses:
         costs=self.computeCostsFromOutput(input,output,target)
         return (output,costs)
 
-    def test(self,testSet,test_stats,return_outputs,return_costs):
+    def test(self,testSet,testMat,test_stats,return_outputs,return_costs):
         testSet1=pl.ProcessingVMatrix(source=testSet,
                                prg = "[%0:%"+str(testSet.inputsize-1)+"] @CLASSE_REEL 1 0 ifelse :CLASSE_REEL")
         testSet2=pl.ProcessingVMatrix(source=testSet,
@@ -182,8 +182,7 @@ class AdaBoostMultiClasses:
         outputs=[]
         costs=[]
         #calculate stats, outputs, costs
-        test_mat=testSet.getMat()
-        for i in range(len(test_mat)):
+        for i in range(len(testMat)):
             out1=testoutputs1[i][0]
             out2=testoutputs2[i][0]
             ind1=int(round(out1))
@@ -199,8 +198,8 @@ class AdaBoostMultiClasses:
             output=[ind,out1,out2]
             if return_outputs:
                 outputs.append(output)
-            input=test_mat[i][:-1]
-            target=test_mat[i][-1]
+            input=testMat[i][:-1]
+            target=testMat[i][-1]
             cost=self.computeCostsFromOutput(input,output,target,
                                              forward_sub_learner_costs=False)
             cost.extend(testcosts1[i])
@@ -220,8 +219,8 @@ class AdaBoostMultiClasses:
             path+="/"
         else:
             print "WARNING: AdaBoost3PLearner - no path for saving the learner, we use the current directory"
-        self.learner1.save(path+"learner1_stage#"+str(self.stage)+".psave",encoding)
-        self.learner2.save(path+"learner2_stage#"+str(self.stage)+".psave",encoding)
+        self.learner1.save(path+"learner1_stage="+str(self.stage)+".psave",encoding)
+        self.learner2.save(path+"learner2_stage="+str(self.stage)+".psave",encoding)
     
     def load_old_learner(self,filepath=None,trainSet1=None,trainSet2=None,stage1=-1,stage2=-1):
         assert(trainSet1 and trainSet2)
