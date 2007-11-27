@@ -102,7 +102,6 @@ void MissingIndicatorVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(source, copies);
   deepCopyField(train_set, copies);
   deepCopyField(number_of_train_samples_to_use, copies);
-  deepCopyField(train_var_missing, copies);
   deepCopyField(source_rel_pos, copies);
   deepCopyField(fields, copies);
 
@@ -117,7 +116,7 @@ void MissingIndicatorVMatrix::getExample(int i, Vec& input, Vec& target, real& w
     {
       input[new_col] = source_input[source_col];
       new_col += 1;
-      if (train_var_missing[source_col] > 0)
+      if (source_rel_pos[source_col] < 0)
       {
           if (is_missing(source_input[source_col])) input[new_col] = 1.0;
           else input[new_col] = 0.0;
@@ -159,7 +158,7 @@ void MissingIndicatorVMatrix::build_()
 void MissingIndicatorVMatrix::buildNewRecordFormat()
 {
     source_inputsize = source->inputsize();
-    train_var_missing.resize(source_inputsize);
+    TVec<int> train_var_missing(source_inputsize);
     train_var_missing.clear();
     int source_width = source->width();
 

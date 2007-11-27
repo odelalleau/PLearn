@@ -86,7 +86,6 @@ public:
 
 private:
   
-  TVec<int>    train_var_missing;
   int          source_inputsize;
   Vec          source_input;
   TVec<int>    source_rel_pos;
