@@ -758,7 +758,7 @@ void VecStatsCollector::append(const VecStatsCollector& vsc,
     }
     else {
         const int n = vsc.stats.size();
-        assert (vsc.fieldnames.size() == n );
+        PLASSERT(vsc.fieldnames.size() == n || n == 0);
         fieldnames.resize(fieldnames.size(), n);
         for (int i=0 ; i<n ; ++i)
             fieldnames.append(fieldname_prefix + vsc.fieldnames[i]);
