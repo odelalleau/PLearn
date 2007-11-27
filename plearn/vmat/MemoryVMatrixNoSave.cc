@@ -52,6 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // MemoryVMatrixNoSave //
 //////////////////
 MemoryVMatrixNoSave::MemoryVMatrixNoSave()
+    : inherited()
 /* ### Initialize all fields to their default value here */
 {
     // ...
