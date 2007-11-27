@@ -173,7 +173,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(int leave_id, int col, TVec<in
 void RegressionTreeRegisters::sortRows()
 {
     next_id = 0;
-    if (tsorted_row.length() == length() && tsorted_row.width() == inputsize())
+    if (tsorted_row.length() == inputsize() && tsorted_row.width() == length())
     {
         verbose("RegressionTreeRegisters: Sorted train set indices are present, no sort required", 3);
         return;
