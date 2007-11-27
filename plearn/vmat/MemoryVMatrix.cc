@@ -86,6 +86,7 @@ MemoryVMatrix::MemoryVMatrix(VMat the_source)
     : inherited(the_source->length(), the_source->width()),
       memory_data(the_source->toMat()),
       synch_data(false),
+      source(the_source),
       deep_copy_memory_data(true)
 
 {
