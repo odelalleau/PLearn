@@ -96,7 +96,8 @@ private:
     Vec sample_costs;
     real sample_weight;
     PP<RegressionTreeNode> node;
-  
+    TVec<int> split_cols;
+
 public:
     RegressionTree();
     virtual              ~RegressionTree();

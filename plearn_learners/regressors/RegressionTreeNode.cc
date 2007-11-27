@@ -327,7 +327,7 @@ int RegressionTreeNode::expandNode()
     right_node->verbosity=verbosity;
     right_node->initNode(train_set, right_leave, leave_template);
     right_node->lookForBestSplit();
-    return +1;
+    return split_col;
 }
 
 int RegressionTreeNode::getSplitBalance()
