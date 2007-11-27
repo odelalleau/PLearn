@@ -85,6 +85,9 @@ void MissingIndicatorVMatrix::declareOptions(OptionList &ol)
                 "The number of samples from the train set that will be examined to see\n"
                 "if an indicator should be added for each variable\n");
 
+  declareOption(ol, "fields", &MissingIndicatorVMatrix::fields, OptionBase::buildoption,
+		"The names of the fields to extract if the train_set is not provided.");
+
   inherited::declareOptions(ol);
 }
 
@@ -99,6 +102,10 @@ void MissingIndicatorVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
   deepCopyField(source, copies);
   deepCopyField(train_set, copies);
   deepCopyField(number_of_train_samples_to_use, copies);
+  deepCopyField(train_var_missing, copies);
+  deepCopyField(source_rel_pos, copies);
+  deepCopyField(fields, copies);
+
   inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -143,88 +150,106 @@ void MissingIndicatorVMatrix::getColumn(int i, Vec v) const
 
 void MissingIndicatorVMatrix::build_()
 {
-    if (!train_set || !source) PLERROR("In MissingIndicatorVMatrix::train set and source vmat must be supplied");
+    if (!source) PLERROR("In MissingIndicatorVMatrix:: source vmat must be supplied");
+    if(!train_set && !fields)
+      PLERROR("In MissingIndicatorVMatrix:: train_set or fields must be supplied");
     buildNewRecordFormat(); 
 }
 
 void MissingIndicatorVMatrix::buildNewRecordFormat()
 {
     source_inputsize = source->inputsize();
-  
-    int train_length = train_set->length();
-    if (number_of_train_samples_to_use > 0.0)
-        if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
-        else train_length = (int) number_of_train_samples_to_use;
-    if (train_length > train_set->length()) train_length = train_set->length();
-
-    int train_width = train_set->width();
-    int train_inputsize = train_set->inputsize();
+    train_var_missing.resize(source_inputsize);
+    train_var_missing.clear();
     int source_width = source->width();
 
-    if(train_length < 1) 
-      PLERROR("In MissingIndicatorVMatrix::length of the number of train"
-	      " samples to use must be at least 1, got: %i", train_length);
-    if(train_inputsize < 1) 
-      PLERROR("In MissingIndicatorVMatrix::inputsize of the train vmat must"
-	      " be supplied, got : %i", train_inputsize);
-    if (train_width != source_width) 
-      PLERROR("In MissingIndicatorVMatrix::train set and source width must"
-	      " agree, got : %i, %i", train_width, source_width);
-    if (train_set->targetsize() != source->targetsize())
-      PLERROR("In MissingIndicatorVMatrix::train set and source targetsize"
-	      " must agree, got : %i, %i", train_set->targetsize(),
-	      source->targetsize());
-    if (train_set->weightsize() != source->weightsize()) 
-      PLERROR("In MissingIndicatorVMatrix::train set and source weightsize"
-	      " must agree, got : %i, %i", train_set->weightsize(),
-	      source->weightsize());
-    if (train_inputsize != source_inputsize)
-      PLERROR("In MissingIndicatorVMatrix::train set and source inputsize"
-	      " must agree, got : %i, %i", train_inputsize, source_inputsize);
+    if(train_set){
+      int train_length = train_set->length();
+      if (number_of_train_samples_to_use > 0.0)
+        if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
+        else train_length = (int) number_of_train_samples_to_use;
+      if (train_length > train_set->length()) train_length = train_set->length();
 
-    Vec train_input(train_width);
-    train_var_missing.resize(train_inputsize);
-    train_var_missing.clear();
+      int train_width = train_set->width();
+      int train_inputsize = train_set->inputsize();
 
-    for (int train_row = 0; train_row < train_length; train_row++)
-    {
-         train_set->getRow(train_row, train_input);
-         for (int train_col = 0; train_col < train_inputsize; train_col++)
-         {
-             if (is_missing(train_input[train_col])) train_var_missing[train_col] = 1;
-         }
-    }
+      if(train_length < 1) 
+	PLERROR("In MissingIndicatorVMatrix::length of the number of train"
+		" samples to use must be at least 1, got: %i", train_length);
+      if(train_inputsize < 1) 
+	PLERROR("In MissingIndicatorVMatrix::inputsize of the train vmat must"
+		" be supplied, got : %i", train_inputsize);
+      if (train_width != source_width) 
+	PLERROR("In MissingIndicatorVMatrix::train set and source width must"
+		" agree, got : %i, %i", train_width, source_width);
+      if (train_set->targetsize() != source->targetsize())
+	PLERROR("In MissingIndicatorVMatrix::train set and source targetsize"
+		" must agree, got : %i, %i", train_set->targetsize(),
+		source->targetsize());
+      if (train_set->weightsize() != source->weightsize()) 
+	PLERROR("In MissingIndicatorVMatrix::train set and source weightsize"
+		" must agree, got : %i, %i", train_set->weightsize(),
+		source->weightsize());
+      if (train_inputsize != source_inputsize)
+	PLERROR("In MissingIndicatorVMatrix::train set and source inputsize"
+		" must agree, got : %i, %i", train_inputsize, source_inputsize);
+
+      Vec train_input(train_width);
+
+      for (int train_row = 0; train_row < train_length; train_row++)
+	{
+	  train_set->getRow(train_row, train_input);
+	  for (int train_col = 0; train_col < train_inputsize; train_col++)
+	    {
+	      if (is_missing(train_input[train_col])) 
+		train_var_missing[train_col] = 1;
+	    }
+	}
+    }else if(fields.size()>0){
+      TVec<string> source_field_names = source->fieldNames();
+      for(int i=0;i<fields.size();i++)
+	{
+	  int index=source->getFieldIndex(fields[i]);
+	  if(index<0)
+	    PLERROR("In MissingIndicatorVMatrix::buildNewRecordFormat() - The fields '%s' is not in the source",
+		    fields[i].c_str());
+	  else
+	    train_var_missing[index]=1;
+ 	}
+      
+    }else
+       PLERROR("In MissingIndicatorVMatrix, the train_set or fields option should be provided.");
 
     int added_colomns = sum(train_var_missing);
-    width_ = train_width + added_colomns;
+    width_ = source_width + added_colomns;
 
-    TVec<string> train_field_names(train_width);
+    TVec<string> source_field_names(source_width);
     source_rel_pos.resize(width_);
     TVec<string> new_field_names(width_);
-    train_field_names = train_set->fieldNames();
+    source_field_names = source->fieldNames();
     int new_col = 0;
-    for (int train_col = 0; train_col < train_inputsize; train_col++)
+    for (int source_col = 0; source_col < source_inputsize; source_col++)
     {
-      new_field_names[new_col] = train_field_names[train_col];
-      source_rel_pos[new_col] = train_col;
+      new_field_names[new_col] = source_field_names[source_col];
+      source_rel_pos[new_col] = source_col;
       new_col += 1;
-      if (train_var_missing[train_col] > 0)
+      if (train_var_missing[source_col] > 0)
       {
-          new_field_names[new_col] = train_field_names[train_col] + "_MI";
+          new_field_names[new_col] = source_field_names[source_col] + "_MI";
           source_rel_pos[new_col] = -1;
           new_col += 1;
       }
     }
-    for (int train_col = train_inputsize; train_col < train_width; train_col++)
+    for (int source_col = source_inputsize; source_col < source_width; source_col++)
     {
-      new_field_names[new_col] = train_field_names[train_col];
-      source_rel_pos[new_col] = train_col;
+      new_field_names[new_col] = source_field_names[source_col];
+      source_rel_pos[new_col] = source_col;
       new_col += 1;
     }
     length_ = source->length();
-    inputsize_ = train_inputsize + added_colomns;
+    inputsize_ = source_inputsize + added_colomns;
     targetsize_ = source->targetsize();
-    weightsize_ = train_set->weightsize();
+    weightsize_ = source->weightsize();
     source_input.resize(source_inputsize);
     declareFieldNames(new_field_names);
 }

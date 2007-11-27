@@ -67,7 +67,9 @@ public:
   //! The number of samples from the train set that will be examined to see
   //! if an indicator should be added for each variable.
   real         number_of_train_samples_to_use;
-  
+
+  //!
+  TVec<string> fields; 
 
                         MissingIndicatorVMatrix();
                         MissingIndicatorVMatrix(VMat the_source, VMat the_train_set, real the_number_of_train_samples_to_use);
