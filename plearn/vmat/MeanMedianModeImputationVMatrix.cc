@@ -217,8 +217,8 @@ void MeanMedianModeImputationVMatrix::build_()
       if(variable_imputation_instruction[i]==0)
 	no_instruction.append(train_field_names[i]);
     if(no_instruction.size()>0)
-      PLWARNING("In MeanMedianModeImputationVMatrix::build_() In the source VMatrix some fields do not have instruction: '%s'.",
-		tostring(no_instruction).c_str());
+      PLWARNING("In MeanMedianModeImputationVMatrix::build_() In the source VMatrix their is %d field(s) that do not have instruction: '%s'.",
+		no_instruction.size(),tostring(no_instruction).c_str());
     PPath train_metadata = train_set->getMetaDataDir();
     PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     train_set->lockMetaDataDir();
