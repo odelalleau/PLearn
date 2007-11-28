@@ -9,20 +9,27 @@
 #   <template_mat> : a matrix file readable by 'plearn vmat fields', whose fields names
 #                    will be copied into the .amat field names
 #   <parameter_i>  : the name of the i-th parameter to be reported in the results
+#   <performance_i> : the name of the i-th statistics to be reported in the results
 #
 # Output: two files (.vmat and .amat), used respectively to visualize and store the results of
 #         the experiments (using the appendresults script)
 
 if [ "$2" = "" ]; then
-  echo "Usage: makeresults <matrix_name> <template_mat> <parameter_1> ... <parameter_N>"
+  echo "Usage:"
+  echo "     $0 <matrix_name> <template_mat> <parameter_1> ... <parameter_N>"
+  echo "OR   $0 <matrix_name> <parameter_1> ... <parameter_N> <performance_1> ... <performance_M>"
   exit 127
 fi
 
 MATNAME="$1"
 shift
 
+# Wait until nobody else is messing with the output file.
+lockfile $MATNAME.amat.lock
+
 # Don't do anything if files already exist.
 if [ -f $MATNAME.amat ] && [ -f $MATNAME.vmat ]; then
+  rm -f $MATNAME.amat.lock
   exit 0
 fi
 
@@ -31,11 +38,9 @@ if [ -f $MATNAME.amat ] || [ -f $MATNAME.vmat ]; then
   echo "In makeresults script: one of the following files already exist:"
   echo "  $MATNAME.amat, or"
   echo "  $MATNAME.vmat"
+  rm -f $MATNAME.amat.lock
   exit 127
 fi
-
-TEMPLATEMAT="$1"
-shift
 
 # Make the .vmat.
 echo "# Wrapper to visualize the results stored in $MATNAME.amat." > $MATNAME.vmat
@@ -47,16 +52,39 @@ echo "    # Add here the columns you want to get sorted." >> $MATNAME.vmat
 echo "  ]" >> $MATNAME.vmat
 echo ")" >> $MATNAME.vmat
 
+
+TEMPLATEMAT="$1"
+if [ -f $TEMPLATEMAT ];then
+   if [ ! -r $TEMPLATEMAT ];then
+       echo "ERROR: file "$TEMPLATEMAT" exists but cannot be read!"
+       rm -f $MATNAME.amat.lock
+       exit 69
+   fi
+   shift
+fi
+
 # Make the .amat.
 echo "# Data collected from PLearn experiments, to be visualized through $MATNAME.vmat." > $MATNAME.amat
 echo "# Fieldnames:" >> $MATNAME.amat
 echo -n "#: " >> $MATNAME.amat
-for PARAM in $@; do
-  echo -n "$PARAM " >> $MATNAME.amat
-done
 
-# Now uses the template matrix to complete the field names.
-plearn vmat fields $TEMPLATEMAT name_only transpose >> $MATNAME.amat
+# Write the parameters and statistics names
+if [ -f $TEMPLATEMAT ];then
+    for PARAM in $@; do
+        echo -n "$PARAM " >> $MATNAME.amat
+    done
+    # Now uses the template matrix to complete the field names.
+    plearn vmat fields $TEMPLATEMAT name_only transpose >> $MATNAME.amat
+else
+    for PARAM in $@; do
+        echo -n "$PARAM " >> $MATNAME.amat
+    done
+    echo >> $MATNAME.amat
+fi
+
+# Release the lock
+rm -f $MATNAME.amat.lock
+
 
 # Display exit message.
 echo "Files $MATNAME.vmat and $MATNAME.amat successfully created"

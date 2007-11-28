@@ -5,14 +5,25 @@
 #   appendresults ${dir} results.amat ${param_1} ${param_2} ... ${param_n}
 
 if [ "$3" = "" ]; then
-  echo Usage: $0 dir output param_1 ... param_n
-  echo See code for more info.
+  echo "Usage:"
+  echo "     $0 dir output param_1 ... param_n"
+  echo "OR   $0 output param_1 ... param_n perf_1 ... perf_m"
+  echo "See code for more info."
   exit 127
 fi
 DIR="$1"
-OUTPUT="$2"
 shift
-shift
+if [ -d $DIR ];then
+    OUTPUT="$1"
+    shift
+else
+    OUTPUT=$DIR
+fi
+if [ ! -f $OUTPUT ];then
+    echo "$OUTPUT is not a file!"
+    exit 69
+fi
+
 PARAMS="$1 "
 shift
 for PARAM in $@; do
@@ -22,8 +33,12 @@ done
 # Wait until nobody else is messing with the output file.
 lockfile $OUTPUT.lock
 
-echo -n "$PARAMS" >> $OUTPUT
-plearn vmat cat $DIR/global_stats.pmat "rowindex 1 ==" >> $OUTPUT
+if [ -d $DIR ];then
+    echo -n "$PARAMS" >> $OUTPUT
+    plearn vmat cat $DIR/global_stats.pmat "rowindex 1 ==" >> $OUTPUT
+else
+    echo "$PARAMS" >> $OUTPUT
+fi
 
 # Release the lock
 rm -f $OUTPUT.lock
