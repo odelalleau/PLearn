@@ -42,7 +42,7 @@
  ******************************************************* */
 
 
-/*! \file Option.h */
+/*! \file OptionBase.h */
 
 #ifndef OptionBase_INC
 #define OptionBase_INC
