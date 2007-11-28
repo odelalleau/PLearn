@@ -40,7 +40,6 @@
  ******************************************************************** */
 
 
-/*! \file VMat.h */
 
 #ifndef VariableDeletionVMatrix_INC
 #define VariableDeletionVMatrix_INC

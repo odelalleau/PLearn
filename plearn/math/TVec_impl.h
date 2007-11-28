@@ -43,7 +43,6 @@
  ******************************************************* */
 
 
-/*! \file TMat_impl.h */
 
 #ifndef TVec_impl_INC
 #define TVec_impl_INC
