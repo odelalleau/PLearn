@@ -560,8 +560,7 @@ void NatGradSMPNNet::build_()
             neuron_gradients.subMatColumns(k,layer_sizes[i]);
     }
     example_weights.resize(minibatch_size);
-    TVec<string> train_cost_names = getTrainCostNames() ;
-    train_costs.resize(minibatch_size,train_cost_names.length()-2 );
+    train_costs.resize(minibatch_size, nTestCosts());
 
     Profiler::activate();
 
@@ -763,15 +762,13 @@ void NatGradSMPNNet::train()
 
     Profiler::reset("training");
     Profiler::start("training");
-    Profiler::pl_profile_start("Totaltraining");
+    //Profiler::pl_profile_start("Totaltraining");
     if( report_progress && stage < nstages )
         pb = new ProgressBar( "Training "+classname(),
                               nstages - stage );
 
-    Vec costs_plus_time(train_costs.width()+2);
-    costs_plus_time[train_costs.width()] = MISSING_VALUE;
-    costs_plus_time[train_costs.width()+1] = MISSING_VALUE;
-    Vec costs = costs_plus_time.subVec(0,train_costs.width());
+    Vec costs_plus_time(nTrainCosts(), MISSING_VALUE);
+    Vec costs = costs_plus_time.subVec(0, train_costs.width());
     int nsamples = train_set->length();
 
     // Obtain the number of CPUs we want to use.
@@ -873,8 +870,11 @@ void NatGradSMPNNet::train()
     if (iam == 0) {
         //tmp_log << "Starting loop" << endl;
         //tmp_log.flush();
+        Profiler::reset("big_loop");
+        Profiler::start("big_loop");
     }
 
+    //pout << "CPU " << iam << ": my_stage_incr = " << my_stage_incr << endl;
     for(int i = 0; i < my_stage_incr; i++)
     {
         int sample = start + i % my_n_samples;
@@ -991,9 +991,11 @@ void NatGradSMPNNet::train()
         */
     }
 
+
     if (iam == 0) {
         //tmp_log << "Loop ended" << endl;
         //tmp_log.flush();
+        Profiler::end("big_loop");
     }
 
     if (!wait_for_final_update) {
@@ -1018,8 +1020,8 @@ void NatGradSMPNNet::train()
         }
     }
 
-    Profiler::reset("Synchronization");
-    Profiler::start("Synchronization");
+    //Profiler::reset("Synchronization");
+    //Profiler::start("Synchronization");
 
     //tmp_log << "Synchronization" << endl;
     //tmp_log.flush();
@@ -1083,7 +1085,7 @@ void NatGradSMPNNet::train()
 
     //tmp_log << "Synchronized" << endl;
     //tmp_log.flush();
-    Profiler::end("Synchronization");
+    //Profiler::end("Synchronization");
     /*
     const Profiler::Stats& synch_stats = Profiler::getStats("Synchronization");
     real synch_time = (synch_stats.user_duration + synch_stats.system_duration)
@@ -1114,16 +1116,22 @@ void NatGradSMPNNet::train()
                 "stage: %d)", stage, cur_stage);
 
     Profiler::end("training");
-    Profiler::pl_profile_end("Totaltraining");
+    //Profiler::pl_profile_end("Totaltraining");
+    /*
     if (verbosity>0)
         Profiler::report(cout);
+        */
     const Profiler::Stats& stats = Profiler::getStats("training");
+    const Profiler::Stats& big_loop_stats = Profiler::getStats("big_loop");
     costs.fill(MISSING_VALUE);
     real ticksPerSec = Profiler::ticksPerSecond();
     real cpu_time = (stats.user_duration+stats.system_duration)/ticksPerSec;
     cumulative_training_time += cpu_time;
     costs_plus_time[train_costs.width()] = cpu_time;
     costs_plus_time[train_costs.width()+1] = cumulative_training_time;
+    costs_plus_time[train_costs.width()+2] =
+        (big_loop_stats.user_duration + big_loop_stats.system_duration) /
+        ticksPerSec;
     train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
 
@@ -1218,17 +1226,13 @@ void NatGradSMPNNet::onlineStep(int cur_stage, const Mat& targets,
 //alternate
             PLERROR("No, I just want stochastic gradient!");
             if( params_natgrad_per_input_template && i==1 ){ // parameters are transposed
-                Profiler::pl_profile_start("ProducScaleAccOnlineStep");
                 productScaleAcc(layer_params_gradient[i-1],
                             neuron_extended_outputs_per_layer[i-1], true,
                             next_neurons_gradient, false, 
                             1, 0);
-                Profiler::pl_profile_end("ProducScaleAccOnlineStep");
             }else{
-                Profiler::pl_profile_start("ProducScaleAccOnlineStep");
                 productScaleAcc(layer_params_gradient[i-1],next_neurons_gradient,true,
                             neuron_extended_outputs_per_layer[i-1],false,1,0);
-                Profiler::pl_profile_end("ProducScaleAccOnlineStep");
             }
             layer_params_gradient[i-1] *= 1.0/minibatch_size; // use the MEAN gradient
         } else {// just regular stochastic gradient
@@ -1372,11 +1376,11 @@ void NatGradSMPNNet::computeOutput(const Vec& input, Vec& output) const
     out_log_file << "Starting to compute output on " << input << endl;
     out_log_file.flush();
     */
-    Profiler::pl_profile_start("computeOutput");
+    //Profiler::pl_profile_start("computeOutput");
     neuron_outputs_per_layer[0](0) << input;
     fpropNet(1,false);
     output << neuron_outputs_per_layer[n_layers-1](0);
-    Profiler::pl_profile_end("computeOutput");
+    //Profiler::pl_profile_end("computeOutput");
     /*
     out_log_file << "Output computed" << endl;
     out_log_file.flush();
@@ -1405,31 +1409,15 @@ void NatGradSMPNNet::fpropNet(int n_examples, bool during_training) const
 
         // try to use BLAS for the expensive operation
         if (self_adjusted_scaling_and_bias && i+1<n_layers-1){
-            if (during_training)
-                Profiler::pl_profile_start("ProducScaleAccFpropTrain");
-            else
-                Profiler::pl_profile_start("ProducScaleAccFpropNoTrain");
             productScaleAcc(next_layer, prev_layer, false, 
                             (during_training || params_averaging_coeff==1.0)?
                             weights[i]:mweights[i], 
                             tw, 1, 0);
-            if (during_training)
-                Profiler::pl_profile_end("ProducScaleAccFpropTrain");
-            else
-                Profiler::pl_profile_end("ProducScaleAcccFpropNoTrain");
         }else{
-            if (during_training)
-                Profiler::pl_profile_start("ProducScaleAccFpropTrain");
-            else
-                Profiler::pl_profile_start("ProducScaleAcccFpropNoTrain");
             productScaleAcc(next_layer, prev_layer, false, 
                             (during_training || params_averaging_coeff==1.0)?
                             layer_params[i]:layer_mparams[i], 
                             tw, 1, 0);
-            if (during_training)
-                Profiler::pl_profile_end("ProducScaleAccFpropTrain");
-            else
-                Profiler::pl_profile_end("ProducScaleAcccFpropNoTrain");
         }
         // compute layer's output non-linearity
         if (i+1<n_layers-1)
@@ -1467,32 +1455,24 @@ void NatGradSMPNNet::fpropNet(int n_examples, bool during_training) const
                                 *v *= rescale_factor*rescale_factor;
                             }
                         }
-                        Profiler::pl_profile_start("activation function");
                         *a = tanh((*a + *b) * *s);
-                        Profiler::pl_profile_end("activation function");
                     }
                 }
                 else{
-                    Profiler::pl_profile_start("activation function");
                     compute_tanh(L,L);
-                    Profiler::pl_profile_end("activation function");
                 }
             }
         else if (output_type=="NLL")
             for (int k=0;k<n_examples;k++)
             {
                 Vec L=next_layer(k);
-                Profiler::pl_profile_start("activation function");
                 log_softmax(L,L);
-                Profiler::pl_profile_end("activation function");
             }
         else if (output_type=="cross_entropy")  {
             for (int k=0;k<n_examples;k++)
             {
                 Vec L=next_layer(k);
-                Profiler::pl_profile_start("activation function");
                 log_sigmoid(L,L);
-                Profiler::pl_profile_end("activation function");
             }
          }
     }
@@ -1595,6 +1575,7 @@ TVec<string> NatGradSMPNNet::getTrainCostNames() const
     TVec<string> costs = getTestCostNames();
     costs.append("train_seconds");
     costs.append("cum_train_seconds");
+    costs.append("big_loop_seconds");
     return costs;
 }
 
