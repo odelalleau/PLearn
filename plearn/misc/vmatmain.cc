@@ -203,7 +203,7 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
                 vmats[0]->printFields(pout);
             else
             {
-                varnum = toint(command[0]);
+                varnum = vmats[0]->getFieldIndex(command[0]);
                 if(varnum<0 || varnum>=w)
                     vmats[0]->printFields(pout);
                 else if(command.size()==3)
