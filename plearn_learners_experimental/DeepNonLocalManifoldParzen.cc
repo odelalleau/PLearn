@@ -252,7 +252,6 @@ void DeepNonLocalManifoldParzen::build_()
         if( k_neighbors <= 0 )
             PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
                     "k_neighbors should be > 0.\n");
-        test_nearest_neighbors_indices.resize(k_neighbors);
 
         if( weightsize_ > 0 )
             PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
@@ -400,8 +399,6 @@ void DeepNonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    PLERROR("NOT IMPLEMENTED YET!");
-
     // deepCopyField(, copies);
 
     // Public options
@@ -409,37 +406,53 @@ void DeepNonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(layers, copies);
     deepCopyField(connections, copies);
     deepCopyField(reconstruction_connections, copies);
-    deepCopyField(unsupervised_layers, copies);
-    deepCopyField(unsupervised_connections, copies);
 
     // Protected options
     deepCopyField(activations, copies);
     deepCopyField(expectations, copies);
     deepCopyField(activation_gradients, copies);
     deepCopyField(expectation_gradients, copies);
-    deepCopyField(greedy_activation, copies);
-    deepCopyField(greedy_expectation, copies);
-    deepCopyField(greedy_activation_gradient, copies);
-    deepCopyField(greedy_expectation_gradient, copies);
     deepCopyField(reconstruction_activations, copies);
     deepCopyField(reconstruction_activation_gradients, copies);
     deepCopyField(reconstruction_expectation_gradients, copies);
     deepCopyField(output_connections, copies);
     deepCopyField(input_representation, copies);
     deepCopyField(previous_input_representation, copies);
-    deepCopyField(dissimilar_gradient_contribution, copies);
+    deepCopyField(all_outputs, copies);
+    deepCopyField(all_outputs_gradient, copies);
+    deepCopyField(F, copies);
+    deepCopyField(F_copy, copies);
+    deepCopyField(mu, copies);
+    deepCopyField(pre_sigma_noise, copies);
+    deepCopyField(Ut, copies);
+    deepCopyField(U, copies);
+    deepCopyField(V, copies);
+    deepCopyField(z, copies);
+    deepCopyField(invSigma_F, copies);
+    deepCopyField(invSigma_z, copies);
+    deepCopyField(temp_ncomp, copies);
+    deepCopyField(diff_neighbor_input, copies);
+    deepCopyField(sm_svd, copies);
+    deepCopyField(sn, copies);
+    deepCopyField(S, copies);
+    deepCopyField(uk, copies);
+    deepCopyField(fk, copies);
+    deepCopyField(uk2, copies);
+    deepCopyField(inv_sigma_zj, copies);
+    deepCopyField(zj, copies);
+    deepCopyField(inv_sigma_fk, copies);
+    deepCopyField(diff, copies);
     deepCopyField(pos_down_val, copies);
     deepCopyField(pos_up_val, copies);
     deepCopyField(neg_down_val, copies);
     deepCopyField(neg_up_val, copies);
+    deepCopyField(eigenvectors, copies);
+    deepCopyField(eigenvalues, copies);
+    deepCopyField(sigma_noises, copies);
+    deepCopyField(mus, copies);
     deepCopyField(class_datasets, copies);
-    deepCopyField(other_classes_proportions, copies);
     deepCopyField(nearest_neighbors_indices, copies);
-    deepCopyField(test_nearest_neighbors_indices, copies);
     deepCopyField(test_votes, copies);
-    deepCopyField(train_set_representations, copies);
-    deepCopyField(train_set_representations_vmat, copies);
-    deepCopyField(train_set_targets, copies);
     deepCopyField(greedy_stages, copies);
 }
 
@@ -758,65 +771,80 @@ void DeepNonLocalManifoldParzen::greedyStep(
     }
 }
 
-void DeepNonLocalManifoldParzen::fineTuningStep( 
-    const Vec& input, const Vec& target,
-    Vec& train_costs, Mat nearest_neighbors )
+void DeepNonLocalManifoldParzen::computeManifoldParzenParameters( 
+    const Vec& input, Mat& F, Vec& mu, 
+    Vec& pre_sigma_noise, Mat& U, Vec& sm_svd) const
 {
-    manifold_parzen_parameters_are_up_to_date = false;
-
     // Get example representation
-
     computeRepresentation(input, input_representation, 
                           n_layers-1);
 
-    F = all_outputs.subVec(0,n_components * inputsize()).toMat(
-        n_components, inputsize());
-    F_copy.resize(F.length(), F.width());
-    mu = all_outputs.subVec(n_components * inputsize(),inputsize());
-    pre_sigma_noise = all_outputs.subVec( n_components * (inputsize() + 1), 1 );
-
+    // Get parameters
     output_connections->fprop( input_representation, all_outputs );
-    real sigma_noise = square(sigma_noise, 2) + min_sigma_noise;
+
+    F.resize(n_components, inputsize());
+    mu.resize(inputsize());
+    pre_sigma_noise.resize(1);
+
+    F << all_outputs.subVec(0,n_components * inputsize()).toMat(
+        n_components, inputsize());
+    mu << all_outputs.subVec(n_components * inputsize(),inputsize());
+    pre_sigma_noise << all_outputs.subVec( n_components * (inputsize() + 1), 1 );
 
     F_copy.resize(F.length(),F.width());
     sm_svd.resize(n_components);
     // N.B. this is the SVD of F'
     F_copy << F;
     lapackSVD(F_copy, Ut, S, V,'A',1.5);
-    for (int k=0;k<ncomponents;k++)
+    U.resize(n_components,inputsize());
+    for (int k=0;k<n_components;k++)
     {
         sm_svd[k] = mypow(S[k],2);
         U(k) << Ut(k);
     }
+}
+
+
+void DeepNonLocalManifoldParzen::fineTuningStep( 
+    const Vec& input, const Vec& target,
+    Vec& train_costs, Mat nearest_neighbors )
+{
+    manifold_parzen_parameters_are_up_to_date = false;
+
+    computeManifoldParzenParameters( input, F, mu, pre_sigma_noise, U, sm_svd );
+
+    real sigma_noise = square(pre_sigma_noise[0], 2) + min_sigma_noise;
 
     real mahal = 0;
     real norm_term = 0;
     real dotp = 0;
     real coef = 0;
+    real n = inputsize();
+    inv_Sigma_z.resize(inputsize());
     inv_Sigma_z.clear();
     real tr_inv_Sigma = 0;
     train_costs.last() = 0;
-    for(int j=0; j<nneighbors;j++)
+    for(int j=0; j<k_neighbors;j++)
     {
         zj = z(j);
-        substract(neighbors(j),input,diff_neighbor_input); 
+        substract(nearest_neighbors(j),input,diff_neighbor_input); 
         substract(diff_neighbor_input,mu,zj); 
       
-        mahal = -0.5*pownorm(zj)/sn[0];      
-        norm_term = - n/2.0 * Log2Pi - 0.5*(n-ncomponents)*pl_log(sn[0]);
+        mahal = -0.5*pownorm(zj)/sigma_noise;      
+        norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*pl_log(sigma_noise);
 
         inv_sigma_zj = inv_Sigma_z(j);
         inv_sigma_zj << zj; 
-        inv_sigma_zj /= sn[0];
+        inv_sigma_zj /= sigma_noise;
 
         if(j==0)
-            tr_inv_Sigma = n/sn[0];
+            tr_inv_Sigma = n/sigma_noise;
 
-        for(int k=0; k<ncomponents; k++)
+        for(int k=0; k<n_components; k++)
         { 
             uk = U(k);
             dotp = dot(zj,uk);
-            coef = (1.0/(sm_svd[k]+sn[0]) - 1.0/sn[0]);
+            coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
             multiplyAcc(inv_sigma_zj,uk,dotp*coef);
             mahal -= square(dotp)*0.5*coef;
             norm_term -= 0.5*pl_log(sm_svd[k]);
@@ -829,24 +857,26 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
 
     train_costs.last() / k_neighbors;
 
+    inv_Sigma_F.resize( n_components, inputsize() );
     inv_Sigma_F.clear();
-    for(int k=0; k<ncomponents; k++)
+    for(int k=0; k<n_components; k++)
     { 
         fk = F(k);
         inv_sigma_fk = inv_Sigma_F(k);
         inv_sigma_fk << fk;
-        inv_sigma_fk /= sn[0];
-        for(int k2=0; k2<ncomponents;k2++)
+        inv_sigma_fk /= sigma_noise;
+        for(int k2=0; k2<n_components;k2++)
         {
             uk2 = U(k2);
             multiplyAcc(inv_sigma_fk,uk2,
-                        (1.0/(sm_svd[k2]+sn[0]) - 1.0/sn[0])*dot(fk,uk2));
+                        (1.0/(sm_svd[k2]+sigma_noise) - 1.0/sigma_noise)*
+                        dot(fk,uk2));
         }
     }
 
     all_outputs_gradient.clear();
     real coef = 1/train_set->length();
-    for(int neighbor=0; neighbor<nneighbors; neighbor++)
+    for(int neighbor=0; neighbor<k_neighbors; neighbor++)
     {
         // dNLL/dF
         product(temp_ncomp,F,inv_Sigma_z(neighbor));
@@ -935,24 +965,106 @@ void DeepNonLocalManifoldParzen::computeRepresentation(const Vec& input,
 
 void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) const
 {
-    updateTrainSetRepresentations();
-
-    // Penser aux variables
-    // - ..._are_up_to_date
-    // - save_manifold_parzen...
-
-    computeRepresentation(input,input_representation, 
-                          min(currently_trained_layer,n_layers-1));
-
-    computeNearestNeighbors(train_set_representations_vmat,input_representation,
-                            test_nearest_neighbors_indices);
-
+    test_votes.resize(n_classes);
     test_votes.clear();
-    for(int i=0; i<test_nearest_neighbors_indices.length(); i++)
-        test_votes[train_set_targets[test_nearest_neighbors_indices[i]]]++;
+
+    // Variables for probability computations
+    real log_p_x_g_y = 0;
+    real mahal = 0;
+    real norm_term = 0;
+    real n = inputsize();
+    real dotp = 0;
+    real coef = 0;
+    real sigma_noise = 0;
+    
+    Vec input_j(inputsize());
+    Vec target(targetsize());
+    real weight;
+
+    if( save_manifold_parzen_parameters )
+    {
+        updateManifoldParzenParameters();
+
+        int input_j_index;
+        for( int i=0; i<n_classes; i++ )
+        {
+            for( int j=0; j<class_datasets[i]->length(); j++ )
+            {
+                class_datasets[i]->getExample(input_j,target,weight);
+
+                input_j_index = class_datasets[i]->indices[j];
+                U << eigenvectors[input_j_index];
+                sm_svd << eigenvalues[input_j_index];
+                sigma_noise = sigma_noises[input_j_index];
+                mu << mus[input_j_index];
+
+                substract(input,input_j,diff_neighbor_input); 
+                substract(diff_neighbor_input,mu,diff); 
+                    
+                mahal = -0.5*pownorm(diff)/sigma_noise;      
+                norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
+                    pl_log(sigma_noise);
+
+                for(int k=0; k<n_components; k++)
+                { 
+                    uk = U(k);
+                    dotp = dot(diff,uk);
+                    coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
+                    mahal -= square(dotp)*0.5*coef;
+                    norm_term -= 0.5*pl_log(sm_svd[k]);
+                }
+                
+                if( j==0 )
+                    log_p_x_g_y = norm_term + mahal;
+                else
+                    log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
+            }
+
+            test_votes[i] = log_p_x_g_y;
+        }
+    }
+    else
+    {
+
+        for( int i=0; i<n_classes; i++ )
+        {
+            for( int j=0; j<class_datasets[i]->length(); j++ )
+            {
+                class_datasets[i]->getExample(input_j,target,weight);
+
+                computeManifoldParzenParameters( input_j, F, mu, 
+                                                 pre_sigma_noise, U, sm_svd );
+                
+                sigma_noise = square(pre_sigma_noise[0], 2) + min_sigma_noise;
+                
+                substract(input,input_j,diff_neighbor_input); 
+                substract(diff_neighbor_input,mu,diff); 
+                    
+                mahal = -0.5*pownorm(diff)/sigma_noise;      
+                norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
+                    pl_log(sigma_noise);
+
+                for(int k=0; k<n_components; k++)
+                { 
+                    uk = U(k);
+                    dotp = dot(diff,uk);
+                    coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
+                    mahal -= square(dotp)*0.5*coef;
+                    norm_term -= 0.5*pl_log(sm_svd[k]);
+                }
+                
+                if( j==0 )
+                    log_p_x_g_y = norm_term + mahal;
+                else
+                    log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
+            }
+
+            test_votes[i] = log_p_x_g_y;
+        }
+    }
+
 
     output[0] = argmax(test_votes);
-
 }
 
 void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const Vec& output,
@@ -999,30 +1111,37 @@ void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const
 //////////
 // test //
 //////////
-void DeepNonLocalManifoldParzen::updateTrainSetRepresentations() const
+void DeepNonLocalManifoldParzen::updateManifoldParzenParameters() const
 {
-    if(!train_set_representations_up_to_date)
+    if(!manifold_parzen_parameters_are_up_to_date)
     {
-        // Precompute training set examples' representation
-        int l = min(currently_trained_layer,n_layers-1);
+        // Precompute manifold parzen parameters
         Vec input( inputsize() );
         Vec target( targetsize() );
-        Vec train_set_representation;
         real weight;
 
-        train_set_representations.resize(train_set->length(), layers[l]->size);
-        train_set_targets.resize(train_set->length());
-        
-        for(int i=0; i<train_set->length(); i++)
-        {
-            train_set->getExample(i,input,target,weight);
-            computeRepresentation(input,train_set_representation,l);
-            train_set_representations(i) << train_set_representation;
-            train_set_targets[i] = (int)round(target[0]);
-        }
-        train_set_representations_vmat = VMat(train_set_representations);
+        eigenvectors.resize(train_set->length());
+        eigenvalues.resize(train_set->length(),n_components);
+        sigma_noises.resize(train_set->length());
+        mus.resize(train_set->length(), inputsize());
 
-        train_set_representations_up_to_date = true;
+        for( int i=0; i<train_set->length(); i++ )
+        {
+            train_set[i]->getExample(input,target,weight);
+
+            computeManifoldParzenParameters( input, F, mu, 
+                                             pre_sigma_noise, U, sm_svd );
+            
+            sigma_noise = square(pre_sigma_noise[0], 2) + min_sigma_noise;
+
+            eigenvectors[i].resize(n_components,inputsize());
+            eigenvectors[i] << U;
+            eigenvalues[i] << sm_svd;
+            sigma_noises[i] = sigma_noise;
+            mus[i] << mu;
+        }
+        
+        manifold_parzen_parameters_are_up_to_date = true;
     }
 }
 
@@ -1055,14 +1174,6 @@ void DeepNonLocalManifoldParzen::setTrainingSet(VMat training_set, bool call_for
     
     manifold_parzen_parameters_are_up_to_date = false;
 
-    if( save_manifold_parzen_parameters )
-    {
-        eigenvectors.resize(train_set->length());
-        eigenvalues.resize(train_set->length(),n_components);
-        sigma_noises.resize(train_set->length());
-        mus.resize(train_set->length(), inputsize());
-    }
-
     Vec input( inputsize() );
     Vec target( targetsize() );
     real weight; // unused
@@ -1078,16 +1189,16 @@ void DeepNonLocalManifoldParzen::setTrainingSet(VMat training_set, bool call_for
         class_datasets[k]->build();
     }
     
-    // Find other classes proportions
-    class_proportions.resize(n_classes);
-    class_proportions.fill(0);
-    real sum = 0;
-    for(int k=0; k<n_classes; k++)
-    {
-        class_proportions[k] = class_datasets[k]->length();
-        sum += class_datasets[k]->length();
-    }
-    class_proportions /= sum;
+    //// Find other classes proportions
+    //class_proportions.resize(n_classes);
+    //class_proportions.fill(0);
+    //real sum = 0;
+    //for(int k=0; k<n_classes; k++)
+    //{
+    //    class_proportions[k] = class_datasets[k]->length();
+    //    sum += class_datasets[k]->length();
+    //}
+    //class_proportions /= sum;
 }
 
 

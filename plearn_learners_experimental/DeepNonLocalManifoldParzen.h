@@ -162,7 +162,7 @@ public:
      *  Precomputes the representations of the training set examples, 
      *  to speed up nearest neighbors searches in that space.
      */
-    virtual void updateTrainSetRepresentations() const;
+    virtual void updateManifoldParzenParameters() const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
@@ -190,6 +190,11 @@ public:
 
     void computeRepresentation( const Vec& input, 
                                 Vec& representation, int layer) const;
+
+    void computeManifoldParzenParameters( const Vec& input, 
+                                          Mat& F, Vec& mu, Vec& pre_sigma_noise,
+                                          Mat& U, Vec& sm_svd) const;
+                                          
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -251,14 +256,14 @@ protected:
     Vec all_outputs_gradient;
 
     //! Variables for density of a Gaussian
-    Mat F, F_copy;
-    Vec mu;
-    Vec pre_sigma_noise;
+    mutable Mat F, F_copy;
+    mutable Vec mu;
+    mutable Vec pre_sigma_noise;
 
     //! Variables for the SVD and gradient computation
-    Mat Ut, U, V, z, invSigma_F, invSigma_z;
-    Vec temp_ncomp, diff_neighbor_input, sm_svd, sn, S;
-    Vec uk, fk, uk2, inv_sigma_zj, zj, inv_sigma_fk;
+    mutable Mat Ut, U, V, z, invSigma_F, invSigma_z;
+    mutable Vec temp_ncomp, diff_neighbor_input, sm_svd, sn, S;
+    mutable Vec uk, fk, uk2, inv_sigma_zj, zj, inv_sigma_fk, diff;
 
     //! Positive down statistic
     Vec pos_down_val;
@@ -285,7 +290,7 @@ protected:
 
     //! Proportions of examples from the other classes (columns), for each
     //! class (rows)
-    Vec class_proportions;
+    //Vec class_proportions;
 
     //! Nearest neighbors for each training example
     TMat<int> nearest_neighbors_indices;
@@ -295,14 +300,6 @@ protected:
 
     //! Nearest neighbor votes for test example
     TVec<int> test_votes;
-
-    //! Data set mapped to last hidden layer space
-    mutable Mat train_set_representations;
-    mutable VMat train_set_representations_vmat;
-    mutable TVec<int> train_set_targets;
-
-    //! Indication that train_set_representations is up to date
-    mutable bool train_set_representations_up_to_date;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
