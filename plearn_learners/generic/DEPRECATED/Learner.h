@@ -43,7 +43,6 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnAlgo/Learner.h */
 
 #ifndef Learner_INC
 #define Learner_INC

@@ -38,7 +38,6 @@
  * $Id$
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
 #ifndef NNet_INC
 #define NNet_INC

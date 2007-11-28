@@ -44,7 +44,6 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnAlgo/PLearner.h */
 
 #ifndef PLearner_INC
 #define PLearner_INC

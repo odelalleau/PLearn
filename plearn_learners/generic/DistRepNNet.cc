@@ -38,7 +38,6 @@
  * $Id: DistRepNNet.cc 3994 2005-08-25 13:35:03Z chapados $
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/DistRepNNet.h */
 
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/VarRowsVariable.h>

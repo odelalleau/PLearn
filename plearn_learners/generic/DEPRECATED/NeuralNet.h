@@ -38,7 +38,6 @@
  * $Id$
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/NeuralNet.h */
 
 #ifndef NeuralNet_INC
 #define NeuralNet_INC

@@ -39,7 +39,6 @@
  * This file is part of the PLearn library.                                                                   *
  ************************************************************************************************************** */
 
-/*! \file PLearnLibrary/PLearnAlgo/VariableSelectionWithDirectedGradientDescent.h */
 
 #ifndef VariableSelectionWithDirectedGradientDescent_INC
 #define VariableSelectionWithDirectedGradientDescent_INC

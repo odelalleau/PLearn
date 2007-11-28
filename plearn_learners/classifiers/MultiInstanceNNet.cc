@@ -38,7 +38,6 @@
  * $Id$
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/MultiInstanceNNet.h */
 
 
 #include <plearn/var/AffineTransformVariable.h>

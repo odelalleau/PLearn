@@ -39,7 +39,6 @@
  * This file is part of the PLearn library.                                     *
  ******************************************************************************** */
 
-/*! \file PLearnLibrary/PLearnAlgo/BaseRegressorConfidence.h */
 
 #ifndef BaseRegressorConfidence_INC
 #define BaseRegressorConfidence_INC

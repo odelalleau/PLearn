@@ -38,7 +38,6 @@
  * $Id$
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/NNet.h */
 
 #include <plearn/var/AffineTransformVariable.h>
 #include <plearn/var/AffineTransformWeightPenalty.h>

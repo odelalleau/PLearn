@@ -40,7 +40,6 @@
  ******************************************************* */
 
 
-/*! \file PLearnLibrary/PLearnAlgo/GaussianDistribution.h */
 
 #ifndef GaussianDistribution_INC
 #define GaussianDistribution_INC

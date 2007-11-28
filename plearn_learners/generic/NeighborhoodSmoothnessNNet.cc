@@ -38,7 +38,6 @@
  * $Id$
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/NeighborhoodSmoothnessNNet.h */
 
 
 #include <plearn/var/AffineTransformVariable.h>

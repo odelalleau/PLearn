@@ -38,7 +38,6 @@
  * $Id: DistRepNNet.h 3994 2005-08-25 13:35:03Z chapados $
  ******************************************************* */
 
-/*! \file PLearnLibrary/PLearnAlgo/DistRepNNet.h */
 
 #ifndef DistRepNNet_INC
 #define DistRepNNet_INC
