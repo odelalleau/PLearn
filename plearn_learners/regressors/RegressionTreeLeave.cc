@@ -157,8 +157,9 @@ void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
 
 void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)
 {
-    if(length==0){
+    if(length==0){        
         output.clear();
+        output[0]=MISSING_VALUE;
         error.clear();
         return;
     }
