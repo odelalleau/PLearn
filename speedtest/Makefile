@@ -35,55 +35,55 @@ xgemm-nvidia: xgemm-sgemm-nvidia
 xgemm-cxgemm: xgemm-sgemm-c xgemm-dgemm-c
 
 xgemm-sgemm-acml: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBACML}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< ${LIBACML}
 
 xgemm-sgemm-acmlpt: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< -fopenmp ${LIBACMLPT}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< -fopenmp ${LIBACMLPT}
 
 xgemm-sgemm-atlas: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBATLAS}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< ${LIBATLAS}
 
 xgemm-dgemm-atlas: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBATLAS}
+	${CC} ${CFLAGS} -o $@ -DUSEDOUBLE $< ${LIBATLAS}
 
 xgemm-sgemm-blas: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBBLAS}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< ${LIBBLAS}
 
 xgemm-dgemm-blas: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBBLAS}
+	${CC} ${CFLAGS} -o $@ -DUSEDOUBLE $< ${LIBBLAS}
 
 xgemm-sgemm-blas-compare: xgemm.c
 	${CC} ${CFLAGS} -o $@ $< ${LIBBLAS} -DCOMPARE
 
 xgemm-sgemm-c: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< -DCXGEMM 
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< -DCXGEMM 
 
 xgemm-dgemm-c: xgemm.c
-	${CC} ${CFLAGS} -o $@ $< -DCXGEMM -USEDOUBLE
+	${CC} ${CFLAGS} -o $@ $< -DCXGEMM -DUSEDOUBLE
 
 xgemm-sgemm-goto: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBGOTO}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< ${LIBGOTO}
 
 xgemm-dgemm-goto: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBGOTO}
+	${CC} ${CFLAGS} -o $@ -DUSEDOUBLE $< ${LIBGOTO}
 
 xgemm-sgemm-goto-compare: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< -DCOMPARE ${LIBGOTO}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< -DCOMPARE ${LIBGOTO}
 
 xgemm-sgemm-mkl: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBMKL}
+	${CC} ${CFLAGS} -o $@ -DUSEDOUBLE $< ${LIBMKL}
 
 xgemm-dgemm-mkl: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBMKL}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< ${LIBMKL}
 
 xgemm-sgemm-mklpt: xgemm.c
-	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBMKLPT}
+	${CC} ${CFLAGS} -o $@ -DUSEFLOAT $< ${LIBMKLPT}
 
 xgemm-sgemm-nvidia: xgemm.c
-	${CC} ${CFLAGS} -m32 -o $@ -USEFLOAT $<  ${LIBNVIDIA} -DNVIDIA
+	${CC} ${CFLAGS} -m32 -o $@ -DUSEFLOAT $<  ${LIBNVIDIA} -DNVIDIA
 
 xgemm-sgemm-nvidia-compare: xgemm.c
-	${CC} ${CFLAGS} -m32 -o $@ -USEFLOAT $< ${LIBNVIDIA} -DNVIDIA -DCOMPARE
+	${CC} ${CFLAGS} -m32 -o $@ -DUSEFLOAT $< ${LIBNVIDIA} -DNVIDIA -DCOMPARE
 
 xgemv: xgemv-blas xgemv-blas-compare xgemv-cxgemm xgemv-goto xgemv-goto-compare xgemv-nvidia xgemv-nvidia-compare xgemv-sgemv-goto xgemv-dgemv-goto xgemv-sgemv-blas xgemv-dgemv-blas
 	true
@@ -116,13 +116,13 @@ xgemv-sgemv-goto: xgemv.c
 	${CC} ${CFLAGS} -o $@ $< ${LIBGOTO}
 
 xgemv-dgemv-goto: xgemv.c
-	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBGOTO}
+	${CC} ${CFLAGS} -o $@ -DUSEDOUBLE $< ${LIBGOTO}
 
 xgemv-sgemv-blas: xgemv.c
 	${CC} ${CFLAGS} -o $@ $< ${LIBBLAS}
 
 xgemv-dgemv-blas: xgemv.c
-	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBBLAS}
+	${CC} ${CFLAGS} -o $@ -DUSEDOUBLE $< ${LIBBLAS}
 
 clean: clean-xgemv
 	rm -f xgemm-blas-compare xgemm-goto-compare xgemm-nvidia-compare xgemm-blas xgemm-goto xgemm-nvidia xgemm-cxgemm

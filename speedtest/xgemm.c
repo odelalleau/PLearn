@@ -12,12 +12,14 @@
   /* Includes, cblas */
   #include <gsl/gsl_cblas.h>
 #endif
-#ifdef DOUBLE
+#ifdef USEDOUBLE
   typedef double real;
   #define cblas_xgemm cblas_dgemm
-#else
+#elif USEFLOAT
   typedef float real;
   #define cblas_xgemm cblas_sgemm
+#else
+  #error "USEDOUBLE or USEFLOAT must be defined"
 #endif
 //#include <iostream>
 //using namespace std;
