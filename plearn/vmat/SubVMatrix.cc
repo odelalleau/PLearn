@@ -306,7 +306,7 @@ string SubVMatrix::getString(int row, int col) const
     if(row<0 || row>=length() || col<0 || col>=width())
         PLERROR("In SubVMatrix::getString(): OUT OF BOUND access");
 #endif
-    return source->getString(row, jstart+col); 
+    return source->getString(row + istart, jstart+col); 
 }
 
 void SubVMatrix::getMat(int i, int j, Mat m) const
