@@ -1,23 +1,38 @@
 CC=g++
 CFLAGS=-Wall -fPIC -O3
-LIBCBLAS=~/CBLAS/lib/${OSARCH}/libcblas.a
+LIBCBLAS=~bastienf/.NOBACKUP/CBLAS/lib/${OSARCH}/libcblas.a
+
 LIBBLAS=-lblas ${LIBCBLAS}
 LIBGOTO=-lgoto -lgfortran ${LIBCBLAS}
-LIBNVIDIA=-L/u/bastienf/NVIDIA_CUDA_SDK/cuda/lib -L/u/bastienf/NVIDIA_CUDA_SDK/lib/ -I/u/bastienf/NVIDIA_CUDA_SDK/cuda/include/ -lcuda -lcudart -lGL -lGLU -lcublas -l cutil
-ACMLBASE=/u/lisa/local/acml-3-6-1beta/gfortran64
-ACMLBASE=/u/lisa/local/acml-3-6-0/gfortran32
-
-LIBACML= ${LIBCBLAS} ${ACMLBASE}/lib/libacml.a -lgfortran
-LIBACMLPT= ${LIBCBLAS} ${ACMLBASE}_mp/lib/libacml_mp.a -lg2c -lgfortran
 LIBATLAS=-lcblas -lf77blas -latlas -lg2c
 LIBMKL=-lmkl -lvml ${LIBCBLAS}
 LIBMKLPT=-lmkl -lvml -lguide -lpthread ${LIBCBLAS}
 
+ACMLBASE=/u/lisa/local/acml-3-6-1beta/gfortran64
+ACMLBASE=/u/lisa/local/acml-3-6-0/gfortran32
+LIBACML= ${LIBCBLAS} ${ACMLBASE}/lib/libacml.a -lgfortran
+LIBACMLPT= ${LIBCBLAS} ${ACMLBASE}_mp/lib/libacml_mp.a -lg2c -lgfortran
+LIBNVIDIA=-L/u/bastienf/NVIDIA_CUDA_SDK/cuda/lib -L/u/bastienf/NVIDIA_CUDA_SDK/lib/ -I/u/bastienf/NVIDIA_CUDA_SDK/cuda/include/ -lcuda -lcudart -lGL -lGLU -lcublas -l cutil
+
 all: xgemm
 
-xgemm: xgemm-atlas xgemm-blas xgemm-blas-compare xgemm-goto xgemm-goto-compare xgemm-mkl xgemm-nvidia xgemm-nvidia-compare xgemm-cxgemm xgemm-sgemm-goto xgemm-dgemm-goto xgemm-sgemm-blas xgemm-dgemm-blas
+xgemm: xgemm-atlas xgemm-blas xgemm-goto xgemm-mkl xgemm-nvidia xgemm-cxgemm xgemm-sgemm-goto xgemm-dgemm-goto xgemm-sgemm-blas xgemm-dgemm-blas
 	true
+#xgemm-blas-compare xgemm-goto-compare xgemm-nvidia-compare
+
 xgemm-sgemm: xgemm-sgemm-acml xgemm-sgemm-atlas xgemm-sgemm-blas xgemm-sgemm-c xgemm-sgemm-goto xgemm-sgemm-mkl xgemm-sgemm-nvidia
+
+xgemm-atlas: xgemm-sgemm-atlas xgemm-dgemm-atlas
+
+xgemm-blas: xgemm-sgemm-blas xgemm-dgemm-blas
+
+xgemm-goto: xgemm-sgemm-goto xgemm-dgemm-goto
+
+xgemm-mkl: xgemm-sgemm-mkl xgemm-dgemm-mkl
+
+xgemm-nvidia: xgemm-sgemm-nvidia
+
+xgemm-cxgemm: xgemm-sgemm-c xgemm-dgemm-c
 
 xgemm-sgemm-acml: xgemm.c
 	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBACML}
@@ -27,6 +42,9 @@ xgemm-sgemm-acmlpt: xgemm.c
 
 xgemm-sgemm-atlas: xgemm.c
 	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBATLAS}
+
+xgemm-dgemm-atlas: xgemm.c
+	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBATLAS}
 
 xgemm-sgemm-blas: xgemm.c
 	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBBLAS}
@@ -53,6 +71,9 @@ xgemm-sgemm-goto-compare: xgemm.c
 	${CC} ${CFLAGS} -o $@ -USEFLOAT $< -DCOMPARE ${LIBGOTO}
 
 xgemm-sgemm-mkl: xgemm.c
+	${CC} ${CFLAGS} -o $@ -USEDOUBLE $< ${LIBMKL}
+
+xgemm-dgemm-mkl: xgemm.c
 	${CC} ${CFLAGS} -o $@ -USEFLOAT $< ${LIBMKL}
 
 xgemm-sgemm-mklpt: xgemm.c
