@@ -77,6 +77,7 @@
 #include "NNet.h"
 // #include <plearn/math/random.h>
 #include <plearn/vmat/SubVMatrix.h>
+#include <plearn/vmat/FileVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -1059,6 +1060,22 @@ void NNet::train()
     if(report_progress)
         pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
+
+    //Open/create vmat to save train costs at each epoch
+    VMat costs_per_epoch= 0;
+    if(expdir != "")
+    {
+        PPath cpe_path= expdir / "NNet_train_costs.pmat";
+        if(isfile(cpe_path))
+            costs_per_epoch= new FileVMatrix(cpe_path, true);
+        else
+        {
+            TVec<string> fieldnames(1, "epoch");
+            fieldnames.append(train_stats->getFieldNames());
+            costs_per_epoch= new FileVMatrix(cpe_path, 0, fieldnames);
+        }
+    }
+
     int initial_stage = stage;
     bool early_stop=false;
     while(stage<nstages && !early_stop)
@@ -1071,6 +1088,12 @@ void NNet::train()
         train_stats->finalize();
         if(verbosity>2)
             pout << "Epoch " << stage << " train objective: " << train_stats->getMean() << endl;
+        if(costs_per_epoch)
+        {
+            Vec v(1, stage);
+            v.append(train_stats->getMean());
+            costs_per_epoch->appendRow(v);
+        }
         ++stage;
         if(pb)
             pb->update(stage-initial_stage);
