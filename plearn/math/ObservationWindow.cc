@@ -164,8 +164,10 @@ ObservationWindow::update(const Vec& obs, real weight/*=1.0*/)
     
     ++m_nobs;
     if(unlimited_size) m_window= m_nobs;
-    m_observations.resize(MIN(m_nobs,m_window), obs.size());
-    m_obs_weights.resize(MIN(m_nobs,m_window));
+    int new_size= MIN(m_nobs,m_window);
+    int extra= unlimited_size? new_size : 0;//extra rows to alloc. when resizing
+    m_observations.resize(new_size, obs.size(), extra*obs.size());
+    m_obs_weights.resize(new_size, extra);
     if (m_nobs > m_window)
     {
         outdated.resize(obs.size());
