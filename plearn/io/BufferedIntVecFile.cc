@@ -97,9 +97,29 @@ void BufferedIntVecFile::getBuf(int bufstart_)
 
 void BufferedIntVecFile::flush()
 {
+/*
     if(bufmod)
         for(int i= 0; i < buflen && i+bufstart < length(); ++i)
             inherited::put(i+bufstart, buf[i]);
+*/
+
+    if(bufmod)
+    {
+        int len= min(buflen, length()-bufstart);
+        seek_to_index(bufstart);
+        if (byte_order() != endianness_) 
+        {
+            TVec<int> new_vec(len);
+            new_vec.copyFrom(buf, len);
+            endianswap(new_vec.data(), new_vec.length());
+            fwrite(new_vec.data(), sizeof(int), new_vec.length(), f);
+        }
+        else 
+        {
+            fwrite(buf, sizeof(int), len, f);
+        }
+    }
+
     bufmod= false;
 }
 
