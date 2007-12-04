@@ -331,7 +331,6 @@ struct ConvertFromPyObject<Object*>
     static Object* convert(PyObject*, bool print_traceback);
 };
 
-
 ///***///***
 // PARTIAL specialisation from T*.  Assume Object*.
 // todo: fix this assumption
@@ -1397,6 +1396,8 @@ PyObject* ConvertToPyObject<std::set<T> const* >::newPyObject(const std::set<T>*
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v);
 PStream& operator<<(PStream& out, const PythonObjectWrapper& v);
+PStream& operator>>(PStream& in, PyObject* v);
+PStream& operator<<(PStream& out, const PyObject* v);
 DECLARE_TYPE_TRAITS(PythonObjectWrapper);
 
 //! for debug purposes

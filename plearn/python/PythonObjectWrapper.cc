@@ -183,6 +183,7 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
     return obj;
 }
 
+
 void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v,
                                        bool print_traceback)
 {
@@ -478,7 +479,7 @@ PyObject* PythonObjectWrapper::refCPPObj(PyObject* self, PyObject* args)
     PythonObjectWrapper::m_wrapped_objects[o]= pyo;
     //perr << "refCPPObj: " << (void*)o << " : " << (void*)pyo << endl;
 
-    Py_INCREF(pyo);
+    addToWrappedObjectsSet(pyo);//Py_INCREF(pyo);
     //printWrappedObjects();
 
     return newPyObject();//None
@@ -494,7 +495,8 @@ void PythonObjectWrapper::gc_collect1()
         ++m_gc_next_object;
         if(it->first->usage() == 1 && it->second->ob_refcnt == 1)
         {
-            Py_DECREF(it->second);
+            //Py_DECREF(it->second);
+            removeFromWrappedObjectsSet(it->second);
             gc_collect1();
         }
     }
@@ -526,9 +528,6 @@ PythonObjectWrapper::wrapped_objects_t::iterator
 
 PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 {
-    //perr << "in ConvertToPyObject<Object*>::newPyObject : "
-    //     << x->classname() << ' ' << (void*)x << endl;
-
     // void ptr becomes None
     if(!x) return PythonObjectWrapper::newPyObject();
 
@@ -542,12 +541,6 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
     if(objit != PythonObjectWrapper::m_wrapped_objects.end())
     {
         PyObject* o= objit->second;
-
-//         perr << "NEW REF TO " << objit->first->classname() << ' ' << (void*)objit->first 
-//              << ' ' << objit->first->usage() << " : " 
-//              << (void*)objit->second << ' ' << objit->second->ob_refcnt << endl;
-
-//        printWrappedObjects();
         Py_INCREF(o);//new ref
         return o;//return ptr to already created pyobj
     }
@@ -585,7 +578,7 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 
 //    perr << "newPyObject: " << (void*)x << " : " << (void*)the_obj << endl;
 
-    Py_INCREF(the_obj);
+    addToWrappedObjectsSet(the_obj);//Py_INCREF(the_obj);
     //printWrappedObjects();
 
     return the_obj;
@@ -684,8 +677,11 @@ PyObject* ConvertToPyObject<PP<VMatrix> >::newPyObject(const PP<VMatrix>& vm)
     if (vm.isNull())
         return ConvertToPyObject<Mat>::newPyObject(Mat());
     else
-        return ConvertToPyObject<Mat>::newPyObject(vm->toMat());
-    //return ConvertToPyObject<Object*>::newPyObject(static_cast<Object*>(vm));
+#ifdef PL_PYTHON_VMAT_AS_PTR
+        return ConvertToPyObject<Object*>::newPyObject(static_cast<Object*>(vm));
+#else
+        return ConvertToPyObject<Mat>::newPyObject(vm->toMat());// as a numpy array
+#endif
 }
 
 PyObject* ConvertToPyObject<PythonObjectWrapper>::newPyObject(const PythonObjectWrapper& pow)
@@ -795,6 +791,28 @@ PStream& operator<<(PStream& out, const PythonObjectWrapper& v)
     return out; // shut up compiler
 }
 
+
+PStream& operator>>(PStream& in, PyObject* v)
+{
+    PLERROR("operator>>(PStream& in, PyObject* v) not supported yet");
+    return in;
+}
+
+PStream& operator<<(PStream& out, const PyObject* v)
+{
+    PyObject* pystr= PyObject_Str(const_cast<PyObject*>(v));
+    if(!pystr)
+    {
+        if (PyErr_Occurred()) PyErr_Print();
+        PLERROR("in PythonTableVMatrix::build_ : "
+                "access to underlying table's 'weightsize' failed.");
+    }
+    out << PythonObjectWrapper(pystr).as<string>();
+    Py_DECREF(pystr);
+    return out;
+}
+
+
 //! debug
 void printWrappedObjects()
 {
@@ -820,7 +838,7 @@ void ramassePoubelles()
             PythonObjectWrapper::wrapped_objects_t::iterator jt= it;
             ++it;
             if(jt->second->ob_refcnt == 1 && jt->first->usage() == 1)
-                Py_DECREF(jt->second);
+                removeFromWrappedObjectsSet(jt->second);
         }
     }
 }
