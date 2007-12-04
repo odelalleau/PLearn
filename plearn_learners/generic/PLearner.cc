@@ -343,7 +343,17 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
 
 
     declareMethod(
-        rmm, "test", &PLearner::rtest,
+        rmm, "sub_test", &PLearner::sub_test,
+        (BodyDoc("Test on a given (chunk of a) testset and return stats, outputs and costs.  "
+                 "Used by parallel test"),
+         ArgDoc("testset","test set"),
+         ArgDoc("test_stats","VecStatsCollector to use"),
+         ArgDoc("rtestoutputs","wether to return outputs"),
+         ArgDoc("rtestcosts","wether to return costs"),
+         RetDoc ("tuple of (stats, outputs, costs)")));
+
+    declareMethod(
+        rmm, "test", &PLearner::remote_test,
         (BodyDoc("Test on a given testset and return stats, outputs and costs."),
          ArgDoc("testset","test set"),
          ArgDoc("test_stats","VecStatsCollector to use"),
@@ -384,6 +394,12 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Compute the output of a trained learner on every row of an\n"
                  "input VMatrix.  The outputs are returned as a matrix.\n"),
          ArgDoc ("input_vmat", "VMatrix containing the inputs"),
+         RetDoc ("Matrix holding the computed outputs")));
+
+    declareMethod(
+        rmm, "useOnTrain", &PLearner::remote_useOnTrain,
+        (BodyDoc("Compute the output of a trained learner on every row of \n"
+                 "the trainset.  The outputs are returned as a matrix.\n"),
          RetDoc ("Matrix holding the computed outputs")));
 
     declareMethod(
@@ -869,6 +885,13 @@ void PLearner::useOnTrain(Mat& outputs) const {
     use(train_set, train_output);
 }
 
+Mat PLearner::remote_useOnTrain() const 
+{
+    Mat outputs;
+    useOnTrain(outputs);
+    return outputs;
+}
+
 //////////
 // test //
 //////////
@@ -960,7 +983,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                         s->link(tsid, testset);
                     }
                     curpos+= clen;
-                    s->callMethod(id, "test", sts, template_vsc, 
+                    s->callMethod(id, "sub_test", sts, template_vsc, 
                                   static_cast<bool>(testoutputs), static_cast<bool>(testcosts));
                     chunknums[s]= chunks_called;
                     ++chunks_called;
@@ -994,7 +1017,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
                     if(master_sends_testset_rows)
                         sts= new MemoryVMatrix(sts.toMat());
                     curpos+= clen;
-                    s->callMethod(learners_ids[s], "test", sts, template_vsc, 
+                    s->callMethod(learners_ids[s], "sub_test", sts, template_vsc, 
                                   static_cast<bool>(testoutputs), static_cast<bool>(testcosts));
                     chunknums[s]= chunks_called;
                     ++chunks_called;
@@ -1126,10 +1149,10 @@ void PLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
 }
 
 
-////////////////////////////////////////////////////////////////
-// test ('remote' version which returns a tuple w/ results.) //
-//////////////////////////////////////////////////////////////
-tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::rtest(VMat testset, PP<VecStatsCollector> test_stats, bool rtestoutputs, bool rtestcosts) const
+//////////////////////////////////////////////////////////////////////////////////////////
+// sub-test, used by parallel test ('remote' version which returns a tuple w/ results.) //
+//////////////////////////////////////////////////////////////////////////////////////////
+tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::sub_test(VMat testset, PP<VecStatsCollector> test_stats, bool rtestoutputs, bool rtestcosts) const
 {
     VMat testoutputs= 0;
     VMat testcosts= 0;
@@ -1149,6 +1172,21 @@ tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::rtest(VMat testset, PP<VecSta
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// remote interface for test                                                            //
+//////////////////////////////////////////////////////////////////////////////////////////
+tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::remote_test(VMat testset, PP<VecStatsCollector> test_stats, bool rtestoutputs, bool rtestcosts) const
+{
+    VMat testoutputs= 0;
+    VMat testcosts= 0;
+    int outsize= outputsize();
+    int costsize= nTestCosts();
+    int len= testset.length();
+    if(rtestoutputs) testoutputs= new MemoryVMatrix(len, outsize);
+    if(rtestcosts) testcosts= new MemoryVMatrix(len, costsize);
+    test(testset, test_stats, testoutputs, testcosts);
+    return make_tuple(test_stats, testoutputs, testcosts);
+}
 
 ///////////////
 // initTrain //

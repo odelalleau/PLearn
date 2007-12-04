@@ -559,6 +559,11 @@ public:
     virtual void useOnTrain(Mat& outputs) const;
 
     /**
+     * 'remote' version of useOnTrain
+     */
+    virtual Mat remote_useOnTrain() const;
+
+    /**
      *  Performs test on testset, updating test cost statistics, and optionally
      *  filling testoutputs and testcosts.  The default version repeatedly
      *  calls computeOutputAndCosts or computeCostsOnly.  Note that neither
@@ -570,11 +575,19 @@ public:
                       VMat testoutputs=0, VMat testcosts=0) const;
 
     /**
-     *  "remote" test:
+     *  sub-test:
+     *  Called by parallel test on chunks of the testset.
      *  Performs test on testset, returns stats and optionally testoutputs and testcosts
      */
-    virtual tuple<PP<VecStatsCollector>, VMat, VMat> rtest(VMat testset, PP<VecStatsCollector> test_stats,
+    virtual tuple<PP<VecStatsCollector>, VMat, VMat> sub_test(VMat testset, PP<VecStatsCollector> test_stats,
                                                       bool rtestoutputs, bool rtestcosts) const;
+    
+    /**
+     * 'remote' interface for test
+     */
+    virtual tuple<PP<VecStatsCollector>, VMat, VMat> remote_test(VMat testset, PP<VecStatsCollector> test_stats,
+                                                      bool rtestoutputs, bool rtestcosts) const;
+    
     
 
     /**
