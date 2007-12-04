@@ -85,7 +85,8 @@ def getGuiInfo(args):
     return verb, logs, namespaces, pos>=0
 
 def gladeFile():
-    import plearn.plide.plide
+    #import plearn.plide.plide
+    import plearn
     return os.path.join(os.path.dirname(plearn.utilities.options_dialog.__file__),
                         "resources", "options_dialog.glade")
 

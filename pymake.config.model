@@ -266,7 +266,7 @@ options_choices = [
   
   [ 'blas', 'noblas' ],
   [ 'defblas', 'nolibblas', 'p3blas','p4blas','athlonblas','pentiumblas',
-    'mammouthblas', 'veclib', 'scs', 'goto', 'lisa' ],
+    'mammouthblas', 'apintelblas', 'veclib', 'scs', 'goto', 'lisa' ],
   
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
     'logging=extreme', 'logging=dbg-profile' ],
@@ -345,7 +345,7 @@ if not 'nopython' in optionargs:
             python_version = '2.5'
         else:
             python_version = pyver
-
+            
         python_lib_root = '/usr/lib'
         numpy_site_packages = '-L/usr/lib/python'+python_version+'/site-packages/numarray'
         python_includedirs   = [ '/usr/include/python'+python_version]
@@ -788,6 +788,10 @@ pymakeLinkOption( name = 'p4blas',
 pymakeLinkOption( name = 'mammouthblas',
               description = 'linking BLAS for P4 Mammouth-Serie cluster',
               linkeroptions = '-L/opt/mkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lmkl_lapack' )
+
+pymakeLinkOption( name = 'apintelblas',
+              description = 'Intel BLAS+LAPACK for generic install in /usr/local/lib (incl. ApSTAT)',
+              linkeroptions = '-L/home/chrish/mkl/install/lib/32 -lmkl_lapack -lmkl -lguide -lpthread' )
 
 pymakeLinkOption( name = 'veclib',
               description = "Apple's vecLib library, a version of the BLAS library for the G4 and G5 under OS X",

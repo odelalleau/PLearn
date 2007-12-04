@@ -430,6 +430,9 @@ class plopt(object):
     def getType(self):
         return self._type
 
+    def getDoc(self):
+        return self._doc
+
     def getGui(self):
         return self._gui
 
@@ -455,6 +458,9 @@ class plopt(object):
 
     def setDefault(self, default):
         self.__default_value = default
+
+    def setDoc(self, doc):
+        self._doc= doc
 
     #######  Static methods  ######################################################
 
@@ -595,8 +601,25 @@ class plopt(object):
     iterator = staticmethod(iterator)
 
     def optdict(holder):
+        """
+        returns a dict of {plopt_name: plopt_value} for all options in holder
+        """
         return dict([ (opt.getName(), opt.get()) for opt in plopt.iterator(holder) ])
     optdict = staticmethod(optdict)
+
+    def optdict2(holder):
+        """
+        returns a dict of {plopt_name, plopt} for all options in holder
+        """
+        return dict([ (opt.getName(), opt) for opt in plopt.iterator(holder) ])
+    optdict2 = staticmethod(optdict2)
+
+    def copyOptionFrom(holder, option):
+        """
+        returns a [deep] copy of holder's option 'option'
+        """
+        return copy.deepcopy(plopt.optdict2(holder)[option])
+    copyOptionFrom= staticmethod(copyOptionFrom)
 
     def override(holder, option, value):
         """Typical pattern to override the value of an existing plopt instance."""

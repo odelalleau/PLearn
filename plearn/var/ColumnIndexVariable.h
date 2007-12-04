@@ -77,7 +77,7 @@ DECLARE_OBJECT_PTR(ColumnIndexVariable);
 inline Var matrixIndex(Var mat, Var index)
 {
     if(index->size()!=mat->width())
-        PLERROR("matrixIndex: index->size() should be equal to mat->width()");
+        PLERROR("matrixIndex: index->size() should be equal to mat->width() (%d!=%d x %d)",index->size(),mat->width(),mat->length());
     return new ColumnIndexVariable(mat,index);  
 }
 

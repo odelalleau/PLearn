@@ -74,6 +74,7 @@ SelectRowsFileIndexVMatrix::build_()
             indices.open(index_file);
             length_ = indices.length();
         }
+        width_= distr->width();
         defineSizes(distr->inputsize(), distr->targetsize(), distr->weightsize());
     }
 }
