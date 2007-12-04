@@ -53,6 +53,11 @@ void initPythonExtensionModule(char* module_name);
 // inject funcs. and classes, set global module.
 void setPythonModuleAndInject(PyObject* module);
 
+// manage wrapped objects set
+void addToWrappedObjectsSet(PyObject* o);
+void removeFromWrappedObjectsSet(PyObject* o);
+
+
 extern PyObject* the_PLearn_python_module;
 
 } // end of namespace PLearn

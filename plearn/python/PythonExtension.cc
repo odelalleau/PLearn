@@ -375,6 +375,58 @@ void injectPLearnClasses(PyObject* module)
     }
 }
 
+void createWrappedObjectsSet(PyObject* module)
+{
+    string code= "";
+#if PL_PYTHON_VERSION <= 230
+    code+= "\nfrom sets import Set as set\n";
+#endif // PL_PYTHON_VERSION <= 230
+    code+= "\nwrapped_PLearn_instances= set()\n";
+    PyObject* res= PyRun_String(code.c_str(), Py_file_input, 
+                                PyModule_GetDict(module), PyModule_GetDict(module));
+    if(!res)
+    {
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in createWrappedObjectsSet : cannot create set.");
+    }
+    Py_DECREF(res);
+ }
+
+void addToWrappedObjectsSet(PyObject* o)
+{
+    PLASSERT(the_PLearn_python_module);
+    if(-1 == PyObject_SetAttrString(the_PLearn_python_module, "_tmp_wrapped_instance", o))
+        PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to module.");
+    PyObject* res= PyRun_String("\nwrapped_PLearn_instances.add(_tmp_wrapped_instance)"
+                                "\ndel _tmp_wrapped_instance\n", 
+                                Py_file_input, 
+                                PyModule_GetDict(the_PLearn_python_module), 
+                                PyModule_GetDict(the_PLearn_python_module));
+    if(!res)
+    {
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to set.");
+    }
+    Py_DECREF(res);
+}
+void removeFromWrappedObjectsSet(PyObject* o)
+{
+    PLASSERT(the_PLearn_python_module);
+    if(-1 == PyObject_SetAttrString(the_PLearn_python_module, "_tmp_wrapped_instance", o))
+        PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to module.");
+    PyObject* res= PyRun_String("\nwrapped_PLearn_instances.remove(_tmp_wrapped_instance)"
+                                "\ndel _tmp_wrapped_instance\n", 
+                                Py_file_input, 
+                                PyModule_GetDict(the_PLearn_python_module), 
+                                PyModule_GetDict(the_PLearn_python_module));
+    if(!res)
+    {
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to set.");
+    }
+    Py_DECREF(res);
+}
+
 // Init func for python module.
 // init module, then inject global funcs
 void initPythonExtensionModule(char* module_name)
@@ -388,7 +440,9 @@ void setPythonModuleAndInject(PyObject* module)
 {
     injectPLearnGlobalFunctions(module);
     injectPLearnClasses(module);
+    createWrappedObjectsSet(module);
     the_PLearn_python_module= module;
+    
 }
 
 PyObject* the_PLearn_python_module= 0;
