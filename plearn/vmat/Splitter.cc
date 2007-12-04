@@ -77,6 +77,10 @@ void Splitter::declareMethods(RemoteMethodMap& rmm)
     rmm.inherited(inherited::_getRemoteMethodMap_());
 
     declareMethod(
+        rmm, "setDataSet", &Splitter::setDataSet,
+        (BodyDoc("Set this splitter's dataset\n"),
+         ArgDoc ("the_dataset","The dataset to split")));
+    declareMethod(
         rmm, "nSetsPerSplit", &Splitter::nSetsPerSplit,
         (BodyDoc("Returns the number of sets per split\n"),
          RetDoc ("the numer of sets per split")));
@@ -84,6 +88,11 @@ void Splitter::declareMethods(RemoteMethodMap& rmm)
         rmm, "nsplits", &Splitter::nsplits,
         (BodyDoc(" Returns the number of available different 'splits'\n"),
          RetDoc (" the numer of available splits")));
+    declareMethod(
+        rmm, "getSplit", &Splitter::getSplit,
+        (BodyDoc("Get one of the splits\n"),
+         ArgDoc ("i","The split to get"),
+         RetDoc ("The ith split (vec. of N sets)")));
 
 
 ///TODO export    virtual TVec<VMat> getSplit(int i=0) = 0;

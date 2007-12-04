@@ -239,6 +239,14 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Returns the unconditonal statistics for all fields\n"),
          RetDoc ("Stats vector")));
 
+    declareMethod(
+        rmm, "defineSizes", &VMatrix::defineSizes,
+        (BodyDoc("Define this vmatrix's sizes\n"),
+         ArgDoc ("inputsize", "inputsize"),
+         ArgDoc ("targetsize", "targetsize"),
+         ArgDoc ("weightsize", "weightsize"),
+         ArgDoc ("extrasize", "extrasize")));
+
 }
 
 
