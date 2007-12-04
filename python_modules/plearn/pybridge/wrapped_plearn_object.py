@@ -31,6 +31,9 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
+global plearn_module
+plearn_module= None
+
 class WrappedPLearnObject(object):
 
     def __init__(self, **kwargs):
@@ -90,6 +93,20 @@ class WrappedPLearnObject(object):
                 newone.__dict__[k]= \
                     copy.deepcopy(self.__dict__[k], memo)
         return newone
+
+    def __getstate__(self):
+        d= self.__dict__.copy()
+        d['_cptr']= self.asString()
+        return d
+    
+    def __setstate__(self, dict):
+        newone= plearn_module.newObject(dict['_cptr'])
+        self._cptr= newone._cptr
+        self._refCPPObj(self, False)
+        for k in dict:
+            if k != '_cptr':
+                self.__setattr__(k, dict[k])
+        return dict
 
 
 from numpy.numarray import *
