@@ -846,11 +846,34 @@ void ramassePoubelles()
     }
 }
 
+
+bool getVMatAsPtr()
+{
+    return PythonObjectWrapper::VMatAsPtr;
+}
+bool setVMatAsPtr(bool vmat_as_ptr)
+{
+    bool prev= PythonObjectWrapper::VMatAsPtr;
+    PythonObjectWrapper::VMatAsPtr= vmat_as_ptr;
+    return prev;
+}
+
+
 BEGIN_DECLARE_REMOTE_FUNCTIONS
     declareFunction("printWrappedObjects", &printWrappedObjects,
                     (BodyDoc("Prints PLearn objects wrapped into python.\n")));
     declareFunction("ramassePoubelles", &ramassePoubelles,
                     (BodyDoc("GC for wrapped objects.\n")));
+
+    declareFunction("getVMatAsPtr", &getVMatAsPtr,
+                    (BodyDoc("Returns current setting of 'VMatAsPtr'.\n"
+                             "true= wrapped VMat; false= numpy array.\n"),
+                     RetDoc("current VMatAsPtr")));
+    declareFunction("setVMatAsPtr", &setVMatAsPtr,
+                    (BodyDoc("Sets 'VMatAsPtr', returns previous setting.\n"
+                             "true= wrapped VMat; false= numpy array.\n"),
+                     ArgDoc("vmat_as_ptr","wrap VMats instead of converting to numpy?"),
+                     RetDoc("Previous setting")));
 END_DECLARE_REMOTE_FUNCTIONS
 
 

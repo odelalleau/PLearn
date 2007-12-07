@@ -1407,6 +1407,9 @@ DECLARE_TYPE_TRAITS(PythonObjectWrapper);
 void printWrappedObjects();
 void ramassePoubelles();
 
+bool getVMatAsPtr();
+bool setVMatAsPtr(bool vmat_as_ptr= true);
+
 } // end of namespace PLearn
 
 #endif
