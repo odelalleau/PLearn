@@ -753,6 +753,8 @@ public:
         transfer_ownership
     };
 
+    static bool VMatAsPtr;//Object* or numpy array?
+
 public:
     //#####  Construction and Utility  ########################################
 
@@ -880,6 +882,7 @@ protected:
     friend PStream& operator>>(PStream& in, PythonObjectWrapper& v);
     friend PStream& operator<<(PStream& out, const PythonObjectWrapper& v);
 };
+
 
 // Specialization for General T*.  Attempt to cast into Object*.  If that works
 // we're all set; for specific pointer types (e.g.  map<U,V>* and vector<T>*),

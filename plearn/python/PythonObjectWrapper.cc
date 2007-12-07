@@ -288,6 +288,7 @@ CopiesMap ConvertFromPyObject<CopiesMap>::convert(PyObject* pyobj,
 }
 
 //#####  Constructors+Destructors  ############################################
+
 PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,
                                          // unused in this overload
                                          bool acquire_gil)
@@ -671,17 +672,19 @@ PyObject* ConvertToPyObject<Mat>::newPyObject(const Mat& data)
     return (PyObject*)pyarr;
 }
 
+
+bool PythonObjectWrapper::VMatAsPtr= false;//numpy array by default
+
 //PyObject* ConvertToPyObject<VMat>::newPyObject(const VMat& vm)
 PyObject* ConvertToPyObject<PP<VMatrix> >::newPyObject(const PP<VMatrix>& vm)
 {
-    if (vm.isNull())
-        return ConvertToPyObject<Mat>::newPyObject(Mat());
-    else
-#ifdef PL_PYTHON_VMAT_AS_PTR
+    if(PythonObjectWrapper::VMatAsPtr)
         return ConvertToPyObject<Object*>::newPyObject(static_cast<Object*>(vm));
-#else
-        return ConvertToPyObject<Mat>::newPyObject(vm->toMat());// as a numpy array
-#endif
+    else// as a numpy array
+        if (vm.isNull())
+            return ConvertToPyObject<Mat>::newPyObject(Mat());
+        else
+            return ConvertToPyObject<Mat>::newPyObject(vm->toMat());
 }
 
 PyObject* ConvertToPyObject<PythonObjectWrapper>::newPyObject(const PythonObjectWrapper& pow)
