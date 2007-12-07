@@ -40,6 +40,7 @@ using namespace PLearn;
 
 PyMODINIT_FUNC initplext()
 {
+    PythonObjectWrapper::VMatAsPtr= true;
     setVersion(0,92,0);
     initPythonExtensionModule("plext");
 }

@@ -120,6 +120,7 @@
 #include <plearn/ker/SummationKernel.h>
 #include <plearn/ker/ThresholdedKernel.h>
 #include <plearn/ker/VMatKernel.h>
+#include <plearn/ker/DTWKernel.h>
 
 /*************
  * Optimizer *
