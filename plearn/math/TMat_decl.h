@@ -573,7 +573,7 @@ public:
     { return subMatRows(row, 1); }
 
     inline T& firstElement() const { return *data(); }
-    inline T& lastElement() const { return operator()(length-1,width-1); }
+    inline T& lastElement() const { return operator()(length_-1,width_-1); }
 
     inline TVec<T> firstRow() const { return operator()(0); } 
     inline TVec<T> lastRow() const { return operator()(length_ - 1); }
