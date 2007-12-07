@@ -125,6 +125,13 @@ void Kernel::declareMethods(RemoteMethodMap& rmm)
         rmm, "returnComputedGramMatrix", &Kernel::returnComputedGramMatrix,
         (BodyDoc("\n"),
          RetDoc ("Returns the Gram Matrix")));
+
+    declareMethod(
+        rmm, "evaluate", &Kernel::evaluate,
+        (BodyDoc("evaluate the kernel on two vectors\n"),
+         ArgDoc("x1","first vector"),
+         ArgDoc("x2","second vector"),
+         RetDoc ("K(x1,x2)")));
 }
 
 ///////////
