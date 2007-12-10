@@ -40,6 +40,7 @@
 #include "NatGradSMPNNet.h"
 #include <plearn/io/openFile.h>
 #include <plearn/math/pl_erf.h>
+#include <plearn/misc/PTimer.h>
 
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -867,11 +868,14 @@ void NatGradSMPNNet::train()
     int my_stage_incr = iam >= stage_incr_left ? stage_incr_per_cpu
                                                : stage_incr_per_cpu + 1;
 
+    PP<PTimer> ptimer;
     if (iam == 0) {
         //tmp_log << "Starting loop" << endl;
         //tmp_log.flush();
+        ptimer = new PTimer();
         Profiler::reset("big_loop");
         Profiler::start("big_loop");
+        ptimer->startTimer("big_loop");
     }
 
     //pout << "CPU " << iam << ": my_stage_incr = " << my_stage_incr << endl;
@@ -996,6 +1000,7 @@ void NatGradSMPNNet::train()
         //tmp_log << "Loop ended" << endl;
         //tmp_log.flush();
         Profiler::end("big_loop");
+        ptimer->stopTimer("big_loop");
     }
 
     if (!wait_for_final_update) {
@@ -1132,6 +1137,7 @@ void NatGradSMPNNet::train()
     costs_plus_time[train_costs.width()+2] =
         (big_loop_stats.user_duration + big_loop_stats.system_duration) /
         ticksPerSec;
+    costs_plus_time[train_costs.width() + 3] = ptimer->getTimer("big_loop");
     train_stats->update( costs_plus_time );
     train_stats->finalize(); // finalize statistics for this epoch
 
@@ -1575,7 +1581,8 @@ TVec<string> NatGradSMPNNet::getTrainCostNames() const
     TVec<string> costs = getTestCostNames();
     costs.append("train_seconds");
     costs.append("cum_train_seconds");
-    costs.append("big_loop_seconds");
+    costs.append("big_loop_seconds_1");
+    costs.append("big_loop_seconds_2");
     return costs;
 }
 
