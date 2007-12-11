@@ -47,14 +47,16 @@ PLEARN_IMPLEMENT_OBJECT(
     "Kernel for Dynamic Time Warping",
     "Kernel for Dynamic Time Warping\n"
     "(see sect.4.7 of Rabiner, L. and Juang, B. 1993 'Fundamentals of Speech Recognition'. Prentice-Hall, Inc.)\n"
-    "TODO: Add global path constraints and other goodies...\n"
     );
 
 //////////////////
 // DTWKernel //
 //////////////////
 DTWKernel::DTWKernel()
-    :subvec_length(-1), local_paths(), distance_type("euclidean")
+    :subvec_length(-1), 
+     local_paths(), 
+     distance_type("L2"), 
+     max_time_deviation(-1)
 {
     /*
      * default local paths: 
@@ -77,12 +79,25 @@ void DTWKernel::declareOptions(OptionList& ol)
 
     declareOption(ol, "local_paths", &DTWKernel::local_paths,
                   OptionBase::buildoption,
-                  "Specifies local path constraints.");
+                  "Specifies local path constraints and weights. "
+                  "In each path, steps should be listed from "
+                  "the ending point to the starting point."
+                  "e.g. if a path can start at (0,0), go to (1,1) "
+                  "and then end at (2,1), it should be listed as: "
+                  "[((1,0),0.5), ((1,1),0.5)] where '0.5' are weights");
 
     declareOption(ol, "distance_type", &DTWKernel::distance_type,
                   OptionBase::buildoption,
                   "Name of the 'distance' function to use "
-                  "when comparing features (sub-vecs).");
+                  "when comparing features (sub-vecs). "
+                  "one of: 'L2'  : sqrt{sum{(x-y)^2}}"
+                  "        'L1'  : sum{|x-y|}"
+                  "        'pow2': sum{(x-y)^2}");
+
+    declareOption(ol, "max_time_deviation", &DTWKernel::max_time_deviation,
+                  OptionBase::buildoption,
+                  "Maximum allowed difference between i and j; "
+                  "negative means no limit.");
 
     inherited::declareOptions(ol);
 }
@@ -121,12 +136,46 @@ void DTWKernel::build_()
                 "subvec_length must be specified before build "
                 "(%d is not a valid value).", subvec_length);
 
-    if(distance_type == "euclidean")
+    //distance function
+    if(distance_type == "L2")
+        dist_fn= L2distance;
+    else if(distance_type == "L1")
+        dist_fn= L1distance;
+    else if(distance_type == "pow2")
         dist_fn= powdistance;
     else
         PLERROR("In DTWKernel::build_() : "
-                "only 'euclidean' distance_type is supported for now "
+                "distance_type should be one of: " 
+                "'L2', 'L1' or 'pow2' "
                 "('%s' is not a valid value).", distance_type.c_str());
+
+    //calc. valid region from local_paths (min/max slope)
+    TVec<LocalPath>::iterator it;
+    TVec<LocalPath>::iterator itbeg= local_paths.begin();
+    TVec<LocalPath>::iterator itend= local_paths.end();
+    TVec<LocalStep>::iterator jt;
+    TVec<LocalStep>::iterator jtend;
+    bool first= true;
+    for(it= itbeg; it != itend; ++it)
+    {
+        int i= 0, j= 0;
+        jtend= it->end();
+        for(jt= it->begin(); jt != jtend; ++jt)
+        {
+            i+= jt->first.first;
+            j+= jt->first.second;
+        }
+        real rij= i;
+        rij/= j;
+        if(rij < slope_ij_min || first)
+            slope_ij_min= rij;
+        real rji= j;
+        rji/= i;
+        if(rji < slope_ji_min || first)
+            slope_ji_min= rji;
+        first= false;
+    }
+
 }
 
 //////////////
@@ -147,17 +196,43 @@ void DTWKernel::dtw(const Vec& x1, const Vec& x2) const
         subvecs2[j]= x2.subVec(j*subvec_length, subvec_length);
 
     //init: calc. point-to-point distances
+    // also pre-calc. bounds on j for each i
+    int i,j,jmin,jmax;
+    real jmin0, jmax0;
     dpoint.resize(n1,n2);
-    for(int i= 0; i < n1; ++i)
-        for(int j= 0; j < n2; ++j)
+    jbounds.resize(n1,2);
+    for(i= 0; i < n1; ++i)
+    {
+        if(slope_ij_min == 0.)
+        {
+            jmin0= 0.;
+            jmax0= n2;
+        }
+        else
+        {
+            jmin0= static_cast<real>(i+1-n1)/slope_ij_min + n2 - 1;
+            jmax0= static_cast<real>(i)/slope_ij_min;
+        }
+        jmin= static_cast<int>(ceil(max(jmin0, slope_ji_min * i)));
+        jmax= static_cast<int>(
+            floor(min(jmax0, slope_ji_min*(i-n1+1) + n2 - 1)));
+        if(max_time_deviation >= 0)
+        {
+            jmin= max(jmin, i - max_time_deviation);
+            jmax= min(jmax, i + max_time_deviation);
+        }
+        jbounds(i,0)= jmin;
+        jbounds(i,1)= jmax;
+
+        for(j= jmin; j <= jmax; ++j)
             dpoint(i,j)= dist_fn(subvecs1[i], subvecs2[j]);
+    }
 
     //recurs: calc. path distances
     dpath.resize(n1,n2);
     bptrs.resize(n1,n2);
     dpath(0,0)= dpoint(0,0); //starting point
     
-    int i,j;
     real mn; //min. found at each step
     int ai, aj; //'actual' coords when following a local path
     pair<int,int> scoords; //coords for a step
@@ -171,10 +246,13 @@ void DTWKernel::dtw(const Vec& x1, const Vec& x2) const
     bool some_path_ok; //is there any valid path to those coords?
 
     for(i= 0; i < n1; ++i)
-        for(j= 0; j < n2; ++j)
+    {
+        jmin= jbounds(i,0);
+        if(i==0)
+            jmin= max(1,jmin);//skip (0,0), already calc.
+        jmax= jbounds(i,1);
+        for(j= jmin; j <= jmax; ++j)
         {
-            if(i==0 && j==0)
-                continue; //starting point already calc.
             some_path_ok= false;
             mn= REAL_MAX;
             for(it= itbeg; it != itend; ++it)
@@ -184,17 +262,19 @@ void DTWKernel::dtw(const Vec& x1, const Vec& x2) const
                 dist= 0.;
                 jtend= it->end();
                 for(jt= it->begin(); jt != jtend; ++jt)
-                {// for each step from a local path
+                {// for each step in the local path
                     dist+= dpoint(ai,aj) * jt->second;
                     scoords= jt->first;
                     ai-= scoords.first;
                     aj-= scoords.second;
-                    if(ai < 0 || aj < 0)//invalid path
+                    if(ai < 0 || aj < 0)
                     {
                         path_ok= false;
                         break;
                     }
                 }
+                if(ai < 0 || aj < jbounds(ai,0) || aj > jbounds(ai,1))
+                    path_ok= false;
                 if(path_ok)
                 {
                     dist+= dpath(ai,aj);//add dist. to beg. of path
@@ -206,8 +286,12 @@ void DTWKernel::dtw(const Vec& x1, const Vec& x2) const
                     }
                 }
             }
-            dpath(i,j)= mn;//will be REAL_MAX if no path
+            dpath(i,j)= mn;//will be REAL_MAX if no path... but should not happen
+            if(!some_path_ok && i==n1-1 && j==n2-1)
+                PLERROR("In DTWKernel::dtw : can't reach end of path! "
+                        "Check your local_paths, they may be inconsistent.");
         }
+    }
 }
 
 ////////////////

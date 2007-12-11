@@ -50,7 +50,6 @@ namespace PLearn {
  *
  * WARNING: THIS CLASS IS *NOT* THREAD-SAFE (has mutable pre-allocated data members)
  * 
- * TODO: Add global path constraints and other goodies
  */
 
 class DTWKernel : public Kernel
@@ -79,6 +78,9 @@ public:
 
     //! name of the 'distance' function to use when comparing features (sub-vecs)
     string distance_type;
+
+    //! Maximum allowed difference between i and j.
+    int max_time_deviation;
     
 public:
     //#####  Public Member Functions  #########################################
@@ -135,8 +137,17 @@ private:
     //! back-pointers of optimal paths (pre-alloc'd)
     mutable TMat<pair<int,int> > bptrs;
 
+    //! bounds on j for each i
+    mutable TMat<int> jbounds;
+
     //! actual pointer to distance function
     real (*dist_fn)(const Vec&,const Vec&);
+
+    //! global path constraints calc. from local_paths
+    //! min. and max. slope
+    real slope_ij_min;
+    real slope_ji_min;
+
 
 };
 
