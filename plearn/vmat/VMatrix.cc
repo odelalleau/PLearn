@@ -169,7 +169,7 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
     declareMethod(
         rmm, "getMat", &VMatrix::toMat,
         (BodyDoc("Returns the content of the vmat as a Mat\n"),
-         RetDoc ("The conent of this VMatrix as a Mat")));
+         RetDoc ("The content of this VMatrix as a Mat")));
 
     declareMethod(
         rmm, "declareFieldNames", &VMatrix::declareFieldNames,
