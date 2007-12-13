@@ -89,10 +89,10 @@ void DTWKernel::declareOptions(OptionList& ol)
     declareOption(ol, "distance_type", &DTWKernel::distance_type,
                   OptionBase::buildoption,
                   "Name of the 'distance' function to use "
-                  "when comparing features (sub-vecs). "
-                  "one of: 'L2'  : sqrt{sum{(x-y)^2}}"
-                  "        'L1'  : sum{|x-y|}"
-                  "        'pow2': sum{(x-y)^2}");
+                  "when comparing features (sub-vecs).\n"
+                  "one of: 'L2'  : sqrt{sum{(x-y)^2}}\n"
+                  "        'L1'  : sum{|x-y|}\n"
+                  "        'pow2': sum{(x-y)^2}\n");
 
     declareOption(ol, "max_time_deviation", &DTWKernel::max_time_deviation,
                   OptionBase::buildoption,
@@ -111,7 +111,7 @@ void DTWKernel::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Calc. DTW on two feature vectors\n"),
          ArgDoc("x1","first vector"),
          ArgDoc("x2","second vector"),
-         RetDoc ("dpoint, dpath, bptrs")));
+         RetDoc ("dpath, dpoint, bptrs")));
 }
 
 
@@ -204,7 +204,7 @@ void DTWKernel::dtw(const Vec& x1, const Vec& x2) const
     for(i= 0; i < n1; ++i)
     {
         if(slope_ij_min == 0.)
-        {
+        {// avoid div by zero... especially if 0/0
             jmin0= 0.;
             jmax0= n2;
         }
@@ -217,13 +217,18 @@ void DTWKernel::dtw(const Vec& x1, const Vec& x2) const
         jmax= static_cast<int>(
             floor(min(jmax0, slope_ji_min*(i-n1+1) + n2 - 1)));
         if(max_time_deviation >= 0)
-        {
+        {// max abs. delta time (if >= 0)
             jmin= max(jmin, i - max_time_deviation);
             jmax= min(jmax, i + max_time_deviation);
         }
         jbounds(i,0)= jmin;
         jbounds(i,1)= jmax;
-
+        ///***///***///***///
+        /*
+         * TODO: make sure this is OK for exotic local_paths
+         *       (also see: option desc. for local_paths)
+         */
+        ///***///***///***///
         for(j= jmin; j <= jmax; ++j)
             dpoint(i,j)= dist_fn(subvecs1[i], subvecs2[j]);
     }
@@ -319,9 +324,11 @@ void DTWKernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(local_paths, copies);
     deepCopyField(dpoint, copies);
     deepCopyField(dpath, copies);
     deepCopyField(bptrs, copies);
+    deepCopyField(jbounds, copies);
 }
 
 } // end of namespace PLearn

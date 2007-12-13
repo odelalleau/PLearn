@@ -148,7 +148,6 @@ private:
     real slope_ij_min;
     real slope_ji_min;
 
-
 };
 
 // Declares a few other classes and functions related to this class
