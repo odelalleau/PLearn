@@ -109,7 +109,7 @@ void PLCheckTest::perform()
 // the same output regardless of small variations in the function display.
 // In particular, GCC displays the 'virtual' keyword, but not ICC.
     string pl_assert_func = PL_ASSERT_FUNCTION;
-    search_replace(pl_assert_func, "virtual", "");
+    search_replace(pl_assert_func, "virtual ", "");
 #undef PL_ASSERT_FUNCTION
 #define PL_ASSERT_FUNCTION (pl_assert_func.c_str())
     PLCHECK( one == ein );
