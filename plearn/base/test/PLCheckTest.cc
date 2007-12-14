@@ -38,6 +38,7 @@
 
 
 #include "PLCheckTest.h"
+#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -104,6 +105,13 @@ void PLCheckTest::perform()
 #undef __FILE__
 #define __FILE__ "PLCheckTest.cc"
 
+// Similarly, PLCHECK uses __PRETTY_FUNCTION__, but we want the test to have
+// the same output regardless of small variations in the function display.
+// In particular, GCC displays the 'virtual' keyword, but not ICC.
+    string pl_assert_func = PL_ASSERT_FUNCTION;
+    search_replace(pl_assert_func, "virtual", "");
+#undef PL_ASSERT_FUNCTION
+#define PL_ASSERT_FUNCTION (pl_assert_func.c_str())
     PLCHECK( one == ein );
     PLCHECK_MSG( ein == stein, "ein != stein" );
 }
