@@ -187,6 +187,12 @@ void InterfunctionXchgTest::perform()
             regex_replace(msg_without_sys_dependent_data, python_ver,
                     "Python 2.X.Y");
 
+        boost::regex python_path(": /(.)+/python",
+                                 boost::regex::perl|boost::regex::icase);
+        msg_without_sys_dependent_data =
+            regex_replace(msg_without_sys_dependent_data, python_path,
+                    ": /path/python");
+
         boost::regex except_display("<type 'exceptions.([a-z]+)'>",
                                     boost::regex::perl|boost::regex::icase);
         msg_without_sys_dependent_data =
