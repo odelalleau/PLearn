@@ -1457,7 +1457,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         connection->accumulatePosStats(*visible,*hidden);
 
         // negative phase
-        PLASSERT_MSG(hidden_layer->size<32 || visible_layer->size<32,
+        PLCHECK_MSG(hidden_layer->size<32 || visible_layer->size<32,
                      "To minimize exact log-likelihood of an RBM, hidden_layer->size "
                      "or visible_layer->size must be <32");
         // gradient of partition function
