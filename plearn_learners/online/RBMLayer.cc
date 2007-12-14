@@ -55,6 +55,8 @@ RBMLayer::RBMLayer( real the_learning_rate ) :
     learning_rate(the_learning_rate),
     momentum(0.),
     size(-1),
+    bias_decay_type("none"),
+    bias_decay_parameter(0),
     gibbs_ma_increment(0.1),
     gibbs_initial_ma_coefficient(0.1),
     batch_size(0),
@@ -108,6 +110,17 @@ void RBMLayer::declareOptions(OptionList& ol)
     declareOption(ol, "momentum", &RBMLayer::momentum,
                   OptionBase::buildoption,
                   "Momentum.");
+
+    declareOption(ol, "bias_decay_type", &RBMLayer::bias_decay_type,
+                  OptionBase::buildoption,
+                  "Bias decay type:\n"
+                  " - none: no decay applied\n"
+                  " - negative: pushes the biases towards -\\infty\n"
+                  " - l2: applies an l2 penalty");
+
+    declareOption(ol, "bias_decay_parameter", &RBMLayer::bias_decay_parameter,
+                  OptionBase::buildoption,
+                  "Bias decay parameter.");
 
     declareOption(ol, "gibbs_ma_schedule", &RBMLayer::gibbs_ma_schedule,
                   OptionBase::buildoption,
@@ -394,6 +407,8 @@ void RBMLayer::update()
         }
     }
 
+    applyBiasDecay();
+    
     clearStats();
 }
 
@@ -419,6 +434,8 @@ void RBMLayer::update( const Vec& grad )
             b[i] += binc[i];
         }
     }
+
+    applyBiasDecay();
 }
 
 void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
@@ -443,6 +460,9 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
             b[i] += binc[i];
         }
     }
+
+    applyBiasDecay();
+
 }
 
 void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
@@ -480,6 +500,9 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
         }
         */
     }
+
+    applyBiasDecay();
+
 }
 
 //////////////////////
@@ -522,6 +545,9 @@ void RBMLayer::updateCDandGibbs( const Mat& pos_values,
     columnSum(cd_neg_values, tmp);
     multiplyAcc(bias, tmp,
                 -learning_rate*(1-background_gibbs_update_ratio)*normalize_factor);
+
+    applyBiasDecay();
+
 }
 
 /////////////////
@@ -564,6 +590,9 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
     columnSum(pos_values,tmp);
     multiplyAcc(bias, tmp, learning_rate*normalize_factor);
     multiplyAcc(bias, bias_neg_stats, -learning_rate);
+
+    applyBiasDecay();
+
 }
 
 ////////////////
@@ -628,6 +657,9 @@ void RBMLayer::bpropCD(Vec& bias_gradient)
 
     for( int i=0 ; i<size ; i++ )
         bg[i] = -bps[i]/pos_count + bns[i]/neg_count;
+
+    addBiasDecay(bias_gradient);
+
 }
 
 void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
@@ -641,6 +673,9 @@ void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
 
     for( int i=0 ; i<size ; i++ )
         bg[i] = -bps[i] + bns[i];
+    
+    addBiasDecay(bias_gradient);
+
 }
 
 real RBMLayer::energy(const Vec& unit_values) const
@@ -666,6 +701,49 @@ void RBMLayer::getConfiguration(int conf_index, Vec& output)
     PLERROR("RBMLayer::getConfiguration(int, Vec) not implemented in subclass %s\n",classname().c_str());
 }
 
+
+void RBMLayer::addBiasDecay(Vec& bias_gradient)
+{
+    PLASSERT(bias_gradient.size()==size);
+
+    real *bg = bias_gradient.data();
+    real *b = bias.data();
+    bias_decay_type = lowerstring(bias_decay_type);
+
+    if (bias_decay_type=="none")
+        {}
+    else if (bias_decay_type=="negative")  // Pushes the biases towards -\infty
+        for( int i=0 ; i<size ; i++ )
+            bg[i] += learning_rate * bias_decay_parameter;
+    else if (bias_decay_type=="l2")  // L2 penalty on the biases
+        for (int i=0 ; i<size ; i++ )
+            bg[i] += learning_rate * bias_decay_parameter * b[i];
+    else
+        PLERROR("RBMLayer::addBiasDecay(string) bias_decay_type %s is not in"
+                " the list, in subclass %s\n",bias_decay_type.c_str(),classname().c_str());
+
+}
+
+void RBMLayer::applyBiasDecay()
+{
+    
+    PLASSERT(bias.size()==size);
+
+    real* b = bias.data();
+    bias_decay_type = lowerstring(bias_decay_type);
+
+    if (bias_decay_type=="none")
+        {}
+    else if (bias_decay_type=="negative") // Pushes the biases towards -\infty
+        for( int i=0 ; i<size ; i++ )
+            b[i] -= learning_rate * bias_decay_parameter;
+    else if (bias_decay_type=="l2") // L2 penalty on the biases
+        bias *= (1 - learning_rate * bias_decay_parameter);
+    else 
+        PLERROR("RBMLayer::applyBiasDecay(string) bias_decay_type %s is not in"
+                " the list, in subclass %s\n",bias_decay_type.c_str(),classname().c_str());
+
+}   
 } // end of namespace PLearn
 
 

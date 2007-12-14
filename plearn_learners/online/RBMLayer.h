@@ -72,6 +72,12 @@ public:
     //! Obsolete option, still here for script compatibility
     string units_types;
 
+    //! Type of decay applied to the biases
+    string bias_decay_type;
+
+    //! Bias decay parameter
+    real bias_decay_parameter;
+
     //! background gibbs chain options
     //! each element of this vector is a number of updates after which
     //! the moving average coefficient is incremented (by incrementing
@@ -284,6 +290,12 @@ public:
 
     //! Computes the conf_index configuration of the layer.
     virtual void getConfiguration(int conf_index, Vec& output);
+
+    //! Applies the bias decay
+    virtual void applyBiasDecay();
+
+    //! Adds the bias decay to the bias gradients
+    virtual void addBiasDecay(Vec& bias_gradient);
 
     //#####  PLearn::Object Protocol  #########################################
 
