@@ -79,10 +79,11 @@ inline size_t hashval(const T& x) { return hashbytes((char*)&x,sizeof(T)); }
 
 ///////////////////////////////////////////////////////////////////////////
 
-#if defined(__GNUC__) && defined(__INTEL_COMPILER)
-// Intel Compiler on Linux: we need to define a hash function for const char*.
+#if defined(__GNUC__) && defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1000
+// Intel Compiler (before 10.0) on Linux: we need to define a hash function for
+// const char*.
 SET_HASH_WITH_FUNCTION_NOCONSTREF(const char*, _s, PLearn::hashval(_s))
-#endif // __GNUC__
+#endif
 
     SET_HASH_WITH_INHERITANCE(std::string, const char*, __s, __s.c_str())
 
