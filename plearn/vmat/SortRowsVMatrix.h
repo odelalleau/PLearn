@@ -61,6 +61,7 @@ public:
     //! Public build options.
     bool increasing_order;
     TVec<int> sort_columns;
+    TVec<string> sort_columns_by_name;
 
 public:
 
@@ -68,10 +69,13 @@ public:
 
     PLEARN_DECLARE_OBJECT(SortRowsVMatrix);
 
-    static void declareOptions(OptionList &ol);
 
     virtual void build();
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+protected:
+
+    static void declareOptions(OptionList &ol);
 
 private:
 

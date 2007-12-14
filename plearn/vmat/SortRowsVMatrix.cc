@@ -48,27 +48,42 @@ using namespace std;
 
 /** SortRowsVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(SortRowsVMatrix,
-                        "Sort the samples of a VMatrix according to one (or more) given columns.",
-                        "The implementation is not efficient at all, feel free to improve it !"
-    );
+PLEARN_IMPLEMENT_OBJECT(
+    SortRowsVMatrix,
+    "Sort the samples of a VMatrix according to one (or more) given columns.",
+    "The implementation is not efficient at all, feel free to improve it !"
+);
 
-SortRowsVMatrix::SortRowsVMatrix()
-    : increasing_order(true)
-{
-    // Default = no sorting.
-    sort_columns.resize(0);
-}
+/////////////////////
+// SortRowsVMatrix //
+/////////////////////
+SortRowsVMatrix::SortRowsVMatrix():
+    increasing_order(true)
+{}
 
+////////////////////
+// declareOptions //
+////////////////////
 void SortRowsVMatrix::declareOptions(OptionList &ol)
 {
-    declareOption(ol, "sort_columns", &SortRowsVMatrix::sort_columns, OptionBase::buildoption,
-                  "    the column(s) that must be sorted (the first one is the first criterion)");
+    declareOption(ol, "sort_columns", &SortRowsVMatrix::sort_columns,
+                                      OptionBase::buildoption,
+        "Indices of the column(s) that must be sorted (the first one is the\n"
+        "first criterion).");
+
+    declareOption(ol, "sort_columns_by_name",
+                  &SortRowsVMatrix::sort_columns_by_name,
+                  OptionBase::buildoption,
+        "Names of the column(s) that must be sorted (the first one is the\n"
+        "first criterion). This option is optional and, if provided, the\n"
+        "'sort_columns' option will be ignored.");
 
     declareOption(ol, "increasing_order", &SortRowsVMatrix::increasing_order, OptionBase::buildoption,
                   "    if set to 1, the data will be sorted in increasing order");
 
     inherited::declareOptions(ol);
+
+    // Hide unused options.
 
     redeclareOption(ol, "indices", &SortRowsVMatrix::indices, OptionBase::nosave,
                     "The indices are computed at build time.");
@@ -76,9 +91,13 @@ void SortRowsVMatrix::declareOptions(OptionList &ol)
                     "Unused.");
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void SortRowsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    deepCopyField(sort_columns, copies);
+    deepCopyField(sort_columns,         copies);
+    deepCopyField(sort_columns_by_name, copies);
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -96,6 +115,12 @@ void SortRowsVMatrix::build()
 ////////////
 void SortRowsVMatrix::build_()
 {
+    if (sort_columns_by_name.isNotEmpty() && source) {
+        // Convert column names into column indices.
+        sort_columns.resize(sort_columns_by_name.length());
+        for (int i = 0; i < sort_columns_by_name.length(); i++)
+            sort_columns[i] = source->getFieldIndex(sort_columns_by_name[i]);
+    }
     // Check we don't try to sort twice by the same column (this can be confusing).
     if (sort_columns.isNotEmpty()) {
         for (int i = 0; i < sort_columns.length(); i++) {
