@@ -17,7 +17,7 @@ Setting the string:   'This string should survive within the Python environment'
 Read back the string: 'This string should survive within the Python environment'
 Trying to read back from second snippet:
 Caught Python Exception: 'NameError
-Python 2.X.Y: /usr/bin/python
+Python 2.X.Y: /path/python
 
 
 A problem occurred in a Python script.  Here is the sequence of
