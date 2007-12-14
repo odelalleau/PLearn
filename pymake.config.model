@@ -253,7 +253,7 @@ linkeroptions_tail = ''
 # First option that appears in each group is the default, and is assumed if you
 # do not specify any option from that group.
 options_choices = [
-  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'mpi',
+  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'icc10', 'mpi',
     'purify', 'quantify', 'vc++', 'condor' ],
   
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
@@ -299,6 +299,7 @@ if 'autopython' in optionargs:
 if not 'nopython' in optionargs:
     # First find which version of python is installed.
     python_includedirs=[]
+    numpy_includedirs = []
     if domain_name.endswith('iro.umontreal.ca'):
         optionargs += [ pyoption ]
         python_version = pyver
@@ -312,16 +313,15 @@ if not 'nopython' in optionargs:
             numpy_site_packages = []
             numpy_includedirs = []
         else:
-            numpy_includedirs = [ '/u/lisa/local/' + target_platform + '/include/', '/usr/include/python'+python_version ]
+          nothing_to_do = True
+          #numpy_includedirs = [ '/u/lisa/local/' + target_platform + '/include/', '/usr/include/python'+python_version ]
             ### NB: The '-lutil' is necessary on i386 LISA computers.
-            numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python%s/site-packages/numarray -lutil' % pyver
-    elif domain_name.endswith('.ms'):
-        numpy_includedirs = []
-        numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
-        optionargs += [ 'python25' ]
+            #numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python%s/site-packages/numarray -lutil' % pyver
+    elif domain_name.endswith('.m'):
+        #numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
         python_version = '2.5'
+        optionargs += [ 'python%s' % python_version.replace('.', '') ]
         python_lib_root = '/home/delallea/local/lib'
-        linkeroptions_tail += '-lunwind -lcprts' # -lgcc_eh
     elif domain_name.endswith('.rqchp.qc.ca'):
         numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
         numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
@@ -393,9 +393,9 @@ if not 'nopython' in optionargs:
                   ' or compile using another version of python.'
             sys.exit(100)
 
-    numpy_lib= ' -lnumarray '
-    if 'numpy' in optionargs:
-        numpy_lib= '/_capi.so -lutil '
+    #numpy_lib= ' -lnumarray '
+    #if 'numpy' in optionargs:
+      #numpy_lib= '/_capi.so -lutil '
 
     if platform == 'darwin':
         optionalLibrary( name = 'python',
@@ -416,11 +416,9 @@ if not 'nopython' in optionargs:
         optionalLibrary( name = 'python',
                      triggers = '[Pp]ython*',
                      includedirs = numpy_includedirs,
-                     linkeroptions = ( '%s%s ' % (numpy_site_packages, numpy_lib) + 
-                                       '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
-                                       '-Xlinker -export-dynamic ' + 
-                                       '-Xlinker -rpath -Xlinker %s' % numpy_site_packages )
-                     )
+                     linkeroptions = ( '-L%s/python%s/config -lpython%s ' % \
+                         (python_lib_root, python_version, python_version ) +
+                         ' -Xlinker -export-dynamic -lutil '))
 else:
     python_version = '' # should not be used anyway
 
@@ -586,6 +584,17 @@ pymakeOption( name = 'icc9',   # For C++, it is actually icpc
               compiler = icc9_exec + ' -w1 -wd981 -wd383 -wd869 -wd444 -wd810 -wd1418 -wd654 -wd279 -wd1683',
               cpp_definitions = ['USING_MPI=0'],
               linker = icc9_exec + ' '
+              )
+
+pymakeOption( name = 'icc10',   # For C++, it is actually icpc
+              description = 'compiling with Intel Compiler (version 10.x), with no MPI support',
+              # Disable some warnings:
+              # remark #981: operands are evaluated in unspecified order
+              # remark #383: value copied to temporary, reference to temporary used
+              # remark #1418: external function definition with no prior declaration
+              compiler = 'icpc -wd981 -wd383 -wd1418',
+              cpp_definitions = ['USING_MPI=0'],
+              linker = 'icpc  '
               )
 
 pymakeOption( name = 'mpi',
@@ -787,7 +796,7 @@ pymakeLinkOption( name = 'p4blas',
 
 pymakeLinkOption( name = 'mammouthblas',
               description = 'linking BLAS for P4 Mammouth-Serie cluster',
-              linkeroptions = '-L/opt/mkl/lib/32 -lmkl_p4 -lmkl_vml_p4 -lpthread -lmkl_lapack' )
+              linkeroptions = '-L/opt/intel/mkl/10.0.011/lib/32 -lmkl -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
 
 pymakeLinkOption( name = 'apintelblas',
               description = 'Intel BLAS+LAPACK for generic install in /usr/local/lib (incl. ApSTAT)',
