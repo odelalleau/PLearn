@@ -49,7 +49,8 @@
 #  include <ext/hash_set> //to get stl_hash_fun.h ... (template<> class hash)
 #  include <ext/hash_map> //to get stl_hash_fun.h ... (template<> class hash)
 
-#	if (__GNUC__ == 3 && __GNUC_MINOR__ == 0) || defined(__INTEL_COMPILER) // GCC 3.0 or ICC
+#	if (__GNUC__ == 3 && __GNUC_MINOR__ == 0) || (defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1000)
+//              GCC 3.0 or ICC < 10.0
 #		define __NMSPACE__ std
 #  else                                            // GCC 3.1 or later
 using namespace __gnu_cxx;
