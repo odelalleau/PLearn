@@ -147,6 +147,12 @@ class Var:
     def multiSample(self, gs):
         return Var(pl.MultiSampleVariable(input=self.v, groupsize=gs))
 
+    def bernoulliSample(self):
+        return Var(pl.BernoulliSampleVariable(input=self.v))
+
+    def timesConstantScalarVariable2(self, v2):
+        return Var(pl.TimesConstantScalarVariable2(input1=self.v, input2=v2.v))
+
     def transposeDoubleProduct(self, W, M):
         return Var(pl.TransposedDoubleProductVariable(varray=[self.v, W, M]))
 
@@ -170,6 +176,16 @@ class Var:
 
     def __neg__(self):
         return self.neg()
+
+####################################################
+# Operations implemented as functions
+
+
+def hconcatVars(varlist):
+    return Var(pl.ConcatColumnsVariable(varray=varlist))
+
+def vconcatVars(varlist):
+    return Var(pl.ConcatRowsVariable(varray=varlist))
     
 
 ###################################################    

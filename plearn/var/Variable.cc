@@ -317,7 +317,7 @@ void Variable::resize(int l, int w)
     else
         gradientdata = 0;
 }
-  
+
 //////////////
 // sizeprop //
 //////////////

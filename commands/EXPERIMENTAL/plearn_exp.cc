@@ -370,13 +370,18 @@
 #include <plearn/var/EXPERIMENTAL/LogSoftSoftMaxVariable.h>
 #include <plearn_learners/generic/EXPERIMENTAL/DeepReconstructorNet.h>
 #include <plearn/var/SourceVariable.h>
+#include <plearn/var/ConcatColumnsVariable.h>
+#include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/ExpVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/ProductTransposeVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/LogSoftmaxVariable.h>
 #include <plearn/var/ClassificationLossVariable.h>
-// #include <plearn/var/EXPERIMENTAL/MultiSampleVariable.h>
+#include <plearn/var/EXPERIMENTAL/MultiSampleVariable.h>
+#include <plearn/var/EXPERIMENTAL/RandomForcedValuesVariable.h>
+#include <plearn/var/EXPERIMENTAL/BernoulliSampleVariable.h>
+#include <plearn/var/EXPERIMENTAL/TimesConstantScalarVariable2.h>
 
 // Stuff used for transformationLearner experiments
 #include <plearn_learners/distributions/EXPERIMENTAL/TransformationLearner.h>

@@ -1,11 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
-// Copyright (C) 2002 Xiangdong Wang, Christian Dorion
-
+// TimesConstantScalarVariable2.cc
+//
+// Copyright (C) 2007 Pascal Vincent
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -36,75 +34,88 @@
 
 
 /* *******************************************************      
- * $Id$
+ * $Id: TimesConstantScalarVariable2.cc 3994 2005-08-25 13:35:03Z chapados $
  * This file is part of the PLearn library.
  ******************************************************* */
 
-#ifndef UnaryVariable_INC
-#define UnaryVariable_INC
+#include "TimesConstantScalarVariable2.h"
+#include <plearn/var/Var_operators.h>
 
-#include "VarArray.h"
-#include <plearn/math/TMat_maths.h>
+
 
 namespace PLearn {
 using namespace std;
 
-class UnaryVariable: public Variable
+/** TimesConstantScalarVariable2 **/
+
+PLEARN_IMPLEMENT_OBJECT(TimesConstantScalarVariable2,
+                        "Multiplies the first var V1 by a scalar second var V2. The second var is assumed constant, and no gradient is backpropagated to it.",
+                        "NO HELP");
+
+TimesConstantScalarVariable2::TimesConstantScalarVariable2(Variable* input1, Variable* input2)
+    : inherited(input1, input2, input1->length(), input1->width())
 {
-public:
-    typedef Variable inherited;
+    build_();
+}
 
-public:
+void
+TimesConstantScalarVariable2::build()
+{
+    inherited::build();
+    build_();
+}
 
-    //!  Default constructor for persistence
-    UnaryVariable() {}
+void
+TimesConstantScalarVariable2::build_()
+{
+    if (input2 && !input2->isScalar())
+        PLERROR("IN TimesConstantScalarVariable2: input2 is not a scalar");
+}
 
-protected:
-    static void declareOptions(OptionList & ol);
+void TimesConstantScalarVariable2::recomputeSize(int& l, int& w) const
+{
+    if (input1) {
+        l = input1->length();
+        w = input1->width();
+    } else
+        l = w = 0;
+}
 
-protected:
-    Var input;
+void TimesConstantScalarVariable2::fprop()
+{
+    real scal = input2->valuedata[0];
+    for(int k=0; k<nelems(); k++)
+        valuedata[k] = input1->valuedata[k] * scal;
+}
 
-public:
-    UnaryVariable(Variable* v, int thelength, int thewidth);
 
-    PLEARN_DECLARE_OBJECT(UnaryVariable);
-  
-    //! Set this Variable's input (simply call build after setting the new
-    //! input).
-    void setInput(Var the_input);
-  
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-    virtual bool markPath();
-    virtual void buildPath(VarArray& proppath);
-    virtual VarArray sources();
-    virtual VarArray random_sources();
-    virtual VarArray ancestors();
-    virtual void unmarkAncestors();
-    virtual void fprop() {} //!< Nothing to do by default.
-    virtual void bprop() {} //!< Nothing to do by default.
-    virtual VarArray parents();
-    void printInfo(bool print_gradient) 
-    { 
-        pout << getName() << "[" << (void*)this << "] " << *this
-             << " (" << (void*)input << ") = " << value;
-        if (print_gradient) 
-            pout << " gradient=" << gradient;
-        pout << endl; 
-    }
-    virtual void resizeRValue();
+void TimesConstantScalarVariable2::bprop()
+{
+    real scal = input2->valuedata[0];
+    for(int k=0; k<nelems(); k++)
+        input1->gradientdata[k] += scal*gradientdata[k];
+}
 
-    //! will issue a PLERROR if any of the input or current value or gradient matrices are not contiguous.
-    void checkContiguity() const;
 
-};
+void TimesConstantScalarVariable2::symbolicBprop()
+{
+    input1->accg(g*input2);
+}
 
-// Declares a few other classes and functions related to this class.
-DECLARE_OBJECT_PTR(UnaryVariable);
+
+//R(x1x2)=R(x1)x2+x1R(x2)
+void TimesConstantScalarVariable2::rfprop()
+{
+    if (rValue.length()==0) resizeRValue();
+    real scal = input2->valuedata[0];
+    real rscal = input2->rvaluedata[0];
+    for(int k=0; k<nelems(); k++)
+        rvaluedata[k] = input1->rvaluedata[k] * scal + input1->valuedata[k] * rscal;
+}
+
+
 
 } // end of namespace PLearn
-
-#endif 
 
 
 /*

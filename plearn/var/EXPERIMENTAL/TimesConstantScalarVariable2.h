@@ -1,11 +1,9 @@
 // -*- C++ -*-
 
-// PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
-// Copyright (C) 2001-2002 Nicolas Chapados, Ichiro Takeuchi, Jean-Sebastien Senecal
-// Copyright (C) 2002 Xiangdong Wang, Christian Dorion
-
+// TimesConstantScalarVariable2.h
+//
+// Copyright (C) 2007 Pascal Vincent
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 
@@ -36,71 +34,49 @@
 
 
 /* *******************************************************      
- * $Id$
+ * $Id: TimesConstantScalarVariable2.h 3994 2005-08-25 13:35:03Z chapados $
  * This file is part of the PLearn library.
  ******************************************************* */
 
-#ifndef UnaryVariable_INC
-#define UnaryVariable_INC
+#ifndef TimesConstantScalarVariable2_INC
+#define TimesConstantScalarVariable2_INC
 
-#include "VarArray.h"
-#include <plearn/math/TMat_maths.h>
+#include <plearn/var/BinaryVariable.h>
 
 namespace PLearn {
 using namespace std;
 
-class UnaryVariable: public Variable
+
+//!  multiplies a matrix var by a scalar var
+class TimesConstantScalarVariable2: public BinaryVariable
 {
-public:
-    typedef Variable inherited;
+    typedef BinaryVariable inherited;
 
 public:
-
     //!  Default constructor for persistence
-    UnaryVariable() {}
+    TimesConstantScalarVariable2() {}
+    TimesConstantScalarVariable2(Variable* input1, Variable* input2);
+
+    PLEARN_DECLARE_OBJECT(TimesConstantScalarVariable2);
+
+    virtual void build();
+
+    virtual void recomputeSize(int& l, int& w) const;
+    virtual void fprop();
+    virtual void bprop();
+    virtual void symbolicBprop();
+    virtual void rfprop();
 
 protected:
-    static void declareOptions(OptionList & ol);
-
-protected:
-    Var input;
-
-public:
-    UnaryVariable(Variable* v, int thelength, int thewidth);
-
-    PLEARN_DECLARE_OBJECT(UnaryVariable);
-  
-    //! Set this Variable's input (simply call build after setting the new
-    //! input).
-    void setInput(Var the_input);
-  
-    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
-    virtual bool markPath();
-    virtual void buildPath(VarArray& proppath);
-    virtual VarArray sources();
-    virtual VarArray random_sources();
-    virtual VarArray ancestors();
-    virtual void unmarkAncestors();
-    virtual void fprop() {} //!< Nothing to do by default.
-    virtual void bprop() {} //!< Nothing to do by default.
-    virtual VarArray parents();
-    void printInfo(bool print_gradient) 
-    { 
-        pout << getName() << "[" << (void*)this << "] " << *this
-             << " (" << (void*)input << ") = " << value;
-        if (print_gradient) 
-            pout << " gradient=" << gradient;
-        pout << endl; 
-    }
-    virtual void resizeRValue();
-
-    //! will issue a PLERROR if any of the input or current value or gradient matrices are not contiguous.
-    void checkContiguity() const;
-
+    void build_();
 };
 
-// Declares a few other classes and functions related to this class.
-DECLARE_OBJECT_PTR(UnaryVariable);
+DECLARE_OBJECT_PTR(TimesConstantScalarVariable2);
+
+inline Var timesConstantScalar2(Var v, Var scalar) {
+    return new TimesConstantScalarVariable2(v, scalar);
+}
+
 
 } // end of namespace PLearn
 

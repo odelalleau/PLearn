@@ -251,14 +251,14 @@ void DeepReconstructorNet::build_()
 
     supervised_costvec = hconcat(supervised_costs);
 
-
-    fullcost = supervised_costs[0];
+    if(supervised_costs.length()>0)
+        fullcost += supervised_costs[0];
     for(int i=1; i<supervised_costs.length(); i++)
-        fullcost = fullcost + supervised_costs[i];
+        fullcost += supervised_costs[i];
     
     int n_rec_costs = reconstruction_costs.length();
     for(int k=0; k<n_rec_costs; k++)
-        fullcost = fullcost + reconstruction_costs[k];
+        fullcost += reconstruction_costs[k];
     //displayVarGraph(fullcost);
     Var input = layers[0];
     Func f(input&target, fullcost);

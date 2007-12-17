@@ -253,6 +253,16 @@ public:
     inline int mod() const
     { return mod_; }
 
+    //! returns true if matrix elements are contiguous in memory
+    //! (i.e. no gap between last element of a row and first element of next row).
+    inline bool isContiguous() const
+    { return mod_==width_; }
+
+    //! returns true if matrix elements are not contiguous in memory
+    //! (i.e. there is a gap between last element of a row and first element of next row).
+    inline bool isNotContiguous() const
+    { return mod_!=width_; }
+
     //! Set a new value for 'mod'. The content of the matrix will be destroyed
     //! (i.e. moved around). In addition, if the new mod is strictly less than
     //! the width, the width will be set to this new mod (in order to ensure it

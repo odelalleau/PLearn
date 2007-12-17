@@ -89,7 +89,7 @@ using namespace std;
 
   real color_luminance_to_rgbreal(int colornum, real luminance)
   {
-    real r,g,b;
+    real r=0, g=0, b=0;
     color_luminance_to_rgb(colornum, luminance, r, g, b);
     return rgb2real(r,g,b);
   }

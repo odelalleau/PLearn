@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// MultiSampleVariable.cc
+// RandomForcedValuesVariable.cc
 //
-// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
+// Copyright (C) 2007 Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,93 +32,109 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux, Pascal Vincent
+// Authors: Pascal Vincent
 
-/*! \file MultiSampleVariable.cc */
+/*! \file RandomForcedValuesVariable.cc */
 
 
-#include "MultiSampleVariable.h"
+#include "RandomForcedValuesVariable.h"
 
 namespace PLearn {
 using namespace std;
 
-/** MultiSampleVariable **/
+/** RandomForcedValuesVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-    MultiSampleVariable,
-    "Different max variables done on separate groups of the input",
-    "This variables samples" 
-    "\non subvectors of the input, which lengths are defined by the field groupsize"
-    "\n"
+    RandomForcedValuesVariable,
+    "ONE LINE USER DESCRIPTION",
+    "MULTI LINE\nHELP FOR USERS"
     );
 
+RandomForcedValuesVariable::RandomForcedValuesVariable()
+    :forcing_prob(0),
+     forcing_value(0)
 
-//! Constructor
-
-MultiSampleVariable::MultiSampleVariable(Variable* input, int groupsize)
-    : inherited(input, input->length(), input->width()),
-      groupsize(groupsize),
-      random_gen(NULL)
+    /* ### Initialize all fields to their default value */
 {
-    build_();
+    // ### You may (or not) want to call build_() to finish building the object
+    // ### (doing so assumes the parent classes' build_() have been called too
+    // ### in the parent classes' constructors, something that you must ensure)
 }
 
-void MultiSampleVariable::recomputeSize(int& l, int& w) const
+// constructor from input variable and parameters
+// RandomForcedValuesVariable::RandomForcedValuesVariable(Variable* input, param_type the_parameter,...)
+// ### replace with actual parameters
+//  : inherited(input, this_variable_length, this_variable_width),
+//    parameter(the_parameter),
+//    ...
+//{
+//    // ### You may (or not) want to call build_() to finish building the
+//    // ### object
+//}
+
+void RandomForcedValuesVariable::recomputeSize(int& l, int& w) const
 {
-    if (input) {
-        l = input->length();
-        w = input->width() ;
-    } else
+    if (input) 
+    {
+        l = input.length();
+        w = input.width(); // the computed width
+    } 
+    else
         l = w = 0;
 }
 
 // ### computes value from input's value
-void MultiSampleVariable::fprop()
+void RandomForcedValuesVariable::fprop()
 {
+    checkContiguity();
+
     if(random_gen.isNull())
         random_gen = PRandom::common(false);
 
-    int k;
-    Mat inputValue = input->matValue;
 
-    Vec inputValue_n;
-    Vec value_n;
+    int n = value.length();
+    forced.resize(n);
 
-    for(int n=0; n<inputValue.length(); n++)
+    for(int i=0; i<n; i++)
     {
-        k=0;
-        inputValue_n = inputValue(n);
-        value_n = matValue(n);
-
-        //we set all values to 0. before sampling "ones"
-        for (int i=0; i<value_n.length(); i++)
-            value_n[i]=0.;
-        
-        while ( k < this->width() )
-        {            
-            sample_range(inputValue_n, value_n, k, groupsize);         
-            k+=groupsize;
+        if(random_gen->uniform_sample()<forcing_prob)
+        {
+            valuedata[i] = forcing_value;
+            forced[i] = true;
+        }
+        else
+        {
+            valuedata[i] = input->valuedata[i];
+            forced[i] = false;
         }
     }
 }
 
 // ### computes input's gradient from gradient
-void MultiSampleVariable::bprop()
-{}    
+void RandomForcedValuesVariable::bprop()
+{
+    int n = gradient.length();
+    for(int i=0; i<n; i++)
+    {
+        if(!forced[i])
+            input->gradientdata[i] += gradientdata[i];
+    }
+}
+
 // ### You can implement these methods:
-// void MultiSampleVariable::bbprop() {}
-// void MultiSampleVariable::symbolicBprop() {}
-// void MultiSampleVariable::rfprop() {}
+// void RandomForcedValuesVariable::bbprop() {}
+// void RandomForcedValuesVariable::symbolicBprop() {}
+// void RandomForcedValuesVariable::rfprop() {}
 
 
 // ### Nothing to add here, simply calls build_
-void MultiSampleVariable::build()
+void RandomForcedValuesVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void MultiSampleVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void RandomForcedValuesVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -126,12 +142,13 @@ void MultiSampleVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
-    //deepCopyField(groupsizes, copies);
+    deepCopyField(random_gen, copies);
+
     // ### If you want to deepCopy a Var field:
-    // varDeepCopyField(somevariable, copies);   
+    // varDeepCopyField(somevariable, copies);
 }
 
-void MultiSampleVariable::declareOptions(OptionList& ol)
+void RandomForcedValuesVariable::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
@@ -141,24 +158,21 @@ void MultiSampleVariable::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    // ### ex:
-    //declareOption(ol, "groupsizes", &MultiSampleVariable::groupsizes,
-    //              OptionBase::buildoption,
-    //              "this tells how to \"divide\" our diffrents inputs\nex: groupsizes = [1,2,3] says we divide our output like this :\n[x1],[x2,x3],[x4,x5,x6] and apply a maximum algorithm on each group separately");
-
-    declareOption(ol, "groupsize", &MultiSampleVariable::groupsize,
+    declareOption(ol, "forcing_prob", &RandomForcedValuesVariable::forcing_prob,
                   OptionBase::buildoption,
-                  "shortcut if you want all groupsizes to be equals, for example if you set the value of this option to be 3, it will make groupsizes = [3,3,...,3]");   
-
-    declareOption(ol, "random_gen", &MultiSampleVariable::random_gen,
+                  "The probability of forcing each input to forcing_value");
+    declareOption(ol, "forcing_value", &RandomForcedValuesVariable::forcing_value,
+                  OptionBase::buildoption,
+                  "The value to which to set all inputs that have been elected to be forced.");
+    declareOption(ol, "random_gen", &RandomForcedValuesVariable::random_gen,
                   OptionBase::buildoption,
                   "Random number generator. If null, the PRandom::common(false) generator will be used.");
-            
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
-void MultiSampleVariable::build_()
+void RandomForcedValuesVariable::build_()
 {
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation.
@@ -170,35 +184,7 @@ void MultiSampleVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
-    
-    if (groupsize <= 0)
-        PLERROR("Groupsize(s) not specified or invalid in MultiSampleVariable");    
-    if (input->width() % groupsize != 0)
-        PLERROR("Invalid groupsize in MultiSampleVariable (%i does not divide %i)", groupsize, input->width());
 }
-
-
-////////////////
-// some utils //
-////////////////
-
-void MultiSampleVariable::sample_range(Vec &x, Vec &y, int start, int length)
-{
-    if(length != 1)
-    {
-        y[start+random_gen->multinomial_sample(x.subVec(start,length))] = 1;
-    }
-    else // if groupsize == 1
-    {
-        Vec temp(2);
-        temp[0] = 1.-x[start];
-        temp[1] = temp[0];
-        y[start] = random_gen->multinomial_sample(temp);
-    }
-}
-
-
-
 
 
 } // end of namespace PLearn

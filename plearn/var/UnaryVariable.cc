@@ -101,6 +101,14 @@ void UnaryVariable::buildPath(VarArray& proppath)
     }
 }
 
+void UnaryVariable::checkContiguity() const
+{
+    if(matValue.isNotContiguous() 
+       || input->matValue.isNotContiguous()
+       || matGradient.isNotContiguous() 
+       || input->matGradient.isNotContiguous())
+        PLERROR("operation not currently implemented for non-contiguous matrix data");
+}
 
 VarArray UnaryVariable::sources() 
 { 
@@ -109,7 +117,6 @@ VarArray UnaryVariable::sources()
     marked = true;
     return input->sources(); 
 }
-
 
 VarArray UnaryVariable::random_sources() 
 { 

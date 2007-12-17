@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// MultiSampleVariable.cc
+// BernoulliSampleVariable.cc
 //
-// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
+// Copyright (C) 2007 Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,38 +32,35 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux, Pascal Vincent
+// Authors: Pascal Vincent
 
-/*! \file MultiSampleVariable.cc */
+/*! \file BernoulliSampleVariable.cc */
 
 
-#include "MultiSampleVariable.h"
+#include "BernoulliSampleVariable.h"
 
 namespace PLearn {
 using namespace std;
 
-/** MultiSampleVariable **/
+/** BernoulliSampleVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(
-    MultiSampleVariable,
-    "Different max variables done on separate groups of the input",
-    "This variables samples" 
-    "\non subvectors of the input, which lengths are defined by the field groupsize"
+    BernoulliSampleVariable,
+    "Input gives a vector of parameters, each of which is the probability parameter of a Bernoulli. Output is sample from those." ,
     "\n"
     );
 
 
 //! Constructor
 
-MultiSampleVariable::MultiSampleVariable(Variable* input, int groupsize)
+BernoulliSampleVariable::BernoulliSampleVariable(Variable* input)
     : inherited(input, input->length(), input->width()),
-      groupsize(groupsize),
-      random_gen(NULL)
+      random_gen(0)
 {
     build_();
 }
 
-void MultiSampleVariable::recomputeSize(int& l, int& w) const
+void BernoulliSampleVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {
         l = input->length();
@@ -73,52 +70,38 @@ void MultiSampleVariable::recomputeSize(int& l, int& w) const
 }
 
 // ### computes value from input's value
-void MultiSampleVariable::fprop()
+void BernoulliSampleVariable::fprop()
 {
+    checkContiguity();
+
     if(random_gen.isNull())
         random_gen = PRandom::common(false);
 
-    int k;
-    Mat inputValue = input->matValue;
-
-    Vec inputValue_n;
-    Vec value_n;
-
-    for(int n=0; n<inputValue.length(); n++)
-    {
-        k=0;
-        inputValue_n = inputValue(n);
-        value_n = matValue(n);
-
-        //we set all values to 0. before sampling "ones"
-        for (int i=0; i<value_n.length(); i++)
-            value_n[i]=0.;
-        
-        while ( k < this->width() )
-        {            
-            sample_range(inputValue_n, value_n, k, groupsize);         
-            k+=groupsize;
-        }
-    }
+    int l = nelems();
+    real* valueptr = valuedata;
+    real* inputvalueptr = input->valuedata;
+    for(int i=0; i<l; i++)
+        *valueptr++ = random_gen->binomial_sample(*inputvalueptr++);
 }
 
 // ### computes input's gradient from gradient
-void MultiSampleVariable::bprop()
+void BernoulliSampleVariable::bprop()
 {}    
+
 // ### You can implement these methods:
-// void MultiSampleVariable::bbprop() {}
-// void MultiSampleVariable::symbolicBprop() {}
-// void MultiSampleVariable::rfprop() {}
+// void BernoulliSampleVariable::bbprop() {}
+// void BernoulliSampleVariable::symbolicBprop() {}
+// void BernoulliSampleVariable::rfprop() {}
 
 
 // ### Nothing to add here, simply calls build_
-void MultiSampleVariable::build()
+void BernoulliSampleVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void MultiSampleVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
+void BernoulliSampleVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
@@ -126,12 +109,12 @@ void MultiSampleVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### that you wish to be deepCopied rather than
     // ### shallow-copied.
     // ### ex:
-    //deepCopyField(groupsizes, copies);
+    deepCopyField(random_gen, copies);
     // ### If you want to deepCopy a Var field:
     // varDeepCopyField(somevariable, copies);   
 }
 
-void MultiSampleVariable::declareOptions(OptionList& ol)
+void BernoulliSampleVariable::declareOptions(OptionList& ol)
 {
     // ### Declare all of this object's options here.
     // ### For the "flags" of each option, you should typically specify
@@ -142,15 +125,7 @@ void MultiSampleVariable::declareOptions(OptionList& ol)
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
     // ### ex:
-    //declareOption(ol, "groupsizes", &MultiSampleVariable::groupsizes,
-    //              OptionBase::buildoption,
-    //              "this tells how to \"divide\" our diffrents inputs\nex: groupsizes = [1,2,3] says we divide our output like this :\n[x1],[x2,x3],[x4,x5,x6] and apply a maximum algorithm on each group separately");
-
-    declareOption(ol, "groupsize", &MultiSampleVariable::groupsize,
-                  OptionBase::buildoption,
-                  "shortcut if you want all groupsizes to be equals, for example if you set the value of this option to be 3, it will make groupsizes = [3,3,...,3]");   
-
-    declareOption(ol, "random_gen", &MultiSampleVariable::random_gen,
+    declareOption(ol, "random_gen", &BernoulliSampleVariable::random_gen,
                   OptionBase::buildoption,
                   "Random number generator. If null, the PRandom::common(false) generator will be used.");
             
@@ -158,7 +133,7 @@ void MultiSampleVariable::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-void MultiSampleVariable::build_()
+void BernoulliSampleVariable::build_()
 {
     // ### This method should do the real building of the object,
     // ### according to set 'options', in *any* situation.
@@ -170,35 +145,7 @@ void MultiSampleVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
-    
-    if (groupsize <= 0)
-        PLERROR("Groupsize(s) not specified or invalid in MultiSampleVariable");    
-    if (input->width() % groupsize != 0)
-        PLERROR("Invalid groupsize in MultiSampleVariable (%i does not divide %i)", groupsize, input->width());
 }
-
-
-////////////////
-// some utils //
-////////////////
-
-void MultiSampleVariable::sample_range(Vec &x, Vec &y, int start, int length)
-{
-    if(length != 1)
-    {
-        y[start+random_gen->multinomial_sample(x.subVec(start,length))] = 1;
-    }
-    else // if groupsize == 1
-    {
-        Vec temp(2);
-        temp[0] = 1.-x[start];
-        temp[1] = temp[0];
-        y[start] = random_gen->multinomial_sample(temp);
-    }
-}
-
-
-
 
 
 } // end of namespace PLearn
