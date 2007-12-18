@@ -35,8 +35,9 @@ logging.root.setLevel(logging._levelNames["INFO"])
 #  These could be moved in a config file...
 #  ( cluster.config in .plearn )
 #
-TASK_TYPE_MAP    = { 'apstat.com':       'SshTask',
-                     'iro.umontreal.ca': 'ClusterTask'
+TASK_TYPE_MAP    = { 'apstat.com':            'SshTask',
+                     'iro.umontreal.ca':      'ClusterTask',
+                     '## UNKNOWN DOMAINE ##': 'OnHostTask'
                      }
 
 # Used only for clusters of type 'ssh'. Do not enter the same machine more
@@ -55,7 +56,9 @@ SSH_MACHINES_MAP = { 'apstat.com': [ 'embla',
                      'iro.umontreal.ca' : [ 'lhmm',    'lknn',    'lmfa',      'lmlp',
                                             'lsom',    'lsvm',    'currie',    'dirac',
                                             'fermi',   'plank',   'einstein'
-                                            ]                         
+                                            ],
+
+                     '## UNKNOWN DOMAINE ##': [ 'host' ]
                      }
 
 # To override the default of 1
@@ -68,7 +71,10 @@ LOADAVG_DELAY = timedelta(seconds=120)
 BUFSIZE       = 4096
 SLEEP_TIME    = 15
 LOGDIR        = None  # May be set by set_logdir()
-DOMAIN_NAME   = get_domain_name()
+try:
+    DOMAIN_NAME = get_domain_name()
+except Exception, e:
+    DOMAIN_NAME = "## UNKNOWN DOMAINE ##"
 
 # Configurables
 NICE          = 'nice'
@@ -229,7 +235,8 @@ class TaskType:
             for fromchild in iwtd:
                 ready = cls._child_processes[fromchild]
                 read_str = ready.process.fromchild.read()
-                #read_str = ready.process.fromchild.read(BUFSIZE)
+                logging.debug("* Read \n%s"% read_str)
+                #print("* Read \n%s"% read_str)
                 if hasattr(ready, 'logfile'):
                     ready.logfile.write(read_str)
 
@@ -247,7 +254,9 @@ class TaskType:
             # the task is still running.
             running_tasks = cls._child_processes.values()
             for task in running_tasks:
-                if task.process.poll() >= 0:
+                poll_value = task.process.poll()
+                logging.debug("* Poll returned %s" % poll_value)
+                if poll_value >= 0:
                     task.free()
                     completed.append(task)
 
@@ -323,7 +332,8 @@ class SshTask( TaskType ):
     _available_machines = None
     _max_load= 1.0
     
-    def getLoadAvg(cls, machine):
+    def getLoadAvg(cls, machine,
+                   command = lambda host: 'ssh -x %s cat /proc/loadavg' % host):
         #print "\nQuery to", machine
         if machine in cls._loadavg:
             # For typical PLearn/FinLearn tasks, the process begins by
@@ -337,7 +347,7 @@ class SshTask( TaskType ):
 
         # Query for the load average
         #print "NEW QUERY!"
-        p = os.popen('ssh -x %s cat /proc/loadavg' % machine)
+        p = os.popen( command(machine) )
         line = p.readline()
         return float(line.split()[0]) # Take the last minute average
     getLoadAvg = classmethod(getLoadAvg)
@@ -379,27 +389,6 @@ class SshTask( TaskType ):
         return next
     nextAvailableMachine = classmethod(nextAvailableMachine)
 
-    #TBR: def nextAvailableMachine(cls):
-    #TBR:     # If a StopIteration exception is encountered on an already began
-    #TBR:     # loop, we simply have queried each machine once and shall start
-    #TBR:     # over. If such an exception is raise on a new loop, then no
-    #TBR:     # machines are currently available and we raise an
-    #TBR:     # EmptyTaskListError so as to wait a little while before querying
-    #TBR:     # again...
-    #TBR:     new_loop = False
-    #TBR:     if cls._available_machines is None:
-    #TBR:         cls._available_machines = cls.listAvailableMachines()            
-    #TBR:         new_loop = True
-    #TBR:     
-    #TBR:     try:
-    #TBR:         return cls._available_machines.next()
-    #TBR:     except StopIteration:
-    #TBR:         cls._available_machines = None
-    #TBR:         if new_loop:
-    #TBR:             time.sleep(SLEEP_TIME)
-    #TBR:         return cls.nextAvailableMachine()
-    #TBR: nextAvailableMachine = classmethod(nextAvailableMachine)
-
     #
     # Instance methods
     #
@@ -417,6 +406,50 @@ class SshTask( TaskType ):
     def free(self):
         #KNOWN ISSUE: self._machines.append( self.host )
         TaskType.free(self)
+
+
+class OnHostTask( SshTask ):
+
+    def getLoadAvg(cls, machine,
+                   command = lambda host: 'cat /proc/loadavg'):
+        return SshTask.getLoadAvg(machine, command)
+    getLoadAvg = classmethod(getLoadAvg)
+    
+    def listAvailableMachines(cls):
+        for m in cls._machines:
+            loadavg = cls.getLoadAvg(m)
+            max_loadavg = cls._max_load
+
+            print "Load %f / %f"%(loadavg, max_loadavg)
+            if loadavg < max_loadavg:
+                # Register the load average *plus* one, taking in account
+                # the process we are about to launch
+                cls._loadavg[m] = datetime(*time.localtime()[:6]), loadavg+1
+                print "At %s Saving %f"%cls._loadavg[m]
+                print
+                yield m
+    listAvailableMachines = classmethod(listAvailableMachines)
+
+    #
+    # Instance methods
+    #
+
+    def getLaunchCommand(self):
+        # Get the first available machine
+        self.host = self.nextAvailableMachine()
+        assert self.host == 'host', self.host
+        return ' '.join(self.argv)
+
+    def getLogFileBaseName(self):
+        raise NotImplementedError('OnHostTask::getLogFileBaseName')
+
+    # def free(self):
+    #     TaskType.free(self)
+    # 
+    #     cls = self.__class__
+    #     time, loadavg = cls._loadavg['host'] 
+    #     cls._loadavg['host'] = time, loadavg-1
+
 
 class ClusterTask( TaskType ):
     def listAvailableMachines( cls ):
