@@ -70,6 +70,12 @@ SLEEP_TIME    = 15
 LOGDIR        = None  # May be set by set_logdir()
 DOMAIN_NAME   = get_domain_name()
 
+# Configurables
+NICE          = 'nice'
+ARG_VALUE_FMT = "%s=%s"
+QUOTED_ARGS   = lambda L: ['"%s"'%elem for elem in L]
+
+
 #######  To be assigned to a subclass of TaskType when these will be declared
 Task = None
 
@@ -355,25 +361,44 @@ class SshTask( TaskType ):
     listAvailableMachines = classmethod(listAvailableMachines)
 
     def nextAvailableMachine(cls):
-        # If a StopIteration exception is encountered on an already began
-        # loop, we simply have queried each machine once and shall start
-        # over. If such an exception is raise on a new loop, then no
-        # machines are currently available and we raise an
-        # EmptyTaskListError so as to wait a little while before querying
-        # again...
-        new_loop = False
-        if cls._available_machines is None:
-            cls._available_machines = cls.listAvailableMachines()            
-            new_loop = True
-
-        try:
-            return cls._available_machines.next()
-        except StopIteration:
-            cls._available_machines = None
-            if new_loop:
-                time.sleep(SLEEP_TIME)
-            return cls.nextAvailableMachine()
+        # If a StopIteration exception is encountered on an iteration
+        # already begun, we simply have queried each machine once and shall
+        # start over. If such an exception is raised on a fresh iterator,
+        # then no machines are currently available and we have to wait a
+        # little before querying again...
+        next = None
+        fresh_iterator = False
+        while next is None:
+            try:
+                next = cls._available_machines.next()
+            except (StopIteration, AttributeError), err:
+                if fresh_iterator:
+                    time.sleep(SLEEP_TIME)
+                cls._available_machines = cls.listAvailableMachines()
+                fresh_iterator = True
+        return next
     nextAvailableMachine = classmethod(nextAvailableMachine)
+
+    #TBR: def nextAvailableMachine(cls):
+    #TBR:     # If a StopIteration exception is encountered on an already began
+    #TBR:     # loop, we simply have queried each machine once and shall start
+    #TBR:     # over. If such an exception is raise on a new loop, then no
+    #TBR:     # machines are currently available and we raise an
+    #TBR:     # EmptyTaskListError so as to wait a little while before querying
+    #TBR:     # again...
+    #TBR:     new_loop = False
+    #TBR:     if cls._available_machines is None:
+    #TBR:         cls._available_machines = cls.listAvailableMachines()            
+    #TBR:         new_loop = True
+    #TBR:     
+    #TBR:     try:
+    #TBR:         return cls._available_machines.next()
+    #TBR:     except StopIteration:
+    #TBR:         cls._available_machines = None
+    #TBR:         if new_loop:
+    #TBR:             time.sleep(SLEEP_TIME)
+    #TBR:         return cls.nextAvailableMachine()
+    #TBR: nextAvailableMachine = classmethod(nextAvailableMachine)
 
     #
     # Instance methods
@@ -382,7 +407,7 @@ class SshTask( TaskType ):
     def getLaunchCommand(self):
         # Get the first available machine
         self.host = self.nextAvailableMachine()
-        actual_command = ' '.join(['cd', os.getcwd(), ';', 'nice'] + self.argv)
+        actual_command = ' '.join(['cd', os.getcwd(), ';', NICE] + self.argv)
         actual_command = actual_command.replace('"', r'\"')
         return 'ssh %s %s "%s"'%(self.host, self.Xopt, actual_command)
 
@@ -430,8 +455,6 @@ Task = globals()[ TASK_TYPE_MAP[ DOMAIN_NAME ] ]
 
 class RejectedByPredicate( Exception ): pass
 
-## Under Development
-_quoted = lambda L: ['"%s"'%elem for elem in L]
 class Dispatch( PyPLearnObject ):
     # The name of the program to invoke
     program                  = PLOption(None)
@@ -489,7 +512,7 @@ class Dispatch( PyPLearnObject ):
 
           4) expdir_root      -> Experiments are cached.
 
-        Keys and values are joined using an equal sign ('=').
+        Keys and values are joined using the ARG_VALUE_FMT string.
         """
         self.program       = argument_bindings.pop( "_program_",       self.program )
         self.script        = argument_bindings.pop( "_script_",        self.script )
@@ -503,9 +526,9 @@ class Dispatch( PyPLearnObject ):
                 Experiment.cache_experiments( self.expdir_root )
         
         if self.protocol=="expkey":            
-            expkey = [ "%s=%s"%(k,v) for (k,v) in argument_bindings.iteritems() ]
+            expkey = [ ARG_VALUE_FMT%(k,v) for (k,v) in argument_bindings.iteritems() ]
             if not self._predicate( expkey ):
-                raise RejectedByPredicate( ' '.join(_quoted(expkey)) )
+                raise RejectedByPredicate( ' '.join(QUOTED_ARGS(expkey)) )
             return expkey
         elif self.protocol=="named_args":
             return [ arg%argument_bindings for arg in self.constant_args ]
@@ -523,7 +546,7 @@ class Dispatch( PyPLearnObject ):
             task_sum = 0
             delayed_tasks = 0
             for arguments_oracle in oracles:
-                assert isinstance( arguments_oracle, ArgumentsOracle ), TypeError(type(argumentsoracle))
+                assert isinstance( arguments_oracle, ArgumentsOracle ), TypeError(type(arguments_oracle))
                 done, delayed = self.__start( arguments_oracle )
                 task_sum += done
                 delayed_tasks += delayed
@@ -552,12 +575,14 @@ class Dispatch( PyPLearnObject ):
                 continue
 
             assert self.program
-            prepend = [ "echo", "$HOST;", 'nice', self.program ]
+            prepend = [ "echo", "$HOST;", NICE, self.program ]
             if self.script:
                 prepend.append( self.script )
             if self.protocol=="expkey":
                 prepend.extend( self.constant_args )
 
+            # No expdir is created if there is no script or if the script
+            # is not a pyplearn script
             if self.script.find( '.pyplearn' ) != -1:
                 expdir = None
                 for arg in arguments:
@@ -573,19 +598,19 @@ class Dispatch( PyPLearnObject ):
                     arguments.append( "expdir=%s" % expdir )
 
             # # Module function defined above
-            # launch_task( prepend+_quoted(arguments) )
+            # launch_task( prepend+QUOTED_ARGS(arguments) )
             assert Task is not None
-            ##TBM?: task = Task(prepend+_quoted(arguments)+[";", "echo", "'Task Done.'"])
+            ##TBM?: task = Task(prepend+QUOTED_ARGS(arguments)+[";", "echo", "'Task Done.'"])
             if self.delay:
                 ##TBM?: 
-                cmd = ' '.join(prepend+_quoted(arguments))
+                cmd = ' '.join(prepend+QUOTED_ARGS(arguments))
                 logging.info('Delayed: %s'%cmd)
                 ##TBM?: logging.info('Delayed: %s'%task.getLaunchCommand())
                 delayed += 1
                 ##TBM?: task.free() # Since it won't be launch, free the resources...
                 continue
             ##TBM?: 
-            task = Task(prepend+_quoted(arguments)+[";", "echo", "'Task Done.'"])
+            task = Task(prepend+QUOTED_ARGS(arguments)+[";", "echo", "'Task Done.'"])
             
             task.launch()
             if Task.count( ) == self.max_nmachines:
