@@ -828,7 +828,7 @@ T Aij = it->second;
         return MAX(end1->first, end2->first);
     }
 
-/*!       Export as matlab readable [i, j , v] format to file <out>
+/*!       Export as matlab readable [i, j , v] format to file 'filename'
   Matlab : (1) load <out> (2) A = spconvert(out)
   (note: the file extension must be '.dat')
 */
