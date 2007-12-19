@@ -113,7 +113,10 @@ VMatCommand::VMatCommand():
         "       field (column) number, starting at 0. Those files contain the plearn\n"
         "       scripts of the Dictionary objets for each field.\n"
         "   or: vmat catstr <dataset>\n"
-        "       Will output the content of <dataset>, using its string mappings\n\n"
+        "       Will output the content of <dataset>, using its string mappings\n"
+        "   or: vmat compare_stats <dataset1> <dataset2> [stdev threshold] [missing threshold]\n"
+        "       Will compare stats from dataset1 to dataset2\n\n"
+
         "<dataset> is a parameter understandable by getDataSet: \n"
         + getDataSetHelp()
         ) 

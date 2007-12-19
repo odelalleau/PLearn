@@ -486,7 +486,9 @@ int vmatmain(int argc, char** argv)
             "       between two consecutive input points \n"
             "   or: vmat catstr <dataset> [separator]\n"
             "       Will output the content of <dataset>, using its string mappings.\n"
-            "       A column separator can be provided. By default, \"\t\" is used.\n\n"
+            "       A column separator can be provided. By default, \"\t\" is used.\n"
+            "   or: vmat compare_stats <dataset1> <dataset2> [stdev threshold] [missing threshold]\n"
+            "       Will compare stats from dataset1 to dataset2\n\n"
             "<dataset> is a parameter understandable by getDataSet. This includes \n"
             "all matrix file formats. Type 'vmat help dataset' to see what other\n"
             "<dataset> strings are available." << endl;
@@ -942,6 +944,22 @@ int vmatmain(int argc, char** argv)
     else if(command=="help")
     {
         pout << getDataSetHelp() << endl;
+    }
+    else if(command=="compare_stats")
+    {
+        if(!(argc==4||argc==5||argc==6))
+            PLERROR("vmat compare_stats must be used that way: vmat compare_stats <dataset1> <dataset2> [stderror threshold] [missing threshold]");
+        VMat m1 = getDataSet(argv[2]);
+        VMat m2 = getDataSet(argv[3]);
+        real stderror_threshold = 1;
+        real missing_threshold = 10;
+        if(argc>4)
+            stderror_threshold=toreal(argv[4]);
+        if(argc>5)
+            missing_threshold=toreal(argv[5]);
+        int diff = m1->compareStats(m2, stderror_threshold, missing_threshold);
+        cout<<"Their is "<<diff<<" fields that have different stats"<<endl;
+
     }
     else
         PLERROR("Unknown command : %s",command.c_str());

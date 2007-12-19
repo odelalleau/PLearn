@@ -596,6 +596,18 @@ public:
     StatsCollector& getStats(int fieldnum) const
     { return getStats()[fieldnum]; }
 
+    
+    //! Compare the stats of this VecStatsCollector with the target one.
+    //! @param target the VecStatsCollector we compare again
+    //! @param stderror_threshold The threshold alowed for the standard error
+    //! @param missing_threshold The threshold alowed for the % of missing
+    //! @return If they are comparable with respect to the gived threshold,
+    //! we return true. Otherwise false
+    int compareStats(const VMat& target,
+                     const real stderror_threshold = 2,
+                     const real missing_threshold = 10) const;
+
+
     /**
      *  Returns the bounding box of the data, as a vector of min:max pairs.  If
      *  extra_percent is non 0, then the box is enlarged in both ends of every

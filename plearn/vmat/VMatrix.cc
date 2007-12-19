@@ -1886,6 +1886,45 @@ void VMatrix::appendRows(Mat rows)
         appendRow(rows(i));
 }
 
+
+int VMatrix:: compareStats(const VMat& target,
+                           const real stderror_threshold,
+                           const real missing_threshold) const
+{
+#ifdef BOUNDCHECK
+    if(target->width()!=width())
+        PLERROR("In VecStatsCollector:: compareStats() - this vmatris have width %d witch differ from the target width of %d", width(), target->width());
+#endif
+    int diff = 0;
+
+    for(int i=0;i<width();i++)
+    {
+        const StatsCollector tstats = target->getStats(i);
+        const StatsCollector lstats = getStats(i);
+
+        real tmissing = tstats.nmissing()/tstats.n();
+        real lmissing = lstats.nmissing()/lstats.n();
+        if(lmissing<(tmissing-missing_threshold/100) || lmissing>(tmissing+missing_threshold/100))
+        {
+            PLWARNING("In VMatrix::compareStats - field %d(%s) have %f missing while target stats have %f",
+                      i, fieldName(i).c_str(), lmissing, tmissing);
+            diff++;
+        }
+        real tmean = tstats.mean();
+        real lmean = lstats.mean();
+        real tstderror = tstats.stderror();
+        real  th = (lmean-tmean)/tstderror;
+
+        if(th>stderror_threshold)
+        {
+            PLWARNING("In VMatrix::compareStats - field %d(%s) have mean %f"
+                      " while target mean is %f and target stderror is %f. They differ by %f stderror",
+                      i, fieldName(i).c_str(), lmean, tmean, tstderror, th);
+            diff++;
+        }
+    }
+     return diff;
+}
 } // end of namespace PLearn
 
 
