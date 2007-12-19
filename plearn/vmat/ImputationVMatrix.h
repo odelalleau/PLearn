@@ -44,8 +44,8 @@
 #ifndef ImputationVMatrix_INC
 #define ImputationVMatrix_INC
 
-#include <plearn/vmat/SourceVMatrix.h>
-#include <plearn/vmat/FileVMatrix.h>
+#include <plearn/vmat/VMatrix.h>
+#include <plearn/vmat/VMat.h>
 #include <plearn/io/fileutils.h>                     //!<  For isfile()
 #include <plearn/math/BottomNI.h>
 
