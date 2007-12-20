@@ -167,6 +167,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("row i vector")));
 
     declareMethod(
+        rmm, "getString", &VMatrix::getString,
+        (BodyDoc("Returns an element of a matrix as a string\n"),
+         ArgDoc ("i", "Position of the row to get.\n"),
+         ArgDoc ("j", "Position of the column to get.\n"),
+         RetDoc ("string value")));
+
+    declareMethod(
         rmm, "getMat", &VMatrix::toMat,
         (BodyDoc("Returns the content of the vmat as a Mat\n"),
          RetDoc ("The content of this VMatrix as a Mat")));
