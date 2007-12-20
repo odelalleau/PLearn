@@ -256,10 +256,15 @@ void SelectColumnsVMatrix::build_()
         width_ = indices.length();
         length_ = source->length();
 
-        if(inputsize_ + targetsize_ + weightsize_ + extrasize_ != width_)
+        // Check sizes are consistent with width.
+        if(inputsize_ >= 0 && targetsize_ >= 0 && weightsize_ >= 0 &&
+           extrasize_ >= 0  &&
+           (inputsize_ + targetsize_ + weightsize_ + extrasize_ != width_))
+        {
             PLWARNING("In SelectColumnsVMatrix::build_() - inputsize_(%d) +"
                       " targetsize_(%d) + weightsize_(%d) + extrasize_(%d) != width_(%d) !",
                       inputsize_, targetsize_, weightsize_, extrasize_, width_);
+        }
 #if 0
         // Disabled for now, since it gives way too many false positives in
         // some cases. Todo: figure out a way to warn in a useful way when
