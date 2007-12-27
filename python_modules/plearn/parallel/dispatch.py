@@ -420,13 +420,8 @@ class OnHostTask( SshTask ):
             loadavg = cls.getLoadAvg(m)
             max_loadavg = cls._max_load
 
-            print "Load %f / %f"%(loadavg, max_loadavg)
             if loadavg < max_loadavg:
-                # Register the load average *plus* one, taking in account
-                # the process we are about to launch
                 cls._loadavg[m] = datetime(*time.localtime()[:6]), loadavg+1
-                print "At %s Saving %f"%cls._loadavg[m]
-                print
                 yield m
     listAvailableMachines = classmethod(listAvailableMachines)
 
@@ -442,13 +437,6 @@ class OnHostTask( SshTask ):
 
     def getLogFileBaseName(self):
         raise NotImplementedError('OnHostTask::getLogFileBaseName')
-
-    # def free(self):
-    #     TaskType.free(self)
-    # 
-    #     cls = self.__class__
-    #     time, loadavg = cls._loadavg['host'] 
-    #     cls._loadavg['host'] = time, loadavg-1
 
 
 class ClusterTask( TaskType ):
