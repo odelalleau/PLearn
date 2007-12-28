@@ -49,7 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(BootstrapVMatrix,
         "A VMatrix that sees a bootstrap subset of its parent VMatrix.",
         "It means that a random sample of the source will be taken. Samples\n"
         "may or may not be repeated depending on the value of the option\n"
-        "'allow_repetitions'"
+        "'allow_repetitions' (the default behavior is not to repeat samples)."
 );
 
 //////////////////////
@@ -59,6 +59,7 @@ BootstrapVMatrix::BootstrapVMatrix():
     rgen(new PRandom()),
     frac(0.6667),
     n_elems(-1),
+    operate_on_bags(false),
     own_seed(-3), // Temporary hack value to detect use of deprecated option.
     seed(1827),   // Default fixed seed value (safer than time-dependent).
     shuffle(false),
@@ -70,6 +71,7 @@ BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac, bool the_shuffle,
     rgen(new PRandom()),
     frac(the_frac),
     n_elems(-1),
+    operate_on_bags(false),
     own_seed(-3),
     seed(the_seed),
     shuffle(the_shuffle),
@@ -86,6 +88,7 @@ BootstrapVMatrix::BootstrapVMatrix(VMat m, real the_frac,
     rgen(the_rgen),
     frac(the_frac),
     n_elems(-1),
+    operate_on_bags(false),
     own_seed(-3),
     shuffle(the_shuffle),
     allow_repetitions(allow_rep)
@@ -120,6 +123,12 @@ void BootstrapVMatrix::declareOptions(OptionList &ol)
                   OptionBase::buildoption,
                   "Wether examples should be allowed to appear each more than once.",
                   OptionBase::advanced_level);
+
+    declareOption(ol, "operate_on_bags", &BootstrapVMatrix::operate_on_bags, 
+                  OptionBase::buildoption,
+        "Wether to operate on bags rather than individual samples (see help\n"
+        "of SumOverBagsVariable for details on bags).",
+        OptionBase::advanced_level);
 
     declareOption(ol, "own_seed", &BootstrapVMatrix::own_seed,
                   (OptionBase::learntoption | OptionBase::nosave),
@@ -163,7 +172,31 @@ void BootstrapVMatrix::build_()
 
         // Create bootstrap sample.
         int l= source.length();
+
+        TVec< TVec<int> > bag_to_indices;
+        if (operate_on_bags) {
+            // Analyze bags in the source.
+            Vec input, target;
+            real weight;
+            for (int i = 0; i < l; i++) {
+                source->getExample(i, input, target, weight);
+#ifdef BOUNDCHECK
+                // Safety checks on bag information.
+                real bi = target.lastElement();
+                PLASSERT( is_equal(round(bi), bi) );
+                int bii = int(round(bi));
+                PLASSERT( bii >= 0 && bii <= 3 );
+#endif
+                int bag_info = int(round(target.lastElement()));
+                if (bag_info % 2 == 1)
+                    bag_to_indices.append(TVec<int>());
+                bag_to_indices.lastElement().append(i);
+            }
+            l = bag_to_indices.length();
+        }
+
         int nsamp= (n_elems >= 0) ? n_elems : int(round(frac*l));
+
         if(allow_repetitions)
         {
             indices.resize(nsamp);
@@ -178,6 +211,14 @@ void BootstrapVMatrix::build_()
         }
         if (!shuffle)
             sortElements(indices);
+
+        if (operate_on_bags) {
+            // Convert bag indices back to sample indices.
+            TVec<int> bag_indices = indices.copy();
+            indices.resize(0);
+            for (int i = 0; i < bag_indices.length(); i++)
+                indices.append(bag_to_indices[bag_indices[i]]);
+        }
 
         // Because we changed the indices, a rebuild may be needed.
         inherited::build();

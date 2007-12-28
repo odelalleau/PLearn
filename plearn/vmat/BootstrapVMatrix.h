@@ -61,6 +61,7 @@ public:
 
     real frac;
     int n_elems;
+    bool operate_on_bags;
     int32_t own_seed;
     int32_t seed;
     bool shuffle;
