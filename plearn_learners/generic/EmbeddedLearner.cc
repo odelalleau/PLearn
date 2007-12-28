@@ -100,20 +100,27 @@ void EmbeddedLearner::build_()
 {
     if (!learner_)
         PLERROR("EmbeddedLearner::_build() - learner_ attribute is NULL");
-
-    //learner_->build();
 }
 
+///////////
+// build //
+///////////
 void EmbeddedLearner::build()
 {
     inherited::build();
     build_();
 }
 
-void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
+
+////////////////////////////////
+// setInnerLearnerTrainingSet //
+////////////////////////////////
+void EmbeddedLearner::setInnerLearnerTrainingSet(VMat training_set,
+                                                 bool call_forget)
 {
     PLASSERT( learner_ );
-    bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
+    VMat ts = learner_->getTrainingSet();
+    bool training_set_has_changed = !ts || !(ts->looksTheSameAs(training_set));
     // If 'call_forget' is true, learner_->forget() will be called
     // in this->forget() (called by PLearner::setTrainingSet a few lines below),
     // so we don't need to call it here.
@@ -122,9 +129,20 @@ void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
         // In this case, learner_->build() will not have been called, which may
         // cause trouble if it updates data from the training set.
         learner_->build();
+}
+
+////////////////////
+// setTrainingSet //
+////////////////////
+void EmbeddedLearner::setTrainingSet(VMat training_set, bool call_forget)
+{
+    setInnerLearnerTrainingSet(training_set, call_forget);
     inherited::setTrainingSet(training_set, call_forget);
 }
 
+//////////////////////
+// setValidationSet //
+//////////////////////
 void EmbeddedLearner::setValidationSet(VMat validset)
 {
     PLASSERT( learner_ );

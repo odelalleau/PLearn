@@ -78,13 +78,16 @@ public:
 
 private: 
     //! This does the actual building. 
-    // (Please implement in .cc)
     void build_();
 
 protected: 
+
     //! Declares this class' options
-    // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Set training set of the inner learner.
+    void setInnerLearnerTrainingSet(VMat training_set, bool call_forget);
+    
 public:
     // simply calls inherited::build() then build_() 
     virtual void build();
