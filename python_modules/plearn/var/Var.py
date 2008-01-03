@@ -77,6 +77,12 @@ class Var:
     def sigmoid(self):
         return Var(pl.SigmoidVariable(input=self.v))
 
+    def sigmoidInRange(self, minp=0.0, maxp=1.0):
+        if minp==0.0 and maxp==1.0:
+            return self.sigmoid()
+        else:
+            return (self*(maxp-minp)+minp).sigmoid()
+
     def tanh(self):
         return Var(pl.TanhVariable(input=self.v))
 
@@ -160,7 +166,10 @@ class Var:
         return Var(pl.SquareVariable(input=self.v))
 
     def add(self, other):
-        return Var(pl.PlusVariable(input1=self.v, input2=other.v))
+        if type(other) in (int, float):
+            return Var(pl.PlusConstantVariable(input=self.v, cst=other))
+        else:
+            return Var(pl.PlusVariable(input1=self.v, input2=other.v))
 
     def classificationLoss(self, class_index):
         return Var(pl.ClassificationLossVariable(input1=self.v, input2=class_index.v))
@@ -170,6 +179,12 @@ class Var:
 
     def __sub__(self, other):
         return Var(pl.MinusVariable(input1=self.v,input2=other.v))
+
+    def __mul__(self, other):
+        if type(other) in (int, float):
+            return Var(pl.TimesConstantVariable(input=self.v, cst=other))
+        else:
+            raise NotImplementedError
 
     def neg(self):
         return Var(pl.NegateElementsVariable(input=self.v))

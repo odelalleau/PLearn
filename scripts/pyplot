@@ -42,7 +42,11 @@
 import os
 import sys
 import time
-from fpconst import isNaN
+try:
+    from fpconst import isNaN
+except ImportError:
+    pass
+
 from plearn.io.server import *
 from plearn.plotting import *
 

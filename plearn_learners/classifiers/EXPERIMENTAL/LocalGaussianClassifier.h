@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// DeepReconstructorNet.h
+// LocalGaussianClassifier.h
 //
-// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
+// Copyright (C) 2007 Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,20 +32,19 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux, Pascal Vincent
+// Authors: Pascal Vincent
 
-/*! \file DeepReconstructorNet.h */
+/*! \file LocalGaussianClassifier.h */
 
 
-#ifndef DeepReconstructorNet_INC
-#define DeepReconstructorNet_INC
+#ifndef LocalGaussianClassifier_INC
+#define LocalGaussianClassifier_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn/var/Variable.h>
-#include <plearn/opt/Optimizer.h>
-#include <plearn/var/SumOfVariable.h>
-#include <plearn/vmat/FileVMatrix.h>
-#include <plearn/var/SourceVariable.h>
+
+// From C++ stdlib
+#include <utility>                           //!< for pair
+#include <algorithm>                         //!< for push_heap
 
 namespace PLearn {
 
@@ -59,71 +58,49 @@ namespace PLearn {
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class DeepReconstructorNet : public PLearner
+class LocalGaussianClassifier : public PLearner
 {
     typedef PLearner inherited;
+    
+
+protected:
+
+    // Vec emptyvec;
+    // mutable Vec NN_outputs;
+    // mutable Vec NN_costs;
+
+    // *********************
+    // * protected options *
+    // *********************
+
+    // PP<GenericNearestNeighbors> NN;
+
 
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
-    
-    TVec< pair<int,int> > unsupervised_nepochs;
-    Vec unsupervised_min_improvement_rate;
+    int nclasses;
+    real computation_neighbors;
+    real kernel_sigma;
+    real regularization_sigma;
+    real ignore_weights_below;
 
-    pair<int,int> supervised_nepochs;    
-    real supervised_min_improvement_rate;
+private:
+    real minus_one_half_over_kernel_sigma_square;
 
-    // layers[0] is the input variable
-    // last layer is final output layer
-    VarArray layers;
+    //! Global storage to save memory allocations.
+    Vec trainsample;
+    Vec traininput;
+    real* traintarget_ptr;
+    real* trainweight_ptr;
+    mutable TVec< pair<real,int> > pqvec; // priority queue (heap) vector 
 
-    // reconstruction_costs[k] is the reconstruction cost for layers[k]
-    VarArray reconstruction_costs;
-    
-    // The names to be given to each of the elements of a vector cost 
-    TVec<string> reconstruction_costs_names;
+    Vec log_counts;  // the log_counts considering all points
+    Vec log_counts2; // the log_counts considering only the points kept for computing the covariance
+    Mat means;    
+    Mat allcovars;
+    TVec<Mat> covars;
 
-    // reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]
-    VarArray reconstructed_layers;
-
-    // optimizers if we use different ones for each layer
-    TVec< PP<Optimizer> > reconstruction_optimizers;
-    
-    // if we use always the same optimizer
-    PP<Optimizer> reconstruction_optimizer;
-
-
-    Var target;
-    //TVec<Var> supervised_costs;
-    VarArray supervised_costs;
-    Var supervised_costvec; // hconcat(supervised_costs)
-
-    TVec<string> supervised_costs_names;
-
-    Var fullcost;
-    
-    VarArray parameters;
-
-    int minibatch_size;
-
-
-    PP<Optimizer> supervised_optimizer;
-
-    PP<Optimizer> fine_tuning_optimizer;
-
-
-    TVec<int> group_sizes;
-
-protected:
-    // protected members (not options)
-
-    TVec<Func> compute_layer;
-    Func compute_output;
-    Func output_and_target_to_cost;
-    TVec<VMat> outmat;
-    
 
 public:
     //#####  Public Member Functions  #########################################
@@ -131,7 +108,7 @@ public:
     //! Default constructor
     // ### Make sure the implementation in the .cc
     // ### initializes all fields to reasonable default values.
-    DeepReconstructorNet();
+    LocalGaussianClassifier();
 
 
     //#####  PLearner Member Functions  #######################################
@@ -146,6 +123,8 @@ public:
     //! a fresh learner!).
     // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
+
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     //! The role of the train method is to bring the learner up to
     //! stage==nstages, updating the train_stats collector with training costs
@@ -167,43 +146,13 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
+    real computeLogWeight(const Vec& input, const Vec& traininput) const;
+
     //! Returns the names of the objective costs that the train method computes
-    //! and  for which it updates the VecStatsCollector train_stats.
+    //! and for which it updates the VecStatsCollector train_stats.
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
 
-
-    virtual void initializeParams(bool set_seed=true);
-
-    //! Returns the matValue of the parameter variable with the given name
-    Mat getParameterValue(const string& varname);
-
-    //! Returns the nth row of the matValue of the parameter variable with the given name
-    Vec getParameterRow(const string& varname, int n);
-
-    //! Returns a list of the names of the parameters (in the same order as in listParameter)
-    TVec<string> listParameterNames();
-
-    //! Returns a list of the parameters
-    TVec<Mat> listParameter();
-
-    void prepareForFineTuning();
-    void fineTuningFor1Epoch();
-    // void fineTuningFullOld();
-
-    void trainSupervisedLayer(VMat inputs, VMat targets);
-
-    TVec<Mat> computeRepresentations(Mat input);
-    void reconstructInputFromLayer(int layer);
-    TVec<Mat> computeReconstructions(Mat input);
-
-    Mat getMatValue(int layer);
-    void setMatValue(int layer, Mat values);
-    Mat fpropOneLayer(int layer);
-    Mat reconstructOneLayer(int layer);
-       
-
-    
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs
@@ -226,7 +175,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
-    PLEARN_DECLARE_OBJECT(DeepReconstructorNet);
+    PLEARN_DECLARE_OBJECT(LocalGaussianClassifier);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -247,10 +196,6 @@ protected:
     //! Declares the class options.
     // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
-    static void declareMethods(RemoteMethodMap& rmm);
-
-    void trainHiddenLayer(int which_input_layer, VMat inputs);
-    void buildHiddenLayerOutputs(int which_input_layer, VMat inputs, VMat outputs);
 
 private:
     //#####  Private Member Functions  ########################################
@@ -263,12 +208,10 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
-    int nout;
-
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(DeepReconstructorNet);
+DECLARE_OBJECT_PTR(LocalGaussianClassifier);
 
 } // end of namespace PLearn
 

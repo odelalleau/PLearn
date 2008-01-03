@@ -69,7 +69,6 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    
     declareOption(ol, "unsupervised_nepochs", &DeepReconstructorNet::unsupervised_nepochs,
                   OptionBase::buildoption,
                   "unsupervised_nepochs[k] contains a pair of integers giving the minimum and\n"
@@ -97,6 +96,10 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
     declareOption(ol, "reconstruction_costs", &DeepReconstructorNet::reconstruction_costs,
                   OptionBase::buildoption,
                   "recontruction_costs[k] is the reconstruction cost for layer[k]");
+
+    declareOption(ol, "reconstruction_costs_names", &DeepReconstructorNet::reconstruction_costs_names,
+                  OptionBase::buildoption,
+                  "The names to be given to each of the elements of a vector cost");
 
     declareOption(ol, "reconstructed_layers", &DeepReconstructorNet::reconstructed_layers,
                   OptionBase::buildoption,
@@ -617,13 +620,9 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
         reconstruction_optimizer->reset();    
     }
 
-    TVec<string> colnames(4);
-    colnames[0] = "nepochs";
-    colnames[1] = "reconstr_cost";
-    colnames[2] = "stderror";
-    colnames[3] = "relative_improvement";
-    VMat training_curve = new FileVMatrix(expdir/"training_costs_layer_"+tostring(which_input_layer+1)+".pmat",0,colnames);
-    Vec costrow(4);
+    Vec costrow;
+    TVec<string> colnames;
+    VMat training_curve;
 
     VecStatsCollector st;
     real prev_mean = -1;
@@ -641,19 +640,49 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
             reconstruction_optimizer->nstages = l/minibatch_size;
             reconstruction_optimizer->optimizeN(st);
         }        
-        const StatsCollector& s = st.getStats(0);
-        real m = s.mean();
-        real er = s.stderror();
-        perr << "Epoch " << n+1 << " mean error: " << m << " +- " << s.stderror() << endl;
-        if(prev_mean>0)
+        int reconstr_cost_pos = 0;
+
+        Vec means = st.getMean();
+        Vec stderrs = st.getStdError();
+        perr << "Epoch " << n+1 << ": " << means << " +- " << stderrs;
+        real m = means[reconstr_cost_pos];
+        real er = stderrs[reconstr_cost_pos];
+        if(n>0)
         {
-            relative_improvement = (prev_mean-m)/prev_mean;
-            perr << "Relative improvement: " << relative_improvement*100 << " %"<< endl;
+            relative_improvement = (prev_mean-m)/fabs(prev_mean);
+            perr << "  improvement: " << relative_improvement*100 << " %";
         }
+        perr << endl;
+
+        int ncosts = means.length();
+        if(reconstruction_costs_names.length()!=ncosts)
+        {
+            reconstruction_costs_names.resize(ncosts);
+            for(int k=0; k<ncosts; k++)
+                reconstruction_costs_names[k] = "cost"+tostring(k);
+        }
+
+        if(colnames.length()==0)
+        {
+            colnames.append("nepochs");
+            colnames.append("relative_improvement");
+            for(int k=0; k<ncosts; k++)
+            {
+                colnames.append(reconstruction_costs_names[k]+"_mean");
+                colnames.append(reconstruction_costs_names[k]+"_stderr");
+            }
+            training_curve = new FileVMatrix(expdir/"training_costs_layer_"+tostring(which_input_layer+1)+".pmat",0,colnames);
+        }
+
+        costrow.resize(colnames.length());
+        int k=0;
         costrow[0] = n+1;
-        costrow[1] = m;
-        costrow[2] = er;
-        costrow[3] = relative_improvement*100;
+        costrow[1] = relative_improvement*100;
+        for(int k=0; k<ncosts; k++)
+        {
+            costrow[2+k*2] = means[k];
+            costrow[2+k*2+1] = stderrs[k];
+        }
         training_curve->appendRow(costrow);
         training_curve->flush();
 

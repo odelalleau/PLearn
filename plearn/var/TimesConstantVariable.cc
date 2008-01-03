@@ -57,6 +57,14 @@ TimesConstantVariable::TimesConstantVariable(Variable* input, real c)
     : inherited(input, input->length(), input->width()), cst(c) 
 {}
 
+void
+
+TimesConstantVariable::declareOptions(OptionList &ol)
+{
+    declareOption(ol, "cst", &TimesConstantVariable::cst, OptionBase::buildoption, "");
+    inherited::declareOptions(ol);
+}
+
 void TimesConstantVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {

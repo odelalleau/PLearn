@@ -119,6 +119,7 @@
 // #include <plearn/opt/AdaptGradientOptimizer.h>
 // #include <plearn/opt/ConjGradientOptimizer.h>
 #include <plearn/opt/GradientOptimizer.h>
+#include <plearn/opt/EXPERIMENTAL/AutoScaledGradientOptimizer.h>
 
 // /****************
 //  * OptionOracle *
@@ -294,7 +295,7 @@
 // #include <plearn/vmat/RandomSamplesVMatrix.h>
 // #include <plearn/vmat/RandomSamplesFromVMatrix.h>
 // #include <plearn/vmat/RankedVMatrix.h>
-// #include <plearn/vmat/RegularGridVMatrix.h>
+#include <plearn/vmat/RegularGridVMatrix.h>
 // #include <plearn/vmat/RemoveDuplicateVMatrix.h>
 // #include <plearn/vmat/ReorderByMissingVMatrix.h>
 // //#include <plearn/vmat/SelectAttributsSequenceVMatrix.h>
@@ -382,9 +383,15 @@
 #include <plearn/var/EXPERIMENTAL/RandomForcedValuesVariable.h>
 #include <plearn/var/EXPERIMENTAL/BernoulliSampleVariable.h>
 #include <plearn/var/EXPERIMENTAL/TimesConstantScalarVariable2.h>
+#include <plearn/var/PlusConstantVariable.h>
+#include <plearn/var/TimesConstantVariable.h>
 
 // Stuff used for transformationLearner experiments
 #include <plearn_learners/distributions/EXPERIMENTAL/TransformationLearner.h>
+
+// Stuff used for local Gaussian classifier
+#include <plearn_learners/classifiers/KNNClassifier.h>
+#include <plearn_learners/classifiers/EXPERIMENTAL/LocalGaussianClassifier.h>
 
 using namespace PLearn;
 

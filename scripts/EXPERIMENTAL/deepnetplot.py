@@ -310,7 +310,7 @@ class InteractiveRepRecPlotter:
             # reconstruction -- r
                 
             elif char == 'r':
-                if i<self.size()-2:
+                if i<self.size()-1:
                     print 'reconstructing...'
                     self.__reconstructLayer(i)
                     self.rep_axes[i].imshow(hl1.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)                 
