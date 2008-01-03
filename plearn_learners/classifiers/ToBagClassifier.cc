@@ -50,25 +50,28 @@ PLEARN_IMPLEMENT_OBJECT(
     "For testing, a majority vote is performed on each bag: assuming the\n"
     "inner learner's output is made of the probabilities for each class,\n"
     "these probabilities are summed over a full bag, and the class with\n"
-    "highest sum is taken as prediction.");
+    "highest sum is taken as prediction.\n"
+    "This learner can also compute the confusion matrix as a test cost, in\n"
+    "addition to classification error. Each element of the confusion matrix\n"
+    "is named 'cm_ij' with i the index of the true class, and j the index of\n"
+    "the predicted class.");
 
 /////////////////////
 // ToBagClassifier //
 /////////////////////
-ToBagClassifier::ToBagClassifier()
-{
-}
+ToBagClassifier::ToBagClassifier():
+    n_classes(-1)
+{}
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ToBagClassifier::declareOptions(OptionList& ol)
 {
-    // ### ex:
-    // declareOption(ol, "myoption", &ToBagClassifier::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+    declareOption(ol, "n_classes", &ToBagClassifier::n_classes,
+                  OptionBase::buildoption,
+        "Number of classes in the dataset. This option is required to\n"
+        "compute the confusion matrix, but may be ignored otherwise.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -101,22 +104,29 @@ void ToBagClassifier::computeCostsFromOutputs(const Vec& input,
     sub_target.resize(target.length() - 1);
     sub_target << target.subVec(0, sub_target.length());
     inherited::computeCostsFromOutputs(input, output, sub_target, costs);
+    PLASSERT( is_equal(sum(output), 1) );   // Ensure probabilities sum to 1.
     int bag_info = int(round(target.lastElement()));
     if (bag_info % 2 == 1)
         bag_output.resize(0, 0);
     bag_output.appendRow(output);
-    costs.resize(1);
+    costs.resize(nTestCosts());
+    costs.fill(MISSING_VALUE);
     if (bag_info >= 2) {
         // Perform majority vote.
         votes.resize(bag_output.width());
         columnSum(bag_output, votes);
         int target_class = int(round(target[0]));
-        if (argmax(votes) == target_class)
+        int prediction = argmax(votes);
+        if (prediction == target_class)
             costs[0] = 0;
         else
             costs[0] = 1;
-    } else
-        costs.fill(MISSING_VALUE);
+        if (n_classes > 0) {
+            int i_start = 1 + target_class * n_classes;
+            costs.subVec(i_start, n_classes).fill(0);
+            costs[i_start + prediction] = 1;
+        }
+    }
 }
 
 //////////////////////
@@ -124,9 +134,12 @@ void ToBagClassifier::computeCostsFromOutputs(const Vec& input,
 //////////////////////
 TVec<string> ToBagClassifier::getTestCostNames() const
 {
-    static TVec<string> costs;
-    if (costs.isEmpty())
-        costs.append("class_error");
+    TVec<string> costs;
+    costs.append("class_error");
+    if (n_classes > 0)
+        for (int i = 0; i < n_classes; i++)
+            for (int j = 0; j < n_classes; j++)
+                costs.append("cm_" + tostring(i) + tostring(j));
     return costs;
 }
 

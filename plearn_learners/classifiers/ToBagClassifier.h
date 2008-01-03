@@ -61,8 +61,7 @@ class ToBagClassifier : public EmbeddedLearner
 public:
     //#####  Public Build Options  ############################################
 
-    //! ### declare public option fields (such as build options) here
-    //! Start your comments with Doxygen-compatible comments such as //!
+    int n_classes;
 
 public:
     //#####  Public Member Functions  #########################################
