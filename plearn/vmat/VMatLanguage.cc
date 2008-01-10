@@ -405,7 +405,9 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
 
                 if (a > b)
-                    PLERROR("In copyfield macro, you have specified a start field that is after the end field. Eg : [%10:%5]");
+                    PLERROR("In copyfield macro '%s', you have specified a "
+                            "start field (%d) that is after the end field "
+                            "(%d). E.g.: [%10:%5]", token.c_str(), a, b);
                 if (a == -1)
                     PLERROR("In copyfield macro, unknown field : '%s'", astr.c_str());
                 if (b == -1)
