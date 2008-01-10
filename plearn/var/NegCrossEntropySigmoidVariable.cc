@@ -52,7 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(NegCrossEntropySigmoidVariable,
                         "Compute sigmoid of its first input, and then computes the negative "
                         "cross-entropy cost",
                         "Let o the first input ant t te second input, this computes\n"
-                        "result = - \sum_i t_i*log(o_i) + (1-t_i)*log(1-o_i)");
+                        "result = - \\sum_i t_i*log(o_i) + (1-t_i)*log(1-o_i)");
 
 ////////////////////////////////////
 // NegCrossEntropySigmoidVariable //

@@ -41,7 +41,8 @@ import atexit
 def cleanupWrappedObjects():
     import gc
     gc.collect()
-    ramassePoubelles()
+    if pl: #if plext still loaded
+        ramassePoubelles()
 atexit.register(cleanupWrappedObjects)
 
 print versionString()

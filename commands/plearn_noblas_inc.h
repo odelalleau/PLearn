@@ -149,6 +149,7 @@
 //#include <plearn_learners/classifiers/SVMClassificationTorch.h>
 #include <plearn_learners/classifiers/MultiInstanceNNet.h>
 //#include <plearn_learners/classifiers/OverlappingAdaBoost.h> // Does not currently compile.
+#include <plearn_learners/classifiers/ToBagClassifier.h>
 
 // Generic
 #include <plearn_learners/generic/AddCostToLearner.h>
@@ -279,6 +280,7 @@
  * VMatrix *
  ***********/
 #include <plearn/vmat/AddMissingVMatrix.h>
+#include <plearn/vmat/AddBagInformationVMatrix.h>
 #include <plearn/vmat/AppendNeighborsVMatrix.h>
 #include <plearn/vmat/AsciiVMatrix.h>
 #include <plearn/vmat/AutoVMatrix.h>

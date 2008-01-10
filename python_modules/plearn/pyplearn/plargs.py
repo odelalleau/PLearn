@@ -1068,6 +1068,21 @@ def printCurrentContext(out=sys.stdout):
         for opt in plopt.iterator(namespace):
             print >>out, '   ',opt.getName()+':', opt
 
+
+def currentNamespacesHelp():
+    s= ''
+    for namespace in plargs.getNamespaces():
+        s+= "Namespace: " + namespace.__name__ + '\n'
+        od= plopt.optdict2(namespace)
+        for o in od:
+            opt= od[o]
+            s+= '    ' + o + ' : ' + str(opt) + '\n'
+            s+= '        ' + opt.getDoc() + '\n'
+    return s
+            
+
+    
+
 def test_plargs():                
     print "#######  Binders  #############################################################\n"
     class binder(plargs):
