@@ -239,6 +239,14 @@ class SVM(object):
 
       def test(self, samples_target_list):
           check_samples_target_list([samples_target_list])
+          if self.save_filename != None:
+                        try:
+                           FID=open(self.save_filename,'a')
+                           #FID.write('------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)+' )\n')
+                           FID.write('\n'+'='*10+'\n ==> Test Error rate = '+str(test_error_rate)+'\n'+'='*10+'\n')
+                           FID.close()
+                        except:
+                           print "COULD not write in save_filename"
           return test_model(self.best_model, [[x_i for x_i in x] for x in samples_target_list[0]], [float(l) for l in samples_target_list[1]])['error_rate']
 
 
@@ -246,10 +254,18 @@ class SVM(object):
           check_samples_target_list(samples_target_list)
           if len(samples_target_list) == 1:
              print "\nCross-validation...\n"
+             train_error_name=str(self.nr_fold)+"-fold Cross-Valid Error Rate"
+             test_error_name=train_error_name
           elif len(samples_target_list) == 2:
              print "\nSimple validation...\n"
+             train_error_name="Valid Error Rate"
+             test_error_name=train_error_name
           elif len(samples_target_list) == 3:
              print "\nValidation + test...\n"
+             train_error_name="Valid Error Rate"
+             test_error_name="Test Error Rate"
+          else:
+             raise TypeError, "last argument of train_and_tune() should be a list, with length between 1 and 3"
            
           expert = eval( 'self.'+kernel_type+'_expert' )
           
@@ -280,21 +296,24 @@ class SVM(object):
                      model = svm_model(train_problem, param)
                      error_rate = test_model(model, samples_target_list[1][0], samples_target_list[1][1])['error_rate']
                      
-                     if self.save_filename != None:
-                        try:
-                           FID=open(self.save_filename,'a')
-                           FID.write('------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)+' )\n')
-                           FID.write(' --> Error rate = '+str(error_rate)+'\n')
-                           FID.close()
-                        except:
-                           print "COULD not write in save_filename"
-
-                  self.add_result_to_result_list(kernel_type, parameters, error_rate)
+                  self.add_result_to_result_list(kernel_type, parameters, self.error_rate)
                   if error_rate < best_error_rate:
                      best_parameters = parameters
                      best_error_rate = error_rate
 		     if len(samples_target_list) <> 1: # in case of cross-validation, we will compute the model later
                         best_model   = model
+
+                  if self.save_filename != None:
+                     try:
+                        FID=open(self.save_filename,'a')
+                        FID.write('------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)+' )\n')
+                        FID.write(' --> Error rate = '+str(error_rate)+'\n')
+                        FID.close()
+                     except:
+                        print "COULD not write in save_filename"
+                  print '------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)
+                  print ' --> '+train_error_name+' = '+str(error_rate)+'\n'
+                  print '...'
 
           if best_error_rate < expert.error_rate:
              expert.best_parameters = best_parameters
@@ -317,6 +336,23 @@ class SVM(object):
 	     if expert.should_be_tuned_again():
 	        self.train_and_tune(kernel_type, samples_target_list)
 	  
+          if self.save_filename != None:
+             try:
+                  FID=open(self.save_filename,'a')
+                  FID.write('==============================================\n')
+                  if len(samples_target_list) == 3: # train-valid-test
+                     FID.write(' --> Best '+train_error_name+' = '+str(self.valid_error_rate)+'\n')
+                  FID.write(' --> '+test_error_name+' = '+str(self.error_rate)+'\n')
+                  FID.write('     for prms: '+str(self.best_parameters)+'\n')
+                  FID.close()
+             except:
+                  print "COULD not write in save_filename"
+
+          print '=============================================='
+          print ' --> Best error rate = '+str(self.error_rate)
+          print '     for prms: '+str(self.best_parameters)
+
+
 	  return self.error_rate
           
 
@@ -386,6 +422,7 @@ def test_model(model, samples, targets):
     diffs = {}
     for i in range(N):
           diff = abs(model.predict([float(x_i) for x_i in samples[i]]) - float(targets[i]))
+          #print "prediction: ",model.predict([float(x_i) for x_i in samples[i]]),"  -  real: ",float(targets[i]),"  ( ",diff," )"
           if diffs.has_key(diff):
                 diffs[diff] += 1
           else:
@@ -394,7 +431,7 @@ def test_model(model, samples, targets):
     linear_class_error = 0
     square_class_error = 0
     for diff, nbdiff in diffs.iteritems():
-          if not diff == 0:
+          if abs(diff) > 0.001:
                 error_rate += 1*nbdiff
           linear_class_error += diff*nbdiff
           square_class_error += (diff*diff)*nbdiff
@@ -452,13 +489,13 @@ def mean_std(data):
     stds=[get_std_cmp(data,i) for i in range(len(data[0]))]
     return sum(stds)/len(stds)
 def get_std_cmp(data,i):
-    values=[vec[i] for vec in data]
+    values=[float(vec[i]) for vec in data]
     tot = sum(values)
     avg = tot*1.0/len(values)
     sdsq = sum([(i-avg)**2 for i in values])
     return (sdsq*1.0/(len(values)-1 or 1))**.5
 def get_mean_cmp(data,i):
-    values=[vec[i] for vec in data]
+    values=[float(vec[i]) for vec in data]
     return  sum(values)/len(values)
 
 def arithm_mean(data):
@@ -569,7 +606,7 @@ if __name__ == '__main__':
     my_svm.train_and_tune( 'POLY' ,    DATA )
     #[..]
 
-    valid_error_rate =  my_svm.error_rate
+    valid_error_rate =  my_svm.valid_error_rate
     print valid_error_rate
     print my_svm.best_parameters
     print my_svm.tried_parameters
@@ -598,7 +635,7 @@ if __name__ == '__main__':
     # (retrain the model on new train data, but no search for better parameters)
     my_svm.train_and_test( NEW_DATA )
     
-    valid_error_rate = my_svm.error_rate
+    valid_error_rate = my_svm.valid_error_rate
 
 #<<<#
 #>>># To try the best trained model with new data (and obtain "fair" error rates)
@@ -608,3 +645,14 @@ if __name__ == '__main__':
     test_error_rate = my_svm.test( TEST_DATA )
     
     print test_error_rate
+
+#<<<#
+#>>># Doing all this amounts to the same as the following
+
+    ALL_DATA = [ [train_samples , train_targets], [valid_samples , valid_targets], [test_samples , test_targets]  ]
+    my_svm.train_and_tune( 'RBF' , ALL_DATA )
+    # [...]
+    
+    valid_error_rate = my_svm.valid_error_rate
+    test_error_rate  = my_svm.error_rate
+    
