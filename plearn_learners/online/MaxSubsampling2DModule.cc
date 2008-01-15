@@ -252,11 +252,15 @@ void MaxSubsampling2DModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     // output port).
 
     Mat* input = ports_value[0];
+#ifdef BOUNDCHECK
     Mat* output = ports_value[1];
+#endif
     Mat* argmax = ports_value[2];
     Mat* input_grad = ports_gradient[0];
     Mat* output_grad = ports_gradient[1];
+#ifdef BOUNDCHECK
     Mat* argmax_grad = ports_gradient[2];
+#endif
 
     // If we want input_grad and we have output_grad
     if( input_grad && input_grad->isEmpty()
