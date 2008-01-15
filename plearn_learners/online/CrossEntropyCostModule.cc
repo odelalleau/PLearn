@@ -136,7 +136,9 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     Mat* prediction = ports_value[0];
     Mat* target = ports_value[1];
+#ifdef BOUNDCHECK
     Mat* cost = ports_value[2];
+#endif
     Mat* prediction_grad = ports_gradient[0];
     Mat* target_grad = ports_gradient[1];
     Mat* cost_grad = ports_gradient[2];

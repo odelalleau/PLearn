@@ -93,7 +93,9 @@ int multinomial_sample(const PP<PRandom>& rg, const Mat& distribution)
     real u = rg->uniform_sample();
     TMatElementIterator<real> pi = distribution.begin();
     real s = *pi;
+#ifdef BOUNDCHECK
     int w = distribution.width();
+#endif
     int n = distribution.size();
     int i = 0;
 
