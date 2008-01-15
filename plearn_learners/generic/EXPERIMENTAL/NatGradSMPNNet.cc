@@ -939,6 +939,7 @@ void NatGradSMPNNet::train()
                     // updates.
                     //printf("CPU %d updating (nsteps = %d)\n", iam, nsteps);
                     all_params += params_update;
+                    //params_update += all_params;
                     params_update.clear();
                     performed_update = true;
                 }
@@ -1247,10 +1248,11 @@ void NatGradSMPNNet::onlineStep(int cur_stage, const Mat& targets,
             //Profiler::pl_profile_start("ProducScaleAccOnlineStep");
             if (delayed_update) {
                 // Store updates in 'layer_params_update'.
+                //layer_params_update[i - 1].fill(0);
                 productScaleAcc(layer_params_update[i - 1],
                         next_neurons_gradient, true,
                         neuron_extended_outputs_per_layer[i-1], false,
-                        -layer_lrate_factor*lrate /* /minibatch_size */, 1);
+                        -layer_lrate_factor*lrate, 1);
             } else {
                 // Directly update the parameters.
                 productScaleAcc(layer_params[i-1],next_neurons_gradient,true,
