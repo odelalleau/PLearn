@@ -437,16 +437,20 @@ void DiscriminativeRBM::train()
     for( ; stage<nstages ; stage++ )
     {
         train_set->getExample(stage%nsamples, input, target, weight);
-        target_index = (int)round( target[0] );
+
+
         if( pb )
             pb->update( stage - init_stage + 1 );
 
         // Get CD stats...
         target_one_hot.clear();
-        target_one_hot[ target_index ] = 1;
-
+        if( !is_missing(target[0]) )
+        {
+            target_index = (int)round( target[0] );
+            target_one_hot[ target_index ] = 1;
+        }
         // ... for discriminative learning
-        if( !use_exact_disc_gradient && target_index >= 0 )
+        if( !use_exact_disc_gradient && !is_missing(target[0]) )
         {
             // Positive phase
 
@@ -481,7 +485,7 @@ void DiscriminativeRBM::train()
         }
 
         // ... for generative learning        
-        if( target_index >= 0 && gen_learning_weight > 0 )
+        if( !is_missing(target[0]) && gen_learning_weight > 0 )
         {
             // Positive phase
             if( !use_exact_disc_gradient )
@@ -546,7 +550,7 @@ void DiscriminativeRBM::train()
         }
 
         // ... and for semi-supervised learning        
-        if( target_index < 0 && semi_sup_learning_weight > 0 )
+        if( is_missing(target[0]) && semi_sup_learning_weight > 0 )
         {
             // Positive phase
 
@@ -557,7 +561,7 @@ void DiscriminativeRBM::train()
             target_layer->generateSample();            
             input_layer->sample << input ;
             
-            // Up pass
+             // Up pass
             joint_connection->setAsDownInput( joint_layer->sample );
             hidden_layer->getAllActivations( joint_connection );
             hidden_layer->computeExpectation();
@@ -587,7 +591,7 @@ void DiscriminativeRBM::train()
 
         // Get gradient and update
 
-        if( use_exact_disc_gradient && target_index >= 0 )
+        if( use_exact_disc_gradient && !is_missing(target[0]) )
         {
             classification_module->fprop( input, class_output );
             // This doesn't work. gcc bug?
@@ -609,7 +613,7 @@ void DiscriminativeRBM::train()
         }
 
         // CD Updates
-        if( !use_exact_disc_gradient && target_index >= 0 )
+        if( !use_exact_disc_gradient && !is_missing(target[0]) )
         {
             joint_layer->update( disc_pos_down_val, disc_neg_down_val );
             hidden_layer->update( disc_pos_up_val, disc_neg_up_val );
@@ -618,7 +622,7 @@ void DiscriminativeRBM::train()
         }
 
         
-        if( target_index >= 0 && gen_learning_weight > 0 )
+        if( !is_missing(target[0]) && gen_learning_weight > 0 )
         {
             setLearningRate( gen_learning_weight * disc_learning_rate / 
                              (1. + disc_decrease_ct * stage ));
@@ -628,7 +632,7 @@ void DiscriminativeRBM::train()
                                 gen_neg_down_val, gen_neg_up_val);
         }
 
-        if( target_index >= 0 && semi_sup_learning_weight > 0 )
+        if( is_missing(target[0]) && semi_sup_learning_weight > 0 )
         {
             setLearningRate( semi_sup_learning_weight * disc_learning_rate / 
                              (1. + disc_decrease_ct * stage ));
@@ -663,10 +667,13 @@ void DiscriminativeRBM::computeCostsFromOutputs(const Vec& input, const Vec& out
     costs.resize( cost_names.length() );
     costs.fill( MISSING_VALUE );
     
-    //classification_cost->fprop( output, target, costs[nll_cost_index] );
-    classification_cost->CostModule::fprop( output, target, costs[nll_cost_index] );
-    costs[class_cost_index] =
-        (argmax(output) == (int) round(target[0]))? 0 : 1;
+    if( !is_missing(target[0]) )
+    {
+        //classification_cost->fprop( output, target, costs[nll_cost_index] );
+        classification_cost->CostModule::fprop( output, target, costs[nll_cost_index] );
+        costs[class_cost_index] =
+            (argmax(output) == (int) round(target[0]))? 0 : 1;
+    }
 }
 
 TVec<string> DiscriminativeRBM::getTestCostNames() const
