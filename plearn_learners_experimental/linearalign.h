@@ -19,10 +19,10 @@ using namespace std;
 
 /**
 calculates the nodekernel...note that more the similarity more the nodekernel.its computing the exp(-distance).distance is computed taking into account the deviation and an additional scaling factor sigma
-@param : x : property matrix of first molecule
-@param : y : property matrix of the model (template)
-@param : sigma : additional scaling factor. 
-@param : ans : the answer...i.e. the nodekernel matrix. ans is assigned a newly created matrix */
+@param x property matrix of first molecule
+@param y property matrix of the model (template)
+@param sigma additional scaling factor. 
+@param ans the answer...i.e. the nodekernel matrix. ans is assigned a newly created matrix */
 void static nodekernel(const Mat& x,const Mat& y,const Mat& dev,real sigma,Mat& ans){
 	int xrows=x.nrows();
 	int yrows=y.nrows();
@@ -50,8 +50,8 @@ bool static compare(const pair<real,int>& a,const pair<real,int>& b){
 }
 
 /**
-@param : tosort : a plearn Vec which you want to sort 
-@param : slist : it will contain the list of indices of tosort in a sorted manner. thus last entry of slist is the index of largest value in tosort */
+@param tosort a plearn Vec which you want to sort 
+@param slist it will contain the list of indices of tosort in a sorted manner. thus last entry of slist is the index of largest value in tosort */
 void static sortedIndexList(const Vec& tosort,vector<int>& slist){
 	int n = tosort.length();
 	vector< pair<real,int> > ilist;
@@ -70,9 +70,9 @@ void static sortedIndexList(const Vec& tosort,vector<int>& slist){
 
 /**
 given a node kernel it picks the top n node kernels in each row and column . only these weights need to considered as all other weights will probably come out to be zero anyway. this way we can reduce the number of variables in our optimization problem 
-@param : nkmat : node kernel matrix
-@param : weights : this is a boolean matrix which will contain which weights are to be considered
-@param : n : minimum number of weights to be considered in a row or column
+@param nkmat node kernel matrix
+@param weights this is a boolean matrix which will contain which weights are to be considered
+@param n minimum number of weights to be considered in a row or column
 */
 void static findRelevantWeights(const Mat& nkmat,vector< vector<bool> >& weights , int n){
 	const int nx = nkmat.nrows();
@@ -114,8 +114,8 @@ void static findRelevantWeights(const Mat& nkmat,vector< vector<bool> >& weights
 }
 
 /**
-@param : wfilter : the boolean matrix containing info about which weights are to be considered
-@param : wlist : list of pairs of indices which will contain the same info as wfilter but it carries it in a list form. this makes it possible to traverse over the list of weights */
+@param wfilter the boolean matrix containing info about which weights are to be considered
+@param wlist list of pairs of indices which will contain the same info as wfilter but it carries it in a list form. this makes it possible to traverse over the list of weights */
 void static extractWeightList(const vector< vector<bool> >& wfilter , vector< pair<int,int> >& wlist){
 	int nx = wfilter.size();
 	int count = 0;
@@ -136,8 +136,8 @@ void static extractWeightList(const vector< vector<bool> >& wfilter , vector< pa
 }
 
 /**
-@param : coords : coordinates of the vertices among which distances are to be calculated
-@param : dist : euclidean distances will be reported in this mat */
+@param coords coordinates of the vertices among which distances are to be calculated
+@param dist euclidean distances will be reported in this mat */
 void static calculateEuclDist(const Mat& coords,Mat& dist){
 	int n = coords.nrows();
 	dist = Mat(n,n,0.0);
@@ -156,13 +156,13 @@ void static calculateEuclDist(const Mat& coords,Mat& dist){
 
 /**
 see documenation about the alignment procedure. this is the function being used to align
-@param : xmat : coordinates of molecule x (to be transformed)
-@param : ymat : coordinates of molecule y
-@param : wij : weight matrix
-@param : nk : nodekernel 
-@param : xm : weighted centroid of x
-@param : ym : weighted centroid of y
-@return : the error which gives an estimate of how well the molecules were aligned 
+@param xmat coordinates of molecule x (to be transformed)
+@param ymat coordinates of molecule y
+@param wij weight matrix
+@param nk nodekernel 
+@param xm weighted centroid of x
+@param ym weighted centroid of y
+@return the error which gives an estimate of how well the molecules were aligned 
 */
 real static calcTransformation4(const Mat &xmat,const Mat& ymat,const Mat& wij,const Mat &nk,Mat& rot,Vec& xm,Vec& ym){
 	int newn = xmat.nrows()+ymat.nrows();
@@ -214,7 +214,7 @@ real static calcTransformation4(const Mat &xmat,const Mat& ymat,const Mat& wij,c
 
 /**
 extension of calcLinearWeights ... uses fixed sigma and automatically selects suitable thresh from a fixed list. this is the version used for all calculations.
-@see : calcLinearWeights */
+@see calcLinearWeights */
 void static autoThreshLP(const Mat& dist1,const Mat& dist2,const Mat& nk,const vector< pair<int,int> >& wlist,const vector< vector<bool> >& wfilter,Mat& wm){
 	int nterms = 0;
 	int n = wlist.size();
@@ -343,11 +343,11 @@ void static autoThreshLP(const Mat& dist1,const Mat& dist2,const Mat& nk,const v
 
 /**
 given the molecule names , reads the vrml files and the properties and passes on the appropriate data to autoThreshLP. this is the front end that is used.
-@param : name1 : name of molecule to be aligned
-@param : name2 : name of molecule with which to align
-@param : wm : weight matrix
-@param : isweighted : take into account deviations ?
-@see : autoThreshLP */
+@param name1 name of molecule to be aligned
+@param name2 name of molecule with which to align
+@param wm weight matrix
+@param isweighted take into account deviations ?
+@see autoThreshLP */
 void static performLP(PMolecule name1,MoleculeTemplate name2,Mat& wm,bool isweighted){
 try{	
 //	cout<<"performing lp on "<<name1<<" "<<name2<<endl;
