@@ -48,7 +48,8 @@ window = -1;
 full_update_frequency = -1;
 window_nan_code = 0;
 no_removal_warnings = 0;
-stats = # samples: 12
+stats = 
+# samples: 12
 # missing: 0
 mean: 95.8829597321088301
 stddev: 1.43759313057489235
