@@ -1016,16 +1016,6 @@ void StatsCollector::newwrite(PStream& out) const
     case PStream::raw_ascii:
     case PStream::pretty_ascii:
     {
-        out << "# samples: " << n() << "\n";
-        out << "# missing: " << nmissing() << "\n";
-        out << "mean: " << mean() << "\n";
-        out << "stddev: " << stddev() << "\n";
-        out << "stderr: " << stderror() << "\n";
-        out << "min: " << min() << "\n";
-        out << "max: " << max() << "\n\n";
-        out << "first: " << first_obs() << "\n";
-        out << "last:  " << last_obs()  << "\n\n";
-        out << "counts size: " << (unsigned int) counts.size() << "\n";
         map<real,StatsCollectorCounts>::const_iterator it = counts.begin();
         map<real,StatsCollectorCounts>::const_iterator itend = counts.end();
         for(; it!=itend; ++it)
@@ -1035,6 +1025,16 @@ void StatsCollector::newwrite(PStream& out) const
                 << "  #less:" << it->second.nbelow
                 << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
         }
+        out << "\n# samples: " << n() << "\n";
+        out << "# missing: " << nmissing() << "\n";
+        out << "mean: " << mean() << "\n";
+        out << "stddev: " << stddev() << "\n";
+        out << "stderr: " << stderror() << "\n";
+        out << "min: " << min() << "\n";
+        out << "max: " << max() << "\n\n";
+        out << "first: " << first_obs() << "\n";
+        out << "last:  " << last_obs()  << "\n\n";
+        out << "counts size: " << (unsigned int) counts.size() << "\n";
         break;
     }
     default:
