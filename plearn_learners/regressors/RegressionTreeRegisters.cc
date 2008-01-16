@@ -41,7 +41,7 @@
 
 #include "RegressionTreeRegisters.h"
 #include <plearn/vmat/TransposeVMatrix.h>
-#include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/vmat/MemoryVMatrixNoSave.h>
 
 namespace PLearn {
 using namespace std;
@@ -109,7 +109,9 @@ void RegressionTreeRegisters::build_()
 
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {
-    tsource = VMat(MemoryVMatrix(TransposeVMatrix(the_train_set)));
+    VMat tmp = VMat(new TransposeVMatrix(the_train_set));
+    PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
+    tsource = VMat(tmp2 );
     length_ = the_train_set->length();
     width_ = the_train_set->width();
     inputsize_ = the_train_set->inputsize();
