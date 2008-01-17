@@ -569,6 +569,22 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
     VarArray params = totalcost->parents();
     supervised_optimizer->setToOptimize(params, totalcost);
     supervised_optimizer->reset();
+
+    TVec<string> colnames;
+    VMat training_curve;
+    Vec costrow;
+
+    colnames.append("nepochs");
+    colnames.append("relative_improvement");
+    int ncosts=supervised_costs_names.length();
+    for(int k=0; k<ncosts; k++)
+    {
+        colnames.append(supervised_costs_names[k]+"_mean");
+        colnames.append(supervised_costs_names[k]+"_stderr");
+    }
+    training_curve = new FileVMatrix(expdir/"training_costs_output.pmat",0,colnames);
+    costrow.resize(colnames.length());
+
     VecStatsCollector st;
     real prev_mean = -1;
     real relative_improvement = 1000;
@@ -579,7 +595,9 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
         supervised_optimizer->optimizeN(st);
         const StatsCollector& s = st.getStats(0);
         real m = s.mean();
-        perr << "Epoch " << n+1 << " Mean costs: " << st.getMean() << " stderr " << st.getStdError() << endl;
+        Vec means = st.getMean();
+        Vec stderrs = st.getStdError();
+        perr << "Epoch " << n+1 << " Mean costs: " << means << " stderr " << stderrs << endl;
         perr << "mean error: " << m << " +- " << s.stderror() << endl;
         if(prev_mean>0)
         {
@@ -588,6 +606,16 @@ void DeepReconstructorNet::trainSupervisedLayer(VMat inputs, VMat targets)
         }
         prev_mean = m;
         //displayVarGraph(supervised_costvec, true);
+
+        // save to a file
+        costrow[0] = (real)n+1;
+        costrow[1] = relative_improvement*100;
+        for(int k=0; k<ncosts; k++) {
+            costrow[2+k*2] = means[k];
+            costrow[2+k*2+1] = stderrs[k];
+        }
+        training_curve->appendRow(costrow);
+        training_curve->flush();
 
     }
     
@@ -675,8 +703,8 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
         }
 
         costrow.resize(colnames.length());
-        int k=0;
-        costrow[0] = n+1;
+//        int k=0;
+        costrow[0] = (real)n+1;
         costrow[1] = relative_improvement*100;
         for(int k=0; k<ncosts; k++)
         {
@@ -789,4 +817,4 @@ Mat DeepReconstructorNet::reconstructOneLayer(int layer)
   fill-column:79
   End:
 */
-// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :50
+// vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4:encoding=utf-8:textwidth=79 :
