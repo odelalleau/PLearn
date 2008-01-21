@@ -63,7 +63,11 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     compute_all_test_costs( false ),
     reconstruct_hidden( false ),
     fraction_of_masked_inputs( 0 ),
+    unsupervised_nstages( 0 ),
+    unsupervised_fine_tuning_learning_rate( 0. ),
+    unsupervised_fine_tuning_decrease_ct( 0. ),
     n_layers( 0 ),
+    unsupervised_stage( 0 ),
     currently_trained_layer( 0 )
 {
     // random_gen will be initialized in PLearner::build_()
@@ -210,6 +214,23 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "masked, i.e. unsused to reconstruct the input.\n"
         );
 
+    declareOption(ol, "unsupervised_nstages", 
+                  &StackedAutoassociatorsNet::unsupervised_nstages,
+                  OptionBase::buildoption,
+                  "Number of samples to use for unsupervised fine-tuning.\n");
+
+    declareOption(ol, "unsupervised_fine_tuning_learning_rate", 
+                  &StackedAutoassociatorsNet::unsupervised_fine_tuning_learning_rate,
+                  OptionBase::buildoption,
+                  "The learning rate used during the unsupervised "
+                  "fine tuning gradient descent");
+
+    declareOption(ol, "unsupervised_fine_tuning_decrease_ct", 
+                  &StackedAutoassociatorsNet::unsupervised_fine_tuning_decrease_ct,
+                  OptionBase::buildoption,
+                  "The decrease constant of the learning rate used during\n"
+                  "unsupervised fine tuning gradient descent.\n");
+
     declareOption(ol, "greedy_stages", 
                   &StackedAutoassociatorsNet::greedy_stages,
                   OptionBase::learntoption,
@@ -221,6 +242,12 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Number of layers"
         );
+
+    declareOption(ol, "unsupervised_stage", 
+                  &StackedAutoassociatorsNet::unsupervised_stage,
+                  OptionBase::learntoption,
+                  "Number of samples visited so far during unsupervised "
+                  "fine-tuning.\n");
 
     declareOption(ol, "correlation_layers", 
                   &StackedAutoassociatorsNet::correlation_layers,
@@ -277,6 +304,11 @@ void StackedAutoassociatorsNet::build_()
             PLERROR("StackedAutoassociatorsNet::build_()"
                     " - \n"
                     "cannot use online setting with reconstruct_hidden=true.\n");
+
+        if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
+            PLERROR("StackedAutoassociatorsNet::build_()"
+                    " - \n"
+                    "cannot use unsupervised fine-tuning with correlation connections.\n");
 
         if( fraction_of_masked_inputs < 0 )
             PLERROR("StackedAutoassociatorsNet::build_()"
@@ -565,7 +597,7 @@ void StackedAutoassociatorsNet::build_costs()
                         "partial_costs[%i] should have an input_size of %d.\n", 
                         i,layers[i+1]->size);
             if(i==0)
-                partial_costs_positions[i] = n_layers-1;
+                partial_costs_positions[i] = n_layers;
             else
                 partial_costs_positions[i] = partial_costs_positions[i-1]
                     + partial_costs[i-1]->name().length();
@@ -613,6 +645,10 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(reconstruction_activations, copies);
     deepCopyField(reconstruction_activation_gradients, copies);
     deepCopyField(reconstruction_expectation_gradients, copies);
+    deepCopyField(fine_tuning_reconstruction_activations, copies);
+    deepCopyField(fine_tuning_reconstruction_expectations, copies);
+    deepCopyField(fine_tuning_reconstruction_activation_gradients, copies);
+    deepCopyField(fine_tuning_reconstruction_expectation_gradients, copies);
     deepCopyField(reconstruction_activation_gradients_from_hid_rec, copies);
     deepCopyField(reconstruction_expectation_gradients_from_hid_rec, copies);
     deepCopyField(hidden_reconstruction_activations, copies);
@@ -631,6 +667,9 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_value, copies);
     deepCopyField(final_cost_gradient, copies);
     deepCopyField(masked_autoassociator_input, copies);
+    deepCopyField(masked_autoassociator_expectations, copies);
+    deepCopyField(autoassociator_input_indices, copies);
+    deepCopyField(autoassociator_expectation_indices, copies);
     deepCopyField(greedy_stages, copies);
 }
 
@@ -688,6 +727,7 @@ void StackedAutoassociatorsNet::forget()
     }
 
     stage = 0;
+    unsupervised_stage = 0;
     greedy_stages.clear();
 }
 
@@ -818,6 +858,78 @@ void StackedAutoassociatorsNet::train()
             }
         }
 
+        /***** unsupervised fine-tuning by gradient descent *****/
+        if( unsupervised_stage < unsupervised_nstages )
+        {
+            if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
+                PLERROR("StackedAutoassociatorsNet::train()"
+                        " - \n"
+                        "cannot use unsupervised fine-tuning with correlation connections.\n");
+            
+            MODULE_LOG << "Unsupervised fine-tuning all parameters, ";
+            MODULE_LOG << "by gradient descent" << endl;
+            MODULE_LOG << "  unsupervised_stage = " << unsupervised_stage << endl;
+            MODULE_LOG << "  unsupervised_nstages = " << 
+                unsupervised_nstages << endl;
+            MODULE_LOG << "  unsupervised_fine_tuning_learning_rate = " << 
+                unsupervised_fine_tuning_learning_rate << endl;
+
+            init_stage = unsupervised_stage;
+            if( report_progress && unsupervised_stage < unsupervised_nstages )
+                pb = new ProgressBar( "Fine-tuning parameters of all layers of "
+                                      + classname(),
+                                      unsupervised_nstages - init_stage );
+
+            fine_tuning_reconstruction_activations.resize( n_layers );
+            fine_tuning_reconstruction_expectations.resize( n_layers );
+            fine_tuning_reconstruction_activation_gradients.resize( n_layers );
+            fine_tuning_reconstruction_expectation_gradients.resize( n_layers );
+            for( int i=0 ; i<n_layers ; i++ )
+            {
+                fine_tuning_reconstruction_activations[i].resize( 
+                    layers[i]->size );
+                fine_tuning_reconstruction_expectations[i].resize( 
+                    layers[i]->size );
+                fine_tuning_reconstruction_activation_gradients[i].resize( 
+                    layers[i]->size );
+                fine_tuning_reconstruction_expectation_gradients[i].resize( 
+                    layers[i]->size );
+            }
+
+            if( fraction_of_masked_inputs > 0 )
+            {
+                masked_autoassociator_expectations.resize( n_layers-1 );
+                autoassociator_expectation_indices.resize( n_layers-1 );
+                
+                for( int i=0 ; i<n_layers-1 ; i++ )
+                {
+                    masked_autoassociator_expectations[i].resize( layers[i]->size );
+                    autoassociator_expectation_indices[i].resize( layers[i]->size );
+                    for( int j=0 ; j < autoassociator_expectation_indices[i].length() ; j++ )
+                        autoassociator_expectation_indices[i][j] = j;
+                }
+            }
+
+            setLearningRate( unsupervised_fine_tuning_learning_rate );
+            train_costs.fill(MISSING_VALUE);
+            for( ; unsupervised_stage<unsupervised_nstages ; unsupervised_stage++ )
+            {
+                sample = unsupervised_stage % nsamples;
+                if( !fast_exact_is_equal( unsupervised_fine_tuning_decrease_ct, 0. ) )
+                    setLearningRate( 
+                        unsupervised_fine_tuning_learning_rate
+                        / (1. + unsupervised_fine_tuning_decrease_ct 
+                           * unsupervised_stage ) );
+
+                train_set->getExample( sample, input, target, weight );
+                unsupervisedFineTuningStep( input, target, train_costs );
+                train_stats->update( train_costs );
+
+                if( pb )
+                    pb->update( unsupervised_stage - init_stage + 1 );
+            }
+        }
+
         /***** fine-tuning by gradient descent *****/
         if( stage < nstages )
         {
@@ -868,6 +980,12 @@ void StackedAutoassociatorsNet::train()
     }
     else
     {
+
+        if( unsupervised_nstages > 0 )
+            PLERROR("StackedAutoassociatorsNet::train()"
+                    " - \n"
+                    "unsupervised fine-tuning with online=true is not implemented.\n");
+        
         // Train all layers simultaneously AND fine-tuning as well!
         if( stage < nstages )
         {
@@ -1178,8 +1296,96 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
 
 }
 
+void StackedAutoassociatorsNet::unsupervisedFineTuningStep( const Vec& input, 
+                                                            const Vec& target,
+                                                            Vec& train_costs )
+{
+    // fprop
+    expectations[0] << input;
+
+    if( fraction_of_masked_inputs > 0 )
+    {
+        for( int i=0; i<autoassociator_expectation_indices.length(); i++ )
+            random_gen->shuffleElements(autoassociator_expectation_indices[i]);
+        
+        for( int i=0 ; i<n_layers-1; i++ )
+        {
+            masked_autoassociator_expectations[i] << expectations[i];
+            for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
+                masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0; 
+            
+            connections[i]->fprop( masked_autoassociator_expectations[i], 
+                                   activations[i+1] );
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        }
+    }
+    else
+    {
+        for( int i=0 ; i<n_layers-1; i++ )
+        {
+            connections[i]->fprop( expectations[i], activations[i+1] );
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+        }
+    }
+
+    fine_tuning_reconstruction_expectations[ n_layers-1 ] << 
+        expectations[ n_layers-1 ];
+
+    for( int i=n_layers-2 ; i>=0; i-- )
+    {
+        reconstruction_connections[i]->fprop( 
+            fine_tuning_reconstruction_expectations[i+1], 
+            fine_tuning_reconstruction_activations[i] );
+        layers[i]->fprop( fine_tuning_reconstruction_activations[i],
+                          fine_tuning_reconstruction_expectations[i]);
+    }
+    
+    layers[ 0 ]->setExpectation( fine_tuning_reconstruction_expectations[ 0 ] );
+    layers[ 0 ]->activation << fine_tuning_reconstruction_activations[0];
+    real rec_err = layers[ 0 ]->fpropNLL( input );
+    train_costs[n_layers-1] = rec_err;
+    
+    layers[ 0 ]->bpropNLL( input, rec_err,
+                           fine_tuning_reconstruction_activation_gradients[ 0 ] );
+
+    layers[ 0 ]->update( fine_tuning_reconstruction_activation_gradients[ 0 ] );
+
+    for( int i=0 ; i<n_layers-1; i++ )
+    {
+        if( i != 0)
+            layers[i]->bpropUpdate( fine_tuning_reconstruction_activations[i],
+                                    fine_tuning_reconstruction_expectations[i],
+                                    fine_tuning_reconstruction_activation_gradients[i],
+                                    fine_tuning_reconstruction_expectation_gradients[i]);
+        reconstruction_connections[i]->bpropUpdate( 
+            fine_tuning_reconstruction_expectations[i+1], 
+            fine_tuning_reconstruction_activations[i],
+            fine_tuning_reconstruction_expectation_gradients[i+1], 
+            fine_tuning_reconstruction_activation_gradients[i]);
+    }
+
+    expectation_gradients[ n_layers-1 ] << 
+        fine_tuning_reconstruction_expectation_gradients[ n_layers-1 ];
+    
+    for( int i=n_layers-2 ; i>=0; i-- )
+    {
+        layers[i+1]->bpropUpdate(
+            activations[i+1],expectations[i+1],
+            activation_gradients[i+1],expectation_gradients[i+1]);
+        if( fraction_of_masked_inputs > 0 )
+            connections[i]->bpropUpdate( 
+                masked_autoassociator_expectations[i], activations[i+1],
+                expectation_gradients[i], activation_gradients[i+1] );
+        else
+            connections[i]->bpropUpdate( 
+                expectations[i], activations[i+1],
+                expectation_gradients[i], activation_gradients[i+1] );
+
+    }
+}
+
 void StackedAutoassociatorsNet::fineTuningStep( const Vec& input, const Vec& target,
-                                    Vec& train_costs )
+                                                Vec& train_costs )
 {
     // fprop
     expectations[0] << input;
@@ -1729,7 +1935,24 @@ TVec<string> StackedAutoassociatorsNet::getTestCostNames() const
 
 TVec<string> StackedAutoassociatorsNet::getTrainCostNames() const
 {
-    return getTestCostNames() ;    
+    TVec<string> cost_names(0);
+
+    for( int i=0; i<layers.size()-1; i++)
+        cost_names.push_back("reconstruction_error_" + tostring(i+1));
+
+    cost_names.push_back("global_reconstruction_error");
+    
+    for( int i=0 ; i<partial_costs.size() ; i++ )
+    {
+        TVec<string> names = partial_costs[i]->name();
+        for(int j=0; j<names.length(); j++)
+            cost_names.push_back("partial" + tostring(i) + "." + 
+                names[j]);
+    }
+
+    cost_names.append( final_cost->name() );
+
+    return cost_names;
 }
 
 
@@ -1750,6 +1973,7 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
         {
             direct_connections[i]->setLearningRate( the_learning_rate );
         }
+        reconstruction_connections[i]->setLearningRate( the_learning_rate );
     }
     layers[n_layers-1]->setLearningRate( the_learning_rate );
 

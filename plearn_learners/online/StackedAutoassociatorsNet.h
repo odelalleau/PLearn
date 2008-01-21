@@ -150,10 +150,23 @@ public:
     //! masked, i.e. unsused to reconstruct the input.
     real fraction_of_masked_inputs;
 
+    //! Number of samples to use for unsupervised fine-tuning
+    int unsupervised_nstages;
+
+    //! The learning rate used during the unsupervised fine tuning gradient descent
+    real unsupervised_fine_tuning_learning_rate;
+
+    //! The decrease constant of the learning rate used during 
+    //! unsupervised fine tuning gradient descent
+    real unsupervised_fine_tuning_decrease_ct;
+
     //#####  Public Learnt Options  ###########################################
 
     //! Number of layers
     int n_layers;
+
+    //! Number of samples visited so far during unsupervised fine-tuning
+    int unsupervised_stage;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -196,6 +209,9 @@ public:
 
     void greedyStep( const Vec& input, const Vec& target, int index, 
                      Vec train_costs );
+
+    void unsupervisedFineTuningStep( const Vec& input, const Vec& target,
+                                     Vec& train_costs );
 
     void fineTuningStep( const Vec& input, const Vec& target,
                          Vec& train_costs );
@@ -241,14 +257,23 @@ protected:
     //! Reconstruction activations
     mutable Vec reconstruction_activations;
     
-    //! Reconstruction expectations
-    mutable Vec reconstruction_expectations;
-        
     //! Reconstruction activation gradients
     mutable Vec reconstruction_activation_gradients;
 
     //! Reconstruction expectation gradients
     mutable Vec reconstruction_expectation_gradients;
+
+    //! Unsupervised fine-tuning reconstruction activations
+    TVec< Vec > fine_tuning_reconstruction_activations;
+    
+    //! Unsupervised fine-tuning reconstruction expectations
+    TVec< Vec > fine_tuning_reconstruction_expectations;
+
+    //! Unsupervised fine-tuning reconstruction activations gradients
+    TVec< Vec > fine_tuning_reconstruction_activation_gradients;
+    
+    //! Unsupervised fine-tuning reconstruction expectations gradients
+    TVec< Vec > fine_tuning_reconstruction_expectation_gradients;
 
     //! Reconstruction activation gradients coming from hidden reconstruction
     mutable Vec reconstruction_activation_gradients_from_hid_rec;
@@ -305,8 +330,14 @@ protected:
     //! have been masked (set to 0) randomly.
     Vec masked_autoassociator_input;
 
+    //! Layers randomly masked, for unsupervised fine-tuning.
+    TVec< Vec > masked_autoassociator_expectations;
+
     //! Indices of the input components
     TVec<int> autoassociator_input_indices;
+
+    //! Indices of the expectation components
+    TVec< TVec<int> > autoassociator_expectation_indices;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
@@ -314,12 +345,6 @@ protected:
     //! Currently trained layer (1 means the first hidden layer,
     //! n_layers means the output layer)
     int currently_trained_layer;
-
-    //! Indication whether final_module has learning rate
-    bool final_module_has_learning_rate;
-    
-    //! Indication whether final_cost has learning rate
-    bool final_cost_has_learning_rate;
 
 protected:
     //#####  Protected Member Functions  ######################################
