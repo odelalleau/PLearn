@@ -1,0 +1,2 @@
+__REVISION__ = "PL8390"
+data                                          = PLEARNDIR:examples/data/uci_mldb/abalone_all.vmat

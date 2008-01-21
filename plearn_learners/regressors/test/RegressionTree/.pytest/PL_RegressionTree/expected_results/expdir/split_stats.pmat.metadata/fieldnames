@@ -1,0 +1,9 @@
+splitnum	0
+train.E[mse]	0
+train.E[base_confidence]	0
+train.E[base_reward_l2]	0
+train.E[base_reward_l1]	0
+test1.E[mse]	0
+test1.E[base_confidence]	0
+test1.E[base_reward_l2]	0
+test1.E[base_reward_l1]	0

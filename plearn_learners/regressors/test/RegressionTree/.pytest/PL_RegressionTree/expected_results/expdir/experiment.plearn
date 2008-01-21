@@ -1,0 +1,40 @@
+*5 -> PTester(
+    dataset = *1 -> AutoVMatrix(
+        inputsize = 8,
+        specification = "PLEARNDIR:examples/data/uci_mldb/abalone_all.vmat",
+        targetsize = 1,
+        weightsize = 0
+        ),
+    expdir = "expdir",
+    learner = *3 -> RegressionTree(
+        complexity_penalty_factor = 0.0,
+        compute_train_stats = 1,
+        forget_when_training_set_changes = 1,
+        leave_template = *2 -> RegressionTreeLeave( ),
+        loss_function_weight = 1,
+        maximum_number_of_nodes = 50,
+        nstages = 10,
+        report_progress = 1,
+        verbosity = 0
+        ),
+    provide_learner_expdir = 1,
+    save_test_confidence = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *4 -> FractionSplitter(
+        splits = 1 2 [
+                (0, 0.75),
+                (0.75, 1)
+                ]
+        ),
+    statnames = [
+        "E[train.E[mse]]",
+        "E[train.E[base_confidence]]",
+        "E[train.E[base_reward_l2]]",
+        "E[train.E[base_reward_l1]]",
+        "E[test1.E[mse]]",
+        "E[test1.E[base_confidence]]",
+        "E[test1.E[base_reward_l2]]",
+        "E[test1.E[base_reward_l1]]"
+        ]
+    )

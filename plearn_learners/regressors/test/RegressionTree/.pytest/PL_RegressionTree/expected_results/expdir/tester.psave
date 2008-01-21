@@ -1,0 +1,94 @@
+PTester(
+expdir = "PYTEST__PL_RegressionTree__RESULTS:expdir/" ;
+dataset = *1 ->AutoVMatrix(
+filename = "UCI_MLDB:abalone_all.vmat" ;
+load_in_memory = 0 ;
+writable = 0 ;
+length = 4177 ;
+width = 9 ;
+inputsize = 8 ;
+targetsize = 1 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = "UCI_MLDB:abalone_all.vmat.metadata/"  )
+;
+splitter = *2 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  2  [ 
+(0 , 0.75 )	(0.75 , 1 )	
+]
+ )
+;
+statnames = 8 [ "E[train.E[mse]]" "E[train.E[base_confidence]]" "E[train.E[base_reward_l2]]" "E[train.E[base_reward_l1]]" "E[test1.E[mse]]" "E[test1.E[base_confidence]]" "E[test1.E[base_reward_l2]]" "E[test1.E[base_reward_l1]]" ] ;
+statmask = []
+;
+learner = *3 ->RegressionTree(
+missing_is_valid = 0 ;
+loss_function_weight = 1 ;
+maximum_number_of_nodes = 50 ;
+compute_train_stats = 1 ;
+complexity_penalty_factor = 0 ;
+multiclass_outputs = []
+;
+leave_template = *4 ->RegressionTreeLeave(
+id = 0 ;
+missing_leave = 0 ;
+loss_function_weight = 0 ;
+verbosity = 0 ;
+train_set = *0 ;
+length = 0 ;
+weights_sum = 0 ;
+targets_sum = 0 ;
+weighted_targets_sum = 0 ;
+weighted_squared_targets_sum = 0 ;
+loss_function_factor = 0 ;
+output = []
+;
+error = []
+ )
+;
+sorted_train_set = *0 ;
+root = *0 ;
+priority_queue = *0 ;
+first_leave = *0 ;
+first_leave_output = []
+;
+first_leave_error = []
+;
+split_cols = []
+;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 1 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 0 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 1 ;
+save_stat_collectors = 1 ;
+save_learners = 1 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 1 ;
+call_forget_in_run = 1 ;
+save_test_costs = 1 ;
+provide_learner_expdir = 1 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = []
+;
+save_test_confidence = 1 ;
+enforce_clean_expdir = 1  )

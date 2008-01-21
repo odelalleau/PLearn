@@ -52,7 +52,8 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeNode,
                         "a left leave for samples with values below the value of the splitting attribute, and a right leave for the others,\n"
     );
 
-RegressionTreeNode::RegressionTreeNode()
+RegressionTreeNode::RegressionTreeNode():
+    dummy_int(0)
 {
     build();
 }

@@ -1,0 +1,45 @@
+import os.path
+from plearn.pyplearn import *
+
+plarg_defaults.data    = "PLEARNDIR:examples/data/uci_mldb/abalone_all.vmat"
+
+dataset = pl.AutoVMatrix(
+    specification = plargs.data,
+    inputsize = 8,
+    targetsize = 1,
+    weightsize = 0
+    )
+
+#learner = pl.RegresssionTree()
+learner = pl.RegressionTree(
+        nstages = 10
+        ,loss_function_weight = 1
+#        ,missing_is_valid = 0
+#        ,multiclass_outputs = []
+        ,maximum_number_of_nodes = 50
+        ,compute_train_stats = 1
+        ,complexity_penalty_factor = 0.0
+        ,verbosity = 0
+        ,report_progress = 1
+        ,forget_when_training_set_changes = 1
+#        ,conf_rated_adaboost = 0
+        ,leave_template = pl.RegressionTreeLeave( )
+        )
+splitter = pl.FractionSplitter(
+    splits = TMat(1,2, [ (0,0.75),  (0.75,1) ])
+    )
+tester = pl.PTester(
+    expdir = plargs.expdir,
+    dataset = dataset,
+    splitter = splitter,
+    learner = learner,
+    statnames = ['E[train.E[mse]]', 'E[train.E[base_confidence]]', 'E[train.E[base_reward_l2]]', 'E[train.E[base_reward_l1]]',
+                 'E[test1.E[mse]]',  'E[test1.E[base_confidence]]',  'E[test1.E[base_reward_l2]]',  'E[test1.E[base_reward_l1]]'],
+    provide_learner_expdir = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    save_test_confidence = 1
+    )
+
+def main():
+    return tester
