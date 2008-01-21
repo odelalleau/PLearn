@@ -370,11 +370,11 @@ void DeepReconstructorNet::train()
 
             bool must_train_supervised_layer = supervised_nepochs.second>0;
             
-            PLearn::save(expdir/"learner.psave", this);
+            PLearn::save(expdir/"learner.psave", *this);
             for(int k=0; k<nreconstructions; k++)
             {
                 trainHiddenLayer(k, dset);
-                PLearn::save(expdir/"learner.psave", this);
+                PLearn::save(expdir/"learner.psave", *this);
                 // 'if' is a hack to avoid precomputing last hidden layer if not needed
                 if(k<nreconstructions-1 ||  must_train_supervised_layer) 
                 { 
@@ -389,7 +389,7 @@ void DeepReconstructorNet::train()
             if(must_train_supervised_layer)
             {
                 trainSupervisedLayer(dset, targets);
-                PLearn::save(expdir/"learner.psave", this);
+                PLearn::save(expdir/"learner.psave", *this);
             }
             perr << "\n\n*********************************************" << endl;
             perr << "****      Now performing fine tuning     ****" << endl;
