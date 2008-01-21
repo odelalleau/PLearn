@@ -1,4 +1,4 @@
-import cvs, svn, os
+import cvs, svn, os, hg
 
 from plearn.utilities.ppath     import cvs_directory, subversion_hidden
 from plearn.utilities.verbosity import vprint
@@ -10,6 +10,8 @@ def get_vc_module():
         return cvs
     elif os.path.isdir(subversion_hidden):
         return svn
+    elif os.path.isdir(hg_hidden):
+        return hg
     else:
         raise VersionControlError("Could not figure out version control system to use!")
 
