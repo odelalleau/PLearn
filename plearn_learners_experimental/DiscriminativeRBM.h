@@ -103,6 +103,9 @@ public:
     //! Target weights' L2_penalty_factor
     real target_weights_L2_penalty_factor;
 
+    //! Indication that discriminative learning should not be used
+    bool do_not_use_discriminative_learning;
+
     //#####  Public Learnt Options  ###########################################
     //! The module computing the probabilities of the different classes.
     PP<RBMClassificationModule> classification_module;

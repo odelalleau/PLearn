@@ -66,7 +66,8 @@ DiscriminativeRBM::DiscriminativeRBM() :
     semi_sup_learning_weight( 0. ),
     n_classes( -1 ),
     target_weights_L1_penalty_factor( 0. ),
-    target_weights_L2_penalty_factor( 0. )
+    target_weights_L2_penalty_factor( 0. ),
+    do_not_use_discriminative_learning( false )
 {
     random_gen = new PRandom();
 }
@@ -133,6 +134,11 @@ void DiscriminativeRBM::declareOptions(OptionList& ol)
                   &DiscriminativeRBM::target_weights_L2_penalty_factor,
                   OptionBase::buildoption,
                   "Target weights' L2_penalty_factor.\n");
+
+    declareOption(ol, "do_not_use_discriminative_learning", 
+                  &DiscriminativeRBM::do_not_use_discriminative_learning,
+                  OptionBase::buildoption,
+                  "Indication that discriminative learning should not be used.\n");
 
     declareOption(ol, "classification_module",
                   &DiscriminativeRBM::classification_module,
@@ -450,7 +456,8 @@ void DiscriminativeRBM::train()
             target_one_hot[ target_index ] = 1;
         }
         // ... for discriminative learning
-        if( !use_exact_disc_gradient && !is_missing(target[0]) )
+        if( !do_not_use_discriminative_learning && 
+            !use_exact_disc_gradient && !is_missing(target[0]) )
         {
             // Positive phase
 
@@ -488,7 +495,7 @@ void DiscriminativeRBM::train()
         if( !is_missing(target[0]) && gen_learning_weight > 0 )
         {
             // Positive phase
-            if( !use_exact_disc_gradient )
+            if( !use_exact_disc_gradient && !do_not_use_discriminative_learning )
             {
                 // Use previous computations
                 gen_pos_down_val << disc_pos_down_val;
@@ -591,7 +598,8 @@ void DiscriminativeRBM::train()
 
         // Get gradient and update
 
-        if( use_exact_disc_gradient && !is_missing(target[0]) )
+        if( !do_not_use_discriminative_learning && 
+            use_exact_disc_gradient && !is_missing(target[0]) )
         {
             classification_module->fprop( input, class_output );
             // This doesn't work. gcc bug?
@@ -613,7 +621,8 @@ void DiscriminativeRBM::train()
         }
 
         // CD Updates
-        if( !use_exact_disc_gradient && !is_missing(target[0]) )
+        if( !do_not_use_discriminative_learning && 
+            !use_exact_disc_gradient && !is_missing(target[0]) )
         {
             joint_layer->update( disc_pos_down_val, disc_neg_down_val );
             hidden_layer->update( disc_pos_up_val, disc_neg_up_val );
