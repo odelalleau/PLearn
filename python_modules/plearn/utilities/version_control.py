@@ -1,6 +1,6 @@
 import cvs, svn, os, hg
 
-from plearn.utilities.ppath     import cvs_directory, subversion_hidden
+from plearn.utilities.ppath     import cvs_directory, subversion_hidden, hg_hidden
 from plearn.utilities.verbosity import vprint
 
 class VersionControlError( Exception ): pass

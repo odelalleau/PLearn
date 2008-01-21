@@ -105,7 +105,7 @@ def repository_revision( path ):
         # First move to the given path, as svn does not always like absolute
         # directories.
         os.chdir(path)
-        h = os.popen("hg identify")
+        h = os.popen("hg identify | cut -d' ' -f1")
 
         # Move back to the previous current directory.
         os.chdir(current_path)
