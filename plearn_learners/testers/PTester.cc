@@ -405,7 +405,7 @@ void PTester::build_()
             int id = statnames_processed[i].find('[');
             char c=statnames_processed[i][id+5];
             if(c=='n'){}
-            else if(c>(nb_testset+'0'))
+            else if(pl_islong(tostring(c)) && c>(nb_testset+'0'))
                 PLWARNING("In PTester::build_() - the statnames %s ask for"
                           " test set %c while their is only %d test set.",
                           statnames_processed[i].c_str(),
