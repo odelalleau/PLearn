@@ -1896,14 +1896,16 @@ void VMatrix::appendRows(Mat rows)
 
 int VMatrix:: compareStats(const VMat& target,
                            const real stderror_threshold,
-                           const real missing_threshold) const
+                           const real missing_threshold,
+                           real* sumdiff_stderr,
+                           real* sumdiff_missing) const
 {
-#ifdef BOUNDCHECK
     if(target->width()!=width())
         PLERROR("In VecStatsCollector:: compareStats() - this vmatris have width %d witch differ from the target width of %d", width(), target->width());
-#endif
-    int diff = 0;
 
+    int nbdiff            = 0;
+    real sumdiff_stderr_  = 0;
+    real sumdiff_missing_ = 0;
     for(int i=0;i<width();i++)
     {
         const StatsCollector tstats = target->getStats(i);
@@ -1911,26 +1913,47 @@ int VMatrix:: compareStats(const VMat& target,
 
         real tmissing = tstats.nmissing()/tstats.n();
         real lmissing = lstats.nmissing()/lstats.n();
-        if(lmissing<(tmissing-missing_threshold/100) || lmissing>(tmissing+missing_threshold/100))
+        real terr = sqrt(tmissing*(1-tmissing)+lmissing*(1-lmissing));
+        real th = fabs(tmissing-lmissing)/terr;
+        if(terr==0)
+            PLCHECK(tmissing==0 && lmissing==0);
+        else if(isnan(th))
+            PLWARNING("In VMatrix::compareStats - should not happen!");
+        else
+            sumdiff_missing_ += th;
+        if(th>missing_threshold)
         {
-            PLWARNING("In VMatrix::compareStats - field %d(%s) have %f missing while target stats have %f",
-                      i, fieldName(i).c_str(), lmissing, tmissing);
-            diff++;
+            PLWARNING("In VMatrix::compareStats - field %d(%s) have %f"
+                      " missing while target stats have %f."
+                      " The stats difference is %f.", 
+                      i, fieldName(i).c_str(), lmissing, tmissing, th);
+            nbdiff++;
         }
         real tmean = tstats.mean();
         real lmean = lstats.mean();
-        real tstderror = tstats.stderror();
-        real  th = (lmean-tmean)/tstderror;
-
+        real tstderror = sqrt(pow(tstats.stderror(),2.) + 
+                              pow(lstats.stderror(),2.));
+        th = fabs(lmean-tmean)/tstderror;
+        if(tstderror==0)
+            PLWARNING("In VMatrix::compareStats - field %d(%s) have a"
+                      " stderror of 0 for both matrice.",
+                      i, fieldName(i).c_str());
+        else
+            sumdiff_stderr_+=th;
         if(th>stderror_threshold)
         {
             PLWARNING("In VMatrix::compareStats - field %d(%s) have mean %f"
-                      " while target mean is %f and target stderror is %f. They differ by %f stderror",
+                      " while target mean is %f and target stderror is %f."
+                      " They differ by %f stderror",
                       i, fieldName(i).c_str(), lmean, tmean, tstderror, th);
-            diff++;
+            nbdiff++;
         }
     }
-     return diff;
+    if(sumdiff_stderr!=NULL)
+        *sumdiff_stderr = sumdiff_stderr_;
+    if(sumdiff_missing!=NULL)
+        *sumdiff_missing = sumdiff_missing_;
+    return nbdiff;
 }
 } // end of namespace PLearn
 

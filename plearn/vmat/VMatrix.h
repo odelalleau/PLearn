@@ -598,14 +598,16 @@ public:
 
     
     //! Compare the stats of this VecStatsCollector with the target one.
-    //! @param target the VecStatsCollector we compare again
-    //! @param stderror_threshold The threshold alowed for the standard error
-    //! @param missing_threshold The threshold alowed for the % of missing
+    //! @param target the VMat we compare again
+    //! @param stderror_threshold The threshold allowed for the standard error
+    //! @param missing_threshold The threshold allowed for the % of missing
     //! @return If they are comparable with respect to the gived threshold,
-    //! we return true. Otherwise false
+    //! we return true. Otherwise we return false.
     int compareStats(const VMat& target,
                      const real stderror_threshold = 2,
-                     const real missing_threshold = 10) const;
+                     const real missing_threshold = 2,
+                     real* sumdiff_stderr = NULL,
+                     real* sumdiff_missing = NULL) const;
 
 
     /**

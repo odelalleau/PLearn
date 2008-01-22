@@ -957,8 +957,14 @@ int vmatmain(int argc, char** argv)
             stderror_threshold=toreal(argv[4]);
         if(argc>5)
             missing_threshold=toreal(argv[5]);
-        int diff = m1->compareStats(m2, stderror_threshold, missing_threshold);
-        cout<<"Their is "<<diff<<" fields that have different stats"<<endl;
+        real sumdiff_stderr = 0;
+        real sumdiff_missing = 0;
+        int diff = m1->compareStats(m2, stderror_threshold, missing_threshold,
+                                    &sumdiff_stderr, &sumdiff_missing);
+        cout<<"Their is "<<diff<<"/"<<m1.width()
+            <<" fields that have different stats"<<endl;
+        cout <<"The sum of stderror difference is "<<sumdiff_stderr<<endl;
+        cout <<"The sum of missing difference is "<<sumdiff_missing<<endl;
 
     }
     else
