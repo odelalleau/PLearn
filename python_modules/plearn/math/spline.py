@@ -77,6 +77,7 @@ class Spline(object):
         calc. interpolated value from tabulated fn. + spline coeffs.
         """
         ox, oy, y2= self.ox, self.oy, self.y2
+        x= float(x)
         l= len(ox)
         i0= 0
         i1= l-1
