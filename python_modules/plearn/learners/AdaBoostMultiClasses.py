@@ -1,6 +1,6 @@
 from plearn.pyext import *
 from plearn.pyplearn.plargs import *
-import time
+import time,os.path
 
 class AdaBoostMultiClasses:
     def __init__(self,trainSet1,trainSet2,weakLearner,confusion_target=1):
@@ -215,12 +215,11 @@ class AdaBoostMultiClasses:
     def save(self,path="",encoding="plearn_ascii"):
         if not os.path.exists(path):
             os.mkdir(path)
-        if path:
-            path+="/"
-        else:
-            print "WARNING: AdaBoost3PLearner - no path for saving the learner, we use the current directory"
-        self.learner1.save(path+"learner1_stage="+str(self.stage)+".psave",encoding)
-        self.learner2.save(path+"learner2_stage="+str(self.stage)+".psave",encoding)
+
+        file1=os.path.join(path,"learner1_stage="+str(self.stage)+".psave")
+        file2=os.path.join(path,"learner2_stage="+str(self.stage)+".psave")
+        self.learner1.save(file1,encoding)
+        self.learner2.save(file2,encoding)
     
     def load_old_learner(self,filepath=None,trainSet1=None,trainSet2=None,stage1=-1,stage2=-1):
         assert(trainSet1 and trainSet2)
@@ -235,7 +234,7 @@ class AdaBoostMultiClasses:
             filepath=max(tmp)
         #if stage=-1 we find the last one
         if stage1 == -1:
-            s="learner1_stage#"
+            s="learner1_stage="
             lens=len(s)
             e=".psave"
             lene=len(e)
@@ -245,7 +244,7 @@ class AdaBoostMultiClasses:
                 if t>stage1: stage1=t
         #We must split stage1 and stage2 as one learner can early stop.
         if stage2 == -1:
-            s="learner2_stage#"
+            s="learner2_stage="
             lens=len(s)
             e=".psave"
             lene=len(e)
@@ -254,10 +253,11 @@ class AdaBoostMultiClasses:
                 t=int(x[lens:-lene])
                 if t>stage2: stage2=t
                 
-        file1=filepath+"/learner1_stage#"+str(stage1)+".psave"
-        file2=filepath+"/learner2_stage#"+str(stage2)+".psave"
+        file1=os.path.join(filepath,"learner1_stage="+str(stage1)+".psave")
+        file2=os.path.join(filepath,"learner2_stage="+str(stage2)+".psave")
         if (not os.path.exists(file1)) or (not os.path.exists(file2)):
             print "ERROR: no file to load in the gived directory"
+            print "file",file1,"and file",file2, "do not exist"
             sys.exit(1)
         self.learner1=loadObject(file1)
         self.learner2=loadObject(file2)
