@@ -70,3 +70,5 @@ for i in "$@";
   pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc || ( echo "Build failed for $i"; exit)
   echo -e "Ended with status: $?\n"
 done
+
+echo "Time finished:" `date`
