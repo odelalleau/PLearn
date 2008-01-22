@@ -90,6 +90,7 @@ PTester::PTester()
        save_stat_collectors(true),
        save_test_costs(false),
        save_test_outputs(false),
+       save_test_names(true),
        call_forget_in_run(true),
        save_test_confidence(false),
        should_train(true),
@@ -172,8 +173,7 @@ void PTester::declareOptions(OptionList& ol)
         ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
         "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
         "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
-        "For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) \n"
-        "will be reported in files train_cost_names.txt and test_cost_names.txt");
+        "For reference, all cost names can be saved with the option save_test_names.");
 
     declareOption(
         ol, "save_initial_tester", &PTester::save_initial_tester, OptionBase::buildoption,
@@ -207,6 +207,11 @@ void PTester::declareOptions(OptionList& ol)
     declareOption(
         ol, "save_test_costs", &PTester::save_test_costs, OptionBase::buildoption,
         "If true, the costs of the test for split #k will be saved in Split#k/test#i_costs.pmat");
+
+    declareOption(
+        ol, "save_test_names", &PTester::save_test_names, OptionBase::buildoption,
+        "For reference, all cost names (as given by the learner's getTrainCostNames() and getTestCostNames() ) \n"
+        "will be reported in files train_cost_names.txt and test_cost_names.txt");
 
     declareOption(
         ol, "provide_learner_expdir", &PTester::provide_learner_expdir, OptionBase::buildoption,
@@ -542,9 +547,10 @@ Vec PTester::oldperform(bool call_forget)
         
     if (expdir != "" && report_stats)
     {
-        saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
-        saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
-
+        if(save_test_names){
+            saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
+            saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
+        }
         global_stats_vm = new FileVMatrix(expdir / "global_stats.pmat",
                                           1, nstats);
         for (int k = 0; k < nstats; k++)
@@ -1052,9 +1058,10 @@ Vec PTester::perform(bool call_forget)
         
     if (expdir != "" && report_stats)
     {
-        saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
-        saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
-
+        if(save_test_names){
+            saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
+            saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
+        }
         global_stats_vm = new FileVMatrix(expdir / "global_stats.pmat",
                                           1, nstats);
         for (int k = 0; k < nstats; k++)
