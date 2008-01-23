@@ -299,8 +299,13 @@ Vec HyperOptimize::optimize()
     int trialnum = 0;
 
     which_cost_pos= getResultNames().find(which_cost);
-    if(which_cost_pos < 0)
+    if(which_cost_pos < 0){
+        if(!pl_islong(which_cost))
+            PLERROR("In HyperOptimize::optimize() -  option 'which_cost' with "
+                    "value '%s' is not a number and is not a valid result test name",
+                    which_cost.c_str());
         which_cost_pos= toint(which_cost);
+    }
 
     Vec results;
     while(option_vals)
