@@ -1,2 +1,2 @@
-__REVISION__ = "PL8390"
-data                                          = PLEARNDIR:examples/data/uci_mldb/abalone_all.vmat
+__REVISION__ = "PL8398"
+data                                          = PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat

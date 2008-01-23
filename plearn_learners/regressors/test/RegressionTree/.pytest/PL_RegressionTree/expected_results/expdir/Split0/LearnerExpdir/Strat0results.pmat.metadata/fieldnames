@@ -1,3 +1,6 @@
+_trial_	0
+_objective_	0
+nstages	0
 E[test1.E[mse]]	0
 E[test1.E[base_confidence]]	0
 E[test1.E[base_reward_l2]]	0
