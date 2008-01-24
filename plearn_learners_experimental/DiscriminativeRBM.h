@@ -106,6 +106,14 @@ public:
     //! Indication that discriminative learning should not be used
     bool do_not_use_discriminative_learning;
 
+    //! The smallest index for the classes of the unlabeled data
+    int unlabeled_class_index_begin;
+
+    //! The number of classes to discriminate from during test.
+    //! The classes that will be discriminated are indexed 
+    //! from 0 to n_classes_at_test_time.
+    int n_classes_at_test_time;
+
     //#####  Public Learnt Options  ###########################################
     //! The module computing the probabilities of the different classes.
     PP<RBMClassificationModule> classification_module;
@@ -216,6 +224,12 @@ protected:
     //! (pointer to classification_module->target_layer)
     PP<RBMMultinomialLayer> target_layer;
 
+    //! Classification module for when unlabeled_class_index_begin != 0
+    PP<RBMClassificationModule> unlabeled_classification_module;
+
+    //! Classification module for when n_classes_at_test_time != n_classes
+    PP<RBMClassificationModule> test_time_classification_module;
+
     //! Temporary variables for Contrastive Divergence
     mutable Vec target_one_hot;
 
@@ -237,6 +251,8 @@ protected:
     //! Temporary variables for gradient descent
     mutable Vec input_gradient;
     mutable Vec class_output;
+    mutable Vec unlabeled_class_output;
+    mutable Vec test_time_class_output;
     mutable Vec class_gradient;
 
     //! Keeps the index of the NLL cost in train_costs

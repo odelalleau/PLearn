@@ -67,7 +67,10 @@ DiscriminativeRBM::DiscriminativeRBM() :
     n_classes( -1 ),
     target_weights_L1_penalty_factor( 0. ),
     target_weights_L2_penalty_factor( 0. ),
-    do_not_use_discriminative_learning( false )
+    do_not_use_discriminative_learning( false ),
+    unlabeled_class_index_begin( 0 ),
+    n_classes_at_test_time( -1 )
+
 {
     random_gen = new PRandom();
 }
@@ -140,6 +143,18 @@ void DiscriminativeRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Indication that discriminative learning should not be used.\n");
 
+    declareOption(ol, "unlabeled_class_index_begin", 
+                  &DiscriminativeRBM::unlabeled_class_index_begin,
+                  OptionBase::buildoption,
+                  "The smallest index for the classes of the unlabeled data.\n");
+
+    declareOption(ol, "n_classes_at_test_time", 
+                  &DiscriminativeRBM::n_classes_at_test_time,
+                  OptionBase::buildoption,
+                  "The number of classes to discriminate from during test.\n"
+                  "The classes that will be discriminated are indexed\n"
+                  "from 0 to n_classes_at_test_time.\n");
+
     declareOption(ol, "classification_module",
                   &DiscriminativeRBM::classification_module,
                   OptionBase::learntoption,
@@ -193,9 +208,9 @@ void DiscriminativeRBM::build_costs()
     build_classification_cost();
 
     int current_index = 0;
-    cost_names.append("NLL");
-    nll_cost_index = current_index;
-    current_index++;
+    //cost_names.append("NLL");
+    //nll_cost_index = current_index;
+    //current_index++;
     
     cost_names.append("class_error");
     class_cost_index = current_index;
@@ -329,6 +344,62 @@ void DiscriminativeRBM::build_classification_cost()
     joint_layer->sub_layers[1] = target_layer;
     joint_layer->random_gen = random_gen;
     joint_layer->build();
+
+    if( unlabeled_class_index_begin != 0 )
+    {
+        unlabeled_class_output.resize( n_classes - unlabeled_class_index_begin );
+        PP<RBMMultinomialLayer> sub_layer = new RBMMultinomialLayer();
+        sub_layer->bias = target_layer->bias.subVec(
+            unlabeled_class_index_begin,
+            n_classes - unlabeled_class_index_begin);
+        sub_layer->size = n_classes - unlabeled_class_index_begin;
+        sub_layer->random_gen = random_gen;
+        sub_layer->build();
+
+        PP<RBMMatrixConnection> sub_connection = new RBMMatrixConnection();
+        sub_connection->weights = last_to_target->weights.subMatColumns(
+            unlabeled_class_index_begin,
+            n_classes - unlabeled_class_index_begin);
+        sub_connection->up_size = hidden_layer->size;
+        sub_connection->down_size = n_classes - unlabeled_class_index_begin;
+        sub_connection->random_gen = random_gen;
+        sub_connection->build();
+
+        unlabeled_classification_module = new RBMClassificationModule();
+        unlabeled_classification_module->previous_to_last = connection;
+        unlabeled_classification_module->last_layer = hidden_layer;
+        unlabeled_classification_module->last_to_target = sub_connection;
+        unlabeled_classification_module->target_layer = sub_layer;
+        unlabeled_classification_module->random_gen = random_gen;
+        unlabeled_classification_module->build();
+    }
+
+    if( n_classes_at_test_time > 0 && n_classes_at_test_time != n_classes )
+    {
+        test_time_class_output.resize( n_classes_at_test_time ); 
+        PP<RBMMultinomialLayer> sub_layer = new RBMMultinomialLayer();
+        sub_layer->bias = target_layer->bias.subVec(
+            0, n_classes_at_test_time );
+        sub_layer->size = n_classes_at_test_time;
+        sub_layer->random_gen = random_gen;
+        sub_layer->build();
+
+        PP<RBMMatrixConnection> sub_connection = new RBMMatrixConnection();
+        sub_connection->weights = last_to_target->weights.subMatColumns(
+            0, n_classes_at_test_time );
+        sub_connection->up_size = hidden_layer->size;
+        sub_connection->down_size = n_classes_at_test_time;
+        sub_connection->random_gen = random_gen;
+        sub_connection->build();
+
+        test_time_classification_module = new RBMClassificationModule();
+        test_time_classification_module->previous_to_last = connection;
+        test_time_classification_module->last_layer = hidden_layer;
+        test_time_classification_module->last_to_target = sub_connection;
+        test_time_classification_module->target_layer = sub_layer;
+        test_time_classification_module->random_gen = random_gen;
+        test_time_classification_module->build();
+    }
 }
 
 ///////////
@@ -358,6 +429,8 @@ void DiscriminativeRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(last_to_target_connection, copies);
     deepCopyField(joint_connection, copies);
     deepCopyField(target_layer, copies);
+    deepCopyField(unlabeled_classification_module, copies);
+    deepCopyField(test_time_classification_module, copies);
     deepCopyField(target_one_hot, copies);
     deepCopyField(disc_pos_down_val, copies);
     deepCopyField(disc_pos_up_val, copies);
@@ -373,6 +446,8 @@ void DiscriminativeRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(semi_sup_neg_up_val, copies);
     deepCopyField(input_gradient, copies);
     deepCopyField(class_output, copies);
+    deepCopyField(unlabeled_class_output, copies);
+    deepCopyField(test_time_class_output, copies);
     deepCopyField(class_gradient, copies);
 }
 
@@ -382,7 +457,7 @@ void DiscriminativeRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int DiscriminativeRBM::outputsize() const
 {
-    return n_classes;
+    return n_classes_at_test_time > 0 ? n_classes_at_test_time : n_classes;
 }
 
 ////////////
@@ -562,8 +637,20 @@ void DiscriminativeRBM::train()
             // Positive phase
 
             // Clamp visible units and sample from p(y|x)
-            classification_module->fprop( input,
-                                          class_output );
+            if( unlabeled_classification_module )
+            {
+                unlabeled_classification_module->fprop( input,
+                                                        unlabeled_class_output );
+                class_output.clear();
+                class_output.subVec( unlabeled_class_index_begin,
+                                     n_classes - unlabeled_class_index_begin )
+                    << unlabeled_class_output;
+            }
+            else
+            {
+                classification_module->fprop( input,
+                                              class_output );
+            }
             target_layer->setExpectation( class_output );
             target_layer->generateSample();            
             input_layer->sample << input ;
@@ -608,7 +695,7 @@ void DiscriminativeRBM::train()
                                                     nll_cost );
 
             class_error =  ( argmax(class_output) == target_index ) ? 0: 1;  
-            train_costs[nll_cost_index] = nll_cost;
+            //train_costs[nll_cost_index] = nll_cost;
             train_costs[class_cost_index] = class_error;
 
             classification_cost->bpropUpdate( class_output, target, nll_cost,
@@ -664,7 +751,16 @@ void DiscriminativeRBM::computeOutput(const Vec& input, Vec& output) const
 {
     // Compute the output from the input.
     output.resize(0);
-    classification_module->fprop( input, output );
+    if( test_time_classification_module )
+    {
+        test_time_classification_module->fprop( input,
+                                                output );
+    }
+    else
+    {
+        classification_module->fprop( input,
+                                      output );
+    }
 }
 
 
@@ -679,7 +775,7 @@ void DiscriminativeRBM::computeCostsFromOutputs(const Vec& input, const Vec& out
     if( !is_missing(target[0]) )
     {
         //classification_cost->fprop( output, target, costs[nll_cost_index] );
-        classification_cost->CostModule::fprop( output, target, costs[nll_cost_index] );
+        //classification_cost->CostModule::fprop( output, target, costs[nll_cost_index] );
         costs[class_cost_index] =
             (argmax(output) == (int) round(target[0]))? 0 : 1;
     }
