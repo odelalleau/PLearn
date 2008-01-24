@@ -187,6 +187,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         rmm, "fieldNames", &VMatrix::fieldNames,
         (BodyDoc("Returns the field names.\n"),
          RetDoc ("TVec of field names.\n")));
+
+     declareMethod(
+        rmm, "getFieldIndex", &VMatrix::getFieldIndex,
+        (BodyDoc("Returns the index of a field.\n"),
+         ArgDoc ("fname_or_num",
+             "Field name or index (as a string) of the field.\n"),
+         RetDoc ("Index of the field.\n")));
     
     declareMethod(
         rmm, "appendRow", &VMatrix::appendRow,
