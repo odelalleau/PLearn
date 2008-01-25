@@ -140,7 +140,7 @@ process( const string& scriptfile,
         }
     }
 
-    final_args.push_back(string("--named-logging=")
+    final_args.push_back(string("--enable-logging=")
                          + join(PL_Log::instance().namedLogging(), ","));
     final_args.push_back(string("--verbosity=")
                          + tostring(PL_Log::instance().verbosity()))    ;
