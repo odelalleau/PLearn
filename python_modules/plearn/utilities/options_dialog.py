@@ -51,7 +51,7 @@ def getModulesToLog(args):
     """
     logs_pos= -1
     for i in range(len(args)):
-        if args[i].startswith('--named-logging='):
+        if args[i].startswith('--enable-logging='):
             logs_pos= i
     logs= ['__NONE__']
     if logs_pos >= 0:
