@@ -1230,7 +1230,7 @@ def DBI(commands, launch_system, **args):
 
 def main():
     if len(sys.argv)!=2:
-        print "Usage:dbi.py {Condor|Cluster|Ssh|Local|bqtools} < joblist"
+        print "Usage:%s {Condor|Cluster|Ssh|Local|bqtools} < joblist"%(sys.argv[0])
         print "Where joblist is a file containing one exeperiement by line"
         sys.exit(0)
     DBI([ s[0:-1] for s in sys.stdin.readlines() ], sys.argv[1]).run()
