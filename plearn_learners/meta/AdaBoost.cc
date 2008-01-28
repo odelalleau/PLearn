@@ -506,33 +506,6 @@ void AdaBoost::train()
             cout << "weak learner at stage " << stage 
                  << " has average loss = " << learners_error[stage] << endl;
 
-        // stopping criterion (in addition to n_stages)
-        if (early_stopping && learners_error[stage] >= target_error)
-        {
-            nstages = stage;
-            cout << 
-                "AdaBoost::train early stopping because learner's loss at stage " 
-                 << stage << " is " << learners_error[stage] << endl;       
-            break;
-        }
-
-        if(fast_exact_is_equal(learners_error[stage], 0))
-        {
-            cout << "AdaBoost::train found weak learner with 0 training "
-                 << "error at stage " 
-                 << stage << " is " << learners_error[stage] << endl;  
-
-            // Simulate infinite weight on new_weak_learner
-            weak_learners.resize(0);
-            weak_learners.push_back(new_weak_learner);
-            voting_weights.resize(0);
-            voting_weights.push_back(1);
-            sum_voting_weights = 1;
-            found_zero_error_weak_learner = true;
-            break;
-        }
-
-
         weak_learners.push_back(new_weak_learner);
 
         if (save_often && expdir!="")
@@ -705,6 +678,34 @@ void AdaBoost::train()
                      << train_stats->getMean() << endl;
      
         }
+
+        if(fast_exact_is_equal(learners_error[stage], 0))
+        {
+            cout << "AdaBoost::train found weak learner with 0 training "
+                 << "error at stage " 
+                 << stage << " is " << learners_error[stage] << endl;  
+
+            // Simulate infinite weight on new_weak_learner
+            weak_learners.resize(0);
+            weak_learners.push_back(new_weak_learner);
+            voting_weights.resize(0);
+            voting_weights.push_back(1);
+            sum_voting_weights = 1;
+            found_zero_error_weak_learner = true;
+            break;
+        }
+
+        // stopping criterion (in addition to n_stages)
+        if (early_stopping && learners_error[stage] >= target_error)
+        {
+            nstages = stage;
+            cout << 
+                "AdaBoost::train early stopping because learner's loss at stage " 
+                 << stage << " is " << learners_error[stage] << endl;       
+            break;
+        }
+
+
     }
 }
 
