@@ -144,6 +144,16 @@ void WPLS::declareOptions(OptionList& ol)
                   "If set to 1, then (the prediction of) the target will be included in the\n"
                   "output (after the score).");
 
+    declareOption(ol, "parent_filename", &WPLS::parent_filename, OptionBase::buildoption,
+                  "For hyper-parameter selection purposes: use incremental learning to speed-up process");
+    
+    declareOption(ol, "parent_sub", &WPLS::parent_sub, OptionBase::buildoption,
+                  "Tells which of the sublearners (of the combined learner) should be used.");
+    
+    declareOption(ol, "precision", &WPLS::precision, OptionBase::buildoption,
+                  "The precision to which we compute the eigenvectors.");
+
+
     // Learnt options.
 
     declareOption(ol, "B", &WPLS::B, OptionBase::learntoption,
@@ -161,15 +171,6 @@ void WPLS::declareOptions(OptionList& ol)
     declareOption(ol, "p", &WPLS::p, OptionBase::learntoption,
                   "Used to store the input size.");
 
-    declareOption(ol, "parent_filename", &WPLS::parent_filename, OptionBase::buildoption,
-                  "For hyper-parameter selection purposes: use incremental learning to speed-up process");
-    
-    declareOption(ol, "parent_sub", &WPLS::parent_sub, OptionBase::buildoption,
-                  "Tells which of the sublearners (of the combined learner) should be used.");
-    
-    declareOption(ol, "precision", &WPLS::precision, OptionBase::buildoption,
-                  "The precision to which we compute the eigenvectors.");
-    
     declareOption(ol, "P", &WPLS::P, OptionBase::learntoption,
                   "Matrix that maps features to observed inputs: X = T.P' + E.");
 
@@ -209,6 +210,8 @@ void WPLS::build()
 ////////////
 void WPLS::build_()
 {
+    PLASSERT(precision > 0);
+
     if (train_set) {
         this->m = train_set->targetsize();
         this->p = train_set->inputsize();
