@@ -32,6 +32,7 @@
 #  library, go to the PLearn Web site at www.plearn.org
 
 import os, shutil 
+from time import time
 
 from plearn.utilities import ppath 
 from plearn.utilities import pldiff
@@ -344,7 +345,7 @@ class Test(PyTestObject):
     pfileprg         = PLOption("__program__")
     ignored_files_re = PLOption([])
     disabled         = PLOption(False)
-    
+    runtime          = PLOption(None)
 
     #######  Class Variables and Methods  #########################################
     # NB: Class variables could now all be 'public', laziness is why it isn't so...
@@ -570,27 +571,30 @@ class Test(PyTestObject):
         statsHeader = TestStatus.summaryHeader()
 
         # Hackish hardcoded display summing to 80...
-        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+3
-        N = 80 - (C+S+H); 
-        def vpformat(c,n,s, h):
+        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+3; T = 11
+        N = 80 - (C+S+H+T); 
+        def vpformat(c, n, s, h, t):
             if len(n) < N:
-                logging.info( c.ljust(C)+n.ljust(N)+s.center(S)+h.center(H) )
+                logging.info( c.ljust(C)+n.ljust(N)+s.center(S)+h.center(H)
+                              +t.ljust(T))
             else:
                 logging.info( c.ljust(C)+n.ljust(N) )
-                logging.info( ((C+N)*" ")+s.center(S)+h.center(H) )
+                logging.info( ((C+N)*" ")+s.center(S)+h.center(H)+t.ljust(T))
         
         if self._status.isCompleted():
             if not self._logged_header:
-                logging.info(TestStatus.headerLegend(C+N+S+H)+'\n')
-                vpformat("N/%d"%self._test_count, "Test Name", "Status", statsHeader)
+                logging.info(TestStatus.headerLegend(C+N+S+H+T)+'\n')
+                vpformat("N/%d"%self._test_count, "Test Name", "Status",
+                         statsHeader,"Run time(s)")
                 self.__class__._logged_header = True
 
             if self._log_count%5 == 0:
-                logging.info("-"*(C+N+S+H))
+                logging.info("-"*(C+N+S+H+T))
                 
             self.__class__._log_count += 1
             vpformat(str(self._log_count), self.getName(),
-                     str(self._status), TestStatus.summary())
+                     str(self._status), TestStatus.summary(),
+                     "%10.4s"%self.runtime)
 
     def toBeNeglected(self):
         neglect = False
@@ -748,7 +752,11 @@ class ResultsRelatedRoutine(Routine):
         ## Run the test from inside the test_results directory and return
         ## to the cwd
         pushd(test_results)
+        starttime = time()
         self.test.program.invoke(self.test.arguments, self.run_log)
+        endtime = time()
+        self.test.runtime = endtime-starttime
+
         self.clean_cwd()
         popd()
 
