@@ -597,12 +597,15 @@ public:
     { return getStats()[fieldnum]; }
 
     
-    //! Compare the stats of this VecStatsCollector with the target one.
-    //! @param target the VMat we compare again
-    //! @param stderror_threshold The threshold allowed for the standard error
-    //! @param missing_threshold The threshold allowed for the % of missing
-    //! @return If they are comparable with respect to the gived threshold,
-    //! we return true. Otherwise we return false.
+    /** Compare the stats of this VecStatsCollector with the target one.
+     * @param target the VMat we compare again
+     * @param stderror_threshold The threshold allowed for the standard error
+     * @param missing_threshold The threshold allowed for the % of missing
+     * @param sumdiff_stderr The sum of all variable difference of stderr
+     * @param sumdiff_missing The sum of all variable difference of missing
+     * @return If they are comparable with respect to the gived threshold,
+     * we return true. Otherwise we return false
+     */
     int compareStats(const VMat& target,
                      const real stderror_threshold = 2,
                      const real missing_threshold = 2,
