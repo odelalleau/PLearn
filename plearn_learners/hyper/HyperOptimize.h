@@ -127,6 +127,7 @@ public:
     TVec< PP<HyperCommand> > sub_strategy; //!< A possible sub-strategy to optimize other hyper parameters
     bool rerun_after_sub;
     bool provide_sub_expdir; // should sub_strategy be provided an expdir
+    bool save_best_learner;
     PP<Splitter> splitter;  // (if not specified, use default splitter specified in PTester)
 
     // ****************

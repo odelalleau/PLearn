@@ -44,9 +44,10 @@
 /*! \file HyperOptimize.cc */
 #include "HyperOptimize.h"
 #include "HyperLearner.h"
+#include <plearn/io/load_and_save.h>
+#include <plearn/base/stringutils.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
-#include <plearn/base/stringutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -111,7 +112,8 @@ HyperOptimize::HyperOptimize()
       min_n_trials(0),
       provide_tester_expdir(false),
       rerun_after_sub(false),
-      provide_sub_expdir(true)
+      provide_sub_expdir(true),
+      save_best_learner(false)
 { }
 
 
@@ -148,6 +150,12 @@ void HyperOptimize::declareOptions(OptionList& ol)
     declareOption(
         ol, "provide_sub_expdir", &HyperOptimize::provide_sub_expdir, OptionBase::buildoption,
         "Should sub_strategy commands be provided an expdir");
+
+    declareOption(
+        ol, "save_best_learner", &HyperOptimize::save_best_learner,
+        OptionBase::buildoption,
+        "If true, the best learner at any step will be saved in the\n"
+        "strategy expdir, as 'current_best_learner.psave'.");
 
     declareOption(
         ol, "splitter", &HyperOptimize::splitter, OptionBase::buildoption,
@@ -325,7 +333,7 @@ Vec HyperOptimize::optimize()
             for(int commandnum=0; commandnum<sub_strategy.length(); commandnum++)
             {
                 sub_strategy[commandnum]->setHyperLearner(hlearner);
-                if(expdir!="" && provide_sub_expdir)
+                if(!expdir.isEmpty() && provide_sub_expdir)
                     sub_strategy[commandnum]->setExperimentDirectory(
                         expdir / ("Trials"+tostring(trialnum)) / ("Step"+tostring(commandnum))
                         );
@@ -359,6 +367,10 @@ Vec HyperOptimize::optimize()
             CopiesMap copies;
             best_learner = NULL;
             best_learner = hlearner->getLearner()->deepCopy(copies);
+            if (save_best_learner && !expdir.isEmpty()) {
+                PLearn::save(expdir / "current_best_learner.psave",
+                             best_learner);
+            }
         }
         ++trialnum;
     }
