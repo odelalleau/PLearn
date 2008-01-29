@@ -169,6 +169,8 @@ StatsCollector::StatsCollector(int the_maxnvalues)
       first_(MISSING_VALUE),
       last_(MISSING_VALUE),
       more_than_maxnvalues(false),
+      binary_(-1),
+      integer_(-1),
       sorted(false)
 {
     build_();
@@ -295,6 +297,22 @@ void StatsCollector::declareOptions(OptionList& ol)
         ol, "last_", &StatsCollector::last_,
         OptionBase::learntoption,
         "last encountered observation");
+
+    declareOption(
+        ol, "binary_", &StatsCollector::binary_,
+        OptionBase::learntoption,
+        "1(true) if all seen value are binary. 0(false) otherwise"
+        "In the case where we would have reloaded and old version"
+        "we will calculate the result from the data in counts"
+        "If maxnvalues==0, we are in trouble as we can't recalculate it"
+        "So binary_==-1 and integer_==-1, but "
+        "if we do new update, it will contain the result of only the "
+        " new value if they change it for 0.");
+
+    declareOption(
+        ol, "integer_", &StatsCollector::integer_,
+        OptionBase::learntoption,
+        "as binary_, execpt for integer");
 
     declareOption(
         ol, "counts", &StatsCollector::counts,
@@ -459,6 +477,9 @@ void StatsCollector::build_()
     for(map<real, StatsCollectorCounts>::iterator it= counts.begin();
         it != counts.end(); ++it)
         count_ids[it->second.id]= it->first;
+    
+    //In case we reload an old version
+    calculate_binary_integer();
 }
 
 ///////////
@@ -487,6 +508,8 @@ void StatsCollector::forget()
     agemin_ = MISSING_VALUE;
     agemax_ = MISSING_VALUE;
     first_ = last_ = MISSING_VALUE;
+    binary_ = -1;
+    integer_ = -1;
     more_than_maxnvalues = (maxnvalues == 0);
     approximate_counts.clear();
     sorted = false;
@@ -515,6 +538,8 @@ void StatsCollector::update(real val, real weight)
             min_ = max_ = first_ = last_ = val;
             agemin_ = 0;
             agemax_ = 0;
+            binary_  = true;
+            integer_ = true;
         }
         else if(val<min_) {
             min_ = val;
@@ -537,8 +562,12 @@ void StatsCollector::update(real val, real weight)
         sumsquare_ += sqval              * weight;
         sumcube_   += sqval*(val-first_) * weight;
         sumfourth_ += sqval*sqval        * weight;
-    
 
+        if(!(fast_exact_is_equal(val,0) ||fast_exact_is_equal(val,1)))
+            binary_ = false;
+        if(!fast_exact_is_equal(val,int(round(val))))
+            integer_ = false;
+            
         if (storeCounts())
         {
             // Also remembering statistics inside values ranges.
@@ -1372,7 +1401,6 @@ real StatsCollector::zpr2t() const
     return 2 * zpr1t();
 }
 
-
 void StatsCollector::merge(const StatsCollector& other)
 {
     if(storeCounts() && other.maxnvalues != -1)
@@ -1492,7 +1520,37 @@ void StatsCollector::merge(const StatsCollector& other)
     if (!approximate_counts.empty()) approximate_counts.clear();
 }
 
-
+void StatsCollector::calculate_binary_integer()
+{
+    if(maxnvalues!=0 && nnonmissing_>0)
+    {
+        binary_  = true;
+        integer_ = true;
+        for(map<real, StatsCollectorCounts>::iterator it = counts.begin();
+            it!=counts.end();it++)
+        {
+            if(it->second.n!=0)
+            {
+                if(!(fast_exact_is_equal(it->first,0)||
+                     fast_exact_is_equal(it->first,1)))
+                    binary_ = false;
+                if(!fast_exact_is_equal(int(round(it->first)),it->first)){
+                    integer_ = false;
+                    break;
+                }
+            }
+        }
+        if((binary_||integer_)&&more_than_maxnvalues)
+            PLWARNING("In StatsCollector::calculate_binary_integer() - "
+                      "Reloading an old StatsCollector. While recalculating data for isbinary() and isinteger(), we found a possible error case. The StatsCollector have more value then maxnvalues(%d), but we are still thinking it is a binary or an integer. This can be false.",maxnvalues);
+    }
+    else if(maxnvalues==0 && nnonmissing()>0 && -1==binary_ && -1==integer_)
+        PLWARNING("In StatsCollector::calculate_binary_integer() - "
+                  "Reloadind old StatsCollector with maxnvalues==0 and "
+                  "nnonmissing()>0. This cause trouble as we can't recompute"
+                  "the data for the function isbinary() and isinteger()"
+            );
+}
 } // end of namespace PLearn
 
 

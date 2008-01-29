@@ -34,6 +34,7 @@ AIC = nan ;
 BIC = nan ;
 resid_variance = []
 ;
+random_gen = *0 ;
 stage = 0 ;
 n_examples = -1 ;
 inputsize = -1 ;
@@ -58,6 +59,7 @@ save_data_sets = 0 ;
 save_test_outputs = 1 ;
 call_forget_in_run = 1 ;
 save_test_costs = 1 ;
+save_test_names = 1 ;
 provide_learner_expdir = 1 ;
 should_train = 1 ;
 should_test = 1 ;

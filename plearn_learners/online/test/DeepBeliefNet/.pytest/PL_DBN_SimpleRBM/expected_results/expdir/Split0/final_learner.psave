@@ -10,6 +10,7 @@ data = 2  3  [
 source = *0 ;
 fieldnames = []
 ;
+deep_copy_memory_data = 1 ;
 writable = 0 ;
 length = 2 ;
 width = 3 ;
@@ -31,6 +32,7 @@ statmask = []
 ;
 learner = *5 ->DeepBeliefNet(
 cd_learning_rate = 0.0100000000000000002 ;
+cd_decrease_ct = 0 ;
 grad_learning_rate = 0.100000000000000006 ;
 grad_decrease_ct = 0 ;
 batch_size = 1 ;
@@ -42,6 +44,8 @@ layers = 2 [ *6 ->RBMBinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
+bias_decay_type = "none" ;
+bias_decay_parameter = 0 ;
 gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
@@ -61,11 +65,13 @@ fixed_seed = 0  )
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
+bias_decay_type = "none" ;
+bias_decay_parameter = 0 ;
 gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00419880748139610759 0.0029152184514807198 ] ;
+bias = 2 [ -0.0041988074813960885 0.00291521845148070419 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
@@ -74,16 +80,19 @@ estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
 random_gen = *7   )
 ] ;
+i_output_layer = 1 ;
 connections = 1 [ *9 ->RBMMatrixConnection(
 weights = 2  2  [ 
 -0.222066209664342068 	0.582925561708350082 	
-0.516883916989072434 	-0.316272804129796303 	
+0.516883916989072545 	-0.316272804129796303 	
 ]
 ;
 gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
+L1_penalty_factor = 0 ;
+L2_penalty_factor = 0 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0.100000000000000006 ;
@@ -102,14 +111,16 @@ previous_to_last = *9  ;
 last_layer = *8  ;
 last_to_target = *11 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.603392333131359537 	0.370787384786479657 	
-0.0970862565219703239 	-0.668099599496062679 	
+-0.603392333131359426 	0.370787384786479657 	
+0.09708625652197031 	-0.668099599496062679 	
 ]
 ;
 gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
+L1_penalty_factor = 0 ;
+L2_penalty_factor = 0 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0.100000000000000006 ;
@@ -127,11 +138,13 @@ target_layer = *12 ->RBMMultinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
+bias_decay_type = "none" ;
+bias_decay_parameter = 0 ;
 gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00487910443291655199 0.00487910443291657281 ] ;
+bias = 2 [ -0.00487910443291659449 0.00487910443291660317 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMMultinomialLayer" ;
@@ -209,6 +222,7 @@ save_data_sets = 0 ;
 save_test_outputs = 1 ;
 call_forget_in_run = 1 ;
 save_test_costs = 1 ;
+save_test_names = 1 ;
 provide_learner_expdir = 0 ;
 should_train = 1 ;
 should_test = 1 ;
@@ -250,6 +264,7 @@ save_final_learner = 1 ;
 learner = *5  ;
 provide_learner_expdir = 0 ;
 expdir_append = "" ;
+forward_nstages = 0 ;
 random_gen = *0 ;
 stage = 1 ;
 n_examples = 2 ;

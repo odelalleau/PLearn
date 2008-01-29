@@ -187,6 +187,8 @@ public:
     real first_;           //!< first encountered nonmissing observation
     real last_;            //!< last encountered nonmissing observation
     bool more_than_maxnvalues;
+    int binary_;           //!< true if all seen variable are 0 or 1, -1 in some case
+    int integer_;          //!< true if all seen variable are integer, -1 in some case
 
     map<real, StatsCollectorCounts> counts; 
     map<int, real> count_ids;
@@ -207,6 +209,9 @@ private:
 
     //! This does the actual building.
     void build_();
+
+    //! used to calculate binary_ and integer_ if we reload an old version
+    void calculate_binary_integer();
 
 protected: 
 
@@ -366,6 +371,13 @@ public:
     //! merge another StatsCollector into this one
     virtual void merge(const StatsCollector& other);
 
+    //! @return true if all value seen are binary, false otherwise and is not
+    //! defined in case where we reload an old version that have maxnvalues==0
+    bool isbinary(){return binary_;}
+
+    //! @return true if all value seen are integer, false otherwise and is not
+    //! defined in case where we reload an old version that have maxnvalues==0
+    bool isinteger(){return integer_;}
 };
 
 DECLARE_OBJECT_PTR(StatsCollector);

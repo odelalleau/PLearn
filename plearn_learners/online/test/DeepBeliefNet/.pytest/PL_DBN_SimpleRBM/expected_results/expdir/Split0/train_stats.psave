@@ -24,6 +24,8 @@ agmemin_ = 0 ;
 agemax_ = 0 ;
 first_ = 0.651261219307483818 ;
 last_ = 0.651261219307483818 ;
+binary_ = 0 ;
+integer_ = 0 ;
 counts = {};
 more_than_maxnvalues = 1  )
 StatsCollector(
@@ -43,6 +45,8 @@ agmemin_ = 0 ;
 agemax_ = 0 ;
 first_ = 0.5 ;
 last_ = 0.5 ;
+binary_ = 0 ;
+integer_ = 0 ;
 counts = {};
 more_than_maxnvalues = 1  )
 StatsCollector(
@@ -62,6 +66,8 @@ agmemin_ = 0 ;
 agemax_ = 0 ;
 first_ = 0.614096318051678525 ;
 last_ = 0.614096318051678525 ;
+binary_ = 0 ;
+integer_ = 0 ;
 counts = {};
 more_than_maxnvalues = 1  )
 StatsCollector(
@@ -81,6 +87,8 @@ agmemin_ = 0 ;
 agemax_ = 0 ;
 first_ = 0 ;
 last_ = 0 ;
+binary_ = 1 ;
+integer_ = 1 ;
 counts = {};
 more_than_maxnvalues = 1  )
 ] ;
