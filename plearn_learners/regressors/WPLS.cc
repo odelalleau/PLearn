@@ -386,7 +386,8 @@ void computeWeightedInputOutputMeansAndStddev(const VMat& d, Vec& means, Vec& st
     stddev.resize(p+m);
     Vec input(p+m), target(p+m);
     real weight;
-    real sum_wi, sum_wi2;
+    real sum_wi = 0.0;
+    real sum_wi2 = 0.0;
     Vec sum_wixi(p+m), sum_wixi2(p+m);
     sum_wixi.fill(0.0);
     sum_wixi2.fill(0.0);
