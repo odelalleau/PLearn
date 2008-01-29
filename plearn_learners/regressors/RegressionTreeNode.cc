@@ -53,6 +53,13 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeNode,
     );
 
 RegressionTreeNode::RegressionTreeNode():
+    missing_is_valid(0),
+    loss_function_weight(1),
+    verbosity(0),
+    split_col(-1),
+    split_balance(INT_MAX),
+    split_feature_value(REAL_MAX),
+    after_split_error(REAL_MAX),
     dummy_int(0)
 {
     build();
