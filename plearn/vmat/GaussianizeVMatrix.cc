@@ -80,6 +80,7 @@ GaussianizeVMatrix::GaussianizeVMatrix():
     gaussianize_target(false),
     gaussianize_weight(false),
     gaussianize_extra(false),
+    gaussianize_binary(false),
     threshold_ratio(10)
 {}
 
@@ -112,6 +113,11 @@ void GaussianizeVMatrix::declareOptions(OptionList& ol)
                   &GaussianizeVMatrix::gaussianize_extra,
                   OptionBase::buildoption,
         "Whether or not to Gaussianize the extra part.");
+
+    declareOption(ol, "gaussianize_binary",
+                  &GaussianizeVMatrix::gaussianize_binary,
+                  OptionBase::buildoption,
+        "Whether or not to Gaussianize binary variable.");
 
     declareOption(ol, "train_source", &GaussianizeVMatrix::train_source,
                                       OptionBase::buildoption,
@@ -186,6 +192,8 @@ void GaussianizeVMatrix::build_()
         int j = candidates[i];
         StatsCollector& stat = stats[j];
         if (fast_exact_is_equal(stat.stddev(), 0))
+            continue;
+        if (!gaussianize_binary && stat.isbinary())
             continue;
         if ((stat.max() - stat.min()) > threshold_ratio * stat.stddev()) {
             features_to_gaussianize.append(j);

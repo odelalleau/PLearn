@@ -68,6 +68,7 @@ public:
     bool gaussianize_target;
     bool gaussianize_weight;
     bool gaussianize_extra;
+    bool gaussianize_binary;
     real threshold_ratio;
     VMat train_source;
 
