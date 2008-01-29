@@ -89,6 +89,8 @@ Options specifying the type of compiled file to produce:
         on ia64. Allows to compile on .pymake/linux-x86_64.hosts,
         linux-ia64.hosts and linux-i386.hosts.
   -so:  create a shared object (.so) instead of an executable file.
+  -pyso: same as -so, but for python extension modules (does not add
+         'lib' before the .so name.)
   -static: produce a statically linked executable.
 
 Options that will not affect the final compiled file:
