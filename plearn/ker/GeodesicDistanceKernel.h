@@ -89,7 +89,8 @@ public:
     GeodesicDistanceKernel(Ker the_distance_kernel, int the_knn = 10,
                            const PPath& the_geodesic_file = "",
                            bool the_pow_distance = false,
-                           const string& the_method = "floyd");
+                           const string& the_method = "floyd",
+                           bool call_build_ = true);
 
     // ******************
     // * Kernel methods *

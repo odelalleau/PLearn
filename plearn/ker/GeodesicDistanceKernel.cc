@@ -63,14 +63,17 @@ GeodesicDistanceKernel::GeodesicDistanceKernel()
 GeodesicDistanceKernel::GeodesicDistanceKernel(
         Ker the_distance_kernel, int the_knn,
         const PPath& the_geodesic_file, bool the_pow_distance,
-        const string& the_method):
+        const string& the_method,
+        bool call_build_):
+    inherited(true, call_build_),
     geodesic_file(the_geodesic_file),
     knn(the_knn),
     pow_distance(the_pow_distance),
     shortest_algo(the_method)
 {
     distance_kernel = the_distance_kernel;
-    build();
+    if (call_build_)
+        build_();
 }
 
 PLEARN_IMPLEMENT_OBJECT(GeodesicDistanceKernel,
