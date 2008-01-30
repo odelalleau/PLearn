@@ -218,7 +218,7 @@ void HyperLearner::train()
             }
 
             if(verbosity>0)
-                cerr<<"HyperLearner: starting the optimization"<<endl;
+                perr<<"HyperLearner: starting the optimization"<<endl;
 
             results = strategy[commandnum]->optimize();
         }
