@@ -54,7 +54,9 @@ RBMMatrixConnection::RBMMatrixConnection( real the_learning_rate ) :
     gibbs_ma_increment(0.1),
     gibbs_initial_ma_coefficient(0.1),
     L1_penalty_factor(0),
-    L2_penalty_factor(0)
+    L2_penalty_factor(0),
+    L2_decrease_constant(0),
+    L2_n_updates(0)
 {
 }
 
@@ -100,7 +102,19 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
                   "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 "
                   "during training.\n");
 
+    declareOption(ol, "L2_decrease_constant", 
+                  &RBMMatrixConnection::L2_decrease_constant,
+                  OptionBase::buildoption,
+        "The L2 penalty is divided by (1 + t*L2_decrease_constant) where\n"
+        "'t' is the number of times this penalty has been used to modify\n"
+        "the weights.",
+        OptionBase::advanced_level);
 
+    declareOption(ol, "L2_n_updates", 
+                  &RBMMatrixConnection::L2_n_updates,
+                  OptionBase::learntoption,
+        "Number of times that weights have been changed by the L2 penalty\n"
+        "update rule.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -816,7 +830,8 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(
 void RBMMatrixConnection::applyWeightPenalty()
 {
     real delta_L1 = learning_rate * L1_penalty_factor;
-    real delta_L2 = learning_rate * L2_penalty_factor;
+    real delta_L2 = learning_rate * L2_penalty_factor
+                                  / (1 + L2_decrease_constant * L2_n_updates);
     for( int i=0; i<up_size; i++)
     {
         real* w_ = weights[i];
@@ -836,6 +851,8 @@ void RBMMatrixConnection::applyWeightPenalty()
             }
         }
     }
+    if (delta_L2 > 0)
+        L2_n_updates++;
 }
 
 // Adds penalty (decay) gradient
@@ -890,6 +907,7 @@ void RBMMatrixConnection::forget()
 
         random_gen->fill_random_uniform( weights, -d, d );
     }
+    L2_n_updates = 0;
 }
 
 

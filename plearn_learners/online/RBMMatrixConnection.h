@@ -74,6 +74,9 @@ public:
     //! Optional (default=0) factor of L2 regularization term
     real L2_penalty_factor;
 
+    real L2_decrease_constant;
+    int L2_n_updates;
+
     //! Matrix containing unit-to-unit weights (output_size × input_size)
     Mat weights;
 
