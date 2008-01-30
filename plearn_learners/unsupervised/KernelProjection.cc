@@ -192,7 +192,7 @@ void KernelProjection::computeCostsFromOutputs(const Vec& input, const Vec& outp
     costs[0] = abs(k_x_x - fs_norm);
     if (k_x_x - fs_norm < -1e-5) {
         // TODO Remove this later after making sure it didn't happen.
-        cout << "Negative error: " << k_x_x - fs_norm << " (k_x_x = " << k_x_x << ", fs_norm = " << fs_norm << ")" << endl;
+        perr << "Negative error: " << k_x_x - fs_norm << " (k_x_x = " << k_x_x << ", fs_norm = " << fs_norm << ")" << endl;
     }
 }                                
 
@@ -244,9 +244,11 @@ void KernelProjection::computeOutput(const Vec& input, Vec& output) const
 void KernelProjection::forget()
 {
     stage = 0;
-    cout << "forget: n_comp_kept = " << n_comp_kept << endl;
+    if (verbosity > 1)
+        pout << "forget: n_comp_kept = " << n_comp_kept << endl;
     n_comp_kept = n_comp;
-    cout << "forget: n_comp_kept = " << n_comp_kept << endl;
+    if (verbosity > 1)
+        pout << "forget: n_comp_kept = " << n_comp_kept << endl;
     n_examples = 0;
     first_output = true;
     last_input.resize(0);
@@ -340,7 +342,7 @@ void KernelProjection::train()
     kernel->computeGramMatrix(gram);
     time_for_gram = clock() - time_for_gram;
     if (verbosity >= 3) {
-        cout << flush;
+        pout << flush;
     }
     // (2) Compute its eigenvectors and eigenvalues.
     eigenVecOfSymmMat(gram, n_comp + ignore_n_first, eigenvalues, eigenvectors);
