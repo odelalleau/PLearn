@@ -124,7 +124,7 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
         "number 't' of times this penalty has been used to modify the\n"
         "weights of the connection. It can be one of:\n"
         " - 'one_over_t': 1 / (1 + t * L2_decrease_constant)\n"
-        " - 'sigmoid_like': sigmoid(L2_shift - t * L2_decrease_constant)",
+        " - 'sigmoid_like': sigmoid((L2_shift - t) * L2_decrease_constant)",
         OptionBase::advanced_level);
 
     declareOption(ol, "L2_n_updates", 
@@ -856,7 +856,7 @@ void RBMMatrixConnection::applyWeightPenalty()
     if (L2_decrease_type == "one_over_t")
         delta_L2 /= (1 + L2_decrease_constant * L2_n_updates);
     else if (L2_decrease_type == "sigmoid_like")
-        delta_L2 *= sigmoid(L2_shift - L2_decrease_constant * L2_n_updates);
+        delta_L2 *= sigmoid((L2_shift - L2_n_updates) * L2_decrease_constant);
     else
         PLERROR("In RBMMatrixConnection::applyWeightPenalty - Invalid value "
                 "for L2_decrease_type: %s", L2_decrease_type.c_str());
