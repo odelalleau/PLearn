@@ -47,12 +47,16 @@ using namespace std;
 
 /** MemoryVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(MemoryVMatrix,
-                        "A VMatrix whose data is stored in memory.",
-                        "The data can either be given directly by a Mat, or by another VMat that\n"
-                        "will be precomputed in memory at build time.\n"
-    );
+PLEARN_IMPLEMENT_OBJECT(
+    MemoryVMatrix,
+    "A VMatrix whose data is stored in memory.",
+    "The data can either be given directly by a Mat, or by another VMat that\n"
+    "will be precomputed in memory at build time.\n"
+);
 
+///////////////////
+// MemoryVMatrix //
+///////////////////
 MemoryVMatrix::MemoryVMatrix()
     : synch_data(true),
       data(Mat()),
@@ -82,16 +86,14 @@ MemoryVMatrix::MemoryVMatrix(const Mat& the_data)
     defineSizes(the_data.width(), 0, 0);
 }
 
-MemoryVMatrix::MemoryVMatrix(VMat the_source)
-    : inherited(the_source->length(), the_source->width()),
-      memory_data(the_source->toMat()),
-      synch_data(false),
-      source(the_source),
-      deep_copy_memory_data(true)
-
+MemoryVMatrix::MemoryVMatrix(VMat the_source, bool call_build_):
+    inherited(the_source->length(), the_source->width(), call_build_),
+    synch_data(false),
+    source(the_source),
+    deep_copy_memory_data(true)
 {
-    copySizesFrom(the_source);
-    setMetaInfoFrom(the_source);
+    if (call_build_)
+        build_();
 }
 
 ////////////////////

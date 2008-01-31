@@ -90,7 +90,7 @@ public:
     MemoryVMatrix();
     MemoryVMatrix(const Mat& the_data);
     MemoryVMatrix(int l, int w);
-    MemoryVMatrix(VMat the_source);
+    MemoryVMatrix(VMat the_source, bool call_build_ = true);
     virtual real get(int i, int j) const;
     virtual void getSubRow(int i, int j, Vec v) const;
     virtual void getRow(int i, Vec v) const;
