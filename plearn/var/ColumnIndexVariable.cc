@@ -49,39 +49,59 @@ using namespace std;
 
 /** ColumnIndexVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(ColumnIndexVariable,
-                        "Return a row vector with the elements indexed in each column",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    ColumnIndexVariable,
+    "Return a row vector with the elements indexed in each column.",
+    "The first input is a matrix of size NxM.\n"
+    "The second input is a vector of size M, with elements in {0, ..., N-1}.\n"
+    "The result is a row vector of size M, where the i-th element is equal\n"
+    "to input1(input2[i], i)."
+);
 
 ColumnIndexVariable::ColumnIndexVariable(Variable *input1, Variable *input2)
-    : inherited(input1, input2, 1/*input2->length()*/, input1->width())
+    : inherited(input1, input2, 1, input1->width())
 {
     build_();
 }
 
-void
-ColumnIndexVariable::build()
+///////////
+// build //
+///////////
+void ColumnIndexVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-ColumnIndexVariable::build_()
+////////////
+// build_ //
+////////////
+void ColumnIndexVariable::build_()
 {
     if (input2 && !input2->isVec())
-        PLERROR("In ColumnIndexVariable: input2 must be a vector variable representing the indexs of input1");
+        PLERROR("In ColumnIndexVariable::build_ - input2 must be a vector "
+                "variable representing the indices of input1");
+    if (input1 && input2 && input1->width() != input2->size())
+        PLERROR("In ColumnIndexVariable::build_ - input1's width (%d) "
+                "should be equal to input2's size (%s)",
+                input1->width(), input2->size());
 }
 
+///////////////////
+// recomputeSize //
+///////////////////
 void ColumnIndexVariable::recomputeSize(int& l, int& w) const
 {
-    l = 1; /*input2->length()*/
+    l = 1;
     if (input1)
         w = input1->width();
     else
         w = 0;
 }
 
+///////////
+// fprop //
+///////////
 void ColumnIndexVariable::fprop()
 {
     for (int i=0; i<input2->size(); i++)
