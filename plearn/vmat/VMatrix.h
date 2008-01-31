@@ -584,12 +584,18 @@ public:
     void loadStats(const PPath& filename);
 
     /**
-     *  Returns the unconditonal statistics for all fields from the stats.psave
-     *  file (if the file does not exist, a default version is automatically
-     *  created).
+     * Returns the unconditional statistics for all fields from the
+     * stats.psave file (if the file does not exist, a default version is
+     * automatically created).
      */
     TVec<StatsCollector> getStats() const;
-    TVec<StatsCollector> getPrecomputedStatsFromFile(const string filename, const int maxnvalues, bool progress_bar) const;
+
+    //! Generic function to obtain the statistics from a given file in the
+    //! metadatadir. If this file does not exist, statistics are computed and
+    //! saved in this file.
+    TVec<StatsCollector> getPrecomputedStatsFromFile(const string& filename,
+                                                     int maxnvalues,
+                                                     bool progress_bar) const;
 
     TVec<PP<StatsCollector> > remote_getStats() const;
 
@@ -597,14 +603,13 @@ public:
     { return getStats()[fieldnum]; }
 
     
-    /** Compare the stats of this VecStatsCollector with the target one.
-     * @param target the VMat we compare again
+    /** Compare the stats of this VMat with the target one.
+     * @param target The VMat we compare against
      * @param stderror_threshold The threshold allowed for the standard error
      * @param missing_threshold The threshold allowed for the % of missing
-     * @param sumdiff_stderr The sum of all variable difference of stderr
-     * @param sumdiff_missing The sum of all variable difference of missing
-     * @return If they are comparable with respect to the gived threshold,
-     * we return true. Otherwise we return false
+     * @param sumdiff_stderr The sum of all variable differences of stderr
+     * @param sumdiff_missing The sum of all variable differences of missing
+     * @return The number of differences that were found
      */
     int compareStats(const VMat& target,
                      const real stderror_threshold = 2,

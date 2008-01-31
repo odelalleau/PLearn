@@ -1398,18 +1398,21 @@ TVec<StatsCollector> VMatrix::getStats() const
     return field_stats;
 }
 
-/////////////////////////
-// getPrecomputedStats //
-/////////////////////////
-TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(const string filename, const int maxnvalues, bool progress_bar) const
+/////////////////////////////////
+// getPrecomputedStatsFromFile //
+/////////////////////////////////
+TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
+        const string& filename, int maxnvalues, bool progress_bar) const
 {
     TVec<StatsCollector> stats;
     PPath metadatadir = getMetaDataDir();
-    PPath statsfile =  metadatadir + filename;
+    PPath statsfile =  metadatadir / filename;
+    lockMetaDataDir();
     if (isfile(statsfile) && getMtime()<mtime(statsfile))
     {
-        if(getMtime()==0)
-            PLWARNING("Warning: using a saved stat file (%s) but mtime is 0.\n(cannot be sure file is up to date)",
+        if(getMtime() == 0)
+            PLWARNING("Warning: using a saved stat file (%s) but mtime is 0"
+                      "(cannot be sure file is up to date).",
                       statsfile.absolute().c_str());
         PLearn::load(statsfile, stats);
     }
@@ -1420,9 +1423,13 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(const string filename,
         if(!metadatadir.isEmpty())
             PLearn::save(statsfile, stats);
     }
+    unlockMetaDataDir();
     return stats;
 }
 
+/////////////////////
+// remote_getStats //
+/////////////////////
 TVec<PP<StatsCollector> > VMatrix::remote_getStats() const
 {
     if(field_p_stats.isEmpty())
@@ -1887,6 +1894,9 @@ void VMatrix::accumulateXtX(int X_startcol, int X_ncols,
         }
 }
 
+///////////////
+// getRowVec //
+///////////////
 Vec VMatrix::getRowVec(int i) const
 {
     Vec v(width());
@@ -1894,6 +1904,9 @@ Vec VMatrix::getRowVec(int i) const
     return v;
 }
 
+////////////////
+// appendRows //
+////////////////
 void VMatrix::appendRows(Mat rows)
 {
     for(int i=0; i<rows.length(); i++)
@@ -1901,14 +1914,19 @@ void VMatrix::appendRows(Mat rows)
 }
 
 
-int VMatrix:: compareStats(const VMat& target,
-                           const real stderror_threshold,
-                           const real missing_threshold,
-                           real* sumdiff_stderr,
-                           real* sumdiff_missing) const
+//////////////////
+// compareStats //
+//////////////////
+int VMatrix::compareStats(const VMat& target,
+                          const real stderror_threshold,
+                          const real missing_threshold,
+                          real* sumdiff_stderr,
+                          real* sumdiff_missing) const
 {
     if(target->width()!=width())
-        PLERROR("In VecStatsCollector:: compareStats() - this vmatris have width %d witch differ from the target width of %d", width(), target->width());
+        PLERROR("In VecStatsCollector:: compareStats() - This VMatrix has "
+                "width %d which differs from the target width of %d",
+                width(), target->width());
 
     int nbdiff            = 0;
     real sumdiff_stderr_  = 0;
