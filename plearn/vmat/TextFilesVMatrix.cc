@@ -49,15 +49,15 @@ using namespace std;
 
 char TextFilesVMatrix::buf[50000];
 
-TextFilesVMatrix::TextFilesVMatrix()
-    : idxfile(0),
-      delimiter("\t"),
-      quote_delimiter(""),
-      auto_build_map(false),
-      auto_extend_map(true),
-      build_vmatrix_stringmap(false)
-{
-}
+TextFilesVMatrix::TextFilesVMatrix():
+    idxfile(0),
+    delimiter("\t"),
+    quote_delimiter(""),
+    auto_build_map(false),
+    auto_extend_map(true),
+    build_vmatrix_stringmap(false),
+    reorder_fieldspec_from_headers(false)
+{}
 
 PLEARN_IMPLEMENT_OBJECT(
     TextFilesVMatrix,
@@ -835,8 +835,9 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "reorder_fieldspec_from_headers", 
                   &TextFilesVMatrix::reorder_fieldspec_from_headers,
                   OptionBase::buildoption,
-                  "If true, will reorder the fieldspec in the order gived "
-                  "by the field names taken from txtfilenames");
+                  "If true, will reorder the fieldspec in the order given "
+                  "by the field names taken from txtfilenames.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
