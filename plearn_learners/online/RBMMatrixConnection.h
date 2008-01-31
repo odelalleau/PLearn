@@ -75,6 +75,8 @@ public:
     real L2_penalty_factor;
 
     real L2_decrease_constant;
+    real L2_shift;
+    string L2_decrease_type;
     int L2_n_updates;
 
     //! Matrix containing unit-to-unit weights (output_size × input_size)

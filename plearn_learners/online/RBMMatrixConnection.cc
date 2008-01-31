@@ -56,6 +56,8 @@ RBMMatrixConnection::RBMMatrixConnection( real the_learning_rate ) :
     L1_penalty_factor(0),
     L2_penalty_factor(0),
     L2_decrease_constant(0),
+    L2_shift(100),
+    L2_decrease_type("one_over_t"),
     L2_n_updates(0)
 {
 }
@@ -105,9 +107,24 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
     declareOption(ol, "L2_decrease_constant", 
                   &RBMMatrixConnection::L2_decrease_constant,
                   OptionBase::buildoption,
-        "The L2 penalty is divided by (1 + t*L2_decrease_constant) where\n"
-        "'t' is the number of times this penalty has been used to modify\n"
-        "the weights.",
+        "Parameter of the L2 penalty decrease (see L2_decrease_type).",
+        OptionBase::advanced_level);
+
+    declareOption(ol, "L2_shift", 
+                  &RBMMatrixConnection::L2_shift,
+                  OptionBase::buildoption,
+        "Parameter of the L2 penalty decrease (see L2_decrease_type).",
+        OptionBase::advanced_level);
+
+    declareOption(ol, "L2_decrease_type", 
+                  &RBMMatrixConnection::L2_decrease_type,
+                  OptionBase::buildoption,
+        "The kind of L2 decrease that is being applied. The decrease\n"
+        "consists in scaling the L2 penalty by a factor that depends on the\n"
+        "number 't' of times this penalty has been used to modify the\n"
+        "weights of the connection. It can be one of:\n"
+        " - 'one_over_t': 1 / (1 + t * L2_decrease_constant)\n"
+        " - 'sigmoid_like': sigmoid(L2_shift - t * L2_decrease_constant)",
         OptionBase::advanced_level);
 
     declareOption(ol, "L2_n_updates", 
@@ -115,6 +132,8 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
         "Number of times that weights have been changed by the L2 penalty\n"
         "update rule.");
+
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -826,12 +845,21 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(
         addWeightPenalty(weights, weights_gradient);
 }
 
-// Applies penalty (decay) on weights
+////////////////////////
+// applyWeightPenalty //
+////////////////////////
 void RBMMatrixConnection::applyWeightPenalty()
 {
+    // Apply penalty (decay) on weights.
     real delta_L1 = learning_rate * L1_penalty_factor;
-    real delta_L2 = learning_rate * L2_penalty_factor
-                                  / (1 + L2_decrease_constant * L2_n_updates);
+    real delta_L2 = learning_rate * L2_penalty_factor;
+    if (L2_decrease_type == "one_over_t")
+        delta_L2 /= (1 + L2_decrease_constant * L2_n_updates);
+    else if (L2_decrease_type == "sigmoid_like")
+        delta_L2 *= sigmoid(L2_shift - L2_decrease_constant * L2_n_updates);
+    else
+        PLERROR("In RBMMatrixConnection::applyWeightPenalty - Invalid value "
+                "for L2_decrease_type: %s", L2_decrease_type.c_str());
     for( int i=0; i<up_size; i++)
     {
         real* w_ = weights[i];
@@ -855,11 +883,16 @@ void RBMMatrixConnection::applyWeightPenalty()
         L2_n_updates++;
 }
 
-// Adds penalty (decay) gradient
+//////////////////////
+// addWeightPenalty //
+//////////////////////
 void RBMMatrixConnection::addWeightPenalty(Mat weights, Mat weight_gradients)
 {
+    // Add penalty (decay) gradient.
     real delta_L1 = L1_penalty_factor;
     real delta_L2 = L2_penalty_factor;
+    PLASSERT_MSG( is_equal(L2_decrease_constant, 0) && is_equal(L2_shift, 100),
+                  "L2 decrease not implemented in this method" );
     for( int i=0; i<weights.length(); i++)
     {
         real* w_ = weights[i];
