@@ -55,7 +55,10 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeRegisters,
                         "It is also used to maintain the next available leave id.\n"
     );
 
-RegressionTreeRegisters::RegressionTreeRegisters()
+RegressionTreeRegisters::RegressionTreeRegisters():
+    report_progress(0),
+    verbosity(0),
+    next_id(0)
 {
     build();
 }

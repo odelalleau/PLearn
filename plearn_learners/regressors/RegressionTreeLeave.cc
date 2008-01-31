@@ -50,7 +50,17 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeLeave,
                         "of the samples in the leave.\n"
     );
 
-RegressionTreeLeave::RegressionTreeLeave()
+RegressionTreeLeave::RegressionTreeLeave():
+    id(-1),
+    missing_leave(false),
+    loss_function_weight(0),
+    verbosity(0),
+    length(0),
+    weights_sum(0),
+    targets_sum(0),
+    weighted_targets_sum(0),
+    weighted_squared_targets_sum(0),
+    loss_function_factor(1)
 {
     build();
 }
@@ -120,7 +130,8 @@ void RegressionTreeLeave::initStats()
     targets_sum = 0.0;
     weighted_targets_sum = 0.0;
     weighted_squared_targets_sum = 0.0; 
-    if (loss_function_weight != 0.0) loss_function_factor = 2.0 / pow(loss_function_weight, 2);
+    if (loss_function_weight != 0.0) 
+        loss_function_factor = 2.0 / pow(loss_function_weight, 2);
     else loss_function_factor = 1.0;
 }
 
