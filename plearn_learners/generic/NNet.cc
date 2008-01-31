@@ -1061,9 +1061,9 @@ void NNet::train()
         pb = new ProgressBar("Training " + classname() + " from stage " + tostring(stage) + " to " + tostring(nstages), nstages-stage);
 
 
-    //Open/create vmat to save train costs at each epoch
+    // Open/create vmat to save train costs at each epoch.
     VMat costs_per_epoch= 0;
-    if(expdir != "")
+    if(!expdir.isEmpty())
     {
         PPath cpe_path= expdir / "NNet_train_costs.pmat";
         if(isfile(cpe_path))
