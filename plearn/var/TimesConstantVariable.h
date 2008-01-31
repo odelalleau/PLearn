@@ -69,7 +69,6 @@ public:
 
     PLEARN_DECLARE_OBJECT(TimesConstantVariable);
 
-    static void declareOptions(OptionList &ol);
 
     virtual string info() const
     { return string("TimesConstant (* ")+tostring(cst)+")"; }
@@ -79,6 +78,10 @@ public:
     virtual void bprop();
     virtual void symbolicBprop();
     virtual void rfprop();
+
+protected:
+
+    static void declareOptions(OptionList &ol);
 };
 
 DECLARE_OBJECT_PTR(TimesConstantVariable);
