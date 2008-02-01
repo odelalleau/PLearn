@@ -196,6 +196,10 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
     // different than for declareOptions()
     rmm.inherited(inherited::_getRemoteMethodMap_());
 
+   declareMethod(
+        rmm, "forget", &VecStatsCollector::forget,
+        (BodyDoc("Clear all previously accumulated statistics.\n")));
+
     declareMethod(
         rmm, "getStat", &VecStatsCollector::getStat,
         (BodyDoc("Returns a particular statistic of a particular cost.\n"),
