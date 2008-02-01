@@ -42,8 +42,10 @@
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/CostModule.h>
+#include <plearn_learners/online/CrossEntropyCostModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/RBMClassificationModule.h>
+#include <plearn_learners/online/RBMMultitaskClassificationModule.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
@@ -114,9 +116,17 @@ public:
     //! from 0 to n_classes_at_test_time.
     int n_classes_at_test_time;
 
+    //! Number of mean field iterations for the approximate computation of p(y|x)
+    //! for multitask learning.
+    int n_mean_field_iterations;
+
     //#####  Public Learnt Options  ###########################################
     //! The module computing the probabilities of the different classes.
     PP<RBMClassificationModule> classification_module;
+
+    //! The module for approximate computation of the probabilities 
+    //! of the different classes.
+    PP<RBMMultitaskClassificationModule> multitask_classification_module;
 
     //! The computed cost names
     TVec<string> cost_names;
@@ -222,7 +232,7 @@ protected:
 
     //! Part of the RBM visible layer corresponding to the target
     //! (pointer to classification_module->target_layer)
-    PP<RBMMultinomialLayer> target_layer;
+    PP<RBMLayer> target_layer;
 
     //! Classification module for when unlabeled_class_index_begin != 0
     PP<RBMClassificationModule> unlabeled_classification_module;
@@ -251,6 +261,7 @@ protected:
     //! Temporary variables for gradient descent
     mutable Vec input_gradient;
     mutable Vec class_output;
+    mutable Vec before_class_output;
     mutable Vec unlabeled_class_output;
     mutable Vec test_time_class_output;
     mutable Vec class_gradient;
@@ -260,6 +271,9 @@ protected:
 
     //! Keeps the index of the class_error cost in train_costs
     int class_cost_index;
+
+    //! Keeps the index of the hamming_loss cost in train_costs
+    int hamming_loss_index;
 
 protected:
     //#####  Protected Member Functions  ######################################
