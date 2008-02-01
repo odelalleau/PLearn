@@ -120,6 +120,12 @@ public:
     //! for multitask learning.
     int n_mean_field_iterations;
 
+    //! Determines the frequency of a generative learning update.
+    //! For example, set this option to 100 in order to do an
+    //! update every 100 samples. The gen_learning_weight will
+    //! then be multiplied by 100.
+    int gen_learning_every_n_samples;
+
     //#####  Public Learnt Options  ###########################################
     //! The module computing the probabilities of the different classes.
     PP<RBMClassificationModule> classification_module;

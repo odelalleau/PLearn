@@ -70,8 +70,8 @@ DiscriminativeRBM::DiscriminativeRBM() :
     do_not_use_discriminative_learning( false ),
     unlabeled_class_index_begin( 0 ),
     n_classes_at_test_time( -1 ),
-    n_mean_field_iterations( 1 )
-
+    n_mean_field_iterations( 1 ),
+    gen_learning_every_n_samples( 1 )
 {
     random_gen = new PRandom();
 }
@@ -161,6 +161,14 @@ void DiscriminativeRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Number of mean field iterations for the approximate computation of p(y|x)\n"
                   "for multitask learning.\n");
+
+    declareOption(ol, "gen_learning_every_n_samples", 
+                  &DiscriminativeRBM::gen_learning_every_n_samples,
+                  OptionBase::buildoption,
+                  "Determines the frequency of a generative learning update.\n"
+                  "For example, set this option to 100 in order to do an\n"
+                  "update every 100 samples. The gen_learning_weight will\n"
+                  "then be multiplied by 100.");
 
     declareOption(ol, "classification_module",
                   &DiscriminativeRBM::classification_module,
@@ -620,11 +628,14 @@ void DiscriminativeRBM::train()
         pb = new ProgressBar( "Training "
                               + classname(),
                               nstages - stage );
-        
+
+    //! This makes sure that the samples on which generative learning 
+    //! is done changes from one epoch to another
+    int offset = (int)round(stage/nstages) % gen_learning_every_n_samples;
+
     for( ; stage<nstages ; stage++ )
     {
         train_set->getExample(stage%nsamples, input, target, weight);
-
 
         if( pb )
             pb->update( stage - init_stage + 1 );
@@ -682,70 +693,73 @@ void DiscriminativeRBM::train()
             disc_neg_up_val << hidden_layer->expectation;
         }
 
-        // ... for generative learning        
-        if( ( !is_missing(target[0]) || targetsize() > 1 ) && 
-            gen_learning_weight > 0 )
-        {
-            // Positive phase
-            if( !use_exact_disc_gradient && !do_not_use_discriminative_learning )
+        // ... for generative learning
+        if( (stage + offset) % gen_learning_every_n_samples == 0 )
+        {            
+            if( ( !is_missing(target[0]) || targetsize() > 1 ) && 
+                gen_learning_weight > 0 )
             {
-                // Use previous computations
-                gen_pos_down_val << disc_pos_down_val;
-                gen_pos_up_val << disc_pos_up_val;
+                // Positive phase
+                if( !use_exact_disc_gradient && !do_not_use_discriminative_learning )
+                {
+                    // Use previous computations
+                    gen_pos_down_val << disc_pos_down_val;
+                    gen_pos_up_val << disc_pos_up_val;
 
-                hidden_layer->setExpectation( gen_pos_up_val );
-                hidden_layer->generateSample();
-            }
-            else
-            {
-                // Clamp visible units
-                target_layer->sample << target_one_hot;
-                input_layer->sample << input ;
+                    hidden_layer->setExpectation( gen_pos_up_val );
+                    hidden_layer->generateSample();
+                }
+                else
+                {
+                    // Clamp visible units
+                    target_layer->sample << target_one_hot;
+                    input_layer->sample << input ;
                 
-                // Up pass
-                joint_connection->setAsDownInput( joint_layer->sample );
-                hidden_layer->getAllActivations( joint_connection );
-                hidden_layer->computeExpectation();
-                hidden_layer->generateSample();
+                    // Up pass
+                    joint_connection->setAsDownInput( joint_layer->sample );
+                    hidden_layer->getAllActivations( joint_connection );
+                    hidden_layer->computeExpectation();
+                    hidden_layer->generateSample();
                 
-                gen_pos_down_val << joint_layer->sample;
-                gen_pos_up_val << hidden_layer->expectation;
-            }
+                    gen_pos_down_val << joint_layer->sample;
+                    gen_pos_up_val << hidden_layer->expectation;
+                }
 
-            // Negative phase
+                // Negative phase
 
-            if( !use_multi_conditional_learning )
-            {
-                // Down pass
-                joint_connection->setAsUpInput( hidden_layer->sample );
-                joint_layer->getAllActivations( joint_connection );
-                joint_layer->computeExpectation();
-                joint_layer->generateSample();
+                if( !use_multi_conditional_learning )
+                {
+                    // Down pass
+                    joint_connection->setAsUpInput( hidden_layer->sample );
+                    joint_layer->getAllActivations( joint_connection );
+                    joint_layer->computeExpectation();
+                    joint_layer->generateSample();
                 
-                // Up pass
-                joint_connection->setAsDownInput( joint_layer->sample );
-                hidden_layer->getAllActivations( joint_connection );
-                hidden_layer->computeExpectation();
-            }
-            else
-            {
-                target_layer->sample << target_one_hot;
+                    // Up pass
+                    joint_connection->setAsDownInput( joint_layer->sample );
+                    hidden_layer->getAllActivations( joint_connection );
+                    hidden_layer->computeExpectation();
+                }
+                else
+                {
+                    target_layer->sample << target_one_hot;
 
-                // Down pass
-                connection->setAsUpInput( hidden_layer->sample );
-                input_layer->getAllActivations( connection );
-                input_layer->computeExpectation();
-                input_layer->generateSample();
+                    // Down pass
+                    connection->setAsUpInput( hidden_layer->sample );
+                    input_layer->getAllActivations( connection );
+                    input_layer->computeExpectation();
+                    input_layer->generateSample();
                 
-                // Up pass
-                joint_connection->setAsDownInput( joint_layer->sample );
-                hidden_layer->getAllActivations( joint_connection );
-                hidden_layer->computeExpectation(); 
+                    // Up pass
+                    joint_connection->setAsDownInput( joint_layer->sample );
+                    hidden_layer->getAllActivations( joint_connection );
+                    hidden_layer->computeExpectation(); 
+                }
+
+                gen_neg_down_val << joint_layer->sample;
+                gen_neg_up_val << hidden_layer->expectation;
+
             }
-
-            gen_neg_down_val << joint_layer->sample;
-            gen_neg_up_val << hidden_layer->expectation;
-
         }
 
         // ... and for semi-supervised learning
@@ -895,16 +909,18 @@ void DiscriminativeRBM::train()
                                 disc_neg_down_val, disc_neg_up_val);
         }
 
-        
-        if( !is_missing(target[0]) && gen_learning_weight > 0 )
-        {
-            setLearningRate( gen_learning_weight * disc_learning_rate / 
-                             (1. + disc_decrease_ct * stage ));
-            joint_layer->update( gen_pos_down_val, gen_neg_down_val );
-            hidden_layer->update( gen_pos_up_val, gen_neg_up_val );
-            joint_connection->update( gen_pos_down_val, gen_pos_up_val,
-                                gen_neg_down_val, gen_neg_up_val);
-        }
+        if( (stage + offset) % gen_learning_every_n_samples == 0 )
+        { 
+            if( !is_missing(target[0]) && gen_learning_weight > 0 )
+            {
+                setLearningRate( gen_learning_every_n_samples * gen_learning_weight * disc_learning_rate / 
+                                 (1. + disc_decrease_ct * stage ));
+                joint_layer->update( gen_pos_down_val, gen_neg_down_val );
+                hidden_layer->update( gen_pos_up_val, gen_neg_up_val );
+                joint_connection->update( gen_pos_down_val, gen_pos_up_val,
+                                          gen_neg_down_val, gen_neg_up_val);
+            }
+        }            
 
         if( is_missing(target[0]) && semi_sup_learning_weight > 0 )
         {
