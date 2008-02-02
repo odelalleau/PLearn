@@ -275,21 +275,24 @@ real LocallyMagnifiedDistribution::log_density(const Vec& y) const
         local_trainset->defineSizes(w,0,1);        
     }
 
-    double log_local_p = trainLocalDistrAndEvaluateLogDensity(local_trainset, y);
 
     // perr << "local_trainset =" << endl << local_trainset->toMat() << endl;
+    double log_local_p = 0;
 
     switch(mode)
     {
     case 0:
+        log_local_p = trainLocalDistrAndEvaluateLogDensity(local_trainset, y);
         return log_local_p + pl_log((double)weightsum) - pl_log((double)l) - pl_log((double)weighting_kernel(input,input));
     case 1:
+        log_local_p = trainLocalDistrAndEvaluateLogDensity(local_trainset, y);
         return log_local_p;
     case 2:
         return pl_log((double)weightsum) - pl_log((double)l);
     case 3:
         return pl_log((double)weightsum);
     case 4:
+        log_local_p = trainLocalDistrAndEvaluateLogDensity(local_trainset, y);
         return log_local_p+pl_log((double)width_n)-pl_log((double)l);
     default:
         PLERROR("Invalid mode %d", mode);
