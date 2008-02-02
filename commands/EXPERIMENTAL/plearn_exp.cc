@@ -260,6 +260,7 @@
 // #include <plearn/vmat/CenteredVMatrix.h>
 // #include <plearn/vmat/ClassSubsetVMatrix.h>
 // #include <plearn/vmat/CompactVMatrix.h>
+#include <plearn/vmat/CompactFileVMatrix.h>
 // #include <plearn/vmat/CompressedVMatrix.h>
 // #include <plearn/vmat/CumVMatrix.h>
 // #include <plearn/vmat/DatedJoinVMatrix.h>

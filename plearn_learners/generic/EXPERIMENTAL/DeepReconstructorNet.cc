@@ -433,6 +433,7 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
     {
         inputs->getExample(i,in,target,weight);
         f->fprop(in, out);
+        displayFunction(f, true);
         outputs->putOrAppendRow(i,out);
     }
 }
