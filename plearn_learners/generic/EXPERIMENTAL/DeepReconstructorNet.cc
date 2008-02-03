@@ -315,7 +315,7 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(compute_layer, copies);
     deepCopyField(compute_output, copies);
     deepCopyField(output_and_target_to_cost, copies);
-    deepCopyField(outmat, copies);
+    // deepCopyField(outmat, copies); // deep copying vmatrices, especially if opened in write mode, is probably a bad idea
     deepCopyField(group_sizes, copies);
 }
 
@@ -376,7 +376,7 @@ void DeepReconstructorNet::train()
                 trainHiddenLayer(k, dset);
                 PLearn::save(expdir/"learner.psave", *this);
                 // 'if' is a hack to avoid precomputing last hidden layer if not needed
-                if(k<nreconstructions-1 ||  must_train_supervised_layer) 
+                // if(k<nreconstructions-1 ||  must_train_supervised_layer) 
                 { 
                     int width = layers[k+1].width();
                     outmat[k] = new FileVMatrix(outmatfname+tostring(k+1)+".pmat",0,width);
@@ -391,6 +391,16 @@ void DeepReconstructorNet::train()
                 trainSupervisedLayer(dset, targets);
                 PLearn::save(expdir/"learner.psave", *this);
             }
+
+            for(int k=0; k<reconstruction_costs.length(); k++)
+              {
+                if(outmat[k].isNotNull())
+                  {
+                    perr << "Closing outmat " << k+1 << endl;
+                    outmat[k] = 0;
+                  }
+              }
+            
             perr << "\n\n*********************************************" << endl;
             perr << "****      Now performing fine tuning     ****" << endl;
             perr << "********************************************* \n" << endl;
@@ -433,9 +443,10 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
     {
         inputs->getExample(i,in,target,weight);
         f->fprop(in, out);
-        displayFunction(f, true);
+        // displayFunction(f, true);
         outputs->putOrAppendRow(i,out);
     }
+    outputs->flush();
 }
 
 void DeepReconstructorNet::prepareForFineTuning()
