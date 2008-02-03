@@ -340,7 +340,18 @@ void FileVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    // it is unclear whether f should be shared or not...
+    // if we allow multi-threading, we should probably not share it
+    // so for now we will not share it. But a cleaner behavoiur would probably be
+    // to share it in multiple threads but make sure that getRow, putRow, etc... operations
+    // are atomic (no context switch to another thread).
+
     f = 0;   // Because we will open again the file (f should not be shared).
+    // however reopening the file twice in write mode is certainly a VERY bad idea.
+    // thus we switch to read-mode 
+    build_new_file = false;
+    writable = false;
+
     build(); // To open the file.
 }
 
