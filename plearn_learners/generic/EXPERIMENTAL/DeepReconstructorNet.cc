@@ -443,7 +443,13 @@ void DeepReconstructorNet::buildHiddenLayerOutputs(int which_input_layer, VMat i
     {
         inputs->getExample(i,in,target,weight);
         f->fprop(in, out);
-        // displayFunction(f, true);
+        /*
+        if(i==0)
+        {
+            perr << "Function used for building hidden layer " << which_input_layer << endl;
+            displayFunction(f, true);
+        }
+        */
         outputs->putOrAppendRow(i,out);
     }
     outputs->flush();
@@ -453,6 +459,8 @@ void DeepReconstructorNet::prepareForFineTuning()
 {
     Func f(layers[0]&target, supervised_costvec);
     Var totalcost = sumOf(train_set, f, minibatch_size);
+    perr << "Function used for fine tuning" << endl;
+    // displayFunction(f, true);
     // displayVarGraph(supervised_costvec);
     // displayVarGraph(totalcost);
 
@@ -468,7 +476,7 @@ TVec<Mat> DeepReconstructorNet::computeRepresentations(Mat input)
     VarArray proppath = propagationPath(layers[0],layers[nlayers-1]);
     layers[0]->matValue << input;
     proppath.fprop();
-    perr << "Graph for computing representations" << endl;
+    // perr << "Graph for computing representations" << endl;
     // displayVarGraph(proppath,true, 333, "repr");
     for(int k=0; k<nlayers; k++)
         representations[k] = layers[k]->matValue.copy();
@@ -481,7 +489,7 @@ void DeepReconstructorNet::reconstructInputFromLayer(int layer)
     {
         VarArray proppath = propagationPath(layers[k],reconstructed_layers[k-1]);
         proppath.fprop();
-        perr << "Graph for reconstructing layer " << k-1 << " from layer " << k << endl;
+        // perr << "Graph for reconstructing layer " << k-1 << " from layer " << k << endl;
         //displayVarGraph(proppath,true, 333, "reconstr");
 
         //WARNING MEGA-HACK
@@ -644,10 +652,11 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     perr << "*** Training (unsupervised) layer " << which_input_layer+1 << " for max. " << nepochs.second << " epochs " << endl;
     perr << "*** each epoch has " << l << " examples and " << l/minibatch_size << " optimizer stages (updates)" << endl;
     Func f(layers[which_input_layer], reconstruction_costs[which_input_layer]);
-    //displayVarGraph(reconstruction_costs[which_input_layer]);
-    //displayFunction(f,false,false, 333, "train_func");
     Var totalcost = sumOf(inputs, f, minibatch_size);
     VarArray params = totalcost->parents();
+    //displayVarGraph(reconstruction_costs[which_input_layer]);
+    //displayFunction(f,false,false, 333, "train_func");
+    //displayVarGraph(totalcost,true);
     
     if ( reconstruction_optimizers.size() !=0 )
     {
@@ -686,7 +695,7 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
         Vec stderrs = st.getStdError();
         perr << "Epoch " << n+1 << ": " << means << " +- " << stderrs;
         real m = means[reconstr_cost_pos];
-        real er = stderrs[reconstr_cost_pos];
+        // real er = stderrs[reconstr_cost_pos];
         if(n>0)
         {
             relative_improvement = (prev_mean-m)/fabs(prev_mean);
@@ -727,6 +736,16 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
         training_curve->flush();
 
         prev_mean = m;
+
+        /*
+        if(n==0)
+        {
+            perr << "Displaying reconstruciton_cost" << endl;
+            displayVarGraph(reconstruction_costs[which_input_layer],true);
+            perr << "Displaying optimized funciton f" << endl;
+            displayFunction(f,true,false, 333, "train_func");
+        }
+        */
     }
 }
 

@@ -46,6 +46,7 @@
 #include "DisplayUtils.h"
 #include <plearn/io/openString.h>
 #include <plearn/io/TmpFilenames.h>
+#include <plearn/math/pl_math.h>
 
 #if defined(WIN32) && !defined(__CYGWIN__)
 #include <io.h>
@@ -312,6 +313,50 @@ void displayHistogram(Gnuplot& gp, Mat dataColumn,
     return v.subVec((l-n)/2,n);
   }
 
+  string summarizedVecString(Vec v, int maxn=16, string format="%2.2g")
+  {
+    string result = "";
+    int n = 0;
+    char buf[30];
+    int nsame = 1;
+    string val;
+    string prev_val;
+    int l = v.length();
+    result = tostring(l)+ " [ ";
+    int i;
+    for(i=0; i<l && n<maxn; i++)
+      {
+        snprintf(buf,20,format.c_str(),v[i]);
+        val = buf;
+        if(i==0)
+          prev_val = val;
+        else if(val==prev_val)
+          { nsame++; }
+        else 
+          {
+            result += prev_val;
+            if(nsame>1)
+              result += (string("*")+tostring(nsame));
+            result += " ";
+            n++;
+            nsame = 1;
+          }
+        prev_val = val;
+      }
+
+    if(l>0)
+      {
+        result += prev_val;
+        if(nsame>1)
+          result += (string("*")+tostring(nsame));
+      }
+    if(i<l)
+      result += " ...]";
+    else
+      result += " ]";
+    return result;
+  }
+
 /** VarGraph **/
 
 void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth, const char* the_filename, bool must_wait, VarArray display_only_these)
@@ -489,20 +534,20 @@ void displayVarGraph(const VarArray& outputs, bool display_values, real boxwidth
       if(display_values)
         {
           gs.usefont("Times-Bold", 11.0);
-          gs.centerShow(my_x, my_y+boxheight/4, descr.c_str());
+          gs.centerShow(my_x, my_y+boxheight/4, descr);
           gs.usefont("Times-Roman", 10.0);
           gs.centerShow(my_x, my_y, nameline);
           gs.usefont("Courrier", 6.0);
           if (v->rValue.length()>0) // print rvalue if there are some...
           {
-            gs.centerShow(my_x, my_y-boxheight/5, centerSubVec(v->value));
-            gs.centerShow(my_x, my_y-boxheight/3, centerSubVec(v->gradient));
-            gs.centerShow(my_x, my_y-boxheight/1, centerSubVec(v->rValue));
+            gs.centerShow(my_x, my_y-boxheight/5, summarizedVecString(v->value));
+            gs.centerShow(my_x, my_y-boxheight/3, summarizedVecString(v->gradient));
+            gs.centerShow(my_x, my_y-boxheight/1, summarizedVecString(v->rValue));
           }
           else
           {
-            gs.centerShow(my_x, my_y-boxheight/5, centerSubVec(v->value));
-            gs.centerShow(my_x, my_y-boxheight/2.5, centerSubVec(v->gradient));
+            gs.centerShow(my_x, my_y-boxheight/5, summarizedVecString(v->value));
+            gs.centerShow(my_x, my_y-boxheight/2.5, summarizedVecString(v->gradient));
           }
           /*
           cout << descr << " " << nameline << " (" << v->value.length() << ")" << endl;
@@ -749,12 +794,37 @@ void OldDisplayVarGraph(const VarArray& outputs, bool display_values, real boxwi
     unlink(filename);
 }
 
+void tagVariables(VarArray vars, string tag)
+{
+  for(int i=0; i<vars.length(); i++)
+    {
+      string name = vars[i]->getName();
+      vars[i]->setName(tag+":"+name);
+    }
+}
+
+void untagVariables(VarArray vars, string tag)
+{
+  int startpos = tag.length()+1;
+  for(int i=0; i<vars.length(); i++)
+    {
+      string name = vars[i]->getName();
+      vars[i]->setName(name.substr(startpos,name.length()-startpos));
+    }
+}
+
 void displayFunction(Func f, bool display_values, bool display_differentiation, real boxwidth, const char* the_filename, bool must_wait)
 { 
+  tagVariables(f->inputs,"INPUT");
+  tagVariables(f->parameters,"PARAM");
+  tagVariables(f->outputs,"OUTPUT");
   if(display_differentiation)
     displayVarGraph(f->outputs & f->differentiate()->outputs, display_values, boxwidth, the_filename, must_wait);
   else
     displayVarGraph(f->outputs, display_values, boxwidth, the_filename, must_wait); 
+  untagVariables(f->outputs,"OUTPUT");
+  untagVariables(f->parameters,"PARAM");
+  untagVariables(f->inputs,"INPUT");
 }
 
 Mat compute2dGridOutputs(PP<PLearner> learner, real min_x, real max_x, real min_y, real max_y, int length, int width, real singleoutput_threshold)

@@ -141,11 +141,20 @@ class GhostScript
   void show(const char* str)
   { togs << "(" << str << ") show" << endl; }
 
+  void show(const string& str)
+  { togs << "(" << str << ") show" << endl; }
+
   //! halign can be 'l' (left), 'c' (center) or 'r' (right)
   //! valign can be 't' (top), 'm' (middle) or 'b' (bottom) 
   void show(real x, real y, const char* str, char halign='l', char valign='b');
 
+  inline void show(real x, real y, const string& str, char halign='l', char valign='b')
+  { show(x,y,str.c_str(), halign, valign); }
+
   void centerShow(real x, real y, const char* str)
+  { show(x,y,str,'c','m'); }
+
+  void centerShow(real x, real y, const string& str)
   { show(x,y,str,'c','m'); }
 
   //! accepts multiple line text (lines separated by \n) 
