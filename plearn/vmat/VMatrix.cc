@@ -1956,8 +1956,8 @@ int VMatrix::compareStats(const VMat& target,
         }
         real tmean = tstats.mean();
         real lmean = lstats.mean();
-        real tstderror = sqrt(pow(tstats.stderror(),2.) + 
-                              pow(lstats.stderror(),2.));
+        real tstderror = sqrt(pow(tstats.stderror(), 2) + 
+                              pow(lstats.stderror(), 2));
         th = fabs(lmean-tmean)/tstderror;
         if(tstderror==0)
             PLWARNING("In VMatrix::compareStats - field %d(%s) have a"

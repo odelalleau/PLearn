@@ -423,11 +423,13 @@ void GaussianProcessRegressor::computeCostsFromOutputs(const Vec& input, const V
     // the confidence bounds.  If impossible, simply set missing-value for the
     // NLL cost.
     if (m_compute_confidence) {
+#ifdef BOUNDCHECK
         static const float PROBABILITY = pl_erf(1. / (2*sqrt(2.0)));  // 0.5 stddev
         bool confavail = computeConfidenceFromOutput(input, output, PROBABILITY,
                                                      m_intervals);
-        assert( confavail && m_intervals.size() == output.size() &&
-                output.size() == target.size() );
+#endif
+        PLASSERT( confavail && m_intervals.size() == output.size() &&
+                  output.size() == target.size() );
         static const real LN_2PI_OVER_2 = pl_log(2*M_PI) / 2.0;
         real nll = 0;
         for (int i=0, n=output.size() ; i<n ; ++i) {
