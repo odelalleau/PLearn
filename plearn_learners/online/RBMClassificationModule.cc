@@ -218,6 +218,18 @@ void RBMClassificationModule::fprop(const Vec& input, Vec& output) const
     output << target_layer->expectation;
 }
 
+void RBMClassificationModule::fprop(const Mat& inputs, Mat& outputs)
+{
+    int batch_size = inputs.length();
+    outputs.resize(batch_size, output_size);
+
+    for (int k=0; k<batch_size; k++)
+    {
+        Vec tmp_out = outputs(k);
+        fprop(inputs(k), tmp_out);
+    }
+}
+
 /* THIS METHOD IS OPTIONAL
 //! Adapt based on the output gradient: this method should only
 //! be called just after a corresponding fprop; it should be

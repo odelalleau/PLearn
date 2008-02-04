@@ -94,6 +94,7 @@ public:
 
     //! given the input, compute the output (possibly resize it appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
+    virtual void fprop(const Mat& inputs, Mat& outputs);
 
     //! Adapt based on the output gradient: this method should only
     //! be called just after a corresponding fprop; it should be
