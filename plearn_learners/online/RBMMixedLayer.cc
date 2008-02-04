@@ -118,7 +118,7 @@ void RBMMixedLayer::setExpectationByRef(const Vec& the_expectation)
         int init_pos = init_positions[i];
         PP<RBMLayer> layer = sub_layers[i];
         int layer_size = layer->size;
-        
+
         layer->setExpectationByRef( expectation.subVec(init_pos, layer_size) );
     }
 

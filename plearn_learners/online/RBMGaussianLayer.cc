@@ -323,6 +323,7 @@ void RBMGaussianLayer::clearStats()
 
 void RBMGaussianLayer::forget()
 {
+    clearStats();
     quad_coeff.fill( 1. );
     inherited::forget();
 }
@@ -350,17 +351,28 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
 
 void RBMGaussianLayer::build_()
 {
+    bool needs_forget = false;
+
     if(share_quad_coeff)
         size_quad_coeff=1;
     else
         size_quad_coeff=size;
 
-    sigma.resize( size_quad_coeff );
-    sigma_is_up_to_date = false;
+    if (sigma.size() != size_quad_coeff)
+    {
+        sigma.resize( size_quad_coeff );
+        sigma_is_up_to_date = false;
+        quad_coeff.resize( size_quad_coeff );
+        needs_forget = true;
+    }
 
-    quad_coeff.resize( size_quad_coeff );
     quad_coeff_pos_stats.resize( size );
     quad_coeff_neg_stats.resize( size );
+
+    if (needs_forget)
+        forget();
+
+    clearStats();
 }
 
 void RBMGaussianLayer::build()
