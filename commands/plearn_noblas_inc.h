@@ -208,6 +208,7 @@
 #include <plearn_learners/online/ForwardModule.h>
 #include <plearn_learners/online/GradNNetLayerModule.h>
 #include <plearn_learners/online/IdentityModule.h>
+#include <plearn_learners/online/InferenceRBM.h>
 #include <plearn_learners/online/LayerCostModule.h>
 #include <plearn_learners/online/LinearCombinationModule.h>
 #include <plearn_learners/online/LinearFilterModule.h>
@@ -234,6 +235,7 @@
 #include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMModule.h>
 #include <plearn_learners/online/RBMMultinomialLayer.h>
+#include <plearn_learners/online/RBMTrainer.h>
 #include <plearn_learners/online/RBMTruncExpLayer.h>
 #include <plearn_learners/online/SoftmaxModule.h>
 #include <plearn_learners/online/SplitModule.h>
