@@ -265,9 +265,10 @@ void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, rea
     if (left_leave_last_feature >= right_leave_first_feature) return;
     real work_error = missing_error[0] + missing_error[1] + left_error[0] + left_error[1] + right_error[0] + right_error[1];
     int work_balance = abs(left_leave->getLength() - right_leave->getLength());
-    if(split_col<0);
-    else if (work_error > after_split_error) return;
-    else if (work_error == after_split_error && work_balance > split_balance) return;
+    if (fast_is_more(work_error,after_split_error)) return;
+    else if (fast_is_equal(work_error,after_split_error) &&
+             fast_is_more(work_balance,split_balance)) return;
+
     split_col = col;
     split_feature_value = 0.5 * (right_leave_first_feature + left_leave_last_feature);
     after_split_error = work_error;

@@ -235,6 +235,23 @@ inline bool fast_exact_is_equal(real a, real b)
     return (a <= b && b <= a);
 }
 
+//! Test float inequality (but does not deal with 'nan' and 'inf' values).
+inline bool fast_is_more(real a, real b, real absolute_tolerance_threshold = 1.0, 
+                          real absolute_tolerance = ABSOLUTE_TOLERANCE,
+                          real relative_tolerance = RELATIVE_TOLERANCE)
+{
+    return !fast_is_equal(a,b,absolute_tolerance_threshold,absolute_tolerance,relative_tolerance) && a>b;
+}
+
+//! Test float inequality while dealling with 'nan' and 'inf' values.
+inline bool is_more(real a, real b, real absolute_tolerance_threshold = 1.0, 
+                          real absolute_tolerance = ABSOLUTE_TOLERANCE,
+                          real relative_tolerance = RELATIVE_TOLERANCE)
+{
+    return !is_equal(a,b,absolute_tolerance_threshold,absolute_tolerance,relative_tolerance) && a>b;
+
+}
+
 template<class T>
 inline T square(const T& x)
 { return x*x; }
