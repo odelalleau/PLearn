@@ -188,7 +188,6 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
     train_set = the_train_set;
     leave = the_leave;
     leave_template = the_leave_template;
-    split_col = -1;
     int missing_leave_id = train_set->getNextId();
     int left_leave_id =  train_set->getNextId();
     int right_leave_id =  train_set->getNextId();
@@ -214,6 +213,8 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
 
 void RegressionTreeNode::lookForBestSplit()
 {
+    if(leave->length<=1)
+        return;
     TVec<int> candidate(train_set->length());//list of candidate row to split
     candidate.resize(0);
     TVec<int> registered_row;
@@ -241,8 +242,10 @@ void RegressionTreeNode::lookForBestSplit()
             }
         }
         missing_leave->getOutputAndError(tmp_vec, missing_error);
+
+        //in case of missing value
         if(candidate.size()==0)
-            return;
+            continue;
         int row = candidate.pop();
         while (candidate.size()>0)
         {
