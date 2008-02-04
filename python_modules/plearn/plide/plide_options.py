@@ -293,8 +293,16 @@ class PyPLearnOptionsDialog( GladeDialog ):
 
                 ## Spin button (float version)
                 elif type(option_value) == float:
-                    option_input = gtk.SpinButton(digits=3)
-                    option_input.set_increments(0.1, 1.0)
+                    # set precision according to option_value; min. 3 digits
+                    import math
+                    ndig= 3
+                    if option_value < 0:
+                        ndig= -math.log10(-option_value)
+                    elif option_value > 0:
+                        ndig= -math.log10(option_value)
+                    ndig= int(math.ceil(max(3, ndig)))
+                    option_input = gtk.SpinButton(digits=ndig)
+                    option_input.set_increments(10.**(-ndig), 1.0)
                     option_input.set_numeric(True)
                     option_input.set_range(*true_bounds(*option_bounds))
                     option_input.set_value(option_value)
