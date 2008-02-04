@@ -629,7 +629,7 @@ string HelpSystem::helpOnOption(const string& classname, const string& optionnam
        && opt->level() <= OptionBase::getCurrentOptionLevel())
         s+= addprefix("# ", opt->optiontype() + ": " + opt->description())
             //+ addprefix("# ", "*OptionLevel: " + opt->levelString())
-            + opt->optionname() + " = " 
+            + "\n" + opt->optionname() + " = " 
             + getOptionDefaultVal(classname, optionname) + " ;\n\n";
 
     return s;
