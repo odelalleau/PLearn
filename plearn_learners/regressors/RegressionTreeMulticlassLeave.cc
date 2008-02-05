@@ -148,6 +148,8 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
     real target = train_set->getTarget(row);
     length -= 1;
     weights_sum -= weight;
+    PLASSERT(length>=0);
+    PLASSERT(weights_sum>=0);
     for (int multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {
         if (target == multiclass_outputs[multiclass_ind])
@@ -171,7 +173,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
         error.clear();
         return;
     }
-    multiclass_winer = 0;
+    int multiclass_winer = 0;
     for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {
         if (multiclass_weights_sum[multiclass_ind] > multiclass_weights_sum[multiclass_winer]) multiclass_winer = multiclass_ind;
@@ -223,7 +225,6 @@ void RegressionTreeMulticlassLeave::printStats()
     cout << " e0 " << error[0];
     cout << " e1 " << error[1];
     cout << " ws " << weights_sum;
-    cout << " win " << multiclass_winer;
     cout << endl;
     cout << " mws " << multiclass_weights_sum << endl;
 }

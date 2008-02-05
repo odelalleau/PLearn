@@ -354,7 +354,7 @@ real RegressionTreeNode::getErrorImprovment()
 {
     if (split_col < 0) return -1.0;
     real err=leave_error[0] + leave_error[1] - after_split_error;
-    PLASSERT(!isnan(err)&&err>=0);
+    PLASSERT(is_equal(err,0)||err>0);
     return err;
 }
 
