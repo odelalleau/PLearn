@@ -11,7 +11,8 @@ SIZE=( 100 500 1000 1500 )
 #SIZE=( 1023 1024 1055 1056 )
 TITLE="Comparison of execution time of different programme on $HOSTNAME"
 DATE=`date +%s`
-RESFILE=RES/blascompare_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
+SCRIPT=`basename $0`
+RESFILE=RES/${SCRIPT#speedtest.}_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
 APPENDRESULT="NO" #"YES" append result to old one, otherwise we erase old results
 
 function f(){

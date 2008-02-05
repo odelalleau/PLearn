@@ -5,7 +5,8 @@ export OMP_NUM_THREADS=1
 SIZE=( 100 200 400 800 1023 1024 )
 TITLE="Comparaison of execution speed of float vs double program on $HOSTNAME"
 DATE=`date +%s`
-RESFILE=RES/floatvsdouble_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
+SCRIPT=`basename $0`
+RESFILE=RES/${SCRIPT#speedtest.}_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
 
 
 function f(){

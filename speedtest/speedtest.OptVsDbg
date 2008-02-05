@@ -6,7 +6,8 @@ SIZE=( 100 200 400 )
 PROGEXT=( -opt -dbg -safeopt -checkopt -opt64 )
 TITLE="Compare different compilation optimisation flags with default blas on $HOSTNAME"
 DATE=`date +%s`
-RESFILE=RES/optcompare_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
+SCRIPT=`basename $0`
+RESFILE=RES/${SCRIPT#speedtest.}_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
 
 function f(){
 #param1 time prog

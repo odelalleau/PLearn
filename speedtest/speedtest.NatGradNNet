@@ -12,7 +12,8 @@ SIZE2=32 #1, 3, 10, 30, 32, 96, 100, 128
 TITLE="Comparison of execution time of different programme on $HOSTNAME"
 FNAME=${BP//.\//_}
 DATE=`date +%s`
-RESFILE=RES/NatGradNNet_${HOSTNAME%.iro.umontreal.ca}_${FNAME//\//_}_${DATE}_${SIZE2}
+SCRIPT=`basename $0`
+RESFILE=RES/${SCRIPT#speedtest.}_${HOSTNAME%.iro.umontreal.ca}_${FNAME//\//_}_${DATE}_${SIZE2}
 
 
 function f(){

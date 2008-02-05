@@ -12,7 +12,8 @@ SIZE=( 1000 )
 NBTHREADS=( 1 2 4 8 16 ) 
 TITLE="Comparaison of wall execution time for different number of thread for ${BP} on $HOSTNAME"
 DATE=`date +%s`
-RESFILE=RES/nbthread_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
+SCRIPT=`basename $0`
+RESFILE=RES/${SCRIPT#speedtest.}_${HOSTNAME%.iro.umontreal.ca}_${BP//.\//_}_${DATE}
 
 
 function f(){
