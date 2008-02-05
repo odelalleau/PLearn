@@ -222,6 +222,8 @@ void RegressionTreeNode::lookForBestSplit()
     Vec left_error(3);
     Vec right_error(3);
     Vec missing_error(3);
+    missing_error.clear();
+
     int leave_id = leave->id;
     for (int col = 0; col < train_set->inputsize(); col++)
     {
@@ -351,7 +353,9 @@ int RegressionTreeNode::getSplitBalance()
 real RegressionTreeNode::getErrorImprovment()
 {
     if (split_col < 0) return -1.0;
-    return leave_error[0] + leave_error[1] - after_split_error;
+    real err=leave_error[0] + leave_error[1] - after_split_error;
+    PLASSERT(!isnan(err)&&err>=0);
+    return err;
 }
 
 TVec< PP<RegressionTreeNode> > RegressionTreeNode::getNodes()

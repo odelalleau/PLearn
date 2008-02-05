@@ -76,28 +76,21 @@ private:
     PP<RegressionTreeNode> root;
     PP<RegressionTreeLeave> first_leave;
     PP<RegressionTreeQueue> priority_queue;
-    Vec first_leave_output;
-    Vec first_leave_error;
  
 /*
   Work fields: they are sized and initialized if need be, at buid time
 */  
  
     int length;
-    int inputsize;
-    int targetsize;
-    int weightsize;
     real l2_loss_function_factor;
     real l1_loss_function_factor;
-    int each_train_sample_index;
     Vec sample_input;
     Vec sample_output;
     Vec sample_target;
     Vec sample_costs;
-    real sample_weight;
-    PP<RegressionTreeNode> node;
     TVec<int> split_cols;
 
+    Vec tmp_vec;
 public:
     RegressionTree();
     virtual              ~RegressionTree();

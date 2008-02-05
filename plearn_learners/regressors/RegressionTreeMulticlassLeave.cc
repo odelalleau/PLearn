@@ -159,12 +159,18 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
     getOutputAndError(outputv,errorv);
 }
 
-void RegressionTreeMulticlassLeave::getOutputAndError(Vec output, Vec error)
+void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
 {
 #ifdef BOUNDCHECK
     if(multiclass_outputs.length()<=0)
         PLERROR("In RegressionTreeMulticlassLeave::getOutputAndError() - multiclass_outputs must not be empty");
 #endif
+    if(length==0){        
+        output.clear();
+        output[0]=MISSING_VALUE;
+        error.clear();
+        return;
+    }
     multiclass_winer = 0;
     for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
     {

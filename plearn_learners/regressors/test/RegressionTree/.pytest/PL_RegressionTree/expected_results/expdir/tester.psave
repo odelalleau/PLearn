@@ -65,10 +65,6 @@ sorted_train_set = *0 ;
 root = *0 ;
 priority_queue = *0 ;
 first_leave = *0 ;
-first_leave_output = []
-;
-first_leave_error = []
-;
 split_cols = []
 ;
 random_gen = *0 ;
