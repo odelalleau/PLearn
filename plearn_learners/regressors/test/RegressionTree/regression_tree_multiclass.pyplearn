@@ -1,14 +1,16 @@
 import os.path
 from plearn.pyplearn import *
 
-plarg_defaults.data    = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat"
+plarg_defaults.datatrain  = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat"
+plarg_defaults.datatest   = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat"
 
-dataset = pl.AutoVMatrix(
-    specification = plargs.data,
-    inputsize = 4,
-    targetsize = 1,
-    weightsize = 0
-    )
+dataset = pl.ConcatRowsVMatrix(
+sources = [ pl.AutoVMatrix(specification=plargs.datatrain,inputsize=2,targetsize=1),
+	pl.AutoVMatrix(specification=plargs.datatest,inputsize=2,targetsize=1) ],
+inputsize=2,
+targetsize=1,
+weightsize=0
+)
 
 learner = pl.HyperLearner(
     option_fields = [ "nstages" ],
@@ -32,13 +34,13 @@ learner = pl.HyperLearner(
         ,report_progress = 1
         ,forget_when_training_set_changes = 1
 #        ,conf_rated_adaboost = 0
-        ,leave_template = pl.RegressionTreeLeave( )
+        ,leave_template = pl.RegressionTreeMulticlassLeave(multiclass_outputs=[ 0, 1 ] )
         ),
     tester = pl.PTester(
-    splitter = pl.FractionSplitter(splits = TMat(1,3,[ (0,0.75), (0,.75), (0.75,1) ])),
-    statnames = [ #'E[train.E[mse]]', 'E[train.E[base_confidence]]', 'E[train.E[base_reward_l2]]', 'E[train.E[base_reward_l1]]',
-                 'E[test1.E[mse]]',  'E[test1.E[base_confidence]]',  'E[test1.E[base_reward_l2]]',  'E[test1.E[base_reward_l1]]',
-                 'E[test2.E[mse]]',  'E[test2.E[base_confidence]]',  'E[test2.E[base_reward_l2]]',  'E[test2.E[base_reward_l1]]'],
+    splitter = pl.FractionSplitter(splits = TMat(1,3,[ (0,200), (0,200), (200,1) ])),
+    statnames = [ #'E[train.E[class_error]]', 'E[train.E[base_confidence]]', 'E[train.E[base_reward_l2]]', 'E[train.E[base_reward_l1]]',
+                 'E[test1.E[class_error]]',  'E[test1.E[base_confidence]]',  'E[test1.E[base_reward_l2]]',  'E[test1.E[base_reward_l1]]',
+                 'E[test2.E[class_error]]',  'E[test2.E[base_confidence]]',  'E[test2.E[base_reward_l2]]',  'E[test2.E[base_reward_l1]]'],
     save_test_outputs = 0 ,
     report_stats = 1  ,
     save_initial_tester = 0 ,
@@ -53,11 +55,11 @@ learner = pl.HyperLearner(
     strategy = [
 
     pl.HyperOptimize(
-    which_cost = "E[test2.E[mse]]" ,
+    which_cost = "E[test2.E[class_error]]" ,
     provide_tester_expdir = 1 ,
     oracle = pl.EarlyStoppingOracle(
     option = "nstages" ,
-    range = [ 1, 61, 20 ],
+    range = [ 1, 5, 1 ],
     min_value = -3.40282e+38 ,
     max_value = 3.40282e+38 ,
     max_degradation = 3.40282e+38 ,
@@ -71,16 +73,16 @@ learner = pl.HyperLearner(
     ]  # end of HyperLearner strategy
     )
 splitter = pl.FractionSplitter(
-    splits = TMat(1,3, [ (0,1), (0,0.75), (0.75,1) ])
+    splits = TMat(1,3, [ (0,1), (0,200), (200,1) ])
     )
 tester = pl.PTester(
     expdir = plargs.expdir,
     dataset = dataset,
     splitter = splitter,
     learner = learner,
-    statnames = [#'E[train.E[mse]]', 'E[train.E[base_confidence]]', 'E[train.E[base_reward_l2]]', 'E[train.E[base_reward_l1]]',
-                 'E[test1.E[mse]]',  'E[test1.E[base_confidence]]',  'E[test1.E[base_reward_l2]]',  'E[test1.E[base_reward_l1]]',
-                 'E[test2.E[mse]]',  'E[test2.E[base_confidence]]',  'E[test2.E[base_reward_l2]]',  'E[test2.E[base_reward_l1]]'],
+    statnames = [#'E[train.E[class_error]]', 'E[train.E[base_confidence]]', 'E[train.E[base_reward_l2]]', 'E[train.E[base_reward_l1]]',
+                 'E[test1.E[class_error]]',  'E[test1.E[base_confidence]]',  'E[test1.E[base_reward_l2]]',  'E[test1.E[base_reward_l1]]',
+                 'E[test2.E[class_error]]',  'E[test2.E[base_confidence]]',  'E[test2.E[base_reward_l2]]',  'E[test2.E[base_reward_l1]]'],
     provide_learner_expdir = 1,
     save_test_costs = 1,
     save_test_outputs = 1,

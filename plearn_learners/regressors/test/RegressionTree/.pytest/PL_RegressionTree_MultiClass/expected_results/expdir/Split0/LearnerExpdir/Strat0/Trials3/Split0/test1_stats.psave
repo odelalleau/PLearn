@@ -1,0 +1,129 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 5 [ "mse" "base_confidence" "base_reward_l2" "base_reward_l1" "class_error" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+full_update_frequency = -1 ;
+window_nan_code = 0 ;
+no_removal_warnings = 0 ;
+stats = 5 [ StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = -146 ;
+sumsquare_ = 146 ;
+sumcube_ = -146 ;
+sumfourth_ = 146 ;
+min_ = 0 ;
+max_ = 1 ;
+agmemin_ = 198 ;
+agemax_ = 199 ;
+first_ = 1 ;
+last_ = 0 ;
+binary_ = 1 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = 15.3877551020408116 ;
+sumsquare_ = 4.4742631746576258 ;
+sumcube_ = 1.30326420202302096 ;
+sumfourth_ = 0.380403205233986463 ;
+min_ = 0.653061224489795866 ;
+max_ = 1 ;
+agmemin_ = 199 ;
+agemax_ = 140 ;
+first_ = 0.653061224489795866 ;
+last_ = 0.653061224489795866 ;
+binary_ = 0 ;
+integer_ = 0 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = 292 ;
+sumsquare_ = 584 ;
+sumcube_ = 1168 ;
+sumfourth_ = 2336 ;
+min_ = -1 ;
+max_ = 1 ;
+agmemin_ = 199 ;
+agemax_ = 198 ;
+first_ = -1 ;
+last_ = 1 ;
+binary_ = 0 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = 292 ;
+sumsquare_ = 584 ;
+sumcube_ = 1168 ;
+sumfourth_ = 2336 ;
+min_ = -1 ;
+max_ = 1 ;
+agmemin_ = 199 ;
+agemax_ = 198 ;
+first_ = -1 ;
+last_ = 1 ;
+binary_ = 0 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = -146 ;
+sumsquare_ = 146 ;
+sumcube_ = -146 ;
+sumfourth_ = 146 ;
+min_ = 0 ;
+max_ = 1 ;
+agmemin_ = 198 ;
+agemax_ = 199 ;
+first_ = 1 ;
+last_ = 0 ;
+binary_ = 1 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )

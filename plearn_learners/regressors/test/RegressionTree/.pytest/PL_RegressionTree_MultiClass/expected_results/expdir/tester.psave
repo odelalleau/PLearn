@@ -1,0 +1,204 @@
+PTester(
+expdir = "PYTEST__PL_RegressionTree_MultiClass__RESULTS:expdir/" ;
+dataset = *1 ->ConcatRowsVMatrix(
+sources = 2 [ *2 ->AutoVMatrix(
+filename = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat" ;
+load_in_memory = 0 ;
+writable = 0 ;
+length = 200 ;
+width = 3 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.metadata/"  )
+*3 ->AutoVMatrix(
+filename = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat" ;
+load_in_memory = 0 ;
+writable = 0 ;
+length = 6831 ;
+width = 3 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat.metadata/"  )
+] ;
+fill_missing = 0 ;
+fully_check_mappings = 0 ;
+only_common_fields = 0 ;
+writable = 0 ;
+length = 7031 ;
+width = 3 ;
+inputsize = 2 ;
+targetsize = 1 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = ""  )
+;
+splitter = *4 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  3  [ 
+(0 , 1 )	(0 , 200 )	(200 , 1 )	
+]
+ )
+;
+statnames = 8 [ "E[test1.E[class_error]]" "E[test1.E[base_confidence]]" "E[test1.E[base_reward_l2]]" "E[test1.E[base_reward_l1]]" "E[test2.E[class_error]]" "E[test2.E[base_confidence]]" "E[test2.E[base_reward_l2]]" "E[test2.E[base_reward_l1]]" ] ;
+statmask = []
+;
+learner = *5 ->HyperLearner(
+tester = *6 ->PTester(
+expdir = "" ;
+dataset = *0 ;
+splitter = *7 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  3  [ 
+(0 , 200 )	(0 , 200 )	(200 , 1 )	
+]
+ )
+;
+statnames = 8 [ "E[test1.E[class_error]]" "E[test1.E[base_confidence]]" "E[test1.E[base_reward_l2]]" "E[test1.E[base_reward_l1]]" "E[test2.E[class_error]]" "E[test2.E[base_confidence]]" "E[test2.E[base_reward_l2]]" "E[test2.E[base_reward_l1]]" ] ;
+statmask = []
+;
+learner = *8 ->RegressionTree(
+missing_is_valid = 0 ;
+loss_function_weight = 1 ;
+maximum_number_of_nodes = 50 ;
+compute_train_stats = 1 ;
+complexity_penalty_factor = 0 ;
+multiclass_outputs = []
+;
+leave_template = *9 ->RegressionTreeMulticlassLeave(
+multiclass_outputs = 2 [ 0 1 ] ;
+objective_function = "l1" ;
+multiclass_weights_sum = []
+;
+l1_loss_function_factor = 0 ;
+l2_loss_function_factor = 0 ;
+id = -1 ;
+missing_leave = 0 ;
+loss_function_weight = 0 ;
+verbosity = 0 ;
+train_set = *0 ;
+length = 0 ;
+weights_sum = 0 ;
+targets_sum = 0 ;
+weighted_targets_sum = 0 ;
+weighted_squared_targets_sum = 0 ;
+loss_function_factor = 1 ;
+output = []
+;
+error = []
+ )
+;
+sorted_train_set = *0 ;
+root = *0 ;
+priority_queue = *0 ;
+first_leave = *0 ;
+split_cols = []
+;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 1 ;
+nstages = 10 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 0 ;
+save_stat_collectors = 1 ;
+save_learners = 0 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 0 ;
+call_forget_in_run = 1 ;
+save_test_costs = 0 ;
+save_test_names = 0 ;
+provide_learner_expdir = 1 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = []
+;
+save_test_confidence = 0 ;
+enforce_clean_expdir = 1  )
+;
+option_fields = 1 [ "nstages" ] ;
+dont_restart_upon_change = 1 [ "nstages" ] ;
+strategy = 1 [ *10 ->HyperOptimize(
+which_cost = "E[test2.E[class_error]]" ;
+min_n_trials = 0 ;
+oracle = *11 ->EarlyStoppingOracle(
+option = "nstages" ;
+values = []
+;
+range = 3 [ 1 5 1 ] ;
+min_value = -3.40282000000000014e+38 ;
+max_value = 3.40282000000000014e+38 ;
+max_degradation = 3.40282000000000014e+38 ;
+relative_max_degradation = -1 ;
+min_improvement = -3.40282000000000014e+38 ;
+relative_min_improvement = -1 ;
+max_degraded_steps = 120 ;
+min_n_steps = 2  )
+;
+provide_tester_expdir = 1 ;
+sub_strategy = []
+;
+rerun_after_sub = 0 ;
+provide_sub_expdir = 1 ;
+save_best_learner = 0 ;
+splitter = *0  )
+] ;
+provide_strategy_expdir = 1 ;
+save_final_learner = 0 ;
+learner = *8  ;
+provide_learner_expdir = 1 ;
+expdir_append = "" ;
+forward_nstages = 0 ;
+random_gen = *0 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 1 ;
+save_stat_collectors = 1 ;
+save_learners = 1 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 1 ;
+call_forget_in_run = 1 ;
+save_test_costs = 1 ;
+save_test_names = 1 ;
+provide_learner_expdir = 1 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = []
+;
+save_test_confidence = 1 ;
+enforce_clean_expdir = 1  )
