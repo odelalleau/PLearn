@@ -68,12 +68,6 @@ private:
     real l2_loss_function_factor;
     Vec multiclass_weights_sum;
  
-/*
-  Work fields: they are sized and initialized if need be, at buid time
-*/  
- 
-    int multiclass_winer;
-  
 public:
     RegressionTreeMulticlassLeave();
     virtual              ~RegressionTreeMulticlassLeave();
