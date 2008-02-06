@@ -240,7 +240,7 @@ inline bool fast_is_more(real a, real b, real absolute_tolerance_threshold = 1.0
                           real absolute_tolerance = ABSOLUTE_TOLERANCE,
                           real relative_tolerance = RELATIVE_TOLERANCE)
 {
-    return !fast_is_equal(a,b,absolute_tolerance_threshold,absolute_tolerance,relative_tolerance) && a>b;
+    return a>b && !fast_is_equal(a,b,absolute_tolerance_threshold,absolute_tolerance,relative_tolerance);
 }
 
 //! Test float inequality while dealling with 'nan' and 'inf' values.
@@ -248,7 +248,7 @@ inline bool is_more(real a, real b, real absolute_tolerance_threshold = 1.0,
                           real absolute_tolerance = ABSOLUTE_TOLERANCE,
                           real relative_tolerance = RELATIVE_TOLERANCE)
 {
-    return !is_equal(a,b,absolute_tolerance_threshold,absolute_tolerance,relative_tolerance) && a>b;
+    return a>b && !is_equal(a,b,absolute_tolerance_threshold,absolute_tolerance,relative_tolerance);
 
 }
 
