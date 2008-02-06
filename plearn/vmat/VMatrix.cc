@@ -189,7 +189,7 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("TVec of field names.\n")));
 
      declareMethod(
-        rmm, "getFieldIndex", &VMatrix::getFieldIndex,
+        rmm, "getFieldIndex", &VMatrix::remote_getFieldIndex,
         (BodyDoc("Returns the index of a field.\n"),
          ArgDoc ("fname_or_num",
              "Field name or index (as a string) of the field.\n"),

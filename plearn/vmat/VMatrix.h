@@ -194,6 +194,9 @@ public:
      *  PLERROR issued if this fails).
      */
     int getFieldIndex(const string& fieldname_or_num,const bool error=true) const;
+    int remote_getFieldIndex(const string& fieldname_or_num) const{
+        return getFieldIndex(fieldname_or_num);
+    }
 
     /// Return the field name at a given index
     string fieldName(int fieldindex) const
