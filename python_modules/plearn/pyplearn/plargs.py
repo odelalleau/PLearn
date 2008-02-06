@@ -1031,6 +1031,14 @@ class _TmpHolder:
 #         return super(ListMap, self).__getitem__(key)
     
 
+
+def printAllOptions(out= sys.stdout):
+    for namespace in plargs.getNamespaces():
+        for opt in plopt.iterator(namespace):
+            print >>out, namespace.__name__+'.'+opt.getName()+'='+str(opt.get())
+
+
+
 #######  For backward compatibily: will be deprecated soon  ###################
 
 class plargs_binder(plargs):
