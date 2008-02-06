@@ -59,7 +59,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "  - 'hidden_activations.state' : activations of hidden units (given visible)\n"
     "  - 'visible_sample' : random sample obtained on visible units (input or output port)\n"
     "  - 'visible_expectation' : expectation of visible units (output port ONLY)\n"
-    "  - 'visible_activation' : ectation of visible units (output port ONLY)\n"
+    "  - 'visible_activation' : activation of visible units (output port ONLY)\n"
     "  - 'hidden_sample' : random sample obtained on hidden units\n"
     "  - 'energy' : energy of the joint (visible,hidden) pair or free-energy\n"
     "               of the visible (if given) or of the hidden (if given).\n"
@@ -87,6 +87,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "     values (expectations) through the conditional expectations of hidden | visible.\n"
     "  - 'reconstruction_error.state' : the auto-associator reconstruction error (NLL)\n"
     "    obtained by matching the visible_reconstruction with the given visible.\n"
+    "Note that the above determnistic reconstruction may be made stochastic\n"
+    "by using the advanced option 'stochastic_reconstruction'.\n"
     "If compute_contrastive_divergence is true, then the RBM also has these ports\n"
     "  - 'contrastive_divergence' : the quantity minimized by contrastive-divergence training.\n"
     "  - 'negative_phase_visible_samples.state' : the negative phase stochastic reconstruction\n"
@@ -116,6 +118,7 @@ RBMModule::RBMModule():
     log_partition_function(0),
     partition_function_is_stale(true),
     deterministic_reconstruction_in_cd(false),
+    stochastic_reconstruction(false),
     standard_cd_grad(true),
     standard_cd_bias_grad(true),
     standard_cd_weights_grad(true),
@@ -131,6 +134,8 @@ RBMModule::RBMModule():
 ////////////////////
 void RBMModule::declareOptions(OptionList& ol)
 {
+    // Build options.
+    
     declareOption(ol, "visible_layer", &RBMModule::visible_layer,
                   OptionBase::buildoption,
         "Visible layer of the RBM.");
@@ -147,6 +152,14 @@ void RBMModule::declareOptions(OptionList& ol)
                   &RBMModule::reconstruction_connection,
                   OptionBase::buildoption,
         "Reconstruction connection between the hidden and visible layers.");
+
+    declareOption(ol, "stochastic_reconstruction",
+                  &RBMModule::stochastic_reconstruction,
+                  OptionBase::buildoption,
+        "If set to true, then reconstruction is not deterministic. Instead,\n"
+        "we sample a hidden vector given the visible input, then use the\n"
+        "visible layer's expectation given this sample as reconstruction.",
+                  OptionBase::advanced_level);
 
     declareOption(ol, "grad_learning_rate", &RBMModule::grad_learning_rate,
                   OptionBase::buildoption,
@@ -239,6 +252,8 @@ void RBMModule::declareOptions(OptionList& ol)
                   "i.e. take stochastic gradient steps w.r.t. the log-likelihood instead\n"
                   "of w.r.t. the contrastive divergence.\n");
 
+    // Learnt options.
+    
     declareOption(ol, "Gibbs_step",
                   &RBMModule::Gibbs_step,
                   OptionBase::learntoption,
@@ -946,16 +961,21 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         PLASSERT( ports_value.length() == nPorts() );
 
         Mat h;
-        if (hidden && !hidden_is_output)
+        if (hidden && !hidden_is_output) {
             h = *hidden;
-        else {
+            PLASSERT(!stochastic_reconstruction);
+        } else {
             if(!hidden_expectations_are_computed)
             {
                 computePositivePhaseHiddenActivations(*visible);
                 hidden_layer->computeExpectations();
                 hidden_expectations_are_computed=true;
             }
-            h = hidden_layer->getExpectations();
+            if (stochastic_reconstruction) {
+                hidden_layer->generateSamples();
+                h = hidden_layer->samples;
+            } else
+                h = hidden_layer->getExpectations();
         }
 
         // Don't need to verify if they are asked in a port, this was done previously
@@ -995,6 +1015,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     else if ( visible_reconstruction && visible_reconstruction_is_output
          && hidden && !hidden_is_output)
     {
+        PLASSERT_MSG(!stochastic_reconstruction,
+                     "Not yet implemented");
         // Don't need to verify if they are asked in a port, this was done previously
         computeVisibleActivations(*hidden,true);
         if(visible_reconstruction_activations)
@@ -1333,6 +1355,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* visible = ports_value[getPortIndex("visible")];
     Mat* visible_grad = ports_gradient[getPortIndex("visible")];
     Mat* hidden_grad = ports_gradient[getPortIndex("hidden.state")];
+    Mat* hidden_activations_grad =
+        ports_gradient[getPortIndex("hidden_activations.state")];
     Mat* hidden = ports_value[getPortIndex("hidden.state")];
     hidden_act = ports_value[getPortIndex("hidden_activations.state")];
     Mat* visible_activations = ports_value[getPortIndex("visible_activations.state")];
@@ -1372,11 +1396,14 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     bool compute_visible_grad = visible_grad && visible_grad->isEmpty();
     bool compute_hidden_grad = hidden_grad && hidden_grad->isEmpty();
     bool compute_weights_grad = weights_grad && weights_grad->isEmpty();
+    bool provided_hidden_grad = hidden_grad && !hidden_grad->isEmpty();
+    bool provided_hidden_act_grad = hidden_activations_grad &&
+                                    !hidden_activations_grad->isEmpty();
 
     int mbs = (visible && !visible->isEmpty()) ? visible->length() : -1;
 
     // BPROP of UPWARD FPROP
-    if (hidden_grad && !hidden_grad->isEmpty())
+    if (provided_hidden_grad || provided_hidden_act_grad)
     {
         // Note: the assert below is for behavior compatibility with previous
         // code. It might not be necessary, or might need to be modified.
@@ -1390,11 +1417,27 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         else
            setAllLearningRates(grad_learning_rate);
 
-        PLASSERT_MSG( hidden && hidden_act , "To compute gradients in bprop, the hidden_activations.state port must have been filled during fprop");
+        PLASSERT_MSG( hidden && hidden_act ,
+                      "To compute gradients in bprop, the "
+                      "hidden_activations.state port must have been filled "
+                      "during fprop" );
+
         // Compute gradient w.r.t. activations of the hidden layer.
-        hidden_layer->bpropUpdate(
-                *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
-                false);
+        if (provided_hidden_grad)
+            hidden_layer->bpropUpdate(
+                    *hidden_act, *hidden, hidden_act_grad, *hidden_grad,
+                    false);
+        if (provided_hidden_act_grad) {
+            if (!provided_hidden_grad) {
+                // 'hidden_act_grad' will not have been resized nor filled yet,
+                // so we need to do it now.
+                hidden_act_grad.resize(hidden_activations_grad->length(),
+                                       hidden_activations_grad->width());
+                hidden_act_grad.clear();
+            }
+            hidden_act_grad += *hidden_activations_grad;
+        }
+
         if (hidden_bias_grad)
         {
             PLASSERT( hidden_bias_grad->isEmpty() &&
@@ -1920,7 +1963,8 @@ void RBMModule::forget()
     hidden_layer->forget();
     visible_layer->forget();
     connection->forget();
-    if (reconstruction_connection)
+    if (reconstruction_connection && reconstruction_connection != connection)
+        // We avoid to call forget() twice if the connections are the same.
         reconstruction_connection->forget();
 }
 
