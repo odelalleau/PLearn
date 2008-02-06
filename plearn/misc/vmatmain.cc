@@ -180,6 +180,7 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
     for(int i=0; i<k; i++)
     {
         name[i] = vmats[i]->getMetaDataDir();
+        name[i] = name[i].erase(name[i].size()-10);
         pout << name[i] << ": \t " << vmats[i]->length() << " x " << vmats[i]->width() << endl;
     }
 
@@ -191,19 +192,23 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
     {
         // TVec<RealMapping> ranges = vm->getRanges();
 
-        pout << "Field (0.." << w-1 << ") [low high] ? " << flush;
         vector<string> command;
         int varnum = -1;
         real low = -FLT_MAX; // means autorange
         real high = FLT_MAX; // means autorange
         do
         {
+            pout << "Field (0.." << w-1 << ") [low high] or exit? " << flush;
             command = split(pgetline(cin));
             if(command.size()==0)
                 vmats[0]->printFields(pout);
+            else if(command.size()==1&&command[0]=="exit")
+                exit(0);
             else
             {
-                varnum = vmats[0]->getFieldIndex(command[0]);
+                varnum = vmats[0]->getFieldIndex(command[0],false);
+                if(varnum == -1)
+                    pout<<"Bad column name or number("<<command[0]<<")"<<endl;
                 if(varnum<0 || varnum>=w)
                     vmats[0]->printFields(pout);
                 else if(command.size()==3)
@@ -235,7 +240,8 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
         if(is_equal(low,-FLT_MAX))
             gp << "set xrange [*:*]" << endl;      
         else
-            gp << "set xrange [" << low << ":" << high << "]" << endl;
+            //The -0.01 and 0.01 is to clearly see the end value.
+            gp << "set xrange [" << low-0.01 << ":" << high+0.01 << "]" << endl;
 
         if(k>=4)
             gp.plot(m[0],"title '"+name[0]+"'", m[1], "title '" + name[1]+"'", m[2], "title '" + name[2]+"'", m[3], "title '"+name[3]+"'");    
@@ -949,8 +955,12 @@ int vmatmain(int argc, char** argv)
     {
         if(!(argc==4||argc==5||argc==6))
             PLERROR("vmat compare_stats must be used that way: vmat compare_stats <dataset1> <dataset2> [stderror threshold] [missing threshold]");
-        VMat m1 = getDataSet(argv[2]);
-        VMat m2 = getDataSet(argv[3]);
+
+        VMat m1 = getVMat(argv[2], indexf);
+        VMat m2 = getVMat(argv[3], indexf);
+
+        m1->compatibleSizeError(m2);
+
         real stderror_threshold = 1;
         real missing_threshold = 10;
         if(argc>4)
@@ -959,12 +969,13 @@ int vmatmain(int argc, char** argv)
             missing_threshold=toreal(argv[5]);
         real sumdiff_stderr = 0;
         real sumdiff_missing = 0;
+        pout << "Test of difference that suppose gaussiane variable"<<endl;
         int diff = m1->compareStats(m2, stderror_threshold, missing_threshold,
                                     &sumdiff_stderr, &sumdiff_missing);
-        cout<<"There are "<<diff<<"/"<<m1.width()
+        pout<<"There are "<<diff<<"/"<<m1.width()
             <<" fields that have different stats"<<endl;
-        cout <<"The sum of stderror difference is "<<sumdiff_stderr<<endl;
-        cout <<"The sum of missing difference is "<<sumdiff_missing<<endl;
+        pout <<"The sum of stderror difference is "<<sumdiff_stderr<<endl;
+        pout <<"The sum of missing difference is "<<sumdiff_missing<<endl;
 
     }
     else
