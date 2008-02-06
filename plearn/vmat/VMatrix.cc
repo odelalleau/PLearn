@@ -1243,6 +1243,23 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
         || this->extrasize()  != m->extrasize() );
 }
 
+void VMatrix::compatibleSizeError(const VMat& m){
+#define MY_PRINT_ERROR_MST(NAME) PLERROR("In VMatrix::looksTheSameAsError The matrix are not compatible!\n m1."#NAME"=%d and m2."#NAME"=%d", this->NAME(), m->NAME());
+
+    if(this->width()      != m->width())
+        MY_PRINT_ERROR_MST(width)
+    else if(this->inputsize()  != m->inputsize())
+        MY_PRINT_ERROR_MST(inputsize)
+    else if(this->weightsize() != m->weightsize())
+        MY_PRINT_ERROR_MST(weightsize)
+    else if(this->targetsize() != m->targetsize())
+        MY_PRINT_ERROR_MST(targetsize)
+    else if(this->extrasize()  != m->extrasize() )
+        MY_PRINT_ERROR_MST(extrasize)
+#undef MY_PRINT_ERROR_MST
+}
+
+
 ////////////
 // getPid //
 ////////////
@@ -1940,8 +1957,15 @@ int VMatrix::compareStats(const VMat& target,
         real lmissing = lstats.nmissing()/lstats.n();
         real terr = sqrt(tmissing*(1-tmissing)+lmissing*(1-lmissing));
         real th = fabs(tmissing-lmissing)/terr;
-        if(terr==0)
-            PLCHECK(tmissing==0 && lmissing==0);
+        if(fast_is_equal(terr,0))
+        {
+            if(!fast_is_equal(tmissing,0)||!fast_is_equal(lmissing,0))
+                PLWARNING("In VMatrix::compareStats - field %d(%s)terr=%f,"
+                          " tmissing=%f, lmissing=%f!",i, fieldName(i).c_str(),
+                          terr, tmissing, lmissing);
+            PLCHECK((fast_is_equal(tmissing,0)||fast_is_equal(tmissing,1))
+                    && (fast_is_equal(lmissing,0)||fast_is_equal(lmissing,1)));
+        }
         else if(isnan(th))
             PLWARNING("In VMatrix::compareStats - should not happen!");
         else

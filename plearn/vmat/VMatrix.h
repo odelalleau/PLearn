@@ -265,6 +265,10 @@ public:
     /// width and length.
     bool looksTheSameAs(const VMat& m);
 
+    /// generate an PLERROR iif it don't looks like the same matrix,
+    /// i.e. it has same sizes and width.
+    void compatibleSizeError(const VMat& m);
+
     /**
      *  This should be called by the build method of every VMatrix that has a
      *  metadatadir.  It will create said directory if it doesn's already
