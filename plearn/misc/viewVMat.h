@@ -45,8 +45,9 @@ namespace PLearn {
 using namespace std;
 
 //! Enters curses interactive view of dataset vm.
-//! dataset_spec is the optional specification of the dataset that will be used to "reload" it
-void viewVMat(const VMat& vm, string dataset_spec="");
+//! 'filename' is the optional filename of the dataset, that may be used to
+//! reload it.
+void viewVMat(const VMat& vm, PPath filename = "");
 
 } // end of namespace PLearn
 

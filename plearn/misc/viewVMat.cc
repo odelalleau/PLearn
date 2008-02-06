@@ -155,7 +155,7 @@ bool getList(char* str, int curj, const VMat& vm, Vec& outList,
     return invalidInput;
 }
 
-void viewVMat(const VMat& vm, string dataset_spec)
+void viewVMat(const VMat& vm, PPath filename)
 {
     initscr();
     cbreak();
@@ -621,12 +621,12 @@ void viewVMat(const VMat& vm, string dataset_spec)
                 move(LINES-1, (int) strlen(strmsg));
                 char c[200];
                 getnstr(c, 200);
-                if (string(c) != "")
-                    dataset_spec = c;
+                if (!string(c).empty())
+                    filename = string(c);
                 VMat new_vm;
                 bool error = false;
                 try {
-                    new_vm = getDataSet(dataset_spec);
+                    new_vm = getDataSet(filename);
                 } catch(const PLearnError&) {
                     error = true;
                 }
@@ -645,7 +645,7 @@ void viewVMat(const VMat& vm, string dataset_spec)
                     refresh();
                     endwin();
                     // And launch the new one.
-                    viewVMat(new_vm);
+                    viewVMat(new_vm, filename);
                 }
             }
             break;
@@ -995,8 +995,8 @@ BEGIN_DECLARE_REMOTE_FUNCTIONS
                     (BodyDoc("Displays a VMat's contents using curses.\n"),
                      ArgDoc("vm",
                             "the VMat to display"),
-                     ArgDoc("dataset_spec",
-                            "optional specification of the dataset that will be used to 'reload' it (\"\" works just fine)")));
+                     ArgDoc("filename",
+                            "optional filename of the dataset, that may be used to reload it (\"\" works just fine)")));
 
 END_DECLARE_REMOTE_FUNCTIONS
 
