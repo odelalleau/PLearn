@@ -841,3 +841,18 @@ def testAllModes():
 
     ## Verify that directory is empty
     print os.listdir(os.getcwd())
+
+
+class rundiff(ResultsBasedMode):
+    """Redo the diff of last execution.
+    
+    Usage: pytest rundiff <test_name>
+    """
+    RoutineType = DiffTestRoutine
+    def empty(self):
+        pass
+
+    def __init__(self, targets, options):
+        super(rundiff, self).__init__(targets, options)
+
+
