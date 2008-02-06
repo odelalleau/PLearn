@@ -881,6 +881,7 @@ TVec<string> PLearner::getOutputNames() const
 // useOnTrain //
 ////////////////
 void PLearner::useOnTrain(Mat& outputs) const {
+    outputs.resize(train_set.length(), outputsize());
     VMat train_output(outputs);
     use(train_set, train_output);
 }
