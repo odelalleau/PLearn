@@ -465,7 +465,7 @@ void DeepReconstructorNet::prepareForFineTuning()
     // displayVarGraph(totalcost);
 
     VarArray params = totalcost->parents();
-    supervised_optimizer->setToOptimize(params, totalcost);
+    fine_tuning_optimizer->setToOptimize(params, totalcost);
 }
 
 
@@ -530,9 +530,9 @@ void DeepReconstructorNet::fineTuningFor1Epoch()
         train_stats = new VecStatsCollector();
 
     int l = train_set->length();
-    supervised_optimizer->reset();
-    supervised_optimizer->nstages = l/minibatch_size;
-    supervised_optimizer->optimizeN(*train_stats);
+    fine_tuning_optimizer->reset();
+    fine_tuning_optimizer->nstages = l/minibatch_size;
+    fine_tuning_optimizer->optimizeN(*train_stats);
 }
 
 /*
@@ -552,8 +552,8 @@ void DeepReconstructorNet::fineTuningFullOld()
     for(int n=0; n<nepochs && relative_improvement >= fine_tuning_improvement_rate; n++)
     {
         st.forget();
-        supervised_optimizer->nstages = l/minibatch_size;
-        supervised_optimizer->optimizeN(st);
+        fine_tuning_optimizer->nstages = l/minibatch_size;
+        fine_tuning_optimizer->optimizeN(st);
         const StatsCollector& s = st.getStats(0);
         real m = s.mean();
         perr << "Epoch " << n+1 << " mean error: " << m << " +- " << s.stderror() << endl;
