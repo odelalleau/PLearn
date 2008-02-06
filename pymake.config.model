@@ -257,7 +257,7 @@ options_choices = [
     'purify', 'quantify', 'vc++', 'condor' ],
   
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
-    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg', 'vecgcc' ],
+    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg', 'vecgcc', 'openmpgcc' ],
   
   [ 'double', 'float' ],
   
@@ -642,6 +642,12 @@ pymakeOption( name = 'opt',
 pymakeOption( name = 'vecgcc',
               description = 'vectorized with gcc compiler in opt mode',
               compileroptions = '-Wall -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -msse2',
+              cpp_definitions = ['NDEBUG'] )
+
+pymakeOption( name = 'openmpgcc',
+              description = 'vectorized with gcc compiler in opt mode',
+              compileroptions = '-Wall -O3 -fopenmp -msse2',
+              linkeroptions = '-lgomp',
               cpp_definitions = ['NDEBUG'] )
 
 pymakeOption( name = 'pintel',
