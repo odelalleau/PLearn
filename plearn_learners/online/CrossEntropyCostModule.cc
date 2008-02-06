@@ -152,18 +152,18 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT( cost );
         PLASSERT( !target_grad );
 
-        PLASSERT( prediction->width() == port_sizes(0,1) );
-        PLASSERT( target->width() == port_sizes(1,1) );
-        PLASSERT( cost->width() == port_sizes(2,1) );
-        PLASSERT( prediction_grad->width() == port_sizes(0,1) );
-        PLASSERT( cost_grad->width() == port_sizes(2,1) );
+        PLASSERT( prediction->width() == getPortSizes()(0,1) );
+        PLASSERT( target->width() == getPortSizes()(1,1) );
+        PLASSERT( cost->width() == getPortSizes()(2,1) );
+        PLASSERT( prediction_grad->width() == getPortSizes()(0,1) );
+        PLASSERT( cost_grad->width() == getPortSizes()(2,1) );
 
         int batch_size = prediction->length();
         PLASSERT( target->length() == batch_size );
         PLASSERT( cost->length() == batch_size );
         PLASSERT( cost_grad->length() == batch_size );
 
-        prediction_grad->resize(batch_size, port_sizes(0,1));
+        prediction_grad->resize(batch_size, getPortSizes()(0,1));
 
         for( int i=0; i < batch_size; i++ )
             for ( int j=0; j < target->width(); j++ ) 
@@ -171,7 +171,12 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 (*cost_grad)(i,0)*((*target)(i,j) - sigmoid(-(*prediction)(i,j) ));
     }
 
-    else if( !prediction_grad && !target_grad && !cost_grad )
+    else if( !prediction_grad && !target_grad &&
+               (!cost_grad || !cost_grad->isEmpty()) )
+        // We do not care about the gradient w.r.t prediction and target, and
+        // either we do not care about the gradient w.r.t. cost or there is a
+        // gradient provided (that we will not use).
+        // In such situations, there is nothing to do.
         return;
     else if( !cost_grad && prediction_grad && prediction_grad->isEmpty() )
         PLERROR("In CrossEntropyCostModule::bpropAccUpdate - cost gradient is NULL,\n"
