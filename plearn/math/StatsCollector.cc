@@ -1522,8 +1522,9 @@ void StatsCollector::merge(const StatsCollector& other)
 
 void StatsCollector::calculate_binary_integer()
 {
-    if(maxnvalues!=0 && nnonmissing_>0)
+    if(binary_==-1 && maxnvalues!=0 && nnonmissing_>0)
     {
+        PLCHECK(integer_==-1);
         binary_  = true;
         integer_ = true;
         for(map<real, StatsCollectorCounts>::iterator it = counts.begin();
