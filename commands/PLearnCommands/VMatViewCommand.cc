@@ -60,9 +60,9 @@ VMatViewCommand::VMatViewCommand()
 //! The actual implementation of the 'VMatViewCommand' command
 void VMatViewCommand::run(const vector<string>& args)
 {
-    string vmat_view_dataset = string(args[0]);
+    PPath vmat_view_dataset(args[0]);
     VMat vm = getDataSet(vmat_view_dataset);
-    viewVMat(vm);
+    viewVMat(vm, vmat_view_dataset);
 }
 
 } // end of namespace PLearn
