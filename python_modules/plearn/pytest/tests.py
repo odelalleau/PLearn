@@ -346,6 +346,7 @@ class Test(PyTestObject):
     ignored_files_re = PLOption([])
     disabled         = PLOption(False)
     runtime          = PLOption(None)
+    difftime         = PLOption(None)
 
     #######  Class Variables and Methods  #########################################
     # NB: Class variables could now all be 'public', laziness is why it isn't so...
@@ -571,21 +572,25 @@ class Test(PyTestObject):
         statsHeader = TestStatus.summaryHeader()
 
         # Hackish hardcoded display summing to 80...
-        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+3; T = 11
+        C = 6; S = len("** FAILED **")+2; H = len(statsHeader)+3; T = 0
+        if Program.showtime:
+            T = 16
         N = 80 - (C+S+H+T); 
-        def vpformat(c, n, s, h, t):
+        def vpformat(c, n, s, h, t, d):
             if len(n) < N:
-                logging.info( c.ljust(C)+n.ljust(N)+s.center(S)+h.center(H)
-                              +t.ljust(T))
+                str=c.ljust(C)+n.ljust(N)+s.center(S)+h.center(H)
             else:
                 logging.info( c.ljust(C)+n.ljust(N) )
-                logging.info( ((C+N)*" ")+s.center(S)+h.center(H)+t.ljust(T))
+                str=((C+N)*" ")+s.center(S)+h.center(H)
+            if Program.showtime:
+                str+=t.rjust(T/2)+d.ljust(T/2)
+            logging.info(str)
         
         if self._status.isCompleted():
             if not self._logged_header:
                 logging.info(TestStatus.headerLegend(C+N+S+H+T)+'\n')
                 vpformat("N/%d"%self._test_count, "Test Name", "Status",
-                         statsHeader,"Run time(s)")
+                         statsHeader,"Run/Diff"," time(s)")
                 self.__class__._logged_header = True
 
             if self._log_count%5 == 0:
@@ -594,7 +599,7 @@ class Test(PyTestObject):
             self.__class__._log_count += 1
             vpformat(str(self._log_count), self.getName(),
                      str(self._status), TestStatus.summary(),
-                     "%10.4s"%self.runtime)
+                     "%.6s/"%self.runtime,"%.6s"%self.difftime)
 
     def toBeNeglected(self):
         neglect = False
@@ -834,6 +839,8 @@ class RunTestRoutine( ResultsRelatedRoutine ):
 
         diffs = []
         plearn_exec = None
+
+        starttime = time()
         if self.test.pfileprg is not None:
             if self.test.pfileprg.compile():
                 plearn_exec = self.test.pfileprg.getInternalExecPath()
@@ -843,7 +850,10 @@ class RunTestRoutine( ResultsRelatedRoutine ):
         diffs.extend(
             pldiff.pldiff(self.expected_results, self.run_results,
                           self.test.precision, plearn_exec, self.test.ignored_files_re))
+        endtime = time()
         popd()
+
+        self.test.difftime = endtime - starttime
 
         # Set status
         logging.debug("diffs: %s"%str(diffs))

@@ -759,6 +759,9 @@ class ResultsBasedMode(RoutineBasedMode):
         ogroups[1].add_option( '--no-compile', default=False,
                                action="store_true",
                                help='Any program compilation is bypassed.' )
+        ogroups[1].add_option( '--showtime', default=False,
+                               action = "store_true",
+                               help="If true, print the run time and diff time" )
 
         return ogroups        
     option_groups = classmethod(option_groups)
@@ -766,6 +769,8 @@ class ResultsBasedMode(RoutineBasedMode):
     def __init__(self, targets, options):
         logging.debug("--no-compile (=%s) option forwarded to Program."%options.no_compile)
         Program.compilation_disabled = options.no_compile        
+        logging.debug("--showtime (=%s) option forwarded to Program."%options.showtime)
+        Program.showtime = options.showtime
         super(ResultsBasedMode, self).__init__(targets, options)
     
 class results(ResultsBasedMode):
@@ -795,6 +800,18 @@ class results(ResultsBasedMode):
 class run(ResultsBasedMode):    
     RoutineType = RunTestRoutine
 
+class rundiff(ResultsBasedMode):
+    """Redo the diff of last execution.
+    
+    Usage: pytest rundiff <test_name>
+    """
+    RoutineType = DiffTestRoutine
+
+    def empty(self):
+        pass
+
+    def __init__(self, targets, options):
+        super(rundiff, self).__init__(targets, options)
 
 #######  Builtin Unit Tests  ##################################################
 
@@ -841,18 +858,5 @@ def testAllModes():
 
     ## Verify that directory is empty
     print os.listdir(os.getcwd())
-
-
-class rundiff(ResultsBasedMode):
-    """Redo the diff of last execution.
-    
-    Usage: pytest rundiff <test_name>
-    """
-    RoutineType = DiffTestRoutine
-    def empty(self):
-        pass
-
-    def __init__(self, targets, options):
-        super(rundiff, self).__init__(targets, options)
 
 
