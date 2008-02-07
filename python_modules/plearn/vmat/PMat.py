@@ -362,6 +362,19 @@ class PMat( VMat ):
             ar.byteswap(True)
         return ar
 
+    def checkzerorow(self,i):
+        if i<0 or i>self.length:
+            raise IndexError('PMat index out of range')
+        self.f.seek(64+i*self.rowsize)
+        data = self.f.read(self.rowsize)
+        ar = numpy.numarray.fromstring(data, self.elemtype, (len(data)/self.elemsize,))
+        if self.swap_bytes:
+            ar.byteswap(True)
+        for elem in ar:
+            if elem!=0:
+                return False
+        return True
+    
     def putRow(self,i,row):
         if i<0 or i>=self.length:
             raise IndexError('PMat index out of range')
