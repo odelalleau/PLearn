@@ -62,7 +62,18 @@ void HelpCommand::helpOverview()
         "To get a short description of available commands:   " + prgname() + " help commands \n"
         "To get detailed help on a specific command:         " + prgname() + " help <command_name> \n"
         "To get help on a specific PLearn object:            " + prgname() + " help <object_type_name> \n"
-        "To get help on datasets:                            " + prgname() + " help datasets \n" 
+        "To get help on datasets:                            " + prgname() + " help datasets \n\n" 
+        ""
+        "Global parameter:\n"
+        "                 --no-version: do not print the version \n"
+        "                 --verbosity LEVEL: The level of log to print.\n"
+        "                     Must have been compiled with the same level of more\n"
+        "                     Available level:\n"
+        "                             VLEVEL_MAND    // Mandatory\n"
+        "                             VLEVEL_IMP     // Important\n"
+        "                             VLEVEL_NORMAL  // Normal (Default)\n"
+        "                             VLEVEL_DBG     // Debug Info\n"
+        "                             VLEVEL_EXTREME // Extreme Verbosity\n"
          << endl;
 }
 
