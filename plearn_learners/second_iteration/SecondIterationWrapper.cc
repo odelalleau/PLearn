@@ -196,8 +196,8 @@ void SecondIterationWrapper::computeSalesStatistics()
         else if (sales_prediction < 10000000.0 && commitment < 1000000.0) predicted_class = 2.0;
         else if (sales_prediction < 100000000.0 && commitment < 20000000.0) predicted_class = 3.0;
         else predicted_class = 4.0;
-        sample_costs[0] = pow((sales_prediction - reference_vector[sales]), 2.0);
-        sample_costs[1] = pow((predicted_class - reference_vector[tclass]), 2.0);
+        sample_costs[0] = pow((sales_prediction - reference_vector[sales]), 2);
+        sample_costs[1] = pow((predicted_class - reference_vector[tclass]), 2);
         if (predicted_class == reference_vector[tclass]) sample_costs[2] = 0.0;
         else sample_costs[2] = 1.0;
         train_stats->update(sample_costs);
@@ -225,8 +225,8 @@ void SecondIterationWrapper::computeSalesStatistics()
         else if (sales_prediction < 10000000.0 && commitment < 1000000.0) predicted_class = 2.0;
         else if (sales_prediction < 100000000.0 && commitment < 20000000.0) predicted_class = 3.0;
         else predicted_class = 4.0;
-        sample_costs[0] = pow((sales_prediction - reference_vector[sales]), 2.0);
-        sample_costs[1] = pow((predicted_class - reference_vector[tclass]), 2.0);
+        sample_costs[0] = pow((sales_prediction - reference_vector[sales]), 2);
+        sample_costs[1] = pow((predicted_class - reference_vector[tclass]), 2);
         if (predicted_class == reference_vector[tclass]) sample_costs[2] = 0.0;
         else sample_costs[2] = 1.0;
         train_stats->update(sample_costs);
@@ -254,8 +254,8 @@ void SecondIterationWrapper::computeSalesStatistics()
         else if (sales_prediction < 10000000.0 && commitment < 1000000.0) predicted_class = 2.0;
         else if (sales_prediction < 100000000.0 && commitment < 20000000.0) predicted_class = 3.0;
         else predicted_class = 4.0;
-        sample_costs[0] = pow((sales_prediction - reference_vector[sales]), 2.0);
-        sample_costs[1] = pow((predicted_class - reference_vector[tclass]), 2.0);
+        sample_costs[0] = pow((sales_prediction - reference_vector[sales]), 2);
+        sample_costs[1] = pow((predicted_class - reference_vector[tclass]), 2);
         if (predicted_class == reference_vector[tclass]) sample_costs[2] = 0.0;
         else sample_costs[2] = 1.0;
         train_stats->update(sample_costs);
@@ -349,7 +349,7 @@ void SecondIterationWrapper::computeOutputAndCosts(const Vec& inputv, const Vec&
 
 void SecondIterationWrapper::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
-    costsv[0] = pow((outputv[0] - targetv[0]), 2.0);
+    costsv[0] = pow((outputv[0] - targetv[0]), 2);
     if (class_prediction == 1)
     {
         real class_pred;
@@ -357,7 +357,7 @@ void SecondIterationWrapper::computeCostsFromOutputs(const Vec& inputv, const Ve
         else if (outputv[0] <= 1.5) class_pred = 1.0;
         else if (outputv[0] <= 2.5) class_pred = 2.0;
         else class_pred = 3.0;
-        costsv[1] = pow((class_pred - targetv[0]), 2.0);
+        costsv[1] = pow((class_pred - targetv[0]), 2);
         costsv[2] = fabs(class_pred - targetv[0]);
         costsv[3] = class_pred == targetv[0]?0:1;
         return;
