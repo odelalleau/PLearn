@@ -2895,8 +2895,8 @@ template <class T>
 void transposeProduct(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
     int l=m.length();
-    int w=m.width();
 #ifdef BOUNDCHECK
+    int w=m.width();
     if (l!=v.length() || w!=result.length())
         PLERROR("transposeProduct(TVec, TMat, TVec), incompatible arguments:\n"
                 "%d <- %dx%d' times %d",
