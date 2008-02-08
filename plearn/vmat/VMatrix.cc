@@ -1948,6 +1948,8 @@ int VMatrix::compareStats(const VMat& target,
     int nbdiff            = 0;
     real sumdiff_stderr_  = 0;
     real sumdiff_missing_ = 0;
+    Mat score(width(),3);
+
     for(int i=0;i<width();i++)
     {
         const StatsCollector tstats = target->getStats(i);
@@ -1956,7 +1958,7 @@ int VMatrix::compareStats(const VMat& target,
         real tmissing = tstats.nmissing()/tstats.n();
         real lmissing = lstats.nmissing()/lstats.n();
         real terr = sqrt(tmissing*(1-tmissing)+lmissing*(1-lmissing));
-        real th = fabs(tmissing-lmissing)/terr;
+        real th_missing = fabs(tmissing-lmissing)/terr;
         if(fast_is_equal(terr,0))
         {
             if(!fast_is_equal(tmissing,0)||!fast_is_equal(lmissing,0))
@@ -1966,35 +1968,62 @@ int VMatrix::compareStats(const VMat& target,
             PLCHECK((fast_is_equal(tmissing,0)||fast_is_equal(tmissing,1))
                     && (fast_is_equal(lmissing,0)||fast_is_equal(lmissing,1)));
         }
-        else if(isnan(th))
+        else if(isnan(th_missing))
             PLWARNING("In VMatrix::compareStats - should not happen!");
         else
-            sumdiff_missing_ += th;
-        if(th>missing_threshold)
-        {
-            PLWARNING("In VMatrix::compareStats - field %d(%s) have %f"
-                      " missing while target stats have %f."
-                      " The stats difference is %f.", 
-                      i, fieldName(i).c_str(), lmissing, tmissing, th);
-            nbdiff++;
-        }
+            sumdiff_missing_ += th_missing;
+        
         real tmean = tstats.mean();
         real lmean = lstats.mean();
         real tstderror = sqrt(pow(tstats.stderror(), 2) + 
                               pow(lstats.stderror(), 2));
-        th = fabs(lmean-tmean)/tstderror;
+        real th_stderror = fabs(lmean-tmean)/tstderror;
         if(tstderror==0)
             PLWARNING("In VMatrix::compareStats - field %d(%s) have a"
                       " stderror of 0 for both matrice.",
                       i, fieldName(i).c_str());
         else
-            sumdiff_stderr_+=th;
-        if(th>stderror_threshold)
+            sumdiff_stderr_+=th_stderror;
+        score(i,0)=i;
+        score(i,1)=th_stderror;
+        score(i,2)=th_missing;
+
+    }
+    pout<<"Print the field that do not pass the threshold sorted by the stderror"<<endl;
+    sortRows(score,1,false);
+    for(int i=0;i<score.length();i++)
+    {
+        if(score(i,1)>stderror_threshold)
         {
-            PLWARNING("In VMatrix::compareStats - field %d(%s) have mean %f"
-                      " while target mean is %f and target stderror is %f."
-                      " They differ by %f stderror",
-                      i, fieldName(i).c_str(), lmean, tmean, tstderror, th);
+            const StatsCollector tstats = target->getStats(i);
+            const StatsCollector lstats = getStats(i);
+            real tmean = tstats.mean();
+            real lmean = lstats.mean();
+            real tstderror = sqrt(pow(tstats.stderror(), 2) + 
+                                  pow(lstats.stderror(), 2));
+
+            pout<<i<<"("<<fieldName(int(round(score(i,0))))<<")"
+                <<" differ by "<<score(i,1)<<" stderror."
+                <<" The mean is "<<lmean<<" while the target mean is "<<tmean
+                <<" and the used stderror is "<<tstderror<<endl;
+            nbdiff++;
+        }
+    }
+
+    cout<<"Print the field that do not pass the threshold sorted by the missing error"<<endl;
+    sortRows(score,2,false);
+    for(int i=0;i<score.length();i++)
+    {
+        if(score(i,2)>missing_threshold)
+        {
+            const StatsCollector tstats = target->getStats(i);
+            const StatsCollector lstats = getStats(i);
+            real tmissing = tstats.nmissing()/tstats.n();
+            real lmissing = lstats.nmissing()/lstats.n();
+            pout<<i<<"("<<fieldName(int(round(score(i,0))))<<")"
+                <<" The missing stats difference is "<< score(i,2)
+                <<". Their is "<<lmissing<<" missing while target have "
+                <<tmissing<<" missing."<<endl;
             nbdiff++;
         }
     }
