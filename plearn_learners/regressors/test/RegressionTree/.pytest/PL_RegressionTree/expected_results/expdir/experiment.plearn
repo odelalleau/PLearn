@@ -80,7 +80,8 @@
         verbosity = 2
         ),
     provide_learner_expdir = 1,
-    save_test_confidence = 1,
+    save_learners = 0,
+    save_test_confidence = 0,
     save_test_costs = 1,
     save_test_outputs = 1,
     splitter = *9 -> FractionSplitter(

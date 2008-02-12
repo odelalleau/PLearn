@@ -156,7 +156,7 @@ perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
-save_learners = 1 ;
+save_learners = 0 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
 save_test_outputs = 1 ;
@@ -170,5 +170,5 @@ template_stats_collector = *0 ;
 global_template_stats_collector = *0 ;
 final_commands = []
 ;
-save_test_confidence = 1 ;
+save_test_confidence = 0 ;
 enforce_clean_expdir = 1  )
