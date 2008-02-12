@@ -278,6 +278,24 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value)
     p_value = KS_test(D,N,conv);
 }
 
+void KS_test(VMat& m1, VMat& m2, int conv, Vec& Ds, Vec& p_values)
+{
+    m1->compatibleSizeError(m2);
+    Ds.resize(m1->width());
+    p_values.resize(m1->width());
+    for(int col = 0;col<m1->width();col++)
+    {
+        Vec row1(m1->length());
+        Vec row2(m2->length());
+        m1->getColumn(col,row1);
+        m2->getColumn(col,row2);
+        real D;
+        real p_value;
+        KS_test(row1,row2,conv,D,p_value);
+        Ds[col]=D;
+        p_values[col]=p_value;
+    }
+}
 real KS_test(Vec& v1, Vec& v2, int conv)
 {
     real D, ks_stat;

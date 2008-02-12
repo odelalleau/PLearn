@@ -142,6 +142,13 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value);
  */
 real KS_test(Vec& v1, Vec& v2, int conv=10);
 
+
+/** 
+ * Returns result of Kolmogorov-Smirnov test for each pair of variable
+ * between the two VMat
+ */
+void KS_test(VMat& m1, VMat& m2, int conv, Vec& Ds, Vec& p_values);
+
 /**
  * Given two paired sets u and v of n measured values, the paired t-test 
  * determines whether they differ from each other in a significant way under 
