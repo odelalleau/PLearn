@@ -181,6 +181,7 @@ void RBMClassificationModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(joint_connection, copies);
     deepCopyField(out_act, copies);
     deepCopyField(d_target_act, copies);
+    deepCopyField(d_last_act, copies);
 }
 
 //! given the input, compute the output (possibly resize it  appropriately)
