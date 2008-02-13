@@ -85,6 +85,7 @@
 #include <commands/PLearnCommands/TestDependenciesCommand.h>
 #include <commands/PLearnCommands/TestDependencyCommand.h>
 #include <commands/PLearnCommands/VMatCommand.h>
+#include <commands/PLearnCommands/VMatViewCommand.h>
 
 /**************
  * Dictionary *
