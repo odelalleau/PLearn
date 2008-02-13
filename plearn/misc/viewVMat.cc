@@ -186,7 +186,7 @@ void viewVMat(const VMat& vm, PPath filename)
     int valwidth = 15;
     int valstrwidth = valwidth-1;
 
-    char* valstrformat = "%14s";
+    const char* valstrformat = "%14s";
 
     int curi = 0;
     int curj = 0;
