@@ -53,6 +53,10 @@ namespace PLearn {
 
 /**
  * Deep Neural Network that extracts features in a greedy, mostly unsupervised way.
+ * 
+ * TODO: - change comments about nhidden_schedule_position (can train only top weights)
+ *       - potentially change relative_minimum_improvement so that it doesn't train
+ *         top weights only...
  */
 class DeepFeatureExtractorNNet : public PLearner
 {

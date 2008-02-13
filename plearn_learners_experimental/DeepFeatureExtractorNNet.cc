@@ -262,9 +262,7 @@ void DeepFeatureExtractorNNet::declareOptions(OptionList& ol)
                   "But for classification problems where target is just\n"
                   "the class number, noutputs is usually of dimensionality \n"
                   "number of classes (as we want to output a score or\n"
-                  "probability vector, one per class)\n"
-                  "If the network only extracts features in an unsupervised\n"
-                  "manner, then let noutputs be 0.");    
+                  "probability vector, one per class)\n");    
 
     declareOption(ol, "use_same_input_and_output_weights", 
                   &DeepFeatureExtractorNNet::use_same_input_and_output_weights, 
@@ -463,6 +461,9 @@ void DeepFeatureExtractorNNet::build_()
                     output = hiddenLayer(
                         output,w_weights,w_biases,false,"sigmoid",
                         before_transfer_function,use_activations_with_cubed_input);
+                    //output = hiddenLayer(
+                    //    output,w,"sigmoid",
+                    //    before_transfer_function,use_activations_with_cubed_input);
                 }
                 else // ... or have different set of weights.
                 {
@@ -578,6 +579,13 @@ void DeepFeatureExtractorNNet::build_()
                             true, rec_trans_func,
                             before_transfer_function,
                             use_activations_with_cubed_input);
+                        //output =  hiddenLayer(
+                        //    output, 
+                        //    vconcat(biases[biases.size()-it-1]
+                        //            & transpose(weights[weights.size()-it])),
+                        //    rec_trans_func,
+                        //    before_transfer_function,
+                        //    use_activations_with_cubed_input);
                     }
                     else
                     {
