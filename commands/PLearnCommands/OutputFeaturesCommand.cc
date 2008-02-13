@@ -62,7 +62,7 @@ OutputFeaturesCommand::OutputFeaturesCommand()
         "       format and if output_string == 0, the feature IDs will be given.\n"
         "       Optionaly, feat_set can be saved in a new file (used_feat_set)\n"
         "       after it has been used. This can be useful when the feature set\n"
-        "       maintains a cache of the previously requested features of tokens\n."
+        "       maintains a cache of the previously requested features of tokens.\n"
         "       Only the input fields' features are output, with the features of\n"
         "       a single token separated with by ' ' and the features from \n"
         "       different fields separated by '\\t'."
