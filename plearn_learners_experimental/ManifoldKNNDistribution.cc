@@ -56,7 +56,8 @@ PLEARN_IMPLEMENT_OBJECT(
 ManifoldKNNDistribution::ManifoldKNNDistribution()
     : manifold_dimensionality(5),
       min_sigma_square(1e-5),
-      center_around_manifold_neighbors(false)
+      center_around_manifold_neighbors(false),
+      use_gaussian_distribution(false)
 {}
 
 ////////////////////
@@ -93,6 +94,20 @@ void ManifoldKNNDistribution::declareOptions(OptionList& ol)
                   "Indication that the estimation of the manifold tangent vectors\n"
                   "should be made around the knn_manifold neighbors' mean vector,\n"
                   "not around the test point."
+                  );
+
+    declareOption(ol, "use_gaussian_distribution", 
+                  &ManifoldKNNDistribution::use_gaussian_distribution,
+                  OptionBase::buildoption,
+                  "Indication that a Gaussian distribution should be used as the\n"
+                  "knn_manifold nearest neighbors distribution, instead of the\n"
+                  "uniform in the ellipsoid."
+                  );
+
+    declareOption(ol, "density_learner", 
+                  &ManifoldKNNDistribution::density_learner,
+                  OptionBase::buildoption,
+                  "Generic density learner for knn_manifold nearest neighbors."
                   );
 
     // Now call the parent class' declareOptions().
@@ -145,6 +160,17 @@ void ManifoldKNNDistribution::build_()
     {
         knn_manifold->setTrainingSet(train_set,true);
         knn_density->setTrainingSet(train_set,true);
+        
+        knn_manifold->train();
+        knn_density->train();
+    }
+
+    if(use_gaussian_distribution && !center_around_manifold_neighbors)
+    {
+        PLWARNING("In ManifoldKNNDistribution::build_(): when using "
+                  "use_gaussian_distribution=true, center_around_manifold_neighbors"
+                  "must be true too. Setting center_around_manifold_neighbors=true...");
+        center_around_manifold_neighbors = true;
     }
 }
 
@@ -184,38 +210,79 @@ void ManifoldKNNDistribution::generate(Vec& y) const
 /////////////////
 real ManifoldKNNDistribution::log_density(const Vec& y) const
 {
-    computeLocalPrincipalComponents(y,eig_values,eig_vectors);
 
-    // Find volume of ellipsoid defined by eig_values, eig_vectors and
-    // min_sigma_square that covers all the nearest_neighbors found by knn_density
-    knn_density->computeOutput(y,nearest_neighbors_density_vec);
-    nearest_neighbors_density = 
-        nearest_neighbors_density_vec.toMat(knn_density->num_neighbors,inputsize_);
-    nearest_neighbors_density -= y;
-    real max = -1;
-    real scaled_projection;
-    for(int i=0; i<nearest_neighbors_density.length(); i++)
+    real ret = 0;
+    if(density_learner)
     {
-        scaled_projection = 0;
-        product(eig_vectors_projection,eig_vectors,nearest_neighbors_density(i));
+        knn_manifold->computeOutput(y,nearest_neighbors_manifold_vec);
+        nearest_neighbors_manifold = 
+            nearest_neighbors_manifold_vec.toMat(
+                knn_manifold->num_neighbors,inputsize_);
+        density_learner_train_set = VMat( nearest_neighbors_manifold );
+        density_learner_train_set->defineSizes(inputsize_,0);
+        density_learner->setTrainingSet(density_learner_train_set,true);
+        density_learner->train();
+        density_learner->log_density(y);
+        ret = density_learner->log_density(y) + 
+            pl_log((real)knn_manifold->num_neighbors)-pl_log((real)n_examples);
+    }
+    else if(use_gaussian_distribution)
+    {
+        computeLocalPrincipalComponents(y,eig_values,eig_vectors);
+        if(!center_around_manifold_neighbors)
+            columnMean(nearest_neighbors_manifold,neighbors_mean);
+
+        // Compute log-normalization constant
+        ret = - inputsize_ *0.5 *Log2Pi;
+        for(int i=0; i<manifold_dimensionality; i++)
+            ret -= 0.5 * pl_log(eig_values[i]+min_sigma_square);
+        ret -= (inputsize_-manifold_dimensionality)*0.5*pl_log(min_sigma_square);
+        substract(y,neighbors_mean,test_minus_mean);
+        product(eig_vectors_projection,eig_vectors,test_minus_mean);
         for(int j=0; j<eig_values.length(); j++)
-            scaled_projection += mypow(eig_vectors_projection[j],2) * 
+            ret -= mypow(eig_vectors_projection[j],2) * 
                 (1/(eig_values[j]+min_sigma_square) 
                  - 1/min_sigma_square) ;
-        scaled_projection += pownorm(nearest_neighbors_density(i),2)
+        ret -= pownorm(test_minus_mean,2)
             /min_sigma_square;
-        if(max < scaled_projection)
-            max = scaled_projection;
+        ret += pl_log((real)knn_manifold->num_neighbors)-pl_log((real)n_examples);
     }
+    else
+    {
+        computeLocalPrincipalComponents(y,eig_values,eig_vectors);
 
-    // Compute log-volume of the ellipsoid: pi
-    real log_vol = 0.5 * inputsize_ * pl_log(scaled_projection);
-    for(int i=0; i<manifold_dimensionality; i++)
-        log_vol += 0.5 * pl_log(eig_values[i]+min_sigma_square);
-    log_vol += (inputsize_-manifold_dimensionality)*0.5*pl_log(min_sigma_square);
-    log_vol += 0.5*inputsize_*pl_log(Pi) - pl_gammln(0.5*inputsize_+1);
-    
-    return pl_log((real)knn_density->num_neighbors)-pl_log((real)n_examples)-log_vol;
+        // Find volume of ellipsoid defined by eig_values, eig_vectors and
+        // min_sigma_square that covers all the nearest_neighbors found by knn_density
+        knn_density->computeOutput(y,nearest_neighbors_density_vec);
+        nearest_neighbors_density = 
+            nearest_neighbors_density_vec.toMat(knn_density->num_neighbors,inputsize_);
+        nearest_neighbors_density -= y;
+        real max = -1;
+        real scaled_projection=0;
+        for(int i=0; i<nearest_neighbors_density.length(); i++)
+        {
+            scaled_projection = 0;
+            product(eig_vectors_projection,eig_vectors,nearest_neighbors_density(i));
+            for(int j=0; j<eig_values.length(); j++)
+                scaled_projection += mypow(eig_vectors_projection[j],2) * 
+                    (1/(eig_values[j]+min_sigma_square) 
+                     - 1/min_sigma_square) ;
+            scaled_projection += pownorm(nearest_neighbors_density(i),2)
+                /min_sigma_square;
+            if(max < scaled_projection)
+                max = scaled_projection;
+        }
+        
+        // Compute log-volume of the ellipsoid: pi
+        real log_vol = 0.5 * inputsize_ * pl_log(scaled_projection);
+        for(int i=0; i<manifold_dimensionality; i++)
+            log_vol += 0.5 * pl_log(eig_values[i]+min_sigma_square);
+        log_vol += (inputsize_-manifold_dimensionality)*0.5*pl_log(min_sigma_square);
+        log_vol += 0.5*inputsize_*pl_log(Pi) - pl_gammln(0.5*inputsize_+1);
+        
+        ret = pl_log((real)knn_density->num_neighbors)-pl_log((real)n_examples)-log_vol;
+    }
+    return ret;
 }
 
 /////////////////////////////////
@@ -227,6 +294,7 @@ void ManifoldKNNDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(knn_manifold, copies);
     deepCopyField(knn_density, copies);
+    deepCopyField(density_learner, copies);
     deepCopyField(nearest_neighbors_manifold, copies);
     deepCopyField(nearest_neighbors_manifold_vec, copies);
     deepCopyField(nearest_neighbors_density, copies);
@@ -238,6 +306,8 @@ void ManifoldKNNDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(S, copies);
     deepCopyField(eig_vectors_projection, copies);
     deepCopyField(neighbors_mean,copies);
+    deepCopyField(test_minus_mean,copies);
+    deepCopyField(density_learner_train_set,copies);
 }
 
 ////////////////////

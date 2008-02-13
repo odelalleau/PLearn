@@ -78,6 +78,14 @@ public:
     //! not around the test point.
     bool center_around_manifold_neighbors;
 
+    //! Indication that a Gaussian distribution should be used as the
+    //! knn_manifold nearest neighbors distribution, instead of the
+    //! uniform in the ellipsoid.
+    bool use_gaussian_distribution;
+
+    //! Generic density learner for knn_density nearest neighbors
+    PP<PDistribution> density_learner;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -158,6 +166,11 @@ protected:
     mutable Vec eig_vectors_projection;
     //! Mean vector of neighbors
     mutable Vec neighbors_mean;
+    //! Difference between test point and neighbors_mean;
+    mutable Vec test_minus_mean;
+
+    //! The density learner training set
+    mutable VMat density_learner_train_set;
 
 protected:
     //#####  Protected Member Functions  ######################################
