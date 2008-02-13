@@ -76,7 +76,7 @@ public:
     real fine_tuning_decrease_ct;
 
     //! Size of mini-batch for gradient descent
-    int batch_size;
+    int minibatch_size;
 
     //! Indication that the output layer (given by the final module)
     //! should have as input all units of the network (including the input units)
@@ -86,11 +86,16 @@ public:
     //! logistic auto-regression should be filled with the
     //! maximum absolute value of each corresponding row.
     bool fill_in_null_diagonal;
-    
-    //! Minimum relative improvement convergence criteria
-    //! for the logistic auto-regression.
-    real relative_min_improvement;
-    
+        
+    //! Number of examples to use during each phase of learning:
+    //! first the greedy phases, and then the fine-tuning phase.
+    //! However, the learning will stop as soon as we reach nstages.
+    //! For example for 2 hidden layers, with 1000 examples in each
+    //! greedy phase, and 500 in the fine-tuning phase, this option
+    //! should be [1000 1000 500], and nstages should be at least 2500.
+    //! When online = true, this vector is ignored and should be empty.
+    TVec<int> training_schedule;
+
     //! The layers of units in the network
     TVec< PP<RBMLayer> > layers;
 
@@ -198,6 +203,9 @@ protected:
     //! Reconstruction costs
     mutable Mat reconstruction_costs;
 
+    //! Reconstruction costs (when using computeOutput and computeCostsFromOutput)
+    mutable Vec reconstruction_test_costs;
+
     //! Reconstruction activation gradient
     mutable Vec reconstruction_activation_gradient;
 
@@ -227,6 +235,10 @@ protected:
 
     //! Stores the gradients of the cost at the inputs of final_cost
     mutable Mat final_cost_gradients;
+
+    //! Cumulative training schedule
+    TVec<int> cumulative_schedule;
+
 
 protected:
     //#####  Protected Member Functions  ######################################
