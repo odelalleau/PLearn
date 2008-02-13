@@ -724,6 +724,32 @@ void RBMLayer::addBiasDecay(Vec& bias_gradient)
 
 }
 
+void RBMLayer::addBiasDecay(Mat& bias_gradients)
+{
+    PLASSERT(bias_gradients.width()==size);
+    if (bias_decay_type=="none")
+        return;
+
+    real avg_lr = learning_rate / bias_gradients.length();
+
+    for(int b=0; b<bias_gradients.length(); b++)
+    {
+        real *bg = bias_gradients[b];
+        real *b = bias.data();
+        bias_decay_type = lowerstring(bias_decay_type);
+        
+        if (bias_decay_type=="negative")  // Pushes the biases towards -\infty
+            for( int i=0 ; i<size ; i++ )
+                bg[i] += avg_lr * bias_decay_parameter;
+        else if (bias_decay_type=="l2")  // L2 penalty on the biases
+            for (int i=0 ; i<size ; i++ )
+                bg[i] += avg_lr * bias_decay_parameter * b[i];
+        else
+            PLERROR("RBMLayer::addBiasDecay(string) bias_decay_type %s is not in"
+                    " the list, in subclass %s\n",bias_decay_type.c_str(),classname().c_str());
+    }
+}
+
 void RBMLayer::applyBiasDecay()
 {
     

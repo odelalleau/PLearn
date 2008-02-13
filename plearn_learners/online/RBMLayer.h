@@ -297,6 +297,9 @@ public:
     //! Adds the bias decay to the bias gradients
     virtual void addBiasDecay(Vec& bias_gradient);
 
+    //! Adds the bias decay to the bias gradients
+    virtual void addBiasDecay(Mat& bias_gradient);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
