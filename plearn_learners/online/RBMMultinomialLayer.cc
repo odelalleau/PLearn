@@ -200,6 +200,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
             b[i] += binc[i];
         }
     }
+    applyBiasDecay();
 }
 
 void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
@@ -267,6 +268,7 @@ void RBMMultinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
             }
         }
     }
+    applyBiasDecay();
 }
 
 //! TODO: add "accumulate" here
@@ -293,6 +295,7 @@ void RBMMultinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
         ing[i] = (outg[i] - outg_dot_out) * out[i];
 
     rbm_bias_gradient << input_gradient;
+    addBiasDecay(rbm_bias_gradient);
 }
 
 //////////////
@@ -382,6 +385,7 @@ void RBMMultinomialLayer::bpropNLL(const Vec& target, real nll,
 
     // bias_gradient = expectation - target
     substract(expectation, target, bias_gradient);
+    addBiasDecay(bias_gradient);
 }
 
 void RBMMultinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
@@ -397,6 +401,7 @@ void RBMMultinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
 
     // bias_gradients = expectations - targets
     substract(expectations, targets, bias_gradients);
+    addBiasDecay(bias_gradients);
 }
 
 void RBMMultinomialLayer::declareOptions(OptionList& ol)

@@ -198,6 +198,8 @@ void RBMTruncExpLayer::bpropUpdate(const Vec& input, const Vec& output,
             bias[i] += bias_inc[i];
         }
     }
+
+    applyBiasDecay();
 }
 
 
