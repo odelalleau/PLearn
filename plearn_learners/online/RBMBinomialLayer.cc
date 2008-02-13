@@ -238,6 +238,8 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
             bias[i] += bias_inc[i];
         }
     }
+
+    applyBiasDecay();
 }
 
 void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
@@ -298,6 +300,8 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
             }
         }
     }
+
+    applyBiasDecay();
 }
 
 
@@ -321,6 +325,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
     }
 
     rbm_bias_gradient << input_gradient;
+    addBiasDecay(rbm_bias_gradient);
 }
 
 real RBMBinomialLayer::fpropNLL(const Vec& target)
@@ -412,6 +417,7 @@ void RBMBinomialLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 
     // bias_gradient = expectation - target
     substract(expectation, target, bias_gradient);
+    addBiasDecay(bias_gradient);
 }
 
 void RBMBinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
@@ -427,6 +433,8 @@ void RBMBinomialLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
 
     // bias_gradients = expectations - targets
     substract(expectations, targets, bias_gradients);
+
+    addBiasDecay(bias_gradients);
 }
 
 void RBMBinomialLayer::declareOptions(OptionList& ol)
