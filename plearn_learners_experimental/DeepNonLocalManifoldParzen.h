@@ -103,7 +103,7 @@ public:
     int k_neighbors;
 
     //! Dimensionality of the manifold
-    real n_components;
+    int n_components;
 
     //! Minimum value for the noise variance.
     real min_sigma_noise;
@@ -120,9 +120,6 @@ public:
     //! Indication that the parameters for the manifold parzen
     //! windows estimator should be saved during test, to speed up testing.
     bool save_manifold_parzen_parameters;
-
-    //! Indication that the saved manifold parzen parameters are up to date.
-    bool manifold_parzen_parameters_are_up_to_date;
 
     //#####  Public Learnt Options  ###########################################
 
@@ -182,8 +179,7 @@ public:
     virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
     void greedyStep( const Vec& input, const Vec& target, int index, 
-                     Vec train_costs, int stage, Vec similar_example,
-                     Vec dissimilar_example);
+                     Vec train_costs, int stage);
 
     void fineTuningStep( const Vec& input, const Vec& target,
                          Vec& train_costs, Mat nearest_neighbors);
@@ -241,7 +237,7 @@ protected:
     mutable Vec reconstruction_expectation_gradients;
 
     //! Output weights
-    mutable PP<OnlineLearningModuling> output_connections;
+    mutable PP<OnlineLearningModule> output_connections;
     
     //! Example representation
     mutable Vec input_representation;
@@ -261,8 +257,8 @@ protected:
     mutable Vec pre_sigma_noise;
 
     //! Variables for the SVD and gradient computation
-    mutable Mat Ut, U, V, z, invSigma_F, invSigma_z;
-    mutable Vec temp_ncomp, diff_neighbor_input, sm_svd, sn, S;
+    mutable Mat Ut, U, V, z, inv_Sigma_F, inv_Sigma_z;
+    mutable Vec temp_ncomp, diff_neighbor_input, sm_svd, S;
     mutable Vec uk, fk, uk2, inv_sigma_zj, zj, inv_sigma_fk, diff;
 
     //! Positive down statistic
@@ -277,13 +273,13 @@ protected:
     // Saved components of manifold parzen windows
 
     //! Eigenvectors
-    TVec<Mat> eigenvectors;
+    mutable TVec<Mat> eigenvectors;
     //! Eigenvalues
-    Mat eigenvalues;
+    mutable Mat eigenvalues;
     //! Sigma noises
-    Vec sigma_noises;
+    mutable Vec sigma_noises;
     //! Mus
-    Mat mus;
+    mutable Mat mus;
 
     //! Datasets for each class
     TVec< PP<ClassSubsetVMatrix> > class_datasets;
@@ -295,11 +291,8 @@ protected:
     //! Nearest neighbors for each training example
     TMat<int> nearest_neighbors_indices;
 
-    //! Nearest neighbors for each test example
-    mutable TVec<int> test_nearest_neighbors_indices;
-
     //! Nearest neighbor votes for test example
-    TVec<int> test_votes;
+    mutable Vec test_votes;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
@@ -307,6 +300,9 @@ protected:
     //! Currently trained layer (1 means the first hidden layer,
     //! n_layers means the output layer)
     int currently_trained_layer;
+
+    //! Indication that the saved manifold parzen parameters are up to date.
+    mutable bool manifold_parzen_parameters_are_up_to_date;
 
 protected:
     //#####  Protected Member Functions  ######################################
