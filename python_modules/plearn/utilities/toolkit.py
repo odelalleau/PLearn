@@ -52,14 +52,8 @@ def centered_square(s, width, ldelim='[', rdelim=']'):
 def command_output(command, stderr = True, stdout = True):
     """Returns the output lines of a shell command.    
     
-    The U{commands<http://docs.python.org/lib/module-commands.html>} module
-    provides a similar function, getoutput(), that returns a single
-    string. Since the
-    U{commands<http://docs.python.org/lib/module-commands.html>} module
-    relies on U{popen<http://docs.python.org/lib/module-popen2.html>}
-    objects, it is more efficient to use directly
-    U{popen<http://docs.python.org/lib/module-popen2.html>} here than
-    splitting the results of the commands.getoutput() in lines.
+    Deprecated: please consider using the new python 2.4 subprocess module
+    instead.
 
     @param command: The shell command to execute.
     @type command: String
