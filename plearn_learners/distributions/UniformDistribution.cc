@@ -193,7 +193,13 @@ void UniformDistribution::generate(Vec& x) const
 /////////////////
 real UniformDistribution::log_density(const Vec& x) const
 {
-    PLERROR("density not implemented for UniformDistribution"); return 0;
+    real sum = 0;
+    for (int i = 0; i < n_dim; i++) {
+        if (x[i] > max[i] || x[i] < min[i])
+            return -INFINITY;
+        sum += pl_log(max[i] - min[i]);
+    }
+    return -sum;
 }
 
 /////////////////////////////////
