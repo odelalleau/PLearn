@@ -162,6 +162,11 @@ real logadd(double log_a, double log_b)
         double tmp = log_a;
         log_a = log_b;
         log_b = tmp;
+    } else if (fast_exact_is_equal(log_a, log_b)) {
+        // Special case when log_a == log_b. In particular this works when both
+        // log_a and log_b are (+-) INFINITY: it will return (+-) INFINITY
+        // instead of NaN.
+        return LOG_2 + log_a;
     }
     double negative_absolute_difference = log_b - log_a;
     if (negative_absolute_difference < MINUS_LOG_THRESHOLD)
