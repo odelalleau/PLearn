@@ -121,6 +121,7 @@ public:
     //! The weights of the connections between the RBM visible and hidden layers
     PP<RBMMatrixConnection> connections;
     PP<RBMConnection> connections_idem;
+    PP<RBMConnection> connections_idem_t;
 
     //! The weights of the connections between the RBM hidden and input layers.
     //! It is the transpose "connections".
@@ -171,6 +172,10 @@ public:
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
     virtual TVec<std::string> getTestCostNames() const;
+
+
+    //! Generate music in a folder
+    void generate(int nbNotes);
 
     //! Returns the names of the objective costs that the train method computes
     //! and  for which it updates the VecStatsCollector train_stats.
@@ -259,6 +264,10 @@ protected:
     //! Stores hidden gradient of dynamic connections
     mutable Vec hidden_gradient;
     
+    //! Stores hidden gradient of dynamic connections
+    mutable Vec hidden_gradient2;
+
+    
     //! Stores hidden gradient of dynamic connections coming from time t+1
     mutable Vec hidden_temporal_gradient;
     
@@ -309,7 +318,9 @@ protected:
     //! List of the nll of the input samples in a sequence
     Vec nll_list;
 
-    
+    //! Temporary variable to clamp visible units (i.e. set the expectation
+    //! field of visible_layer)
+    mutable Vec input_expectation;
 
 protected:
     //#####  Protected Member Functions  ######################################
