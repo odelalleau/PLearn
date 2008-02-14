@@ -202,7 +202,7 @@ would cause experiment to use the expdir::
     
 for instance.
 """
-import copy, inspect, logging, new, re, sys
+import copy, inspect, logging, new, re, sys, os, warnings
 from plearn.pyplearn.context import *
 from plearn.utilities.Bindings import Bindings
 
@@ -248,11 +248,9 @@ def list_cast(slist, elem_cast):
         raise ValueError, "Cannot cast '%s' into a list", str(slist)
 
 def warn(message, category=UserWarning, stacklevel=0):
-    import os
     pytest_state = os.environ.get("PYTEST_STATE", "")
     if pytest_state!="Active":        
-        from warnings import warn
-        warn(message, category, stacklevel=stacklevel+3)
+        warnings.warn(message, category, stacklevel=stacklevel+3)
 
 #######  Classes to Manage Command-Line Arguments  ############################
 
