@@ -96,8 +96,10 @@ void RandomSamplesVMatrix::declareOptions(OptionList& ol)
         "If given a non-negative value, it indicates the total number of\n"
         "non-preserved examples that are added to this VMat, and overrides\n"
         "the 'length' option. Two special negative values can be used:\n"
-        " -1: this option is ignored, and 'length' is used instead (or the\n"
-        "     source's length if 'length' is not set)\n"
+        " -1: this option is ignored, and the number of non-preserved\n"
+        "     samples is set so that this VMat has either the desired length\n"
+        "     (if the 'length' option is provided), or the same length as\n"
+        "     its source otherwise.\n"
         " -2: the number of non-preserved examples is set exactly to match\n"
         "     the number of preserved examples.");
 
