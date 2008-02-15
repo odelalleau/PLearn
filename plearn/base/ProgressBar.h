@@ -168,7 +168,7 @@ public:
     void operator()(uint32_t newpos){plugin->update(this,newpos);}
 
     void update(uint32_t newpos){plugin->update(this,newpos);}
-
+    void updateone(){plugin->update(this,currentpos+1);}
     // this function assumes plugin is always a valid object (it is created statically in the .cc)
     static void setPlugin(PP<ProgressBarPlugin> plugin_) { plugin = plugin_; }
     static PP<ProgressBarPlugin> getCurrentPlugin();
