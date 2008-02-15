@@ -185,6 +185,7 @@
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
 
 // PDistribution
+#include <plearn_learners/distributions/MixtureDistribution.h>
 #include <plearn_learners/distributions/SpiralDistribution.h>
 #include <plearn_learners/distributions/UniformDistribution.h>
 
