@@ -523,7 +523,7 @@ pymakeOption( name = 'g++',
               description = 'compiling with g++, with no MPI support',
               compiler = 'g++',
               compileroptions = '-Wno-deprecated '+pedantic_mode+'-Wno-long-long -ftemplate-depth-100 ' \
-                      + gcc_opt_options,
+                      + gcc_opt_options+ " -Wno-unknown-pragmas",
               cpp_definitions = ['USING_MPI=0'],
               linker = 'g++' )
 
@@ -647,7 +647,7 @@ pymakeOption( name = 'vecgcc',
 pymakeOption( name = 'openmpgcc',
               description = 'vectorized with gcc compiler in opt mode',
               compileroptions = '-Wall -O3 -fopenmp -msse2',
-              linkeroptions = '-lgomp',
+              linkeroptions = '-fopenmp',
               cpp_definitions = ['NDEBUG'] )
 
 pymakeOption( name = 'pintel',
