@@ -595,7 +595,7 @@ public:
      * stats.psave file (if the file does not exist, a default version is
      * automatically created).
      */
-    TVec<StatsCollector> getStats() const;
+    TVec<StatsCollector> getStats(bool progress_bar=false) const;
 
     //! Generic function to obtain the statistics from a given file in the
     //! metadatadir. If this file does not exist, statistics are computed and

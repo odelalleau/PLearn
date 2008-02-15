@@ -1408,10 +1408,11 @@ void VMatrix::copyStringMappingsFrom(const VMat& source) {
 //////////////
 // getStats //
 //////////////
-TVec<StatsCollector> VMatrix::getStats() const
+TVec<StatsCollector> VMatrix::getStats(bool progress_bar) const
 {
     if(!field_stats)
-        field_stats = getPrecomputedStatsFromFile("stats.psave", 2000, false);
+        field_stats = getPrecomputedStatsFromFile("stats.psave", 2000, 
+                                                  progress_bar);
     return field_stats;
 }
 

@@ -258,7 +258,7 @@ void interactiveDisplayCDF(const Array<VMat>& vmats)
 void displayBasicStats(VMat vm)
 {
     int nfields = vm.width();
-    TVec<StatsCollector> stats = vm->getStats();        
+    TVec<StatsCollector> stats = vm->getStats(true);        
 
     // find longest field name
     size_t fieldlen = 0;
