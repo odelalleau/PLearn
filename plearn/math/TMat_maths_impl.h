@@ -1825,6 +1825,8 @@ TVec<T> squareroot(const TVec<T>& vec)
     return result;
 }
 
+//! @ return a new array that contain only the non-missing value
+//! @ see remove_missing_inplace for inplace version
 template<class T>
 TVec<T> remove_missing(const TVec<T>& vec)
 {
@@ -1841,6 +1843,35 @@ TVec<T> remove_missing(const TVec<T>& vec)
         result.resize(n_non_missing);
     }
     return result;
+}
+
+//! remove all missing value inplace while keeping the order
+template<class T>
+void remove_missing_inplace(TVec<T>& v)
+{   
+    int n_non_missing=0;
+    int next_non_missing=1;
+    T* d = v.data();
+    for(;;)
+    {
+        while(n_non_missing<v.length()&&!is_missing(d[n_non_missing]))
+        {
+            n_non_missing++;next_non_missing++;
+        }
+        if(n_non_missing>=v.length())
+            return;
+        while(next_non_missing<v.length()&&is_missing(d[next_non_missing]))
+            next_non_missing++;
+        if(next_non_missing>=v.length())
+        {
+            v.resize(n_non_missing);
+            return;
+        }
+        else
+        {
+            pl_swap(d[n_non_missing],d[next_non_missing]);
+        }
+    }
 }
 
 //! Transform a vector of T into a vector of U through a unary function.

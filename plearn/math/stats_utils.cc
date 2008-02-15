@@ -183,6 +183,14 @@ real max_cdf_diff(Vec& v1, Vec& v2)
     int i2=0;
     real maxdiff = 0;
 
+    if(n1==0 && n2==0)
+    {
+        PLWARNING("In max_cdf_diff(Vec, Vec) - both vector are empty!");
+        return 0;
+    }
+    else if (n1==0 || n2==0)
+        return 1;
+
     for(;;)
     {
 
@@ -191,6 +199,15 @@ real max_cdf_diff(Vec& v1, Vec& v2)
             i1++;
             if(i1+1==n1)
                 break;
+        }
+        else if(fast_exact_is_equal(v1[i1],v2[i2]))
+        {
+            i1++;i2++;
+            if(i2==n2)
+                break;
+            else if(i1+1==n1)
+                break;
+            continue;
         }
         else
         {
@@ -278,6 +295,7 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value)
     p_value = KS_test(D,N,conv);
 }
 
+//! This version work with nan value
 void KS_test(VMat& m1, VMat& m2, int conv, Vec& Ds, Vec& p_values)
 {
     m1->compatibleSizeError(m2);
@@ -289,6 +307,8 @@ void KS_test(VMat& m1, VMat& m2, int conv, Vec& Ds, Vec& p_values)
         Vec row2(m2->length());
         m1->getColumn(col,row1);
         m2->getColumn(col,row2);
+        remove_missing_inplace(row1);
+        remove_missing_inplace(row2);
         real D;
         real p_value;
         KS_test(row1,row2,conv,D,p_value);
