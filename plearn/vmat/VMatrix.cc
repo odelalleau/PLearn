@@ -1934,21 +1934,16 @@ void VMatrix::appendRows(Mat rows)
 //////////////////
 // compareStats //
 //////////////////
-int VMatrix::compareStats(const VMat& target,
+void VMatrix::compareStats(const VMat& target,
                           const real stderror_threshold,
                           const real missing_threshold,
-                          real* sumdiff_stderr,
-                          real* sumdiff_missing) const
+                          Vec& stderr,
+                          Vec& missing) const
 {
     if(target->width()!=width())
         PLERROR("In VecStatsCollector:: compareStats() - This VMatrix has "
                 "width %d which differs from the target width of %d",
                 width(), target->width());
-
-    int nbdiff            = 0;
-    real sumdiff_stderr_  = 0;
-    real sumdiff_missing_ = 0;
-    Mat score(width(),3);
 
     for(int i=0;i<width();i++)
     {
@@ -1970,8 +1965,6 @@ int VMatrix::compareStats(const VMat& target,
         }
         else if(isnan(th_missing))
             PLWARNING("In VMatrix::compareStats - should not happen!");
-        else
-            sumdiff_missing_ += th_missing;
         
         real tmean = tstats.mean();
         real lmean = lstats.mean();
@@ -1982,57 +1975,24 @@ int VMatrix::compareStats(const VMat& target,
             PLWARNING("In VMatrix::compareStats - field %d(%s) have a"
                       " stderror of 0 for both matrice.",
                       i, fieldName(i).c_str());
-        else
-            sumdiff_stderr_+=th_stderror;
-        score(i,0)=i;
-        score(i,1)=th_stderror;
-        score(i,2)=th_missing;
-
+        stderr[i]=th_stderror;
+        missing[i]=th_missing;
     }
-    pout<<"Print the field that do not pass the threshold sorted by the stderror"<<endl;
-    sortRows(score,1,false);
-    for(int i=0;i<score.length();i++)
-    {
-        if(score(i,1)>stderror_threshold)
-        {
-            const StatsCollector tstats = target->getStats(i);
-            const StatsCollector lstats = getStats(i);
-            real tmean = tstats.mean();
-            real lmean = lstats.mean();
-            real tstderror = sqrt(pow(tstats.stderror(), 2) + 
-                                  pow(lstats.stderror(), 2));
-
-            pout<<i<<"("<<fieldName(int(round(score(i,0))))<<")"
-                <<" differ by "<<score(i,1)<<" stderror."
-                <<" The mean is "<<lmean<<" while the target mean is "<<tmean
-                <<" and the used stderror is "<<tstderror<<endl;
-            nbdiff++;
-        }
-    }
-
-    cout<<"Print the field that do not pass the threshold sorted by the missing error"<<endl;
-    sortRows(score,2,false);
-    for(int i=0;i<score.length();i++)
-    {
-        if(score(i,2)>missing_threshold)
-        {
-            const StatsCollector tstats = target->getStats(i);
-            const StatsCollector lstats = getStats(i);
-            real tmissing = tstats.nmissing()/tstats.n();
-            real lmissing = lstats.nmissing()/lstats.n();
-            pout<<i<<"("<<fieldName(int(round(score(i,0))))<<")"
-                <<" The missing stats difference is "<< score(i,2)
-                <<". Their is "<<lmissing<<" missing while target have "
-                <<tmissing<<" missing."<<endl;
-            nbdiff++;
-        }
-    }
-    if(sumdiff_stderr!=NULL)
-        *sumdiff_stderr = sumdiff_stderr_;
-    if(sumdiff_missing!=NULL)
-        *sumdiff_missing = sumdiff_missing_;
-    return nbdiff;
+    return;
 }
+
+/////////////////////////
+// max_fieldnames_size //
+/////////////////////////
+int VMatrix::max_fieldnames_size() const
+{
+    uint size_fieldnames=0;
+    for(int i=0;i<width();i++)
+        if(fieldName(i).size()>size_fieldnames)
+            size_fieldnames=fieldName(i).size();
+    return size_fieldnames;
+}
+
 } // end of namespace PLearn
 
 

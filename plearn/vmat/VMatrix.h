@@ -618,12 +618,16 @@ public:
      * @param sumdiff_missing The sum of all variable differences of missing
      * @return The number of differences that were found
      */
-    int compareStats(const VMat& target,
-                     const real stderror_threshold = 2,
-                     const real missing_threshold = 2,
-                     real* sumdiff_stderr = NULL,
-                     real* sumdiff_missing = NULL) const;
+    void compareStats(const VMat& target,
+                     const real stderror_threshold ,
+                     const real missing_threshold,
+                     Vec& stderr,
+                     Vec& missing) const;
 
+    /**
+     * @return The size of the longuest fieldname
+     */
+    int max_fieldnames_size() const;
 
     /**
      *  Returns the bounding box of the data, as a vector of min:max pairs.  If
