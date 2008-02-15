@@ -144,7 +144,7 @@ void DERIVEDCLASS::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////////
 // resetGenerator //
 ////////////////////
-void DERIVEDCLASS::resetGenerator(long g_seed) const
+void DERIVEDCLASS::resetGenerator(long g_seed)
 {
     PLERROR("resetGenerator not implemented for DERIVEDCLASS");
 }

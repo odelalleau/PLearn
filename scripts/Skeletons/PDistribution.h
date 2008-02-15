@@ -67,7 +67,7 @@ public:
     //### random_gen->manual_seed(g_seed) if g_seed !=0
     //! Reset the random number generator used by generate() using the
     //! given seed.
-    // virtual void resetGenerator(long g_seed) const;
+    // virtual void resetGenerator(long g_seed);
 
     //! Set the 'predictor' and 'predicted' sizes for this distribution.
     //### See help in PDistribution.h.
