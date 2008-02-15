@@ -129,8 +129,8 @@ protected:
     //! Learnt sizes of the 'predictor' and 'predicted' sizes. These are the
     //! options to use in PDistribution subclasses code. They always verify:
     //!     n_predictor + n_predicted == inputsize()
-    int n_predictor;
-    int n_predicted;
+    mutable int n_predictor;
+    mutable int n_predicted;
 
 public:
 
@@ -331,7 +331,11 @@ public:
     virtual void generatePredictorGivenPredicted(Vec& x, const Vec& y);
 
     //! 'Get' accessor for n_predicted.
-    int getNPredicted() { return n_predicted; }
+    int getNPredicted() const { return n_predicted; }
+
+    //! 'Get' accessor for n_predictor.
+    int getNPredictor() const { return n_predictor; }
+
 
 };
 
