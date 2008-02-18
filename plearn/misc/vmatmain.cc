@@ -1077,7 +1077,7 @@ int vmatmain(int argc, char** argv)
 
         Vec Ds(m1->width());
         Vec p_values(m1->width());
-        KS_test(m1,m2,10,Ds,p_values);
+        KS_test(m1,m2,10,Ds,p_values,true);
         Mat score(m1->width(),3);
             
         for(int col = 0;col<m1->width();col++)

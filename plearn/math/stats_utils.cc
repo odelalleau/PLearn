@@ -296,15 +296,26 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value)
 }
 
 //! This version work with nan value
-void KS_test(VMat& m1, VMat& m2, int conv, Vec& Ds, Vec& p_values)
+void KS_test(const VMat& m1, const VMat& m2, const int conv, Vec& Ds, Vec& p_values,
+             const bool report_progress)
 {
     m1->compatibleSizeError(m2);
     Ds.resize(m1->width());
     p_values.resize(m1->width());
-    for(int col = 0;col<m1->width();col++)
+    PP<ProgressBar> pbar;
+    if (report_progress)
+        pbar = new ProgressBar("Computing Kologorov Smirnow two sample test",
+                               m1->width());
+
+#pragma omp parallel default(none) shared(pbar)
     {
         Vec row1(m1->length());
         Vec row2(m2->length());
+#pragma omp for
+    for(int col = 0;col<m1->width();col++)
+    {
+        row1->resize(m1->length());
+        row2->resize(m2->length());
         m1->getColumn(col,row1);
         m2->getColumn(col,row2);
         remove_missing_inplace(row1);
@@ -314,6 +325,11 @@ void KS_test(VMat& m1, VMat& m2, int conv, Vec& Ds, Vec& p_values)
         KS_test(row1,row2,conv,D,p_value);
         Ds[col]=D;
         p_values[col]=p_value;
+        if (report_progress)
+#pragma omp critical
+            pbar->updateone();
+
+    }
     }
 }
 real KS_test(Vec& v1, Vec& v2, int conv)
