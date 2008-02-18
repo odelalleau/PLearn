@@ -1935,11 +1935,11 @@ void VMatrix::appendRows(Mat rows)
 //////////////////
 // compareStats //
 //////////////////
-void VMatrix::compareStats(const VMat& target,
-                          const real stderror_threshold,
-                          const real missing_threshold,
-                          Vec& stderr,
-                          Vec& missing) const
+void VMatrix::compareStats(VMat target,
+                           real stderror_threshold,
+                           real missing_threshold,
+                           Vec stderror,
+                           Vec missing)
 {
     if(target->width()!=width())
         PLERROR("In VecStatsCollector:: compareStats() - This VMatrix has "
@@ -1976,7 +1976,7 @@ void VMatrix::compareStats(const VMat& target,
             PLWARNING("In VMatrix::compareStats - field %d(%s) have a"
                       " stderror of 0 for both matrice.",
                       i, fieldName(i).c_str());
-        stderr[i]=th_stderror;
+        stderror[i]=th_stderror;
         missing[i]=th_missing;
     }
     return;

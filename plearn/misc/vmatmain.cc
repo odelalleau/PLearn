@@ -973,18 +973,18 @@ int vmatmain(int argc, char** argv)
         if(argc>5)
             missing_threshold=toreal(argv[5]);
         Vec missing(m1->width());
-        Vec stderr(m1->width());
+        Vec stderror(m1->width());
 
         pout << "Test of difference that suppose gaussiane variable"<<endl;
         m1->compareStats(m2, stderror_threshold, missing_threshold,
-                         stderr, missing);
+                         stderror, missing);
 
         Mat score(m1->width(),3);
 
         for(int col = 0;col<m1->width();col++)
         {
             score(col,0)=col;
-            score(col,1)=stderr[col];
+            score(col,1)=stderror[col];
             score(col,2)=missing[col];
         }
         
