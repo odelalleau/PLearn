@@ -63,6 +63,7 @@ public:
 
     // Possibly "Learned" parameters
     Vec mu;
+    Mat covarmat;
     Vec eigenvalues;
     Mat eigenvectors;
 
@@ -82,6 +83,7 @@ public:
 
     virtual void forget();
     virtual void train();
+    virtual void computeEigenDecomposition();
     virtual real log_density(const Vec& x) const;
 
     //! return a pseudo-random sample generated from the distribution.
@@ -95,6 +97,9 @@ public:
 
 protected:
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
 private:
 

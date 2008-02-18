@@ -80,6 +80,7 @@ void GaussianDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(mu, copies);
+    deepCopyField(covarmat, copies);
     deepCopyField(eigenvalues, copies);
     deepCopyField(eigenvectors, copies);
     deepCopyField(given_mu, copies);
@@ -122,10 +123,25 @@ void GaussianDistribution::declareOptions(OptionList& ol)
 
     // Learnt options
     declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
+    declareOption(ol, "covarmat", &GaussianDistribution::covarmat, OptionBase::learntoption, "");
     declareOption(ol, "eigenvalues", &GaussianDistribution::eigenvalues, OptionBase::learntoption, "");
     declareOption(ol, "eigenvectors", &GaussianDistribution::eigenvectors, OptionBase::learntoption, "");
 
     inherited::declareOptions(ol);
+}
+
+////////////////////
+// declareMethods //
+////////////////////
+void GaussianDistribution::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this is
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "computeEigenDecomposition", &GaussianDistribution::computeEigenDecomposition,
+        (BodyDoc("Compute eigenvectors and corresponding eigenvalues.\n")));
 }
 
 ///////////
@@ -159,27 +175,16 @@ void GaussianDistribution::forget()
 void GaussianDistribution::train()
 {
     VMat training_set = getTrainingSet();
-    int l = training_set.length();
     int d = training_set.width();
     int ws = training_set->weightsize();
 
-    if(d!=inputsize()+ws)
+    if(d != inputsize()+ws)
         PLERROR("In GaussianDistribution::train width of training_set should be equal to inputsize()+weightsize()");
 
-    // these are used in SVD
-    static Mat trainmat;
-    static Mat U;
-
-    // The maximum number of eigenvalues we want.
-    int maxneigval = min(k, min(l,d));
-
     // First get mean and covariance
-    // (declared static to avoid repeated dynamic memory allocation)
-    static Mat covarmat;
-
     if(given_mu.length()>0)
     { // we have a fixed given_mu
-        int d = given_mu.length();
+        d = given_mu.length();
         mu.resize(d);
         mu << given_mu;
         if(ws==0)
@@ -199,15 +204,24 @@ void GaussianDistribution::train()
             PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
     }
 
-    // cerr << "maxneigval: " << maxneigval << " ";
-    // cerr << eigenvalues.length() << endl;
-    // cerr << "eig V: \n" << V << endl;
+    computeEigenDecomposition();
+}
+
+void GaussianDistribution::computeEigenDecomposition()
+{
+    VMat training_set = getTrainingSet();
+    int l = training_set.length();
+    int d = training_set.width();
+    int maxneigval = min(k, min(l,d));  // The maximum number of eigenvalues we want.
 
     // Compute eigendecomposition only if there is a training set...
-    // Otherwise, just fill the eigen-* matrices to all NaN...
+    // Otherwise, just empty the eigen-* matrices
+    static Mat covarmat_tmp;
     if (l>0 && maxneigval>0)
     {
-        eigenVecOfSymmMat(covarmat, maxneigval, eigenvalues, eigenvectors, (verbosity>=4));
+        // On copie covarmat car cette matrice est detruite par la fonction eigenVecOfSymmMat
+        covarmat_tmp = covarmat.copy();
+        eigenVecOfSymmMat(covarmat_tmp, maxneigval, eigenvalues, eigenvectors, (verbosity>=4));
         int neig = 0;
         while(neig<eigenvalues.length() && eigenvalues[neig]>0.)
             neig++;
@@ -218,12 +232,6 @@ void GaussianDistribution::train()
     {
         eigenvalues.resize(0);
         eigenvectors.resize(0, mu.length());
-        /*
-          eigenvalues.resize(maxneigval);
-          eigenvectors.resize(maxneigval, mu.size());
-          eigenvalues.fill(0);
-          eigenvectors.fill(0);
-        */
     }
 }
 
