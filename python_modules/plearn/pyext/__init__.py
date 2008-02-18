@@ -34,6 +34,7 @@ from plearn.pyext.plext import *
 from plearn.pyext import plext as pl
 
 from plearn.pyplearn.plargs import *
+import os
 import cgitb
 cgitb.enable(format='PLearn')
 
@@ -45,7 +46,8 @@ def cleanupWrappedObjects():
         ramassePoubelles()
 atexit.register(cleanupWrappedObjects)
 
-print versionString()
+if os.getenv('PYTEST_STATE') != 'Active':
+    print versionString()
 
 
 # Redefines function TMat to emulate pyplearn behaviour
