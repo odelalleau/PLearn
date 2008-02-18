@@ -100,7 +100,6 @@ using namespace PLearn;
 
 int main(int argc, char** argv)
 {
-    cout<<"main begin"<<endl;
     return plearn_main( argc, argv, 
                         PLEARN_MAJOR_VERSION, 
                         PLEARN_MINOR_VERSION, 
