@@ -1,7 +1,7 @@
 #ifndef DERIVEDCLASS_INC
 #define DERIVEDCLASS_INC
 
-#include <plearn_learners/distributions/PDistribution.h>
+#include <plearn_learners/distributions/UnconditionalDistribution.h>
 
 namespace PLearn {
 
