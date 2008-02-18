@@ -765,11 +765,12 @@ class ResultsRelatedRoutine(Routine):
         self.clean_cwd()
         popd()
 
+        ## Set the status and quit
+        self.status_hook()
+
         ## Unlink all resources.
         self.test.unlinkResources(test_results)
 
-        ## Set the status and quit
-        self.status_hook()
 
     def status_hook(self):
         """Overriden by subclasses to set the test's status."""
