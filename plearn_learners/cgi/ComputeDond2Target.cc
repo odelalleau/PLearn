@@ -141,8 +141,7 @@ void ComputeDond2Target::build_()
 void ComputeDond2Target::computeTarget()
 {    
     // initialize primary dataset
-    main_row = 0;
-    main_col = 0;
+    int main_col = 0;
     main_length = train_set->length();
     main_width = train_set->width();
     main_input.resize(main_width);
@@ -155,7 +154,7 @@ void ComputeDond2Target::computeTarget()
     output_names.resize(output_width);
     output_vec.resize(output_width);
     main_names << train_set->fieldNames();
-    for (ins_col = 0; ins_col < ins_width; ins_col++)
+    for (int ins_col = 0; ins_col < ins_width; ins_col++)
     {
         for (main_col = 0; main_col < main_width; main_col++)
         {
@@ -175,10 +174,10 @@ void ComputeDond2Target::computeTarget()
     //Now, we can group the input and compute the class target
     ProgressBar* pb = 0;
     pb = new ProgressBar( "Computing target classes", main_length);
-    for (main_row = 0; main_row < main_length; main_row++)
+    for (int main_row = 0; main_row < main_length; main_row++)
     {
         train_set->getRow(main_row, main_input);
-        for (ins_col = 0; ins_col < ins_width; ins_col++)
+        for (int ins_col = 0; ins_col < ins_width; ins_col++)
         {
             output_vec[ins_col] = main_input[output_variable_src[ins_col]];
         }

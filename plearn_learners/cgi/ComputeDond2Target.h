@@ -133,13 +133,9 @@ private:
     
     // input instructions variables
     int ins_width;
-    int ins_col;
     
     // primary dataset variables
     int main_length;
-    int main_width;
-    int main_row;
-    int main_col;
     Vec main_input;
     TVec<string> main_names;
     
