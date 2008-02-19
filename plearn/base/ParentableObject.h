@@ -138,6 +138,9 @@ public:
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
+    
 protected:
     //! Backpointer to parent
     Object* m_parent;

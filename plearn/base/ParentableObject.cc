@@ -100,6 +100,28 @@ void ParentableObject::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_parent, copies);
 }
 
+void ParentableObject::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "getParent", (const Object* (ParentableObject::*)() const)&ParentableObject::parent,
+        (BodyDoc("Return the parent object")));
+
+    declareMethod(
+        rmm, "setParent", &ParentableObject::setParent,
+        (BodyDoc("Setter for the parent object"),
+         ArgDoc ("parent", "Pointer to the new parent of this object")));
+
+    declareMethod(
+        rmm, "checkParent", &ParentableObject::checkParent,
+        (BodyDoc("After the m_parent field of a child has been set, this function is\n"
+                 "called so that the child has a chance to check the parent (e.g. dynamic\n"
+                 "type checking).  By default it just asserts that there is a parent.")));
+}
+
 void ParentableObject::build_()
 {
     updateChildrensParent(this);
