@@ -143,7 +143,7 @@ void ComputeDond2Target::computeTarget()
     // initialize primary dataset
     int main_col = 0;
     main_length = train_set->length();
-    main_width = train_set->width();
+    int main_width = train_set->width();
     main_input.resize(main_width);
     main_names.resize(main_width);
     ins_width = input_vector.size();
