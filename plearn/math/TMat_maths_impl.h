@@ -1287,7 +1287,8 @@ void operator/=(const TVec<T>& vec1, const TVec<T>& vec2)
     if (vec1.size() > 0 && vec2.size() > 0) {
         T* v1 = vec1.data();
         T* v2 = vec2.data();
-        for(int i=0; i<vec1.length(); i++)
+        int l=vec1.length();
+        for(int i=0; i<l; i++)
             v1[i] /= v2[i];
     }
 }
@@ -3442,7 +3443,8 @@ T matRowDotVec(const TMat<T>& mat, int i, const TVec<T> v)
     T s = 0;
     T* rowi = mat.rowdata(i);
     T* v_=v.data();
-    for (int j=0;j<mat.width();j++)
+    int w=mat.width();
+    for (int j=0;j<w;j++)
         s += rowi[j] * v_[j];
     return s;
 }
@@ -3459,7 +3461,8 @@ T matColumnDotVec(const TMat<T>& mat, int j, const TVec<T> v)
     T s = 0;
     T* colj = mat.data()+j;
     T* v_=v.data();
-    for (int i=0;i<mat.length();i++, colj+=mat.mod())
+    int l=mat.length();
+    for (int i=0;i<l;i++, colj+=mat.mod())
         s += *colj * v_[i];
     return s;
 }
@@ -3545,8 +3548,9 @@ void makeItSymmetric(const TMat<T>& mat, T max_dif)
     T dif;
     T value;
     bool warning_flag = false;
+    int w=mat.width();
     for (int i=0; i<mat.length()-1 ; i++)
-        for (int j=i+1; j<mat.width(); j++)
+        for (int j=i+1; j<w; j++)
         {
             dif = std::abs(mat[i][j] - mat[j][i]);
             if (dif > max_dif)
@@ -3793,11 +3797,12 @@ void externalProduct(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2)
 #endif
     const T* v_1=v1.data();
     const T* v_2=v2.data();
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T* mi = mat[i];
         T v1i = v_1[i];
-        for (int j=0;j<mat.width();j++)
+        for (int j=0;j<w;j++)
             mi[j] = v1i * v_2[j];
     }
 }
@@ -3853,11 +3858,12 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
 #endif
     const T* v_1=v1.data();
     const T* v_2=v2.data();
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T* mi = mat[i];
         T v1i = v_1[i];
-        for (int j=0;j<mat.width();j++)
+        for (int j=0;j<w;j++)
             mi[j] += gamma * v1i * v_2[j];
     }
 }
@@ -3873,11 +3879,12 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
 #endif
     const T* v_1=v1.data();
     const T* v_2=v2.data();
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T* mi = mat[i];
         T v1i = v_1[i];
-        for (int j=0;j<mat.width();j++)
+        for (int j=0;j<w;j++)
             mi[j] = alpha*mi[j] + gamma * v1i * v_2[j];
     }
 }
@@ -4545,6 +4552,7 @@ void multiply(TMat<T>& result, const TMat<T>& x, const TVec<T>& y, bool transpos
                  !transpose && x.length()==y.length(),
                  "multiply matrix rows or columns by vector: incompatible dimensions");
     result.resize(x.length(),x.width());
+    int w=x.width();
     if(result.isCompact() && x.isCompact())
     {
         typename TMat<T>::compact_iterator itm = result.compact_begin();
@@ -4554,12 +4562,12 @@ void multiply(TMat<T>& result, const TMat<T>& x, const TVec<T>& y, bool transpos
             for (int i=0;i<x.length();i++)
             {
                 ity = y.begin();
-                for (int j=0;j<x.width();j++,++itx,++itm,++ity)
+                for (int j=0;j<w;j++,++itx,++itm,++ity)
                     *itm = *itx * *ity;
             }
         else
             for (int i=0;i<x.length();i++,++ity)
-                for (int j=0;j<x.width();j++,++itx,++itm)
+                for (int j=0;j<w;j++,++itx,++itm)
                     *itm = *itx * *ity;
     }
     else // use non-compact iterators
@@ -4571,12 +4579,12 @@ void multiply(TMat<T>& result, const TMat<T>& x, const TVec<T>& y, bool transpos
             for (int i=0;i<x.length();i++)
             {
                 ity = y.begin();
-                for (int j=0;j<x.width();j++,++itx,++itm,++ity)
+                for (int j=0;j<w;j++,++itx,++itm,++ity)
                     *itm = *itx * *ity;
             }
         else
             for (int i=0;i<x.length();i++,++ity)
-                for (int j=0;j<x.width();j++,++itx,++itm)
+                for (int j=0;j<w;j++,++itx,++itm)
                     *itm = *itx * *ity;
     }
 }
@@ -4735,7 +4743,8 @@ template<class T>
 void addToDiagonal(const TMat<T>& mat, T lambda)
 {
     T *d = mat.data();
-    for (int i=0;i<mat.length();i++,d+=mat.mod()+1) *d+=lambda;
+    int l=mat.length();
+    for (int i=0;i<l;i++,d+=mat.mod()+1) *d+=lambda;
 }
 
 
@@ -4752,7 +4761,8 @@ void addToDiagonal(const TMat<T>& mat, const TVec<T>& lambda)
 #endif
     T *l = lambda.data();
     T *d = mat.data();
-    for (int i=0;i<mat.length();i++,d+=mat.mod()+1,l++) *d += *l;
+    int le= mat.length();
+    for (int i=0;i<le;i++,d+=mat.mod()+1,l++) *d += *l;
 }
 
 
@@ -4760,7 +4770,8 @@ template<class T>
 void diag(const TMat<T>& mat, const TVec<T>& d)
 {
     T* d_ = d.data();
-    for (int i=0;i<mat.length();i++)
+    int l=mat.length();
+    for (int i=0;i<l;i++)
         d_[i] = mat(i,i);
 }
 
@@ -4800,11 +4811,12 @@ void averageAcrossRowsAndColumns(const TMat<T>& mat, TVec<T>& avg_across_rows, T
     avg_across_rows.clear();
     avg_across_columns.clear();
     T* row_i=mat.data();
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T& avg_cols_i=avg_across_columns[i];
         T* avg_rows = avg_across_rows.data();
-        for (int j=0;j<mat.width();j++)
+        for (int j=0;j<w;j++)
         {
             T row_ij=row_i[j];
             avg_cols_i += row_ij;
@@ -4820,7 +4832,8 @@ void averageAcrossRowsAndColumns(const TMat<T>& mat, TVec<T>& avg_across_rows, T
 template<class T>
 void addToRows(const TMat<T>& mat, const TVec<T> row, bool ignored)
 {
-    for (int i=0;i<mat.length();i++)
+    int l=mat.length();
+    for (int i=0;i<l;i++)
     {
         TVec<T> row_i = mat(i);
         row_i += row;
@@ -4832,10 +4845,11 @@ template<class T>
 void addToColumns(const TMat<T>& mat, const TVec<T> col, bool ignored)
 {
     T* row_i=mat.data();
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T col_i=col[i];
-        for (int j=0;j<mat.width();j++)
+        for (int j=0;j<w;j++)
             row_i[j] += col_i;
         row_i+=mat.mod();
     }
@@ -4858,10 +4872,11 @@ template<class T>
 void substractFromColumns(const TMat<T>& mat, const TVec<T> col, bool ignored)
 {
     T* row_i=mat.data();
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T col_i=col[i];
-        for (int j=0;j<mat.width();j++)
+        for (int j=0;j<w;j++)
             row_i[j] -= col_i;
         row_i+=mat.mod();
     }
@@ -4882,9 +4897,10 @@ T sum(const TMat<T>& mat, bool ignore_missing)
 {
     double res = 0.0;
     T* m_i = mat.data();
+    int w=mat.width();
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
     {
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
         {
             if (!is_missing(m_i[j])) res += m_i[j];
             else if (!ignore_missing) return MISSING_VALUE;
@@ -4900,8 +4916,10 @@ T sum(const TMat<T>& mat)
 {
     T res = T(0);
     T* m_i = mat.data();
+    int w=mat.width();
+
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
             res += m_i[j];
     return res;
 }
@@ -4911,8 +4929,10 @@ T product(const TMat<T>& mat)
 {
     double res = 1.0;
     T* m_i = mat.data();
+    int w=mat.width();
+
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
             res *= m_i[j];
     return T(res);
 }
@@ -4922,8 +4942,9 @@ T sum_of_squares(const TMat<T>& mat)
 {
     double res = 0.0;
     T* m_i = mat.data();
+    int w=mat.width();
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
         {
             T v = m_i[j];
             res += v*v;
@@ -4940,8 +4961,9 @@ T mean(const TMat<T>& mat)
 #endif
     double res = 0.0;
     T* m_i = mat.data();
+    int w=mat.width();
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
             res += m_i[j];
     return T(res/(mat.length()*mat.width()));
 }
@@ -5123,8 +5145,9 @@ T minabs(const TMat<T>& mat)
 #endif
     T* m_i = mat.data();
     double minval = fabs(m_i[0]);
+    int w=mat.width();
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
         {
             T a=fabs(m_i[j]);
             if(a<minval)
@@ -5143,8 +5166,9 @@ T minabs(const TMat<T>& mat, int& min_i, int& min_j)
     double minval = fabs(m_i[0]);
     min_i = 0;
     min_j = 0;
+    int w=mat.width();
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
         {
             T a = fabs(m_i[j]);
             if(a<minval)
@@ -5167,8 +5191,9 @@ T maxabs(const TMat<T>& mat)
 #endif
     T* m_i = mat.data();
     double maxval = fabs(m_i[0]);
+    int w=mat.width();
     for(int i=0; i<mat.length(); i++, m_i+=mat.mod())
-        for(int j=0; j<mat.width(); j++)
+        for(int j=0; j<w; j++)
         {
             T a=fabs(m_i[j]);
             if(a>maxval)
@@ -5333,11 +5358,12 @@ void rowSumOfSquares(const TMat<T>& mat, const TMat<T>& singlecolumn)
     if(singlecolumn.length()!=mat.length() || singlecolumn.width()!=1)
         PLERROR("IN void rowSumOfSquares(const TMat<T>& mat, TMat<T>& singlecolumn) singlecolumn must be a mat.length() x 1 matrix");
 #endif
+    int w=mat.width();
     for (int i=0;i<mat.length();i++)
     {
         T ss=0;
         T* mi=mat[i];
-        for (int j=0;j<mat.width();j++) { T mij=mi[j]; ss+=mij*mij; }
+        for (int j=0;j<w;j++) { T mij=mi[j]; ss+=mij*mij; }
         singlecolumn(i,0)=ss;
     }
 }
@@ -5655,7 +5681,8 @@ void computeMeanAndStddev(const TMat<T>& m, TVec<T>& meanvec, TVec<T>& stddevvec
 {
     columnMean(m,meanvec);
     columnVariance(m,stddevvec,meanvec);
-    for(int i=0; i<stddevvec.length(); i++)
+    int l=stddevvec.length();
+    for(int i=0; i<l; i++)
         stddevvec[i] = sqrt(stddevvec[i]);
 }
 
@@ -5667,7 +5694,8 @@ void computeColumnsMeanAndStddev(const TMat<T>& m, TMat<T>& meanvec, TMat<T>& st
 {
     rowMean(m,meanvec);
     rowVariance(m,stddevvec,meanvec);
-    for(int i=0; i<stddevvec.length(); i++)
+    int l=stddevvec.length();
+    for(int i=0; i<l; i++)
         stddevvec[i][0] = sqrt(stddevvec[i][0]);
 }
 
@@ -5721,8 +5749,9 @@ template<class T>
 void operator+=(const TMat<T>& m, T scalar)
 {
     T* m_i = m.data();
+    int w = m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] += scalar;
 }
 
@@ -5730,8 +5759,9 @@ template<class T>
 void operator*=(const TMat<T>& m, T scalar)
 {
     T* m_i = m.data();
+    int w = m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] *= scalar;
 }
 
@@ -5755,8 +5785,9 @@ void operator+=(const TMat<T>& m, const TVec<T>& v)
 #endif
     T* m_i = m.data();
     T* vv = v.data();
+    int w=m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] += vv[j];
 }
 
@@ -5770,8 +5801,9 @@ void operator-=(const TMat<T>& m, const TVec<T>& v)
 #endif
     T* m_i = m.data();
     T* vv = v.data();
+    int w=m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] -= vv[j];
 }
 
@@ -5785,8 +5817,9 @@ void operator*=(const TMat<T>& m, const TVec<T>& v)
 #endif
     T* m_i = m.data();
     T* vv = v.data();
+    int w=m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] *= vv[j];
 }
 
@@ -5818,8 +5851,9 @@ void operator/=(const TMat<T>& m, const TVec<T>& v)
 #endif
     T* m_i = m.data();
     T* vv = v.data();
+    int w=m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] /= vv[j];
 }
 
@@ -5942,8 +5976,9 @@ TMat<T> operator-(const TMat<T>& m)
     TMat<T> opposite(m.length(),m.width());
     T *m_i=m.data();
     T *o_i=opposite.data();
+    int w=m.width();
     for (int i=0;i<m.length();i++,m_i+=m.mod(),o_i+=opposite.mod())
-        for (int j=0;j<m.width();j++)
+        for (int j=0;j<w;j++)
             o_i[j] = - m_i[j];
     return opposite;
 }
@@ -5953,8 +5988,9 @@ template<class T>
 void negateElements(const TMat<T>& m)
 {
     T* m_i = m.data();
+    int w=m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] = -m_i[j];
 }
 
@@ -5963,8 +5999,9 @@ template<class T>
 void invertElements(const TMat<T>& m)
 {
     T* m_i = m.data();
+    int w=m.width();
     for(int i=0; i<m.length(); i++, m_i+=m.mod())
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             m_i[j] = 1.0/m_i[j];
 }
 
@@ -6744,7 +6781,8 @@ void apply(T (*func)(const TVec<T>&), const TMat<T>& m, TMat<T>& dest)
     if (dest.length()!=m.length())
         PLERROR("apply: m.length_=%d, dest.length_=%d",
                 m.length(),dest.length());
-    for (int i=0;i<m.length();i++)
+    int l=m.length();
+    for (int i=0;i<l;i++)
         dest(i,0)=func(m(i));
 }
 
@@ -6955,8 +6993,9 @@ template<class T>
 TMat<T> square(const TMat<T>& m)
 {
     TMat<T> res(m.length(), m.width());
+    int w=m.width();
     for(int i=0; i<m.length(); i++)
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             res(i,j) = square(m(i,j));
     return res;
 }
@@ -6965,8 +7004,9 @@ template<class T>
 TMat<T> sqrt(const TMat<T>& m)
 {
     TMat<T> res(m.length(), m.width());
+    int w=m.width();
     for(int i=0; i<m.length(); i++)
-        for(int j=0; j<m.width(); j++)
+        for(int j=0; j<w; j++)
             res(i,j) = sqrt(m(i,j));
     return res;
 }
@@ -7010,8 +7050,10 @@ void convolve(TMat<T> m, TMat<T> mask, TMat<T> result)
             T* maskptr = mask.data();
             T* mptr = m[i]+j;
             sum = 0.0;
+            int w=mask.width();
+
             for(int l=0; l<mask.length(); l++, maskptr += mask.mod(), mptr += m.mod())
-                for(int c=0; c<mask.width(); c++)
+                for(int c=0; c<w; c++)
                     sum += maskptr[c] * mptr[c];
             result(i,j) = sum;
         }
