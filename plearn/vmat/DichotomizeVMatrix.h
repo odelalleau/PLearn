@@ -64,6 +64,8 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
     TVec< pair<string, TVec< pair<real, real> > > > discrete_variable_instructions;
+    
+    int verbose;
 
 public:
     //#####  Public Member Functions  #########################################

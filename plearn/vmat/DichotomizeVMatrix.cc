@@ -51,8 +51,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "Variables with no specification will be kept as_is\n"
     );
 
-DichotomizeVMatrix::DichotomizeVMatrix()
-//    discrete_variable_instructions(NULL)
+DichotomizeVMatrix::DichotomizeVMatrix():
+    verbose(3)
 /* ### Initialize all fields to their default value */
 {
     // ...
@@ -96,7 +96,7 @@ void DichotomizeVMatrix::getNewRow(int i, const Vec& v) const
                    }
                    output_col += 1;
                }
-               if(found_range==false)
+               if(found_range==false && verbose>2)
                {
                    PLWARNING("DichotomizeVMatrix::getNewRow() - "
                              "row %d, fields %s, have a value (%f) that are outside all dichotomize range",
