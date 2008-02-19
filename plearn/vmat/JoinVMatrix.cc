@@ -75,7 +75,8 @@ JoinVMatrix::build_()
 
         for(int i=0;i<slave.length();i++) {
             slave->getRow(i,temp);
-            for(int j=0;j<slave_idx.size();j++)
+            int s=slave_idx.size();
+            for(int j=0;j<s;j++)
                 tempkey[j]=temp[slave_idx[j]];
             mp.insert(make_pair(tempkey,i));
         }
@@ -131,7 +132,8 @@ void JoinVMatrix::getNewRow(int idx, const Vec& v) const
     master->getRow(idx,v.subVec(0,master.width()));
 
     // build a key used to search in the slave matrix
-    for(int j=0;j<master_idx.size();j++)
+    int s=master_idx.size();
+    for(int j=0;j<s;j++)
         tempkey[j]=v[master_idx[j]];
     Maptype::const_iterator it,low,upp;
     pair<Maptype::const_iterator,Maptype::const_iterator> tit=mp.equal_range(tempkey);

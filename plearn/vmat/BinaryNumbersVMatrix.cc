@@ -76,31 +76,32 @@ void BinaryNumbersVMatrix::getNewRow(int i, const Vec& v) const
         swap_endian=true;
 #endif
     
+    int l=v.length();
     if (format=="u1") 
-        for (int i=0;i<v.length();i++)
+        for (int i=0;i<l;i++)
             v[i] = (real)((unsigned char*)buffer)[i];
     else if (format=="u2") {
         if (swap_endian)
             endianswap2(buffer,width_);
-        for (int i=0;i<v.length();i++)
+        for (int i=0;i<l;i++)
             v[i] = (real)((unsigned short*)buffer)[i];
     }
     else if (format=="i4") {
         if (swap_endian)
             endianswap4(buffer,width_);
-        for (int i=0;i<v.length();i++)
+        for (int i=0;i<l;i++)
             v[i] = (real)((int*)buffer)[i];
     }
     else if (format=="f4") {
         if (swap_endian)
             endianswap4(buffer,width_);
-        for (int i=0;i<v.length();i++)
+        for (int i=0;i<l;i++)
             v[i] = (real)((float*)buffer)[i];
     }
     else if (format=="f8") {
         if (swap_endian)
             endianswap8(buffer,width_);
-        for (int i=0;i<v.length();i++)
+        for (int i=0;i<l;i++)
             v[i] = (real)((double*)buffer)[i];
     }
     else
