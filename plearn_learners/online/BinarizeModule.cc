@@ -184,11 +184,12 @@ void BinarizeModule::fprop(const TVec<Mat*>& ports_value)
     {
         real* xt = (*input)[t];
         real* yt = (*output)[t];
+        int w=input->width();
         if (stochastic)
-            for (int i=0;i<input->width();i++)
+            for (int i=0;i<w;i++)
                 yt[i]=random_gen->binomial_sample(xt[i]);
         else
-            for (int i=0;i<input->width();i++)
+            for (int i=0;i<w;i++)
                 yt[i]=xt[i]>=0.5?1:0;
     }
 }
