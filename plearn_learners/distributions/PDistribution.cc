@@ -192,6 +192,27 @@ void PDistribution::declareOptions(OptionList& ol)
 
 }
 
+////////////////////
+// declareMethods //
+////////////////////
+void PDistribution::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different from declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "log_density", &PDistribution::log_density,
+        (BodyDoc("Compute the log density of a data point"),
+         ArgDoc("sample", "The data point"),
+         RetDoc("The log density")));
+
+    declareMethod(
+        rmm, "generate", &PDistribution::remote_generate,
+        (BodyDoc("Generate a sample"),
+         RetDoc("The generated sample")));
+}
+
 ///////////
 // build //
 ///////////
@@ -378,10 +399,15 @@ void PDistribution::generateN(const Mat& Y) const
         PLERROR("In PDistribution::generateN - Matrix width (%d) differs from "
                 "n_predicted (%d)", Y.width(), n_predicted);
     int N = Y.length();
+    PP<ProgressBar> pb =
+        report_progress ? new ProgressBar("Generating samples", N)
+                        : NULL;
     for(int i=0; i<N; i++)
     {
         v = Y(i);
         generate(v);
+        if (pb)
+            pb->updateone();
     }
 }
 
@@ -416,6 +442,17 @@ int PDistribution::outputsize() const
         else l++;
     }
     return l;
+}
+
+
+/////////////////////
+// remote_generate //
+/////////////////////
+Vec PDistribution::remote_generate()
+{
+    Vec sample;
+    generate(sample);
+    return sample;
 }
 
 ////////////////////

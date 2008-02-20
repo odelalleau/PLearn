@@ -162,6 +162,9 @@ protected:
 
     //! Declares this class' options.
     static void declareOptions(OptionList& ol);
+    
+    //! Declare the methods that are remote-callable.
+    static void declareMethods(RemoteMethodMap& rmm);
 
 public:
 
@@ -296,9 +299,12 @@ public:
     //! distribution, of density p(y | x).
     virtual void generate(Vec& y) const;
 
+    //! Remote interface for 'generate'.
+    Vec remote_generate();
+
     //! X must be a N x n_predicted matrix. that will be filled.
     //! This will call generate N times to fill the N rows of the matrix.
-    void generateN(const Mat& Y) const;
+    virtual void generateN(const Mat& Y) const;
 
     //! Generates a pseudo-random sample (x,y) from the JOINT distribution,
     //! of density p(x, y)
