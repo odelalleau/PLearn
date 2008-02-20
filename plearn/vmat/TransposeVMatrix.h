@@ -100,6 +100,7 @@ protected:
     //! Fill the vector 'v' with the content of the i-th row.
     //! v is assumed to be the right size.
     virtual void getNewRow(int i, const Vec& v) const;
+    virtual void getColumn(int j, Vec v) const;
 
 public:
 

@@ -119,6 +119,15 @@ void TransposeVMatrix::getNewRow(int i, const Vec& v) const
     source->getColumn(i, v);
 }
 
+///////////////
+// getColumn //
+///////////////
+void TransposeVMatrix::getColumn(int j, Vec v) const
+{
+    //We do not buffer the column...
+    source->getRow(j, v);
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
