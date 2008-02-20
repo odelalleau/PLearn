@@ -158,11 +158,8 @@ void FileVMatrix::build_()
         if (!writable)
             PLERROR("In FileVMatrix::build_ - You asked to create a new file (%s), but 'writable' is set to 0 !", filename_.c_str());
 
-#ifdef USE_NSPR_FILE
-        f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);
-#else
-        f = fopen(filename_.c_str(),"w+b");
-#endif
+        openfile(filename_.c_str(),"w+b", 
+                 PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);
         if (!f)
             PLERROR("In FileVMatrix constructor, could not open file %s",filename_.c_str());
 
@@ -206,21 +203,9 @@ void FileVMatrix::build_()
     else
     {
         if (writable)
-        {
-#ifdef USE_NSPR_FILE
-            f = PR_Open(filename_.c_str(), PR_RDWR | PR_CREATE_FILE, 0666);
-#else
-            f = fopen(filename_.c_str(), "r+b");
-#endif
-        }
+            openfile(filename_.c_str(), "r+b", PR_RDWR | PR_CREATE_FILE, 0666);
         else
-        {
-#ifdef USE_NSPR_FILE
-            f = PR_Open(filename_.c_str(), PR_RDONLY, 0666);
-#else
-            f = fopen(filename_.c_str(), "rb");
-#endif
-        }
+            openfile(filename_.c_str(), "rb", PR_RDONLY, 0666);
 
         if (! f)
             PLERROR("FileVMatrix::build: could not open file %s", filename_.c_str());
@@ -376,23 +361,17 @@ void FileVMatrix::getNewRow(int i, const Vec& v) const
         PLERROR("In FileVMatrix::getNewRow length of v (%d) differs from matrix width (%d)",v.length(),width_);
 #endif
 
-#ifdef USE_NSPR_FILE
     moveto(i);
+#ifdef USE_NSPR_FILE
     if(file_is_float)
         PR_Read_float(f, v.data(), v.length(), file_is_bigendian);
     else
         PR_Read_double(f, v.data(), v.length(), file_is_bigendian);
 #else
     if(file_is_float)
-    {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(float), SEEK_SET);
         fread_float(f, v.data(), v.length(), file_is_bigendian);
-    }
     else
-    {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_)*sizeof(double), SEEK_SET);
         fread_double(f, v.data(), v.length(), file_is_bigendian);
-    }
 #endif
 }
 
@@ -440,23 +419,17 @@ void FileVMatrix::moveto(int i, int j) const
 /////////
 void FileVMatrix::put(int i, int j, real value)
 {
-#ifdef USE_NSPR_FILE
     moveto(i,j);
+#ifdef USE_NSPR_FILE
     if(file_is_float)
         PR_Write_float(f,float(value),file_is_bigendian);
     else
         PR_Write_double(f,double(value),file_is_bigendian);
 #else
     if(file_is_float)
-    {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(float), SEEK_SET);
         fwrite_float(f,float(value),file_is_bigendian);
-    }
     else
-    {
-        fseek(f, DATAFILE_HEADERLENGTH+(i*width_+j)*sizeof(double), SEEK_SET);
         fwrite_double(f,double(value),file_is_bigendian);
-    }
 #endif
     invalidateBuffer();
 }
@@ -541,6 +514,18 @@ void FileVMatrix::updateHeader() {
 #endif
 }
 
+//////////////////
+// updateHeader //
+//////////////////
+void FileVMatrix::openfile(const char *path, const char *mode,
+                           PRIntn flags, PRIntn mode2) {
+#ifdef USE_NSPR_FILE
+        f = PR_Open(path, flags, mode2);
+#else
+        f = fopen(path, mode);
+#endif
+
+}
 } // end of namespace PLearn
 
 

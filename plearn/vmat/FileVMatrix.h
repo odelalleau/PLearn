@@ -78,6 +78,8 @@ protected:
 private:
 
     bool build_new_file;
+    void openfile(const char *path, const char *mode, PRIntn flags,
+                  PRIntn mode2);
 
 public:
 
