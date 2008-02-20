@@ -109,6 +109,9 @@ public:
     // **** PDistribution methods ****
     // *******************************
 
+    //! Resets the distribution.
+    virtual void forget();
+ 
     //! Return an error (not used in unconditional distributions).
     void setPredictor(const Vec& predictor, bool call_parent = true) const;
 

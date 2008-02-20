@@ -116,6 +116,14 @@ void UnconditionalDistribution::build_()
 {
 }
 
+////////////
+// forget //
+////////////
+void UnconditionalDistribution::forget() {
+    inherited::forget();
+    n_predictor = 0;
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
