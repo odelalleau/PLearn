@@ -66,6 +66,7 @@ DeepBeliefNet::DeepBeliefNet() :
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
     i_output_layer( -1 ),
+    use_sample_for_up_layer( false ),
     online ( false ),
     background_gibbs_update_ratio(0),
     gibbs_chain_reinit_freq( INT_MAX ),
@@ -227,6 +228,11 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   " layer\n"
                   "(except the first one) of the RBM. These costs are not\n"
                   "back-propagated to previous layers.\n");
+
+    declareOption(ol, "use_sample_for_up_layer", &DeepBeliefNet::use_sample_for_up_layer,
+                  OptionBase::buildoption,
+                  "Indication that the update of the top layer during CD uses\n"
+                  "a sample, not the expectation.\n");
 
     declareOption(ol, "online", &DeepBeliefNet::online,
                   OptionBase::buildoption,
@@ -1996,13 +2002,16 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         pos_up_vals.resize(minibatch_size, up_layer->size);
 
         pos_down_vals << down_layer->getExpectations();
-        pos_up_vals << up_layer->getExpectations();
+        if( !use_sample_for_up_layer )
+            pos_up_vals << up_layer->getExpectations();
 
         // down propagation, starting from a sample of up_layer
         if (background_gibbs_update_ratio<1)
             // then do some contrastive divergence, o/w only background Gibbs
         {
             up_layer->generateSamples();
+            if( use_sample_for_up_layer )
+                pos_up_vals << up_layer->samples;
             connection->setAsUpInputs( up_layer->samples );
             down_layer->getAllActivations( connection, 0, true );
             down_layer->computeExpectations();
@@ -2015,7 +2024,14 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             // accumulate negative stats
             // no need to deep-copy because the values won't change before update
             Mat neg_down_vals = down_layer->samples;
-            Mat neg_up_vals = up_layer->getExpectations();
+            Mat neg_up_vals;
+            if( use_sample_for_up_layer)
+            {
+                up_layer->generateSamples();
+                neg_up_vals = up_layer->samples;
+            }
+            else
+                neg_up_vals = up_layer->getExpectations();
 
             if (background_gibbs_update_ratio==0)
             // update here only if there is ONLY contrastive divergence
@@ -2097,7 +2113,10 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         pos_up_val.resize( up_layer->size );
 
         pos_down_val << down_layer->expectation;
-        pos_up_val << up_layer->expectation;
+        if( use_sample_for_up_layer )
+            pos_up_val << up_layer->sample;
+        else
+            pos_up_val << up_layer->expectation;
 
         // down propagation, starting from a sample of up_layer
         connection->setAsUpInput( up_layer->sample );
@@ -2113,7 +2132,15 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         // accumulate negative stats
         // no need to deep-copy because the values won't change before update
         Vec neg_down_val = down_layer->sample;
-        Vec neg_up_val = up_layer->expectation;
+        Vec neg_up_val;
+        if( use_sample_for_up_layer )
+        {
+            up_layer->generateSample();
+            neg_up_val = up_layer->sample;
+        }
+        else
+            neg_up_val = up_layer->expectation;
+
 
         // update
         down_layer->update( pos_down_val, neg_down_val );

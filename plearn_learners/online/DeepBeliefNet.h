@@ -144,6 +144,10 @@ public:
     //! costs are not back-propagated to previous layers.
     TVec< PP<CostModule> > partial_costs;
 
+    //! Indication that the update of the top layer during CD uses
+    //! a sample, not the expectation.
+    bool use_sample_for_up_layer;
+
     //#####  Public Learnt Options  ###########################################
     //! The module computing the probabilities of the different classes.
     PP<RBMClassificationModule> classification_module;
