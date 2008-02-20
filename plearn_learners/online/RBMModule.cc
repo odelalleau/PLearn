@@ -1102,27 +1102,65 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         else // sample unconditionally: Gibbs sample after k steps
         {
+            // Find out how many samples we want.
+            int n_samples = -1;
+            if (visible_sample_is_output)
+                n_samples = visible_sample->length();
+            if (visible_expectation_is_output) {
+                PLASSERT( n_samples == -1 ||
+                          n_samples == visible_expectation->length() );
+                n_samples = visible_expectation->length();
+            }
+            if (hidden_sample_is_output) {
+                PLASSERT( n_samples == -1 ||
+                          n_samples == hidden_sample->length() );
+                n_samples = hidden_sample->length();
+            }
+            PLCHECK( n_samples > 0 );
+            
             // the visible_layer->expectations contain the "state" from which we
             // start or continue the chain
-            if (visible_layer->samples.isEmpty())
+            if (visible_layer->samples.length() != n_samples)
             {
-                if (visible && !visible_is_output)
+                // There are no samples already available to continue the
+                // chain: we restart it.
+                Gibbs_step = 0;
+                if (visible && !visible_is_output
+                            && visible->length() == n_samples)
                     visible_layer->samples << *visible;
-                else if (!visible_layer->getExpectations().isEmpty())
+                else if (visible_layer->getExpectations().length() ==
+                                                                    n_samples)
                     visible_layer->samples << visible_layer->getExpectations();
-                else if (!hidden_layer->samples.isEmpty())
+                else if (hidden_layer->samples.length() == n_samples)
                     sampleVisibleGivenHidden(hidden_layer->samples);
-                else if (!hidden_layer->getExpectations().isEmpty())
+                else if (hidden_layer->getExpectations().length() == n_samples)
                     sampleVisibleGivenHidden(hidden_layer->getExpectations());
+                else {
+                    // There is no available data to initialize the chain: we
+                    // initialize it with a zero vector.
+                    Mat& zero_vector = visible_layer->samples;
+                    PLASSERT( zero_vector.width() > 0 );
+                    zero_vector.resize(n_samples, zero_vector.width());
+                    zero_vector.clear();
+                }
+                PLASSERT( visible_layer->samples.length() == n_samples );
             }
             int min_n = max(Gibbs_step+n_Gibbs_steps_per_generated_sample,
                             min_n_Gibbs_steps);
             //cout << "Gibbs sampling " << Gibbs_step+1;
+            PP<ProgressBar> pb =
+                verbosity >= 2 ? new ProgressBar("Gibbs sampling",
+                                                 min_n - Gibbs_step)
+                               : NULL;
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
+                if (pb)
+                    pb->updateone();
             }
+            if (pb)
+                pb = NULL;
             hidden_activations_are_computed = false;
             //cout << " -> " << Gibbs_step << endl;
         }
@@ -1137,6 +1175,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         if (visible_sample && visible_sample_is_output)
             // provide sample of the visible units
         {
+            PLASSERT( visible_sample->length() ==
+                      visible_layer->samples.length() );
             visible_sample->resize(visible_layer->samples.length(),
                                    visible_layer->samples.width());
             *visible_sample << visible_layer->samples;
@@ -1144,6 +1184,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         if (hidden_sample && hidden_sample_is_output)
             // provide sample of the hidden units
         {
+            PLASSERT( hidden_sample->length() ==
+                      hidden_layer->samples.length() );
             hidden_sample->resize(hidden_layer->samples.length(),
                                   hidden_layer->samples.width());
             *hidden_sample << hidden_layer->samples;
@@ -1152,18 +1194,23 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             // provide expectation of the visible units
         {
             const Mat& to_store = visible_layer->getExpectations();
+            PLASSERT( visible_expectation->length() == to_store.length() );
             visible_expectation->resize(to_store.length(),
                                         to_store.width());
             *visible_expectation << to_store;
         }
         if (hidden && hidden_is_output)
         {
+            PLASSERT( hidden->length() ==
+                      hidden_layer->getExpectations().length() );
             hidden->resize(hidden_layer->getExpectations().length(),
                            hidden_layer->getExpectations().width());
             *hidden << hidden_layer->getExpectations();
         }
         if (hidden_act && hidden_act_is_output)
         {
+            PLASSERT( hidden_act->length() ==
+                      hidden_layer->activations.length() );
             hidden_act->resize(hidden_layer->activations.length(),
                                hidden_layer->activations.width());
             *hidden_act << hidden_layer->activations;
@@ -1966,6 +2013,7 @@ void RBMModule::forget()
     if (reconstruction_connection && reconstruction_connection != connection)
         // We avoid to call forget() twice if the connections are the same.
         reconstruction_connection->forget();
+    Gibbs_step = 0;
 }
 
 //////////////////
