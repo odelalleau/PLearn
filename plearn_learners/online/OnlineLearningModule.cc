@@ -74,7 +74,8 @@ OnlineLearningModule::OnlineLearningModule(const string& the_name,
     output_size(-1),
     name(the_name),
     estimate_simpler_diag_hessian(false),
-    use_fast_approximations(true)
+    use_fast_approximations(true),
+    verbosity(1)
 {
     if (call_build_) {
         if (the_name.empty())
@@ -320,6 +321,11 @@ void OnlineLearningModule::declareOptions(OptionList& ol)
                   "e.g. for initializing parameters or any non-deterministic"
                   " operation\n"
                   "required by the module.\n");
+
+    declareOption(ol, "verbosity", &OnlineLearningModule::verbosity,
+                  OptionBase::buildoption,
+                  "Controls the level of verbosity of the module.",
+                  OptionBase::advanced_level);
 
     inherited::declareOptions(ol);
 }

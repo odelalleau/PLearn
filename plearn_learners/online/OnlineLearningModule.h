@@ -97,6 +97,8 @@ public:
     //! use tables to approximate nonlinearities such as sigmoid, tanh, and softplus
     bool use_fast_approximations;
 
+    int verbosity;
+
 public:
     //#####  Public Member Fun ctions  #########################################
 
