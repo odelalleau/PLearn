@@ -270,8 +270,8 @@ void PLearner::declareOptions(OptionList& ol)
 ////////////////////
 void PLearner::declareMethods(RemoteMethodMap& rmm)
 {
-    // Insert a backpointer to remote methods; note that this
-    // different than for declareOptions()
+    // Insert a backpointer to remote methods; note that this is different from
+    // declareOptions().
     rmm.inherited(inherited::_getRemoteMethodMap_());
 
     declareMethod(
