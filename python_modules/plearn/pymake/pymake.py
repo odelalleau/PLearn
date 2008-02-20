@@ -2801,7 +2801,7 @@ def main( args ):
             generate_vcproj_files(target, ccfiles_to_compile, executables_to_link, linkname)
 
         else:
-            print '++++ Compiling...'
+            print '++++ Compiling',len(ccfiles_to_compile),'files...'
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
             else:
