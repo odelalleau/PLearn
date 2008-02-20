@@ -65,6 +65,8 @@ public:
 
     PP<RBMModule> rbm;
 
+    real n_gibbs_chains;
+
 public:
     //#####  Public Member Functions  #########################################
 

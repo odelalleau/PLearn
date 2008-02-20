@@ -51,7 +51,8 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////
 // RBMDistribution //
 /////////////////////
-RBMDistribution::RBMDistribution()
+RBMDistribution::RBMDistribution():
+    n_gibbs_chains(-1)
 {}
 
 ////////////////////
@@ -70,6 +71,15 @@ void RBMDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "rbm", &RBMDistribution::rbm,
                   OptionBase::buildoption,
         "Underlying RBM modeling the distribution.");
+
+    declareOption(ol, "n_gibbs_chains", &RBMDistribution::n_gibbs_chains,
+                  OptionBase::buildoption,
+        "Number of Gibbs chains ran in parallel when generating multiple\n"
+        "samples with generateN(). If <0, then there are as many chains as\n"
+        "samples. If in the (0,1) interval, then it is the given fraction of\n"
+        "the number of generated samples. If an integer >= 1, it is the\n"
+        "absolute number of chains that are run simultaneously. Each chain\n"
+        "will sample about N/n_chains samples, so as to obtain N samples.");
 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
@@ -143,11 +153,36 @@ void RBMDistribution::generate(Vec& y) const
 ///////////////
 void RBMDistribution::generateN(const Mat& Y) const
 {
-    work1.resize(Y.length(), 0);
-    ports_val.fill(NULL);
-    ports_val[rbm->getPortIndex("visible_sample")] = &work1;
-    rbm->fprop(ports_val);
-    Y << work1;
+    int n = Y.length(); // Number of samples to obtain.
+    int n_chains = Y.length();
+    if (n_gibbs_chains > 0 && n_gibbs_chains < 1) {
+        // Fraction.
+        n_chains = min(1, int(round(n_gibbs_chains * n)));
+    } else if (n_gibbs_chains > 0) {
+        n_chains = int(round(n_gibbs_chains));
+        PLCHECK( is_equal(real(n_chains), n_gibbs_chains) );
+    }
+    int n_gibbs_samples = n / n_chains;
+    if (n % n_chains > 0)
+        n_gibbs_samples += 1;
+    work2.resize(n_chains * n_gibbs_samples, Y.width());
+    PP<ProgressBar> pb = verbosity && n_gibbs_samples > 10
+        ? new ProgressBar("Gibbs sampling", n_gibbs_samples)
+        : NULL;
+    for (int i = 0; i < n_gibbs_samples; i++) {
+        work1.resize(n_chains, 0);
+        ports_val.fill(NULL);
+        ports_val[rbm->getPortIndex("visible_sample")] = &work1;
+        rbm->fprop(ports_val);
+        work2.subMatRows(i * n_chains, n_chains) << work1;
+        if (pb)
+            pb->updateone();
+    }
+    if (n_gibbs_samples > 1)
+        // We shuffle rows to add more "randomness" since consecutive samples
+        // in the same Gibbs chain may be similar.
+        random_gen->shuffleRows(work2);
+    Y << work2.subMatRows(0, Y.length());
 }
 
 /////////////////
