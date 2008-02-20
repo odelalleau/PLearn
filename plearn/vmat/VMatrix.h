@@ -626,7 +626,7 @@ public:
                       );
                       
     /**
-     * @return The size of the longuest fieldname
+     * @return The size of the longest fieldname
      */
     int max_fieldnames_size() const;
 
