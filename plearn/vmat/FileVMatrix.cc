@@ -439,23 +439,17 @@ void FileVMatrix::put(int i, int j, real value)
 ///////////////
 void FileVMatrix::appendRow(Vec v)
 {
-#ifdef USE_NSPR_FILE
     moveto(length_,0);
+#ifdef USE_NSPR_FILE
     if(file_is_float)
         PR_Write_float(f, v.data(), v.length(), file_is_bigendian);
     else
         PR_Write_double(f, v.data(), v.length(), file_is_bigendian);
 #else
     if(file_is_float)
-    {
-        fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(float), SEEK_SET);
         fwrite_float(f, v.data(), v.length(), file_is_bigendian);
-    }
     else
-    {
-        fseek(f,DATAFILE_HEADERLENGTH+length_*width_*sizeof(double), SEEK_SET);
         fwrite_double(f, v.data(), v.length(), file_is_bigendian);
-    }
 #endif
 
     length_++;
