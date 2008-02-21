@@ -431,7 +431,7 @@ class confirm( PyTestMode ):
                     else:
                         version_control.add( test.resultsDirectory() )
                         version_control.recursive_add( test.resultsDirectory(tests.EXPECTED_RESULTS) )
-                        version_control.ignore( test.resultsDirectory(), [ '.plearn', tests.RUN_RESULTS ] )
+                        version_control.ignore( test.resultsDirectory(), [ '.plearn', tests.RUN_RESULTS, 'PSAVEDIFF' ] )
 
             except version_control.VersionControlError:
                 raise core.PyTestUsageError(
