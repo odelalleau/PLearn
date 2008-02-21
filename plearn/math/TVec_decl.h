@@ -746,7 +746,7 @@ public:
         }
         return indices;
     }
- 
+
     TVec<int> findIndices(const TVec<T>& elements)
     {
         TVec<int> indices(0);
@@ -763,7 +763,7 @@ public:
         }
         return indices;
     }
- 
+
     //!  Returns the position of the first occurence of element
     //!  in the vector or -1 if it never occurs
     int find(const T& element, int start=0) const
@@ -790,6 +790,38 @@ public:
                 }
         return indices;
     }
+
+    //! Returns the number of occurrences of "element"
+    int count(const T& element)
+    {
+        int result = 0;
+        if (!isEmpty())
+        {
+            T *v = data();
+            for (int i=0; i<length(); i++)
+                if (v[i]==element)
+                    result++;
+        }
+        return result;
+    }
+
+    int count(const TVec<T>& elements)
+    {
+        int result = 0;
+        if (!isEmpty())
+        {
+            T *v = data();
+            for (int i=0; i<length(); i++)
+                for (int j=0, m=elements.length(); j<m; j++)
+                    if (v[i]==elements[j])
+                    {
+                        result++;
+                        break;
+                    }
+        }
+        return result;
+    }
+
 
     //!  C++ stream output
     void print(ostream& out = cout) const; //!<  the data is printed on a single row, no newline
