@@ -1,0 +1,23 @@
+# Dummy multi-class classification problem derived from the 'linear_4x_2y' dataset.
+# The target is one of:
+#   0 if y2 < -50
+#   1 if -50 <= y2 < 0
+#   2 if 0 <= y2 < 50
+#   3 if y2 >= 50
+# The first five columns (x1 -> x4 and y1) are the inputs.
+# These five inputs are processed through a sigmoid to ensure they are
+# between 0 and 1.
+
+MemoryVMatrix(
+    source =
+        ProcessingVMatrix(
+            source =
+                AutoVMatrix(
+                    filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat"
+                )
+            prg = "[@x1:@y1:sigmoid] @y2 0 < @y2 -50 < 0 1 ifelse @y2 50 < 2 3 ifelse ifelse :target"
+            inputsize = 5
+            targetsize = 1
+            weightsize = 0
+        )
+)
