@@ -1,0 +1,35 @@
+# Simple basic NNet experiment.
+
+from plearn.pyplearn import pl
+
+nnet = pl.NNet(
+        cost_funcs = [ 'NLL' ],
+        direct_in_to_out = True,
+        nhidden = 10,
+        nhidden2 = 20,
+        noutputs = 4,
+        nstages = 100,
+        optimizer = pl.GradientOptimizer(
+            start_learning_rate = 1e-2,
+            decrease_constant = 1e-3,
+            ),
+        output_transfer_func = 'softmax',
+        weight_decay = 1e-2,
+        )
+
+tester = pl.PTester(
+        expdir = 'expdir-nnet',
+        learner = nnet,
+        dataset = pl.AutoVMatrix( filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y_multi_class.vmat" ),
+        statnames = [ 'E[test1.E[NLL]]' ],
+        splitter = pl.FractionSplitter(
+            splits = TMat(1, 2, [ (0, 0.75), (0.75, 1) ]),
+            ),
+        save_initial_tester = False,
+        save_stat_collectors = False,
+        save_test_names = False,
+        )
+
+def main():
+    return tester
+
