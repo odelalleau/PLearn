@@ -319,6 +319,7 @@
 #include <plearn/vmat/MeanImputationVMatrix.h>
 #include <plearn/vmat/MemoryVMatrixNoSave.h>
 #include <plearn/vmat/MissingInstructionVMatrix.h>
+#include <plearn/vmat/MixtureVMatrix.h>
 //#include <plearn/vmat/MixUnlabeledNeighbourVMatrix.h>
 #include <plearn/vmat/MultiInstanceVMatrix.h>
 #include <plearn/vmat/MultiTargetOneHotVMatrix.h>
