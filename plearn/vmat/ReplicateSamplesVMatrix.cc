@@ -38,6 +38,7 @@
 
 
 #include "ReplicateSamplesVMatrix.h"
+#include <plearn/var/SumOverBagsVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -56,6 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // ReplicateSamplesVMatrix //
 /////////////////////////////
 ReplicateSamplesVMatrix::ReplicateSamplesVMatrix():
+    operate_on_bags(false),
     seed(1827),
     random_gen(new PRandom())
 {}
@@ -72,6 +74,13 @@ void ReplicateSamplesVMatrix::declareOptions(OptionList& ol)
     // ### this option will be ignored when loading values from a script.
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
+
+    declareOption(ol, "operate_on_bags",
+                  &ReplicateSamplesVMatrix::operate_on_bags,
+                  OptionBase::buildoption,
+        "If set to 1, then bags in the source VMat will be taken into\n"
+        "account so as to preserve their integrity. The classes will also be\n"
+        "reweighted so that they have the same number of bags.");
 
     declareOption(ol, "seed", &ReplicateSamplesVMatrix::seed,
                   OptionBase::buildoption,
@@ -98,16 +107,23 @@ void ReplicateSamplesVMatrix::build_()
 {
     if (!source)
         return;
-    PLCHECK_MSG(source->targetsize() == 1,
-                "In ReplicateSamplesVMatrix::build_ - The source VMat must "
-                "have a targetsize equal to 1, but its targetsize is " +
-                tostring(source->targetsize()));
+    PLCHECK_MSG(operate_on_bags || source->targetsize() == 1,
+            "In ReplicateSamplesVMatrix::build_ - The source VMat must have a "
+            "targetsize equal to 1 when not operating on bags, but its "
+            "targetsize is " + tostring(source->targetsize()));
+
+    PLCHECK_MSG(!operate_on_bags || source->targetsize() == 2,
+            "In ReplicateSamplesVMatrix::build_ - The source VMat must have a "
+            "targetsize equal to 2 when operating on bags, but its targetsize "
+            "is " + tostring(source->targetsize()));
     
     // Build the vector of indices.
     indices.resize(0);
     Vec input, target;
     real weight;
     TVec< TVec<int>  > class_indices;  // Indices of samples in each class.
+    map<int, int> bag_sizes; // Map a source index to the size of its bag.
+    int bag_start_idx = -1;
     for (int i = 0; i < source->length(); i++) {
         source->getExample(i, input, target, weight);
         int c = int(round(target[0]));
@@ -116,8 +132,15 @@ void ReplicateSamplesVMatrix::build_()
             for (int j = 0; j < n_to_add; j++)
                 class_indices.append(TVec<int>());
         }
-        class_indices[c].append(i);
-        indices.append(i);
+        if (!operate_on_bags || int(round(target[1])) &
+                                SumOverBagsVariable::TARGET_COLUMN_FIRST) {
+            class_indices[c].append(i);
+            indices.append(i);
+            bag_sizes[i] = 0;
+            bag_start_idx = i;
+        }
+        if (operate_on_bags)
+            bag_sizes[bag_start_idx]++;
     }
     int max_n = -1;
     for (int c = 0; c < class_indices.length(); c++)
@@ -133,6 +156,18 @@ void ReplicateSamplesVMatrix::build_()
     // Shuffle data.
     random_gen->manual_seed(seed);
     random_gen->shuffleElements(indices);
+
+    if (operate_on_bags) {
+        // We now need to convert the list of start indices to the list of all
+        // indices within each bag.
+        TVec<int> start_idx = indices.copy();
+        indices.resize(0);
+        for (int i = 0; i < start_idx.length(); i++) {
+            int start_i = start_idx[i];
+            for (int j = 0; j < bag_sizes[start_i]; j++)
+                indices.append(start_i + j);
+        }
+    }
     
     // Re-build since indices have changed.
     inherited::build();

@@ -62,6 +62,7 @@ class ReplicateSamplesVMatrix : public SelectRowsVMatrix
 public:
     //#####  Public Build Options  ############################################
 
+    bool operate_on_bags;
     int32_t seed;
 
 public:
