@@ -100,7 +100,8 @@ void ReplicateSamplesVMatrix::build_()
         return;
     PLCHECK_MSG(source->targetsize() == 1,
                 "In ReplicateSamplesVMatrix::build_ - The source VMat must "
-                "have a targetsize equal to 1");
+                "have a targetsize equal to 1, but its targetsize is " +
+                tostring(source->targetsize()));
     
     // Build the vector of indices.
     indices.resize(0);
