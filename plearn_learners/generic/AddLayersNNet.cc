@@ -231,7 +231,7 @@ void AddLayersNNet::build_()
     }
 
     // Build functions.
-    buildFuncs(input, output, target, sampleweight);
+    buildFuncs(input, output, target, sampleweight, NULL);
 
 }
 
