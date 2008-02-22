@@ -35,7 +35,7 @@
 
 #include <plearn/base/general.h>
 // #include <iostream>
-// #include <cmath>
+#include <cmath>
 
 namespace PLearn {
 using namespace std;
@@ -152,7 +152,13 @@ real pl_gammq(real a, real x) {
 
 // returns the error function "erf"
 real pl_erf(real x) {
+#ifdef __GNUC__
+    //8.5 time faster in my test then plearn version.
+    return erf(x);
+#else
+    //it is pl_gcf that take too much time...optimise?
     return (x<0?-1:1)*(1-pl_gammq(0.5,x*x));
+#endif
 }
 
 
