@@ -55,10 +55,10 @@ using namespace std;
 /** LogAddVariable **/
 
 
-PLEARN_IMPLEMENT_OBJECT(LogAddVariable,
-                        "output = log(exp(input1)+exp(input2)) but it is "
-                        "computed in such a way as to preserve precision",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        LogAddVariable,
+        "Stable computation of log(exp(input1) + exp(input2)).",
+        "");
 
 LogAddVariable::LogAddVariable(Variable* input1, Variable* input2)
     : inherited(input1, input2, input1->length(), input1->width())
@@ -107,6 +107,7 @@ void LogAddVariable::bprop()
     grad1 = input1->value - value;
     apply(grad1, grad1, safeexp);
     input1->gradient += grad1%gradient;
+    // TODO Note that the '%' operator is inefficient.
 
     Vec grad2(nelems());
     grad2 = input2->value - value;
