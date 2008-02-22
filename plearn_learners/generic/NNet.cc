@@ -93,6 +93,8 @@ NNet::NNet()
 nhidden(0),
 nhidden2(0),
 noutputs(0),
+operate_on_bags(false),
+max_bag_size(20),
 weight_decay(0),
 bias_decay(0),
 layer1_weight_decay(0),
@@ -346,6 +348,32 @@ void NNet::declareOptions(OptionList& ol)
         " - \"zero\"           = all weights are set to 0\n");
 
     declareOption(
+        ol, "operate_on_bags", &NNet::operate_on_bags, OptionBase::buildoption,
+        "If True, then samples are no longer considered as unique entities.\n"
+        "Instead, each sample belongs to a so-called 'bag', that may contain\n"
+        "1 or more samples. The last column of the target is assumed to\n"
+        "provide information about bags (see help of SumOverBagsVariable for\n"
+        "details on the coding of bags).\n"
+        "When operating on bags, each bag is considered a training sample.\n"
+        "The activations a_ci of output units c for each bag sample i are\n"
+        "combined within each bag, yielding bag activation a_c given by:\n"
+        "   a_c = logadd(a_c1, ..., acn)\n"
+        "In particular, when using the 'softmax' output transfer function,\n"
+        "this corresponds to computing:\n"
+        "   P(class = c | x_1, ..., x_i, ..., x_n) =\n"
+        "                          (\\sum_i exp(a_ci)) / \\sum_c,i exp(a_ci)\n"
+        "where a_ci is the activation of output node c for the i-th sample\n"
+        "x_i in the bag.",
+        OptionBase::advanced_level);
+
+    declareOption(
+        ol, "max_bag_size", &NNet::max_bag_size, OptionBase::buildoption,
+        "Maximum number of samples in a bag (used with 'operate_on_bags').",
+        OptionBase::advanced_level);
+
+    // Learnt options.
+    
+    declareOption(
         ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
         "The learned parameter vector\n");
 
@@ -360,6 +388,26 @@ void NNet::build()
 {
     inherited::build();
     build_();
+}
+
+Var to_define(const Var& bag_inputs, const Var& bag_size, const Func& in_to_out, int max_bag_size)
+{
+    return NULL;
+}
+
+/////////////////////////////////
+// buildBagOutputFromBagInputs //
+/////////////////////////////////
+void NNet::buildBagOutputFromBagInputs(
+        const Var& input, Var& before_transfer_func,
+        const Var& bag_inputs, const Var& bag_size, Var& bag_output,
+        int max_bag_size)
+{
+    Func in_to_out = Func(input, before_transfer_func);
+    before_transfer_func = to_define(bag_inputs, bag_size, in_to_out, max_bag_size);
+    // TODO Note that 'to_define' should basically be a logadd over the outputs
+    // before the transfer function.
+    applyTransferFunc(before_transfer_func, bag_output);
 }
 
 ////////////
@@ -388,6 +436,13 @@ void NNet::build_()
 
         // Build main network graph.
         buildOutputFromInput(input, hidden_layer, before_transfer_func);
+
+        // When operating on bags, use this network to compute the output on a
+        // whole bag, which also becomes the output of the network.
+        if (operate_on_bags)
+            buildBagOutputFromBagInputs(input, before_transfer_func,
+                                        bag_inputs, bag_size, output,
+                                        max_bag_size);
 
         // Build target and weight variables.
         buildTargetAndWeight();
@@ -432,7 +487,9 @@ void NNet::build_()
         }
 
         // Build functions.
-        buildFuncs(input, output, target, sampleweight);
+        buildFuncs(operate_on_bags ? bag_inputs : input,
+                   output, target, sampleweight,
+                   operate_on_bags ? bag_size : NULL);
 
     }
 }
@@ -453,7 +510,6 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
     inherited::setTrainingSet(training_set, call_forget);
     //cout << "name = " << name << endl << "targetsize = " << targetsize_ << endl << "weightsize = " << weightsize_ << endl;
 }
-
 
 ////////////////
 // buildCosts //
@@ -583,7 +639,8 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
 ////////////////
 // buildFuncs //
 ////////////////
-void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight) {
+void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight,
+        const Var& the_bag_size) {
     invars.resize(0);
     VarArray outvars;
     VarArray testinvars;
@@ -591,6 +648,10 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     {
         invars.push_back(the_input);
         testinvars.push_back(the_input);
+    }
+    if (the_bag_size) {
+        invars.append(the_bag_size);
+        testinvars.append(the_bag_size);
     }
     if (the_output)
         outvars.push_back(the_output);
@@ -604,17 +665,19 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     {
         invars.push_back(the_sampleweight);
     }
-    f = Func(the_input, the_output);
+    input_to_output = Func(the_input, the_output);
     test_costf = Func(testinvars, the_output&test_costs);
     test_costf->recomputeParents();
     output_and_target_to_cost = Func(outvars, test_costs); 
     // Since there will be a fprop() in the network, we need to make sure the
     // input is valid.
-    if (train_set && train_set->length() >= 1) {
+    if (train_set && train_set->length() >= the_input->width()) {
         Vec input, target;
         real weight;
-        train_set->getExample(0, input, target, weight);
-        the_input->matValue << input;
+        for (int i = 0; i < the_input->width(); i++) {
+            train_set->getExample(i, input, target, weight);
+            the_input->matValue.column(i) << input;
+        }
     }
     output_and_target_to_cost->recomputeParents();
 }
@@ -725,35 +788,41 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     }
 
     before_transfer_func = output;
+    applyTransferFunc(before_transfer_func, output);
+}
 
-    /*
-     * output_transfer_func
-     */
+///////////////////////
+// applyTransferFunc //
+///////////////////////
+void NNet::applyTransferFunc(const Var& before_transfer_func, Var& output)
+{
     size_t p=0;
     if(output_transfer_func!="" && output_transfer_func!="none")
     {
         if(output_transfer_func=="tanh")
-            output = tanh(output);
+            output = tanh(before_transfer_func);
         else if(output_transfer_func=="sigmoid")
-            output = sigmoid(output);
+            output = sigmoid(before_transfer_func);
         else if(output_transfer_func=="softplus")
-            output = softplus(output);
+            output = softplus(before_transfer_func);
         else if(output_transfer_func=="exp")
-            output = exp(output);
+            output = exp(before_transfer_func);
         else if(output_transfer_func=="softmax")
-            output = softmax(output);
+            output = softmax(before_transfer_func);
         else if (output_transfer_func == "log_softmax")
-            output = log_softmax(output);
+            output = log_softmax(before_transfer_func);
         else if ((p=output_transfer_func.find("interval"))!=string::npos)
         {
             size_t q = output_transfer_func.find(",");
             interval_minval = atof(output_transfer_func.substr(p+1,q-(p+1)).c_str());
             size_t r = output_transfer_func.find(")");
             interval_maxval = atof(output_transfer_func.substr(q+1,r-(q+1)).c_str());
-            output = interval_minval + (interval_maxval - interval_minval)*sigmoid(output);
+            output = interval_minval + (interval_maxval - interval_minval)*sigmoid(before_transfer_func);
         }
         else
-            PLERROR("In NNet::build_()  unknown output_transfer_func option: %s",output_transfer_func.c_str());
+            PLERROR("In NNet::applyTransferFunc() -Unknown value for the "
+                   "'output_transfer_func' option: %s",
+                   output_transfer_func.c_str());
     }
 }
 
@@ -827,7 +896,7 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
     outputv.resize(outputsize());
-    f->fprop(inputv,outputv);
+    input_to_output->fprop(inputv,outputv);
 }
 
 ///////////////////////////
@@ -994,6 +1063,8 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(test_costs, copies);
     deepCopyField(invars, copies);
     deepCopyField(params, copies);
+    varDeepCopyField(bag_inputs, copies);
+    varDeepCopyField(bag_size, copies);
     // public:
     deepCopyField(paramsvalues, copies);
     varDeepCopyField(input, copies);
@@ -1006,7 +1077,7 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(wdirect, copies);
     varDeepCopyField(wrec, copies);
     varDeepCopyField(hidden_layer, copies);
-    deepCopyField(f, copies);
+    deepCopyField(input_to_output, copies);
     deepCopyField(test_costf, copies);
     deepCopyField(output_and_target_to_cost, copies);
     varDeepCopyField(first_hidden_layer, copies);
@@ -1028,10 +1099,11 @@ void NNet::train()
 {
     // NNet nstages is number of epochs (whole passages through the training set)
     // while optimizer nstages is number of weight updates.
-    // So relationship between the 2 depends whether we are in stochastic, batch or minibatch mode
+    // So relationship between the 2 depends on whether we are in stochastic,
+    // batch or minibatch mode.
 
     if(!train_set)
-        PLERROR("In NNet::train, you did not setTrainingSet");
+        PLERROR("In NNet::train - No training set available");
     
     if(!train_stats)
         setTrainStatsCollector(new VecStatsCollector());
@@ -1039,7 +1111,7 @@ void NNet::train()
 
     int l = train_set->length();  
     
-    if(f.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
+    if(input_to_output.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
 
     // number of samples seen by optimizer before each optimizer update

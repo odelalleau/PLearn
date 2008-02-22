@@ -70,6 +70,12 @@ protected:
     VarArray invars;
     VarArray params;  // all arameter input vars
 
+    //! Used to store the inputs in a bag when 'operate_on_bags' is true.
+    Var bag_inputs;
+
+    //! Used to store the size of a bag when 'operate_on_bags' is true.
+    Var bag_size;
+
 // to put back later -- blip  Vec paramsvalues; // values of all parameters
 
 public: // to set these values instead of getting them by training
@@ -90,7 +96,7 @@ public: // to set these values instead of getting them by training
 
 public:
 
-    mutable Func f; // input -> output
+    mutable Func input_to_output; // input -> output
     mutable Func test_costf; // input & target -> output & test_costs
     mutable Func output_and_target_to_cost; // output & target -> cost
 
@@ -124,6 +130,9 @@ public:
      *  case of automatically discovering the outputsize for classification.
      */
     int noutputs;
+
+    bool operate_on_bags;
+    int max_bag_size;
 
     real weight_decay; // default: 0
     real bias_decay;   // default: 0 
@@ -229,6 +238,15 @@ protected:
     //! available in the 'before_transfer_func' parameter.
     void buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& before_transfer_func);
 
+    //! Build the output for a whole bag, from the network defined by the
+    //! 'input' to 'before_transfer_func' variables.
+    //! 'before_transfer_func' is modified so as to hold the activations for
+    //! the bag rather than for individual samples.
+    void buildBagOutputFromBagInputs(
+        const Var& input, Var& before_transfer_func,
+        const Var& bag_inputs, const Var& bag_size, Var& bag_output,
+        int max_bag_size);
+
     //! Builds the target and sampleweight variables.
     void buildTargetAndWeight();
 
@@ -236,7 +254,10 @@ protected:
     void buildCosts(const Var& output, const Var& target, const Var& hidden_layer, const Var& before_transfer_func);
 
     //! Build the various functions used in the network.
-    void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight);
+    void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight, const Var& the_bag_size);
+
+    //! Compute the final output from the activations of the output units.
+    void applyTransferFunc(const Var& before_transfer_func, Var& output);
 
     //! Fill a matrix of weights according to the 'initialization_method' specified.
     //! The 'clear_first_row' boolean indicates whether we should fill the first
