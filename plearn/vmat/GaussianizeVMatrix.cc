@@ -213,7 +213,8 @@ void GaussianizeVMatrix::build_()
             }
         }
     }
-
+    if(features_to_gaussianize.size()==0)
+        PLWARNING("GaussianizeVMatrix::build_() 0 variable was gaussianized");
     // Obtain meta information from source.
     setMetaInfoFromSource();
 }
