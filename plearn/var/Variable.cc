@@ -99,12 +99,21 @@ Var::Var(const Mat& m)
     :PP<Variable>(new SourceVariable(m))
 {}
 
+////////////
+// length //
+////////////
 int Var::length() const
 { return (*this)->length(); }
 
+///////////
+// width //
+///////////
 int Var::width() const
 { return (*this)->width(); }
 
+////////
+// [] // 
+////////
 Var Var::operator[](int i) const
 {
     if(width()==1)
@@ -117,11 +126,16 @@ Var Var::operator[](int i) const
 
 Var Var::operator[](Var index) const
 { 
-    if(width()!=1)
-        PLERROR("You shouldnt use operator[](Var index) to get the row of a matrix var but operator()(Var index)");
-    return new VarElementVariable(*this,index); 
+    if (!ptr->isVec())
+        PLERROR("In Var::operator[](Var index) - You should not use this "
+                "operator to get the row of a matrix Var, but "
+                "operator()(Var index)");
+    return new VarElementVariable(*this, index); 
 }
 
+////////////
+// subMat //
+////////////
 Var Var::subMat(int i, int j, int sublength, int subwidth, bool do_transpose) const
 { 
     if(do_transpose)
