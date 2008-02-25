@@ -71,6 +71,7 @@
 #include <plearn/python/test/InjectionTest.h>
 #include <plearn/python/test/InterfunctionXchgTest.h>
 #include <plearn/python/test/MemoryStressTest.h>
+#include <plearn/var/test/VariablesTest.h>
 #include <plearn/var/test/VarUtilsTest.h>
 #include <plearn/vmat/test/AutoVMatrixTest.h>
 #include <plearn/vmat/test/FileVMatrixTest.h>
