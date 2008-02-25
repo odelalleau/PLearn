@@ -69,11 +69,13 @@ public:
     //#####  PLearn::Object Interface  ########################################
 
     NaryVariable() {}
-    NaryVariable(const VarArray& the_varray, int thelength, int thewidth=1);
+    NaryVariable(const VarArray& the_varray, int thelength, int thewidth = 1,
+                 bool call_build_ = true);
 
     PLEARN_DECLARE_ABSTRACT_OBJECT(NaryVariable);
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+    virtual void build();
     
     //#####  PLearn::Variable Interface  ######################################
 
@@ -97,6 +99,10 @@ public:
 protected:
     //!  Default constructor for persistence
     static void declareOptions(OptionList & ol);
+
+private:
+
+    void build_();
 };
 
 

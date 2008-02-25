@@ -52,33 +52,54 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(NaryVariable,
     ""
 );
 
-NaryVariable::NaryVariable(const VarArray& the_varray, int thelength, int thewidth)
-    :Variable(thelength,thewidth), varray(the_varray) {}
+//////////////////
+// NaryVariable //
+//////////////////
+NaryVariable::NaryVariable(const VarArray& the_varray, int thelength,
+                           int thewidth, bool call_build_):
+    inherited(thelength, thewidth, call_build_),
+    varray(the_varray)
+{
+    if (call_build_)
+        build_();
+}
 
-
-
+////////////////////
+// declareOptions //
+////////////////////
 void NaryVariable::declareOptions(OptionList& ol)
 {
     declareOption(ol, "varray", &NaryVariable::varray, OptionBase::buildoption, 
-                  "The array of parent variables that this one depends on\n");
+                  "The array of parent variables that this one depends on.");
 
     inherited::declareOptions(ol);
 }
 
+///////////
+// build //
+///////////
+void NaryVariable::build()
+{
+    inherited::build();
+    build_();
+}
 
+////////////
+// build_ //
+////////////
+void NaryVariable::build_()
+{
+    // Nothing to do here.
+}
+
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void NaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(varray, copies);
-    //for(int i=0; i<varray.size(); i++)
-    //  deepCopyField(varray[i], copies);
 }
-
-
-
-
-
-
 
 
 bool NaryVariable::markPath()
