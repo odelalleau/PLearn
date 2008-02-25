@@ -63,7 +63,8 @@ class AffineTransformVariable: public BinaryVariable
 public:
     //!  Default constructor for persistence
     AffineTransformVariable() {}
-    AffineTransformVariable(Variable* vec, Variable* transformation);
+    AffineTransformVariable(Variable* vec, Variable* transformation,
+                            bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(AffineTransformVariable);
 

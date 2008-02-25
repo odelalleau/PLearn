@@ -46,33 +46,54 @@ namespace PLearn {
 using namespace std;
 
 
-PLEARN_IMPLEMENT_OBJECT(AffineTransformVariable,
-                        "Affine transformation of a vector variable.",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        AffineTransformVariable,
+        "Affine transformation of a vector variable.",
+        "The first input is the vector variable.\n"
+        "The second input is the matrix of biases (on the first row) and\n"
+        "weights (in other rows).");
 
-AffineTransformVariable::AffineTransformVariable(Variable* vec, Variable* transformation)
-    : inherited(vec, transformation, 
-                (vec->size() == 1) ? transformation->width() : (vec->isRowVec() ? 1 : transformation->width()),
-                (vec->size() == 1) ? 1 : (vec->isRowVec() ? transformation->width() : 1))
+/////////////////////////////
+// AffineTransformVariable //
+/////////////////////////////
+AffineTransformVariable::AffineTransformVariable(Variable* vec,
+                                                 Variable* transformation,
+                                                 bool call_build_):
+    inherited(vec, transformation, 
+            (vec->size() == 1) ? transformation->width()
+                               : (vec->isRowVec() ? 1
+                                                  : transformation->width()),
+            (vec->size() == 1) ? 1
+                               : (vec->isRowVec() ? transformation->width()
+                                                  : 1),
+            call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-AffineTransformVariable::build()
+///////////
+// build //
+///////////
+void AffineTransformVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-AffineTransformVariable::build_()
+////////////
+// build_ //
+////////////
+void AffineTransformVariable::build_()
 {
     // input1 is vec from constructor
     if (input1 && !input1->isVec())
         PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
 }
 
+///////////////////
+// recomputeSize //
+///////////////////
 void AffineTransformVariable::recomputeSize(int& l, int& w) const
 { 
     if (input1 && input2) {
