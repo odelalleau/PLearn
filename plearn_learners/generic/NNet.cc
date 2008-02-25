@@ -55,6 +55,7 @@
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/NegLogPoissonVariable.h>
 #include <plearn/var/OneHotSquaredLoss.h>
+#include <plearn/var/ProductVariable.h>
 // #include "RBFLayerVariable.h" //TODO Put it back when the file exists.
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
@@ -65,7 +66,6 @@
 #include <plearn/var/SumSquareVariable.h>
 #include <plearn/var/TanhVariable.h>
 #include <plearn/var/TransposeVariable.h>
-#include <plearn/var/TransposeProductVariable.h>
 #include <plearn/var/UnaryHardSlopeVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
@@ -429,7 +429,7 @@ void NNet::build_()
             PLERROR("NNet: the option 'noutputs' must be specified");
 
         // Initialize the input.
-        input = Var(inputsize(), "input");
+        input = Var(1, inputsize(), "input");
 
         params.resize(0);
         Var before_transfer_func;
@@ -529,7 +529,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
             costs[k] = onehot_squared_loss(the_output, the_target);
         else if (cost_funcs[k]=="NLL") 
         {
-            if (the_output->size() == 1) {
+            if (the_output->width() == 1) {
                 // Assume sigmoid output here!
                 costs[k] = stable_cross_entropy(before_transfer_func, the_target);
             } else {
@@ -541,7 +541,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
         } 
         else if (cost_funcs[k]=="class_error")
         {
-            if (the_output->size()==1)
+            if (the_output->width()==1)
                 costs[k] = binary_classification_loss(the_output, the_target);
             else
                 costs[k] = classification_loss(the_output, the_target);
@@ -674,9 +674,9 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     if (train_set && train_set->length() >= the_input->width()) {
         Vec input, target;
         real weight;
-        for (int i = 0; i < the_input->width(); i++) {
+        for (int i = 0; i < the_input->length(); i++) {
             train_set->getExample(i, input, target, weight);
-            the_input->matValue.column(i) << input;
+            the_input->matValue(i) << input;
         }
     }
     output_and_target_to_cost->recomputeParents();
@@ -714,7 +714,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     }
     else if(nhidden>0)
     {
-        w1 = Var(1 + the_input->size(), nhidden, "w1");      
+        w1 = Var(1 + the_input->width(), nhidden, "w1");      
         params.append(w1);
         hidden_layer = hiddenLayer(output, w1);
         output = hidden_layer;
@@ -725,7 +725,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     if(nhidden2>0)
     {
         PLASSERT( !first_hidden_layer_is_output );
-        w2 = Var(1 + output.length(), nhidden2, "w2");
+        w2 = Var(1 + output.width(), nhidden2, "w2");
         params.append(w2);
         output = hiddenLayer(output, w2);
     }
@@ -757,13 +757,14 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
 
     // Output layer before transfer function.
     if (!first_hidden_layer_is_output) {
-        wout = Var(1 + output->size(), outputsize(), "wout");
+        wout = Var(1 + output->width(), outputsize(), "wout");
         output = affine_transform(output, wout);
+        output->setName("output_activations");
         if (!fixed_output_weights)
             params.append(wout);
         else
         {
-            outbias = Var(output->size(), "outbias");
+            outbias = Var(1, output->width(), "outbias");
             output = output + outbias;
             params.append(outbias);
         }
@@ -780,8 +781,8 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     // Direct in-to-out layer.
     if(direct_in_to_out)
     {
-        wdirect = Var(the_input->size(), outputsize(), "wdirect");
-        output += transposeProduct(wdirect, the_input);
+        wdirect = Var(the_input->width(), outputsize(), "wdirect");
+        output += product(the_input, wdirect);
         params.append(wdirect);
         if (nhidden <= 0)
             PLERROR("In NNet::buildOutputFromInput - It seems weird to use direct in-to-out connections if there is no hidden layer anyway");
@@ -853,7 +854,7 @@ void NNet::buildPenalties(const Var& hidden_layer) {
     }
     if (input_reconstruction_penalty>0)
     {
-        wrec = Var(1 + hidden_layer->size(),input->size(),"wrec");
+        wrec = Var(1 + hidden_layer->width(),input->width(),"wrec");
         predicted_input = affine_transform(hidden_layer, wrec);
         params.append(wrec);
         penalties.append(input_reconstruction_penalty*sumsquare(predicted_input - input));
@@ -864,7 +865,7 @@ void NNet::buildPenalties(const Var& hidden_layer) {
 // buildTargetAndWeight //
 //////////////////////////
 void NNet::buildTargetAndWeight() {
-    target = Var(targetsize(), "target");
+    target = Var(1, targetsize(), "target");
     if(weightsize_>0)
     {
         if (weightsize_!=1)
@@ -971,6 +972,7 @@ TVec<string> NNet::getTestCostNames() const
 /////////////////
 Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func) {
     Var hidden = affine_transform(input, weights); 
+    hidden->setName("hidden_layer_activations");
     Var result;
     if (transfer_func == "default")
         transfer_func = hidden_transfer_func;
