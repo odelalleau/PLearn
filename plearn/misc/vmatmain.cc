@@ -550,8 +550,6 @@ int vmatmain(int argc, char** argv)
             PLERROR("Usage: vmat convert <source> <destination> "
                     "[--mat_to_mem] [--cols=col1,col2,col3,...]");
 
-        VMat vm = getVMat(source, indexf);
-
         /**
          * Interpret the following options:
          *
@@ -602,6 +600,8 @@ int vmatmain(int argc, char** argv)
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                           curopt.c_str());
         }
+
+        VMat vm = getVMat(source, indexf);
 
         // If columns specified, select them.  Note: SelectColumnsVMatrix is very
         // powerful and allows ranges, etc.
