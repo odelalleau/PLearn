@@ -1042,7 +1042,7 @@ int vmatmain(int argc, char** argv)
     else if(command=="compare_stats_ks")
     {
         bool err = false;
-        real threashold = REAL_MAX;
+        real threshold = REAL_MAX;
         bool mat_to_mem = false;
         if(argc<4||argc>6)
             err = true;
@@ -1050,19 +1050,19 @@ int vmatmain(int argc, char** argv)
         {
             if(argv[4]==string("--mat_to_mem"))
                 mat_to_mem=true;
-            else if(!pl_isnumber(string(argv[4]),&threashold))
+            else if(!pl_isnumber(string(argv[4]),&threshold))
                 err = true;
         }
         else if(argc==6)
         {
              if(argv[5]!=string("--mat_to_mem"))
                  err = true;
-             else if(!pl_isnumber(string(argv[4]),&threashold))
+             else if(!pl_isnumber(string(argv[4]),&threshold))
                  err = true;
         }
         if(err)
             PLERROR("vmat compare_stats_ks must be used that way:"
-                    " vmat compare_stats_ks <dataset1> <dataset2> [threashold]"
+                    " vmat compare_stats_ks <dataset1> <dataset2> [threshold]"
                     " [--mat_to_mem]");
 
         VMat m1 = getVMat(argv[2], indexf);
@@ -1104,18 +1104,18 @@ int vmatmain(int argc, char** argv)
 
         sortRows(score,2,false);
         pout <<"Kolmogorow Smirnow two sample test"<<endl<<endl;
-        if(threashold<REAL_MAX)
-            pout<<"Variables that are under the threashold"<<endl;
+        if(threshold<REAL_MAX)
+            pout<<"Variables that are under the threshold"<<endl;
         pout<<"Sorted by p_value"<<endl;
         cout << std::left << setw(8) << "# "
              << setw(size_fieldnames) << " fieldname " << std::right
              << setw(15) << " D"
              << setw(15) << " p_value"
              <<endl;
-        int threashold_fail=0;
+        int threshold_fail=0;
         for(int col=0;col<score.length();col++)
         {
-            if(threashold>=score(col,2))
+            if(threshold>=score(col,2))
             {
                 cout << std::left << setw(8) << tostring(col)+"/"+tostring(score(col,0))
                      << setw(size_fieldnames) << m1->fieldName(int(round(score(col,0))))
@@ -1123,12 +1123,12 @@ int vmatmain(int argc, char** argv)
                      << setw(15) << score(col,1)
                      << setw(15) << score(col,2)
                      <<endl;
-                threashold_fail++;
+                threshold_fail++;
             }
         }
-        if(threashold<REAL_MAX)
-            pout << "Their is "<<threashold_fail<<" variable that are under the threashold"<<endl;
-        if(threashold==REAL_MAX)
+        if(threshold<REAL_MAX)
+            pout << "Their is "<<threshold_fail<<" variable that are under the threshold"<<endl;
+        if(threshold==REAL_MAX)
         {
             pout << "99% cutoff: "<<pc_value_99<<endl;
             pout << "95% cutoff: "<<pc_value_95<<endl;
@@ -1152,12 +1152,12 @@ int vmatmain(int argc, char** argv)
         }
         if(err)
             PLERROR("vmat compare_stats_desjardins must be used that way:"
-                    " vmat compare_stats_desjardins <orig dataset1> <orig dataset2> <new dataset3> <ks_threashold> <stderror_threashold> <missing_threashold> [--mat_to_mem]");
+                    " vmat compare_stats_desjardins <orig dataset1> <orig dataset2> <new dataset3> <ks_threshold> <stderror_threshold> <missing_threshold> [--mat_to_mem]");
 
         VMat m1 = getVMat(argv[2], indexf);
         VMat m2 = getVMat(argv[3], indexf);
         VMat m3 = getVMat(argv[4], indexf);
-        real ks_threashold = toreal(argv[5]);
+        real ks_threshold = toreal(argv[5]);
 
         m3->compatibleSizeError(m1);
         m3->compatibleSizeError(m2);
@@ -1194,17 +1194,17 @@ int vmatmain(int argc, char** argv)
 
         sortRows(score,2,false);
         pout <<"Kolmogorow Smirnow two sample test"<<endl<<endl;
-        pout<<"Variables that are under the ks_threashold"<<endl;
+        pout<<"Variables that are under the ks_threshold"<<endl;
         pout<<"Sorted by p_value"<<endl;
         cout << std::left << setw(8) << "# "
              << setw(size_fieldnames) << " fieldname " << std::right
              << setw(15) << " D"
              << setw(15) << " p_value"
              <<endl;
-        int threashold_fail = 0;
+        int threshold_fail = 0;
         for(int col=0;col<score.length();col++)
         {
-            if(ks_threashold>=score(col,2))
+            if(ks_threshold>=score(col,2))
             {
                 cout << std::left << setw(8) << tostring(col)+"/"+tostring(score(col,0))
                      << setw(size_fieldnames) << m1->fieldName(int(round(score(col,0))))
@@ -1212,10 +1212,10 @@ int vmatmain(int argc, char** argv)
                      << setw(15) << score(col,1)
                      << setw(15) << score(col,2)
                      <<endl;
-                threashold_fail++;
+                threshold_fail++;
             }
         }
-        pout << "Their is "<<threashold_fail<<" variable that are under the threashold"<<endl;
+        pout << "Their is "<<threshold_fail<<" variable that are under the threshold"<<endl;
         pout <<"Kolmogorow Smirnow two sample test end"<<endl<<endl;
 
 
