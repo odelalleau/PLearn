@@ -64,10 +64,13 @@ public:
     TVec<VarArray> f_paths; // the duplicates of f prop. path for each input/output pair: inputs[i]->outputs[i]
 
 public:
-    //!  protected default constructor for persistence
+    
+    //! Default constructor.
     UnfoldedFuncVariable();
-    //! concatenate_{i=0 to n_unfold} f(i-th row of input_matrix)
-    UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose);
+
+    //! Concatenate_{i=0 to n_unfold} f(i-th row of input_matrix).
+    UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose,
+                         bool call_build_ = true);
     
     PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);
     static void declareOptions(OptionList& ol);
@@ -81,7 +84,7 @@ public:
     
     void printInfo(bool print_gradient);
 
-protected:
+private:
     void build_();
 };
 

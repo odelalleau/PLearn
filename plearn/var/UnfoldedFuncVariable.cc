@@ -51,36 +51,60 @@ using namespace std;
 
 /** UnfoldedFuncVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(UnfoldedFuncVariable, "Variable that puts in the rows of its output matrix the value\n"
-                        "of a Func evaluated on each row of an input matrix.\n",
-                        "The input_matrix and output matrix have n_unfold rows. A separate propagation path\n"
-                        "is created that maps (using the Func as a template) each input row to each output row.\n"
-                        "The parents of this variable include the non-input parents of the Func.\n");
+PLEARN_IMPLEMENT_OBJECT(
+        UnfoldedFuncVariable,
+        "Computes the output of a Func over all elements on an input matrix.",
+        "By default the function 'f' is applied over all rows of the input\n"
+        "provided in 'input_matrix', but it may be applied on columns\n"
+        "instead using the 'transpose' option.\n"
+        "A separate propagation path is created (using the Func as a\n"
+        "template) that maps each input to the corresponding output.\n"
+        "The parents of this variable include the non-input parents of 'f'.");
 
-UnfoldedFuncVariable::UnfoldedFuncVariable()
-    : transpose(0)
+//////////////////////////
+// UnfoldedFuncVariable //
+//////////////////////////
+UnfoldedFuncVariable::UnfoldedFuncVariable():
+    transpose(false)
 {}
 
-UnfoldedFuncVariable::UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool the_transpose)
-    : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs) & inputmatrix, 
-                the_transpose ? the_f->outputs[0]->length()*the_f->outputs[0]->width() : inputmatrix->length(),
-                the_transpose ? inputmatrix->width() : the_f->outputs[0]->length()*the_f->outputs[0]->width()),
+UnfoldedFuncVariable::UnfoldedFuncVariable(
+        Var inputmatrix, Func the_f, bool the_transpose, bool call_build_):
+    inherited(VarArray(),
+            the_transpose ? the_f->outputs[0]->length()
+                                                * the_f->outputs[0]->width()
+                          : inputmatrix->length(),
+            the_transpose ? inputmatrix->width()
+                          : the_f->outputs[0]->length()
+                                                * the_f->outputs[0]->width(),
+            call_build_),
       input_matrix(inputmatrix), 
       f(the_f),
       transpose(the_transpose)
 {
-    build();
+    if (call_build_)
+        build_();
 }
 
+///////////
+// build //
+///////////
 void UnfoldedFuncVariable::build()
 {
     inherited::build();
     build_();
 }
 
+////////////
+// build_ //
+////////////
 void UnfoldedFuncVariable::build_()
 {
     if (f) {
+        VarArray f_parents = nonInputParentsOfPath(f->inputs, f->outputs);
+        varray.resize(f_parents.length() + 1);
+        varray << (f_parents & input_matrix);
+
         if(f->outputs.size()!=1)
             PLERROR("In UnfoldedFuncVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
         f->inputs.setDontBpropHere(true);
@@ -100,22 +124,40 @@ void UnfoldedFuncVariable::build_()
     }
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void UnfoldedFuncVariable::declareOptions(OptionList& ol)
 {
     declareOption(ol, "f", &UnfoldedFuncVariable::f, OptionBase::buildoption, 
                   "    Func that is replicated for each element of the 'bag' taken from the VMat.");
 
     declareOption(ol, "input_matrix", &UnfoldedFuncVariable::input_matrix, OptionBase::buildoption, 
-                  "    Var that contains the data, with multiple consecutive rows forming one bag.\n");
+        "Var containing the data: multiple consecutive rows form one bag.");
+
+    /*
+    declareOption(ol, "bag_size", &UnfoldedFuncVariable::bag_size,
+                  OptionBase::buildoption, 
+        "Optional Var that contains the size of the bag being presented.\n"
+        "If provided, then only the corresponding number of function values\n"
+        "will be computed, while the rest of the output data matrix will be\n"
+        "left untouched.");
+    */
 
     declareOption(ol, "transpose", &UnfoldedFuncVariable::transpose, OptionBase::buildoption, 
                   "    If set to 1, then instead puts in the columns of the output matrix the values\n"
                   "    of f at the columns of the input matrix.");
 
     inherited::declareOptions(ol);
+
+    redeclareOption(ol, "varray", &UnfoldedFuncVariable::varray,
+                    OptionBase::nosave,
+            "This option is set at build time.");
 }
 
-
+///////////////////
+// recomputeSize //
+///////////////////
 void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
 {
     if (f && f->outputs.size()) {
@@ -130,7 +172,9 @@ void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
         l = w = 0;
 }
 
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
@@ -141,7 +185,9 @@ void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(f_paths, copies);
 }
 
-
+///////////
+// fprop //
+///////////
 void UnfoldedFuncVariable::fprop()
 {
     int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
