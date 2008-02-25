@@ -1426,7 +1426,11 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     PPath metadatadir = getMetaDataDir();
     PPath statsfile =  metadatadir / filename;
     lockMetaDataDir();
-    if (isfile(statsfile) && getMtime()<mtime(statsfile))
+    bool file = isfile(statsfile);
+    bool uptodate = false;
+    if(file)
+        uptodate = getMtime()<mtime(statsfile);
+    if (file && uptodate)
     {
         if(getMtime() == 0)
             PLWARNING("Warning: using a saved stat file (%s) but mtime is 0"
@@ -1436,6 +1440,10 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     }
     else
     {
+        if(file && !uptodate)
+            PLWARNING("Warning: recomputing stat file (%s) as it is older"
+                      "the source.",
+                      statsfile.absolute().c_str());
         VMat vm = const_cast<VMatrix*>(this);
         stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
         if(!metadatadir.isEmpty())
