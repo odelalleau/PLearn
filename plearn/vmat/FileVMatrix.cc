@@ -158,7 +158,7 @@ void FileVMatrix::build_()
         if (!writable)
             PLERROR("In FileVMatrix::build_ - You asked to create a new file (%s), but 'writable' is set to 0 !", filename_.c_str());
 
-        openfile(filename_.c_str(),"w+b", 
+        openfile(filename_,"w+b", 
                  PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0666);
         if (!f)
             PLERROR("In FileVMatrix constructor, could not open file %s",filename_.c_str());
@@ -203,9 +203,9 @@ void FileVMatrix::build_()
     else
     {
         if (writable)
-            openfile(filename_.c_str(), "r+b", PR_RDWR | PR_CREATE_FILE, 0666);
+            openfile(filename_, "r+b", PR_RDWR | PR_CREATE_FILE, 0666);
         else
-            openfile(filename_.c_str(), "rb", PR_RDONLY, 0666);
+            openfile(filename_, "rb", PR_RDONLY, 0666);
 
         if (! f)
             PLERROR("FileVMatrix::build: could not open file %s", filename_.c_str());
@@ -511,12 +511,12 @@ void FileVMatrix::updateHeader() {
 //////////////////
 // updateHeader //
 //////////////////
-void FileVMatrix::openfile(const char *path, const char *mode,
+void FileVMatrix::openfile(const PPath& path, const char *mode,
                            PRIntn flags, PRIntn mode2) {
 #ifdef USE_NSPR_FILE
-        f = PR_Open(path, flags, mode2);
+        f = PR_Open(path.absolute().c_str(), flags, mode2);
 #else
-        f = fopen(path, mode);
+        f = fopen(path.absolute().c_str(), mode);
 #endif
 
 }
