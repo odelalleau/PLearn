@@ -96,6 +96,23 @@ inline real gauss_density_stddev(real x, real mu, real sigma)
 // the number of observations.
 real p_value(real mu, real vn);
 
+#define GAUSSQUANTILETABLESIZE 10000
+
+class PLGaussQuantileInitializer
+{
+public:
+    PLGaussQuantileInitializer();
+    ~PLGaussQuantileInitializer();
+};
+
+extern float gaussQuantiletable[GAUSSQUANTILETABLESIZE];
+extern PLGaussQuantileInitializer pl_gauss_quantile_initializer;
+
+//! Use precomputed value in a table of size GAUSSQUANTILETABLESIZE.
+//! If value is in the first or last 1/1000 we return
+//! the result of the non-fast version as the quality is too low.
+real fast_gauss_01_quantile(real x);
+
 
 } // end of namespace PLearn
 

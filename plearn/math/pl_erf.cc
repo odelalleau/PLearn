@@ -34,6 +34,7 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 #include <plearn/base/general.h>
+#include <plearn/math/pl_erf.h>
 // #include <iostream>
 #include <cmath>
 
@@ -172,6 +173,12 @@ real gauss_01_cum(real x) {
 // i.e. approximately gauss_01_quantile(gauss_01_cum(x)) ~=~ x
 // (the inverse is computed with a binary search, the bisection method)
 real gauss_01_quantile(real q) {
+#ifdef BOUNDCHECK
+    if(q<0||q>1)
+        PLERROR("gauss_01_quantile(q=%f) - q is less then 0 or more then 1",q);
+    PLASSERT(!is_missing(q));
+#endif
+
     // first find a reasonable interval (a,b) s.t. cum(a)<q<cum(b)
     real a=-2;
     real b=2;
@@ -232,6 +239,38 @@ real p_value(real mu, real vn)
 }
 
 
+float gaussQuantiletable[GAUSSQUANTILETABLESIZE];
+
+PLGaussQuantileInitializer::PLGaussQuantileInitializer()
+{
+    //! Fill the table
+    real scaling = 1./(GAUSSQUANTILETABLESIZE-1);
+    for(int i=0; i<GAUSSQUANTILETABLESIZE; i++)
+        gaussQuantiletable[i] = (float) gauss_01_quantile(i*scaling);
+}
+
+PLGaussQuantileInitializer::~PLGaussQuantileInitializer() {}
+
+PLGaussQuantileInitializer pl_gauss_quantile_initializer;
+
+real fast_gauss_01_quantile(real q)
+{
+#ifdef BOUNDCHECK
+    if(q<0||q>1)
+        PLERROR("fast_gauss_01_quantile(q=%f) - "
+                "q is less then 0 or more then 1",q);
+    PLASSERT(!is_missing(q));
+#endif
+
+    if(q>GAUSSQUANTILETABLESIZE*0.001&&q<GAUSSQUANTILETABLESIZE*0.999)
+    {
+        int i;
+        DOUBLE_TO_INT( double(q*((GAUSSQUANTILETABLESIZE-1))), i);
+        return real(gaussQuantiletable[i]);
+    }
+    else
+        return gauss_01_quantile(q);
+}
 } // end of namespace PLearn
 
 
