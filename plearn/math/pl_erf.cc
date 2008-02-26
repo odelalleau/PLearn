@@ -166,7 +166,7 @@ real pl_erf(real x) {
 //returns the gaussian cumulative function
 // For X ~ Normal(0,1), cumulative probability function P(X<x)
 real gauss_01_cum(real x) {
-    return 0.5*(1+pl_erf(x/1.414214));
+    return 0.5*(1+pl_erf(x*0.707106781187));
 }
 
 // For X ~ Normal(0,1), inverse of cumulative probability function P(X<x)
