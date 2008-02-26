@@ -56,6 +56,7 @@ class UnfoldedFuncVariable: public NaryVariable
 public:
 //protected:
     Var input_matrix;
+    Var bag_size;
     Func f;
     bool transpose;
 
@@ -70,6 +71,7 @@ public:
 
     //! Concatenate_{i=0 to n_unfold} f(i-th row of input_matrix).
     UnfoldedFuncVariable(Var inputmatrix, Func the_f, bool transpose,
+                         Var bagsize = (Variable*) NULL,
                          bool call_build_ = true);
     
     PLEARN_DECLARE_OBJECT(UnfoldedFuncVariable);

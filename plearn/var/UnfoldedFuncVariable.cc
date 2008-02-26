@@ -69,7 +69,8 @@ UnfoldedFuncVariable::UnfoldedFuncVariable():
 {}
 
 UnfoldedFuncVariable::UnfoldedFuncVariable(
-        Var inputmatrix, Func the_f, bool the_transpose, bool call_build_):
+        Var inputmatrix, Func the_f, bool the_transpose,
+        Var bagsize, bool call_build_):
     inherited(VarArray(),
             the_transpose ? the_f->outputs[0]->length()
                                                 * the_f->outputs[0]->width()
@@ -79,6 +80,7 @@ UnfoldedFuncVariable::UnfoldedFuncVariable(
                                                 * the_f->outputs[0]->width(),
             call_build_),
       input_matrix(inputmatrix), 
+      bag_size(bagsize),
       f(the_f),
       transpose(the_transpose)
 {
@@ -102,8 +104,8 @@ void UnfoldedFuncVariable::build_()
 {
     if (f) {
         VarArray f_parents = nonInputParentsOfPath(f->inputs, f->outputs);
-        varray.resize(f_parents.length() + 1);
-        varray << (f_parents & input_matrix);
+        varray.resize(f_parents.length() + 2);
+        varray << (f_parents & input_matrix & bag_size);
 
         if(f->outputs.size()!=1)
             PLERROR("In UnfoldedFuncVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
@@ -121,7 +123,11 @@ void UnfoldedFuncVariable::build_()
             outputs[i] = f(inputs[i])[0];
             f_paths[i] = propagationPath(inputs[i],outputs[i]);
         }
+        inherited::build(); // Re-build since varray has changed.
     }
+
+    if (bag_size)
+        PLASSERT( bag_size->isScalar() );
 }
 
 ////////////////////
@@ -135,14 +141,12 @@ void UnfoldedFuncVariable::declareOptions(OptionList& ol)
     declareOption(ol, "input_matrix", &UnfoldedFuncVariable::input_matrix, OptionBase::buildoption, 
         "Var containing the data: multiple consecutive rows form one bag.");
 
-    /*
     declareOption(ol, "bag_size", &UnfoldedFuncVariable::bag_size,
                   OptionBase::buildoption, 
         "Optional Var that contains the size of the bag being presented.\n"
         "If provided, then only the corresponding number of function values\n"
         "will be computed, while the rest of the output data matrix will be\n"
         "left untouched.");
-    */
 
     declareOption(ol, "transpose", &UnfoldedFuncVariable::transpose, OptionBase::buildoption, 
                   "    If set to 1, then instead puts in the columns of the output matrix the values\n"
@@ -152,7 +156,7 @@ void UnfoldedFuncVariable::declareOptions(OptionList& ol)
 
     redeclareOption(ol, "varray", &UnfoldedFuncVariable::varray,
                     OptionBase::nosave,
-            "This option is set at build time.");
+            "This option is set at build time from other options.");
 }
 
 ///////////////////
@@ -160,7 +164,7 @@ void UnfoldedFuncVariable::declareOptions(OptionList& ol)
 ///////////////////
 void UnfoldedFuncVariable::recomputeSize(int& l, int& w) const
 {
-    if (f && f->outputs.size()) {
+    if (f && f->outputs.size() > 0) {
         w = f->outputs[0]->length()*f->outputs[0]->width();
         if (transpose) {
             l = w;
@@ -179,10 +183,11 @@ void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(input_matrix, copies);
-    deepCopyField(f, copies);
-    deepCopyField(inputs, copies);
-    deepCopyField(outputs, copies);
-    deepCopyField(f_paths, copies);
+    deepCopyField(bag_size,     copies);
+    deepCopyField(f,            copies);
+    deepCopyField(inputs,       copies);
+    deepCopyField(outputs,      copies);
+    deepCopyField(f_paths,      copies);
 }
 
 ///////////
@@ -190,7 +195,11 @@ void UnfoldedFuncVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////
 void UnfoldedFuncVariable::fprop()
 {
-    int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+    int n_unfold = bag_size ? int(round(bag_size->value[0]))
+                            : transpose ? input_matrix->width()
+                                        : input_matrix->length();
+    PLASSERT( !bag_size || is_equal(bag_size->value[0],
+                                    round(bag_size->value[0])) );
     for (int i=0;i<n_unfold;i++) {
         if (transpose) {
             Vec tmp = input_matrix->matValue.column(i).toVecCopy(); // TODO something more efficient
@@ -207,10 +216,14 @@ void UnfoldedFuncVariable::fprop()
     }
 }
 
-
+///////////
+// bprop //
+///////////
 void UnfoldedFuncVariable::bprop()
 { 
-    int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+    int n_unfold = bag_size ? int(round(bag_size->value[0]))
+                            : transpose ? input_matrix->width()
+                                        : input_matrix->length();
     for (int i=0;i<n_unfold;i++)
     {
         f_paths[i].clearGradient();
@@ -224,20 +237,25 @@ void UnfoldedFuncVariable::bprop()
     }
 }
 
-
+///////////////
+// printInfo //
+///////////////
 void UnfoldedFuncVariable::printInfo(bool print_gradient)
 {
-    int n_unfold = transpose ? input_matrix->width() : input_matrix->length();
+    int n_unfold = bag_size ? int(round(bag_size->value[0]))
+                            : transpose ? input_matrix->width()
+                                        : input_matrix->length();
     for (int i=0;i<n_unfold;i++)
         f_paths[i].printInfo(print_gradient);
-    cout << info() << " : " << getName() << "[" << (void*)this << "]" 
+    pout << info() << " : " << getName() << "[" << (void*)this << "]" 
          << "(input_matrix=" << (void*)input_matrix << " ";
-    for(int i=0; i<n_unfold; i++) cout << (void*)outputs[i] << " ";
-    cout << ") = " << value;
-    if (print_gradient) cout << " gradient=" << gradient;
-    cout << endl; 
+    for(int i=0; i<n_unfold; i++)
+        pout << (void*)outputs[i] << " ";
+    pout << ") = " << value;
+    if (print_gradient)
+        pout << " gradient=" << gradient;
+    pout << endl; 
 }
-
 
 } // end of namespace PLearn
 
