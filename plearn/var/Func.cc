@@ -123,8 +123,15 @@ Function::Function(const VarArray& the_inputs, const VarArray& parameters_to_opt
   }
 */
 
-PLEARN_IMPLEMENT_OBJECT(Function, "Implements a function defined as a var graph", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        Function,
+        "Implements a function defined as a graph of Variables.",
+        ""
+);
 
+////////////////////
+// declareOptions //
+////////////////////
 void Function::declareOptions(OptionList& ol)
 {
     declareOption(ol, "inputs", &Function::inputs, OptionBase::buildoption,
@@ -138,6 +145,9 @@ void Function::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void Function::build_()
 {
     if(parameters.isEmpty())
