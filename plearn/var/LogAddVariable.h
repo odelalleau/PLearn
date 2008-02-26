@@ -62,13 +62,22 @@ class LogAddVariable: public BinaryVariable
     typedef BinaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    string vector_logadd;
+
+    //! Default constructor.
     LogAddVariable() {}
-    LogAddVariable(Variable* input1, Variable* input2);
+
+    //! Convenience constructor.
+    LogAddVariable(Variable* input1, Variable* input2,
+                   const string& the_vector_logadd = "none",
+                   bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(LogAddVariable);
 
     virtual void build();
+
+    virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void recomputeSize(int& l, int& w) const;  
     virtual void fprop();
@@ -76,6 +85,23 @@ public:
     virtual void symbolicBprop();
 
 protected:
+
+    //! Integer coding for 'vector_logadd':
+    //!     0 <-> 'none'
+    //!    -1 <-> 'per_column'
+    //!    +1 <-> 'per_row'
+    int vector_logadd_id;
+
+    //! Temporary work vector.
+    Vec work;
+
+    //! Temporary work vector whose content must not be modified: it can only
+    //! be used to point to other data in memory.
+    Vec work_ptr;
+
+    static void declareOptions(OptionList & ol);
+
+private:
     void build_();
 };
 
