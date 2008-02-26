@@ -99,13 +99,9 @@ void VariablesTest::declareOptions(OptionList& ol)
     // ### You can also combine flags, for example with OptionBase::nosave:
     // ### (OptionBase::buildoption | OptionBase::nosave)
 
-    declareOption(ol, "unfolded_argmin", &VariablesTest::unfolded_argmin,
+    declareOption(ol, "results_mat", &VariablesTest::results_mat,
                    OptionBase::buildoption,
-        "Result of the unfolded argmin computation.");
-
-    declareOption(ol, "logadd_binary", &VariablesTest::logadd_binary,
-                   OptionBase::buildoption,
-        "Result of the logadd on two variables.");
+        "Matrix test results.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -136,11 +132,16 @@ void VariablesTest::perform()
     // Declare and initialize variables used in tests.
     int is1 = 5;
     int n_input2 = 3;
+    int n_input5 = 4;
     Var input1(1, is1, "input1");
     Var input2(n_input2, is1, "input2");
     PRandom::common(false)->fill_random_uniform(input2->matValue, -1, 1);
     Var input3(input2->length(), input2->width(), "input3");
     PRandom::common(false)->fill_random_uniform(input3->matValue, -1, 1);
+    Var input4(1, 1, "input4");
+    input4->matValue(0, 0) = 3;
+    Var input5(n_input5, is1, "input5");
+    PRandom::common(false)->fill_random_uniform(input5->matValue, -1, 1);
 
     // Test UnfoldedFuncVariable to compute an argmin over a set of row vectors.
     Var argmin1 = argmin(input1);
@@ -148,12 +149,24 @@ void VariablesTest::perform()
     Var unfolded_argmin1 = new UnfoldedFuncVariable(input2, input1_to_argmin1,
                                                     false);
     unfolded_argmin1->fprop();
-    unfolded_argmin = unfolded_argmin1->matValue.copy();
+    results_mat["unfolded_argmin"] = unfolded_argmin1->matValue.copy();
     
     // Test LogAddVariable to compute a logadd over two input matrices.
     Var logadd1 = logadd(input2, input3);
     logadd1->fprop();
-    logadd_binary = logadd1->matValue.copy();
+    results_mat["logadd_binary"] = logadd1->matValue.copy();
+
+    // Test LogAddVariable to compute a logadd over sub-columns of its first
+    // input.
+    Var logadd2 = new LogAddVariable(input5, input4, "per_row");
+    logadd2->fprop();
+    results_mat["logadd_per_row"] = logadd2->matValue.copy();
+    
+    // Test LogAddVariable to compute a logadd over sub-rows of its first
+    // input.
+    Var logadd3 = new LogAddVariable(input5, input4, "per_column");
+    logadd3->fprop();
+    results_mat["logadd_per_column"] = logadd3->matValue.copy();
 }
 
 } // end of namespace PLearn
