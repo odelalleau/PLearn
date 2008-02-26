@@ -272,7 +272,7 @@ void GaussianizeVMatrix::getNewRow(int i, const Vec& v) const
         // inverse of the Gaussian cumulative function.
         real n = values_j.length();
         interpol = (n - 1) / (n + 1) * interpol + 1 / (n + 1);
-        v[j] = gauss_01_quantile(interpol);
+        v[j] = fast_gauss_01_quantile(interpol);
     }
 }
 
