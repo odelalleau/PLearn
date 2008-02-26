@@ -262,7 +262,7 @@ real fast_gauss_01_quantile(real q)
     PLASSERT(!is_missing(q));
 #endif
 
-    if(q>GAUSSQUANTILETABLESIZE*0.001&&q<GAUSSQUANTILETABLESIZE*0.999)
+    if(q>0.005&&q<0.995)
     {
         int i;
         DOUBLE_TO_INT( double(q*((GAUSSQUANTILETABLESIZE-1))), i);
