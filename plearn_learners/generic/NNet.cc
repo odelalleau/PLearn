@@ -51,6 +51,7 @@
 #include <plearn/var/MarginPerceptronCostVariable.h>
 #include <plearn/var/ConfRatedAdaboostCostVariable.h>
 #include <plearn/var/GradientAdaboostCostVariable.h>
+#include <plearn/var/LogAddVariable.h>
 #include <plearn/var/MulticlassLossVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/NegLogPoissonVariable.h>
@@ -63,10 +64,12 @@
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/SumAbsVariable.h>
 #include <plearn/var/SumOfVariable.h>
+#include <plearn/var/SumOverBagsVariable.h>
 #include <plearn/var/SumSquareVariable.h>
 #include <plearn/var/TanhVariable.h>
 #include <plearn/var/TransposeVariable.h>
 #include <plearn/var/UnaryHardSlopeVariable.h>
+#include <plearn/var/UnfoldedFuncVariable.h>
 #include <plearn/var/Var_operators.h>
 #include <plearn/var/Var_utils.h>
 #include <plearn/var/FNetLayerVariable.h>
@@ -88,8 +91,8 @@ PLEARN_IMPLEMENT_OBJECT(NNet, "Ordinary Feedforward Neural Network with 1 or 2 h
 //////////
 // NNet //
 //////////
-NNet::NNet()
-    :
+NNet::NNet():
+n_training_bags(-1),
 nhidden(0),
 nhidden2(0),
 noutputs(0),
@@ -390,23 +393,17 @@ void NNet::build()
     build_();
 }
 
-Var to_define(const Var& bag_inputs, const Var& bag_size, const Func& in_to_out, int max_bag_size)
-{
-    return NULL;
-}
-
 /////////////////////////////////
 // buildBagOutputFromBagInputs //
 /////////////////////////////////
 void NNet::buildBagOutputFromBagInputs(
         const Var& input, Var& before_transfer_func,
-        const Var& bag_inputs, const Var& bag_size, Var& bag_output,
-        int max_bag_size)
+        const Var& bag_inputs, const Var& bag_size, Var& bag_output)
 {
     Func in_to_out = Func(input, before_transfer_func);
-    before_transfer_func = to_define(bag_inputs, bag_size, in_to_out, max_bag_size);
-    // TODO Note that 'to_define' should basically be a logadd over the outputs
-    // before the transfer function.
+    Var tmp_out = new UnfoldedFuncVariable(bag_inputs, in_to_out, false,
+                                           bag_size);
+    before_transfer_func = new LogAddVariable(tmp_out, bag_size, "per_column");
     applyTransferFunc(before_transfer_func, bag_output);
 }
 
@@ -439,10 +436,11 @@ void NNet::build_()
 
         // When operating on bags, use this network to compute the output on a
         // whole bag, which also becomes the output of the network.
-        if (operate_on_bags)
+        if (operate_on_bags) {
+            bag_inputs = Var(max_bag_size, inputsize(), "bag_inputs");
             buildBagOutputFromBagInputs(input, before_transfer_func,
-                                        bag_inputs, bag_size, output,
-                                        max_bag_size);
+                                        bag_inputs, bag_size, output);
+        }
 
         // Build target and weight variables.
         buildTargetAndWeight();
@@ -498,7 +496,6 @@ void NNet::build_()
 ////////////////////
 // setTrainingSet //
 ////////////////////
-
 void NNet::setTrainingSet(VMat training_set, bool call_forget)
 {
     PLASSERT( training_set );
@@ -509,6 +506,25 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
 
     inherited::setTrainingSet(training_set, call_forget);
     //cout << "name = " << name << endl << "targetsize = " << targetsize_ << endl << "weightsize = " << weightsize_ << endl;
+    
+    if (operate_on_bags) {
+        // Compute the number of bags in the training set.
+        int n_train = training_set->length();
+        PP<ProgressBar> pb = 
+            report_progress ? new ProgressBar("Counting bags", n_train)
+                            : NULL;
+        Vec input, target;
+        real weight;
+        n_training_bags = 0;
+        for (int i = 0; i < n_train; i++) {
+            training_set->getExample(i, input, target, weight);
+            if (int(round(target.lastElement()))
+                & SumOverBagsVariable::TARGET_COLUMN_FIRST)
+                n_training_bags++;
+            if (pb)
+                pb->updateone();
+        }
+    }
 }
 
 ////////////////
@@ -944,6 +960,7 @@ void NNet::forget()
     if(optimizer)
         optimizer->reset();
     stage = 0;
+    n_training_bags = -1;
 }
 
 ///////////////////////
@@ -1111,15 +1128,19 @@ void NNet::train()
         setTrainStatsCollector(new VecStatsCollector());
     // PLERROR("In NNet::train, you did not setTrainStatsCollector");
 
-    int l = train_set->length();  
+    int n_train = operate_on_bags ? n_training_bags
+                                  : train_set->length();  
     
     if(input_to_output.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
 
     // number of samples seen by optimizer before each optimizer update
-    int nsamples = batch_size>0 ? batch_size : l;
+    int nsamples = batch_size>0 ? batch_size : n_train;
     Func paramf = Func(invars, training_cost); // parameterized function to optimize
-    Var totalcost = meanOf(train_set, paramf, nsamples);
+    Var totalcost =
+        operate_on_bags ? sumOverBags(train_set, paramf, max_bag_size,
+                                      nsamples, true)
+                        : meanOf(train_set, paramf, nsamples);
     if(optimizer)
     {
         optimizer->setToOptimize(params, totalcost);  
@@ -1128,7 +1149,7 @@ void NNet::train()
     else PLERROR("NNet::train can't train without setting an optimizer first!");
 
     // number of optimizer stages corresponding to one learner stage (one epoch)
-    int optstage_per_lstage = l/nsamples;
+    int optstage_per_lstage = n_train / nsamples;
 
     PP<ProgressBar> pb;
     if(report_progress)

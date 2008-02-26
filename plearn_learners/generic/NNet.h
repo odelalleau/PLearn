@@ -76,6 +76,9 @@ protected:
     //! Used to store the size of a bag when 'operate_on_bags' is true.
     Var bag_size;
 
+    //! Number of bags in the training set.
+    int n_training_bags;
+
 // to put back later -- blip  Vec paramsvalues; // values of all parameters
 
 public: // to set these values instead of getting them by training
@@ -244,8 +247,7 @@ protected:
     //! the bag rather than for individual samples.
     void buildBagOutputFromBagInputs(
         const Var& input, Var& before_transfer_func,
-        const Var& bag_inputs, const Var& bag_size, Var& bag_output,
-        int max_bag_size);
+        const Var& bag_inputs, const Var& bag_size, Var& bag_output);
 
     //! Builds the target and sampleweight variables.
     void buildTargetAndWeight();
