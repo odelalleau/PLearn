@@ -95,6 +95,9 @@ void BinaryVariable::build()
 ////////////
 void BinaryVariable::build_() {}
 
+////////////////
+// setParents //
+////////////////
 void BinaryVariable::setParents(const VarArray& parents)
 {
     if(parents.length() != 2)
@@ -116,16 +119,19 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies);
 #pragma warning(default:1419)
 #endif
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void BinaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    //deepCopyField(input1, copies);
     varDeepCopyField(input1, copies);
-    //deepCopyField(input2, copies);
     varDeepCopyField(input2, copies);
 }
 
-
+//////////////
+// markPath //
+//////////////
 bool BinaryVariable::markPath()
 {
     if(!marked)
