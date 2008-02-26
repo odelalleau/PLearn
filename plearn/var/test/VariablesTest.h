@@ -61,6 +61,7 @@ class VariablesTest : public PTest
 public:
     //#####  Public Build Options  ############################################
 
+    Mat logadd_binary;
     Mat unfolded_argmin;
 
 public:

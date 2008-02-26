@@ -41,6 +41,7 @@
 #include <plearn/math/PRandom.h>
 #include <plearn/var/ArgminVariable.h>
 #include <plearn/var/Func.h>
+#include <plearn/var/LogAddVariable.h>
 #include <plearn/var/UnfoldedFuncVariable.h>
 
 namespace PLearn {
@@ -102,6 +103,10 @@ void VariablesTest::declareOptions(OptionList& ol)
                    OptionBase::buildoption,
         "Result of the unfolded argmin computation.");
 
+    declareOption(ol, "logadd_binary", &VariablesTest::logadd_binary,
+                   OptionBase::buildoption,
+        "Result of the logadd on two variables.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -128,20 +133,27 @@ void VariablesTest::build_()
 /////////////
 void VariablesTest::perform()
 {
-    // Test UnfoldedFuncVariable to compute an argmin over a set of row vectors.
+    // Declare and initialize variables used in tests.
     int is1 = 5;
     int n_input2 = 3;
     Var input1(1, is1, "input1");
-    Var argmin1 = argmin(input1);
-    Func input1_to_argmin1(input1, argmin1);
     Var input2(n_input2, is1, "input2");
     PRandom::common(false)->fill_random_uniform(input2->matValue, -1, 1);
-    //pout << input2->matValue << endl;
+    Var input3(input2->length(), input2->width(), "input3");
+    PRandom::common(false)->fill_random_uniform(input3->matValue, -1, 1);
+
+    // Test UnfoldedFuncVariable to compute an argmin over a set of row vectors.
+    Var argmin1 = argmin(input1);
+    Func input1_to_argmin1(input1, argmin1);
     Var unfolded_argmin1 = new UnfoldedFuncVariable(input2, input1_to_argmin1,
                                                     false);
     unfolded_argmin1->fprop();
     unfolded_argmin = unfolded_argmin1->matValue.copy();
-    //pout << unfolded_argmin << endl;
+    
+    // Test LogAddVariable to compute a logadd over two input matrices.
+    Var logadd1 = logadd(input2, input3);
+    logadd1->fprop();
+    logadd_binary = logadd1->matValue.copy();
 }
 
 } // end of namespace PLearn
