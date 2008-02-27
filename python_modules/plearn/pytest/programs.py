@@ -49,6 +49,10 @@ def find_global_program(name):
     return program_path
 
 def find_local_program(name):
+    name= ppath.expandEnvVariables(name)
+    name2, ext= os.path.splitext(name)
+    if ext=='.so':
+        name= name2
     if os.path.exists( name ) or \
            os.path.exists( name+'.cc' ):
         return os.path.abspath(name)
@@ -123,7 +127,7 @@ class Program(core.PyTestObject):
         ##  initialize the '_program_path' and '__is_global' members
         logging.debug("\nProgram: "+self.getProgramPath())
 
-        internal_exec_path = self.getInternalExecPath(self.__signature())
+        internal_exec_path = self.getInternalExecPath(self._signature())
         logging.debug("Internal Exec Path: %s"%internal_exec_path)
         if self.isCompilable():
             if self.compiler is None:
@@ -152,7 +156,7 @@ class Program(core.PyTestObject):
                           self.name, self.compile_options, options)
             self.compile_options = options
             
-    def __signature(self):
+    def _signature(self):
         if self.compiler is None:
             signature = self.name
         else:
@@ -303,7 +307,7 @@ class Program(core.PyTestObject):
         
     def getInternalExecPath(self, candidate=None):
         if hasattr(self, '_internal_exec_path'):
-            assert candidate is None
+            assert candidate is None, 'candidate is not None:'+repr(candidate)
             return self._internal_exec_path
 
         logging.debug("Parsing for internal exec path; candidate=%s"%candidate)
@@ -392,6 +396,172 @@ class Program(core.PyTestObject):
 
     def isPLearnCommand(self):
         return self.isGlobal() and self.isCompilable()
+
+
+class PythonSharedLibrary(Program):
+    """
+    Version of Program for shared libraries used as python extension modules.
+    WARNING: the compilation produces an .so file in the same directory as
+    the source (instead of ~/.plearn/pytest/compiled_programs)
+    """
+    def __init__(self, **overrides):
+        Program.__init__(self, **overrides)
+
+    def getProgramPath(self):
+        if hasattr(self, '_program_path'):
+            return self._program_path        
+        pp= super(PythonSharedLibrary, self).getProgramPath()
+        ppd, ext= os.path.splitext(pp)
+        if ext == '':
+            pp+= '.cc'
+        self._program_path= pp
+        return self._program_path
+
+    def _signature(self):
+        return self.getProgramPath()[:-2]+'so'
+
+        
+class PythonSharedLibrary2(Program):
+    """
+    DO NOT USE (unless you fix it).
+    Old, incomplete version of PythonSharedLibrary;
+    should produce executable in ~/.plearn/pytest/compiled_programs
+    """
+
+    def __init__(self, **overrides):
+        Program.__init__(self, **overrides)
+        internal_exec_path= self.getInternalExecPath()
+        internal_exec_dir= os.path.dirname(internal_exec_path)
+        module_path= self.getPythonModulePath()
+
+        base_exec_dir= internal_exec_dir[:-len(module_path)]
+        base_exec_dir= os.path.dirname(base_exec_dir)
+
+        def mkInit(d):
+            logging.debug("** "+d)
+            try:
+                os.mkdir(d)
+            except:
+                pass
+            try:
+                os.mknod(os.path.join(d, '__init__.py'))
+                logging.debug("\t**! "+d)
+            except:
+                pass
+
+        to_init= base_exec_dir
+        mkInit(to_init)
+        subdirs= module_path.split('/')
+        for d in subdirs:
+            to_init= os.path.join(to_init, d)
+            mkInit(to_init)
+            
+        os.environ['PYTHONPATH']= base_exec_dir+':'+os.getenv('PYTHONPATH','')
+        
+        logging.debug("PYTHONPATH: "+os.environ['PYTHONPATH']+"\tinternal_exec_path="+internal_exec_path)
+        logging.debug("NAME: "+self.name)
+        p= ppath.expandEnvVariables(self.name)
+        logging.debug("path: "+p)
+
+
+    def getPythonModulePath(self):
+        if hasattr(self, '_python_module_path'):
+            return self._python_module_path
+        pythonpath= os.getenv('PYTHONPATH','').split(':')
+        module_path= None
+        common_prefix= None
+        name= ppath.expandEnvVariables(self.name)
+        for p in pythonpath:
+            c= os.path.commonprefix([p, name])
+            if c == p:
+                logging.debug("Common Prefix Match: "+c+' -- '+repr(name[len(p):].split('/')))
+                module_path= name[len(p):]
+                while module_path[0] == '/':
+                    module_path= module_path[1:]
+                while module_path[-1] == '/':
+                    module_path= module_path[:-1]
+                module_path= os.path.dirname(module_path)
+                common_prefix= c
+                break
+            else:
+                logging.debug("NO Common Prefix: "+p+' -- '+name)
+        self._python_module_path= module_path
+        return module_path
+
+    def _signature(self):
+        """
+        
+        """
+        if self.compiler is None:
+            signature = self.name
+        else:
+            name= os.path.basename(self.name)
+            if self.compile_options == "":
+                self.compile_options = None
+            module_path= self.getPythonModulePath()
+            signature = "SHARED_OBJS__compiler_%s__options_%s"%(
+               self.compiler, self.compile_options)
+            signature= os.path.join(signature, module_path, name)
+        signature = signature.replace('-', '') # Compile options...
+        return signature.replace(' ', '_')
+
+#      def getInternalExecPath(self, candidate=None):
+#         if hasattr(self, '_internal_exec_path'):
+#             return self._internal_exec_path
+#         iep= super(PythonSharedLibrary, self).getInternalExecPath(self, candidate)
+#         if iep.endswith('.so'):
+#             return iep
+#         self._internal_exec_path= iep+'.so'
+#         return self._internal_exec_path
+
+
+
+         
+#         if hasattr(self, '_internal_exec_path'):
+#             assert candidate is None
+#             return self._internal_exec_path
+
+#         logging.debug("Parsing for internal exec path; candidate=%s"%candidate)
+
+#         if candidate == self.name:
+#             self._internal_exec_path = self.getProgramPath()
+#         else:
+#             self._internal_exec_path = \
+#                 os.path.join(core.pytest_config_path(), "compiled_programs", candidate)
+#         if sys.platform == 'win32':
+#             # Cygwin has trouble with the \ characters.
+#             self._internal_exec_path = \
+#                 self._internal_exec_path.replace('\\', '/')
+#             # In addition, we need to add the '.exe' extension as otherwise it
+#             # may not be able to run it.
+#             self._internal_exec_path += '.exe'
+#         return self._internal_exec_path
+
+    def getProgramPath(self):
+        if hasattr(self, '_program_path'):
+            return self._program_path        
+        pp= super(PythonSharedLibrary, self).getProgramPath()
+        ppd, ext= os.path.splitext(pp)
+        if ext == '':
+            pp+= '.cc'
+        self._program_path= pp
+        return self._program_path
+         
+#         if hasattr(self, '_program_path'):
+#             return self._program_path        
+
+#         try:
+#             self._program_path = find_local_program(self.name)
+#             self.__is_global = False
+#         except core.PyTestUsageError, not_local:
+#             try:
+#                 self._program_path = find_global_program(self.name)
+#                 self.__is_global = True                
+#             except core.PyTestUsageError, neither_global:
+#                 raise core.PyTestUsageError("%s %s"%(not_local, neither_global))
+#         return self._program_path
+
+
 
 if __name__ == "__main__":
     # In Python2.4
