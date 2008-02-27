@@ -1432,7 +1432,7 @@ bool VMatrix::is_file_uptodate(PPath& path, bool warning_recalcul,
                   path.absolute().c_str());
     if(warning_recalcul && exist && !uptodate)
         PLWARNING("Warning: recomputing saved file (%s) as it is older"
-                  "then the source.",
+                  " then the source.",
                   path.absolute().c_str());
 
     return exist && uptodate;
