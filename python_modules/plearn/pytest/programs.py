@@ -189,7 +189,8 @@ class Program(core.PyTestObject):
 
         # Account for dependencies
         success = no_need_to_compile or (self.__attempted_to_compile and exec_exists)
-        #print "+++ compilationSucceeded():", self.name, success, no_need_to_compile, self.__attempted_to_compile, exec_exists
+        #logging.debug("compilationSucceeded(): %s %s %s %s %s", self.getInternalExecPath(),#self.name,
+        #              success, no_need_to_compile, self.__attempted_to_compile, exec_exists)
         for dep in self.dependencies:            
             success = (success and dep.compilationSucceeded())
             #print "+++ DEP compilationSucceeded():", success
@@ -231,7 +232,7 @@ class Program(core.PyTestObject):
         #print "+++ Success", self.name, succeeded        
         for dep in self.dependencies:
             succeeded = (succeeded and dep.compile(publish_dirpath))        
-            #print "+++ DEP", succeeded
+            #print "+++ DEPcompile", succeeded
             
         return succeeded
         
@@ -281,6 +282,7 @@ class Program(core.PyTestObject):
                               self.getInternalExecPath(),
                               redirection, log_fname )
 
+        compile_cmd= self.getCompileCommand(the_compiler, compile_options, redirection, log_fname)
 
         logging.debug(compile_cmd)
         if sys.platform == 'win32':
@@ -301,6 +303,15 @@ class Program(core.PyTestObject):
             os.system("strip %s"%self.getInternalExecPath())
             
         return compile_exit_code==0
+
+    def getCompileCommand(self, the_compiler, compile_options, redirection, log_fname):
+        compile_cmd   = "%s %s %s -link-target %s %s %s" \
+                        % ( the_compiler, compile_options,
+                            self.getProgramPath(),
+                            self.getInternalExecPath(),
+                            redirection, log_fname )
+        return compile_cmd
+
 
     def getName(self):
         return self.name
@@ -402,7 +413,7 @@ class PythonSharedLibrary(Program):
     """
     Version of Program for shared libraries used as python extension modules.
     WARNING: the compilation produces an .so file in the same directory as
-    the source (instead of ~/.plearn/pytest/compiled_programs)
+    the source (instead of e.g. ~/.plearn/pytest/compiled_programs)
     """
     def __init__(self, **overrides):
         Program.__init__(self, **overrides)
@@ -420,12 +431,23 @@ class PythonSharedLibrary(Program):
     def _signature(self):
         return self.getProgramPath()[:-2]+'so'
 
+    def getCompileCommand(self, the_compiler, compile_options, redirection, log_fname):
+        """
+        WARNING: this replaces the shared object in-place
+        """
+        compile_cmd   = "%s %s %s %s %s" \
+                        % ( the_compiler, compile_options,
+                            self.getProgramPath(),
+                            redirection, log_fname )
+        return compile_cmd
+
         
 class PythonSharedLibrary2(Program):
     """
     DO NOT USE (unless you fix it).
-    Old, incomplete version of PythonSharedLibrary;
+    Incomplete version of PythonSharedLibrary;
     should produce executable in ~/.plearn/pytest/compiled_programs
+    should replace PythonSharedLibrary once fixed
     """
 
     def __init__(self, **overrides):

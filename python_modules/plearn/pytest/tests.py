@@ -52,7 +52,6 @@ from plearn.utilities.version_control import is_under_version_control
 from core import *
 from programs import *
 
-
 # Eventually remove Test's static methods
 EXPECTED_RESULTS = "expected_results"
 RUN_RESULTS      = "run_results"
@@ -707,7 +706,7 @@ class Routine( PyTestObject ):
 
         logging.debug("\nCompilation:")
         logging.debug("------------")
-        
+
         self.test.compile()
         if not self.test.compilationSucceeded():
             logging.debug("Compilation failed.")
