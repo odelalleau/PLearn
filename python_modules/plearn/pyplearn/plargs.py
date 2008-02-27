@@ -1074,6 +1074,12 @@ def printCurrentContext(out=sys.stdout):
         for opt in plopt.iterator(namespace):
             print >>out, '   ',opt.getName()+':', opt
 
+def bindersHelp():
+    s= ''
+    for binder in plargs.getBinders():
+        for opt in plopt.iterator(binder):
+            s+= opt.getName()+': '+opt.getDoc()+'\n\t'+str(opt)+'\n'
+    return s
 
 def currentNamespacesHelp():
     s= ''
