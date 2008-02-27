@@ -319,11 +319,11 @@ void RBMWoodsLayer::computeExpectation()
                 //    ( on_free_energy[n + offset + sub_tree_size] + off_free_energy[n + offset + sub_tree_size] ) ;
                 // Now working in log-domain
                 on_free_energy[ n + offset ] = activation[n+offset] + 
-                    logadd( on_free_energy[n + offset - sub_tree_size],
-                            off_free_energy[n + offset - sub_tree_size] ) ;
+                    logadd( on_free_energy[n + offset - (sub_tree_size/2+1)],
+                            off_free_energy[n + offset - (sub_tree_size/2+1)] ) ;
                 off_free_energy[ n + offset ] = 
-                    logadd( on_free_energy[n + offset + sub_tree_size],
-                            off_free_energy[n + offset + sub_tree_size] ) ;
+                    logadd( on_free_energy[n + offset + (sub_tree_size/2+1)],
+                            off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
 
             }
             sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
@@ -488,11 +488,11 @@ void RBMWoodsLayer::fprop( const Vec& input, Vec& output ) const
                 //    ( on_free_energy[n + offset + sub_tree_size] + off_free_energy[n + offset + sub_tree_size] ) ;
                 // Now working in the log-domain
                 on_free_energy[ n + offset ] = input[n+offset] + bias[n+offset] +
-                    logadd( on_free_energy[n + offset - sub_tree_size], 
-                            off_free_energy[n + offset - sub_tree_size] ) ;
+                    logadd( on_free_energy[n + offset - (sub_tree_size/2+1)], 
+                            off_free_energy[n + offset - (sub_tree_size/2+1)] ) ;
                 off_free_energy[ n + offset ] = 
-                    logadd( on_free_energy[n + offset + sub_tree_size], 
-                            off_free_energy[n + offset + sub_tree_size] ) ;
+                    logadd( on_free_energy[n + offset + (sub_tree_size/2+1)], 
+                            off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
             }
             sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
             depth--;
@@ -690,13 +690,13 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
 
                 // Gradient w/r current node
                 local_node_expectation_gradient[ n + offset ] += 
-                    ( out_grad - off_grad ) * parent_exp * grand_parent_prob
-                    * node_exp * ( 1 - node_exp );
+                    ( out_grad - off_grad ) * parent_exp * grand_parent_prob;
+                    //* node_exp * ( 1 - node_exp );
 
                 // Gradient w/r parent node
                 local_node_expectation_gradient[ n + offset + sub_tree_size + 1 ] += 
-                        ( out_grad * node_exp + off_grad * (1 - node_exp) )  * grand_parent_prob
-                        * parent_exp * (1-parent_exp) ;
+                    ( out_grad * node_exp + off_grad * (1 - node_exp) )  * grand_parent_prob;
+                    //* parent_exp * (1-parent_exp) ;
 
             }
 
@@ -735,13 +735,13 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
 
                 // Gradient w/r current node
                 local_node_expectation_gradient[ n + offset ] += 
-                    ( out_grad - off_grad ) * ( 1 - parent_exp ) * grand_parent_prob
-                    * node_exp * ( 1 - node_exp );
+                    ( out_grad - off_grad ) * ( 1 - parent_exp ) * grand_parent_prob;
+                    //* node_exp * ( 1 - node_exp );
 
                 // Gradient w/r parent node
                 local_node_expectation_gradient[ n + offset - sub_tree_size - 1 ] -= 
-                    ( out_grad * node_exp + off_grad * (1 - node_exp) )  * grand_parent_prob
-                    * parent_exp * (1-parent_exp) ;
+                    ( out_grad * node_exp + off_grad * (1 - node_exp) )  * grand_parent_prob;
+                    //* parent_exp * (1-parent_exp) ;
             }
             sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
             depth--;
@@ -760,13 +760,13 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
         
         // Gradient w/r current node
         local_node_expectation_gradient[ node + offset ] += 
-            ( out_grad - off_grad ) * parent_exp
-            * node_exp * ( 1 - node_exp );
+            ( out_grad - off_grad ) * parent_exp;
+            //* node_exp * ( 1 - node_exp );
         
         // Gradient w/r parent node
         local_node_expectation_gradient[ node + offset + sub_tree_size + 1 ] += 
-            ( out_grad * node_exp  + off_grad * (1 - node_exp) )
-            * parent_exp * (1-parent_exp) ;
+            ( out_grad * node_exp  + off_grad * (1 - node_exp) );
+            //* parent_exp * (1-parent_exp) ;
 
         //// Right child
         node = 3*sub_tree_size+2;
@@ -778,13 +778,13 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
 
         // Gradient w/r current node
         local_node_expectation_gradient[ node + offset ] += 
-            ( out_grad - off_grad ) * ( 1 - parent_exp ) 
-            * node_exp * ( 1 - node_exp );
+            ( out_grad - off_grad ) * ( 1 - parent_exp ) ;
+            //* node_exp * ( 1 - node_exp );
         
         // Gradient w/r parent node
         local_node_expectation_gradient[ node + offset - sub_tree_size - 1 ] -= 
-            ( out_grad * node_exp + off_grad * (1 - node_exp) ) 
-            * parent_exp * (1-parent_exp) ;
+            ( out_grad * node_exp + off_grad * (1 - node_exp) ) ;
+            //* parent_exp * (1-parent_exp) ;
         
         ////// Root
         node = n_nodes_per_tree / 2;
@@ -795,7 +795,7 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
         off_grad = off_tree_gradient[ node + offset ] ;
         node_exp = local_node_expectation[ node + offset ];
         local_node_expectation_gradient[ node + offset ] += 
-            ( out_grad - off_grad ) * node_exp * ( 1 - node_exp );
+            ( out_grad - off_grad );// * node_exp * ( 1 - node_exp );
 
         offset += n_nodes_per_tree;
     }
@@ -819,15 +819,16 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
             for( int n=sub_tree_size; n<n_nodes_per_tree; n += 2*sub_tree_size + 2 )
             {
                 out_grad = on_free_energy_gradient[ n + offset ];
-                node_exp = local_node_expectation[n + offset - sub_tree_size];
+                node_exp = local_node_expectation[n + offset - (sub_tree_size/2+1)];
                 input_gradient[n+offset] += out_grad;
-                on_free_energy[n + offset - sub_tree_size] += out_grad * node_exp; 
-                off_free_energy[n + offset - sub_tree_size] += out_grad * (1 - node_exp); 
+                on_free_energy_gradient[n + offset - (sub_tree_size/2+1)] += out_grad * node_exp; 
+                off_free_energy_gradient[n + offset - (sub_tree_size/2+1)] += out_grad * (1 - node_exp); 
 
                 out_grad = off_free_energy_gradient[ n + offset ];
-                node_exp = local_node_expectation[n + offset + sub_tree_size];
-                on_free_energy[n + offset + sub_tree_size] += out_grad * node_exp; 
-                off_free_energy[n + offset + sub_tree_size] += out_grad * (1 - node_exp); 
+                node_exp = local_node_expectation[n + offset + (sub_tree_size/2+1)];
+                on_free_energy_gradient[n + offset + (sub_tree_size/2+1)] += out_grad * node_exp; 
+                off_free_energy_gradient[n + offset + (sub_tree_size/2+1)] += 
+                    out_grad * (1 - node_exp); 
             }
             sub_tree_size /= 2;
             depth++;
@@ -848,7 +849,6 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
     for( int i=0 ; i<size ; i++ )
     {
         real in_grad_i = input_gradient[i];
-        input_gradient[i] += in_grad_i;
 
         if( momentum == 0. )
         {
