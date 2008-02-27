@@ -1416,6 +1416,28 @@ TVec<StatsCollector> VMatrix::getStats(bool progress_bar) const
     return field_stats;
 }
 
+//////////////////////
+// is_file_uptodate //
+//////////////////////
+bool VMatrix::is_file_uptodate(PPath& path, bool warning_recalcul,
+                               bool warning_mtime) const
+{
+    bool exist = isfile(path);
+    bool uptodate = false;
+    if(exist)
+        uptodate = getMtime()<mtime(path);
+    if (warning_mtime && exist && uptodate && getMtime()==0)
+        PLWARNING("Warning: using a saved file (%s) but mtime is 0"
+                  "(cannot be sure file is up to date).",
+                  path.absolute().c_str());
+    if(warning_recalcul && exist && !uptodate)
+        PLWARNING("Warning: recomputing saved file (%s) as it is older"
+                  "then the source.",
+                  path.absolute().c_str());
+
+    return exist && uptodate;
+ 
+}
 /////////////////////////////////
 // getPrecomputedStatsFromFile //
 /////////////////////////////////
@@ -1426,24 +1448,11 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     PPath metadatadir = getMetaDataDir();
     PPath statsfile =  metadatadir / filename;
     lockMetaDataDir();
-    bool file = isfile(statsfile);
-    bool uptodate = false;
-    if(file)
-        uptodate = getMtime()<mtime(statsfile);
-    if (file && uptodate)
-    {
-        if(getMtime() == 0)
-            PLWARNING("Warning: using a saved stat file (%s) but mtime is 0"
-                      "(cannot be sure file is up to date).",
-                      statsfile.absolute().c_str());
+    bool uptodate=is_file_uptodate(statsfile, true, true);
+    if (uptodate)
         PLearn::load(statsfile, stats);
-    }
     else
     {
-        if(file && !uptodate)
-            PLWARNING("Warning: recomputing stat file (%s) as it is older"
-                      "the source.",
-                      statsfile.absolute().c_str());
         VMat vm = const_cast<VMatrix*>(this);
         stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
         if(!metadatadir.isEmpty())

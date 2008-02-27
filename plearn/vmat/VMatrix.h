@@ -376,6 +376,9 @@ public:
     inline void setMtime(time_t t) { mtime_ = t; }
 
 
+    bool is_file_uptodate(PPath& file, bool warning_recalcul=false,
+                          bool warning_mtime=true) const;
+
     //#####  Matrix Sizes  ####################################################
 
     /// Return the number of columns in the VMatrix
