@@ -43,6 +43,7 @@
 
 #include "databases.h"
 #include <plearn/vmat/ConcatRowsVMatrix.h>
+#include <plearn/db/NistDB.h>
 #include <plearn/math/random.h>
 #include <plearn/vmat/RemapLastColumnVMatrix.h>
 #include <plearn/vmat/ShiftAndRescaleVMatrix.h>
