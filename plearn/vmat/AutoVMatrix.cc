@@ -44,7 +44,6 @@
 #include "AutoVMatrix.h"
 #include "MemoryVMatrix.h"
 #include <plearn/db/getDataSet.h>
-#include <plearn/db/databases.h>
 
 namespace PLearn {
 using namespace std;
