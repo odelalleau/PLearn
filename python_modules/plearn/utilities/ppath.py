@@ -129,7 +129,7 @@ def expandEnvVariables( path ):
         begvar = string.find(expanded, "${")
         endvar = string.find(expanded,  "}")
 
-    return expanded;
+    return expanded
 
 ########################################
 ##  Binding Functions  #################
