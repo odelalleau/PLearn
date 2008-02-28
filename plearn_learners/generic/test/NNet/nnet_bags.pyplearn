@@ -1,0 +1,42 @@
+# NNet operating on bags.
+
+from plearn.pyplearn import pl
+import plearn
+
+plarg_defaults.operate_on_bags = True
+plarg_defaults.nstages = 100
+plarg_defaults.lr = 0.1
+plarg_defaults.datafile = 'PLEARNDIR:examples/data/test_suite/toy_multi_class_bags.amat'
+
+nnet = pl.NNet(
+        cost_funcs = [ 'NLL' ],
+        operate_on_bags = plargs.operate_on_bags,
+        nhidden = 10,
+        noutputs = 3,
+        nstages = plargs.nstages,
+        batch_size = 0,
+        optimizer = pl.GradientOptimizer(
+            start_learning_rate = plargs.lr,
+            ),
+        output_transfer_func = 'softmax',
+        verbosity = 1,
+        )
+expdir = 'expdir-nnet'# % plearn.utilities.toolkit.date_time_string()
+tester = pl.PTester(
+        expdir = expdir,
+        learner = nnet,
+        dataset = pl.AutoVMatrix( filename = plargs.datafile ),
+        statnames = [ 'E[test1.E[NLL]]' ],
+        splitter = pl.FractionSplitter(
+            splits = TMat(1, 2, [ (0, 1), (0, 1) ]),
+            ),
+        save_initial_tester = False,
+        save_stat_collectors = False,
+        save_test_names = False,
+        save_test_outputs = False,
+        #final_commands = [ 'plearn vmat cat %s/Split0/test1_outputs.pmat' % expdir ],
+        )
+
+def main():
+    return tester
+
