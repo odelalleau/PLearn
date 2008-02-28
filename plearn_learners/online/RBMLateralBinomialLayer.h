@@ -100,6 +100,16 @@ public:
     //! Accumulates negative contribution to the gradient of lateral weights
     Mat lateral_weights_neg_stats;
 
+    //! Indication that a parametric predictor of the mean-field 
+    //! approximation of the hidden layer conditional distribution.
+    bool use_parametric_mean_field;
+
+    //! Output weights of the mean field predictor
+    Mat mean_field_output_weights;
+
+    //! Output bias of the mean field predictor
+    Vec mean_field_output_bias;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -236,6 +246,9 @@ protected:
 
     mutable Vec dampening_expectation;
     mutable Mat dampening_expectations;
+
+    mutable Vec mean_field_input;
+    mutable Vec pre_sigmoid_mean_field_output;
 
     mutable TVec<Vec> temp_output;
     mutable TVec<Mat> temp_outputs;
