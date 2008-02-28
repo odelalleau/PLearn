@@ -61,8 +61,10 @@ BinaryVariable::BinaryVariable(Variable* v1, Variable* v2, int thelength,
     input1(v1),
     input2(v2) 
 {
-    input1->disallowPartialUpdates();
-    input2->disallowPartialUpdates();
+    if (input1)
+        input1->disallowPartialUpdates();
+    if (input2)
+        input2->disallowPartialUpdates();
     if (call_build_)
         build_();
 }
@@ -135,33 +137,47 @@ void BinaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 bool BinaryVariable::markPath()
 {
     if(!marked)
-        marked = input1->markPath() | input2->markPath();
+        marked = (input1 ? input1->markPath() : false) |
+                 (input2 ? input2->markPath() : false);
     return marked;
 }
 
-
+///////////////
+// buildPath //
+///////////////
 void BinaryVariable::buildPath(VarArray& proppath)
 {
     if(marked)
     {
-        input1->buildPath(proppath);
-        input2->buildPath(proppath);
+        if (input1)
+            input1->buildPath(proppath);
+        if (input2)
+            input2->buildPath(proppath);
         proppath &= Var(this);
         //cout<<"proppath="<<this->getName()<<endl;
         clearMark();
     }
 }
 
-
+/////////////
+// sources //
+/////////////
 VarArray BinaryVariable::sources() 
 { 
     if (marked)
         return VarArray(0,0);
     marked = true;
-    return input1->sources() & input2->sources(); 
+    if (!input1)
+        return input2->sources();
+    if (!input2)
+        return input1->sources();
+    return (input1 ? input1->sources() : VarArray(0, 0)) &
+           (input2 ? input2->sources() : VarArray(0, 0));
 }
 
-
+////////////////////
+// random_sources //
+////////////////////
 VarArray BinaryVariable::random_sources() 
 { 
     if (marked)
@@ -170,46 +186,57 @@ VarArray BinaryVariable::random_sources()
     return input1->random_sources() & input2->random_sources(); 
 }
 
-
+///////////////
+// ancestors //
+///////////////
 VarArray BinaryVariable::ancestors() 
 { 
     if (marked)
         return VarArray(0,0);
     marked = true;
-    return input1->ancestors() & input2->ancestors() & Var(this) ;
+    return (input1 ? input1->ancestors() : VarArray(0, 0)) &
+           (input2 ? input2->ancestors() : VarArray(0, 0)) & Var(this);
 }
 
-
+/////////////////////
+// unmarkAncestors //
+/////////////////////
 void BinaryVariable::unmarkAncestors()
 { 
     if (marked)
     {
         marked = false;
-        input1->unmarkAncestors();
-        input2->unmarkAncestors();
+        if (input1)
+            input1->unmarkAncestors();
+        if (input2)
+            input2->unmarkAncestors();
     }
 }
 
-
+/////////////
+// parents //
+/////////////
 VarArray BinaryVariable::parents() 
 { 
     VarArray unmarked_parents;
-    if (!input1->marked)
+    if (input1 && !input1->marked)
         unmarked_parents.append(input1);
-    if (!input2->marked)
+    if (input2 && !input2->marked)
         unmarked_parents.append(input2);
     return unmarked_parents;
 }
 
-
+//////////////////
+// resizeRValue //
+//////////////////
 void BinaryVariable::resizeRValue()
 {
     inherited::resizeRValue();
-    if (!input1->rvaluedata) input1->resizeRValue();
-    if (!input2->rvaluedata) input2->resizeRValue();
+    if (input1 && !input1->rvaluedata)
+        input1->resizeRValue();
+    if (input2 && !input2->rvaluedata)
+        input2->resizeRValue();
 }
-
-
 
 } // end of namespace PLearn
 
