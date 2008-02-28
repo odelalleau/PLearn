@@ -231,7 +231,7 @@ void LogAddVariable::bprop()
             work -= value[i];
             apply(work, work, safeexp);
             work *= gradient[i];
-            input1->matGradient.subMat(0, i, n, 1) += work;
+            input1->matGradient.subMat(0, i, n, 1) += work.toMat(n, 1);
         }
     }
 }
