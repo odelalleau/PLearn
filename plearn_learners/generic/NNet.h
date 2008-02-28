@@ -73,8 +73,14 @@ protected:
     //! Used to store the inputs in a bag when 'operate_on_bags' is true.
     Var bag_inputs;
 
+    //! Used to store test inputs in a bag when 'operate_on_bags' is true.
+    Mat store_bag_inputs;
+
     //! Used to store the size of a bag when 'operate_on_bags' is true.
     Var bag_size;
+
+    //! Used to remember the size of a test bag.
+    Vec store_bag_size;
 
     //! Number of bags in the training set.
     int n_training_bags;

@@ -425,8 +425,15 @@ void NNet::build_()
         if (noutputs == 0)
             PLERROR("NNet: the option 'noutputs' must be specified");
 
-        // Initialize the input.
+        // Initialize input.
         input = Var(1, inputsize(), "input");
+
+        // Initialize bag stuff.
+        if (operate_on_bags) {
+            bag_size = Var(1, 1, "bag_size");
+            store_bag_size.resize(1);
+            store_bag_inputs.resize(max_bag_size, inputsize());
+        }
 
         params.resize(0);
         Var before_transfer_func;
@@ -687,7 +694,7 @@ void NNet::buildFuncs(const Var& the_input, const Var& the_output, const Var& th
     output_and_target_to_cost = Func(outvars, test_costs); 
     // Since there will be a fprop() in the network, we need to make sure the
     // input is valid.
-    if (train_set && train_set->length() >= the_input->width()) {
+    if (train_set && train_set->length() >= the_input->length()) {
         Vec input, target;
         real weight;
         for (int i = 0; i < the_input->length(); i++) {
@@ -881,7 +888,9 @@ void NNet::buildPenalties(const Var& hidden_layer) {
 // buildTargetAndWeight //
 //////////////////////////
 void NNet::buildTargetAndWeight() {
-    target = Var(1, targetsize(), "target");
+    int ts = operate_on_bags ? targetsize() - 1 // Remove bag information.
+                             : targetsize();
+    target = Var(1, ts, "target");
     if(weightsize_>0)
     {
         if (weightsize_!=1)
@@ -896,6 +905,7 @@ void NNet::buildTargetAndWeight() {
 void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, 
                                    const Vec& targetv, Vec& costsv) const
 {
+    PLASSERT_MSG( !operate_on_bags, "Not implemented" );
 #ifdef BOUNDCHECK
     // Stable cross entropy needs the value *before* the transfer function.
     if (cost_funcs.contains("stable_cross_entropy") or
@@ -912,6 +922,9 @@ void NNet::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv,
 ///////////////////
 void NNet::computeOutput(const Vec& inputv, Vec& outputv) const
 {
+    if (operate_on_bags)
+        PLERROR("In NNet::computeOutput - Cannot compute output without bag "
+                "information");
     outputv.resize(outputsize());
     input_to_output->fprop(inputv,outputv);
 }
@@ -923,7 +936,27 @@ void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
                                  Vec& outputv, Vec& costsv) const
 {
     outputv.resize(outputsize());
-    test_costf->fprop(inputv&targetv, outputv&costsv);
+    costsv.resize(nTestCosts());
+    if (!operate_on_bags)
+        test_costf->fprop(inputv&targetv, outputv&costsv);
+    else {
+        // We can only compute the output once the whole bag has been seen.
+        int last_target_idx = targetv.length() - 1;
+        int bag_info = int(round(targetv[last_target_idx]));
+        if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
+            store_bag_size[0] = 0;
+        store_bag_inputs(int(round(store_bag_size[0]))) << inputv;
+        store_bag_size[0]++;
+        if (bag_info & SumOverBagsVariable::TARGET_COLUMN_LAST)
+            test_costf->fprop(store_bag_inputs.toVec()
+                                    & store_bag_size
+                                    & targetv.subVec(0, last_target_idx),
+                              outputv & costsv);
+        else {
+            outputv.fill(MISSING_VALUE);
+            costsv.fill(MISSING_VALUE);
+        }
+    }
 }
 
 /////////////////
@@ -1069,6 +1102,7 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
 
     inherited::makeDeepCopyFromShallowCopy(copies);
+
     // protected:
     varDeepCopyField(rbf_centers, copies);
     varDeepCopyField(rbf_sigmas, copies);
@@ -1083,7 +1117,10 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(invars, copies);
     deepCopyField(params, copies);
     varDeepCopyField(bag_inputs, copies);
+    deepCopyField(store_bag_inputs, copies);
     varDeepCopyField(bag_size, copies);
+    deepCopyField(store_bag_size, copies);
+
     // public:
     deepCopyField(paramsvalues, copies);
     varDeepCopyField(input, copies);
