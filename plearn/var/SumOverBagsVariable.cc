@@ -244,10 +244,24 @@ void SumOverBagsVariable::fpropOneBag(bool do_bprop)
             vmat->getExample(curpos,input_value,bag_target_and_bag_signal,weight);
         }
         else
-            vmat->getExample(curpos,input_value,bag_target_and_bag_signal,dummy_weight);
+            vmat->getExample(curpos, input_value,
+                             bag_target_and_bag_signal, dummy_weight);
         if (bag_size == 0) {
             // It's the first element: we copy the good target.
-            bag_target << bag_target_and_bag_signal.subVec(0, bag_target_and_bag_signal.length() - 1);
+            bag_target << bag_target_and_bag_signal.subVec(
+                                    0, bag_target_and_bag_signal.length() - 1);
+        } else {
+#ifdef BOUNDCHECK
+            // Safety check: make sure the target is the same for all elements
+            // in the bag.
+            Vec targ = bag_target_and_bag_signal.subVec(
+                    0, bag_target_and_bag_signal.length() - 1);
+            PLASSERT( targ.length() == bag_target.length() );
+            for (int i = 0; i < targ.length(); i++)
+                if (!is_equal(bag_target[i], targ[i]))
+                    PLERROR("In SumOverBagsVariable::fpropOneBag - A bag must "
+                            "have the same target across all elements in it");
+#endif
         }
         if (transpose) {
             // Need to put input_value into input_values, because it uses a separate
