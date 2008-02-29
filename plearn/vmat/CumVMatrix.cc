@@ -128,7 +128,7 @@ void CumVMatrix::build_()
             if ((columns[j] = source->fieldIndex(columns_to_accumulate[j])) == -1)
                 PLERROR("CumVMatrix: provided field name %s not found in source VMatrix",columns_to_accumulate[j].c_str());
 
-        setMtime(max(getMtime(),source->getMtime()));
+        updateMtime(source);
 
         // copy length and width from source if not set
         if(length_<0)

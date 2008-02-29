@@ -119,7 +119,7 @@ void AsciiVMatrix::build()
 
 void AsciiVMatrix::build_()
 {
-    //setMtime(mtime(filename));
+    //updateMtime(filename);
 
     if(!newfile)  // open old file
     {

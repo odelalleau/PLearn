@@ -231,7 +231,7 @@ void CompactFileVMatrix::build_()
         cache_index = TVec<unsigned char>((length_ + 7) / 8);
     }
 
-    setMtime(mtime(filename_));
+    updateMtime(filename_);
 }
 
 

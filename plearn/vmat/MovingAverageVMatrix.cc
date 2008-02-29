@@ -169,7 +169,7 @@ void MovingAverageVMatrix::build_()
                 max_window_size=window_sizes[j];
         }
 
-        setMtime(max(getMtime(),source->getMtime()));
+        updateMtime(source);
 
         // copy length and width from source if not set
         if(length_<0)

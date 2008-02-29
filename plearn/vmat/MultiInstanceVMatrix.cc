@@ -241,7 +241,7 @@ void MultiInstanceVMatrix::build_()
     //test << data_;
     //test.close();
 
-    this->setMtime(mtime(filename_));
+    this->updateMtime(filename_);
 }
 
 // ### Nothing to add here, simply calls build_

@@ -147,7 +147,7 @@ void DiskVMatrix::build_()
         if(!isdir(dirname))
             PLERROR("In DiskVMatrix constructor, directory %s could not be found",dirname.c_str());
         setMetaDataDir(dirname + ".metadata");
-        setMtime( mtime( dirname/"indexfile" ) );
+        updateMtime( dirname/"indexfile" );
         string omode;
         if(writable)
             omode = "r+b";
@@ -217,7 +217,7 @@ void DiskVMatrix::build_()
         if(isdir(dirname))
             PLERROR("In DiskVMatrix constructor (with specified width), directory %s already exists",dirname.c_str());
         setMetaDataDir(dirname + ".metadata");
-        setMtime(mtime( dirname/"indexfile" ));
+        updateMtime( dirname/"indexfile" );
 
         if(isfile(dirname)) // patch for running mkstemp (TmpFilenames)
             unlink(dirname.c_str());

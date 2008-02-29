@@ -127,10 +127,8 @@ void SourceVMatrix::declareOptions(OptionList& ol)
 void SourceVMatrix::build_()
 {
     /*
-      time_t mt = getMtime();
       for(int k=0; k<dependencies.size(); k++)
-      mt = max(mt, mtime(dependencies[k]));
-      setMtime(mt);
+      updateMtime(dependencies[k]);
     */
 }
 

@@ -140,7 +140,7 @@ VMat loadAsciiAsVMat(const PPath& filename)
     else
         vm->defineSizes(m.width(),0,0);
 
-    vm->setMtime(mtime(filename));
+    vm->updateMtime(filename);
     // Set the discovered string -> real mappings.
     for (int i = 0; i < map_sr.length(); i++) {
         vm->setStringMapping(i, map_sr[i]);

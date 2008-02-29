@@ -403,7 +403,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         }
         source = new FileVMatrix(meta_data_dir / "precomputed.pmat");
         source->setMetaDataDir(meta_data_dir);
-        source->setMtime(date_of_code);
+        source->updateMtime(date_of_code);
         source->defineSizes(inputsize, targetsize, weightsize);
         return source;
     }
@@ -416,7 +416,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
         {
             source = new DiskVMatrix(meta_data_dir/"precomputed.dmat");
             source->setMetaDataDir(meta_data_dir);
-            source->setMtime(date_of_code);
+            source->updateMtime(date_of_code);
             source->defineSizes(inputsize, targetsize, weightsize);
             return source;
         }
@@ -594,7 +594,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
     VMatLanguage::output_preproc=olddebugval;
     source->setMetaDataDir(meta_data_dir);
-    source->setMtime(date_of_code);
+    source->updateMtime(date_of_code);
     if (sizes_spec) {
         source->defineSizes(inputsize, targetsize, weightsize);
     }
@@ -624,7 +624,7 @@ void VVMatrix::build_()
             the_mat->setMetaDataDir(getMetaDataDir());
         }
 
-        setMtime(the_mat->getMtime());
+        updateMtime(the_mat->getMtime());
         length_ = the_mat.length();
         width_ = the_mat.width();
 
