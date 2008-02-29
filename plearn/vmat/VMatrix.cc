@@ -1416,28 +1416,29 @@ TVec<StatsCollector> VMatrix::getStats(bool progress_bar) const
     return field_stats;
 }
 
-//////////////////////
-// is_file_uptodate //
-//////////////////////
-bool VMatrix::is_file_uptodate(PPath& path, bool warning_recalcul,
-                               bool warning_mtime) const
+////////////////////
+// isFileUpToDate //
+////////////////////
+bool VMatrix::isFileUpToDate(const PPath& path, bool warning_reuse,
+                             bool warning_older) const
 {
     bool exist = isfile(path);
     bool uptodate = false;
     if(exist)
-        uptodate = getMtime()<mtime(path);
-    if (warning_mtime && exist && uptodate && getMtime()==0)
-        PLWARNING("Warning: using a saved file (%s) but mtime is 0"
-                  "(cannot be sure file is up to date).",
+        uptodate = getMtime() < mtime(path);
+    if (warning_reuse && exist && uptodate && getMtime()==0)
+        PLWARNING("In VMatrix::isFileUpToDate - File '%s' will be used, but "
+                  "this VMat's last modification time is undefined: we cannot "
+                  "be sure the file is up-to-date",
                   path.absolute().c_str());
-    if(warning_recalcul && exist && !uptodate)
-        PLWARNING("Warning: recomputing saved file (%s) as it is older"
-                  " then the source.",
+    if(warning_older && exist && !uptodate)
+        PLWARNING("In VMatrix::isFileUpToDate - File '%s' is older than this "
+                  "VMat's last modification time, and cannot be re-used",
                   path.absolute().c_str());
 
     return exist && uptodate;
- 
 }
+
 /////////////////////////////////
 // getPrecomputedStatsFromFile //
 /////////////////////////////////
@@ -1448,7 +1449,7 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     PPath metadatadir = getMetaDataDir();
     PPath statsfile =  metadatadir / filename;
     lockMetaDataDir();
-    bool uptodate=is_file_uptodate(statsfile, true, true);
+    bool uptodate= isFileUpToDate(statsfile, true, true);
     if (uptodate)
         PLearn::load(statsfile, stats);
     else

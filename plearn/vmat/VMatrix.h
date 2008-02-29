@@ -375,9 +375,14 @@ public:
      */
     inline void setMtime(time_t t) { mtime_ = t; }
 
-
-    bool is_file_uptodate(PPath& file, bool warning_recalcul=false,
-                          bool warning_mtime=true) const;
+    //! Return 'true' iff 'file' was last modified after this VMat, or this
+    //! VMat's last modification time is undefined (set to 0).
+    //! If 'warning_older' is 'true', then a warning will be issued when the
+    //! file exists and it is older than this VMat's last modification time.
+    //! If 'warning_reuse' is 'true', then a warning will be issued when the
+    //! file exists and this VMat's last modification time is undefined.
+    bool isFileUpToDate(const PPath& file, bool warning_older = false,
+                        bool warning_reuse = true) const;
 
     //#####  Matrix Sizes  ####################################################
 
