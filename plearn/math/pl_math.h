@@ -569,6 +569,11 @@ typedef real (*tRealReadFunc)(real,real);
 //! (doing the computation in double precision)
 real logadd(double log_a, double log_b);
 
+#ifdef USEFLOAT
+//! Required in some template functions when compiling in float mode.
+real logadd(real log_a, real log_b);
+#endif
+
 //!  compute log(exp(log_a)-exp(log_b)) without losing too much precision
 real logsub(real log_a, real log_b);
 

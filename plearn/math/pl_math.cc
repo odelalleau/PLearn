@@ -174,6 +174,13 @@ real logadd(double log_a, double log_b)
     return (real)(log_a + log1p(exp(negative_absolute_difference)));
 }
 
+#ifdef USEFLOAT
+real logadd(real log_a, real log_b)
+{
+    return logadd(double(log_a), double(log_b));
+}
+#endif
+
 real square_f(real x)
 { return x*x; }
 
