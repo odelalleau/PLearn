@@ -878,6 +878,12 @@ void NatGradSMPNNet::train()
         ptimer->startTimer("big_loop");
     }
 
+    // TODO Maybe...
+    // - see if it has anything to do with accessing shared memory
+    // - try to mix in data with a lower or higher measure_every, just to see
+    // if the difference in behaviors in speedup_whilefalse is due to having
+    // less examples to process.
+
     //pout << "CPU " << iam << ": my_stage_incr = " << my_stage_incr << endl;
     for(int i = 0; i < my_stage_incr; i++)
     {
