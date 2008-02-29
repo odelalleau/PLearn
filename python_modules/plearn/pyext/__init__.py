@@ -46,9 +46,7 @@ def cleanupWrappedObjects():
         ramassePoubelles()
 atexit.register(cleanupWrappedObjects)
 
-if os.getenv('PYTEST_STATE') != 'Active':
-    print versionString()
-
+__VERSION__= versionString()
 
 # Redefines function TMat to emulate pyplearn behaviour
 def TMat( *args ):

@@ -361,6 +361,21 @@ def listdirs(dirs):
             dirs_list.extend( os.listdir(dirc) )
     return dirs_list
 
+def splitDirs(path):
+    """
+    returns a list of path elements, by successive calls to os.path.split
+    """
+    dirs= []
+    h= 123
+    while h not in ['','/']:
+        h,t= os.path.split(path)
+        dirs= [t]+dirs
+        path= h
+    if h=='/':
+        dirs= [h]+dirs
+
+    return dirs
+
 def no_none( orig ):
     """Parses the I{None} elements out of a list.  
 
