@@ -546,6 +546,9 @@ public:
     /// VMat's length).
     virtual void getColumn(int i, Vec v) const;
 
+    //! remote version of getColumn: return newly alloc'd vec
+    Vec remote_getColumn(int i) const;
+
     /**
      *  Return true iff the input vector is in this VMat (we compare only the
      *  input part).  If the parameter 'i' is provided, it will be filled with

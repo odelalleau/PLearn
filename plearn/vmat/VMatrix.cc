@@ -167,6 +167,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("row i vector")));
 
     declareMethod(
+        rmm, "getColumn", &VMatrix::remote_getColumn,
+        (BodyDoc("Returns a row of a matrix \n"),
+         ArgDoc ("i", "Position of the row to get.\n"),
+         RetDoc ("row i vector")));
+
+
+    declareMethod(
         rmm, "getString", &VMatrix::getString,
         (BodyDoc("Returns an element of a matrix as a string\n"),
          ArgDoc ("i", "Position of the row to get.\n"),
@@ -1547,6 +1554,14 @@ void VMatrix::getColumn(int j, Vec v) const
     for(int i=0; i<v.length(); i++)
         v[i] = get(i,j);
 }
+
+Vec VMatrix::remote_getColumn(int i) const
+{
+    Vec v(length());
+    getColumn(i,v);
+    return v;
+}
+
 
 ///////////////
 // getSubRow //
