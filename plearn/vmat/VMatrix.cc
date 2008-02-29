@@ -46,7 +46,7 @@
 #include <plearn/base/tostring.h>
 #include <plearn/base/lexical_cast.h>
 #include <plearn/base/stringutils.h> //!< For pgetline()
-#include <plearn/io/fileutils.h>     //!< For isfile()
+#include <plearn/io/fileutils.h>     //!< For isfile() mtime()
 #include <plearn/io/load_and_save.h>
 #include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
 #include <plearn/base/RemoteDeclareMethod.h>
@@ -74,9 +74,9 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 
 VMatrix::VMatrix(bool call_build_):
     inherited   (call_build_),
+    mtime_      (0),
     length_     (-1),
     width_      (-1),
-    mtime_      (0),
     inputsize_  (-1),
     targetsize_ (-1),
     weightsize_ (-1),
@@ -90,9 +90,9 @@ VMatrix::VMatrix(bool call_build_):
 
 VMatrix::VMatrix(int the_length, int the_width, bool call_build_):
     inherited                       (call_build_),
+    mtime_                          (0),
     length_                         (the_length),
     width_                          (the_width),
-    mtime_                          (0),
     inputsize_                      (-1),
     targetsize_                     (-1),
     weightsize_                     (-1),
@@ -1156,7 +1156,7 @@ void VMatrix::copySizesFrom(const VMat& m) {
 /////////////////////
 void VMatrix::setMetaInfoFrom(const VMatrix* vm)
 {
-    setMtime(max(getMtime(),vm->getMtime()));
+    updateMtime(vm->getMtime());
 
     // copy length and width from vm if not set
     if(length_<0)
@@ -1415,6 +1415,20 @@ TVec<StatsCollector> VMatrix::getStats(bool progress_bar) const
                                                   progress_bar);
     return field_stats;
 }
+
+/////////////////
+// updateMtime //
+/////////////////
+void VMatrix::updateMtime(time_t t)
+{
+    if(t>mtime_ && mtime_!=numeric_limits<time_t>::max())
+        mtime_=t;
+    else if(t==0)
+        mtime_=numeric_limits<time_t>::max();
+}
+void VMatrix::updateMtime(const PPath& p){updateMtime(mtime(p));}
+
+void VMatrix::updateMtime(VMat v){updateMtime(v->getMtime());}
 
 ////////////////////
 // isFileUpToDate //

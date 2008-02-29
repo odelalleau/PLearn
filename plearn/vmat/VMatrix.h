@@ -89,12 +89,12 @@ class VMatrix: public Object
     /// Used in the default dot(i,j) method to store the i-th and j-th rows.
     mutable Vec dotrow_1;
     mutable Vec dotrow_2;
+    time_t mtime_;          ///< Time of "last modification" of data files.
 
 protected:
 
     mutable int length_;    ///< Length of the VMatrix.
     int width_;             ///< Width of the VMatrix.
-    time_t mtime_;          ///< Time of "last modification" of data files.
 
     /// For training/testing data sets we assume each row is composed of 4
     /// parts: an input part, a target part, and a weight part.  These fields
@@ -364,14 +364,32 @@ public:
      *  result returned is typically based on mtime of the files contianing
      *  this matrix's data when the object is constructed.  mtime_ defaults to
      *  0, so that's what will be returned by default, if the time was never
-     *  set by a call to setMtime(t) (see below).
+     *  set by a call to updateMtime(t) or setMtime(t)(see below).
      */
-    inline time_t getMtime() const { return mtime_; }
+    inline time_t getMtime() const { return mtime_==numeric_limits<time_t>::max()? 0: mtime_; }
 
     /**
-     *  Sets the "last modification" time for this matrix For matrices on disk,
+     *  Update the "last modification" time for this matrix.
+     *  this should be called by the constructor for all dependence,
+     *  file or other VMatrix, VMat
+     *  This fonction remember the time that is the more recent. If
+     *  a dependence have a mtime of 0, getMtime() will always return 0
+     *  as if a dependence have an unknow mtime, we should have an unknow mtime
+     */
+    void updateMtime(time_t t);
+
+    void updateMtime(const PPath& p);
+
+    void updateMtime(const VMatrix& v){updateMtime(v.getMtime());}
+
+    void updateMtime(VMat v);
+
+    /**
+     *  Preferably use updateMtime()!
+     *  Sets the "last modification" time for this matrix,
      *  this should be called by the constructor to reflect the mtime of the
      *  disk files.
+     *  @see updateMtime 
      */
     inline void setMtime(time_t t) { mtime_ = t; }
 
