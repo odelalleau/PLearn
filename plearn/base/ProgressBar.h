@@ -184,6 +184,9 @@ private:
 };
 
 
+void setProgressBarPlugin(string pb_type);
+
+
 } // end of namespace PLearn
 
 #endif

@@ -44,6 +44,7 @@
  ******************************************************* */
 
 //#include <iomanip>
+#include "RemoteDeclareMethod.h"
 #include "ProgressBar.h"
 #include "stringutils.h"
 #include <math.h>
@@ -267,6 +268,26 @@ string LineOutputProgressBarPlugin::pbInfo(ProgressBar* pb)
         + tostring(curpos) + '/' + tostring(maxpos)
         + " (" + tostring(static_cast<double>(curpos)*100.0 / static_cast<double>(maxpos)) + "%)";
 }
+
+
+void setProgressBarPlugin(string pb_type)
+{
+    if(pb_type == "none")
+        ProgressBar::setPlugin(new NullProgressBarPlugin);
+    else if(pb_type == "text")
+        ProgressBar::setPlugin(new TextProgressBarPlugin(cerr));
+    else
+        PLERROR("Invalid ProgressBar type: %s", pb_type.c_str());
+}
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("setProgressBarPlugin", &setProgressBarPlugin,
+                    (BodyDoc("Sets the progress bar plugin.\n"),
+                     ArgDoc ("pb_type", "one of: 'none','text'.")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
 
 
 } // end of namespace PLearn
