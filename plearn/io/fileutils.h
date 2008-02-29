@@ -203,9 +203,9 @@ void saveStringInFile(const PPath& filepath, const string& text);
 //! Also every $DEFINE{varname=... } in the text will add a new varname
 //! entry in the map (the DEFINE macro will be discarded).
 //! Also every $INCLUDE{filepath} will be replaced in place by the text of
-//! the file it includes
+//! the file it includes and set latest, to max(latest,mtime(filepath))
 string readAndMacroProcess(PStream& in, map<string, string>& variables, 
-                           bool skip_comments= true);
+                           time_t& latest, bool skip_comments= true);
 
 /*! Given a filename, generates the standard PLearn variables FILEPATH,
   DIRPATH, FILENAME, FILEBASE, FILEEXT, DATE, TIME and DATETIME and
@@ -235,12 +235,27 @@ void addFileAndDateVariables(const PPath& filepath, map<string, string>& variabl
 */
 string readFileAndMacroProcess(const PPath& filepath,
                                map<string, string>& variables,
-                               bool change_dir = false);
+                               time_t& latest, bool change_dir = false);
+
+inline string readFileAndMacroProcess(const PPath& filepath,
+                               map<string, string>& variables,
+                               bool change_dir = false)
+{
+    time_t latest = 0;
+    return readFileAndMacroProcess(filepath, variables, latest, change_dir);
+}
+
+inline string readFileAndMacroProcess(const PPath& filepath, time_t& latest)
+{
+    map<string, string> variables;
+    return readFileAndMacroProcess(filepath, variables, latest);
+}
 
 inline string readFileAndMacroProcess(const PPath& filepath)
 {
     map<string, string> variables;
-    return readFileAndMacroProcess(filepath, variables);
+    time_t latest = 0;
+    return readFileAndMacroProcess(filepath, variables, latest);
 }
 
 //! Increase by one the number of references to a file.

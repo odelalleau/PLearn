@@ -873,7 +873,8 @@ string HelpSystem::helpPrologueHTML(const string& title)
     map<string, string> dic;
     dic["PAGE_TITLE"]= title;
     PStream stm= openString(the_prologue, PStream::raw_ascii);
-    return readAndMacroProcess(stm, dic, false);
+    time_t latest = 0;
+    return readAndMacroProcess(stm, dic, latest, false);
 }
 
 string HelpSystem::helpEpilogueHTML()

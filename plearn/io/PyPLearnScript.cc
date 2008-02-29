@@ -48,6 +48,7 @@
 #include <plearn/io/fileutils.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/base/pl_repository_revision.h>
+#include <plearn/vmat/VMatrix.h>
 
 
 namespace PLearn {
@@ -304,7 +305,8 @@ void PyPLearnScript::build_()
     else
     {
         PStream is     = openString( plearn_script, PStream::raw_ascii );
-        plearn_script  = readAndMacroProcess( is, vars );
+        time_t latest = 0 ;
+        plearn_script  = readAndMacroProcess( is, vars, latest );
     }
 }
 
@@ -327,6 +329,7 @@ Object* smartLoadObject(PPath filepath, const vector<string>& args)
     
     const string extension = extract_extension(filepath);
     string script;
+    time_t date = 0;
 
     PP<PyPLearnScript> pyplearn_script;
     PStream in;
@@ -363,8 +366,7 @@ Object* smartLoadObject(PPath filepath, const vector<string>& args)
                 vars[name_val.first] = name_val.second;
             }
         }
-
-        script = readFileAndMacroProcess(filepath, vars);
+        script = readFileAndMacroProcess(filepath, vars, date);
         in = openString( script, PStream::plearn_ascii );
     }
     else if(extension==".psave") // do not perform plearn macro expansion
@@ -375,7 +377,9 @@ Object* smartLoadObject(PPath filepath, const vector<string>& args)
         PLERROR("In smartLoadObject: unsupported file extension. Must be one of .pyplearn .pymat .plearn .vmat .psave");
 
     Object* o = readObject(in);
-    
+    if(extension==".vmat")
+        ((VMatrix*)o)->updateMtime(date);
+
     if ( pyplearn_script.isNotNull() )
         pyplearn_script->close();
 

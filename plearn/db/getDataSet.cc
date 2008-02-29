@@ -105,7 +105,9 @@ VMat getDataSet(const PPath& dataset_path)
         //            "use a standard .vmat or .pymat script"); } 
         else if (ext == "vmat" || ext == "txtmat") {
             use_params = true;
-            const string code = readFileAndMacroProcess(dataset, params);
+            time_t date = 0;
+            const string code = readFileAndMacroProcess(dataset, params, date);
+
             if (removeblanks(code)[0] == '<') {
                 // Old XML-like format.
                 PLDEPRECATED("In getDataSet - File %s is using the old XML-like VMat format, " 
@@ -118,6 +120,7 @@ VMat getDataSet(const PPath& dataset_path)
                     PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
                             dataset.absolute().c_str());
             }
+            vm->updateMtime(date);
         } else if (ext == "pymat" || ext == "py") {
             use_params = true;
             if (ext == "py")

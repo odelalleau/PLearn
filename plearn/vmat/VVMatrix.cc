@@ -142,11 +142,11 @@ vector<vector<string> > VVMatrix::extractSourceMatrix(const string & str,const s
 
 time_t VVMatrix::getDateOfVMat(const string& filename)
 {
-    string in=readFileAndMacroProcess(filename);
+    time_t latest = 0;
+    string in=readFileAndMacroProcess(filename, latest);
     size_t idx_source = in.find("<SOURCES>");
     size_t cidx_source;
-
-    time_t latest = getDateOfCode(filename),tmp;
+    latest=max(getDateOfCode(filename),latest);
 
     if(idx_source!=string::npos)
     {
@@ -167,11 +167,9 @@ time_t VVMatrix::getDateOfVMat(const string& filename)
                     // also check for date of possible IntVecFile
                     if(vecstr[1][0]!=slash_char)
                         vecstr[1]=extract_directory(filename)+vecstr[1];
-                    if((tmp=mtime(vecstr[1])) > latest)
-                        latest=tmp;
+                    latest=max(mtime(vecstr[1]),latest);
                 }
-                if((tmp=getDataSetDate(vecstr[0])) > latest)
-                    latest=tmp;
+                latest=max(getDataSetDate(vecstr[0]),latest);
             }
     }
     return latest;
@@ -344,7 +342,8 @@ string VVMatrix::getPrecomputedDataName()
 
 VMat VVMatrix::createPreproVMat(const string & filename)
 {
-    string in=readFileAndMacroProcess(filename);
+    time_t date_of_code = 0;
+    string in=readFileAndMacroProcess(filename,date_of_code);
     size_t idx_source     = in.find("<SOURCES>");
     size_t idx_prefilter  = in.find("<PREFILTER>");
     size_t idx_postfilter = in.find("<POSTFILTER>");
@@ -367,7 +366,7 @@ VMat VVMatrix::createPreproVMat(const string & filename)
 
     PPath meta_data_dir = remove_trailing_slash(filename)+".metadata";
     force_mkdir(meta_data_dir);
-    time_t date_of_code = getDateOfVMat(filename);
+    date_of_code=max(date_of_code,getDateOfVMat(filename));
 
     // remove pollution : all stuff that has possibly been interrupted during computation
     rm ( meta_data_dir / "incomplete.*" );
@@ -612,8 +611,8 @@ void VVMatrix::build_()
     if (the_filename != "") {
         setMetaDataDir( PPath(the_filename+".metadata").absolute() );
         force_mkdir( getMetaDataDir() );
-
-        code = readFileAndMacroProcess(the_filename);
+        time_t latest=0;
+        code = readFileAndMacroProcess(the_filename,latest);
         if(removeblanks(code)[0]=='<') // old xml-like format
             the_mat = createPreproVMat(the_filename);
         else  // New standard PLearn object description format
@@ -625,6 +624,7 @@ void VVMatrix::build_()
         }
 
         updateMtime(the_mat->getMtime());
+        updateMtime(latest);
         length_ = the_mat.length();
         width_ = the_mat.width();
 

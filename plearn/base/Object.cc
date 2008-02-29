@@ -827,7 +827,8 @@ Object* loadObject(const PPath &filename)
 
 Object* macroLoadObject(const PPath &filename, map<string, string>& vars)
 {
-    string script = readFileAndMacroProcess(filename, vars);
+    time_t date = 0;
+    string script = readFileAndMacroProcess(filename, vars, date);
     PStream sin = openString(script,PStream::plearn_ascii);
     Object* o = readObject(sin);
     o->build();
