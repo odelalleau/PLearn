@@ -324,7 +324,7 @@ void TextFilesVMatrix::build_()
     setColumnNamesAndWidth();
 
     // open the index file
-    if(!isfile(idxfname))
+    if(!isFileUpToDate(idxfname))
         buildIdx(); // (re)build it first!
     idxfile = fopen(idxfname.c_str(),"rb");
     if(fgetc(idxfile) != byte_order())
