@@ -102,6 +102,7 @@ void ConcatColumnsVMatrix::build_()
 
     for(int i=0; i<sources.size(); i++)
     {
+        updateMtime(sources[i]);
         if(sources[i]->length()!=length_)
             PLERROR("ConcatColumnsVMatrix: Problem concatenating two VMat with"
                     " different lengths");

@@ -187,6 +187,7 @@ void SelectColumnsVMatrix::build()
 void SelectColumnsVMatrix::build_()
 {
     if (source) {
+        updateMtime(source);
         if (fields.isNotEmpty()) {
             // Find out the indices from the fields.
             indices.resize(0);

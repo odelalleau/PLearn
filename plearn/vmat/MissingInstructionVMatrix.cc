@@ -132,6 +132,7 @@ void MissingInstructionVMatrix::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+    updateMtime(source);
     length_ = source->length();
     ins.resize(source->width());
     tmp2.resize(source->width());

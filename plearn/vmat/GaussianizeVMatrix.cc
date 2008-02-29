@@ -40,6 +40,7 @@
 #include "GaussianizeVMatrix.h"
 #include <plearn/math/pl_erf.h>
 #include <plearn/vmat/VMat_computeStats.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -146,17 +147,18 @@ void GaussianizeVMatrix::build_()
         return;
 
     if (train_source) {
-        PLCHECK( train_source->width() == source->width() );
-        PLCHECK( train_source->inputsize()  == source->inputsize() &&
-                train_source->targetsize() == source->targetsize() &&
-                train_source->weightsize() == source->weightsize() &&
-                train_source->extrasize()  == source->extrasize() );
+        source->compatibleSizeError(train_source);
     }
 
     VMat the_source = train_source ? train_source : source;
 
     PLCHECK( the_source->inputsize() >= 0 && the_source->targetsize() >= 0 &&
             the_source->weightsize() >= 0 && the_source->extrasize() >= 0 );
+
+    // We set the mtime to remove the warning of Mtime=0
+    if(train_source)
+        updateMtime(train_source);
+    updateMtime(source);
 
     // Find which dimensions to Gaussianize.
     features_to_gaussianize.resize(0);
@@ -217,6 +219,7 @@ void GaussianizeVMatrix::build_()
         PLWARNING("GaussianizeVMatrix::build_() 0 variable was gaussianized");
     // Obtain meta information from source.
     setMetaInfoFromSource();
+    
 }
 
 ///////////////

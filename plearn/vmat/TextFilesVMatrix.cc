@@ -305,6 +305,9 @@ void TextFilesVMatrix::build_()
         PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
                 getMetaDataDir().absolute().c_str());
     
+    for(int i=0;i<txtfilenames.length();i++)
+        updateMtime(txtfilenames[i]);
+
     PPath metadir = getMetaDataDir();
     PPath idxfname = metadir/"txtmat.idx";
 

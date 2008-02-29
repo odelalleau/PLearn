@@ -49,7 +49,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
   MissingIndicatorVMatrix,
-  "VMat class to add a missing indicator for each variable.",
+  "VMatrix class to add a missing indicator for each variable.",
   "For each variable with a missing value in the referenced train set, an indicator is added.\n"
   "It is set to 1 if the value of the corresponding variable`in the underlying dataset is missing.\n"
   "It is set to 0 otherwise.\n"
@@ -152,6 +152,9 @@ void MissingIndicatorVMatrix::build_()
     if (!source) PLERROR("In MissingIndicatorVMatrix:: source vmat must be supplied");
     if(!train_set && !fields)
       PLERROR("In MissingIndicatorVMatrix:: train_set or fields must be supplied");
+    updateMtime(source);
+    if(train_set)
+      updateMtime(train_set);
     buildNewRecordFormat(); 
 }
 

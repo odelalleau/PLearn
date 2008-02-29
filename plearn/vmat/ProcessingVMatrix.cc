@@ -134,6 +134,7 @@ void ProcessingVMatrix::build_()
     if (!source)
         return;
 
+    updateMtime(source);
     length_ = source->length();
 
     TVec<string> fieldnames;

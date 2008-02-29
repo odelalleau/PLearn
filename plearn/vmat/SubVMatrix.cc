@@ -131,6 +131,7 @@ void SubVMatrix::build()
 ////////////
 void SubVMatrix::build_()
 {
+    updateMtime(source);
     int sl = source->length();
     int sw = source->width();
 

@@ -145,6 +145,8 @@ void DichotomizeVMatrix::build_()
     // ### You should assume that the parent class' build_() has already been
     // ### called.
 
+    updateMtime(source);
+
     instruction_index.fill(-1);
     TVec<string> source_names = source->fieldNames();
 
