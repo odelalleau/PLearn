@@ -57,6 +57,13 @@ void DERIVEDCLASS::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+
+    // ### You should keep the line 'updateMtime(0);' if you don't implement the 
+    // ### update of the mtime. Otherwise you can have an mtime != 0 that is not valid.
+    updateMtime(0);
+    //updateMtime(filename);
+    //updateMtime(VMat);
+    //updateMtime(VMatrix);
 }
 
 // ### Nothing to add here, simply calls build_
