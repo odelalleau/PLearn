@@ -54,7 +54,7 @@
 #include <plearn/display/Gnuplot.h>
 #include <plearn/io/openFile.h>
 #include <plearn/base/HelpSystem.h>
-
+#include <plearn/base/PDate.h>
 #include <algorithm>                         // for max
 #include <iostream>
 #include <iomanip>                           // for setw and such
@@ -448,64 +448,7 @@ int vmatmain(int argc, char** argv)
     if(argc<3)
     {
         // Use the VMatCommand help instead of repeating the same help message twice...
-#if 0
-        cerr << 
-            "Usage: vmat [options] command [params...]\n"
-            "Options:\n"
-            "       -i <indexfile> : use indexfile as index to access the 1st table\n"
-            "Commands:\n"
-            "       vmat info <dataset> \n"
-            "       Will info about dataset (size, etc..)\n"
-            "   or: vmat fields <dataset> [name_only] [transpose]\n"
-            "       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,\n"
-            "       and if 'transpose' is also added, the fields will be listed on a single line)\n"
-            "   or: vmat fieldinfo <dataset> <fieldname_or_num>\n"
-            "       To display statistics for that field \n"
-            "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
-            "       To display the dataset \n"
-            "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
-            "       To output in <dataset.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
-            "   or: vmat stats <dataset> \n"
-            "       Will display basic statistics for each field \n"
-            "   or: vmat convert <source> <destination> \n"
-            "       To convert any dataset into a .amat .pmat or .dmat format \n"
-            "       The extension of the destination is used to determine the format you want \n"
-            "   or: vmat gendef <source> [binnum1 binnum2 ...] \n"
-            "       Generate stats for dataset (will put them in its associated metadatadir). \n"
-            "   or: vmat genvmat <source_dataset> <dest_vmat> [binned{num} | onehot{num} | normalized]\n"
-            "       Will generate a template .vmat file with all the fields of the source preprocessed\n"
-            "       with the processing you specify\n"
-            "   or: vmat genkfold <source_dataset> <fileprefix> <kvalue>\n"
-            "       Will generate <kvalue> pairs of .vmat that are splitted so they can be used for kfold trainings\n"
-            "       The first .vmat-pair will be named <fileprefix>_train_1.vmat (all source_dataset except the first 1/k)\n"
-            "       and <fileprefix>_test_1.vmat (the first 1/k of <source_dataset>\n"
-            "   or: vmat diff <dataset1> <dataset2> [<tolerance> [<verbose>]]\n"
-            "       Will report all elements that differ by more than tolerance (defauts to 1e-6) \n"
-            "       If verbose==0 then print only total number of differences \n"
-            "   or: vmat cdf <dataset> [<dataset> ...] \n"
-            "       To interactively display cumulative density function for each field \n"
-            "       along with its basic statistics \n"
-            //      "   or: vmat cond <dataset> <condfield#> \n"
-            //      "       Interactive display of coditional statistics conditioned on the \n"
-            //      "       conditioning field <condfield#> \n"
-            "   or: vmat diststat <dataset> <inputsize>\n"
-            "       Will compute and output basic statistics on the euclidean distance \n"
-            "       between two consecutive input points \n"
-            "   or: vmat catstr <dataset> [separator]\n"
-            "       Will output the content of <dataset>, using its string mappings.\n"
-            "       A column separator can be provided. By default, \"\t\" is used.\n"
-            "   or: vmat compare_stats <dataset1> <dataset2> [stdev threshold] [missing threshold]\n"
-            "       Will compare stats from dataset1 to dataset2\n\n"
-            "   or: vmat compare_stats_ks <dataset1> <dataset2> [--mat_to_mem]"
-            "       Will compare stats from dataset2 to dataset2 with "
-            "Kolmogorov-Smirnov 2 samples statistic\n\n"
-
-            "<dataset> is a parameter understandable by getDataSet. This includes \n"
-            "all matrix file formats. Type 'vmat help dataset' to see what other\n"
-            "<dataset> strings are available." << endl;
-#endif
-        
-        //PLearnCommandRegistry::help("vmat", cout);
+        // help message in file commands/PLearnCommands/VMatCommand.cc
         pout << HelpSystem::helpOnCommand("vmat") << flush;
         exit(0);
     }
@@ -1291,6 +1234,11 @@ int vmatmain(int argc, char** argv)
             pout<<carac<<endl;
         }
 
+    }
+    else if(command=="mtime")
+    {    
+        VMat m1 = getVMat(argv[2], indexf);
+        pout<<m1->getMtime()<<endl;
     }
     else
         PLERROR("Unknown command : %s",command.c_str());

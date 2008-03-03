@@ -116,8 +116,13 @@ VMatCommand::VMatCommand():
         "       Will output the content of <dataset>, using its string mappings\n"
         "   or: vmat compare_stats <dataset1> <dataset2> [stdev threshold] [missing threshold]\n"
         "       Will compare stats from dataset1 to dataset2\n\n"
-
+        "   or: vmat compare_stats_ks <dataset1> <dataset2> [--mat_to_mem]\n"
+        "       Will compare stats from dataset2 to dataset2 with "
+        "       Kolmogorov-Smirnov 2 samples statistic\n\n"
+        "   or: vmat mtime <dataset>\n"
+        "       Print the mtime of a dataset\n"
         "<dataset> is a parameter understandable by getDataSet: \n"
+
         + getDataSetHelp()
         ) 
 {}
