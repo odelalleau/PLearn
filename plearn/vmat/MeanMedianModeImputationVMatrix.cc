@@ -116,10 +116,16 @@ real MeanMedianModeImputationVMatrix::get(int i, int j) const
 { 
   real variable_value = source->get(i, j);
   if (!is_missing(variable_value)) return variable_value;
-  if (variable_imputation_instruction[j] == 1) return variable_mean[j];
-  if (variable_imputation_instruction[j] == 2) return variable_median[j];
-  if (variable_imputation_instruction[j] == 3) return variable_mode[j];
-  return variable_value;
+  else if (variable_imputation_instruction[j] == 1) return variable_mean[j];
+  else if (variable_imputation_instruction[j] == 2) return variable_median[j];
+  else if (variable_imputation_instruction[j] == 3) return variable_mode[j];
+  else if (variable_imputation_instruction[j] == 4) return variable_value;
+  else
+    PLERROR("In MeanMedianModeImputationVMatrix::get(%d,%d) - "
+	    "unknow variable_imputation_instruction value of %d",i,j,
+	    variable_imputation_instruction[j] );
+  //Should not be executed, to remove a warning
+  return MISSING_VALUE;
 }
 
 void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
@@ -127,9 +133,19 @@ void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
   source->getSubRow(i, j, v);
   for (int source_col = 0; source_col < v->length(); source_col++) 
     if (is_missing(v[source_col]))
-      if (variable_imputation_instruction[source_col + j] == 1) v[source_col] = variable_mean[source_col + j];
-      else if (variable_imputation_instruction[source_col + j] == 2) v[source_col] = variable_median[source_col + j];
-      else if (variable_imputation_instruction[source_col + j] == 3) v[source_col] = variable_mode[source_col + j];
+      if (variable_imputation_instruction[source_col + j] == 1)
+	v[source_col] = variable_mean[source_col + j];
+      else if (variable_imputation_instruction[source_col + j] == 2)
+	v[source_col] = variable_median[source_col + j];
+      else if (variable_imputation_instruction[source_col + j] == 3)
+	v[source_col] = variable_mode[source_col + j];
+      else if (variable_imputation_instruction[source_col + j] == 4)
+	;//do nothing
+      else
+	PLERROR("In MeanMedianModeImputationVMatrix::getSubRow(%d,%d, Vec) - "
+		"unknow variable_imputation_instruction value of %d",i,j,
+		variable_imputation_instruction[source_col + j] );
+
 }
 
 void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
@@ -137,9 +153,19 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
   source-> getRow(i, v);
   for (int source_col = 0; source_col < v->length(); source_col++)
     if (is_missing(v[source_col]))
-      if (variable_imputation_instruction[source_col] == 1) v[source_col] = variable_mean[source_col];
-      else if (variable_imputation_instruction[source_col] == 2) v[source_col] = variable_median[source_col];
-      else if (variable_imputation_instruction[source_col] == 3) v[source_col] = variable_mode[source_col]; 
+      if (variable_imputation_instruction[source_col] == 1)
+	v[source_col] = variable_mean[source_col];
+      else if (variable_imputation_instruction[source_col] == 2)
+	v[source_col] = variable_median[source_col];
+      else if (variable_imputation_instruction[source_col] == 3)
+	v[source_col] = variable_mode[source_col]; 
+      else if (variable_imputation_instruction[source_col] == 4)
+	;//do nothing
+      else
+	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
+		"unknow variable_imputation_instruction value of %d",i,
+		variable_imputation_instruction[source_col] );
+  
 }
 
 void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
@@ -150,6 +176,13 @@ void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
       if (variable_imputation_instruction[i] == 1) v[source_row] = variable_mean[i];
       else if (variable_imputation_instruction[i] == 2) v[source_row] = variable_median[i];
       else if (variable_imputation_instruction[i] == 3) v[source_row] = variable_mode[i];
+      else if (variable_imputation_instruction[i] == 4)
+	;//do nothing
+      else
+	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
+		"unknow variable_imputation_instruction value of %d",i,
+		variable_imputation_instruction[i] );
+
 }
 
 
@@ -164,31 +197,25 @@ void MeanMedianModeImputationVMatrix::build_()
     updateMtime(source);
 
     int train_length = train_set->length();
+    int train_width = train_set->width();
+
     if (number_of_train_samples_to_use > 0.0)
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
         else train_length = (int) number_of_train_samples_to_use;
     if (train_length > train_set->length()) train_length = train_set->length();
-    if(train_length < 1) PLERROR("In MeanMedianModeImputationVMatrix::length of the number of train samples to use must be at least 1, got: %i", train_length);
-    int train_width = train_set->width();
-    int train_targetsize = train_set->targetsize();
-    int train_weightsize = train_set->weightsize();
-    int train_inputsize = train_set->inputsize();
-    if(train_inputsize < 1) PLERROR("In MeanMedianModeImputationVMatrix::inputsize of the train vmat must be supplied, got : %i", train_inputsize);
-    int source_width = source->width();
-    int source_targetsize = source->targetsize();
-    int source_weightsize = source->weightsize();
-    int source_inputsize = source->inputsize();
-    if (train_width != source_width) PLERROR("In MeanMedianModeImputationVMatrix::train set and source width must agree, got : %i, %i", train_width, source_width);
-    if (train_targetsize != source_targetsize) PLERROR("In MeanMedianModeImputationVMatrix::train set and source targetsize must agree, got : %i, %i", train_targetsize, source_targetsize);
-    if (train_weightsize != source_weightsize) PLERROR("In MeanMedianModeImputationVMatrix::train set and source weightsize must agree, got : %i, %i", train_weightsize, source_weightsize);
-    if (train_inputsize != source_inputsize) PLERROR("In MeanMedianModeImputationVMatrix::train set and source inputsize must agree, got : %i, %i", train_inputsize, source_inputsize);
+    if(train_length < 1) 
+      PLERROR("In MeanMedianModeImputationVMatrix::length of the number of"
+	      " train samples to use must be at least 1, got: %i", train_length);
+
+    if(train_set->inputsize() < 1) 
+      PLERROR("In MeanMedianModeImputationVMatrix::inputsize of the train vmat"
+	      " must be supplied, got : %i", train_set->inputsize());
+    source->compatibleSizeError(train_set);
+    setMetaInfoFrom(source);
+
     train_field_names.resize(train_width);
     train_field_names = train_set->fieldNames();
-    length_ = source->length();
-    width_ = source_width;
-    inputsize_ = source_inputsize;
-    targetsize_ = source_targetsize;
-    weightsize_ = source_weightsize;
+
     declareFieldNames(train_field_names);
     variable_mean.resize(train_width);
     variable_median.resize(train_width);
@@ -210,7 +237,9 @@ void MeanMedianModeImputationVMatrix::build_()
         if (imputation_spec[spec_col].second == "mean") variable_imputation_instruction[train_col] = 1;
         else if (imputation_spec[spec_col].second == "median") variable_imputation_instruction[train_col] = 2;
         else if (imputation_spec[spec_col].second == "mode") variable_imputation_instruction[train_col] = 3;
-        else PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s",
+        else if (imputation_spec[spec_col].second == "none") variable_imputation_instruction[train_col] = 4;
+        else
+	  PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s",
 		     (imputation_spec[spec_col].first).c_str(), (imputation_spec[spec_col].second).c_str());
     }
     if(nofields.length()>0)
@@ -223,10 +252,11 @@ void MeanMedianModeImputationVMatrix::build_()
     if(no_instruction.size()>0)
       PLWARNING("In MeanMedianModeImputationVMatrix::build_() In the source VMatrix their is %d field(s) that do not have instruction: '%s'.",
 		no_instruction.size(),tostring(no_instruction).c_str());
+
     PPath train_metadata = train_set->getMetaDataDir();
     PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     train_set->lockMetaDataDir();
-    if (!isfile(mean_median_mode_file_name))
+    if (!train_set->isFileUpToDate(mean_median_mode_file_name,true,true))
     {
         computeMeanMedianModeVectors();
         createMeanMedianModeFile(mean_median_mode_file_name);
