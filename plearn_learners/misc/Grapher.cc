@@ -442,7 +442,7 @@ void DX_create_grid_outputs_file(const string& filename, PP<PLearner> learner, V
             if(is_equal(logsum, -FLT_MAX))
                 logsum = output[0];
             else 
-                logsum = logadd(logsum, output[0]);
+                logsum = logadd(logsum, double(output[0]));
             pb.update(n++);
         }
     }

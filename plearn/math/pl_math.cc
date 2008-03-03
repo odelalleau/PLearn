@@ -179,10 +179,6 @@ real logadd(real log_a, real log_b)
 {
     return logadd(double(log_a), double(log_b));
 }
-real logadd(double log_a, real log_b)
-{
-    return logadd(log_a, double(log_b));
-}
 #endif
 
 real square_f(real x)
