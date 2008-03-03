@@ -99,6 +99,8 @@ void TextStreamVMatrix::build_()
 	for (int i = 0; i < symbol_width; ++i)
 		ids[(unsigned int)symbols[i]] = i;
 
+        updateMtime(data_file);
+
 	int text_length = 0;
 	string text;
 

@@ -94,6 +94,7 @@ void OneVsAllVMatrix::build_()
 {
     if(source)
     {
+        updateMtime(source);
         inputsize_ = source->inputsize();
         targetsize_ = source->targetsize();
         weightsize_ = source->weightsize();

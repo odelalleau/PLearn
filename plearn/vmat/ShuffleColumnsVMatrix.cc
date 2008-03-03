@@ -97,6 +97,7 @@ void ShuffleColumnsVMatrix::build()
 void ShuffleColumnsVMatrix::build_()
 {
     if (source) {
+        updateMtime(source);
         int n_shuffle = source->width();
         if (only_shuffle_inputs) {
             if (source->inputsize() < 0)

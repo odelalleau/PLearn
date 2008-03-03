@@ -102,6 +102,7 @@ void InterleaveVMatrix::build_()
             int l = sources[i]->length();
             if (l > maxl)
                 maxl=l;
+            updateMtime(sources[i]);
         }
         length_ = n * maxl;
 

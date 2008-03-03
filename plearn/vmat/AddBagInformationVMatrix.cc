@@ -95,6 +95,7 @@ void AddBagInformationVMatrix::build()
 void AddBagInformationVMatrix::build_()
 {
     if (source) {
+        updateMtime(source);
         bag_info_idx = source->getFieldIndex(bag_info_column);
         sourcerow.resize(source->width());
         width_ = source->width() + 1;

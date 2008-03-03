@@ -159,6 +159,10 @@ void MeanMedianModeImputationVMatrix::build_()
     if (!source) PLERROR("In MeanMedianModeImputationVMatrix:: source vmat must be supplied");
     if (!train_set)
       train_set = source;
+
+    updateMtime(train_set);
+    updateMtime(source);
+
     int train_length = train_set->length();
     if (number_of_train_samples_to_use > 0.0)
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);

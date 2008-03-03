@@ -139,6 +139,7 @@ void ProcessDatasetVMatrix::build_()
     }
     if (source->inputsize() < 0 || source->targetsize() < 0 || source->weightsize() < 0)
         PLERROR("In ProcessDatasetVMatrix::build_ - The source VMat's sizes must be defined");
+    updateMtime(source);
     vm = source;
     PPath filename_base = string("processed_dataset")
         + "-input_normalization="  + input_normalization

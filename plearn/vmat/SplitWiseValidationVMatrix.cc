@@ -92,7 +92,10 @@ void SplitWiseValidationVMatrix::build_()
     Mat stats_i;
     for(int i=0; i<stats.length(); i++)
     {
-        stats_i = getDataSet(split_stats_ppaths[i])->toMat();
+        VMat v = getDataSet(split_stats_ppaths[i]);
+        updateMtime(v);
+        stats_i = v->toMat();
+        
         if(i==0)
         {
             if(nsplits<0) nsplits = stats_i.length();

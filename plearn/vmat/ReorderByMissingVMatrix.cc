@@ -131,6 +131,8 @@ struct compareIndexAndMissingFlags {
 ////////////
 void ReorderByMissingVMatrix::build_()
 {
+    updateMtime(indices_vmat);
+    updateMtime(source);
     if (source) {
         // Construct a vector containing each sample index associated with its
         // missing flags.

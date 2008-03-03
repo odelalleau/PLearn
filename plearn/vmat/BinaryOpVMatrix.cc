@@ -94,6 +94,8 @@ void BinaryOpVMatrix::build_()
         PLERROR("BinaryOpVMatrix::build_: source1 not defined");
     if (! source2)
         PLERROR("BinaryOpVMatrix::build_: source2 not defined");
+    updateMtime(source1);
+    updateMtime(source2);
     if (source1.length() != source2.length())
         PLERROR("BinaryOpVMatrix::build_: source1 has %d rows but\n"
                 "source2 has %d rows; both must have the same number of"

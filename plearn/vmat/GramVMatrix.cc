@@ -109,6 +109,8 @@ void GramVMatrix::build()
 void GramVMatrix::build_()
 {
     if (kernel) {
+        updateMtime(kernel->getData());
+        updateMtime(kernel->specify_dataset);
         bool old_report_progress = kernel->report_progress != 0;
         if (verbosity < 1) {
             kernel->report_progress = false;

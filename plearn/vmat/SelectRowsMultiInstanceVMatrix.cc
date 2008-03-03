@@ -208,6 +208,7 @@ void SelectRowsMultiInstanceVMatrix::build_()
 
     // ### In a SourceVMatrix, you will typically end build_() with:
     setMetaInfoFromSource();
+    updateMtime(source_select);
 }
 
 ///////////////

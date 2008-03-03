@@ -52,12 +52,15 @@ SparseVMatrix::SparseVMatrix(const string& filename)
     : nelements(0), positions(0), values(0), rows(0)
 {
     load(filename);
+    updateMtime(filename);
 }
 
 SparseVMatrix::SparseVMatrix(VMat m)
     : inherited(m.length(),m.width()), nelements(0), positions(0), values(0), rows(0)
 {
     fieldinfos = m->getFieldInfos();                // Copy the field infos
+
+    updateMtime(m);
 
     if(m.width()>USHRT_MAX)
         PLERROR("In SparseVMatrix constructor: m.width()=%d can't be greater than USHRT_MAX=%d",m.width(),USHRT_MAX);

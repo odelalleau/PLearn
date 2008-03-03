@@ -96,6 +96,7 @@ void RandomSamplesFromVMatrix::build_()
 {
     if(source)
     {
+        updateMtime(source);
         if(flength > 0)
             length_ = int(flength * source->length());
         if(length_ < 0)

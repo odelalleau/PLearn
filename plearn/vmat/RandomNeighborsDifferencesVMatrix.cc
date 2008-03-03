@@ -111,6 +111,7 @@ void RandomNeighborsDifferencesVMatrix::build_()
     if (source)
         // will not work if source is changed but has the same dimensions
     {
+        updateMtime(source);
         width_ = source->width()*n_neighbors;
         if(append_current_point_indexe) width_ += 1;
         if(append_random_neighbors_indexes) width_ += n_neighbors;

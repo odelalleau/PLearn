@@ -194,6 +194,7 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
 void FilteredVMatrix::build_()
 {
     if (source) {
+        updateMtime(source);
         vector<string> fieldnames;
         program.setSource(source);
         program.compileString(prg,fieldnames);

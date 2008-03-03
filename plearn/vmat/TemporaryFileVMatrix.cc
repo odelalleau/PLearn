@@ -118,6 +118,7 @@ void TemporaryFileVMatrix::build_()
         last_filename = filename_;
     } else
         last_filename = "";
+    updateMtime(filename_);
 }
 
 //////////////////////

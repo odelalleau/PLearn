@@ -99,6 +99,8 @@ void RemapLastColumnVMatrix::build_()
     else
         width_=source->width() + n_extra;
 
+    updateMtime(source);
+
     if( !mapping.isEmpty() && n_extra > 0 )
     {
         // width() is different from source->width(),

@@ -231,6 +231,9 @@ void VariableDeletionVMatrix::build_()
     if(!source)
         PLERROR("In VariableDeletionVMatrix::build_ - The source VMat do not exist!");
 
+    updateMtime(source);
+    updateMtime(train_set);
+
     int is = source->inputsize();
     if (is < 0)
         PLERROR("In VariableDeletionVMatrix::build_ - The source VMat must "

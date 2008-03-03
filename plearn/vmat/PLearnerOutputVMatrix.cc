@@ -235,6 +235,8 @@ void PLearnerOutputVMatrix::declareOptions(OptionList& ol)
 ////////////
 void PLearnerOutputVMatrix::build_()
 {
+    updateMtime(source);
+        
     if (source && learners.length()>0 && learners[0])
     {
         learners_need_train = train_learners;

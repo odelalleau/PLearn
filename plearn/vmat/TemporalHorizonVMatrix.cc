@@ -157,6 +157,7 @@ void TemporalHorizonVMatrix::build()
 void TemporalHorizonVMatrix::build_()
 {
     if (source) {
+        updateMtime(source);
         length_ = source->length()-horizon;
         width_ = source->width();
         fieldinfos = source->fieldinfos;

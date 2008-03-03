@@ -95,6 +95,8 @@ CrossReferenceVMatrix::build_()
     if (master && slave) {
         fieldinfos = master->getFieldInfos();
         fieldinfos &= slave->getFieldInfos();
+        updateMtime(master);
+        updateMtime(slave);
     }
 }
 

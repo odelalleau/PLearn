@@ -68,6 +68,7 @@ void
 SelectRowsFileIndexVMatrix::build_()
 {
     if (distr) {
+        updateMtime(distr);
         fieldinfos = distr->fieldinfos;
         length_ = indices.length();
         if (length_ == -1) {

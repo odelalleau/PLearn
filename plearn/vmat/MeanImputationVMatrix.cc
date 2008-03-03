@@ -192,7 +192,10 @@ void MeanImputationVMatrix::build_()
             obtained_weightsize_from_source = true;
         } else if (obtained_weightsize_from_source && weightsize_ != source->weightsize())
             PLERROR(error_msg.c_str());
+
         setMetaInfoFromSource();
+        updateMtime(mean_source);
+        
         computeMeanVector();
 
         // Train the user-provided distribution if needed.

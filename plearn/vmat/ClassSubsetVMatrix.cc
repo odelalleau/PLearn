@@ -104,6 +104,7 @@ void ClassSubsetVMatrix::build()
 void ClassSubsetVMatrix::build_()
 {
   if (source) {
+    setMetaInfoFrom(source);
     input.resize(inputsize());
     target.resize(targetsize());
     indices.clear();

@@ -143,6 +143,7 @@ void BinaryNumbersVMatrix::build_()
 {
     if (f)
         PR_Close(f);
+    updateMtime(filename);
     f = PR_Open(filename.c_str(), PR_RDONLY, 0666);
     if (width_>0)
     {

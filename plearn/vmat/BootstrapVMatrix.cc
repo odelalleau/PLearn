@@ -157,7 +157,8 @@ void BootstrapVMatrix::build()
 void BootstrapVMatrix::build_()
 {
     if (source) 
-    {
+    { 
+        updateMtime(source);
         // Ensure we are not using the deprecated 'own_seed' option.
         if (own_seed != -3) {
             PLDEPRECATED("In BootstrapVMatrix::build_ - The 'own_seed' option "

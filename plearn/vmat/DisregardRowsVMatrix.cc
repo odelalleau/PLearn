@@ -145,6 +145,7 @@ build_()
     if ( !source )
         return;
 
+    updateMtime(source);
     /* Option: inspected_fieldnames */
 
     // Default: All fields are inspected.

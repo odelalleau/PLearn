@@ -1433,9 +1433,9 @@ void VMatrix::updateMtime(time_t t)
     else if(t==0)
         mtime_=numeric_limits<time_t>::max();
 }
-void VMatrix::updateMtime(const PPath& p){updateMtime(mtime(p));}
+void VMatrix::updateMtime(const PPath& p){if(!p.empty())updateMtime(mtime(p));}
 
-void VMatrix::updateMtime(VMat v){updateMtime(v->getMtime());}
+void VMatrix::updateMtime(VMat v){if(v)updateMtime(v->getMtime());}
 
 ////////////////////
 // isFileUpToDate //

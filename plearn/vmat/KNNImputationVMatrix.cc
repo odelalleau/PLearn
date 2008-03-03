@@ -134,6 +134,10 @@ void KNNImputationVMatrix::build_()
     PLASSERT( neighbors || full_source->length() == source->length() );
     PLASSERT( full_source->width() == source->width()  );
 
+    updateMtime(source);
+    updateMtime(full_source);
+    updateMtime(neighbors);
+
     VMat candidates;
     if (neighbors)
         candidates = full_source ? full_source : source;

@@ -209,7 +209,7 @@ void LemmatizeVMatrix::build_()
         weightsize_ = source->weightsize();
         width_ = inputsize_+targetsize_+weightsize_;
         length_ = source->length();
-
+        updateMtime(source);
         if(word_pos_to_lemma_table.length() != 0 && word_pos_to_lemma_table.width() != 3)
            PLERROR("In LemmatizeVMatrix::build_(): word_pos_to_lemma_table doesn't have three columns");
         if(word_to_lemma_table.length() != 0 && word_to_lemma_table.width() != 2)

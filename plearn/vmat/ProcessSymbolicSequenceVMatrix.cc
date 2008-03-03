@@ -379,9 +379,10 @@ void ProcessSymbolicSequenceVMatrix::build_()
 
     if(inputsize_+targetsize_ != width_) PLERROR("In ProcessSymbolicSequenceVMatrix:build_() : inputsize_ + targetsize_ != width_");
 
+
     // Should we call:
     // setMetaInfoFromSource(); // ?
-
+    updateMtime(source);
 }
 
 void ProcessSymbolicSequenceVMatrix::build()

@@ -93,6 +93,9 @@ void MultiToUniInstanceSelectRandomVMatrix::build_()
     else if (seed != 0)
         PLERROR("In MultiToUniInstanceSelectRandomVMatrix::build_ - The seed must be either -1 or >= 0");
 
+    updateMtime(indices_vmat);
+    updateMtime(source_);
+
     // Building the source VMatrix (uni instances conforming version of source_)
     source = new SubVMatrix(source_, 0, 0, source_->length(), source_->inputsize()+source_->targetsize() - 1);
     source->defineSizes(source_->inputsize(), source_->targetsize()-1, 0);

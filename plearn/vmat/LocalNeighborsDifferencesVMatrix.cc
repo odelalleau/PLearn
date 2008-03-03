@@ -171,6 +171,8 @@ void LocalNeighborsDifferencesVMatrix::build_()
             computeNearestNeighbors(source,a_row,neighbors_of_i,i);
         }
     }
+
+    updateMtime(source);
 }
 
 // ### Nothing to add here, simply calls build_

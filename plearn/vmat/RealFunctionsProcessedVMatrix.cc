@@ -98,6 +98,7 @@ void RealFunctionsProcessedVMatrix::build_()
 {
     if(source)
     {
+        updateMtime(source);
         length_= source->length();
         if(functions)
         {

@@ -118,6 +118,9 @@ void RemoveDuplicateVMatrix::build()
 ////////////
 void RemoveDuplicateVMatrix::build_()
 {
+    updateMtime(indices_vmat);
+    updateMtime(source);
+
     if (source) {
         DistanceKernel dk;
         dk.pow_distance = true;

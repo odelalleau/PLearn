@@ -109,6 +109,7 @@ void AddMissingVMatrix::build()
 ////////////
 void AddMissingVMatrix::build_()
 {
+    updateMtime(source);
     // Ensure we are not using both a missing values proportion and
     // user-specified missing columns.
     if (!fast_exact_is_equal(missing_prop, 0) &&

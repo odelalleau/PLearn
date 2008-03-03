@@ -256,6 +256,7 @@ void FinancePreprocVMatrix::build_()
                     (add_last_day_of_month?1:0) +
                     (add_moving_average?asset_name.size()*prices_tag.size()*moving_average_window.size():0) +
                     (add_rollover_info?asset_name.size():0) );
+        updateMtime(source);
     }
 
     // stuff about the tradable information

@@ -116,11 +116,13 @@ void MultiInstanceVMatrix::declareOptions(OptionList& ol)
 
 void MultiInstanceVMatrix::build_()
 {
+
+    updateMtime(filename_);
     //this->setMetaDataDir(filename_ + ".metadata");
 
     // To be used in the end.. it is about 5 secs slower in debug
     //int nRows = countNonBlankLinesOfFile(filename_);
-
+    
     PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
 //    PStream inFile = openFile(filename_, PStream::raw_ascii, "r");
 

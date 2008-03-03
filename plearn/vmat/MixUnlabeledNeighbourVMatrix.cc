@@ -190,6 +190,7 @@ void MixUnlabeledNeighbourVMatrix::build_()
                 }
             }
         }
+        updateMtime(source_select);
     }
     // ?? Modify the width, length, (targetsize, inputsize and weight) size attribute.
     inputsize_ = source->inputsize();

@@ -144,6 +144,11 @@ void MultiTargetOneHotVMatrix::build_()
   // ### You should assume that the parent class' build_() has already been called.
 
   if (source && source_target) {
+    updateMtime(source);
+    updateMtime(source_target);
+    updateMtime(target_descriptor);
+    updateMtime(source_and_target);
+
     if (source->targetsize() > 0)
       PLERROR("In MultiTargetOneHotVMatrix::build_ - The source VMatrix must have a targetsize <= 0");
     if (source->length() != source_target->length())

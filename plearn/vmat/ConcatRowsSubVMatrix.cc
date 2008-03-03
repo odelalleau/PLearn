@@ -194,6 +194,7 @@ void ConcatRowsSubVMatrix::build_()
 {
     if (source) {
         fieldinfos = source->getFieldInfos();
+        setMetaInfoFrom(source);
         length_=0;
         for (int i = 0; i < start.length(); i++) {
             if (start[i]<0 || start[i]+len[i]>source->length())

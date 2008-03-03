@@ -125,6 +125,7 @@ void AppendNeighborsVMatrix::declareOptions(OptionList& ol)
 
 void AppendNeighborsVMatrix::build_()
 {
+    updateMtime(source);
     // find the nearest neighbors, if not done already
     if (source && (input_parts.length() != source->length() || input_parts.width() != n_neighbors+1 ))
         // WARNING: will not work if source is changed but has the same dimensions

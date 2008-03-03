@@ -95,6 +95,7 @@ void TemporaryDiskVMatrix::build_()
     addReferenceToFile(dirname);
     if (indexf)
         last_files_opened.append(dirname / "indexfile");
+    updateMtime(dirname/"indexfile");
     for (int i = 0; i < dataf.length(); i++)
         if (dataf[i])
             last_files_opened.append(dirname / (tostring(i) + ".data"));

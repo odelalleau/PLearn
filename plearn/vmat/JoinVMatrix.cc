@@ -80,6 +80,8 @@ JoinVMatrix::build_()
                 tempkey[j]=temp[slave_idx[j]];
             mp.insert(make_pair(tempkey,i));
         }
+        updateMtime(master);
+        updateMtime(slave);
     }
 }
 

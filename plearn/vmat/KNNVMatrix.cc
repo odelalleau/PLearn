@@ -110,6 +110,8 @@ void KNNVMatrix::build()
 // build_ //
 ////////////
 void KNNVMatrix::build_() {
+    updateMtime(source);
+    updateMtime(k_nn_mat);
     if (source) {
         int n = source->length();
         bool recompute_nn = true;

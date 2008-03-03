@@ -96,6 +96,7 @@ void SeparateInputVMatrix::build()
 void SeparateInputVMatrix::build_()
 {
     if (source) {
+        updateMtime(source);
         if(source->inputsize() % nsep != 0)
             PLERROR("In SeparateInputVMatrix::build_(): inputsize=%d of source vmat should be a multiple of nsep=%d",source->inputsize(),nsep);
         inputsize_ = source->inputsize()/nsep;

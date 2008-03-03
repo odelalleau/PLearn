@@ -88,6 +88,13 @@ void UCIDataVMatrix::build()
 {
     inherited::build();
     build_();
+    updateMtime(0);
+//     updateMtime(uci_spec->data_all);
+//     updateMtime(uci_spec->data_train);
+//     updateMtime(uci_spec->data_test);
+//     updateMtime(uci_spec->file_all);
+//     updateMtime(uci_spec->file_train);
+//     updateMtime(uci_spec->file_test);
 }
 
 void UCIDataVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)

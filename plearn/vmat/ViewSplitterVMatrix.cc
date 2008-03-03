@@ -97,6 +97,9 @@ void ViewSplitterVMatrix::build_()
     splitter->setDataSet(source);
     sets = splitter->getSplit(split);
     setMetaInfoFrom(sets[set]);
+    updateMtime(source);
+    for(int i=0;i<sets.length();i++)
+        updateMtime(sets[i]);
 }
 
 ///////////////

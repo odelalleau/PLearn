@@ -93,6 +93,7 @@ void GetInputVMatrix::build_()
 {
     weightsize_ = 0;
     if (source) {
+        updateMtime(source);
         if(targetsize_ < 0) targetsize_ = 0;
         if(inputsize_ < 0) inputsize_ = source->inputsize();
 

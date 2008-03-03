@@ -144,7 +144,8 @@ void ConcatRowsVMatrix::build_()
     if (n < 1)
         // No sources provided yet: nothing to do.
         return;
-
+    for(int i=0;i<sources.size();i++)
+        updateMtime(sources[i]);
     if (only_common_fields && fill_missing)
         PLERROR("In ConcatRowsVMatrix::build_ - You can't set both 'only_common_fields' and 'fill_missing'");
 

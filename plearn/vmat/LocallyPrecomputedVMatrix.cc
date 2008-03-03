@@ -150,6 +150,8 @@ void LocallyPrecomputedVMatrix::build_()
         if (sequential_access)
             source->unlockMetaDataDir();
     }
+    updateMtime(precomp_source);
+    updateMtime(source);
 }
 
 /////////////////////////////////

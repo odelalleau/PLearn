@@ -133,6 +133,7 @@ void SortRowsVMatrix::build_()
     }
     // Construct the indices vector.
     if (source) {
+        updateMtime(source);
         indices = TVec<int>(0, source.length()-1, 1);
         if (sort_columns.length() > 1) {
             // We need to sort many columns: we use the unefficient method.
@@ -158,6 +159,7 @@ void SortRowsVMatrix::build_()
         }
         inherited::build(); // Since we have just changed the indices.
     }
+    updateMtime(indices_vmat);
 }
 
 //////////////

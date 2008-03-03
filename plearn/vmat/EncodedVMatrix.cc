@@ -88,6 +88,7 @@ void EncodedVMatrix::build_()
 {
     if(source)
     {
+        updateMtime(source);
         copySizesFrom(source);
         declareFieldNames(source->fieldNames());
         for(int i= 0; i < source.width(); ++i)

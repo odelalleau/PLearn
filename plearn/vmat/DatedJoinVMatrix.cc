@@ -274,6 +274,8 @@ void DatedJoinVMatrix::build_()
 {
     if (master && slave) // we can't really build if we don't have them
     {
+        updateMtime(master);
+        updateMtime(slave);
         // convert field names into indices
         // * get master key indices
         if (master_key_names.length()>0)

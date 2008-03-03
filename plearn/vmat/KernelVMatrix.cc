@@ -84,6 +84,9 @@ KernelVMatrix::build_()
         input1.resize(source1->width());
     if (source2)
         input2.resize(source2->width());
+    updateMtime(source1);
+    updateMtime(source2);
+    updateMtime(ker.getData());
 }
 
 void

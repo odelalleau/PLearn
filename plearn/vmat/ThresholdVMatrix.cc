@@ -61,6 +61,7 @@ ThresholdVMatrix::ThresholdVMatrix(VMat the_source,
       gt_threshold(gt_threshold_)
 {
     // build_() isn't defined anyways...
+    updateMtime(the_source);
 }
 
 void ThresholdVMatrix::getNewRow(int i, const Vec& v) const

@@ -143,6 +143,8 @@ void MixtureVMatrix::build_()
 
     if (incorrect_period)
         buildPeriod();
+    for(int i=0;i<sources.length();i++)
+        updateMtime(sources[i]);
 }
 
 void MixtureVMatrix::buildPeriod()

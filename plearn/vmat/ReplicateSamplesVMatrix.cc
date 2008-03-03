@@ -116,7 +116,10 @@ void ReplicateSamplesVMatrix::build_()
             "In ReplicateSamplesVMatrix::build_ - The source VMat must have a "
             "targetsize equal to 2 when operating on bags, but its targetsize "
             "is " + tostring(source->targetsize()));
-    
+
+    updateMtime(indices_vmat);
+    updateMtime(source);
+
     // Build the vector of indices.
     indices.resize(0);
     Vec input, target;

@@ -90,6 +90,7 @@ void VecExtendedVMatrix::build_()
 {
     if (source)
         fieldinfos = source->getFieldInfos();
+    updateMtime(source);
 }
 
 void VecExtendedVMatrix::declareOptions(OptionList &ol)
