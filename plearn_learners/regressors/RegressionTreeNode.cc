@@ -358,7 +358,7 @@ real RegressionTreeNode::getErrorImprovment()const
     return err;
 }
 
-intt RegressionTreeNode::getSplitCol()const
+int RegressionTreeNode::getSplitCol()const
 {
     return split_col;
 }
