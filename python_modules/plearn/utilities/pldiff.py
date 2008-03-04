@@ -37,7 +37,7 @@ import plearn.utilities.toolkit as toolkit
 
 from plearn.math import floats_are_equal
 
-_plearn_cmd = "%s --no-version --verbosity VLEVEL_IMP"
+_plearn_cmd = "%s --no-progress --no-version --verbosity VLEVEL_IMP"
 _plearn_exec = "plearn_tests"
 def set_plearn_exec(plearn_exec):
     global _plearn_exec
@@ -165,7 +165,7 @@ def psavediff(former_file, later_file, precision=1e-06):
 
     ## Actual comparison
     report = []
-    diff = toolkit.command_output(plearn_cmd("--no-progress diff %s %s %s") \
+    diff = toolkit.command_output(plearn_cmd("diff %s %s %s") \
                           % (former_rw, later_rw, precision))
     diff = "".join(diff)
     # diff = toldiff(former_rw, later_rw, precision)
