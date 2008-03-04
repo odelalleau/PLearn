@@ -1158,8 +1158,9 @@ int vmatmain(int argc, char** argv)
                 threshold_fail++;
             }
         }
-        pout << "Their is "<<threshold_fail<<" variable that are under the threshold"<<endl;
-        pout <<"Kolmogorow Smirnow two sample test end"<<endl<<endl;
+        pout << "Their is "<<threshold_fail<<"/"<<m1->width()<<
+            " variable that are under the threshold"<<endl<<
+            " Kolmogorow Smirnow two sample test end"<<endl<<endl;
 
 
 //         real stderror_threshold = 1;
