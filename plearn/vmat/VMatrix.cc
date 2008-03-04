@@ -1454,8 +1454,8 @@ bool VMatrix::isFileUpToDate(const PPath& path, bool warning_reuse,
                   path.absolute().c_str());
     if(warning_older && exist && !uptodate)
         PLWARNING("In VMatrix::isFileUpToDate - File '%s' is older than this "
-                  "VMat's last modification time, and cannot be re-used",
-                  path.absolute().c_str());
+                  "VMat's mtime of %d, and cannot be re-used",
+                  path.absolute().c_str(), getMtime());
 
     return exist && uptodate;
 }
