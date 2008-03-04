@@ -98,8 +98,9 @@ public:
     void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature,
                               Vec left_error, Vec right_error, Vec missing_error);
     int          expandNode();
-    int          getSplitBalance();
-    real         getErrorImprovment();
+    int          getSplitBalance()const;
+    real         getErrorImprovment()const;
+    int          getSplitCol() const;
     TVec< PP<RegressionTreeNode> >  getNodes();
     void         computeOutput(const Vec& inputv, Vec& outputv);
     
