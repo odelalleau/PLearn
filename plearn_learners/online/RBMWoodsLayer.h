@@ -62,6 +62,9 @@ public:
     // Depth of the trees in the woods (1 gives the ordinary RBMBinomialLayer)
     int tree_depth;
 
+    // Indication that samples should be in {-1,1}, not {0,1}
+    bool use_signed_samples;
+
 public:
     //#####  Public Member Functions  #########################################
 

@@ -53,7 +53,8 @@ PLEARN_IMPLEMENT_OBJECT(
 RBMWoodsLayer::RBMWoodsLayer( real the_learning_rate ) :
     inherited( the_learning_rate ),
     n_trees( 10 ),
-    tree_depth( 3 )
+    tree_depth( 3 ),
+    use_signed_samples( false )
 {
 }
 
@@ -68,7 +69,10 @@ void RBMWoodsLayer::generateSample()
     PLCHECK_MSG(expectation_is_up_to_date, "Expectation should be computed "
             "before calling generateSample()");
 
-    sample.clear();
+    if(use_signed_samples)
+        sample.fill(-1);
+    else
+        sample.clear();
 
     int n_nodes_per_tree = size / n_trees;    
     int node, depth, node_sample, sub_tree_size;
@@ -83,8 +87,11 @@ void RBMWoodsLayer::generateSample()
         {
             node_sample = random_gen->binomial_sample( 
                 local_node_expectation[ node + offset ] );
-            sample[node + offset] = node_sample;
-
+            if( use_signed_samples )
+                sample[node + offset] = 2*node_sample-1;
+            else
+                sample[node + offset] = node_sample;
+            
             // Descending in the tree
             sub_tree_size /= 2;
             if ( node_sample > 0.5 )
@@ -115,154 +122,10 @@ void RBMWoodsLayer::generateSamples()
 
 void RBMWoodsLayer::computeProbabilisticClustering(Vec& prob_clusters)
 {
-    int n_nodes_per_tree = size / n_trees;    
-    int n_leaves = n_nodes_per_tree+1;
-    prob_clusters.resize( n_trees * n_leaves );
-    int node, depth, sub_tree_size, grand_parent;
+    computeExpectation();
     int offset = 0;
-    bool left_of_grand_parent;
-    real grand_parent_prob;
-
-    // Get local expectations at every node
-    
-    // Divide and conquer computation of local (conditional) free energies
-    for( int t=0; t<n_trees; t++ )
-    {
-        depth = tree_depth-1;
-        sub_tree_size = 0;
-
-        // Initialize last level
-        for( int n=sub_tree_size; n<n_nodes_per_tree; n += 2*sub_tree_size + 2 )
-        {
-            //on_free_energy[ n + offset ] = safeexp(activation[n+offset]);
-            //off_free_energy[ n + offset ] = 1;
-            // Now working in log-domain
-            on_free_energy[ n + offset ] = activation[n+offset];
-            off_free_energy[ n + offset ] = 0;
-            
-        }
-
-        depth = tree_depth-2;
-        sub_tree_size = 1;
-
-        while( depth >= 0 )
-        {
-            for( int n=sub_tree_size; n<n_nodes_per_tree; n += 2*sub_tree_size + 2 )
-            {
-                //on_free_energy[ n + offset ] = safeexp(activation[n+offset]) * 
-                //    ( on_free_energy[n + offset - sub_tree_size] + off_free_energy[n + offset - sub_tree_size] ) ;
-                //off_free_energy[ n + offset ] = 
-                //    ( on_free_energy[n + offset + sub_tree_size] + off_free_energy[n + offset + sub_tree_size] ) ;
-                // Now working in log-domain
-                on_free_energy[ n + offset ] = activation[n+offset] + 
-                    logadd( on_free_energy[n + offset - sub_tree_size],
-                            off_free_energy[n + offset - sub_tree_size] ) ;
-                off_free_energy[ n + offset ] = 
-                    logadd( on_free_energy[n + offset + sub_tree_size],
-                            off_free_energy[n + offset + sub_tree_size] ) ;
-
-            }
-            sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
-            depth--;
-        }
-        offset += n_nodes_per_tree;
-    }    
-    
-    for( int i=0 ; i<size ; i++ )
-        //local_node_expectation[i] = on_free_energy[i] / ( on_free_energy[i] + off_free_energy[i] );
-        // Now working in log-domain
-        local_node_expectation[i] = safeexp(on_free_energy[i] 
-                                            - logadd(on_free_energy[i], off_free_energy[i]));
-
-    // Compute marginal expectations over clustering
-    offset = 0;
-    for( int t=0; t<n_trees; t++ )
-    {
-        // Initialize root        
-        node = n_nodes_per_tree / 2;
-        expectation[ node + offset ] = local_node_expectation[ node + offset ];
-        off_expectation[ node + offset ] = (1 - local_node_expectation[ node + offset ]);
-        sub_tree_size = node;
-
-        // First level nodes
-        depth = 1;
-        sub_tree_size /= 2;
-
-        // Left child
-        node = sub_tree_size;
-        expectation[ node + offset ] = local_node_expectation[ node + offset ]
-            * local_node_expectation[ node + offset + sub_tree_size + 1 ];
-        off_expectation[ node + offset ] = (1 - local_node_expectation[ node + offset ])
-            * local_node_expectation[ node + offset + sub_tree_size + 1 ];
-        
-        // Right child
-        node = 3*sub_tree_size+2;
-        expectation[ node + offset ] = local_node_expectation[ node + offset ]
-            * (1 - local_node_expectation[ node + offset - sub_tree_size - 1 ]);
-        off_expectation[ node + offset ] = (1 - local_node_expectation[ node + offset ])
-            * (1 - local_node_expectation[ node + offset - sub_tree_size - 1 ]);
-
-        // Set other nodes, level-wise
-        depth = 2;
-        sub_tree_size /= 2;
-        while( depth < tree_depth )
-        {
-            // Left child
-            left_of_grand_parent = true;
-            for( int n=sub_tree_size; n<n_nodes_per_tree; n += 4*sub_tree_size + 4 )
-            {
-                if( left_of_grand_parent )
-                {
-                    grand_parent = n + offset + 3*sub_tree_size + 3;
-                    grand_parent_prob = expectation[ grand_parent ];
-                    left_of_grand_parent = false;
-                }
-                else
-                {
-                    grand_parent = n + offset - sub_tree_size - 1;
-                    grand_parent_prob = off_expectation[ grand_parent ];
-                    left_of_grand_parent = true;
-                }
-
-                expectation[ n + offset ] = local_node_expectation[ n + offset ]
-                    * local_node_expectation[ n + offset + sub_tree_size + 1 ]
-                    * grand_parent_prob;
-                off_expectation[ n + offset ] = (1 - local_node_expectation[ n + offset ])
-                    * local_node_expectation[ n + offset + sub_tree_size + 1 ]
-                    * grand_parent_prob;
-            }
-
-            // Right child
-            left_of_grand_parent = true;
-            for( int n=3*sub_tree_size+2; n<n_nodes_per_tree; n += 4*sub_tree_size + 4 )
-            {
-                if( left_of_grand_parent )
-                {
-                    grand_parent = n + offset + sub_tree_size + 1;
-                    grand_parent_prob = expectation[ grand_parent ];
-                    left_of_grand_parent = false;
-                }
-                else
-                {
-                    grand_parent = n + offset - 3*sub_tree_size - 3;
-                    grand_parent_prob = off_expectation[ grand_parent ];
-                    left_of_grand_parent = true;
-                }
-
-                expectation[ n + offset ] = local_node_expectation[ n + offset ]
-                    * (1 - local_node_expectation[ n + offset - sub_tree_size - 1 ])
-                    * grand_parent_prob;
-                off_expectation[ n + offset ] = (1 - local_node_expectation[ n + offset ])
-                    * (1 - local_node_expectation[ n + offset - sub_tree_size - 1 ])
-                    * grand_parent_prob;
-            }
-            sub_tree_size /= 2;
-            depth++;
-        }
-        offset += n_nodes_per_tree;
-    }
-
-    offset = 0;
+    int n_nodes_per_tree = size / n_trees;
+    prob_clusters.resize(n_trees*(n_nodes_per_tree+1));
     for( int t=0; t<n_trees; t++ )
     {
         for( int i=0; i<n_nodes_per_tree; i = i+2)
@@ -302,8 +165,10 @@ void RBMWoodsLayer::computeExpectation()
             //off_free_energy[ n + offset ] = 1;
             // Now working in log-domain
             on_free_energy[ n + offset ] = activation[n+offset];
-            off_free_energy[ n + offset ] = 0;
-            
+            if( use_signed_samples )
+                off_free_energy[ n + offset ] = -activation[n+offset];
+            else
+                off_free_energy[ n + offset ] = 0;
         }
 
         depth = tree_depth-2;
@@ -321,10 +186,15 @@ void RBMWoodsLayer::computeExpectation()
                 on_free_energy[ n + offset ] = activation[n+offset] + 
                     logadd( on_free_energy[n + offset - (sub_tree_size/2+1)],
                             off_free_energy[n + offset - (sub_tree_size/2+1)] ) ;
-                off_free_energy[ n + offset ] = 
-                    logadd( on_free_energy[n + offset + (sub_tree_size/2+1)],
-                            off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
-
+                if( use_signed_samples )
+                    off_free_energy[ n + offset ] = -activation[n+offset] +
+                        logadd( on_free_energy[n + offset + (sub_tree_size/2+1)],
+                                off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
+                else
+                    off_free_energy[ n + offset ] = 
+                        logadd( on_free_energy[n + offset + (sub_tree_size/2+1)],
+                                off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
+                
             }
             sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
             depth--;
@@ -472,7 +342,10 @@ void RBMWoodsLayer::fprop( const Vec& input, Vec& output ) const
             //off_free_energy[ n + offset ] = 1;
             // Now working in log-domain
             on_free_energy[ n + offset ] = input[n+offset] + bias[n+offset];
-            off_free_energy[ n + offset ] = 0;            
+            if( use_signed_samples )
+                off_free_energy[ n + offset ] = -(input[n+offset] + bias[n+offset]);
+            else
+                off_free_energy[ n + offset ] = 0;
         }
 
         depth = tree_depth-2;
@@ -490,9 +363,14 @@ void RBMWoodsLayer::fprop( const Vec& input, Vec& output ) const
                 on_free_energy[ n + offset ] = input[n+offset] + bias[n+offset] +
                     logadd( on_free_energy[n + offset - (sub_tree_size/2+1)], 
                             off_free_energy[n + offset - (sub_tree_size/2+1)] ) ;
-                off_free_energy[ n + offset ] = 
-                    logadd( on_free_energy[n + offset + (sub_tree_size/2+1)], 
-                            off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
+                if( use_signed_samples )
+                    off_free_energy[ n + offset ] = -(input[n+offset] + bias[n+offset]) +
+                        logadd( on_free_energy[n + offset + (sub_tree_size/2+1)], 
+                                off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
+                else
+                    off_free_energy[ n + offset ] = 
+                        logadd( on_free_energy[n + offset + (sub_tree_size/2+1)], 
+                                off_free_energy[n + offset + (sub_tree_size/2+1)] ) ;
             }
             sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
             depth--;
@@ -826,6 +704,8 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
 
                 out_grad = off_free_energy_gradient[ n + offset ];
                 node_exp = local_node_expectation[n + offset + (sub_tree_size/2+1)];
+                if( use_signed_samples )
+                    input_gradient[n+offset] -= out_grad;
                 on_free_energy_gradient[n + offset + (sub_tree_size/2+1)] += out_grad * node_exp; 
                 off_free_energy_gradient[n + offset + (sub_tree_size/2+1)] += 
                     out_grad * (1 - node_exp); 
@@ -838,7 +718,11 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
         sub_tree_size = 0;
 
         for( int n=sub_tree_size; n<n_nodes_per_tree; n += 2*sub_tree_size + 2 )
+        {
             input_gradient[n+offset] += on_free_energy_gradient[ n + offset ];
+            if( use_signed_samples )
+                input_gradient[n+offset] -= off_free_energy_gradient[ n + offset ];                
+        }
 
         offset += n_nodes_per_tree;
     }
@@ -1083,6 +967,10 @@ void RBMWoodsLayer::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Depth of the trees in the woods (1 gives the ordinary "
                   "RBMBinomialLayer).");
+
+    declareOption(ol, "use_signed_samples", &RBMWoodsLayer::use_signed_samples,
+                  OptionBase::buildoption,
+                  "Indication that samples should be in {-1,1}, not {0,1}.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
