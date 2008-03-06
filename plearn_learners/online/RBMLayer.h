@@ -165,6 +165,9 @@ public:
     virtual void getAllActivations( PP<RBMConnection> rbmc, int offset = 0,
                                     bool minibatch = false);
 
+    //change the flag of expectation_is_up_to_date to false
+    virtual void expectation_is_not_up_to_date();
+
     //! generate a sample, and update the sample field
     virtual void generateSample() = 0 ;
 

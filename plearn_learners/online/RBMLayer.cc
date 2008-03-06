@@ -273,6 +273,11 @@ void RBMLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
     expectations_are_up_to_date = false;
 }
 
+void RBMLayer::expectation_is_not_up_to_date()
+{
+    expectation_is_up_to_date = false;
+}
+
 
 /////////////////////
 // getExpectations //
