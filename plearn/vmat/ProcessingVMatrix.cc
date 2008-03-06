@@ -156,6 +156,10 @@ void ProcessingVMatrix::build_()
             weightsize_ = 0;
         if(extrasize_<0)
             extrasize_ = 0;            
+        
+        PLCHECK_MSG(
+                width_ ==  inputsize_ + targetsize_ + weightsize_ + extrasize_,
+                "Width does not match sizes!");
     }
     else // use the *_prg
     {
