@@ -2032,7 +2032,7 @@ void VMatrix::compareStats(VMat target,
 /////////////////////////
 // max_fieldnames_size //
 /////////////////////////
-int VMatrix::max_fieldnames_size() const
+int VMatrix::maxFieldNamesSize() const
 {
     uint size_fieldnames=0;
     for(int i=0;i<width();i++)
@@ -2044,7 +2044,7 @@ int VMatrix::max_fieldnames_size() const
 ////////////////////////////////
 // compute_missing_size_value //
 ////////////////////////////////
-void VMatrix::compute_missing_size_value()
+void VMatrix::computeMissingSizeValue()
 {
     PLCHECK(width_>0);
     int v=min(inputsize_,0) + min(targetsize_,0)
@@ -2053,9 +2053,10 @@ void VMatrix::compute_missing_size_value()
         PLWARNING("In VMatrix::compute_missing_size_value() - in class %s"
                   " more then one of"
                   " inputsize(%d), targetsize(%d), weightsize(%d) and"
-                  " extrasize(%d) is unknow so we can't compute them.",
+                  " extrasize(%d) is unknow so we can't compute them with the"
+                  " width(%d)",
                   classname().c_str(), inputsize_, targetsize_, weightsize_,
-                  extrasize_);
+                  extrasize_, width_);
     else if(v==0 && 
             width_ != inputsize_ + targetsize_ + weightsize_ + extrasize_)
         PLWARNING("In VMatrix::compute_missing_size_value() for class %s - "

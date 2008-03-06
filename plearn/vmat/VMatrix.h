@@ -657,12 +657,12 @@ public:
     /**
      * @return The size of the longest fieldname
      */
-    int max_fieldnames_size() const;
+    int maxFieldNamesSize() const;
 
     /** if only one of inputsize, targetsize, weightsize, extrasize
      *  is less unknow and width>0, we compute its value
      */
-    void compute_missing_size_value();
+    void computeMissingSizeValue();
 
     /**
      *  Returns the bounding box of the data, as a vector of min:max pairs.  If

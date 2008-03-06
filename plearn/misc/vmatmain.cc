@@ -1022,7 +1022,7 @@ int vmatmain(int argc, char** argv)
         int pc_value_90=0;
         int pc_value_0=0;
 
-        uint size_fieldnames=m1->max_fieldnames_size();
+        uint size_fieldnames=m1->maxFieldNamesSize();
 
         Vec Ds(m1->width());
         Vec p_values(m1->width());
@@ -1108,7 +1108,7 @@ int vmatmain(int argc, char** argv)
         Vec Ds(m1->width());
         Vec p_values(m1->width());
         Mat score(m1->width(),3);
-        uint size_fieldnames=m1->max_fieldnames_size();
+        uint size_fieldnames=m1->maxFieldNamesSize();
         if(mat_to_mem==true)
         {
             m1.precompute();
@@ -1187,7 +1187,7 @@ int vmatmain(int argc, char** argv)
         TVec<StatsCollector> stats = 
             m1->getStats();//"stats_all.psave",-1,true);
         TVec<string> caracs;
-        uint size_fieldnames=m1->max_fieldnames_size();
+        uint size_fieldnames=m1->maxFieldNamesSize();
 
         for(int i=0;i<stats.size();i++)
         {
