@@ -659,6 +659,11 @@ public:
      */
     int max_fieldnames_size() const;
 
+    /** if only one of inputsize, targetsize, weightsize, extrasize
+     *  is less unknow and width>0, we compute its value
+     */
+    void compute_missing_size_value();
+
     /**
      *  Returns the bounding box of the data, as a vector of min:max pairs.  If
      *  extra_percent is non 0, then the box is enlarged in both ends of every

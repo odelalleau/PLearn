@@ -1251,7 +1251,7 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
 }
 
 void VMatrix::compatibleSizeError(const VMat& m){
-#define MY_PRINT_ERROR_MST(NAME) PLERROR("In VMatrix::looksTheSameAsError The matrix are not compatible!\n m1."#NAME"=%d and m2."#NAME"=%d", this->NAME(), m->NAME());
+#define MY_PRINT_ERROR_MST(NAME) PLERROR("In VMatrix::compatibleSizeError - in class %s The matrix are not compatible!\n m1."#NAME"=%d and m2."#NAME"=%d", classname().c_str(), this->NAME(), m->NAME());
 
     if(this->width()      != m->width())
         MY_PRINT_ERROR_MST(width)
@@ -2039,6 +2039,40 @@ int VMatrix::max_fieldnames_size() const
         if(fieldName(i).size()>size_fieldnames)
             size_fieldnames=fieldName(i).size();
     return size_fieldnames;
+}
+
+////////////////////////////////
+// compute_missing_size_value //
+////////////////////////////////
+void VMatrix::compute_missing_size_value()
+{
+    PLCHECK(width_>0);
+    int v=min(inputsize_,0) + min(targetsize_,0)
+        + min(weightsize_,0) + min(extrasize_,0);
+    if(v<-1)
+        PLWARNING("In VMatrix::compute_missing_size_value() - in class %s"
+                  " more then one of"
+                  " inputsize(%d), targetsize(%d), weightsize(%d) and"
+                  " extrasize(%d) is unknow so we can't compute them.",
+                  classname().c_str(), inputsize_, targetsize_, weightsize_,
+                  extrasize_);
+    else if(v==0 && 
+            width_ != inputsize_ + targetsize_ + weightsize_ + extrasize_)
+        PLWARNING("In VMatrix::compute_missing_size_value() for class %s - "
+                  "inputsize_(%d) + targetsize_(%d) + weightsize_(%d) + "
+                  "extrasize_(%d) != width_(%d) !",
+                  classname().c_str(), inputsize_, targetsize_, weightsize_,
+                  extrasize_, width_);
+
+    else if(inputsize_<0)
+        inputsize_ = width_- targetsize_ - weightsize_ - extrasize_;
+    else if(targetsize_ < 0)
+        targetsize_ = width_- inputsize_ - weightsize_ - extrasize_;
+    else if(weightsize_ < 0)
+        weightsize_ = width_- inputsize_ - targetsize_ - extrasize_;
+    else if(extrasize_ < 0)
+        extrasize_  = width_- inputsize_ - targetsize_ - weightsize_;
+
 }
 
 } // end of namespace PLearn
