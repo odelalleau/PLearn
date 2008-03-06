@@ -64,6 +64,10 @@ public:
     //! or 1 when share_quad_coeff is True
     int size_quad_coeff;
 
+    //! Value for the usually learned standard deviation, if it should not be learned.
+    //! This will fix the value of the quad coeffs to the appropriate value.
+    //! If < 0, then this option is ignored.
+    real fixed_std_deviation;
 
 public:
     //#####  Public Member Functions  #########################################

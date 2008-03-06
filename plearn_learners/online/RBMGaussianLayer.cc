@@ -55,6 +55,7 @@ RBMGaussianLayer::RBMGaussianLayer( real the_learning_rate ) :
     min_quad_coeff( 0. ),
     share_quad_coeff( false ),
     size_quad_coeff( 0 ),
+    fixed_std_deviation( -1 ),
     sigma_is_up_to_date( false )
 {
 }
@@ -64,6 +65,7 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate ) :
     min_quad_coeff( 0. ),
     share_quad_coeff( false ),
     size_quad_coeff( 0 ),
+    fixed_std_deviation( -1 ),
     quad_coeff( the_size, 1. ), // or 1./M_SQRT2 ?
     quad_coeff_pos_stats( the_size ),
     quad_coeff_neg_stats( the_size ),
@@ -83,6 +85,7 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate,
                                     bool do_share_quad_coeff ) :
     inherited( the_learning_rate ),
     min_quad_coeff( 0. ),
+    fixed_std_deviation( -1 ),
     quad_coeff_pos_stats( the_size ),
     quad_coeff_neg_stats( the_size ),
     sigma_is_up_to_date( false )
@@ -326,7 +329,11 @@ void RBMGaussianLayer::clearStats()
 void RBMGaussianLayer::forget()
 {
     clearStats();
-    quad_coeff.fill( 1. );
+
+    if( fixed_std_deviation > 0 )
+        quad_coeff.fill( 1 / ( M_SQRT2 * fixed_std_deviation ) );
+    else
+        quad_coeff.fill( 1. );
     inherited::forget();
 }
 
@@ -345,6 +352,14 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
                   "Should all the units share the same quadratic coefficients?\n"
                   "Suitable to avoid unstability (overfitting)  in cases where\n"
                   "all the units have the same 'meaning'  (pixels of an image)");
+
+    declareOption(ol, "fixed_std_deviation", &RBMGaussianLayer::fixed_std_deviation,
+                  OptionBase::buildoption,
+                  "Value for the usually learned standard deviation, "
+                  "if it should not be learned.\n"
+                  "This will fix the value of the quad coeffs to the "
+                  "appropriate value.\n"
+                  "If < 0, then this option is ignored.\n");
 
 
     // Now call the parent class' declareOptions
@@ -367,6 +382,15 @@ void RBMGaussianLayer::build_()
         quad_coeff.resize( size_quad_coeff );
         needs_forget = true;
     }
+
+    if ( fixed_std_deviation > 0 && share_quad_coeff )
+    {
+        if( share_quad_coeff ) 
+            PLERROR("In RBMGaussianLayer::build_(): fixed_std_deviation should not "
+                    "be > 0 when share_quad_coeff is true.");
+        quad_coeff.fill( 1 / ( M_SQRT2 * fixed_std_deviation ) );
+    }
+
 
     quad_coeff_pos_stats.resize( size );
     quad_coeff_neg_stats.resize( size );
@@ -398,36 +422,42 @@ void RBMGaussianLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void RBMGaussianLayer::accumulatePosStats( const Vec& pos_values )
 {
-    if (share_quad_coeff)
-       for( int i=0 ; i<size ; i++ )
-       {
+    if ( fixed_std_deviation <= 0 )
+    {
+        if (share_quad_coeff)
+            for( int i=0 ; i<size ; i++ )
+            {
            real x_i = pos_values[i];
            quad_coeff_pos_stats[i] += 2 * quad_coeff[0] * x_i * x_i;
-       }
-    else
-       for( int i=0 ; i<size ; i++ )
-       {
-           real x_i = pos_values[i];
-           quad_coeff_pos_stats[i] += 2 * quad_coeff[i] * x_i * x_i;
-       }
+            }
+        else
+            for( int i=0 ; i<size ; i++ )
+            {
+                real x_i = pos_values[i];
+                quad_coeff_pos_stats[i] += 2 * quad_coeff[i] * x_i * x_i;
+            }
+    }
 
     inherited::accumulatePosStats( pos_values );
 }
 
 void RBMGaussianLayer::accumulateNegStats( const Vec& neg_values )
 {
-    if (share_quad_coeff)
-        for( int i=0 ; i<size ; i++ )
-        {
-            real x_i = neg_values[i];
-            quad_coeff_neg_stats[i] += 2 * quad_coeff[0] * x_i * x_i;
-        }
-    else
-        for( int i=0 ; i<size ; i++ )
-        {
-            real x_i = neg_values[i];
-            quad_coeff_neg_stats[i] += 2 * quad_coeff[i] * x_i * x_i;
-        }
+    if ( fixed_std_deviation <= 0 )
+    {
+        if (share_quad_coeff)
+            for( int i=0 ; i<size ; i++ )
+            {
+                real x_i = neg_values[i];
+                quad_coeff_neg_stats[i] += 2 * quad_coeff[0] * x_i * x_i;
+            }
+        else
+            for( int i=0 ; i<size ; i++ )
+            {
+                real x_i = neg_values[i];
+                quad_coeff_neg_stats[i] += 2 * quad_coeff[i] * x_i * x_i;
+            }
+    }
     inherited::accumulateNegStats( neg_values );
 }
 
@@ -435,66 +465,69 @@ void RBMGaussianLayer::update()
 {
     // quad_coeff -= learning_rate * (quad_coeff_pos_stats/pos_count
     //                                - quad_coeff_neg_stats/neg_count)
-    real pos_factor = -learning_rate / pos_count;
-    real neg_factor = learning_rate / neg_count;
-
-    real* a = quad_coeff.data();
-    real* aps = quad_coeff_pos_stats.data();
-    real* ans = quad_coeff_neg_stats.data();
-
-    if( momentum == 0. )
+    if ( fixed_std_deviation <= 0 )
     {
-        if(share_quad_coeff)
+        real pos_factor = -learning_rate / pos_count;
+        real neg_factor = learning_rate / neg_count;
+        
+        real* a = quad_coeff.data();
+        real* aps = quad_coeff_pos_stats.data();
+        real* ans = quad_coeff_neg_stats.data();
+
+        if( momentum == 0. )
         {
-            real update=0;
-            for( int i=0 ; i<size ; i++ )
+            if(share_quad_coeff)
             {
-                update += pos_factor * aps[i] + neg_factor * ans[i];
+                real update=0;
+                for( int i=0 ; i<size ; i++ )
+                {
+                    update += pos_factor * aps[i] + neg_factor * ans[i];
+                }
+                a[0] += update/(real)size;
+                if( a[0] < min_quad_coeff )
+                    a[0] = min_quad_coeff;
             }
-            a[0] += update/(real)size;
-            if( a[0] < min_quad_coeff )
-                a[0] = min_quad_coeff;
-        }
-        else
-            for( int i=0 ; i<size ; i++ )
-            {
-                a[i] += pos_factor * aps[i] + neg_factor * ans[i];
-                if( a[i] < min_quad_coeff )
-                    a[i] = min_quad_coeff;
-            }
-    }
-    else
-    {
-        if(share_quad_coeff)
-        {
-            quad_coeff_inc.resize( 1 );
-            real* ainc = quad_coeff_inc.data();
-            for( int i=0 ; i<size ; i++ )
-            {
-                ainc[0] = momentum*ainc[0] + pos_factor*aps[i] + neg_factor*ans[i];
-                ainc[0] /= (real)size;
-                a[0] += ainc[0];
-            }
-            if( a[0] < min_quad_coeff )
-                a[0] = min_quad_coeff;
+            else
+                for( int i=0 ; i<size ; i++ )
+                {
+                    a[i] += pos_factor * aps[i] + neg_factor * ans[i];
+                    if( a[i] < min_quad_coeff )
+                        a[i] = min_quad_coeff;
+                }
         }
         else
         {
-            quad_coeff_inc.resize( size );
-            real* ainc = quad_coeff_inc.data();
-            for( int i=0 ; i<size ; i++ )
+            if(share_quad_coeff)
             {
-                ainc[i] = momentum*ainc[i] + pos_factor*aps[i] + neg_factor*ans[i];
-                a[i] += ainc[i];
-                if( a[i] < min_quad_coeff )
-                    a[i] = min_quad_coeff;
+                quad_coeff_inc.resize( 1 );
+                real* ainc = quad_coeff_inc.data();
+                for( int i=0 ; i<size ; i++ )
+                {
+                    ainc[0] = momentum*ainc[0] + pos_factor*aps[i] + neg_factor*ans[i];
+                    ainc[0] /= (real)size;
+                    a[0] += ainc[0];
+                }
+                if( a[0] < min_quad_coeff )
+                    a[0] = min_quad_coeff;
+            }
+            else
+            {
+                quad_coeff_inc.resize( size );
+                real* ainc = quad_coeff_inc.data();
+                for( int i=0 ; i<size ; i++ )
+                {
+                    ainc[i] = momentum*ainc[i] + pos_factor*aps[i] + neg_factor*ans[i];
+                    a[i] += ainc[i];
+                    if( a[i] < min_quad_coeff )
+                        a[i] = min_quad_coeff;
+                }
             }
         }
+
+        // We will need to recompute sigma
+        sigma_is_up_to_date = false;
     }
-
-    // We will need to recompute sigma
-    sigma_is_up_to_date = false;
-
+    
     // will update the bias, and clear the statistics
     inherited::update();
 }
@@ -503,65 +536,68 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values )
 {
     // quad_coeff[i] -= learning_rate * 2 * quad_coeff[i] * (pos_values[i]^2
     //                                                       - neg_values[i]^2)
-    real two_lr = 2 * learning_rate;
-    real* a = quad_coeff.data();
-    real* pv = pos_values.data();
-    real* nv = neg_values.data();
+    if ( fixed_std_deviation <= 0 )
+    {
+        real two_lr = 2 * learning_rate;
+        real* a = quad_coeff.data();
+        real* pv = pos_values.data();
+        real* nv = neg_values.data();
 
-    if( momentum == 0. )
-    {
-        if (share_quad_coeff)
+        if( momentum == 0. )
         {
-            real update=0;
-            for( int i=0 ; i<size ; i++ )
+            if (share_quad_coeff)
             {
-                update += two_lr * a[0] * (nv[i]*nv[i] - pv[i]*pv[i]);
+                real update=0;
+                for( int i=0 ; i<size ; i++ )
+                {
+                    update += two_lr * a[0] * (nv[i]*nv[i] - pv[i]*pv[i]);
+                }
+                a[0] += update/(real)size;
+                if( a[0] < min_quad_coeff )
+                    a[0] = min_quad_coeff;
             }
-            a[0] += update/(real)size;
-            if( a[0] < min_quad_coeff )
-                a[0] = min_quad_coeff;
-        }
-        else
-            for( int i=0 ; i<size ; i++ )
-            {
-                a[i] += two_lr * a[i] * (nv[i]*nv[i] - pv[i]*pv[i]);
-                if( a[i] < min_quad_coeff )
-                    a[i] = min_quad_coeff;
-            }
-    }
-    else
-    {
-        real* ainc = quad_coeff_inc.data();
-        if(share_quad_coeff)
-        {
-            quad_coeff_inc.resize( 1 );
-            for( int i=0 ; i<size ; i++ )
-            {
-                ainc[0] = momentum*ainc[0]
-                    + two_lr * a[0] * (nv[i]*nv[i] - pv[i]*pv[i]);
-                ainc[0] /= (real)size;
-                a[0] += ainc[0];
-            }
-            if( a[0] < min_quad_coeff )
-                a[0] = min_quad_coeff;
+            else
+                for( int i=0 ; i<size ; i++ )
+                {
+                    a[i] += two_lr * a[i] * (nv[i]*nv[i] - pv[i]*pv[i]);
+                    if( a[i] < min_quad_coeff )
+                        a[i] = min_quad_coeff;
+                }
         }
         else
         {
-            quad_coeff_inc.resize( size );
-            for( int i=0 ; i<size ; i++ )
+            real* ainc = quad_coeff_inc.data();
+            if(share_quad_coeff)
             {
-                ainc[i] = momentum*ainc[i]
-                    + two_lr * a[i] * (nv[i]*nv[i] - pv[i]*pv[i]);
-                a[i] += ainc[i];
-                if( a[i] < min_quad_coeff )
-                    a[i] = min_quad_coeff;
+                quad_coeff_inc.resize( 1 );
+                for( int i=0 ; i<size ; i++ )
+                {
+                    ainc[0] = momentum*ainc[0]
+                        + two_lr * a[0] * (nv[i]*nv[i] - pv[i]*pv[i]);
+                    ainc[0] /= (real)size;
+                    a[0] += ainc[0];
+                }
+                if( a[0] < min_quad_coeff )
+                    a[0] = min_quad_coeff;
+            }
+            else
+            {
+                quad_coeff_inc.resize( size );
+                for( int i=0 ; i<size ; i++ )
+                {
+                    ainc[i] = momentum*ainc[i]
+                        + two_lr * a[i] * (nv[i]*nv[i] - pv[i]*pv[i]);
+                    a[i] += ainc[i];
+                    if( a[i] < min_quad_coeff )
+                        a[i] = min_quad_coeff;
+                }
             }
         }
+
+        // We will need to recompute sigma
+        sigma_is_up_to_date = false;
     }
-
-    // We will need to recompute sigma
-    sigma_is_up_to_date = false;
-
+    
     // update the bias
     inherited::update( pos_values, neg_values );
 }
@@ -577,45 +613,47 @@ void RBMGaussianLayer::update( const Mat& pos_values, const Mat& neg_values )
 
     // quad_coeff[i] -= learning_rate * 2 * quad_coeff[i] * (pos_values[i]^2
     //                                                       - neg_values[i]^2)
-
-    real two_lr = 2 * learning_rate / batch_size;
-    real* a = quad_coeff.data();
-
-    if( momentum == 0. )
+    if ( fixed_std_deviation <= 0 )
     {
-        if (share_quad_coeff)
-            for( int k=0; k<batch_size; k++ )
-            {
-                real *pv_k = pos_values[k];
-                real *nv_k = neg_values[k];
-                real update=0;
-                for( int i=0; i<size; i++ )
-                {
-                    update += two_lr * a[0] * (nv_k[i]*nv_k[i] - pv_k[i]*pv_k[i]);
-                }
-                a[0] += update/(real)size;
-                if( a[0] < min_quad_coeff )
-                    a[0] = min_quad_coeff;
-            }
-        else
-            for( int k=0; k<batch_size; k++ )
-            {
-                real *pv_k = pos_values[k];
-                real *nv_k = neg_values[k];
-                for( int i=0; i<size; i++ )
-                {
-                    a[i] += two_lr * a[i] * (nv_k[i]*nv_k[i] - pv_k[i]*pv_k[i]);
-                    if( a[i] < min_quad_coeff )
-                        a[i] = min_quad_coeff;
-                }
-            }
-    }
-    else
-        PLCHECK_MSG( false,
-                     "momentum and minibatch are not compatible yet" );
+        real two_lr = 2 * learning_rate / batch_size;
+        real* a = quad_coeff.data();
 
-    // We will need to recompute sigma
-    sigma_is_up_to_date = false;
+        if( momentum == 0. )
+        {
+            if (share_quad_coeff)
+                for( int k=0; k<batch_size; k++ )
+                {
+                    real *pv_k = pos_values[k];
+                    real *nv_k = neg_values[k];
+                    real update=0;
+                    for( int i=0; i<size; i++ )
+                    {
+                        update += two_lr * a[0] * (nv_k[i]*nv_k[i] - pv_k[i]*pv_k[i]);
+                    }
+                    a[0] += update/(real)size;
+                    if( a[0] < min_quad_coeff )
+                        a[0] = min_quad_coeff;
+                }
+            else
+                for( int k=0; k<batch_size; k++ )
+                {
+                    real *pv_k = pos_values[k];
+                    real *nv_k = neg_values[k];
+                    for( int i=0; i<size; i++ )
+                    {
+                        a[i] += two_lr * a[i] * (nv_k[i]*nv_k[i] - pv_k[i]*pv_k[i]);
+                        if( a[i] < min_quad_coeff )
+                            a[i] = min_quad_coeff;
+                    }
+                }
+        }
+        else
+            PLCHECK_MSG( false,
+                         "momentum and minibatch are not compatible yet" );
+
+        // We will need to recompute sigma
+        sigma_is_up_to_date = false;
+    }
 
     // Update the bias
     inherited::update( pos_values, neg_values );
