@@ -544,9 +544,9 @@ void DeepNonLocalManifoldParzen::train()
         reconstruction_expectation_gradients.resize(layers[i]->size);
 
         pos_down_val.resize(layers[i]->size);
-        pos_up_val.resize(layers[i]->size);
+        pos_up_val.resize(layers[i+1]->size);
         neg_down_val.resize(layers[i]->size);
-        neg_up_val.resize(layers[i]->size);
+        neg_up_val.resize(layers[i+1]->size);
 
         for( ; *this_stage<end_stage ; (*this_stage)++ )
         {
@@ -569,6 +569,7 @@ void DeepNonLocalManifoldParzen::train()
             MODULE_LOG << "Finding the nearest neighbors" << endl;
             // Find training nearest neighbors
             TVec<int> nearest_neighbors_indices_row;
+            nearest_neighbors_indices.resize(train_set->length(), k_neighbors);
             for(int k=0; k<n_classes; k++)
             {
                 for(int i=0; i<class_datasets[k]->length(); i++)
@@ -711,7 +712,7 @@ void DeepNonLocalManifoldParzen::greedyStep(
         
         // negative phase
         connections[index]->setAsDownInput( layers[index]->sample );
-        layers[index+1]->getAllActivations( connections[index+1] );
+        layers[index+1]->getAllActivations( connections[index] );
         layers[index+1]->computeExpectation();
         // accumulate negative stats
         // no need to deep-copy because the values won't change before update
@@ -784,7 +785,7 @@ void DeepNonLocalManifoldParzen::computeManifoldParzenParameters(
     F << all_outputs.subVec(0,n_components * inputsize()).toMat(
         n_components, inputsize());
     mu << all_outputs.subVec(n_components * inputsize(),inputsize());
-    pre_sigma_noise << all_outputs.subVec( n_components * (inputsize() + 1), 1 );
+    pre_sigma_noise << all_outputs.subVec( (n_components+1) * inputsize(), 1 );
 
     F_copy.resize(F.length(),F.width());
     sm_svd.resize(n_components);
@@ -815,6 +816,8 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
     real dotp = 0;
     real coef = 0;
     real n = inputsize();
+    z.resize(k_neighbors,inputsize());
+    temp_ncomp.resize(n_components);
     inv_Sigma_z.resize(k_neighbors,inputsize());
     inv_Sigma_z.clear();
     real tr_inv_Sigma = 0;
@@ -870,7 +873,8 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
     }
 
     all_outputs_gradient.clear();
-    coef = 1/train_set->length();
+    coef = 1.0/train_set->length();
+    all_outputs_gradient.resize((n_components+1) * inputsize()+1);
     for(int neighbor=0; neighbor<k_neighbors; neighbor++)
     {
         // dNLL/dF
@@ -1101,10 +1105,12 @@ void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const
     }
     else
     {
-        if( ((int)round(output[0])) == ((int)round(target[0])) )
+        int target_class = ((int)round(target[0]));
+        if( ((int)round(output[0])) == target_class )
             costs[n_layers-1] = 0;
         else
             costs[n_layers-1] = 1;
+        costs[n_layers] = - test_votes[target_class]+pl_log(class_datasets[target_class]->length());
     }
 }
 
@@ -1158,6 +1164,7 @@ TVec<string> DeepNonLocalManifoldParzen::getTestCostNames() const
         cost_names.push_back("reconstruction_error_" + tostring(i+1));
     
     cost_names.append( "class_error" );
+    cost_names.append( "NLL" );
 
     return cost_names;
 }
