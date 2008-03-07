@@ -133,7 +133,9 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
-    //! TODO Document.
+    //! Given a target and the corresponding output, update the 'bag_output'
+    //! data matrix and compute the costs (which will be missing except for
+    //! the last sample in a bag).
     void updateCostAndBagOutput(const Vec& target, const Vec& output,
                                 Vec& costs) const;
 
