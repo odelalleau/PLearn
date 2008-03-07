@@ -45,7 +45,6 @@
 #include <sys/stat.h>
 #include <nspr/prsystem.h>
 #include <nspr/prenv.h>
-#include <plearn/base/tostring.h>
 #ifdef _MSC_VER
 #include <io.h>
 #endif
@@ -116,7 +115,7 @@ string hostname()
 {
     char tmp[1024];
     if(PR_GetSystemInfo(PR_SI_HOSTNAME,tmp,500)==PR_SUCCESS)
-        return tostring(tmp);
+        return string(tmp);
     else{
         const char* h = PR_GetEnv("HOSTNAME");
         if (!h)
