@@ -189,14 +189,13 @@ public:
 
     /**
      *  This first calls fieldIndex to try and get the index corresponding to
-     *  the given string If this fails, the given string is assumed to hold the
-     *  numerical index, and its conversion to int will be returned (or a
-     *  PLERROR issued if this fails).
+     *  the given string. If this fails, the given string is assumed to hold
+     *  the numerical index, and its conversion to int will be returned (or a
+     *  PLERROR issued if this fails, unless 'throw_error' is set to false, in
+     *  which case -1 is returned instead).
      */
-    int getFieldIndex(const string& fieldname_or_num,const bool error=true) const;
-    int remote_getFieldIndex(const string& fieldname_or_num) const{
-        return getFieldIndex(fieldname_or_num);
-    }
+    int getFieldIndex(const string& fieldname_or_num,
+                      bool throw_error = true) const;
 
     /// Return the field name at a given index
     string fieldName(int fieldindex) const

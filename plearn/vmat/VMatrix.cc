@@ -196,10 +196,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("TVec of field names.\n")));
 
      declareMethod(
-        rmm, "getFieldIndex", &VMatrix::remote_getFieldIndex,
+        rmm, "getFieldIndex", &VMatrix::getFieldIndex,
         (BodyDoc("Returns the index of a field.\n"),
          ArgDoc ("fname_or_num",
              "Field name or index (as a string) of the field.\n"),
+         ArgDoc("throw_error",
+             "Whether to throw an error or return -1 for unknown fields"),
          RetDoc ("Index of the field.\n")));
     
     declareMethod(
@@ -411,7 +413,7 @@ int VMatrix::fieldIndex(const string& fieldname) const
 ///////////////////
 // getFieldIndex //
 ///////////////////
-int VMatrix::getFieldIndex(const string& fieldname_or_num, const bool error) const
+int VMatrix::getFieldIndex(const string& fieldname_or_num, bool error) const
 {
     int i = fieldIndex(fieldname_or_num);
     if(i==-1 && pl_islong(fieldname_or_num)) {
