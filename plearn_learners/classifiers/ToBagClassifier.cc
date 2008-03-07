@@ -38,6 +38,7 @@
 
 
 #include "ToBagClassifier.h"
+#include <plearn/var/SumOverBagsVariable.h>
 #include <plearn/vmat/SubVMatrix.h>
 
 namespace PLearn {
@@ -101,33 +102,32 @@ void ToBagClassifier::computeCostsFromOutputs(const Vec& input,
                                               const Vec& target,
                                               Vec& costs) const
 {
+    fillSubTarget(target);
+    inherited::computeCostsFromOutputs(input, output, sub_target, costs);
+    updateCostAndBagOutput(target, output, costs);
+}
+
+///////////////////////////
+// computeOutputAndCosts //
+///////////////////////////
+void ToBagClassifier::computeOutputAndCosts(const Vec& input,
+                                            const Vec& target,
+                                            Vec& output, Vec& costs) const
+{
+    fillSubTarget(target);
+    inherited::computeOutputAndCosts(input, sub_target, output, costs);
+    updateCostAndBagOutput(target, output, costs);
+}
+
+///////////////////
+// fillSubTarget //
+///////////////////
+void ToBagClassifier::fillSubTarget(const Vec& target) const
+{
     sub_target.resize(target.length() - 1);
     sub_target << target.subVec(0, sub_target.length());
-    inherited::computeCostsFromOutputs(input, output, sub_target, costs);
-    PLASSERT( is_equal(sum(output), 1) );   // Ensure probabilities sum to 1.
-    int bag_info = int(round(target.lastElement()));
-    if (bag_info % 2 == 1)
-        bag_output.resize(0, 0);
-    bag_output.appendRow(output);
-    costs.resize(nTestCosts());
-    costs.fill(MISSING_VALUE);
-    if (bag_info >= 2) {
-        // Perform majority vote.
-        votes.resize(bag_output.width());
-        columnSum(bag_output, votes);
-        int target_class = int(round(target[0]));
-        int prediction = argmax(votes);
-        if (prediction == target_class)
-            costs[0] = 0;
-        else
-            costs[0] = 1;
-        if (n_classes > 0) {
-            int i_start = 1 + target_class * n_classes;
-            costs.subVec(i_start, n_classes).fill(0);
-            costs[i_start + prediction] = 1;
-        }
-    }
 }
+
 
 //////////////////////
 // getTestCostNames //
@@ -187,8 +187,39 @@ int ToBagClassifier::targetsize() const
     return learner_->targetsize() + 1;
 }
 
-} // end of namespace PLearn
+////////////////////////////
+// updateCostAndBagOutput //
+////////////////////////////
+void ToBagClassifier::updateCostAndBagOutput(const Vec& target,
+                                             const Vec& output,
+                                             Vec& costs) const
+{
+    PLASSERT( is_equal(sum(output), 1) );   // Ensure probabilities sum to 1.
+    int bag_info = int(round(target.lastElement()));
+    if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
+        bag_output.resize(0, 0);
+    bag_output.appendRow(output);
+    costs.resize(nTestCosts());
+    costs.fill(MISSING_VALUE);
+    if (bag_info & SumOverBagsVariable::TARGET_COLUMN_LAST) {
+        // Perform majority vote.
+        votes.resize(bag_output.width());
+        columnSum(bag_output, votes);
+        int target_class = int(round(target[0]));
+        int prediction = argmax(votes);
+        if (prediction == target_class)
+            costs[0] = 0;
+        else
+            costs[0] = 1;
+        if (n_classes > 0) {
+            int i_start = 1 + target_class * n_classes;
+            costs.subVec(i_start, n_classes).fill(0);
+            costs[i_start + prediction] = 1;
+        }
+    }
+}
 
+} // end of namespace PLearn
 
 /*
   Local Variables:

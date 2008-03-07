@@ -83,12 +83,9 @@ public:
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
-    //! Currently using PLearner's simple version for code simplicity.
+    //! Overridden to be able to use the sub-learner's corresponding method.
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-                                       Vec& output, Vec& costs) const
-    {
-        PLearner::computeOutputAndCosts(input, target, output, costs);
-    }
+                                       Vec& output, Vec& costs) const;
 
     //! Currently using PLearner's simple version for code simplicity.
     virtual void computeOutputsAndCosts(const Mat& input, const Mat& target,
@@ -134,8 +131,14 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+
+    //! TODO Document.
+    void updateCostAndBagOutput(const Vec& target, const Vec& output,
+                                Vec& costs) const;
+
+    //! Fill 'sub_target' with all elements of 'target' but the last one.
+    void fillSubTarget(const Vec& target) const;
 
 private:
     //#####  Private Member Functions  ########################################
