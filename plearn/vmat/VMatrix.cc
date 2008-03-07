@@ -196,12 +196,19 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("TVec of field names.\n")));
 
      declareMethod(
-        rmm, "getFieldIndex", &VMatrix::getFieldIndex,
-        (BodyDoc("Returns the index of a field.\n"),
+        rmm, "findFieldIndex", &VMatrix::fieldIndex,
+        (BodyDoc("Returns the index of a field, or -1 if the field does not "
+                 "exist.\n"),
+         ArgDoc ("fname",
+             "Field name of the field.\n"),
+         RetDoc ("Index of the field (-1 if not found)\n")));
+
+      declareMethod(
+        rmm, "getFieldIndex", &VMatrix::remote_getFieldIndex,
+        (BodyDoc("Returns the index of a field. "
+                 "Throws an error if the field is not found.\n"),
          ArgDoc ("fname_or_num",
              "Field name or index (as a string) of the field.\n"),
-         ArgDoc("throw_error",
-             "Whether to throw an error or return -1 for unknown fields"),
          RetDoc ("Index of the field.\n")));
     
     declareMethod(

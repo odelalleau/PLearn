@@ -197,6 +197,12 @@ public:
     int getFieldIndex(const string& fieldname_or_num,
                       bool throw_error = true) const;
 
+    //! Remote version of 'getFieldIndex'.
+    int remote_getFieldIndex(const string& fieldname_or_num) const
+    {
+        return getFieldIndex(fieldname_or_num);
+    }
+
     /// Return the field name at a given index
     string fieldName(int fieldindex) const
     {
