@@ -972,7 +972,7 @@ int vmatmain(int argc, char** argv)
                 real lmissing = lstats.nmissing()/lstats.n();
                 pout<<i<<"("<<m1->fieldName(int(round(score(i,0))))<<")"
                     <<" The missing stats difference is "<< score(i,2)
-                    <<". Their is "<<lmissing<<" missing while target have "
+                    <<". There are "<<lmissing<<" missing while target has "
                     <<tmissing<<" missing."<<endl;
                 nbdiff++;
             }
@@ -1046,7 +1046,7 @@ int vmatmain(int argc, char** argv)
         }
 
         sortRows(score,2,false);
-        pout <<"Kolmogorow Smirnow two sample test"<<endl<<endl;
+        pout <<"Kolmogorov Smirnov two sample test"<<endl<<endl;
         if(threshold<REAL_MAX)
             pout<<"Variables that are under the threshold"<<endl;
         pout<<"Sorted by p_value"<<endl;
@@ -1070,7 +1070,7 @@ int vmatmain(int argc, char** argv)
             }
         }
         if(threshold<REAL_MAX)
-            pout << "Their is "<<threshold_fail<<" variable that are under the threshold"<<endl;
+            pout << "There are "<<threshold_fail<<" variables that are under the threshold"<<endl;
         if(threshold==REAL_MAX)
         {
             pout << "99% cutoff: "<<pc_value_99<<endl;
@@ -1078,7 +1078,7 @@ int vmatmain(int argc, char** argv)
             pout << "90% cutoff: "<<pc_value_90<<endl;
             pout << "0-90% cutoff: "<<pc_value_0<<endl;
         }
-        pout <<"Kolmogorow Smirnow two sample test end"<<endl<<endl;
+        pout <<"Kolmogorov Smirnov two sample test end"<<endl<<endl;
     }
     else if(command=="compare_stats_desjardins")
     {      
@@ -1136,7 +1136,7 @@ int vmatmain(int argc, char** argv)
         }
 
         sortRows(score,2,false);
-        pout <<"Kolmogorow Smirnow two sample test"<<endl<<endl;
+        pout <<"Kolmogorov Smirnov two sample test"<<endl<<endl;
         pout<<"Variables that are under the ks_threshold"<<endl;
         pout<<"Sorted by p_value"<<endl;
         cout << std::left << setw(8) << "# "
@@ -1158,9 +1158,9 @@ int vmatmain(int argc, char** argv)
                 threshold_fail++;
             }
         }
-        pout << "Their is "<<threshold_fail<<"/"<<m1->width()<<
-            " variable that are under the threshold"<<endl<<
-            " Kolmogorow Smirnow two sample test end"<<endl<<endl;
+        pout << "There are "<<threshold_fail<<"/"<<m1->width()<<
+            " variables that are under the threshold"<<endl<<
+            " Kolmogorov Smirnov two sample test end"<<endl<<endl;
 
 
 //         real stderror_threshold = 1;
