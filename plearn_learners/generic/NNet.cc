@@ -513,25 +513,11 @@ void NNet::setTrainingSet(VMat training_set, bool call_forget)
 
     inherited::setTrainingSet(training_set, call_forget);
     //cout << "name = " << name << endl << "targetsize = " << targetsize_ << endl << "weightsize = " << weightsize_ << endl;
+
+    // Since the training set probably changed, it is safer to reset
+    // 'n_training_bags', just in case.
+    n_training_bags = -1;
     
-    if (operate_on_bags) {
-        // Compute the number of bags in the training set.
-        int n_train = training_set->length();
-        PP<ProgressBar> pb = 
-            report_progress ? new ProgressBar("Counting bags", n_train)
-                            : NULL;
-        Vec input, target;
-        real weight;
-        n_training_bags = 0;
-        for (int i = 0; i < n_train; i++) {
-            training_set->getExample(i, input, target, weight);
-            if (int(round(target.lastElement()))
-                & SumOverBagsVariable::TARGET_COLUMN_FIRST)
-                n_training_bags++;
-            if (pb)
-                pb->updateone();
-        }
-    }
 }
 
 ////////////////
@@ -1160,6 +1146,25 @@ void NNet::train()
 
     if(!train_set)
         PLERROR("In NNet::train - No training set available");
+
+    if (operate_on_bags && n_training_bags < 0) {
+        // Compute the number of bags in the training set.
+        int n_train = train_set->length();
+        PP<ProgressBar> pb = 
+            report_progress ? new ProgressBar("Counting bags", n_train)
+                            : NULL;
+        Vec input, target;
+        real weight;
+        n_training_bags = 0;
+        for (int i = 0; i < n_train; i++) {
+            train_set->getExample(i, input, target, weight);
+            if (int(round(target.lastElement()))
+                & SumOverBagsVariable::TARGET_COLUMN_FIRST)
+                n_training_bags++;
+            if (pb)
+                pb->updateone();
+        }
+    }
     
     if(!train_stats)
         setTrainStatsCollector(new VecStatsCollector());
