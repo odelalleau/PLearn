@@ -613,28 +613,25 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
     if(fieldtype=="skip")
     {
         // do nothing, simply skip it
+        return;
     }
+    
+    if(strval=="")  // missing
+        dest[0] = MISSING_VALUE;
     else if(fieldtype=="auto")
     {
-        if(strval=="")  // missing
-            dest[0] = MISSING_VALUE;
-        else if(pl_isnumber(strval,&val))
+        if(pl_isnumber(strval,&val))
             dest[0] = real(val);
         else
             dest[0] = getMapping(k, strval);
     }
     else if(fieldtype=="char")
     {
-        if(strval=="")  // missing
-            dest[0] = MISSING_VALUE;
-        else
-            dest[0] = getMapping(k, strval);
+        dest[0] = getMapping(k, strval);
     }
     else if(fieldtype=="num")
     {
-        if(strval=="")  // missing
-            dest[0] = MISSING_VALUE;
-        else if(pl_isnumber(strval,&val))
+        if(pl_isnumber(strval,&val))
             dest[0] = real(val);
         else
             PLERROR("In TextFilesVMatrix::transformStringToValue - expedted a number as the value for field %d(%s). Got %s",k,fieldname.c_str(),strval.c_str());
@@ -642,23 +639,15 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
     }
     else if(fieldtype=="date")
     {
-        if(strval=="")  // missing
-            dest[0] = MISSING_VALUE;
-        else
-            dest[0] = date_to_float(PDate(strval));
+        dest[0] = date_to_float(PDate(strval));
     }
-
     else if(fieldtype=="jdate")
     {
-        if(strval=="")  // missing
-            dest[0] = MISSING_VALUE;
-        else
-            dest[0] = PDate(strval).toJulianDay();
+        dest[0] = PDate(strval).toJulianDay();
     }
-
     else if(fieldtype=="sas_date")
     {
-        if(strval=="" || strval == "0")  // missing
+        if(strval == "0")  // missing
             dest[0] = MISSING_VALUE;
         else if(pl_isnumber(strval,&val)) {
             dest[0] = val;
@@ -669,15 +658,13 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
         else
             PLERROR("Error while parsing a sas_date");
     }
-
     else if(fieldtype=="YYYYMM")
     {
-        if(strval=="" || !pl_isnumber(strval) || toint(strval)<197000)
+        if(!pl_isnumber(strval) || toint(strval)<197000)
             dest[0] = MISSING_VALUE;
         else
             dest[0] = PDate(strval+"01").toJulianDay();
     }
-
     else if(fieldtype=="postal")
     {
         dest[0] = getPostalEncoding(strval);
@@ -687,8 +674,6 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
         char char_torm = ' ';
         if(fieldtype=="dollar-comma")
             char_torm = ',';
-        if(strval=="")  // missing
-            dest[0] = MISSING_VALUE;
         else if(strval[0]=='$')
         {
             string s = "";
@@ -705,10 +690,7 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
             PLERROR("In TextFilesVMatrix::transformStringToValue - Got as value '%s' while expecting a value beggining with '$' while parsing field %d (%s) with fieldtype %s",strval.c_str(),k,fieldname.c_str(),fieldtype.c_str());
     }
     else if(fieldtype=="bell_range") {
-        if (strval == "") {
-            // Missing value.
-            dest[0] = MISSING_VALUE;
-        } else if (strval == "Negative Value") {
+        if (strval == "Negative Value") {
             // We put an arbitrary negative value since we don't have more info.
             dest[0] = -100;
         } else {
@@ -745,15 +727,12 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
             if(strval[i]!=',')
                 s=s+strval[i];
         }
-        if(s=="")  // missing
-            dest[0] = MISSING_VALUE;
-        else if(pl_isnumber(s,&val))
+        if(pl_isnumber(s,&val))
             dest[0] = real(val);
         else
             PLERROR("In TextFilesVMatrix::transformStringToValue - expedted a number as the value for field %d(%s). Got %s",k,fieldname.c_str(),strval.c_str());
                 
     }
-
     else
     {
         PLERROR("TextFilesVMatrix::TextFilesVMatrix::transformStringToValue, Invalid field type specification for field %s: %s",fieldname.c_str(), fieldtype.c_str());
