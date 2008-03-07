@@ -312,7 +312,11 @@ void ConcatRowsVMatrix::findAllFields()
     // Now fill 'to_concat' with the corresponding VMats.
     to_concat.resize(sources.length());
     for (int i = 0; i < sources.length(); i++) {
-        to_concat[i] = new SelectColumnsVMatrix(sources[i], fnames, true);
+        TVec<string> source_fnames=sources[i]->fieldNames();
+        if(fnames!=source_fnames)
+            to_concat[i] = new SelectColumnsVMatrix(sources[i], fnames, true);
+        else
+            to_concat[i] = sources[i];
     }
 }
 
