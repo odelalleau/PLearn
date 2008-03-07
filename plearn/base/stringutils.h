@@ -178,7 +178,11 @@ vector<string> split(const string& s, const string& delimiters=" \t\n\r", bool k
   @double_quote a string that will surround a field if it containt delimiter caractere that should not consider generate a new field.
   @todo optimize...
 */
-vector<string> split_quoted_delimiter(const string& s, char delimiter, string double_quote);
+vector<string> split_quoted_delimiter(const string& s, char delimiter,
+                                      const string& double_quote);
+
+vector<string> split_quoted_delimiter(const string& s, char delimiter,
+                                      char double_quote);
 
 /*!     Split the string on the first occurence of a delimiter and returns 
   what was left of the delimitor and what was right of it.

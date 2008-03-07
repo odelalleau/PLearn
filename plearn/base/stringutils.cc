@@ -364,12 +364,14 @@ vector<string> split(const string& s, char delimiter)
     return res;
 }
 
-vector<string> split_quoted_delimiter(const string& s, char delimiter, string double_quote){
-    if(double_quote.length()==1)
-        PLASSERT(delimiter!=double_quote[0]);
+vector<string> split_quoted_delimiter(const string& s, char delimiter,
+                                      const string& double_quote){
+    int delim_size=double_quote.size();
+    if(delim_size==1)
+        return split_quoted_delimiter(s,delimiter,double_quote[0]);
+
     vector<string> ret = split(s, delimiter);
     vector<string> ret2;
-    int delim_size=double_quote.size();
     for(uint i=0; i<ret.size();i++){
         bool bw=string_begins_with(ret[i],double_quote);
         bool ew=string_ends_with(ret[i],double_quote);
@@ -395,6 +397,37 @@ vector<string> split_quoted_delimiter(const string& s, char delimiter, string do
     return ret2;
     
 }
+vector<string> split_quoted_delimiter(const string& s, char delimiter,
+                                      char double_quote){
+    PLASSERT(delimiter!=double_quote);
+    vector<string> ret = split(s, delimiter);
+    vector<string> ret2;
+    for(uint i=0; i<ret.size();i++){
+        string f = ret[i];
+        bool bw=f[0]==double_quote;
+        bool ew=f[f.size()-1]==double_quote;
+        if(bw && ew){
+            ret2.push_back(f.substr(1,f.size()-1)); 
+        }else if(bw){
+            string tmp=f.substr(1);
+            tmp+=delimiter;
+            for(uint j=i+1;j<ret.size();j++){
+                if(ret[j][ret[j].size()-1]==double_quote){
+                    tmp+=ret[j].substr(0,ret[j].size()-1);
+                    ret2.push_back(tmp);
+                    i=j;
+                    break;
+                }
+                tmp+=ret[j];
+                tmp+=delimiter;
+            }
+        }else
+            ret2.push_back(f);
+    }
+    return ret2;
+    
+}
+
 vector<string> split(const string& s, const string& delimiters, bool keep_delimiters)
 {
     vector<string> result;
