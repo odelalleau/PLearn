@@ -1480,7 +1480,7 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     TVec<StatsCollector> stats;
     PPath metadatadir = getMetaDataDir();
     PPath statsfile =  metadatadir / filename;
-    lockMetaDataDir();
+    if(!metadatadir.isEmpty()) lockMetaDataDir(); // don't try to lock nothing
     bool uptodate= isFileUpToDate(statsfile, true, true);
     if (uptodate)
         PLearn::load(statsfile, stats);
@@ -1491,7 +1491,7 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
         if(!metadatadir.isEmpty())
             PLearn::save(statsfile, stats);
     }
-    unlockMetaDataDir();
+    if(!metadatadir.isEmpty()) unlockMetaDataDir();// don't try to unlock nothing
     return stats;
 }
 
