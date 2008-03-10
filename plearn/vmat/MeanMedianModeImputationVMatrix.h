@@ -109,10 +109,10 @@ private:
           void         createMeanMedianModeFile(PPath file_name); 
           void         loadMeanMedianModeFile(PPath file_name); 
           void         computeMeanMedianModeVectors();  
-          void         sortColumn(Vec input_vec, int start, int end);
-          void         sortSmallSubArray(Vec input_vec, int start_index, int end_index);
-          void         swapValues(Vec input_vec, int index_i, int index_j);
-          real         compare(real field1, real field2);
+  static  void         sortColumn(Vec input_vec, int start, int end);
+  static  void         sortSmallSubArray(Vec input_vec, int start_index, int end_index);
+  static  void         swapValues(Vec input_vec, int index_i, int index_j);
+  static  real         compare(real field1, real field2);
   
   PLEARN_DECLARE_OBJECT(MeanMedianModeImputationVMatrix);
 
