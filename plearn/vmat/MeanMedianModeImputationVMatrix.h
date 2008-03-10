@@ -70,7 +70,7 @@ public:
   //! If greater or equal to 1, the integer portion is interpreted as the number of samples to use.
   real                          number_of_train_samples_to_use;
   
-  //! Pairs of instruction of the form field_name : mean | median | mode.
+  //! Pairs of instruction of the form field_name : mean | median | mode | none.
   TVec< pair<string, string> >  imputation_spec;
   
   //! The vector of variable means observed from the train set.
@@ -84,8 +84,6 @@ public:
   
   //! The vector of coded instruction for each variables.
   TVec<int>                     variable_imputation_instruction;
-  
-  //! Pairs of instruction of the form field_name : mean | median | mode.
   
 
                         MeanMedianModeImputationVMatrix();

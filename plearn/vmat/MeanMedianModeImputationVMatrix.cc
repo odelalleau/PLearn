@@ -256,7 +256,8 @@ void MeanMedianModeImputationVMatrix::build_()
     PPath train_metadata = train_set->getMetaDataDir();
     PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     train_set->lockMetaDataDir();
-    if (!train_set->isFileUpToDate(mean_median_mode_file_name,true,true))
+    if (!train_set->isFileUpToDate(mean_median_mode_file_name,true,true)
+	||!source->isFileUpToDate(mean_median_mode_file_name,true,true))
     {
         computeMeanMedianModeVectors();
         createMeanMedianModeFile(mean_median_mode_file_name);
@@ -275,21 +276,13 @@ void MeanMedianModeImputationVMatrix::createMeanMedianModeFile(PPath file_name)
 
 void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
 {
+    isFileUpToDate(file_name,true,true);
+    source->isFileUpToDate(file_name,true,true);
+
     mean_median_mode_file = new FileVMatrix(file_name);
     mean_median_mode_file->getRow(0, variable_mean);
     mean_median_mode_file->getRow(1, variable_median);
     mean_median_mode_file->getRow(2, variable_mode);
-    time_t source_time = source->getMtime();
-    time_t stat_file_time = mean_median_mode_file->getMtime();
-    if(stat_file_time==0)
-      PLWARNING("In MeanMedianModeImputationVMatrix::loadMeanMedianModeFile() - "
-		"The precomputed stats file '%s'"
-		" have a modification time of 0",file_name.c_str());
-    else if(source_time>stat_file_time)
-            PLWARNING("In MeanMedianModeImputationVMatrix::loadMeanMedianModeFile()"
-		      " - The precomputed stats file '%s'"
-		      " was created before the source file. Delete it to have it recreated next time."
-		      ,file_name.c_str());
 }
 
 VMat MeanMedianModeImputationVMatrix::getMeanMedianModeFile()
