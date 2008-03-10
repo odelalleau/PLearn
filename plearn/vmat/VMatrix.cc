@@ -1460,12 +1460,12 @@ bool VMatrix::isFileUpToDate(const PPath& path, bool warning_reuse,
         PLWARNING("In VMatrix::isFileUpToDate - for class '%s'"
                   " File '%s' will be used, but "
                   "this VMat's last modification time is undefined: we cannot "
-                  "be sure the file is up-to-date",
+                  "be sure the file is up-to-date.",
                   classname().c_str(), path.absolute().c_str());
     if(warning_older && exist && !uptodate)
         PLWARNING("In VMatrix::isFileUpToDate - for class '%s'"
-                  "File '%s' is older than this "
-                  "VMat's mtime of %d, and cannot be re-used",
+                  " File '%s' is older than this "
+                  "VMat's mtime of %d, and cannot be re-used.",
                   classname().c_str(), path.absolute().c_str(), getMtime());
 
     return exist && uptodate;
