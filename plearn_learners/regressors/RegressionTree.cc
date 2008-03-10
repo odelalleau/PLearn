@@ -173,8 +173,8 @@ void RegressionTree::build_()
         sample_input.resize(inputsize);
         sample_target.resize(targetsize);
         sample_output.resize(outputsize());
+        sample_costs.resize(getTestCostNames().size());
     }
-    sample_costs.resize(getTestCostNames().size());
 
     if (loss_function_weight != 0.0)
     {
@@ -334,12 +334,29 @@ TVec<string> RegressionTree::getTrainCostNames() const
 
 TVec<string> RegressionTree::getTestCostNames() const
 { 
-    return getTrainCostNames();
+    TVec<string> costs=getTrainCostNames();
+    PP<VMatrix> the_train_set=train_set;
+    if(sorted_train_set)
+        the_train_set = sorted_train_set;
+
+    PLCHECK_MSG(the_train_set,"In RegressionTree::getTestCostNames() - "
+                "a train set is needed!");
+    for(int i=0;i<the_train_set->width();i++)
+    {
+        costs.append("SPLIT_VAR_"+the_train_set->fieldName(i));
+    }
+    return costs;
 }
 
 void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
-    root->computeOutput(inputv, outputv);
+    computeOutputAndNodes(inputv,outputv);
+}
+
+void RegressionTree::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
+                                           TVec<PP<RegressionTreeNode> >* nodes) const
+{
+    root->computeOutputAndNodes(inputv, outputv, nodes);
     if (multiclass_outputs.length() <= 0) return;
     real closest_value=multiclass_outputs[0];
     real margin_to_closest_value=abs(outputv[0] - multiclass_outputs[0]);
@@ -357,11 +374,21 @@ void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 
 void RegressionTree::computeCostsFromOutputs(const Vec& inputv, const Vec& outputv, const Vec& targetv, Vec& costsv) const
 {
+    PLASSERT(costsv.size()==nTestCosts());
+    costsv.clear();
     costsv[0] = pow((outputv[0] - targetv[0]), 2);
     costsv[1] = outputv[1];
     costsv[2] = 1.0 - (l2_loss_function_factor * costsv[0]);
     costsv[3] = 1.0 - (l1_loss_function_factor * abs(outputv[0] - targetv[0]));
     costsv[4] = !fast_is_equal(targetv[0],outputv[0]);
+    Vec tmp(outputv.size());
+    TVec<PP<RegressionTreeNode> > nodes;
+    root->computeOutputAndNodes(inputv, tmp, &nodes);
+    PLASSERT(outputv==tmp);
+    for(int i=0;i<nodes.length();i++)
+    {
+        costsv[5+nodes[i]->getSplitCol()]++;
+    }
 }
 
 } // end of namespace PLearn

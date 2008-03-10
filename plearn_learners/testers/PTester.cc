@@ -1023,9 +1023,6 @@ Vec PTester::perform(bool call_forget)
     if (nsplits > 1)
         call_forget = true;
 
-    TVec<string> testcostnames = learner->getTestCostNames();
-    TVec<string> traincostnames = learner->getTrainCostNames();
-
     // Global stats collector
     PP<VecStatsCollector> global_statscol;
     if (global_template_stats_collector)
@@ -1059,6 +1056,13 @@ Vec PTester::perform(bool call_forget)
     if (expdir != "" && report_stats)
     {
         if(save_test_names){
+            //To work around the fact that RegressionTree need a
+            // train_set to generate the train/test costs names
+            if(!learner->getTrainingSet())
+                learner->setTrainingSet(splitter->getDataSet(), false);
+
+            TVec<string> testcostnames = learner->getTestCostNames();
+            TVec<string> traincostnames = learner->getTrainCostNames();
             saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
             saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
         }

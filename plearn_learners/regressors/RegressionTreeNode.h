@@ -102,7 +102,12 @@ public:
     real         getErrorImprovment()const;
     int          getSplitCol() const;
     TVec< PP<RegressionTreeNode> >  getNodes();
-    void         computeOutput(const Vec& inputv, Vec& outputv);
+    void         computeOutputAndNodes(const Vec& inputv, Vec& outputv, TVec<PP<RegressionTreeNode> >* nodes=0);
+    void         computeOutput(const Vec& inputv, Vec& outputv)
+    {
+        computeOutputAndNodes(inputv,outputv);
+    }
+
     
 private:
     void         build_();

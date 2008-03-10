@@ -380,8 +380,11 @@ TVec< PP<RegressionTreeNode> > RegressionTreeNode::getNodes()
     return return_value;
 }
 
-void RegressionTreeNode::computeOutput(const Vec& inputv, Vec& outputv)
+void RegressionTreeNode::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
+                                       TVec<PP<RegressionTreeNode> >* nodes)
 {
+    if(nodes)
+        nodes->append(this);
     if (!left_node)
     {
         outputv[0] = leave_output[0];
@@ -392,7 +395,7 @@ void RegressionTreeNode::computeOutput(const Vec& inputv, Vec& outputv)
     {
         if (missing_is_valid > 0)
         {
-            missing_node->computeOutput(inputv, outputv);
+            missing_node->computeOutputAndNodes(inputv, outputv, nodes);
         }
         else
         {
@@ -403,12 +406,12 @@ void RegressionTreeNode::computeOutput(const Vec& inputv, Vec& outputv)
     }
     if (inputv[split_col] > split_feature_value)
     {
-        right_node->computeOutput(inputv, outputv);
+        right_node->computeOutputAndNodes(inputv, outputv, nodes);
         return;
     }
     else
     {
-        left_node->computeOutput(inputv, outputv);
+        left_node->computeOutputAndNodes(inputv, outputv, nodes);
         return;
     }
 }
