@@ -48,7 +48,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "MULTI-LINE \nHELP");
 
 MultiClassAdaBoost::MultiClassAdaBoost():
-    nb_stage_to_use(-1)
+    nb_stage_to_use(-1),
+    forward_sub_learner_test_costs(false)
 /* ### Initialize all fields to their default value here */
 {
     // ...
@@ -92,6 +93,10 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
     declareOption(ol, "learner2", &MultiClassAdaBoost::learner2,
                   OptionBase::buildoption,
                   "The sub learner to use.");
+    declareOption(ol, "forward_sub_learner_test_costs", 
+                  &MultiClassAdaBoost::forward_sub_learner_test_costs,
+                  OptionBase::buildoption,
+                  "Did we add the learner1 and learner2 costs to our costs.\n");
 
 }
 
@@ -228,8 +233,8 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-// Compute the costs from *already* computed output.
-// ...
+    PLASSERT(costs.size()==nTestCosts());
+
     int out = int(round(output[0]));
     int pred = int(round(target[0]));
     costs[0]=int(out != pred);//class_error
@@ -243,11 +248,31 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
     else
         costs[3]=0;
 
-    costs[4]=0;
-    costs[5]=0;
-    costs[6]=0;
+    costs[4]=costs[5]=costs[6]=0;
     costs[out+4]=1;
+    PLASSERT(nTestCosts()==costs.size());
+    if(forward_sub_learner_test_costs){
+        costs.resize(7);
+        Vec subcosts1(learner1.nTestCosts());
+        Vec subcosts2(learner1.nTestCosts());
+        Vec target1(0,1), target2(0,1);
+        if(fast_is_equal(target[0],0.)){
+            target1.append(0);
+            target2.append(0);
+        }else if(fast_is_equal(target[0],1.)){
+            target1.append(1);
+            target2.append(0);
+        }else if(fast_is_equal(target[0],2.)){
+            target1.append(1);
+            target2.append(1);
+        }
+        learner1.computeCostsOnly(input,target1,subcosts1);
+        learner2.computeCostsOnly(input,target2,subcosts2);
+        subcosts1+=subcosts2;
+        costs.append(subcosts1);
+    }
 
+    PLASSERT(costs.size()==nTestCosts());
 }
 
 TVec<string> MultiClassAdaBoost::getTestCostNames() const
@@ -264,6 +289,13 @@ TVec<string> MultiClassAdaBoost::getTestCostNames() const
     names.append("class0");
     names.append("class1");
     names.append("class2");
+    if(forward_sub_learner_test_costs){
+        TVec<string> subcosts=learner1.getTestCostNames();
+        for(int i=0;i<subcosts.length();i++){
+            subcosts[i]="sum_sublearner."+subcosts[i];
+        }
+        names.append(subcosts);
+    }
     return names;
 }
 

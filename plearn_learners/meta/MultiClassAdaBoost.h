@@ -68,10 +68,12 @@ public:
     //! The number of stage that will be used
     int nb_stage_to_use;
 
+    //! Did we add the learner1 and learner2 costs to our costs
+    bool forward_sub_learner_test_costs;
+
     //! The learner1 and learner2 must be trained!
     AdaBoost learner1;
     AdaBoost learner2;
-
 
 public:
     //#####  Public Member Functions  #########################################
