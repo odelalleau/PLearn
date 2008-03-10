@@ -3,3 +3,9 @@ base_confidence
 base_reward_l2
 base_reward_l1
 class_error
+SPLIT_VAR_0
+SPLIT_VAR_1
+SPLIT_VAR_2
+SPLIT_VAR_3
+SPLIT_VAR_4
+SPLIT_VAR_5
