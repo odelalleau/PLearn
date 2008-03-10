@@ -747,7 +747,9 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output, int nb_learner) cons
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const
 {
+    PLASSERT(costs.size()==nTestCosts());
     costs.resize(5);
+    costs.clear();
 
     // First cost is negative log-likelihood...  output[0] is the likelihood
     // of the first class
@@ -764,26 +766,46 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
                  "either 0 or 1; current target=%f", target[0]);
     costs[1] = exp(-1.0*sum_voting_weights*(2*output[0]-1)*(2*target[0]-1));
     costs[2] = costs[0];
-    costs[3] = train_stats->getStat("E[avg_weight_class_0]");
-    costs[4] = train_stats->getStat("E[avg_weight_class_1]");
-    if(forward_sub_learner_test_costs){
-        //TODO: is this the good beavior to have?
-        //We can't reuse the output from parameter as it is not the same
-        //as the one from the sub learner
-        Vec tmp(weak_learner_template->nTestCosts());
-        weak_learners.last()->computeCostsOnly(input,target,tmp);
-        costs.append(tmp);
+    if(train_stats){
+        costs[3] = train_stats->getStat("E[avg_weight_class_0]");
+        costs[4] = train_stats->getStat("E[avg_weight_class_1]");
     }
+    else
+        costs[3]=costs[4]=MISSING_VALUE;
+
+    PP<VMatrix> the_train_set = train_set;
+    if(!train_set)
+        the_train_set=sorted_train_set;
+    PLASSERT(the_train_set);
+
+    if(forward_sub_learner_test_costs){
+        Vec weighted_costs(weak_learners[0]->nTestCosts());
+        Vec sum_weighted_costs(weak_learners[0]->nTestCosts());
+        sum_weighted_costs.clear();
+        for(int i=0;i<weak_learners.size();i++){
+            weak_learners[i]->computeCostsOnly(input, target, weighted_costs);
+            weighted_costs*=voting_weights[i];
+            sum_weighted_costs+=weighted_costs;
+        }
+        costs.append(sum_weighted_costs);
+    }
+
+    PLASSERT(costs.size()==nTestCosts());
 }
 
 TVec<string> AdaBoost::getTestCostNames() const
 {
     TVec<string> costs=getTrainCostNames();
 
+    PP<VMatrix> the_train_set = train_set;
+    if(!train_set)
+        the_train_set=sorted_train_set;
+    PLASSERT(the_train_set);
+
     if(forward_sub_learner_test_costs){
-        TVec<string> subcosts=weak_learner_template->getTestCostNames();
+        TVec<string> subcosts=weak_learners[0]->getTestCostNames();
         for(int i=0;i<subcosts.length();i++){
-            subcosts[i]="weak_learner."+subcosts[i];
+            subcosts[i]="weighted_weak_learner."+subcosts[i];
         }
         costs.append(subcosts);
     }
