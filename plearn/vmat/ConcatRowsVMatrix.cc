@@ -162,17 +162,24 @@ void ConcatRowsVMatrix::build_()
     // Set length_ and width_.
     recomputeDimensions();
 
+    // Note that the 3 lines below will overwrite any provided sizes.
+    if(inputsize_<0 && targetsize_<0 && weightsize_<0){
+        inputsize_ = to_concat[0]->inputsize();
+        targetsize_ = to_concat[0]->targetsize();
+        weightsize_ = to_concat[0]->weightsize();
+        if(fieldinfos.size()!=to_concat[0].width())
+            PLERROR("In ConcatRowsVMatrix::build_() - We override "
+                      "inputsize, targetsize and weightsize with the value"
+                      " of sources[0] and this cause inconsistency");
+    }
+    computeMissingSizeValue();
+
     // Make sure mappings are correct.
     ensureMappingsConsistency();
     if (fully_check_mappings)
         fullyCheckMappings();
     if (need_fix_mappings && !fully_check_mappings)
         PLWARNING("In ConcatRowsVMatrix::build_ - Mappings need to be fixed, but you did not set 'fully_check_mappings' to true, this might be dangerous");
-
-    // TODO Note that the 3 lines below will overwrite any provided sizes.
-    inputsize_ = to_concat[0]->inputsize();
-    targetsize_ = to_concat[0]->targetsize();
-    weightsize_ = to_concat[0]->weightsize();
 
     // Reset last-used cache for completeness
     m_last_vmat_index = m_last_vmat_startrow = m_last_vmat_lastrow = -1;
@@ -313,9 +320,15 @@ void ConcatRowsVMatrix::findAllFields()
     to_concat.resize(sources.length());
     for (int i = 0; i < sources.length(); i++) {
         TVec<string> source_fnames=sources[i]->fieldNames();
-        if(fnames!=source_fnames)
-            to_concat[i] = new SelectColumnsVMatrix(sources[i], fnames, true);
-        else
+        if(fnames!=source_fnames){
+            SelectColumnsVMatrix* v = 
+                new SelectColumnsVMatrix(sources[i],fnames,true,false);
+            //to remove warning
+            if(inputsize_>=0 && targetsize_>=0 && weightsize_ >=0)
+                v->defineSizes(inputsize_, targetsize_, weightsize_,extrasize_);
+            v->build();
+            to_concat[i] = v;
+        } else
             to_concat[i] = sources[i];
     }
 }

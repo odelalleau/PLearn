@@ -105,6 +105,9 @@ def main():
                 generate_vmat(diagonal(1), 20),
                 generate_vmat(general(0), 20),
                 generate_vmat(general(1), 20)
-            ]
+            ],
+	    inputsize=3,
+	    targetsize=0,
+	    weightsize=0
            )
 

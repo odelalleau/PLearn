@@ -62,14 +62,18 @@ SelectColumnsVMatrix::SelectColumnsVMatrix()
       inverse_fields_selection(false)
 {}
 
-SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing)
+SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
+                                           TVec<string> the_fields,
+                                           bool the_extend_with_missing,
+                                           bool call_build_)
     : extend_with_missing(the_extend_with_missing),
       fields(the_fields),
       fields_partial_match(false),
       inverse_fields_selection(false)
 {
     source = the_source;
-    build_();
+    if (call_build_)
+        build_();
 }
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
@@ -224,6 +228,12 @@ void SelectColumnsVMatrix::build_()
                                     "    (you may want to use the 'extend_with_missing' option)", the_field.c_str());
                     } else
                         indices.append(the_index);
+                    if(extend_with_missing && the_index == -1)
+                        PLWARNING("In SelectColumnsVMatrix::build_() - We are"
+                                  " extendind the source matrix with the"
+                                  " columns '%s' with missing value",
+                                  the_field.c_str());
+                    
                 }
             } else {
                 // We need to check whether or not we should add each field.
@@ -255,17 +265,18 @@ void SelectColumnsVMatrix::build_()
         }
         // Copy matrix dimensions
         width_ = indices.length();
+        if(!extend_with_missing)
+            PLCHECK(source->width()>width_);
         length_ = source->length();
 
-        // Check sizes are consistent with width.
-        if(inputsize_ >= 0 && targetsize_ >= 0 && weightsize_ >= 0 &&
-           extrasize_ >= 0  &&
-           (inputsize_ + targetsize_ + weightsize_ + extrasize_ != width_))
-        {
-            PLWARNING("In SelectColumnsVMatrix::build_() - inputsize_(%d) +"
-                      " targetsize_(%d) + weightsize_(%d) + extrasize_(%d) != width_(%d) !",
-                      inputsize_, targetsize_, weightsize_, extrasize_, width_);
-        }
+        //if we don't add new columns and the source columns type are emtpy,
+        //they should be empty in this matrix if they are not already set.
+        if(targetsize_<0 && !extend_with_missing && source->targetsize()==0)
+            targetsize_=0;
+        if(weightsize_<0 && !extend_with_missing && source->weightsize()==0)
+            weightsize_=0;
+        computeMissingSizeValue();
+
 #if 0
         // Disabled for now, since it gives way too many false positives in
         // some cases. Todo: figure out a way to warn in a useful way when

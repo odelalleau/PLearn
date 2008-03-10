@@ -80,7 +80,9 @@ public:
 
     //! The appropriate fieldinfos are copied upon construction.
     //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-    SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields, bool the_extend_with_missing = false);
+    SelectColumnsVMatrix(VMat the_source, TVec<string> the_fields,
+                         bool the_extend_with_missing = false,
+                         bool call_build_ = true);
 
     //! The appropriate fieldinfos are copied upon construction
     //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
