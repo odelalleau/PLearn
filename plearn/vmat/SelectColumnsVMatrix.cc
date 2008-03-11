@@ -265,8 +265,6 @@ void SelectColumnsVMatrix::build_()
         }
         // Copy matrix dimensions
         width_ = indices.length();
-        if(!extend_with_missing)
-            PLCHECK(source->width()>width_);
         length_ = source->length();
 
         //if we don't add new columns and the source columns type are emtpy,
