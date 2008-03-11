@@ -151,12 +151,14 @@ void ProcessingVMatrix::build_()
         if(inputsize_<0)
             inputsize_ = nfields;
         if(targetsize_<0)
-            targetsize_ = 0;            
+            targetsize_ = width_ - inputsize_ - max(0, weightsize_)
+                                              - max(0, extrasize_);
         if(weightsize_<0)
-            weightsize_ = 0;
+            weightsize_ = width_ - inputsize_ - targetsize_
+                                              - max(0, extrasize_);
         if(extrasize_<0)
-            extrasize_ = 0;            
-        
+            extrasize_ = width_ - inputsize_ - targetsize_ - weightsize_;
+
         PLCHECK_MSG(
                 width_ ==  inputsize_ + targetsize_ + weightsize_ + extrasize_,
                 "Width does not match sizes!");

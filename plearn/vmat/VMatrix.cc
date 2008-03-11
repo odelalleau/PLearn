@@ -1200,15 +1200,27 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
     if(weightsize_<0) {
         int ws = vm->weightsize();
         if (ws + current_w <= width_) {
-            weightsize_ = ws;
-            current_w += ws;
+            // We must also ensure the total sum of sizes (if available)
+            // will match the width. Otherwise we may end up with sizes
+            // conflicting with the width.
+            if (inputsize_ < 0 || targetsize_ < 0 || extrasize_ < 0 ||
+                inputsize_ + targetsize_ + extrasize_ + ws == width_)
+            {
+                weightsize_ = ws;
+                current_w += ws;
+            }
         }
     }
     if(extrasize_<=0) {
         int es = vm->extrasize();
         if (es + current_w <= width_) {
-            extrasize_ = es;
-            current_w += es;
+            // Same as above.
+            if (inputsize_ < 0 || targetsize_ < 0 || weightsize_ < 0 ||
+                inputsize_ + targetsize_ + weightsize_ + es == width_)
+            {
+                extrasize_ = es;
+                current_w += es;
+            }
         }
     }
 
