@@ -71,6 +71,7 @@
  * Splitter *
  ************/
 #include <plearn/vmat/FractionSplitter.h>
+#include <plearn/vmat/ExplicitSplitter.h>
 
 /***********
  * VMatrix *
