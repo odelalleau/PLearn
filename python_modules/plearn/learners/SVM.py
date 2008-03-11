@@ -1,5 +1,8 @@
 import sys, os, time
-from numarray import *
+try:
+    from numarray import *
+except:
+    from numpy.numarray import *
 from math import *
 from libsvm import *
 
@@ -23,7 +26,7 @@ class SVM_expert(object):
           #if self.best_parameters != None:
           #   self.add_parameter_to_tried_list(self.getBestValue('C'), self.best_parameters[1:])
           self.error_rate       = 1.
-	  self.should_be_tuned_again = 1
+          self.should_be_tuned_again = 1
 
 
       def should_be_tuned_again():
@@ -79,7 +82,7 @@ class RBF_expert(SVM_expert):
           dim = len(samples[0])
           std = mean_std(samples)
           rho = sqrt(dim)*std
-          gamma0 = 1/(2*rho**2)
+          gamma0 = 90./(2*rho**2)
           gamma_base = self.init_gamma(gamma0)
           return SVM_expert.init_parameters( self, gamma_base )
           
@@ -98,22 +101,22 @@ class RBF_expert(SVM_expert):
       def should_be_tuned_again( self ):
           best_gamma = self.getBestValue('gamma') 
           tried_gamma = self.tried_parameters
-	  if tried_gamma.has_key(best_gamma):
-	     is_lower = False
-	     is_higher = False
+          if tried_gamma.has_key(best_gamma):
+             is_lower = False
+             is_higher = False
              for gamma in tried_gamma:
-	         if gamma<tried_gamma:
-		    is_lower = True
-	         elif gamma<tried_gamma:
-		    is_higher = True
-	     if is_lower and is_higher:
-	        best_C_for_this_gamma  = self.getBestValue('C') 
-		tried_C_for_this_gamma = self.tried_parameters[best_gamma]
-		return not ( best_C_for_this_gamma <> min(tried_C_for_this_gamma) and best_C_for_this_gamma <> max(tried_C_for_this_gamma) )
-	     else:
-	        return True
-	  else:
-	     return True
+                if gamma<tried_gamma:
+                    is_lower = True
+                elif gamma<tried_gamma:
+                    is_higher = True
+             if is_lower and is_higher:
+                best_C_for_this_gamma  = self.getBestValue('C') 
+                tried_C_for_this_gamma = self.tried_parameters[best_gamma]
+                return not ( best_C_for_this_gamma <> min(tried_C_for_this_gamma) and best_C_for_this_gamma <> max(tried_C_for_this_gamma) )
+             else:
+                return True
+          else:
+            return True
       
 class POLY_expert(SVM_expert):
       def __init__( self ):
@@ -138,16 +141,16 @@ class POLY_expert(SVM_expert):
                 return SVM_expert.choose_new_parameters(self, (self.best_parameters[1], self.best_parameters[2])  )
           else:
              return SVM_expert.init_parameters(self, self.init_degree(best_degree) )
-	     
+         
       def should_be_tuned_again( self ):
           best_degree = self.getBestValue('degree')
           tried_degrees = [prms[0] for prms in self.tried_parameters]
           if self.tried_parameters.has_key(best_degree):
              if best_degree <> max(tried_degrees):
-	        best_C_for_this_degree  = self.getBestValue('C') 
-		tried_C_for_this_degree = self.tried_parameters[(best_degree,self.best_parameters[2])]
-		return not ( best_C_for_this_degree <> min(tried_C_for_this_degree) and best_C_for_this_degree <> max(tried_C_for_this_degree) )
-	  return True
+                best_C_for_this_degree  = self.getBestValue('C') 
+                tried_C_for_this_degree = self.tried_parameters[(best_degree,self.best_parameters[2])]
+                return not ( best_C_for_this_degree <> min(tried_C_for_this_degree) and best_C_for_this_degree <> max(tried_C_for_this_degree) )
+          return True
       
 class LINEAR_expert(SVM_expert):
       def __init__( self ):
@@ -162,10 +165,10 @@ class LINEAR_expert(SVM_expert):
 
       def should_be_tuned_again( self ):
           if len(self.tried_parameters[None]) <= 3:
-	     return True
+            return True
           best_C = self.getBestValue('C') 
           tried_C = self.tried_parameters[None]
-	  return not (best_C <> min(tried_C) and best_C <> max(tried_C) )
+          return not (best_C <> min(tried_C) and best_C <> max(tried_C) )
 
 class SVM(object):
 
@@ -173,11 +176,13 @@ class SVM(object):
                         'valid_error_rate',
                         'best_parameters',
                         'tried_parameters',
-                        'save_filename',
-			'best_model',
-			'nr_fold'
+                        'results_filename',
+                        'preproc_optionnames',
+                        'preproc_optionvalues',
+                        'best_model',
+                        'nr_fold'
                         'result_list',
-			'automatically_decide_when_to_stop_tuning'
+                        'automatically_decide_when_to_stop_tuning'
                         ]
        
       def __init__( self ):
@@ -188,28 +193,52 @@ class SVM(object):
           self.LINEAR_expert  = LINEAR_expert()
           self.RBF_expert     = RBF_expert()
           self.POLY_expert    = POLY_expert()
+          self.all_experts    = [self.LINEAR_expert,
+                                 self.RBF_expert,
+                                 self.POLY_expert,
+                                ]
           
           self.best_parameters      = None  
           self.best_model           = None
           self.tried_parameters     = {}
           self.result_list          = {}
           
-          self.save_filename        = None
+          self.results_filename        = None
+          self.preproc_optionnames  = []
+          self.preproc_optionvalues = []
           
           # For cross-validation
           self.nr_fold        = 5
 
-	  self.automatically_decide_when_to_stop_tuning = False
+          self.automatically_decide_when_to_stop_tuning = False
 
+      def get_expert( self, kernel_type ):
+          return eval( 'self.'+kernel_type+'_expert' )
+
+      def get_parameters( self, kernel_type, parameters ):
+          prm_dict = {'kernel':kernel_type.lower()}
+
+          for expert in self.all_experts:
+              for prm_name in expert.parameters_names:
+                  prm_dict[prm_name]= None
+          expert = self.get_expert( kernel_type )
+          if len(expert.parameters_names) <> len(parameters):
+             raise IndexError, "in SVM.get_parameters(): "+\
+                   "parameters (length %s) should be of length %s for kernel " % \
+                   ( len(parameters), len(expert.parameters_names), kernel_type )
+
+          for prm_name, prm_value in zip(expert.parameters_names,
+                                         parameters):
+              prm_dict[prm_name]=prm_value
+          return prm_dict
+
+      
       def reset( self ):
-          self.LINEAR_expert.reset()
-          self.RBF_expert.reset()
-          self.POLY_expert.reset()
+          for expert in self.all_experts:
+              expert.reset()
           
           self.tried_parameters = {}
           self.result_list          = {}
-          #if self.best_parameters != None:
-          #   self.add_parameter_to_tried_list(self.best_parameters[0], self.best_parameters[1:])
           self.error_rate       = 1.
           self.valid_error_rate = 1.
 
@@ -224,50 +253,113 @@ class SVM(object):
              self.result_list[kernel]+= kernel_parameters, error_rate
           else:
              self.result_list[kernel] = kernel_parameters, error_rate
-             
+
+
+      def write_results( self, kernel_type, parameters,
+                        train_class_error,
+                        valid_class_error,
+                        test_class_error = None,
+                        cross_valid = False):
+          if cross_valid:
+                valid_name='crossvalid'
+          else:
+                valid_name='valid'
+
+          # the results_filename will not include the extension ".amat"
+          if self.results_filename[-5:]=='.amat':
+             self.results_filename = self.results_filename[:-5]
+
+          prm_dict = self.get_parameters( kernel_type, parameters )
+          prm_names_list = [ prm_name for prm_name in prm_dict ]
+          prm_names = ' '.join( prm_names_list )
+          prm_values = ' '.join( str(prm_dict[pn]) for pn in prm_names_list )
+          
+          if self.results_filename == None:
+             print "==============================="
+             for pn in prm_names_list:
+                 print "    ",pn,"=",prm_dict[pn]
+             if train_class_error <> None:
+                 print "E[train.E[class_error]]=",train_class_error
+             if valid_class_error <> None:
+                 print "E["+valid_name+".E[class_error]]=",valid_class_error
+             if test_class_error <> None:
+                 print "E[test.E[class_error]]=",test_class_error
+             return
+          
+          if type(self.preproc_optionnames)==str:
+             preproc_optionnames = self.preproc_optionnames
+          elif type(self.preproc_optionnames)==list:
+             preproc_optionnames = ' '.join(self.preproc_optionnames)
+          else:
+             raise TypeError, "preproc_optionnames must be of type str or list"
+          if type(self.preproc_optionvalues)==str:
+             preproc_optionvalues = self.preproc_optionvalues
+          elif type(self.preproc_optionvalues)==list:
+             preproc_optionvalues = ' '.join('%s' % v for v in self.preproc_optionvalues)
+          else:
+             raise TypeError, "preproc_optionvalues must be of type str or list"
+          
+          os.system('makeresults  %s  %s %s %s %s %s;' % \
+                                ( self.results_filename,
+                                  preproc_optionnames,
+                                  prm_names,
+                                  "E[train.E[class_error]]",
+                                  "E["+valid_name+".E[class_error]]",
+                                  "E[test.E[class_error]]"
+                                ) \
+                  + 'appendresults %s.amat  %s %s %s %s %s' % \
+                                ( self.results_filename,
+                                  preproc_optionvalues,
+                                  prm_values,
+                                  train_class_error,
+                                  valid_class_error,
+                                  test_class_error
+                                )
+                   )
+
       def train_and_test(self, samples_target_list):
           check_samples_target_list(samples_target_list)
 
-          best_expert = eval( 'self.'+self.best_parameters[0]+'_expert' )
+          best_expert = self.get_expert( self.best_parameters[0] )
           best_parameters = best_expert.best_parameters
           param = best_expert.get_svm_parameter( best_parameters )
           if len(samples_target_list) == 1: # cross-validation
-             costs = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)
+             #costs = do_cross_validation(samples_target_list[0][0], samples_target_list[0][1], param, self.nr_fold)
+             train_problem = svm_problem( samples_target_list[0][1] , samples_target_list[0][0] )
+             self.best_model = svm_model(train_problem, param)
+             costs = test_model(self.best_model, samples_target_list[0][0], samples_target_list[0][1])
           else:
-             costs = do_simple_validation(samples_target_list[0][0] , samples_target_list[0][1] , samples_target_list[1][0] , samples_target_list[1][1], param)
+             #costs = do_simple_validation(samples_target_list[0][0] , samples_target_list[0][1] , samples_target_list[1][0] , samples_target_list[1][1], param)                     
+             train_problem = svm_problem( samples_target_list[0][1] , samples_target_list[0][0] )
+             self.best_model = svm_model(train_problem, param)
+             costs = test_model(self.best_model, samples_target_list[1][0], samples_target_list[1][1])
           return costs
 
       def test(self, samples_target_list):
           check_samples_target_list([samples_target_list])
-          if self.save_filename != None:
-                        try:
-                           FID=open(self.save_filename,'a')
-                           #FID.write('------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)+' )\n')
-                           FID.write('\n'+'='*10+'\n ==> Test Error rate = '+str(test_error_rate)+'\n'+'='*10+'\n')
-                           FID.close()
-                        except:
-                           print "COULD not write in save_filename"
-          return test_model(self.best_model, [[x_i for x_i in x] for x in samples_target_list[0]], [float(l) for l in samples_target_list[1]])['error_rate']
+          test_class_error=test_model(self.best_model, [[x_i for x_i in x] for x in samples_target_list[0]], [float(l) for l in samples_target_list[1]])['error_rate']
+          self.write_results( best_parameters[0], best_parameters[1:],
+                         None,
+                         self.valid_error_rate,
+                         test_class_error)
+          return test_class_error
 
 
       def train_and_tune(self, kernel_type, samples_target_list):
+          kernel_type=kernel_type.upper()
           check_samples_target_list(samples_target_list)
+          cross_valid=False
           if len(samples_target_list) == 1:
-             print "\nCross-validation...\n"
-             train_error_name=str(self.nr_fold)+"-fold Cross-Valid Error Rate"
-             test_error_name=train_error_name
+             print str(self.nr_fold)+"-fold Cross-Validation"
+             cross_valid=True
           elif len(samples_target_list) == 2:
              print "\nSimple validation...\n"
-             train_error_name="Valid Error Rate"
-             test_error_name=train_error_name
           elif len(samples_target_list) == 3:
              print "\nValidation + test...\n"
-             train_error_name="Valid Error Rate"
-             test_error_name="Test Error Rate"
           else:
              raise TypeError, "last argument of train_and_tune() should be a list, with length between 1 and 3"
            
-          expert = eval( 'self.'+kernel_type+'_expert' )
+          expert = self.get_expert( kernel_type )
           
           if len(expert.tried_parameters) == 0:
              recompute_best = True
@@ -300,20 +392,14 @@ class SVM(object):
                   if error_rate < best_error_rate:
                      best_parameters = parameters
                      best_error_rate = error_rate
-		     if len(samples_target_list) <> 1: # in case of cross-validation, we will compute the model later
+                     if len(samples_target_list) <> 1: # in case of cross-validation, we will compute the model later
                         best_model   = model
 
-                  if self.save_filename != None:
-                     try:
-                        FID=open(self.save_filename,'a')
-                        FID.write('------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)+' )\n')
-                        FID.write(' --> Error rate = '+str(error_rate)+'\n')
-                        FID.close()
-                     except:
-                        print "COULD not write in save_filename"
-                  print '------------\nTry with '+kernel_type+' kernel :( parameters : '+str(parameters)
-                  print ' --> '+train_error_name+' = '+str(error_rate)+'\n'
-                  print '...'
+                  self.write_results( kernel_type, parameters,
+                                 None,
+                                 error_rate,
+                                 None,
+                                 cross_valid )
 
           if best_error_rate < expert.error_rate:
              expert.best_parameters = best_parameters
@@ -328,32 +414,15 @@ class SVM(object):
                    best_model = svm_model(train_problem, param)
                 self.best_model = best_model
                 if len(samples_target_list) == 3: # train-valid-test
-                   self.error_rate = test_model(self.best_model, samples_target_list[2][0], samples_target_list[2][1])['error_rate']
+                   self.error_rate = self.test( [samples_target_list[2]] )
                 else:
                    self.error_rate = self.valid_error_rate
           
-	  if self.automatically_decide_when_to_stop_tuning:
-	     if expert.should_be_tuned_again():
-	        self.train_and_tune(kernel_type, samples_target_list)
-	  
-          if self.save_filename != None:
-             try:
-                  FID=open(self.save_filename,'a')
-                  FID.write('==============================================\n')
-                  if len(samples_target_list) == 3: # train-valid-test
-                     FID.write(' --> Best '+train_error_name+' = '+str(self.valid_error_rate)+'\n')
-                  FID.write(' --> '+test_error_name+' = '+str(self.error_rate)+'\n')
-                  FID.write('     for prms: '+str(self.best_parameters)+'\n')
-                  FID.close()
-             except:
-                  print "COULD not write in save_filename"
+          if self.automatically_decide_when_to_stop_tuning:
+             if expert.should_be_tuned_again():
+                self.train_and_tune(kernel_type, samples_target_list)
 
-          print '=============================================='
-          print ' --> Best error rate = '+str(self.error_rate)
-          print '     for prms: '+str(self.best_parameters)
-
-
-	  return self.error_rate
+          return self.error_rate
           
 
 ##
@@ -392,20 +461,19 @@ def do_cross_validation(samples, targets, param, nr_fold):
         test_samples = samples_subsets[i]
         test_targets = targets_subsets[i]
         train_targets=[]
-	if arrayType:
+        if arrayType:
            train_samples=[]
-	else:
+        else:
            train_samples=[]
         for j in range(0,i)+range(i+1,nr_fold):
             train_targets += targets_subsets[j]
-	    if arrayType:
-	       L=len(train_samples)
-               train_samples=resize(samples,[L+len(samples_subsets[j]),len(samples_subsets[j][0])])
-	       train_samples[L:,:]=samples_subsets[j]
-	    else:
-               train_samples += samples_subsets[j]	       
+            if arrayType:
+                L=len(train_samples)
+                train_samples=resize(samples,[L+len(samples_subsets[j]),len(samples_subsets[j][0])])
+                train_samples[L:,:]=samples_subsets[j]
+            else:
+                train_samples += samples_subsets[j]           
         cum_error_rate += do_simple_validation(train_samples, train_targets, test_samples, test_targets, param)['error_rate']
-#        cum_error_rate += do_simple_validation(samples, targets, test_samples, test_targets, param)['error_rate']
     av_error_rate = cum_error_rate*1.0 / nr_fold
     print av_error_rate
     return {'error_rate':av_error_rate}
@@ -466,7 +534,7 @@ def choose_new_parameters_geom( table, best_value ):
                           geom_mean([sorted_table[index+1],best_value]) ]
     return proposed_table
 
-def normalize(data,mean,std):
+def normalize_data(data,mean,std):
     if mean == None:
        mean=[]
        for i in range(len(data[0])):
@@ -552,7 +620,7 @@ if __name__ == '__main__':
 #<<<#
 #>>># To save the results (progressively) in a ASCII file
 
-    my_svm.save_filename = 'my_svm_results.txt'
+    my_svm.results_filename = 'my_svm_results.txt'
    
 #<<<#
 #>>># Pre-processing your data : it is better to normalize...
@@ -560,12 +628,12 @@ if __name__ == '__main__':
     # Get the mean and standard deviation on the training set
     # and normalize the training set (Mahalanobis)
     #
-    mean, std = normalize(train_samples, None, None)
+    mean, std = normalize_data(train_samples, None, None)
     #
     # DO NOT FORGET to apply the same normalization to other datasets
     #
-    normalize(valid_samples, mean, std)
-    normalize(test_samples, mean, std)
+    normalize_data(valid_samples, mean, std)
+    normalize_data(test_samples, mean, std)
     
 #<<<#
 #>>># Defining train / valid data
