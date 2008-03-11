@@ -1059,7 +1059,7 @@ Vec PTester::perform(bool call_forget)
             //To work around the fact that RegressionTree need a
             // train_set to generate the train/test costs names
             if(!learner->getTrainingSet())
-                learner->setTrainingSet(splitter->getDataSet(), false);
+                learner->setTrainingSet(splitter->getSplit(0)[0], false);
 
             TVec<string> testcostnames = learner->getTestCostNames();
             TVec<string> traincostnames = learner->getTrainCostNames();
