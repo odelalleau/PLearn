@@ -39,6 +39,7 @@
 
 #define PL_LOG_MODULE_NAME "DeepBeliefNet"
 #include "DeepBeliefNet.h"
+#include "RBMMatrixTransposeConnection.h"
 #include <plearn/io/pl_log.h>
 
 #define minibatch_hack 0 // Do we force the minibatch setting? (debug hack)
@@ -58,11 +59,14 @@ PLEARN_IMPLEMENT_OBJECT(
 DeepBeliefNet::DeepBeliefNet() :
     cd_learning_rate( 0. ),
     cd_decrease_ct( 0. ),
+    up_down_learning_rate( 0. ),
+    up_down_decrease_ct( 0. ),
     grad_learning_rate( 0. ),
     batch_size( 1 ),
     grad_decrease_ct( 0. ),
     // grad_weight_decay( 0. ),
     n_classes( -1 ),
+    up_down_nstages( 0 ),
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
     i_output_layer( -1 ),
@@ -70,6 +74,7 @@ DeepBeliefNet::DeepBeliefNet() :
     online ( false ),
     background_gibbs_update_ratio(0),
     gibbs_chain_reinit_freq( INT_MAX ),
+    use_mean_field_contrastive_divergence( false ),
     minibatch_size( 0 ),
     initialize_gibbs_chain( false ),
     final_module_has_learning_rate( false ),
@@ -82,7 +87,8 @@ DeepBeliefNet::DeepBeliefNet() :
     cumulative_training_time_cost_index ( -1 ),
     cumulative_testing_time_cost_index ( -1 ),
     cumulative_training_time( 0 ),
-    cumulative_testing_time( 0 )
+    cumulative_testing_time( 0 ),
+    up_down_stage( 0 )
 {
     random_gen = new PRandom();
     n_layers = 0;
@@ -102,6 +108,18 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The decrease constant of the learning rate used during"
                   " contrastive divergence");
+
+    declareOption(ol, "up_down_learning_rate", 
+                  &DeepBeliefNet::up_down_learning_rate,
+                  OptionBase::buildoption,
+                  "The learning rate used in the up-down algorithm during the\n"
+                  "unsupervised fine tuning gradient descent.\n");
+
+    declareOption(ol, "up_down_decrease_ct", &DeepBeliefNet::up_down_decrease_ct,
+                  OptionBase::buildoption,
+                  "The decrease constant of the learning rate used in the\n"
+                  "up-down algorithm during the unsupervised fine tuning\n"
+                  "gradient descent.\n");
 
     declareOption(ol, "grad_learning_rate", &DeepBeliefNet::grad_learning_rate,
                   OptionBase::buildoption,
@@ -141,6 +159,14 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "greedy phase, and 500 in the fine-tuning phase, this option\n"
                   "should be [1000 1000 500], and nstages should be at least 2500.\n"
                   "When online = true, this vector is ignored and should be empty.\n");
+
+    declareOption(ol, "up_down_nstages", &DeepBeliefNet::up_down_nstages,
+                  OptionBase::buildoption,
+                  "Number of samples to use for unsupervised fine-tuning\n"
+                  "with the up-down algorithm. The unsupervised fine-tuning will\n"
+                  "be executed between the greedy layer-wise learning and the\n"
+                  "supervised fine-tuning. The up-down algorithm only works for\n"
+                  "RBMMatrixConnection connections.\n");
 
     declareOption(ol, "use_classification_cost",
                   &DeepBeliefNet::use_classification_cost,
@@ -254,6 +280,12 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "If == INT_MAX, the default value of this option, then NEVER\n"
                   "re-initialize except at the beginning, when stage==0.\n");
 
+    declareOption(ol, "use_mean_field_contrastive_divergence",
+                  &DeepBeliefNet::use_mean_field_contrastive_divergence,
+                  OptionBase::buildoption,
+                  "Indication that mean-field contrastive divergence\n"
+                  "should be used instead of standard contrastive divergence.\n");
+
     declareOption(ol, "top_layer_joint_cd", &DeepBeliefNet::top_layer_joint_cd,
                   OptionBase::buildoption,
                   "Wether we do a step of joint contrastive divergence on"
@@ -280,6 +312,18 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption | OptionBase::nosave,
                   "Cumulative testing time since age=0, in seconds.\n");
 
+    declareOption(ol, "up_down_stage", &DeepBeliefNet::up_down_stage,
+                  OptionBase::learntoption,
+                  "Number of samples visited so far during unsupervised\n"
+                  "fine-tuning.\n");
+
+    declareOption(ol, "generative_connections", 
+                  &DeepBeliefNet::generative_connections,
+                  OptionBase::learntoption,
+                  "The untied generative weights of the connections"
+                  "between the layers\n"
+                  "for the up-down algorithm.\n");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -302,6 +346,28 @@ void DeepBeliefNet::build_()
 
     if( i_output_layer < 0)
         i_output_layer = n_layers - 1;
+
+    if( online && up_down_nstages > 0)
+        PLERROR("In DeepBeliefNet::build_ - up-down algorithm not implemented "
+            "for online setting.");
+
+    if( batch_size != 1 && up_down_nstages > 0 )
+        PLERROR("In DeepBeliefNet::build_ - up-down algorithm not implemented "
+            "for minibatch setting.");
+
+    if( use_mean_field_contrastive_divergence && up_down_nstages > 0 )
+        PLERROR("In DeepBeliefNet::build_ - up-down algorithm not implemented "
+            "for mean-field CD.");
+
+    if( use_mean_field_contrastive_divergence &&
+        background_gibbs_update_ratio != 0 )
+        PLERROR("In DeepBeliefNet::build_ - mean-field CD cannot be used "
+                "with background_gibbs_update_ratio != 0.");
+
+    if( use_mean_field_contrastive_divergence &&
+        use_sample_for_up_layer )
+        PLERROR("In DeepBeliefNet::build_ - mean-field CD cannot be used "
+                "with use_sample_for_top_layer");
 
     if( !online )
     {
@@ -451,6 +517,12 @@ void DeepBeliefNet::build_layers_and_connections()
     expectations_gradients.resize( n_layers );
     gibbs_down_state.resize( n_layers-1 );
 
+    if( up_down_nstages > 0 )
+    {
+        up_sample.resize(n_layers);
+        down_sample.resize(n_layers);
+    }
+
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         if( layers[i]->size != connections[i]->down_size )
@@ -478,11 +550,22 @@ void DeepBeliefNet::build_layers_and_connections()
 
         activation_gradients[i].resize( layers[i]->size );
         expectation_gradients[i].resize( layers[i]->size );
+
+        if( up_down_nstages > 0 )
+        {
+            up_sample[i].resize(layers[i]->size);
+            down_sample[i].resize(layers[i]->size);
+        }
     }
     if( !(layers[n_layers-1]->random_gen) )
     {
         layers[n_layers-1]->random_gen = random_gen;
         layers[n_layers-1]->forget();
+        if( up_down_nstages > 0 )
+        {
+            up_sample[n_layers-1].resize(layers[n_layers-1]->size);
+            down_sample[n_layers-1].resize(layers[n_layers-1]->size);
+        }
     }
     int last_layer_size = layers[n_layers-1]->size;
     PLASSERT_MSG(last_layer_size >= 0,
@@ -684,6 +767,9 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(cumulative_schedule,      copies);
     deepCopyField(layer_input,              copies);
     deepCopyField(layer_inputs,             copies);
+    deepCopyField(generative_connections,   copies);
+    deepCopyField(up_sample,                copies);
+    deepCopyField(down_sample,              copies);
 }
 
 
@@ -737,6 +823,7 @@ void DeepBeliefNet::forget()
 
     cumulative_training_time = 0;
     cumulative_testing_time = 0;
+    up_down_stage = 0;
 }
 
 ///////////
@@ -943,6 +1030,58 @@ void DeepBeliefNet::train()
 
                 if( pb )
                     pb->update( stage - previous_stage + 1 );
+            }
+        }
+
+        if( up_down_stage < up_down_nstages )
+        {
+
+            if( up_down_stage == 0 )
+            {
+                // Untie weights
+                generative_connections.resize(connections.length()-1);
+                PP<RBMMatrixConnection> w;
+                RBMMatrixTransposeConnection* wt;
+                for(int c=0; c<generative_connections.length(); c++)
+                {
+                    CopiesMap map;
+                    w = dynamic_cast<RBMMatrixConnection*>((RBMConnection*) connections[c]->deepCopy(map));
+                    wt = new RBMMatrixTransposeConnection();
+                    wt->rbm_matrix_connection = w;
+                    wt->build();
+                    generative_connections[c] = wt;
+                }
+            }
+            /***** up-down algorithm *****/
+            MODULE_LOG << "Up-down gradient descent algorithm" << endl;
+            MODULE_LOG << "  up_down_stage = " << up_down_stage << endl;
+            MODULE_LOG << "  up_down_nstages = " << up_down_nstages << endl;
+            MODULE_LOG << "  up_down_learning_rate = " << up_down_learning_rate << endl;
+            
+            int init_stage = up_down_stage;
+            if( report_progress )
+                pb = new ProgressBar( "Up-down gradient descent algorithm "
+                                      + classname(),
+                                      up_down_nstages - init_stage );
+            
+            setLearningRate( up_down_learning_rate );
+
+            train_stats->forget();
+            int sample_start;
+            for( ; up_down_stage<up_down_nstages ; up_down_stage++ )
+            {
+                sample_start = up_down_stage % nsamples;                
+                if( !fast_exact_is_equal( up_down_decrease_ct, 0. ) )
+                    setLearningRate( up_down_learning_rate
+                                     / (1. + up_down_decrease_ct * 
+                                        up_down_stage) );
+                
+                train_set->getExample( sample_start, input, target, weight );
+                upDownStep( input, target, train_costs );
+                train_stats->update( train_costs );
+                
+                if( pb )
+                    pb->update( up_down_stage - init_stage + 1 );
             }
         }
 
@@ -1726,6 +1865,81 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         layers[ n_layers-1 ], n_layers-2);
 }
 
+////////////////
+// upDownStep //
+////////////////
+void DeepBeliefNet::upDownStep( const Vec& input, const Vec& target,
+                                Vec& train_costs )
+{
+    // Up pass
+    up_sample[0] << input;
+    for( int i=0 ; i<n_layers-2 ; i++ )
+    {
+        connections[i]->setAsDownInput( up_sample[i] );
+        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->computeExpectation();
+        layers[i+1]->generateSample();
+        up_sample[i+1] << layers[i+1]->sample;
+    }
+
+    // Top RBM update
+    if( use_classification_cost )
+    {
+        Vec target_exp = classification_module->target_layer->expectation;
+        fill_one_hot( target_exp, (int) round(target[0]), real(0.), real(1.) );
+
+        contrastiveDivergenceStep(
+            get_pointer( joint_layer ),
+            get_pointer( classification_module->joint_connection ),
+            layers[ n_layers-1 ], n_layers-2,false);
+    }
+    else
+    {
+        contrastiveDivergenceStep( layers[ n_layers-2 ],
+                                   connections[ n_layers-2 ],
+                                   layers[ n_layers-1 ],
+                                   n_layers-2, false);
+    }
+    down_sample[n_layers-2] << layers[n_layers-2]->sample;
+
+    // Down pass
+    for( int i=n_layers-3 ; i>=0 ; i-- )
+    {
+        generative_connections[i]->setAsDownInput( down_sample[i+1] );
+        layers[i]->getAllActivations( generative_connections[i] );
+        layers[i]->computeExpectation();
+        layers[i]->generateSample();
+        down_sample[i] << layers[i]->sample;
+    }
+
+    // Updates
+    real nll;
+    for( int i=0 ; i<n_layers-2 ; i++ )
+    {
+        // Update recognition weights
+        connections[i]->setAsDownInput( down_sample[i] );
+        layers[i+1]->getAllActivations( connections[i] );
+        layers[i+1]->computeExpectation();
+        layers[i+1]->bpropNLL(down_sample[i+1], nll, activation_gradients[i+1]);
+        layers[i+1]->update( activation_gradients[i+1] );
+        connections[i]->bpropUpdate( down_sample[i],
+                                  layers[i+1]->activation,
+                                  activation_gradients[i],
+                                  activation_gradients[i+1]);
+
+        // Update generative weights
+        generative_connections[i]->setAsDownInput( up_sample[i+1] );
+        layers[i]->getAllActivations( generative_connections[i] );
+        layers[i]->computeExpectation();
+        layers[i]->bpropNLL(up_sample[i], nll, activation_gradients[i]);
+        layers[i]->update( activation_gradients[i] );
+        generative_connections[i]->bpropUpdate( up_sample[i+1],
+                                             layers[i]->activation,
+                                             activation_gradients[i+1],
+                                             activation_gradients[i]);
+    }
+}
+
 ////////////////////
 // fineTuningStep //
 ////////////////////
@@ -2009,29 +2223,44 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         if (background_gibbs_update_ratio<1)
             // then do some contrastive divergence, o/w only background Gibbs
         {
-            up_layer->generateSamples();
-            if( use_sample_for_up_layer )
-                pos_up_vals << up_layer->samples;
-            connection->setAsUpInputs( up_layer->samples );
-            down_layer->getAllActivations( connection, 0, true );
-            down_layer->computeExpectations();
-            down_layer->generateSamples();
-            // negative phase
-            connection->setAsDownInputs( down_layer->samples );
-            up_layer->getAllActivations( connection, 0, mbatch );
-            up_layer->computeExpectations();
-
-            // accumulate negative stats
-            // no need to deep-copy because the values won't change before update
-            Mat neg_down_vals = down_layer->samples;
+            Mat neg_down_vals;
             Mat neg_up_vals;
-            if( use_sample_for_up_layer)
+            if( use_mean_field_contrastive_divergence )
             {
-                up_layer->generateSamples();
-                neg_up_vals = up_layer->samples;
+                connection->setAsUpInputs( up_layer->getExpectations() );
+                down_layer->getAllActivations( connection, 0, true );
+                down_layer->computeExpectations();
+                // negative phase
+                connection->setAsDownInputs( down_layer->getExpectations() );
+                up_layer->getAllActivations( connection, 0, mbatch );
+                up_layer->computeExpectations();
+
+                neg_down_vals = down_layer->getExpectations();
+                neg_up_vals = up_layer->getExpectations();
             }
             else
-                neg_up_vals = up_layer->getExpectations();
+            {
+                up_layer->generateSamples();
+                if( use_sample_for_up_layer )
+                    pos_up_vals << up_layer->samples;
+                connection->setAsUpInputs( up_layer->samples );
+                down_layer->getAllActivations( connection, 0, true );
+                down_layer->computeExpectations();
+                down_layer->generateSamples();
+                // negative phase
+                connection->setAsDownInputs( down_layer->samples );
+                up_layer->getAllActivations( connection, 0, mbatch );
+                up_layer->computeExpectations();
+
+                neg_down_vals = down_layer->samples;
+                if( use_sample_for_up_layer)
+                {
+                    up_layer->generateSamples();
+                    neg_up_vals = up_layer->samples;
+                }
+                else
+                    neg_up_vals = up_layer->getExpectations();
+            }
 
             if (background_gibbs_update_ratio==0)
             // update here only if there is ONLY contrastive divergence
@@ -2105,8 +2334,9 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             down_state << down_layer->samples;
         }
     } else {
-        up_layer->generateSample();
-
+        if( !use_mean_field_contrastive_divergence )
+            up_layer->generateSample();
+        
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_val.resize( down_layer->size );
@@ -2119,19 +2349,30 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             pos_up_val << up_layer->expectation;
 
         // down propagation, starting from a sample of up_layer
-        connection->setAsUpInput( up_layer->sample );
+        if( use_mean_field_contrastive_divergence )
+            connection->setAsUpInput( up_layer->expectation );
+        else
+            connection->setAsUpInput( up_layer->sample );
 
         down_layer->getAllActivations( connection );
         down_layer->computeExpectation();
-        down_layer->generateSample();
+        if( !use_mean_field_contrastive_divergence )
+            down_layer->generateSample();
 
         // negative phase
-        connection->setAsDownInput( down_layer->sample );
+        if( use_mean_field_contrastive_divergence )
+            connection->setAsDownInput( down_layer->expectation );
+        else
+            connection->setAsDownInput( down_layer->sample );
         up_layer->getAllActivations( connection, 0, mbatch );
         up_layer->computeExpectation();
         // accumulate negative stats
         // no need to deep-copy because the values won't change before update
-        Vec neg_down_val = down_layer->sample;
+        Vec neg_down_val;
+        if( use_mean_field_contrastive_divergence )
+            neg_down_val = down_layer->expectation;
+        else
+            neg_down_val = down_layer->sample;
         Vec neg_up_val;
         if( use_sample_for_up_layer )
         {
@@ -2140,7 +2381,6 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         }
         else
             neg_up_val = up_layer->expectation;
-
 
         // update
         down_layer->update( pos_down_val, neg_down_val );
@@ -2466,6 +2706,9 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
 
     if( final_cost )
         final_cost->setLearningRate( the_learning_rate );
+
+    for( int i=0 ; i<generative_connections.length() ; i++ )
+        generative_connections[i]->setLearningRate( the_learning_rate );
 }
 
 } // end of namespace PLearn

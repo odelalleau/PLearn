@@ -72,6 +72,14 @@ public:
     //! contrastive divergence learning
     real cd_decrease_ct;
 
+    //! The learning rate used in the up-down algorithm during the 
+    //! unsupervised fine tuning gradient descent
+    real up_down_learning_rate;
+    
+    //! The decrease constant of the learning rate used in the
+    //! up-down algorithm during the unsupervised fine tuning gradient descent
+    real up_down_decrease_ct;
+
     //! The learning rate used during the gradient descent
     real grad_learning_rate;
 
@@ -100,6 +108,12 @@ public:
     //! should be [1000 1000 500], and nstages should be at least 2500.
     //! When online = true, this vector is ignored and should be empty.
     TVec<int> training_schedule;
+
+    //! Number of samples to use for unsupervised fine-tuning
+    //! with the up-down algorithm. The unsupervised fine-tuning will
+    //! be executed between the greedy layer-wise learning and the
+    //! supervised fine-tuning.
+    int up_down_nstages;
 
     //! If the first cost function is the NLL in classification,
     //! pre-trained with CD, and using the last *two* layers to get a better
@@ -179,6 +193,10 @@ public:
     //! stage==0)
     int gibbs_chain_reinit_freq;
 
+    //! Indication that mean-field contrastive divergence
+    //! should be used instead of standard contrastive divergence.
+    bool use_mean_field_contrastive_divergence;
+
     //#####  Not Options  #####################################################
 
     //! Timer for monitoring the speed
@@ -256,6 +274,9 @@ public:
     void greedyStep(const Mat& inputs, const Mat& targets, int index, Mat& train_costs_m);
 
     void jointGreedyStep( const Vec& input, const Vec& target );
+
+    void upDownStep( const Vec& input, const Vec& target,
+                     Vec& train_costs );
 
     void fineTuningStep( const Vec& input, const Vec& target,
                          Vec& train_costs );
@@ -404,8 +425,18 @@ protected:
     //! Cumulative training schedule
     TVec<int> cumulative_schedule;
 
+    //! Number of samples visited so far during unsupervised fine-tuning
+    int up_down_stage;
+
     mutable Vec layer_input;
     mutable Mat layer_inputs;
+
+    //! The untied generative weights of the connections between the layers
+    //! for the up-down algorithm.
+    TVec< PP<RBMConnection> > generative_connections;
+
+    mutable TVec<Vec> up_sample;
+    mutable TVec<Vec> down_sample;
 
 protected:
     //#####  Protected Member Functions  ######################################
