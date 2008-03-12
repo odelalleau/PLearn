@@ -321,13 +321,8 @@ void ConcatRowsVMatrix::findAllFields()
     for (int i = 0; i < sources.length(); i++) {
         TVec<string> source_fnames=sources[i]->fieldNames();
         if(fnames!=source_fnames){
-            SelectColumnsVMatrix* v = 
-                new SelectColumnsVMatrix(sources[i],fnames,true,false);
-            //to remove warning
-            if(inputsize_>=0 && targetsize_>=0 && weightsize_ >=0)
-                v->defineSizes(inputsize_, targetsize_, weightsize_,extrasize_);
-            v->build();
-            to_concat[i] = v;
+            to_concat[i] =
+                new SelectColumnsVMatrix(sources[i], fnames, true);
         } else
             to_concat[i] = sources[i];
     }
