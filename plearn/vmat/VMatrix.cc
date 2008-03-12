@@ -1224,17 +1224,9 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
         }
     }
 
-    // Automatically find out inputsize if possible.
-    // Note that this could be done also with other sizes.
-    if (inputsize_ < 0 && width_ >= 0 && targetsize_ >= 0 &&
-            weightsize_ >= 0 && extrasize_ >= 0)
-    {
-        int new_is = width_ - targetsize_ - weightsize_ -
-            extrasize_;
-        if (new_is >= 0)
-            inputsize_ = new_is;
-    }
-
+    // Fill missing size if possible, also display warning when sizes are not
+    // compatible with the width.
+    computeMissingSizeValue();
 
     // Copy fieldnames from vm if not set and they look good.
     bool same_fields_as_source =
