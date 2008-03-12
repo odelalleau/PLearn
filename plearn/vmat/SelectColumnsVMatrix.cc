@@ -277,7 +277,7 @@ void SelectColumnsVMatrix::build_()
             targetsize_=0;
         if(weightsize_<0 && !extend_with_missing && source->weightsize()==0)
             weightsize_=0;
-        computeMissingSizeValue();
+        computeMissingSizeValue(false);
 
 #if 0
         // Disabled for now, since it gives way too many false positives in
