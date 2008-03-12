@@ -67,6 +67,12 @@ protected:
     //! processing at build time, taking into account the 'statmask' option.
     TVec<string> statnames_processed;
 
+    //! Set to true in perform() when 'save_test_names' is true, in order to
+    //! remember to save the cost names after setting the learner's training
+    //! set (since some learners may not have these costs available until they
+    //! are provided with a training set).
+    bool need_to_save_test_names;
+
 public:
 
     // ************************
@@ -192,8 +198,6 @@ public:
      */
     Vec perform(bool call_forget=true);
     Vec perform1Split(int splitnum, bool call_forget=true);
-
-    Vec oldperform(bool call_forget=true);
 
     //! Transforms a shallow copy into a deep copy
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
