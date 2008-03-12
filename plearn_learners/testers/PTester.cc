@@ -503,7 +503,7 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
 
         learner->setTrainingSet(trainset, call_forget);
 
-        TVec<string> testcostnames = learner->getTestCostNames();
+        testcostnames = learner->getTestCostNames();
         TVec<string> traincostnames = learner->getTrainCostNames();
         PP<VecStatsCollector> train_stats = stcol[0];
         train_stats->setFieldNames(traincostnames);
@@ -515,8 +515,6 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
         if (need_to_save_test_names) {
             // Now that the learner has a training set, we can be sure the
             // cost names can be saved.
-            testcostnames = learner->getTestCostNames();
-            TVec<string> traincostnames = learner->getTrainCostNames();
             saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
             saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
             need_to_save_test_names = false;
