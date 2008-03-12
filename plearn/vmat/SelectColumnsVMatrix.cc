@@ -65,13 +65,13 @@ SelectColumnsVMatrix::SelectColumnsVMatrix()
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
                                            TVec<string> the_fields,
                                            bool the_extend_with_missing,
-                                           bool call_build_)
-    : extend_with_missing(the_extend_with_missing),
-      fields(the_fields),
-      fields_partial_match(false),
-      inverse_fields_selection(false)
+                                           bool call_build_):
+    inherited(the_source, call_build_),
+    extend_with_missing(the_extend_with_missing),
+    fields(the_fields),
+    fields_partial_match(false),
+    inverse_fields_selection(false)
 {
-    source = the_source;
     if (call_build_)
         build_();
 }
