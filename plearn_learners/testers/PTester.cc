@@ -452,14 +452,11 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
         PLERROR("PTester::perform1Split : No splitter specified for PTester");
 
     const int nstats = statnames_processed.length();
-
-    TVec<string> testcostnames = learner->getTestCostNames();
-    TVec<string> traincostnames = learner->getTrainCostNames();
-
     const int nsets = splitter->nSetsPerSplit();
 
     // Stats collectors for individual sets of a split:
     TVec< PP<VecStatsCollector> > stcol(nsets);
+
     for (int setnum = 0; setnum < nsets; setnum++)
     {
         if (template_stats_collector)
@@ -469,18 +466,7 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
         }
         else
             stcol[setnum] = new VecStatsCollector();
-
-        if (setnum == 0)
-            stcol[setnum]->setFieldNames(traincostnames);
-        else
-            stcol[setnum]->setFieldNames(testcostnames);
-
-        stcol[setnum]->build();
-        stcol[setnum]->forget();
     }
-
-    PP<VecStatsCollector> train_stats = stcol[0];
-    learner->setTrainStatsCollector(train_stats);
 
 
     // Stat specs
@@ -500,6 +486,8 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
 
     TVec<VMat> dsets = splitter->getSplit(splitnum);
 
+    TVec<string> testcostnames;
+
     if (should_train) {
         VMat trainset = dsets[0];
         if (is_splitdir && save_data_sets)
@@ -515,10 +503,19 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
 
         learner->setTrainingSet(trainset, call_forget);
 
+        TVec<string> testcostnames = learner->getTestCostNames();
+        TVec<string> traincostnames = learner->getTrainCostNames();
+        PP<VecStatsCollector> train_stats = stcol[0];
+        train_stats->setFieldNames(traincostnames);
+        train_stats->build();
+        train_stats->forget();
+        learner->setTrainStatsCollector(train_stats);
+
+
         if (need_to_save_test_names) {
             // Now that the learner has a training set, we can be sure the
             // cost names can be saved.
-            TVec<string> testcostnames = learner->getTestCostNames();
+            testcostnames = learner->getTestCostNames();
             TVec<string> traincostnames = learner->getTrainCostNames();
             saveStringInFile(expdir / "train_cost_names.txt", join(traincostnames, "\n") + "\n");
             saveStringInFile(expdir / "test_cost_names.txt", join(testcostnames, "\n") + "\n");
@@ -553,6 +550,14 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
     // perf_eval_costs[setnum][perf_evaluator_name][costname] will contain value
     // of the given cost returned by the given perf_evaluator on the given setnum
     TVec< map<string, map<string, real> > > perf_eval_costs(dsets.length());
+
+    if (testcostnames.isEmpty())
+        testcostnames = learner->getTestCostNames();
+    for (int setnum = 1; setnum < nsets; setnum++) {
+        stcol[setnum]->setFieldNames(testcostnames);
+        stcol[setnum]->build();
+        stcol[setnum]->forget();
+    }
 
     // Perform the test if required
     if (should_test)
