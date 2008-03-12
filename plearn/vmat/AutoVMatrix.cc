@@ -89,7 +89,7 @@ void AutoVMatrix::declareOptions(OptionList& ol)
 
 void AutoVMatrix::build_()
 {
-    if(filename=="")
+    if(filename.isEmpty())
         setVMat(VMat());
     else if (load_data_in_memory)
     {
