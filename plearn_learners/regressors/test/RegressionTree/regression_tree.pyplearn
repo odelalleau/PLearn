@@ -3,12 +3,18 @@ from plearn.pyplearn import *
 
 plarg_defaults.data    = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat"
 
-dataset = pl.AutoVMatrix(
-    specification = plargs.data,
-    inputsize = 4,
-    targetsize = 1,
-    weightsize = 0
-    )
+dataset = pl.SubVMatrix(
+        inputsize = 4,
+        targetsize = 1,
+        weightsize = 0,
+        source = pl.AutoVMatrix(
+            specification = plargs.data,
+            inputsize = 4,
+            targetsize = 2,
+            weightsize = 0
+            ),
+        width = 5
+        )
 
 learner = pl.HyperLearner(
     option_fields = [ "nstages" ],
