@@ -2059,20 +2059,28 @@ int VMatrix::maxFieldNamesSize() const
 ////////////////////////////////
 // compute_missing_size_value //
 ////////////////////////////////
-void VMatrix::computeMissingSizeValue()
+void VMatrix::computeMissingSizeValue(bool warn_if_cannot_compute,
+                                      bool warn_if_size_mismatch)
 {
-    PLCHECK(width_>0);
     int v=min(inputsize_,0) + min(targetsize_,0)
         + min(weightsize_,0) + min(extrasize_,0);
-    if(v<-1)
+
+    if (width_ < 0 && v <= -1) {
+        if (warn_if_cannot_compute)
+            PLWARNING("In VMatrix::computeMissingSizeValue - Cannot compute "
+                      "the missing size value when the width is undefined");
+        return;
+    }
+
+    if(v < -1 && warn_if_cannot_compute)
         PLWARNING("In VMatrix::compute_missing_size_value() - in class %s"
                   " more then one of"
                   " inputsize(%d), targetsize(%d), weightsize(%d) and"
-                  " extrasize(%d) is unknow so we can't compute them with the"
+                  " extrasize(%d) is unknow so we cannot compute them with the"
                   " width(%d)",
                   classname().c_str(), inputsize_, targetsize_, weightsize_,
                   extrasize_, width_);
-    else if(v==0 && 
+    else if(v==0 && warn_if_size_mismatch && width_ >= 0 &&
             width_ != inputsize_ + targetsize_ + weightsize_ + extrasize_)
         PLWARNING("In VMatrix::compute_missing_size_value() for class %s - "
                   "inputsize_(%d) + targetsize_(%d) + weightsize_(%d) + "
@@ -2088,7 +2096,6 @@ void VMatrix::computeMissingSizeValue()
         weightsize_ = width_- inputsize_ - targetsize_ - extrasize_;
     else if(extrasize_ < 0)
         extrasize_  = width_- inputsize_ - targetsize_ - weightsize_;
-
 }
 
 } // end of namespace PLearn

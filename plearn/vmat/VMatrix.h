@@ -664,10 +664,17 @@ public:
      */
     int maxFieldNamesSize() const;
 
-    /** if only one of inputsize, targetsize, weightsize, extrasize
-     *  is less unknow and width>0, we compute its value
+    /** If only one of inputsize, targetsize, weightsize, extrasize
+     *  is unknow while width>=0, we compute its value.
+     *  Two warnings may be issued in this method:
+     *      1. If 'warn_if_cannot_compute' is true, a warning is issued when
+     *         it is not possible to compute a missing size's value (for
+     *         instance when there are two missing sizes).
+     *      2. If 'warn_if_size_mismatch' is true, a warning is issued when
+     *         all sizes are defined but they do not match the width.
      */
-    void computeMissingSizeValue();
+    void computeMissingSizeValue(bool warn_if_cannot_compute = true,
+                                 bool warn_if_size_mismatch = true);
 
     /**
      *  Returns the bounding box of the data, as a vector of min:max pairs.  If
