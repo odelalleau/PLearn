@@ -230,7 +230,7 @@ void SelectColumnsVMatrix::build_()
                         indices.append(the_index);
                     if(extend_with_missing && the_index == -1)
                         PLWARNING("In SelectColumnsVMatrix::build_() - We are"
-                                  " extendind the source matrix with the"
+                                  " extending the source matrix with the"
                                   " columns '%s' with missing value",
                                   the_field.c_str());
                     
@@ -266,6 +266,10 @@ void SelectColumnsVMatrix::build_()
         // Copy matrix dimensions
         width_ = indices.length();
         length_ = source->length();
+
+        if(!extend_with_missing)
+            // The new width cannot exceed the old one.
+            PLCHECK(source->width() >= width_);
 
         //if we don't add new columns and the source columns type are emtpy,
         //they should be empty in this matrix if they are not already set.
