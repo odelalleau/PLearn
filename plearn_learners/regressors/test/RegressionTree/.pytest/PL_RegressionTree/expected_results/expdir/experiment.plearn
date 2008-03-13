@@ -1,19 +1,25 @@
-*10 -> PTester(
-    dataset = *1 -> AutoVMatrix(
+*11 -> PTester(
+    dataset = *2 -> SubVMatrix(
         inputsize = 4,
-        specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat",
+        source = *1 -> AutoVMatrix(
+            inputsize = 4,
+            specification = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat",
+            targetsize = 2,
+            weightsize = 0
+            ),
         targetsize = 1,
-        weightsize = 0
+        weightsize = 0,
+        width = 5
         ),
     expdir = "expdir",
-    learner = *8 -> HyperLearner(
+    learner = *9 -> HyperLearner(
         dont_restart_upon_change = [ "nstages" ],
         forget_when_training_set_changes = 0,
-        learner = *3 -> RegressionTree(
+        learner = *4 -> RegressionTree(
             complexity_penalty_factor = 0.0,
             compute_train_stats = 1,
             forget_when_training_set_changes = 1,
-            leave_template = *2 -> RegressionTreeLeave( ),
+            leave_template = *3 -> RegressionTreeLeave( ),
             loss_function_weight = 1,
             maximum_number_of_nodes = 50,
             nstages = 10,
@@ -27,8 +33,8 @@
         report_progress = 1,
         save_final_learner = 0,
         strategy = [
-            *5 -> HyperOptimize(
-                oracle = *4 -> EarlyStoppingOracle(
+            *6 -> HyperOptimize(
+                oracle = *5 -> EarlyStoppingOracle(
                     max_degradation = 3.40282e+38,
                     max_degraded_steps = 120,
                     max_value = 3.40282e+38,
@@ -48,7 +54,7 @@
                 which_cost = "E[test2.E[mse]]"
                 )
             ],
-        tester = *7 -> PTester(
+        tester = *8 -> PTester(
             provide_learner_expdir = 1,
             report_stats = 1,
             save_data_sets = 0,
@@ -59,7 +65,7 @@
             save_test_costs = 0,
             save_test_names = 0,
             save_test_outputs = 0,
-            splitter = *6 -> FractionSplitter(
+            splitter = *7 -> FractionSplitter(
                 splits = 1 3 [
                         (0, 0.75),
                         (0, 0.75),
@@ -84,7 +90,7 @@
     save_test_confidence = 0,
     save_test_costs = 1,
     save_test_outputs = 1,
-    splitter = *9 -> FractionSplitter(
+    splitter = *10 -> FractionSplitter(
         splits = 1 3 [
                 (0, 1),
                 (0, 0.75),
