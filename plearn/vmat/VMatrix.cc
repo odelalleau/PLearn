@@ -1453,14 +1453,14 @@ void VMatrix::updateMtime(VMat v){if(v)updateMtime(v->getMtime());}
 ////////////////////
 // isFileUpToDate //
 ////////////////////
-bool VMatrix::isFileUpToDate(const PPath& path, bool warning_reuse,
+bool VMatrix::isFileUpToDate(const PPath& path, bool warning_mtime0,
                              bool warning_older) const
 {
     bool exist = isfile(path);
     bool uptodate = false;
     if(exist)
         uptodate = getMtime() < mtime(path);
-    if (warning_reuse && exist && uptodate && getMtime()==0)
+    if (warning_mtime0 && exist && uptodate && getMtime()==0)
         PLWARNING("In VMatrix::isFileUpToDate - for class '%s'"
                   " File '%s' will be used, but "
                   "this VMat's last modification time is undefined: we cannot "

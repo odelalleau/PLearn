@@ -404,8 +404,8 @@ public:
     //! file exists and it is older than this VMat's last modification time.
     //! If 'warning_reuse' is 'true', then a warning will be issued when the
     //! file exists and this VMat's last modification time is undefined.
-    bool isFileUpToDate(const PPath& file, bool warning_older = false,
-                        bool warning_reuse = true) const;
+    bool isFileUpToDate(const PPath& file, bool warning_mtime0 = true,
+                        bool warning_older = false) const;
 
     //#####  Matrix Sizes  ####################################################
 
