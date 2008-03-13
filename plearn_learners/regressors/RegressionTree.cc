@@ -377,29 +377,17 @@ void RegressionTree::computeOutputAndCosts(const Vec& inputv,
                                            Vec& outputv, Vec& costsv) const
 {
     PLASSERT(costsv.size()==nTestCosts());
-    TVec<PP<RegressionTreeNode> > nodes;
-    root->computeOutputAndNodes(inputv, outputv, &nodes);
-    if (multiclass_outputs.length() <= 0) return;
-    real closest_value=multiclass_outputs[0];
-    real margin_to_closest_value=abs(outputv[0] - multiclass_outputs[0]);
-    for (int value_ind = 1; value_ind < multiclass_outputs.length(); value_ind++)
-    {
-        real v=abs(outputv[0] - multiclass_outputs[value_ind]);
-        if (v < margin_to_closest_value)
-        {
-            closest_value = multiclass_outputs[value_ind];
-            margin_to_closest_value = v;
-        }
-    }
-    outputv[0] = closest_value;
+    
+    TVec<PP<RegressionTreeNode> > *nodes = new TVec<PP<RegressionTreeNode> >();
+    root->computeOutputAndNodes(inputv, outputv, nodes);
     costsv.clear();
     costsv[0] = pow((outputv[0] - targetv[0]), 2);
     costsv[1] = outputv[1];
     costsv[2] = 1.0 - (l2_loss_function_factor * costsv[0]);
     costsv[3] = 1.0 - (l1_loss_function_factor * abs(outputv[0] - targetv[0]));
     costsv[4] = !fast_is_equal(targetv[0],outputv[0]);
-    for(int i=0;i<nodes.length();i++)
-        costsv[5+nodes[i]->getSplitCol()]++;
+    for(int i=0;i<nodes->length();i++)
+        costsv[5+(*nodes)[i]->getSplitCol()]++;
 }
 
 void RegressionTree::computeCostsFromOutputs(const Vec& input,
