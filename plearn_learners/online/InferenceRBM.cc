@@ -78,11 +78,14 @@ void InferenceRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input_layer, copies);
     deepCopyField(target_layer, copies);
     deepCopyField(hidden_layer, copies);
-    deepCopyField(visible_layer, copies);
-
     deepCopyField(input_to_hidden, copies);
     deepCopyField(target_to_hidden, copies);
+    deepCopyField(random_gen, copies);
+    deepCopyField(visible_layer, copies);
     deepCopyField(visible_to_hidden, copies);
+    deepCopyField(v0, copies);
+    deepCopyField(h0, copies);
+
 }
 
 void InferenceRBM::declareOptions(OptionList& ol)
@@ -127,6 +130,11 @@ void InferenceRBM::declareOptions(OptionList& ol)
     declareOption(ol, "random_gen", &InferenceRBM::random_gen,
                   OptionBase::buildoption,
                   "Random numbers generator");
+
+    declareOption(ol, "use_fast_approximations",
+                  &InferenceRBM::use_fast_approximations,
+                  OptionBase::buildoption,
+                  "Whether to use fast approximations in softplus computation");
 
 
     declareOption(ol, "visible_layer", &InferenceRBM::visible_layer,
@@ -181,6 +189,14 @@ void InferenceRBM::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("input", "Input layer's values")));
 
     declareMethod(
+        rmm, "hiddenExpGivenInputTarget",
+        &InferenceRBM::hiddenExpGivenInputTarget,
+        (BodyDoc("Computes the hidden layer's expectation given the input\n"
+                 "and the target"),
+         ArgDoc ("input", "Input layer's values"),
+         ArgDoc ("target", "Target (as an index)")));
+
+    declareMethod(
         rmm, "targetExpGivenInput",
         &InferenceRBM::targetExpGivenInput,
         (BodyDoc("Computes the target layer's expectation given the input"),
@@ -201,11 +217,30 @@ void InferenceRBM::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Hidden layer's expectation")));
 
     declareMethod(
+        rmm, "getHiddenExpGivenInputTarget",
+        &InferenceRBM::getHiddenExpGivenInputTarget,
+        (BodyDoc("Computes the hidden layer's expectation given the input\n"
+                 "and the target"),
+         ArgDoc ("input", "Input layer's values"),
+         ArgDoc ("target", "Target (as an index)"),
+         RetDoc ("Hidden layer's expectation")));
+
+    declareMethod(
         rmm, "getTargetExpGivenInput",
         &InferenceRBM::getTargetExpGivenInput,
         (BodyDoc("Computes the target layer's expectation given the input"),
          ArgDoc ("input", "Input layer's values"),
          RetDoc ("Target layer's expectation")));
+
+    declareMethod(
+        rmm, "supCDStep", &InferenceRBM::supCDStep,
+        (BodyDoc("Performs one step of CD and updates the parameters"),
+         ArgDoc ("visible", "Visible layer's values")));
+
+    declareMethod(
+        rmm, "setLearningRate", &InferenceRBM::setLearningRate,
+        (BodyDoc("Sets the learning rate of underlying modules"),
+         ArgDoc ("the_learning_rate", "The learning rate")));
 }
 
 
@@ -300,6 +335,23 @@ void InferenceRBM::hiddenExpGivenVisible(const Mat& visible)
     hidden_layer->computeExpectations();
 }
 
+void InferenceRBM::hiddenExpGivenInputTarget(const Mat& input,
+                                             const TVec<int>& target)
+{
+    int batch_size = input.length();
+    PLASSERT(input.width() == input_size);
+    PLASSERT(target.length() == batch_size);
+
+    input_to_hidden->setAsDownInputs(input);
+    hidden_layer->getAllActivations(get_pointer(input_to_hidden), 0, true);
+
+    for (int k=0; k<batch_size; k++)
+        hidden_layer->activations(k) += target_to_hidden->weights(target[k]);
+
+    hidden_layer->expectations_are_up_to_date = false;
+    hidden_layer->computeExpectations();
+}
+
 void InferenceRBM::targetExpGivenInput(const Mat& input)
 {
     PLASSERT(input.width() == input_size);
@@ -336,7 +388,11 @@ void InferenceRBM::targetExpGivenInput(const Mat& input)
                 PLASSERT(*t_to_h_w_ji == t_to_h_w(j,i));
                 PLASSERT(*hidden_act_kj == hidden_act(k,j));
 
-                *target_act_ki += softplus(*t_to_h_w_ji + *hidden_act_kj);
+                if (use_fast_approximations)
+                    *target_act_ki +=
+                        tabulated_softplus(*t_to_h_w_ji + *hidden_act_kj);
+                else
+                    *target_act_ki += softplus(*t_to_h_w_ji + *hidden_act_kj);
             }
         }
     }
@@ -378,6 +434,13 @@ Mat InferenceRBM::getHiddenExpGivenVisible(const Mat& visible)
     return hidden_layer->getExpectations();
 }
 
+Mat InferenceRBM::getHiddenExpGivenInputTarget(const Mat& input,
+                                               const TVec<int>& target)
+{
+    hiddenExpGivenInputTarget(input, target);
+    return hidden_layer->getExpectations();
+}
+
 Mat InferenceRBM::getTargetExpGivenInput(const Mat& input)
 {
     targetExpGivenInput(input);
@@ -388,6 +451,47 @@ Mat InferenceRBM::getHiddenExpGivenInput(const Mat& input)
 {
     hiddenExpGivenInput(input);
     return hidden_layer->getExpectations();
+}
+
+void InferenceRBM::supCDStep(const Mat& visible)
+{
+    PLASSERT(visible.width() == visible_size);
+    int batch_size = visible.length();
+
+    v0.resize(batch_size,visible_size);
+    v0 << visible;
+
+    // positive phase
+    hiddenExpGivenVisible(visible);
+    h0.resize(batch_size, hidden_size);
+    h0 << hidden_layer->getExpectations();
+
+    // Down propagation
+    visible_to_hidden->setAsUpInputs(h0);
+    visible_layer->getAllActivations(get_pointer(visible_to_hidden), 0, true);
+    visible_layer->computeExpectations();
+    visible_layer->generateSamples();
+
+    // Negative phase
+    hiddenExpGivenVisible(visible_layer->samples);
+
+    // Update
+    visible_layer->update(v0, visible_layer->samples);
+    visible_to_hidden->update(v0, h0, visible_layer->samples,
+                              hidden_layer->getExpectations());
+    hidden_layer->update(h0, hidden_layer->getExpectations());
+}
+
+void InferenceRBM::unsupCDStep(const Mat& input)
+{
+    PLCHECK_MSG(false, "Not implemented yet");
+}
+
+void InferenceRBM::setLearningRate(real the_learning_rate)
+{
+    visible_layer->setLearningRate(the_learning_rate);
+    visible_to_hidden->setLearningRate(the_learning_rate);
+    hidden_layer->setLearningRate(the_learning_rate);
 }
 
 } // end of namespace PLearn

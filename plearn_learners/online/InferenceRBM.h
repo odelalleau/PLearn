@@ -92,6 +92,9 @@ public:
     //! Random numbers generator
     PP<PRandom> random_gen;
 
+    //! Whether to use fast approximations in softplus computation
+    bool use_fast_approximations;
+
 
 
 public:
@@ -105,13 +108,19 @@ public:
     // Your other public member functions go here
 
     void hiddenExpGivenVisible(const Mat& visible);
+    void hiddenExpGivenInputTarget(const Mat& input, const TVec<int>& target);
     void hiddenExpGivenInput(const Mat& input);
     void targetExpGivenInput(const Mat& input);
 
     Mat getHiddenExpGivenVisible(const Mat& visible);
+    Mat getHiddenExpGivenInputTarget(const Mat& input, const TVec<int>& target);
     Mat getHiddenExpGivenInput(const Mat& input);
     Mat getTargetExpGivenInput(const Mat& input);
 
+    void supCDStep(const Mat& visible);
+    void unsupCDStep(const Mat& input);
+
+    virtual void setLearningRate(real the_learning_rate);
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -159,13 +168,16 @@ private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
+
+    void build_rbms();
 
 private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
+    mutable Mat v0;
+    mutable Mat h0;
 };
 
 // Declares a few other classes and functions related to this class
