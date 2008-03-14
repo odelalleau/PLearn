@@ -76,17 +76,29 @@ public:
     //! Default constructor
     ProcessInputCostModule();
 
-    //! Given the input and the target, compute a vector of costs
-    //! (possibly resize it appropriately)
-    virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
-
     //! Given the input and the target, compute only the first cost
     //! (of which we will compute the gradient)
     virtual void fprop(const Vec& input, const Vec& target, real& cost) const;
 
+    //! Minibatch version
+    virtual void fprop(const Mat& inputs, const Mat& targets, Vec& costs );
+
+    //! Given the input and the target, compute a vector of costs
+    //! (possibly resize it appropriately)
+    virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
+
+    //! Minibatch version
+    virtual void fprop(const Mat& inputs, const Mat& targets, Mat& costs )
+        const;
+
     //! Adapt based on the cost, and compute input gradient to backpropagate.
     virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
                              Vec& input_gradient, bool accumulate=false);
+
+    //! Minibatch version
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+                             const Vec& costs, Mat& input_gradients,
+                             bool accumulate=false);
 
     /* Optional
        N.B. A DEFAULT IMPLEMENTATION IS PROVIDED IN THE SUPER-CLASS, WHICH
@@ -167,8 +179,11 @@ private:
     // The rest of the private stuff goes here
     //#####  Not Options  #####################################################
     mutable Vec processed_value;
+    mutable Mat processed_values;
     mutable Vec processed_gradient;
+    mutable Mat processed_gradients;
     mutable Vec processed_diag_hessian;
+    mutable Mat processed_diag_hessians;
 };
 
 // Declares a few other classes and functions related to this class

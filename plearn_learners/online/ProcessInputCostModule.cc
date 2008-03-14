@@ -126,11 +126,42 @@ void ProcessInputCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(processing_module, copies);
     deepCopyField(cost_module, copies);
+    deepCopyField(processed_value, copies);
+    deepCopyField(processed_values, copies);
+    deepCopyField(processed_gradient, copies);
+    deepCopyField(processed_gradients, copies);
+    deepCopyField(processed_diag_hessian, copies);
+    deepCopyField(processed_diag_hessians, copies);
 }
 
 ///////////
 // fprop //
 ///////////
+void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
+                                   real& cost) const
+{
+    PLASSERT( processing_module );
+    PLASSERT( cost_module );
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
+
+    processing_module->fprop( input, processed_value );
+    cost_module->fprop( processed_value, target, cost );
+}
+
+void ProcessInputCostModule::fprop(const Mat& inputs, const Mat& targets,
+                                   Vec& costs )
+{
+    PLASSERT( processing_module );
+    PLASSERT( cost_module );
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+    PLASSERT( inputs.length() == targets.length() );
+
+    processing_module->fprop( inputs, processed_values );
+    cost_module->fprop( processed_values, targets, costs );
+}
+
 void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
                                    Vec& cost) const
 {
@@ -143,17 +174,20 @@ void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
     cost_module->fprop( processed_value, target, cost );
 }
 
-void ProcessInputCostModule::fprop(const Vec& input, const Vec& target,
-                                   real& cost) const
+void ProcessInputCostModule::fprop(const Mat& inputs, const Mat& targets,
+                                   Mat& costs ) const
 {
     PLASSERT( processing_module );
     PLASSERT( cost_module );
-    PLASSERT( input.size() == input_size );
-    PLASSERT( target.size() == target_size );
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+    PLASSERT( inputs.length() == targets.length() );
 
-    processing_module->fprop( input, processed_value );
-    cost_module->fprop( processed_value, target, cost );
+    processing_module->fprop( inputs, processed_values );
+    cost_module->fprop( processed_values, targets, costs );
 }
+
+
 
 /////////////////
 // bpropUpdate //
@@ -180,6 +214,30 @@ void ProcessInputCostModule::bpropUpdate(const Vec& input, const Vec& target,
                                     accumulate );
 }
 
+void ProcessInputCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
+                                         const Vec& costs, Mat& input_gradients,
+                                         bool accumulate)
+{
+    PLASSERT( processing_module );
+    PLASSERT( cost_module );
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+    PLASSERT( inputs.length() == targets.length() );
+    PLASSERT( inputs.length() == costs.size() );
+
+    if( accumulate )
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size
+                      && input_gradients.length() == inputs.length(),
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+
+    cost_module->bpropUpdate( processed_values, targets, costs,
+                              processed_gradients );
+    processing_module->bpropUpdate( inputs, processed_values,
+                                    input_gradients, processed_gradients,
+                                    accumulate );
+}
 
 
 /////////////////
@@ -219,6 +277,9 @@ void ProcessInputCostModule::bbpropUpdate(const Vec& input, const Vec& target,
 ////////////
 void ProcessInputCostModule::forget()
 {
+    PLASSERT( processing_module );
+    PLASSERT( cost_module );
+
     processed_value.clear();
     processed_gradient.clear();
     processed_diag_hessian.clear();
