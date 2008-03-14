@@ -674,7 +674,7 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
         char char_torm = ' ';
         if(fieldtype=="dollar-comma")
             char_torm = ',';
-        else if(strval[0]=='$')
+        if(strval[0]=='$')
         {
             string s = "";
             for(unsigned int pos=1; pos<strval.size(); pos++)
