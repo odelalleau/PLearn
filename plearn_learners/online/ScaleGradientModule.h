@@ -80,6 +80,8 @@ public:
     //! build().
     virtual void forget();
 
+    virtual void setLearningRate(real the_learning_rate);
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.

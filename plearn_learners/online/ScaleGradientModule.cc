@@ -131,6 +131,11 @@ void ScaleGradientModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
     }
 }
 
+void ScaleGradientModule::setLearningRate(real the_learning_rate)
+{
+    // pass;
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
