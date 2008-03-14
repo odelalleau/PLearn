@@ -30,8 +30,11 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
-from plearn.pyext.plext import *
-from plearn.pyext import plext as pl
+from plearn import getLib
+
+pl_lib_dir, pl_lib_name = getLib()
+exec 'from %s.%s import *' % (pl_lib_dir, pl_lib_name)
+exec 'from %s import %s as pl' % (pl_lib_dir, pl_lib_name)
 
 from plearn.pyplearn.plargs import *
 import os
