@@ -132,6 +132,7 @@ void RegressionTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(first_leave, copies);
     deepCopyField(split_cols, copies);
     deepCopyField(tmp_vec, copies);
+    
 }
 
 void RegressionTree::build()
@@ -170,10 +171,7 @@ void RegressionTree::build_()
         if (weightsize != 1 && weightsize != 0)
             PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d",
                     weightsize);
-        sample_input.resize(inputsize);
-        sample_target.resize(targetsize);
-        sample_output.resize(outputsize());
-        sample_costs.resize(getTestCostNames().size());
+        nodes = new TVec<PP<RegressionTreeNode> >();
     }
 
     if (loss_function_weight != 0.0)
@@ -212,8 +210,13 @@ void RegressionTree::train()
         pb = new ProgressBar("RegressionTree : computing the statistics: ", length);
     } 
     train_stats->forget();
+
     real sample_weight;
-        
+    Vec sample_input(sorted_train_set->inputsize());
+    Vec sample_output(outputsize());
+    Vec sample_target(sorted_train_set->targetsize());
+    Vec sample_costs(getTestCostNames().size());
+
     for (int train_sample_index = 0; train_sample_index < length;
          train_sample_index++)
     {  
@@ -377,8 +380,8 @@ void RegressionTree::computeOutputAndCosts(const Vec& inputv,
                                            Vec& outputv, Vec& costsv) const
 {
     PLASSERT(costsv.size()==nTestCosts());
-    
-    TVec<PP<RegressionTreeNode> > *nodes = new TVec<PP<RegressionTreeNode> >();
+    PLASSERT(nodes);
+    nodes->resize(0);
     root->computeOutputAndNodes(inputv, outputv, nodes);
     costsv.clear();
     costsv[0] = pow((outputv[0] - targetv[0]), 2);

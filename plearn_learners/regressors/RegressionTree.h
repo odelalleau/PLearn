@@ -84,11 +84,8 @@ private:
     int length;
     real l2_loss_function_factor;
     real l1_loss_function_factor;
-    Vec sample_input;
-    Vec sample_output;
-    Vec sample_target;
-    Vec sample_costs;
     TVec<int> split_cols;
+    TVec<PP<RegressionTreeNode> > *nodes;
 
     Vec tmp_vec;
 public:
