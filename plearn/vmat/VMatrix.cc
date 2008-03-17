@@ -1483,8 +1483,8 @@ bool VMatrix::isUpToDate(VMat vm, bool warning_mtime0,
 {
     time_t my_time = getMtime();
     time_t vm_time = vm->getMtime();
-    bool uptodate = getMtime() < vm->getMtime() ||
-                    my_time == 0                ||
+    bool uptodate = my_time < vm_time ||
+                    my_time == 0      ||
                     vm_time == 0;
     if (warning_mtime0 && uptodate && (my_time == 0 || vm_time == 0))
         PLWARNING("In VMatrix::isUpToDate - for class '%s'"
