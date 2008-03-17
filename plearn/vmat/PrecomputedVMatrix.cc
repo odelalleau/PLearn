@@ -119,7 +119,10 @@ void PrecomputedVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
     inherited::setMetaDataDir(the_metadatadir);
     if ( hasMetaDataDir() ) // don't do anything if the meta-data-dir is not yet set.
+    {
+        setMetaInfoFromSource();
         usePrecomputed();
+    }
 }
 
 void PrecomputedVMatrix::usePrecomputed()
@@ -158,7 +161,7 @@ void PrecomputedVMatrix::usePrecomputed()
         {
             precomp_source = temporary ? new TemporaryFileVMatrix(pmatfile)
                                        : new FileVMatrix(pmatfile);
-            if(precomp_source->getMtime() >= source->getMtime())
+            if(isFileUpToDate(pmatfile))
                 recompute = false;
         }
 
@@ -178,7 +181,10 @@ void PrecomputedVMatrix::usePrecomputed()
 
 void PrecomputedVMatrix::build_()
 {
-    setMetaInfoFromSource();
+    //We only call it their, as some matrix(FilteredVMatrix) are only completly
+    //set if they have a metadatadir.
+    if(hasMetaDataDir())
+        setMetaInfoFromSource();
 }
 
 // ### Nothing to add here, simply calls build_
