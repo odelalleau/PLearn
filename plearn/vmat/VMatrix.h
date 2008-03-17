@@ -406,8 +406,17 @@ public:
     //! file exists and it is older than this VMat's last modification time.
     bool isUpToDate(const PPath& file, bool warning_mtime0 = true,
                     bool warning_older = false) const;
-    bool isUpToDate(const VMat& vm, bool warning_mtime0 = true,
+
+    //! Return 'true' iff 'vm' was last modified after this VMat, this VMat's
+    //! last modification time is undefined (set to 0), or vm's last
+    //! modification time is undefined.
+    //! If 'warning_mtime0' is 'true', then a warning will be issued when one
+    //! of the VMats' last modification time is undefined.
+    //! If 'warning_older' is 'true', then a warning will be issued when 'vm'
+    //! is older than this VMat.
+    bool isUpToDate(VMat vm, bool warning_mtime0 = true,
                     bool warning_older = false) const;
+
     //#####  Matrix Sizes  ####################################################
 
     /// Return the number of columns in the VMatrix

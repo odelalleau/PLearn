@@ -1474,27 +1474,33 @@ bool VMatrix::isUpToDate(const PPath& path, bool warning_mtime0,
 
     return exist && uptodate;
 }
+
 ////////////////
 // isUpToDate //
 ////////////////
-bool VMatrix::isUpToDate(const VMat& vm, bool warning_mtime0,
+bool VMatrix::isUpToDate(VMat vm, bool warning_mtime0,
                          bool warning_older) const
 {
-    bool uptodate = getMtime() < vm->getMtime();
-    if (warning_mtime0 && uptodate && getMtime()==0)
+    time_t my_time = getMtime();
+    time_t vm_time = vm->getMtime();
+    bool uptodate = getMtime() < vm->getMtime() ||
+                    my_time == 0                ||
+                    vm_time == 0;
+    if (warning_mtime0 && uptodate && (my_time == 0 || vm_time == 0))
         PLWARNING("In VMatrix::isUpToDate - for class '%s'"
-                  " One VMat will be used, but "
-                  "this VMat's last modification time is undefined: we cannot "
-                  "be sure the file is up-to-date.",
+                  " When comparing the VMats' last modification times, at "
+                  "least one was found to be undefined: we cannot be sure "
+                  "the VMat is up-to-date.",
                   classname().c_str());
     if(warning_older && !uptodate)
         PLWARNING("In VMatrix::isUpToDate - for class '%s'"
-                  " One VMat with mtime of %d is older than this "
+                  " The VMat with mtime of %d is older than this "
                   "VMat's with mtime of %d, and should not be re-used.",
                   classname().c_str(), vm->getMtime(), getMtime());
 
     return uptodate;
 }
+
 /////////////////////////////////
 // getPrecomputedStatsFromFile //
 /////////////////////////////////
