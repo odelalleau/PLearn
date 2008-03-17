@@ -1450,31 +1450,51 @@ void VMatrix::updateMtime(const PPath& p){if(!p.isEmpty())updateMtime(mtime(p));
 
 void VMatrix::updateMtime(VMat v){if(v)updateMtime(v->getMtime());}
 
-////////////////////
-// isFileUpToDate //
-////////////////////
-bool VMatrix::isFileUpToDate(const PPath& path, bool warning_mtime0,
-                             bool warning_older) const
+////////////////
+// isUpToDate //
+////////////////
+bool VMatrix::isUpToDate(const PPath& path, bool warning_mtime0,
+                         bool warning_older) const
 {
     bool exist = isfile(path);
     bool uptodate = false;
     if(exist)
         uptodate = getMtime() < mtime(path);
     if (warning_mtime0 && exist && uptodate && getMtime()==0)
-        PLWARNING("In VMatrix::isFileUpToDate - for class '%s'"
+        PLWARNING("In VMatrix::isUpToDate - for class '%s'"
                   " File '%s' will be used, but "
                   "this VMat's last modification time is undefined: we cannot "
                   "be sure the file is up-to-date.",
                   classname().c_str(), path.absolute().c_str());
     if(warning_older && exist && !uptodate)
-        PLWARNING("In VMatrix::isFileUpToDate - for class '%s'"
+        PLWARNING("In VMatrix::isUpToDate - for class '%s'"
                   " File '%s' is older than this "
-                  "VMat's mtime of %d, and cannot be re-used.",
+                  "VMat's mtime of %d, and should not be re-used.",
                   classname().c_str(), path.absolute().c_str(), getMtime());
 
     return exist && uptodate;
 }
+////////////////
+// isUpToDate //
+////////////////
+bool VMatrix::isUpToDate(const VMat& vm, bool warning_mtime0,
+                         bool warning_older) const
+{
+    bool uptodate = getMtime() < vm->getMtime();
+    if (warning_mtime0 && uptodate && getMtime()==0)
+        PLWARNING("In VMatrix::isUpToDate - for class '%s'"
+                  " One VMat will be used, but "
+                  "this VMat's last modification time is undefined: we cannot "
+                  "be sure the file is up-to-date.",
+                  classname().c_str());
+    if(warning_older && !uptodate)
+        PLWARNING("In VMatrix::isUpToDate - for class '%s'"
+                  " One VMat with mtime of %d is older than this "
+                  "VMat's with mtime of %d, and should not be re-used.",
+                  classname().c_str(), vm->getMtime(), getMtime());
 
+    return uptodate;
+}
 /////////////////////////////////
 // getPrecomputedStatsFromFile //
 /////////////////////////////////
@@ -1485,7 +1505,7 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     PPath metadatadir = getMetaDataDir();
     PPath statsfile =  metadatadir / filename;
     if(!metadatadir.isEmpty()) lockMetaDataDir(); // don't try to lock nothing
-    bool uptodate= isFileUpToDate(statsfile, true, true);
+    bool uptodate= isUpToDate(statsfile, true, true);
     if (uptodate)
         PLearn::load(statsfile, stats);
     else

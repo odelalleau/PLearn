@@ -138,7 +138,7 @@ void PrecomputedVMatrix::usePrecomputed()
         {
             precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir)
                                        : new DiskVMatrix(dmatdir);
-            if(precomp_source->getMtime() >= source->getMtime())
+            if(isUpToDate(precomp_source))
                 recompute = false;
         }
 
@@ -161,7 +161,7 @@ void PrecomputedVMatrix::usePrecomputed()
         {
             precomp_source = temporary ? new TemporaryFileVMatrix(pmatfile)
                                        : new FileVMatrix(pmatfile);
-            if(isFileUpToDate(pmatfile))
+            if(isUpToDate(pmatfile))
                 recompute = false;
         }
 

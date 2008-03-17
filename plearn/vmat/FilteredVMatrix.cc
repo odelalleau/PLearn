@@ -91,7 +91,7 @@ void FilteredVMatrix::openIndex()
 
 
     lockMetaDataDir();
-    if(isFileUpToDate(idxfname))
+    if(isUpToDate(idxfname))
         indexes.open(idxfname);
     else  // let's (re)create the index
     {
