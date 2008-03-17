@@ -75,7 +75,7 @@ public:
     //! The learning rate used in the up-down algorithm during the 
     //! unsupervised fine tuning gradient descent
     real up_down_learning_rate;
-    
+
     //! The decrease constant of the learning rate used in the
     //! up-down algorithm during the unsupervised fine tuning gradient descent
     real up_down_decrease_ct;
@@ -196,6 +196,10 @@ public:
     //! Indication that mean-field contrastive divergence
     //! should be used instead of standard contrastive divergence.
     bool use_mean_field_contrastive_divergence;
+
+    //! The number of samples to use to compute training stats.
+    //! -1 (default) means the number of training samples.
+    int train_stats_window;
 
     //#####  Not Options  #####################################################
 

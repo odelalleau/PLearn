@@ -75,6 +75,7 @@ DeepBeliefNet::DeepBeliefNet() :
     background_gibbs_update_ratio(0),
     gibbs_chain_reinit_freq( INT_MAX ),
     use_mean_field_contrastive_divergence( false ),
+    train_stats_window( -1 ),
     minibatch_size( 0 ),
     initialize_gibbs_chain( false ),
     final_module_has_learning_rate( false ),
@@ -285,6 +286,12 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Indication that mean-field contrastive divergence\n"
                   "should be used instead of standard contrastive divergence.\n");
+
+    declareOption(ol, "train_stats_window",
+                  &DeepBeliefNet::train_stats_window,
+                  OptionBase::buildoption,
+                  "The number of samples to use to compute training stats.\n"
+                  "-1 (default) means the number of training samples.\n");
 
     declareOption(ol, "top_layer_joint_cd", &DeepBeliefNet::top_layer_joint_cd,
                   OptionBase::buildoption,
@@ -848,6 +855,10 @@ void DeepBeliefNet::train()
         << ", target nstages = " << nstages << endl;
 
     PLASSERT( train_set );
+    int n_train_stats_samples = (train_stats_window >= 0)
+        ? train_stats_window
+        : train_set->length();
+
     if (stage == 0) {
         // Training set-dependent initialization.
         minibatch_size = batch_size > 0 ? batch_size : train_set->length();
@@ -901,27 +912,43 @@ void DeepBeliefNet::train()
                                   nstages - stage );
 
         setLearningRate( grad_learning_rate );
-        for( ; stage<nstages; stage++)
+        train_stats->forget();
+
+        for( ; stage<nstages; stage+=minibatch_size)
         {
             initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
+
             // Do a step every 'minibatch_size' examples.
-            if (stage % minibatch_size == 0) {
-                int sample_start = stage % nsamples;
-                if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-                    setLearningRate( grad_learning_rate
-                                     / (1. + grad_decrease_ct * stage ));
-                if (batch_size > 1 || minibatch_hack) {
-                    train_set->getExamples(sample_start, minibatch_size,
-                                           inputs, targets, weights, NULL, true);
-                    train_costs_m.fill(MISSING_VALUE);
-                    if (reconstruct_layerwise)
-                        train_costs_m.column(reconstruction_cost_index).clear();
-                    onlineStep( inputs, targets, train_costs_m );
-                } else {
-                    train_set->getExample(sample_start, input, target, weight);
-                    onlineStep( input, target, train_costs );
-                }
+            int sample_start = stage % nsamples;
+            if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                setLearningRate( grad_learning_rate
+                                 / (1. + grad_decrease_ct * stage ));
+
+            if (batch_size > 1 || minibatch_hack)
+            {
+                train_set->getExamples(sample_start, minibatch_size,
+                                       inputs, targets, weights, NULL, true);
+                train_costs_m.fill(MISSING_VALUE);
+
+                if (reconstruct_layerwise)
+                    train_costs_m.column(reconstruction_cost_index).clear();
+
+                onlineStep( inputs, targets, train_costs_m );
             }
+            else
+            {
+                train_set->getExample(sample_start, input, target, weight);
+                onlineStep( input, target, train_costs );
+            }
+
+            // Update stats if we are in the last n_train_stats_samples
+            if (stage >= nstages - n_train_stats_samples)
+                if (minibatch_size > 1 || minibatch_hack)
+                    for (int k = 0; k < minibatch_size; k++)
+                        train_stats->update(train_costs_m(k));
+                else
+                    train_stats->update(train_costs);
+
             if( pb )
                 pb->update( stage + 1 );
         }
@@ -955,17 +982,17 @@ void DeepBeliefNet::train()
 
             for( ; stage<end_stage ; stage++ )
             {
-                 if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
-                 {
-                     real lr = cd_learning_rate 
-                         / (1. + cd_decrease_ct * 
-                            (stage - cumulative_schedule[i]));
-                     
-                     layers[i]->setLearningRate( lr );
-                     connections[i]->setLearningRate( lr );
-                     layers[i+1]->setLearningRate( lr );
-                 }
-                 
+                if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
+                {
+                    real lr = cd_learning_rate
+                        / (1. + cd_decrease_ct *
+                           (stage - cumulative_schedule[i]));
+
+                    layers[i]->setLearningRate( lr );
+                    connections[i]->setLearningRate( lr );
+                    layers[i+1]->setLearningRate( lr );
+                }
+
                 initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
                 // Do a step every 'minibatch_size' examples.
                 if (stage % minibatch_size == 0) {
@@ -1016,8 +1043,8 @@ void DeepBeliefNet::train()
             {
                 if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
                 {
-                    real lr = cd_learning_rate / 
-                        (1. + cd_decrease_ct * 
+                    real lr = cd_learning_rate /
+                        (1. + cd_decrease_ct *
                          (stage - cumulative_schedule[n_layers-2]));
                     joint_layer->setLearningRate( lr );
                     classification_module->joint_connection->setLearningRate( lr );
@@ -1057,29 +1084,29 @@ void DeepBeliefNet::train()
             MODULE_LOG << "  up_down_stage = " << up_down_stage << endl;
             MODULE_LOG << "  up_down_nstages = " << up_down_nstages << endl;
             MODULE_LOG << "  up_down_learning_rate = " << up_down_learning_rate << endl;
-            
+
             int init_stage = up_down_stage;
             if( report_progress )
                 pb = new ProgressBar( "Up-down gradient descent algorithm "
                                       + classname(),
                                       up_down_nstages - init_stage );
-            
+
             setLearningRate( up_down_learning_rate );
 
             train_stats->forget();
             int sample_start;
             for( ; up_down_stage<up_down_nstages ; up_down_stage++ )
             {
-                sample_start = up_down_stage % nsamples;                
+                sample_start = up_down_stage % nsamples;
                 if( !fast_exact_is_equal( up_down_decrease_ct, 0. ) )
                     setLearningRate( up_down_learning_rate
-                                     / (1. + up_down_decrease_ct * 
+                                     / (1. + up_down_decrease_ct *
                                         up_down_stage) );
-                
+
                 train_set->getExample( sample_start, input, target, weight );
                 upDownStep( input, target, train_costs );
                 train_stats->update( train_costs );
-                
+
                 if( pb )
                     pb->update( up_down_stage - init_stage + 1 );
             }
@@ -1101,41 +1128,38 @@ void DeepBeliefNet::train()
                                   end_stage - init_stage );
 
         setLearningRate( grad_learning_rate );
-
         train_stats->forget();
-        bool update_stats = false;
-        for( ; stage<end_stage ; stage++ )
+
+        for( ; stage<end_stage ; stage+=minibatch_size )
         {
+            int sample_start = stage % nsamples;
 
-            // Update every 'minibatch_size' samples.
-            if (stage % minibatch_size == 0) {
-                int sample_start = stage % nsamples;
-                // Only update train statistics for the last 'epoch', i.e. last
-                // 'nsamples' seen.
-                update_stats = update_stats || stage >= end_stage - nsamples;
+            if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
+                setLearningRate( grad_learning_rate
+                        / (1. + grad_decrease_ct *
+                           (stage - cumulative_schedule[n_layers-1])) );
 
-                if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-                    setLearningRate( grad_learning_rate
-                            / (1. + grad_decrease_ct * 
-                               (stage - cumulative_schedule[n_layers-1])) );
-
-                if (minibatch_size > 1 || minibatch_hack) {
-                    train_set->getExamples(sample_start, minibatch_size, inputs,
-                            targets, weights, NULL, true);
-                    train_costs_m.fill(MISSING_VALUE);
-                    fineTuningStep(inputs, targets, train_costs_m);
-                } else {
-                    train_set->getExample( sample_start, input, target, weight );
-                    fineTuningStep( input, target, train_costs );
-                }
-                if (update_stats)
-                    if (minibatch_size > 1 || minibatch_hack)
-                        for (int k = 0; k < minibatch_size; k++)
-                            train_stats->update(train_costs_m(k));
-                    else
-                        train_stats->update( train_costs );
-
+            if (minibatch_size > 1 || minibatch_hack)
+            {
+                train_set->getExamples(sample_start, minibatch_size, inputs,
+                        targets, weights, NULL, true);
+                train_costs_m.fill(MISSING_VALUE);
+                fineTuningStep(inputs, targets, train_costs_m);
             }
+            else
+            {
+                train_set->getExample( sample_start, input, target, weight );
+                fineTuningStep( input, target, train_costs );
+            }
+
+            // Update stats if we are in the last n_train_stats_samples samples
+            if (stage >= end_stage - n_train_stats_samples)
+                if (minibatch_size > 1 || minibatch_hack)
+                    for (int k = 0; k < minibatch_size; k++)
+                        train_stats->update(train_costs_m(k));
+                else
+                    train_stats->update(train_costs);
+
             if( pb )
                 pb->update( stage - init_stage + 1 );
         }
@@ -1154,11 +1178,11 @@ void DeepBeliefNet::train()
     if (verbosity > 1)
         cout << "The cumulative time spent in train() up until now is " << cumulative_training_time << " cpu seconds" << endl;
 
-    train_costs_m.column(training_cpu_time_cost_index).fill(cpu_time);
-    train_costs_m.column(cumulative_training_time_cost_index).fill(cumulative_training_time);
-    train_stats->update( train_costs_m );
+    train_costs.fill(MISSING_VALUE);
+    train_costs[training_cpu_time_cost_index] = cpu_time;
+    train_costs[cumulative_training_time_cost_index] = cumulative_training_time;
+    train_stats->update( train_costs );
     train_stats->finalize();
-
 }
 
 ////////////////
