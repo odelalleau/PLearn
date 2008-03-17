@@ -31,7 +31,14 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
+echo
+echo "******************************************"
+echo "** WARNING ** : THIS SCRIPT IS DEPRECATED! To compile a PLearn python extension, you should use pymake directly with the -pyso option."
+echo "******************************************"
+echo;echo
+
 pushd $PLEARNDIR/python_modules/plearn/pyext
-pymake -so $* plext.cc
-ln -fs libplext.so plext.so
+pymake -pyso $* plext.cc
+#pymake -so $* plext.cc
+#ln -fs libplext.so plext.so
 popd
