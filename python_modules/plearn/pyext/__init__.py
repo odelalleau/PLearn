@@ -75,20 +75,21 @@ def TMat( *args ):
         return [ content[i*ncols:(i+1)*ncols] for i in range(nrows) ]
 
 
-from plearn.utilities.options_dialog import *
-verb, logs, namespaces, use_gui= getGuiInfo(sys.argv)
+def optDialog():
+    from plearn.utilities import options_dialog as od
+    verb, logs, namespaces, use_gui= od.getGuiInfo(sys.argv)
 
-# Enact the use of plargs: the current behavior is to consider as a plargs
-# any command-line argument that contains a '=' char and to neglect all
-# others
-plargs.parse([ arg for arg in sys.argv if arg.find('=') != -1 ])
+    # Enact the use of plargs: the current behavior is to consider as a plargs
+    # any command-line argument that contains a '=' char and to neglect all
+    # others
+    plargs.parse([ arg for arg in sys.argv if arg.find('=') != -1 ])
 
-if use_gui:
-    runit, verb, logs= optionsDialog(sys.argv[0], plargs.expdir,
-                                     verb, logs, namespaces)
-    if not runit:
-        sys.exit()
-    loggingControl(verb, logs)
+    if use_gui:
+        runit, verb, logs= od.optionsDialog(sys.argv[0], plargs.expdir,
+                                            verb, logs, namespaces)
+        if not runit:
+            sys.exit()
+        loggingControl(verb, logs)
 
 pl.AutoVMatrix()
 AutoVMatrix.__len__ = lambda self: self.length
