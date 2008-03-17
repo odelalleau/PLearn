@@ -84,6 +84,7 @@ PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix"
 
 void FilteredVMatrix::openIndex()
 {
+    PLASSERT(hasMetaDataDir());
     string idxfname = getMetaDataDir() / "filtered.idx";
     if(!force_mkdir(getMetaDataDir()))
         PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
