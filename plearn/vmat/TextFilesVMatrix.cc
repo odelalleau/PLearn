@@ -82,6 +82,7 @@ PLEARN_IMPLEMENT_OBJECT(
 
 void TextFilesVMatrix::getFileAndPos(int i, unsigned char& fileno, int& pos) const
 {
+    PLASSERT(idxfile!=0);
     if(i<0 || i>=length())
         PLERROR("TextFilesVMatrix::getFileAndPos out of range row %d (only %d rows)", i, length());
     fseek(idxfile, 5+i*5, SEEK_SET);
@@ -862,6 +863,11 @@ TextFilesVMatrix::~TextFilesVMatrix()
 void TextFilesVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    idxfile=0;
+    txtfiles.resize(0);
+    //should be already build.
+    auto_build_map=false;
+    build();
 }
 
 } // end of namespace PLearn
