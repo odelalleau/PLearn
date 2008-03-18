@@ -382,7 +382,7 @@ void RegressionTree::computeOutputAndCosts(const Vec& inputv,
     PLASSERT(costsv.size()==nTestCosts());
     PLASSERT(nodes);
     nodes->resize(0);
-    root->computeOutputAndNodes(inputv, outputv, nodes);
+    computeOutputAndNodes(inputv, outputv, nodes);
     costsv.clear();
     costsv[0] = pow((outputv[0] - targetv[0]), 2);
     costsv[1] = outputv[1];
