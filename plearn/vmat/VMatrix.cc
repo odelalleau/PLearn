@@ -789,7 +789,8 @@ Array<VMField> VMatrix::getSavedFieldInfos() const
         case 2: current_fieldinfos[i] = VMField(v[0], VMField::FieldType(toint(v[1]))); break;
         default: PLERROR("In VMatrix::getSavedFieldInfos Format not recognized in file %s.\n"
                          "Each line should be '<name> {<type>}'.\n"
-                         "Got: '%s'",filename.absolute().c_str(),line.c_str());
+                         "Got: '%s'. Check for a space in <name>",
+                         filename.absolute().c_str(),line.c_str());
         }
     }
     return current_fieldinfos;
