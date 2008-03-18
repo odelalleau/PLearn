@@ -1042,13 +1042,15 @@ def win32_parallel_compile(files_to_compile):
 def sequential_link(executables_to_link, linkname):
     """executables_to_link is a list of FileInfo of .cc files that contain a main()
     and whose corresponding executable should be made"""
+    link_exit_code = 0
     for ccfile in executables_to_link:
         failures =  ccfile.failed_ccfiles_to_link()
         if failures:
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
             print '   Errors were while compiling files:'
             print '   '+string.join(failures,'\n   ')
-            return 1
+            if link_exit_code == 0:
+                link_exit_code = 1
         else:
             if not local_compilation:
                 print 'Waiting for NFS to catch up...'
@@ -1057,13 +1059,15 @@ def sequential_link(executables_to_link, linkname):
                 copy_ofiles_locally(executables_to_link)
             if verbose>=2:
                 print '[ LINKING',ccfile.filebase,']'
-            link_exit_code = ccfile.launch_linking()
+            new_link_exit_code = ccfile.launch_linking()
+            if link_exit_code == 0:
+                link_exit_code = new_link_exit_code
             if create_so or create_pyso:
                 so_filename = os.path.basename(ccfile.corresponding_output)
                 ccfile.make_symbolic_link(so_filename, so_filename)
             else:
                 ccfile.make_symbolic_link(linkname)
-            return link_exit_code
+    return link_exit_code
 
 def sequential_dll(target_file_info):
     """target_file_info is a FileInfo of .cc file whose corresponding dll should be made"""
@@ -2759,6 +2763,8 @@ def main( args ):
 
     ######  The compilation and linking
 
+    return_code = 0
+
     for target in otherargs:
         configpath = get_config_path(target)
         execfile( configpath, globals() )
@@ -2814,15 +2820,20 @@ def main( args ):
                 print '++++ Linking', string.join(map(lambda x: x.filebase, executables_to_link.keys()))
                 ret = sequential_link(executables_to_link.keys(),linkname)
                 if ret != 0:
-                    sys.exit(ret)
+                    return_code = ret
+                    continue    # Move on to next file.
 
             if create_dll:
                 print '++++ Creating DLL of', target
                 ret = sequential_dll(file_info(target))
                 if ret != 0:
-                    sys.exit(ret)
+                    return_code = ret
+                    continue    # Move on to next file.
 
             if temp_objs:
                 os.system('chmod 777 --silent '+objsdir+'/*')
                 mychmod(objsdir,33279)
+
+    if return_code != 0:
+        sys.exit(return_code)
 
