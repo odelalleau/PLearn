@@ -179,6 +179,10 @@ void GaussianizeVMatrix::build_()
                 TVec<int>(col, col + the_source->extrasize() - 1, 1));
     col += the_source->extrasize();
 
+    //to save the stats their must be a metadatadir
+    if(!the_source->hasMetaDataDir() && hasMetaDataDir())
+        the_source->setMetaDataDir(getMetaDataDir()+"train_source");
+
     TVec<StatsCollector> stats = the_source->
         getPrecomputedStatsFromFile("stats_gaussianizeVMatrix.psave", -1, true);
 
