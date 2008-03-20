@@ -677,7 +677,11 @@ class DBICondor(DBIBase):
                 c2=""
 
             # We use the absolute path so that we don't have corner case as with ./
-            c = os.path.normpath(os.path.join(os.getcwd(), c))
+            shellcommand=False
+            if c=="touch" or c=="echo":
+                shellcommand=True
+            else:
+                c = os.path.normpath(os.path.join(os.getcwd(), c))
             command = "".join([c,c2])
 
                 # We will execute the command on the specified architecture
@@ -725,8 +729,10 @@ class DBICondor(DBIBase):
                 self.targetcondorplatform=self.cplat
                 newcommand=command
 
-            if not os.path.exists(c):
-                raise Exception("The command '"+c+"' do not exist!")
+            if shellcommand:
+                pass
+            elif not os.path.exists(c):
+                raise Exception("The command '"+c+"' do not exist! You must provide the full path to the executable")
             elif not os.access(c, os.X_OK):
                 raise Exception("The command '"+c+"' do not have execution permission!")
 
