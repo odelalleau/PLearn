@@ -302,6 +302,10 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Current experiment directory")));
 
     declareMethod(
+        rmm, "outputsize", &PLearner::outputsize,
+        (BodyDoc("Return the learner outputsize")));
+    
+    declareMethod(
         rmm, "setTrainStatsCollector", &PLearner::setTrainStatsCollector,
         (BodyDoc("Sets the statistics collector whose update() method will be called\n"
                  "during training.\n."),
