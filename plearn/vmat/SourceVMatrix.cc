@@ -50,7 +50,8 @@ using namespace std;
 
 
 SourceVMatrix::SourceVMatrix(bool call_build_)
-    : inherited(call_build_)
+    : inherited(call_build_),
+      deep_copy_source(true)
 {
     if( call_build_ )
         build_();
@@ -58,7 +59,8 @@ SourceVMatrix::SourceVMatrix(bool call_build_)
 
 SourceVMatrix::SourceVMatrix(VMat the_source, bool call_build_)
     : inherited(call_build_),
-      source(the_source)
+      source(the_source),
+      deep_copy_source(true)
 {
     if( call_build_ )
         build_();
@@ -67,7 +69,8 @@ SourceVMatrix::SourceVMatrix(VMat the_source, bool call_build_)
 SourceVMatrix::SourceVMatrix(VMat the_source, int the_length, int the_width,
                              bool call_build_)
     : inherited(the_length, the_width, call_build_),
-      source(the_source)
+      source(the_source),
+      deep_copy_source(true)
 {
     if( call_build_ )
         build_();
@@ -111,6 +114,9 @@ void SourceVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "source", &SourceVMatrix::source, OptionBase::buildoption,
                   "The source VMatrix");
 
+    declareOption(ol, "deep_copy_source", &SourceVMatrix::deep_copy_source,
+                  OptionBase::buildoption,
+                  "If True, we make a deep copy of the source.");
     /*
       declareOption(ol, "dependencies", &SourceVMatrix::dependencies, OptionBase::buildoption,
       "a list of paths to files that this VMat depends on. \n"
@@ -151,7 +157,8 @@ void SourceVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(sourcerow, copies);
-    deepCopyField(source, copies);
+    if(deep_copy_source)
+        deepCopyField(source, copies);
 }
 
 ///////////////

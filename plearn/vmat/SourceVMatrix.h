@@ -84,6 +84,8 @@ public:
     // ************************
 
     VMat source;
+    
+    bool deep_copy_source;//Default true, if true, we deep copy the source
 
     //  TVec<string> dependencies; // a list of paths to files that this VMat depends on
 
