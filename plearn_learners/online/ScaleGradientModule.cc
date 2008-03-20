@@ -104,6 +104,12 @@ void ScaleGradientModule::fprop(const Mat& inputs, Mat& outputs)
     outputs << inputs;
 }
 
+void ScaleGradientModule::fprop(const Vec& input, Vec& output) const
+{
+    output.resize(input.size());
+    output << input;
+}
+
 /////////////////
 // bpropUpdate //
 /////////////////
@@ -112,11 +118,12 @@ void ScaleGradientModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
                                       const Mat& output_gradients,
                                       bool accumulate)
 {
-    input_gradients.resize(output_gradients.length(),
-                           output_gradients.width());
-
     if (accumulate)
     {
+        PLASSERT_MSG( input_gradients.length() == output_gradients.length()
+                      && input_gradients.width() == output_gradients.width(),
+                      "Cannot accumulate into input_gradients and resize it" );
+
         if (scale == 0)
             return;
         else // input_gradients += scale * output_gradients
@@ -124,10 +131,37 @@ void ScaleGradientModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
     }
     else
     {
+        input_gradients.resize(output_gradients.length(),
+                               output_gradients.width());
+
         if (scale == 0)
             input_gradients.clear();
         else // input_gradients = scale * output_gradients
             multiply(input_gradients, output_gradients, scale);
+    }
+}
+
+void ScaleGradientModule::bpropUpdate(const Vec& input, const Vec& output,
+                                      Vec& input_gradient,
+                                      const Vec& output_gradient,
+                                      bool accumulate)
+{
+    if (accumulate)
+    {
+        PLASSERT_MSG( input_gradient.size() == output_gradient.size(),
+                      "Cannot accumulate into input_gradient and resize it" );
+        if (scale == 0)
+            return;
+        else // input_gradient += scale * output_gradients
+            multiplyAcc(input_gradient, output_gradient, scale);
+    }
+    else
+    {
+        input_gradient.resize(output_gradient.size());
+        if (scale == 0)
+            input_gradient.clear();
+        else // input_gradient = scale * output_gradients
+            multiply(output_gradient, scale, input_gradient);
     }
 }
 

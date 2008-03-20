@@ -67,12 +67,17 @@ public:
     // Your other public member functions go here
 
     //! Given a batch of inputs, compute the outputs
-    //! SOON TO BE DEPRECATED, USE fprop(const TVec<Mat*>& ports_value)
     virtual void fprop(const Mat& inputs, Mat& outputs);
+    virtual void fprop(const Vec& input, Vec& output) const;
 
     virtual void bpropUpdate(const Mat& inputs, const Mat& outputs,
                              Mat& input_gradients,
                              const Mat& output_gradients,
+                             bool accumulate=false);
+
+    virtual void bpropUpdate(const Vec& input, const Vec& output,
+                             Vec& input_gradient,
+                             const Vec& output_gradient,
                              bool accumulate=false);
 
     //! Reset the parameters to the state they would be BEFORE starting

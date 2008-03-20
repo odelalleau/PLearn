@@ -2461,15 +2461,15 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
     if( i_output_layer>=n_layers-2 && (!use_classification_cost && !final_module))
     {
         //! We haven't computed the expectations of the top layer
-	if(i_output_layer==n_layers-1)
-	{
+        if(i_output_layer==n_layers-1)
+        {
             connections[ n_layers-2 ]->setAsDownInput(layers[ n_layers-2 ]->expectation );
             layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
             layers[ n_layers-1 ]->computeExpectation();
         }
         output.resize(outputsize());
         output << layers[ i_output_layer ]->expectation;
-    }	    
+    }
 
     if( use_classification_cost )
         classification_module->fprop( layers[ n_layers-2 ]->expectation,
