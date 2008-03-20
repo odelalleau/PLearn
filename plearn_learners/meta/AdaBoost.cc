@@ -280,6 +280,7 @@ void AdaBoost::forget()
     weak_learners.resize(0, nstages);
     voting_weights.resize(0, nstages);
     sum_voting_weights = 0;
+    found_zero_error_weak_learner=false;
     if (seed_ >= 0)
         manual_seed(seed_);
     else
@@ -298,9 +299,29 @@ void AdaBoost::train()
         PLERROR("In AdaBoost::train, targetsize should be 1, found %d", 
                 train_set->targetsize());
 
-    if (nstages < stage)        //!< Asking to revert to previous stage
-        forget();
+    if (nstages < stage){        //!< Asking to revert to previous stage
+        PLCHECK(nstages>0); // should use forget
+        cout<<"In AdaBoost::train() - reverting to an old stage "<<stage<<" with nstages "<<nstages<<endl;
+        stage = nstages;
+        PLCHECK(learners_error.size()>=stage);
+        PLCHECK(weak_learners.size()>=stage);
+        PLCHECK(voting_weights.size()>=stage);
+        PLCHECK(nstages>0);
+        learners_error.resize(stage);
+        weak_learners.resize(stage);
+        voting_weights.resize(stage);
+        sum_voting_weights = sum(voting_weights);
+        found_zero_error_weak_learner=false;
 
+        example_weights.resize(0);
+        return;
+        //need examples_weights
+        //computeTrainingError();
+
+    }else if(nstages>0 && stage>0 && example_weights.size()==0){
+        PLERROR("In AdaBoost::train() -  we can't retrain a reverted learner...");
+    }
+    
     if(found_zero_error_weak_learner) // Training is over...
         return;
 
@@ -636,48 +657,7 @@ void AdaBoost::train()
         }
         example_weights *= real(1.0)/sum_w;
 
-        if (compute_training_error)
-        {
-            {
-                PP<ProgressBar> pb;
-                if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
-                train_stats->forget();
-                Vec err(nTrainCosts());
-                int nb_class_0=0;
-                int nb_class_1=0;
-                real cum_weights_0=0;
-                real cum_weights_1=0;
-
-                bool save_forward_sub_learner_test_costs = 
-                    forward_sub_learner_test_costs;
-                forward_sub_learner_test_costs=false;
-                for (int i=0;i<n;i++)
-                {
-                    if(report_progress) pb->update(i);
-                    train_set->getExample(i, input, target, weight);
-                    computeCostsOnly(input,target,err);
-                    if(fast_is_equal(target[0],0.)){
-                        cum_weights_0 += example_weights[i];
-                        nb_class_0++;
-                    }else{
-                        cum_weights_1 += example_weights[i];
-                        nb_class_1++;
-                    }
-                    err[3]=cum_weights_0/nb_class_0;
-                    err[4]=cum_weights_1/nb_class_1;
-                    train_stats->update(err);
-                }
-                train_stats->finalize();
-                forward_sub_learner_test_costs = 
-                    save_forward_sub_learner_test_costs;
-
-            }
-            if (verbosity>2)
-                cout << "At stage " << stage << 
-                    " boosted (weighted) classification error on training set = " 
-                     << train_stats->getMean() << endl;
-     
-        }
+        computeTrainingError(input, target);
 
         if(fast_exact_is_equal(learners_error[stage], 0))
         {
@@ -716,6 +696,8 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 }
 void AdaBoost::computeOutput(const Vec& input, Vec& output, int nb_learner) const
 {
+    if(nb_learner<0)
+        nb_learner=weak_learners.size();
     PLASSERT(nb_learner>0);
     real local_sum_weight = sum_voting_weights;
     if (nb_learner>voting_weights.length() and not found_zero_error_weak_learner){
@@ -773,11 +755,6 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
     else
         costs[3]=costs[4]=MISSING_VALUE;
 
-    PP<VMatrix> the_train_set = train_set;
-    if(!train_set)
-        the_train_set=sorted_train_set;
-    PLASSERT(the_train_set);
-
     if(forward_sub_learner_test_costs){
         Vec weighted_costs(weak_learners[0]->nTestCosts());
         Vec sum_weighted_costs(weak_learners[0]->nTestCosts());
@@ -830,6 +807,57 @@ Vec AdaBoost::remote_computeOutput_at_stage(const Vec& input,
     tmp_output2.resize(outputsize());
     computeOutput(input, tmp_output2, stage);
     return tmp_output2;
+}
+
+
+void AdaBoost::computeTrainingError(Vec input, Vec target)
+{
+    if (compute_training_error)
+    {
+        PP<VMatrix> the_train_set = train_set;
+        if(!train_set)
+            the_train_set=sorted_train_set;
+        PLASSERT(the_train_set);
+        int n=the_train_set->length();
+        PP<ProgressBar> pb;
+        if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
+        train_stats->forget();
+        Vec err(nTrainCosts());
+        int nb_class_0=0;
+        int nb_class_1=0;
+        real cum_weights_0=0;
+        real cum_weights_1=0;
+
+        bool save_forward_sub_learner_test_costs = 
+            forward_sub_learner_test_costs;
+        forward_sub_learner_test_costs=false;
+        real weight;
+        for (int i=0;i<n;i++)
+        {
+            if(report_progress) pb->update(i);
+            train_set->getExample(i, input, target, weight);
+            computeCostsOnly(input,target,err);
+            if(fast_is_equal(target[0],0.)){
+                cum_weights_0 += example_weights[i];
+                nb_class_0++;
+            }else{
+                cum_weights_1 += example_weights[i];
+                nb_class_1++;
+            }
+            err[3]=cum_weights_0/nb_class_0;
+            err[4]=cum_weights_1/nb_class_1;
+            train_stats->update(err);
+        }
+        train_stats->finalize();
+        forward_sub_learner_test_costs = 
+            save_forward_sub_learner_test_costs;
+
+        if (verbosity>2)
+            cout << "At stage " << stage << 
+                " boosted (weighted) classification error on training set = " 
+                 << train_stats->getMean() << endl;
+     
+    }
 }
 
 } // end of namespace PLearn

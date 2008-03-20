@@ -149,6 +149,7 @@ private:
     //! be modified by subsequent use of this object, and thus should be copied
     //! if it needs to be stored safely.
     Vec remote_computeOutput_at_stage(const Vec& input, const int stage) const;
+    void computeTrainingError(Vec input, Vec target);
 
 protected: 
     //! Declares this class' options
