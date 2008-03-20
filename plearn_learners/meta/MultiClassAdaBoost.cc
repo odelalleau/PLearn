@@ -200,7 +200,6 @@ void MultiClassAdaBoost::train()
     PLWARNING("In MultiClassAdaBoost::train() - not implemented, should be already trained");
 }
 
-
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     output.resize(outputsize());
@@ -228,6 +227,75 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
     output[0]=ind;
     output[1]=tmp1[0];
     output[2]=tmp2[0];
+}
+void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
+                                               const Vec& target,
+                                               Vec& output, Vec& costs) const
+{
+    PLASSERT(costs.size()==nTestCosts());
+
+    output.resize(outputsize());
+
+    Vec output1(learner1.outputsize());
+    Vec output2(learner2.outputsize());
+    Vec subcosts1(learner1.nTestCosts());
+    Vec subcosts2(learner1.nTestCosts());
+
+    learner1.computeOutputAndCosts(input, target, output1, subcosts1);
+    learner2.computeOutputAndCosts(input, target, output2, subcosts2);
+
+    int ind1=int(round(output1[0]));
+    int ind2=int(round(output2[0]));
+    int ind=-1;
+    if(ind1==0 && ind2==0)
+        ind=0;
+    else if(ind1==1 && ind2==0)
+        ind=1;
+    else if(ind1==1 && ind2==1)
+        ind=2;
+    else
+        ind=1;//TODOself.confusion_target;
+    output[0]=ind;
+    output[1]=output1[0];
+    output[2]=output2[0];
+
+    int out = ind;
+    int pred = int(round(target[0]));
+    costs[0]=int(out != pred);//class_error
+    costs[1]=abs(out-pred);//linear_class_error
+    costs[2]=pow(real(abs(out-pred)),2);//square_class_error
+    
+    //append conflict cost
+    if(fast_is_equal(round(output[1]),0) 
+       && fast_is_equal(round(output[2]),1))
+        costs[3]=1;
+    else
+        costs[3]=0;
+
+    costs[4]=costs[5]=costs[6]=0;
+    costs[out+4]=1;
+
+    if(forward_sub_learner_test_costs){
+        costs.resize(7);
+        Vec subcosts1(learner1.nTestCosts());
+        Vec subcosts2(learner1.nTestCosts());
+        Vec target1(0,1), target2(0,1);
+        if(fast_is_equal(target[0],0.)){
+            target1.append(0);
+            target2.append(0);
+        }else if(fast_is_equal(target[0],1.)){
+            target1.append(1);
+            target2.append(0);
+        }else if(fast_is_equal(target[0],2.)){
+            target1.append(1);
+            target2.append(1);
+        }
+        subcosts1+=subcosts2;
+        costs.append(subcosts1);
+    }
+
+    PLASSERT(costs.size()==nTestCosts());
+
 }
 
 void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
