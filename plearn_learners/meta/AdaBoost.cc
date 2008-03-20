@@ -729,7 +729,12 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output, int nb_learner) cons
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                        const Vec& target, Vec& costs) const
 {
-    PLASSERT(costs.size()==nTestCosts());
+    //when computing train stats, costs==nTrainCosts() 
+    //  and forward_sub_learner_test_costs==false
+    if(forward_sub_learner_test_costs)
+        PLASSERT(costs.size()==nTestCosts());
+    else
+        PLASSERT(costs.size()==nTrainCosts()||costs.size()==nTestCosts());
     costs.resize(5);
     costs.clear();
 
@@ -767,7 +772,7 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
         costs.append(sum_weighted_costs);
     }
 
-    PLASSERT(costs.size()==nTestCosts());
+    PLASSERT(costs.size()==nTrainCosts()||costs.size()==nTestCosts());
 }
 
 TVec<string> AdaBoost::getTestCostNames() const
