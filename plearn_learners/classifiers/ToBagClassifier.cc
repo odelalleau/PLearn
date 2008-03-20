@@ -194,7 +194,7 @@ void ToBagClassifier::updateCostAndBagOutput(const Vec& target,
                                              const Vec& output,
                                              Vec& costs) const
 {
-    PLASSERT( is_equal(sum(output), 1) );   // Ensure probabilities sum to 1.
+    PLASSERT( sum(output) < 1.001 & sum(output) > 0.999);
     int bag_info = int(round(target.lastElement()));
     if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
         bag_output.resize(0, 0);
