@@ -121,6 +121,9 @@ void GaussianDistribution::declareOptions(OptionList& ol)
     declareOption(ol, "given_mu", &GaussianDistribution::given_mu, OptionBase::buildoption,
                   "If this is set (i.e. not an empty vec), then train will not learn mu from the data, but simply copy its value given here.");
 
+    declareOption(ol, "given_covarmat", &GaussianDistribution::given_covarmat, OptionBase::buildoption,
+                  "If this is set (i.e. not an empty mat), then train will not learn covar from the data, but simply copy its value given here.");
+
     // Learnt options
     declareOption(ol, "mu", &GaussianDistribution::mu, OptionBase::learntoption, "");
     declareOption(ol, "covarmat", &GaussianDistribution::covarmat, OptionBase::learntoption, "");
@@ -184,6 +187,7 @@ void GaussianDistribution::train()
     // First get mean and covariance
     if(given_mu.length()>0)
     { // we have a fixed given_mu
+        PLASSERT(given_covarmat.length()==0);
         d = given_mu.length();
         mu.resize(d);
         mu << given_mu;
@@ -193,6 +197,20 @@ void GaussianDistribution::train()
             computeInputCovar(training_set, mu, covarmat);
         else
             PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
+    }
+    else if(given_covarmat.length()>0)
+    {
+        d=given_covarmat.length();
+        PLASSERT(d==given_covarmat.width());
+        covarmat.resize(d,d);
+        covarmat << given_covarmat;
+        if(ws==0)
+            computeMean(training_set, mu);
+        else if(ws==1)
+            computeInputMean(training_set, mu);
+        else
+            PLERROR("In GaussianDistribution, weightsize can only be 0 or 1");
+       
     }
     else
     {

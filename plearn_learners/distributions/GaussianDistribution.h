@@ -74,6 +74,7 @@ public:
     bool use_last_eig;
     float ignore_weights_below; //!< When doing a weighted fitting (weightsize==1), points with a weight below this value will be ignored
     Vec given_mu;
+    Mat given_covarmat;
 
 public:
     GaussianDistribution();
