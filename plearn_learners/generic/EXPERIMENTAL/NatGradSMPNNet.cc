@@ -871,7 +871,7 @@ void NatGradSMPNNet::train()
     PP<PTimer> ptimer;
     // Number of mini-batches that have been processed before one update.
     int n_minibatches_per_update = 0;
-    StatsCollector nmbpu_stats;
+    StatsCollector nmbpu_stats(/*-1*/);
 
     if (iam == 0) {
         //tmp_log << "Starting loop" << endl;
@@ -914,6 +914,10 @@ void NatGradSMPNNet::train()
                     */
             onlineStep(cur_stage, targets, train_costs, example_weights );
             n_minibatches_per_update++;
+            /*
+            pout << "CPU " << iam << ": n_minibatches_per_update = "
+                 << n_minibatches_per_update << endl;
+                 */
             /*
             sleep(iam);
             string update = tostring(params_update);
@@ -986,10 +990,16 @@ void NatGradSMPNNet::train()
                     // If 'synchronize_update' is true this means all CPUs have
                     // updated the parameters.
                     break;
-            } else if (performed_update) {
-                // TODO We could break here by checking the 'n_ready'
-                // semaphore: once it is reset to zero everyone can exit at
-                // once without necessarily doing it in turn.
+            } else {
+                if (!synchronize_update)
+                    // We do not wait our turn: instead we move on to the next
+                    // minibatch.
+                    break;
+                if (performed_update) {
+                    // TODO We could break here by checking the 'n_ready'
+                    // semaphore: once it is reset to zero everyone can exit at
+                    // once without necessarily doing it in turn.
+                }
             }
             }
         }
@@ -1046,18 +1056,20 @@ void NatGradSMPNNet::train()
     //tmp_log.flush();
 
     // Wait until it is our turn.
+    bool displayed_stats = false;
     while (true) {
         int sem_value = semctl(semaphore_id, 0, GETVAL);
         if (sem_value == iam || iam == 0) {
             if (sem_value == iam && wait_for_final_update) {
 
                 // Display statistics for effective sizes of mini-batches.
-                /*
-                pout << "CPU " << iam << ": " << endl
-                    << " - mean  : " << nmbpu_stats.mean() << endl
-                    << " - stderr: " << nmbpu_stats.stderror() << endl
-                    << " - median: " << nmbpu_stats.pseudo_quantile(0.5) << endl;
-                */
+                if (!displayed_stats) {
+                    pout << "CPU " << iam << ": " << endl
+                        << " - mean  : " << nmbpu_stats.mean() << endl
+                        << " - stderr: " << nmbpu_stats.stderror() << endl
+                        << " - median: " << nmbpu_stats.pseudo_quantile(0.5) << endl;
+                    displayed_stats = true;
+                }
 
                 if (nsteps >  0) {
                     //printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
