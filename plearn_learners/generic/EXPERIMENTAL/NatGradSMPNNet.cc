@@ -869,6 +869,10 @@ void NatGradSMPNNet::train()
                                                : stage_incr_per_cpu + 1;
 
     PP<PTimer> ptimer;
+    // Number of mini-batches that have been processed before one update.
+    int n_minibatches_per_update = 0;
+    StatsCollector nmbpu_stats;
+
     if (iam == 0) {
         //tmp_log << "Starting loop" << endl;
         //tmp_log.flush();
@@ -909,6 +913,7 @@ void NatGradSMPNNet::train()
                     iam, cur_stage, samples_str.c_str());
                     */
             onlineStep(cur_stage, targets, train_costs, example_weights );
+            n_minibatches_per_update++;
             /*
             sleep(iam);
             string update = tostring(params_update);
@@ -947,6 +952,8 @@ void NatGradSMPNNet::train()
                     all_params += params_update;
                     //params_update += all_params;
                     params_update.clear();
+                    nmbpu_stats.update(real(n_minibatches_per_update));
+                    n_minibatches_per_update = 0;
                     performed_update = true;
                 }
                 if (nsteps > 0) {
@@ -1043,6 +1050,15 @@ void NatGradSMPNNet::train()
         int sem_value = semctl(semaphore_id, 0, GETVAL);
         if (sem_value == iam || iam == 0) {
             if (sem_value == iam && wait_for_final_update) {
+
+                // Display statistics for effective sizes of mini-batches.
+                /*
+                pout << "CPU " << iam << ": " << endl
+                    << " - mean  : " << nmbpu_stats.mean() << endl
+                    << " - stderr: " << nmbpu_stats.stderror() << endl
+                    << " - median: " << nmbpu_stats.pseudo_quantile(0.5) << endl;
+                */
+
                 if (nsteps >  0) {
                     //printf("CPU %d final updating (nsteps =%d)\n", iam, nsteps);
                     if (delayed_update) {
