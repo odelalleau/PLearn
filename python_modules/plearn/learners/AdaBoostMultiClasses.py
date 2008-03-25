@@ -183,8 +183,8 @@ class AdaBoostMultiClasses:
         costs=[]
         #calculate stats, outputs, costs
         for i in range(len(testMat)):
-            out1=testoutputs1[i][0]
-            out2=testoutputs2[i][0]
+            out1=testoutputs1.getRow(i)[0]
+            out2=testoutputs2.getRow(i)[0]
             ind1=int(round(out1))
             ind2=int(round(out2))
             if ind1==ind2==0:
@@ -202,8 +202,8 @@ class AdaBoostMultiClasses:
             target=testMat[i][-1]
             cost=self.computeCostsFromOutput(input,output,target,
                                              forward_sub_learner_costs=False)
-            cost.extend(testcosts1[i])
-            cost.extend(testcosts2[i])
+            cost.extend(testcosts1.getRow(i))
+            cost.extend(testcosts2.getRow(i))
             test_stats.update(cost,1)
             if return_costs:
                 costs.append(cost)
