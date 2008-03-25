@@ -652,6 +652,9 @@ class DBIbqtools(DBIBase):
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
+        from socket import gethostname
+        if (not os.path.abspath(os.path.curdir).startswith("/home/fringant2/")) and gethostname().endswith(".iro.umontreal.ca"):
+            raise Exception("You must be in a subfolder of /home/fringant2/")
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
@@ -678,7 +681,8 @@ class DBICondor(DBIBase):
 
             # We use the absolute path so that we don't have corner case as with ./
             shellcommand=False
-            if c=="touch" or c=="echo":
+            autorized_shell_command=[ "touch", "echo"]
+            if c in autorized_shell_command:
                 shellcommand=True
             else:
                 c = os.path.normpath(os.path.join(os.getcwd(), c))
