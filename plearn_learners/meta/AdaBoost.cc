@@ -220,25 +220,6 @@ void AdaBoost::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-////////////////////
-// declareMethods //
-////////////////////
-void AdaBoost::declareMethods(RemoteMethodMap& rmm)
-{
-    // Insert a backpointer to remote methods; note that this
-    // different than for declareOptions()
-    rmm.inherited(inherited::_getRemoteMethodMap_());
-
-    declareMethod(
-        rmm, "computeOutput_at_stage", &AdaBoost::remote_computeOutput_at_stage,
-        (BodyDoc("On a trained learner, this computes the output from the "
-                 "input with the first stage weak learner. There must be "
-                 "enough weak learners that have been trained"),
-         ArgDoc ("input", "Input vector (should have width inputsize)"),
-         ArgDoc ("stage", "The number of stage to use to compute the output"),
-         RetDoc ("Computed output (will have width outputsize)")));
-
-}
 void AdaBoost::build_()
 {
     if(conf_rated_adaboost && pseudo_loss_adaboost)
@@ -289,19 +270,10 @@ void AdaBoost::forget()
 
 void AdaBoost::train()
 {
-    if(!train_set)
-        PLERROR("In AdaBoost::train, you did not setTrainingSet");
-    
-    if(!train_stats && compute_training_error)
-        PLERROR("In AdaBoost::train, you did not setTrainStatsCollector");
-
-    if (train_set->targetsize()!=1)
-        PLERROR("In AdaBoost::train, targetsize should be 1, found %d", 
-                train_set->targetsize());
-
     if (nstages < stage){        //!< Asking to revert to previous stage
         PLCHECK(nstages>0); // should use forget
-        cout<<"In AdaBoost::train() - reverting to an old stage "<<stage<<" with nstages "<<nstages<<endl;
+        cout<<"In AdaBoost::train() - reverting from stage "<<stage
+            <<" to stage "<<nstages<<endl;
         stage = nstages;
         PLCHECK(learners_error.size()>=stage);
         PLCHECK(weak_learners.size()>=stage);
@@ -322,6 +294,16 @@ void AdaBoost::train()
         PLERROR("In AdaBoost::train() -  we can't retrain a reverted learner...");
     }
     
+    if(!train_set)
+        PLERROR("In AdaBoost::train, you did not setTrainingSet");
+    
+    if(!train_stats && compute_training_error)
+        PLERROR("In AdaBoost::train, you did not setTrainStatsCollector");
+
+    if (train_set->targetsize()!=1)
+        PLERROR("In AdaBoost::train, targetsize should be 1, found %d", 
+                train_set->targetsize());
+
     if(found_zero_error_weak_learner) // Training is over...
         return;
 
@@ -692,28 +674,11 @@ void AdaBoost::train()
 
 void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
-    computeOutput(input,output,voting_weights.length());
-}
-void AdaBoost::computeOutput(const Vec& input, Vec& output, int nb_learner) const
-{
-    if(nb_learner<0)
-        nb_learner=weak_learners.size();
-    PLASSERT(nb_learner>0);
-    real local_sum_weight = sum_voting_weights;
-    if (nb_learner>voting_weights.length() and not found_zero_error_weak_learner){
-        PLERROR("AdaBoost::computeOutput - Asked to compute the output with more learner(%d) then currently learned %d",
-                nb_learner,voting_weights.length());
-    }else if(nb_learner>voting_weights.length()){
-        nb_learner=voting_weights.length();
-    }else if(nb_learner != voting_weights.length()){
-        local_sum_weight = 0;
-        for (int i=0;i<nb_learner;i++)
-            local_sum_weight += voting_weights[i];
-    }
-    output.resize(weak_learner_template->outputsize());
+    PLASSERT(weak_learners.size()>0);
+    
     real sum_out=0;
-    weak_learner_output.resize(output.size());
-    for (int i=0;i<nb_learner;i++)
+    weak_learner_output.resize(weak_learners[0]->outputsize());
+    for (int i=0;i<weak_learners.size();i++)
     {
         weak_learners[i]->computeOutput(input,weak_learner_output);
         if(!pseudo_loss_adaboost && !conf_rated_adaboost)
@@ -722,7 +687,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output, int nb_learner) cons
         else
             sum_out += weak_learner_output[0]*voting_weights[i];
     }
-    output[0] = sum_out/local_sum_weight;
+    output[0] = sum_out/sum_voting_weights;
     output.resize(1);
 }
 
@@ -804,16 +769,6 @@ TVec<string> AdaBoost::getTrainCostNames() const
     costs[4] = "avg_weight_class_1";
     return costs;
 }
-
-//! Version of computeOutput that returns a result by value
-Vec AdaBoost::remote_computeOutput_at_stage(const Vec& input,
-                                            const int stage) const
-{
-    tmp_output2.resize(outputsize());
-    computeOutput(input, tmp_output2, stage);
-    return tmp_output2;
-}
-
 
 void AdaBoost::computeTrainingError(Vec input, Vec target)
 {

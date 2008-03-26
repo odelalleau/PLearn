@@ -112,6 +112,9 @@ void MultiClassAdaBoost::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+    sub_target_tmp.resize(2);
+    for(int i=0;i<sub_target_tmp.size();i++)
+        sub_target_tmp[i].resize(1);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -198,23 +201,32 @@ void MultiClassAdaBoost::train()
     }
     */
     PLWARNING("In MultiClassAdaBoost::train() - not implemented, should be already trained");
+    int stage1=learner1.stage;
+    int stage2=learner2.stage;
+
+    if(stage1>0 && stage1<nb_stage_to_use)
+        PLERROR("In  MultiClassAdaBoost::train() - asked to use more stage then already trained for learner1");
+    if(stage2>0 && stage2<nb_stage_to_use)
+        PLERROR("In  MultiClassAdaBoost::train() - asked to use more stage then already trained for learner1");
+    if(nb_stage_to_use>0){
+        learner1.nstages=nb_stage_to_use;
+        learner1.train();
+    }
+    if(nb_stage_to_use>0){
+        learner2.nstages=nb_stage_to_use;
+        learner2.train();
+    }
 }
 
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
-    output.resize(outputsize());
-
     Vec tmp1(learner1.outputsize());
     Vec tmp2(learner2.outputsize());
-    if(nb_stage_to_use!=-1){
-        learner1.computeOutput(input,tmp1,nb_stage_to_use);
-        learner2.computeOutput(input,tmp2,nb_stage_to_use);
-    }else{
-        learner1.computeOutput(input,tmp1);
-        learner2.computeOutput(input,tmp2);
-    }
+    learner1.computeOutput(input,tmp1);
+    learner2.computeOutput(input,tmp2);
     int ind1=int(round(tmp1[0]));
     int ind2=int(round(tmp2[0]));
+
     int ind=-1;
     if(ind1==0 && ind2==0)
         ind=0;
@@ -240,9 +252,12 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
     Vec output2(learner2.outputsize());
     Vec subcosts1(learner1.nTestCosts());
     Vec subcosts2(learner1.nTestCosts());
+    getSubLearnerTarget(target, sub_target_tmp);
 
-    learner1.computeOutputAndCosts(input, target, output1, subcosts1);
-    learner2.computeOutputAndCosts(input, target, output2, subcosts2);
+    learner1.computeOutputAndCosts(input, sub_target_tmp[0],
+                                   output1, subcosts1);
+    learner2.computeOutputAndCosts(input, sub_target_tmp[1],
+                                   output2, subcosts2);
 
     int ind1=int(round(output1[0]));
     int ind2=int(round(output2[0]));
@@ -277,19 +292,6 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
 
     if(forward_sub_learner_test_costs){
         costs.resize(7);
-        Vec subcosts1(learner1.nTestCosts());
-        Vec subcosts2(learner1.nTestCosts());
-        Vec target1(0,1), target2(0,1);
-        if(fast_is_equal(target[0],0.)){
-            target1.append(0);
-            target2.append(0);
-        }else if(fast_is_equal(target[0],1.)){
-            target1.append(1);
-            target2.append(0);
-        }else if(fast_is_equal(target[0],2.)){
-            target1.append(1);
-            target2.append(1);
-        }
         subcosts1+=subcosts2;
         costs.append(subcosts1);
     }
@@ -323,19 +325,10 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
         costs.resize(7);
         Vec subcosts1(learner1.nTestCosts());
         Vec subcosts2(learner1.nTestCosts());
-        Vec target1(0,1), target2(0,1);
-        if(fast_is_equal(target[0],0.)){
-            target1.append(0);
-            target2.append(0);
-        }else if(fast_is_equal(target[0],1.)){
-            target1.append(1);
-            target2.append(0);
-        }else if(fast_is_equal(target[0],2.)){
-            target1.append(1);
-            target2.append(1);
-        }
-        learner1.computeCostsOnly(input,target1,subcosts1);
-        learner2.computeCostsOnly(input,target2,subcosts2);
+        getSubLearnerTarget(target, sub_target_tmp);
+
+        learner1.computeCostsOnly(input,sub_target_tmp[0],subcosts1);
+        learner2.computeCostsOnly(input,sub_target_tmp[1],subcosts2);
         subcosts1+=subcosts2;
         costs.append(subcosts1);
     }
@@ -379,7 +372,28 @@ TVec<string> MultiClassAdaBoost::getTrainCostNames() const
     return names;
 }
 
-
+void MultiClassAdaBoost::getSubLearnerTarget(Vec target,
+                                             TVec<Vec> sub_target) 
+{
+    if(fast_is_equal(target[0],0.)){
+        sub_target[0]=0;
+        sub_target[1]=0;
+    }else if(fast_is_equal(target[0],1.)){
+        sub_target[0]=1;
+        sub_target[1]=0;
+    }else if(fast_is_equal(target[0],2.)){
+        sub_target[0]=1;
+        sub_target[1]=1;
+    }else if(target[0]>2){
+        PLWARNING("In MultiClassAdaBoost::getSubLearnerTarget - "
+                  "We only support target 0/1/2. We got %f. We transform "
+                  "it to a target of 2.", target[0]);
+        sub_target[0]=1;
+        sub_target[1]=1;
+    }else
+        PLERROR("In MultiClassAdaBoost::getSubLearnerTarget - "
+                  "We only support target 0/1/2. We got %f.", target[0]); 
+}
 } // end of namespace PLearn
 
 

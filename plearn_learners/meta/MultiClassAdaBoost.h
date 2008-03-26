@@ -156,6 +156,9 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
+
+//    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
 protected:
     //#####  Protected Options  ###############################################
 
@@ -176,9 +179,10 @@ private:
     // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
+    static void getSubLearnerTarget(Vec target, TVec<Vec> sub_target);
 private:
     //#####  Private Data Members  ############################################
-
+    TVec<Vec> sub_target_tmp;
 };
 
 // Declares a few other classes and functions related to this class
