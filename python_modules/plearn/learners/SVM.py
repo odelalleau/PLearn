@@ -1096,8 +1096,6 @@ class SVM(object):
               teststats = None
              ):
         assert testset <> None
-        if self.verbosity > 3:
-            print "SVM::test() called"
         # By default take the LAST model trained
         if self.model <> None:
             model = self.model
@@ -1109,6 +1107,8 @@ class SVM(object):
         samples, targets = self.get_datalist( testset )
         nclasses = self.nclasses
         nsamples = len(samples)
+        if self.verbosity > 3:
+            print "SVM::test() called on ",nsamples," samples"
 
         costnames = self.costnames
         # Translation of the cost 'confusion_matrix'
@@ -1170,6 +1170,8 @@ class SVM(object):
                     raise ValueError, "computation of cost %s not implemented in SVM::test()" % cn
             teststats.update(statVec,1.)
         
+        if self.verbosity > 3:
+            print "SVM::test() computed:", teststats
         return teststats #, outputs, costs
 
 
@@ -1197,6 +1199,7 @@ class SVM(object):
             print "   with param %s" % param
         self.train(dataspec, param)
         validset = self.valid_inputspec(dataspec)
+        self.validset = validset
         return self.test( validset, validstats )
 
 
@@ -1268,7 +1271,13 @@ class SVM(object):
             valid_stats = self.valid(dataspec, param)
 
             # Better valid cost is obtained!
-            if self.update_trials( param, valid_stats ):
+            if not self.update_trials( param, valid_stats ):
+                if self.verbosity > 0:
+                    print " -- valid costs: ", self.get_all_costs( valid_stats )
+
+                # We reject the model (to avoid testing on it)
+                self.model = None
+            else:
 
                 # Cross Validation
                 if self.validtype == 'cross':
@@ -1323,9 +1332,6 @@ class SVM(object):
                                     None, test_stats, train_stats )
                 self.write_results( self.best_param,
                                     self.valid_stats, self.test_stats, self.train_stats )
-
-            elif self.verbosity > 0:
-                print " -- valid costs: ", self.get_all_costs( valid_stats )
 
         if self.retrain_until_local_optimum_is_found and expert.should_be_tuned_again():
            self.train_and_tune( dataspec )
