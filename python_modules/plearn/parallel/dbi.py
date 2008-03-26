@@ -389,6 +389,9 @@ class DBICluster(DBIBase):
         self.duree=None
         self.arch=None
         self.cluster_wait=True
+        self.force=False
+        self.interruptible=False
+        self.cpu=1
         self.threads=[]
         self.started=0
         self.nb_proc=50
@@ -447,6 +450,12 @@ class DBICluster(DBIBase):
             command += " --wait"
         if self.mem:
             command += " --memoire "+self.mem
+        if self.force:
+            command += " --force"
+        if self.interruptible:
+            command += " --interruptible"
+        if self.cpu!=1:
+            command += " --cpu "+self.cpu
         if self.os:
             command += " --os "+self.os
         command += " --execute '"+ filename + "'"
