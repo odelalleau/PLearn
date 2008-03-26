@@ -777,7 +777,7 @@ class DBICondor(DBIBase):
                 param_dat.close()
 
 
-        condor_file = os.path.join(self.tmp_dir, self.unique_id + ".condor")
+        condor_file = os.path.join(self.log_dir, "submit_file.condor")
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
 
