@@ -871,7 +871,7 @@ void NatGradSMPNNet::train()
     PP<PTimer> ptimer;
     // Number of mini-batches that have been processed before one update.
     int n_minibatches_per_update = 0;
-    StatsCollector nmbpu_stats(/*-1*/);
+    StatsCollector nmbpu_stats; // Use -1 in constructor if you want the median.
 
     if (iam == 0) {
         //tmp_log << "Starting loop" << endl;
