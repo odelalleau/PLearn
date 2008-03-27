@@ -55,7 +55,10 @@ PLEARN_IMPLEMENT_OBJECT(
     "This learner can also compute the confusion matrix as a test cost, in\n"
     "addition to classification error. Each element of the confusion matrix\n"
     "is named 'cm_ij' with i the index of the true class, and j the index of\n"
-    "the predicted class.");
+    "the predicted class.\n"
+    "The underlying classifier may choose to not make any prediction on some\n"
+    "of the elements in the bag, in which case it should just return as\n"
+    "output a vector of missing values.");
 
 /////////////////////
 // ToBagClassifier //
@@ -194,13 +197,22 @@ void ToBagClassifier::updateCostAndBagOutput(const Vec& target,
                                              const Vec& output,
                                              Vec& costs) const
 {
+    costs.resize(nTestCosts());
+    costs.fill(MISSING_VALUE);
+    if (is_missing(output[0])) {
+        // Ignore missing outputs from learner.
+#ifdef BOUNDCHECK
+        for (int i = 1; i < output.length(); i++) {
+            PLASSERT( is_missing(output[i]) );
+        }
+        return;
+#endif
+    }
     PLASSERT( sum(output) < 1.001 & sum(output) > 0.999);
     int bag_info = int(round(target.lastElement()));
     if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
         bag_output.resize(0, 0);
     bag_output.appendRow(output);
-    costs.resize(nTestCosts());
-    costs.fill(MISSING_VALUE);
     if (bag_info & SumOverBagsVariable::TARGET_COLUMN_LAST) {
         // Perform majority vote.
         votes.resize(bag_output.width());
