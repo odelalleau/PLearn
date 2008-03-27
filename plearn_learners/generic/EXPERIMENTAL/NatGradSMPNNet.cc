@@ -1056,7 +1056,7 @@ void NatGradSMPNNet::train()
     //tmp_log.flush();
 
     // Wait until it is our turn.
-    bool displayed_stats = false;
+    bool displayed_stats = true;
     while (true) {
         int sem_value = semctl(semaphore_id, 0, GETVAL);
         if (sem_value == iam || iam == 0) {
