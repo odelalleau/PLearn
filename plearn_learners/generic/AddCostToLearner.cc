@@ -722,7 +722,7 @@ TVec<string> AddCostToLearner::getTestCostNames() const
         if(costs[i] == "confusion_matrix")
             for(int conf_i=0; conf_i< n_classes;conf_i++)
                 for(int conf_j=0; conf_j<n_classes;conf_j++){
-                    string s = "confusion_matrix_i"+tostring(conf_i)+"_j"+tostring(conf_j);
+                    string s = "confusion_matrix_target"+tostring(conf_i)+"_pred"+tostring(conf_j);
                     sub_costs.append(s);
                 }
         else
