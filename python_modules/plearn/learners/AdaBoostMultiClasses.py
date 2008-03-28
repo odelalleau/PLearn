@@ -33,6 +33,7 @@ class AdaBoostMultiClasses:
         l.weak_learner_template=sublearner
         l.pseudo_loss_adaboost=plargs.pseudo_loss_adaboost
         l.weight_by_resampling=plargs.weight_by_resampling
+        l.modif_train_set_weights=plargs.modif_train_set_weights
         l.setTrainingSet(trainSet,True)
         l.early_stopping=False
         l.compute_training_error=True
@@ -165,7 +166,7 @@ class AdaBoostMultiClasses:
         costs=self.computeCostsFromOutput(input,output,target)
         return (output,costs)
 
-    def test(self,testSet,testMat,test_stats,return_outputs,return_costs):
+    def test(self,testSet,test_stats,return_outputs,return_costs):
         testSet1=pl.ProcessingVMatrix(source=testSet,
                                prg = "[%0:%"+str(testSet.inputsize-1)+"] @CLASSE_REEL 1 0 ifelse :CLASSE_REEL")
         testSet2=pl.ProcessingVMatrix(source=testSet,
@@ -182,7 +183,7 @@ class AdaBoostMultiClasses:
         outputs=[]
         costs=[]
         #calculate stats, outputs, costs
-        for i in range(len(testMat)):
+        for i in range(testSet.length):
             out1=testoutputs1.getRow(i)[0]
             out2=testoutputs2.getRow(i)[0]
             ind1=int(round(out1))
@@ -198,8 +199,9 @@ class AdaBoostMultiClasses:
             output=[ind,out1,out2]
             if return_outputs:
                 outputs.append(output)
-            input=testMat[i][:-1]
-            target=testMat[i][-1]
+            row=testSet.getRow(i)
+            input=row[:-1]
+            target=row[-1]
             cost=self.computeCostsFromOutput(input,output,target,
                                              forward_sub_learner_costs=False)
             cost.extend(testcosts1.getRow(i))
