@@ -243,7 +243,12 @@ void RegressionTree::forget()
 
 void RegressionTree::initialiseTree()
 {
-    if (!sorted_train_set)
+    if (!sorted_train_set && train_set->classname()=="RegressionTreeRegisters")
+    {
+        sorted_train_set=(PP<RegressionTreeRegisters>)train_set;
+        sorted_train_set->reinitRegisters();
+    }
+    else if(!sorted_train_set)
     {
         sorted_train_set = new RegressionTreeRegisters();
         sorted_train_set->setOption("report_progress", tostring(report_progress));
@@ -311,12 +316,6 @@ int RegressionTree::expandTree()
     priority_queue->addHeap(subnode[1]);
     if (missing_is_valid) priority_queue->addHeap(subnode[2]);
     return split_col; 
-}
-
-void RegressionTree::setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set)
-{
-    sorted_train_set = the_sorted_train_set;
-    build();
 }
 
 int RegressionTree::outputsize() const

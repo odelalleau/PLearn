@@ -108,6 +108,8 @@ void RegressionTreeRegisters::build()
 
 void RegressionTreeRegisters::build_()
 {
+    if(source)
+        initRegisters(source);
 }
 
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
@@ -151,8 +153,18 @@ real RegressionTreeRegisters::getWeight(int row)
 
 void RegressionTreeRegisters::setWeight(int row, real val)
 {
+    PLASSERT(inputsize()>0&&targetsize()>0);
     PLASSERT(weightsize() > 0);
     tsource->put( inputsize() + targetsize(), row, val );
+}
+
+void RegressionTreeRegisters::put(int i, int j, real value)
+{
+    PLASSERT(inputsize()>0&&targetsize()>0);
+    if(j!=inputsize()+targetsize())
+        PLERROR("In RegressionTreeRegisters::put - implemented the put of "
+                "the weightsize only");
+    setWeight(i,value);
 }
 
 int RegressionTreeRegisters::getNextId()

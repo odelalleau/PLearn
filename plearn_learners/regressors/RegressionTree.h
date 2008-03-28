@@ -109,7 +109,6 @@ public:
     virtual void         computeOutputAndNodes(const Vec& input, Vec& output,
                                                TVec<PP<RegressionTreeNode> >* nodes=0) const;
     virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
-    void         setSortedTrainSet(PP<RegressionTreeRegisters> the_sorted_train_set);
   
 private:
     void         build_();

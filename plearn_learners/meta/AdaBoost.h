@@ -44,7 +44,6 @@
 #define AdaBoost_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn_learners/regressors/RegressionTreeRegisters.h>
 
 namespace PLearn {
 using namespace std;
@@ -81,8 +80,6 @@ protected:
     //! Indication that a weak learner with 0 training error has been found
     bool found_zero_error_weak_learner;
 
-    //! a sorted train set when using a tree as a base regressor  
-    PP<RegressionTreeRegisters> sorted_train_set;
 public:
 
     // ************************
@@ -125,6 +122,8 @@ public:
     // Did we add the sub_learner_costs to our costs
     bool forward_sub_learner_test_costs;
 
+    // Did we modif directly the train_set weights?
+    bool modif_train_set_weights;
     // ****************
     // * Constructors *
     // ****************

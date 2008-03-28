@@ -143,7 +143,7 @@ void BaseRegressorWrapper::build_()
         if (regression_tree > 0)
         {
             tree_regressor = ::PLearn::deepCopy(tree_regressor_template);
-            tree_regressor->setSortedTrainSet(sorted_train_set);
+            tree_regressor->setTrainingSet(VMat(sorted_train_set));
             tree_regressor->setOption("loss_function_weight", tostring(loss_function_weight));
             base_regressor = tree_regressor;
         }

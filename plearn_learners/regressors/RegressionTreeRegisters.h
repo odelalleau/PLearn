@@ -96,6 +96,7 @@ public:
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
+    virtual void put(int i, int j, real value);
 //    virtual void getNewRow(int i, const Vec& v) const;
     VMat source;
 

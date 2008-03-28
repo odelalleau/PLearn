@@ -197,7 +197,7 @@ void LocalMedBoost::train()
             if (regression_tree == 1)
             {
                 tree_regressors[stage] = ::PLearn::deepCopy(tree_regressor_template);
-                tree_regressors[stage]->setSortedTrainSet(sorted_train_set);
+                tree_regressors[stage]->setTrainingSet(VMat(sorted_train_set));
                 base_regressors[stage] = tree_regressors[stage];
             }
             else

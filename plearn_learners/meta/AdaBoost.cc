@@ -48,7 +48,6 @@
 #include <plearn/math/random.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/base/stringutils.h>
-#include <plearn_learners/regressors/RegressionTree.h>
 
 namespace PLearn {
 using namespace std;
@@ -66,7 +65,8 @@ AdaBoost::AdaBoost()
       weight_by_resampling(1), 
       early_stopping(1),
       save_often(0),
-      forward_sub_learner_test_costs(false)
+      forward_sub_learner_test_costs(false),
+      modif_train_set_weights(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -200,16 +200,15 @@ void AdaBoost::declareOptions(OptionList& ol)
                   &AdaBoost::forward_sub_learner_test_costs, OptionBase::buildoption,
                   "Did we add the sub_learner_costs to our costs.\n");
 
+    declareOption(ol, "modif_train_set_weights", 
+                  &AdaBoost::modif_train_set_weights, OptionBase::buildoption,
+                  "Did we modif directly the train_set weights?\n");
+
     declareOption(ol, "found_zero_error_weak_learner", 
                   &AdaBoost::found_zero_error_weak_learner, 
                   OptionBase::learntoption,
                   "Indication that a weak learner with 0 training error"
                   "has been found.\n");
-
-    declareOption(ol, "sorted_train_set",
-                  &AdaBoost::sorted_train_set,
-                  OptionBase::learntoption,
-                  "A sorted train set when using the class RegressionTree as a base regressor\n");
 
     declareOption(ol, "weak_learner_output",
                   &AdaBoost::weak_learner_output,
@@ -304,6 +303,13 @@ void AdaBoost::train()
         PLERROR("In AdaBoost::train, targetsize should be 1, found %d", 
                 train_set->targetsize());
 
+    if(modif_train_set_weights && train_set->weightsize()!=1)
+        PLERROR("In AdaBoost::train, when modif_train_set_weights is true"
+                " the weightsize of the trainset must be one.");
+    
+    PLCHECK_MSG(train_set->inputsize()>0, "In AdaBoost::train, the inputsize"
+                " of the train_set must be know.");
+
     if(found_zero_error_weak_learner) // Training is over...
         return;
 
@@ -349,22 +355,6 @@ void AdaBoost::train()
         sum_voting_weights = 0;
         voting_weights.resize(0,nstages);
 
-        if (weak_learner_template->classname()=="RegressionTree" && ! weight_by_resampling)
-        {
-            if(train_set->weightsize()<=0)
-            {
-                Mat* m = new Mat(train_set->length(),1);
-                m->fill(1.0/m->length());
-                VMat data_weights = VMat(*m);
-                VMat new_train_set = new ConcatColumnsVMatrix(train_set,data_weights);
-                new_train_set->defineSizes(train_set->inputsize(),train_set->targetsize(),1);
-                train_set = new_train_set;
-            }
-            sorted_train_set = new RegressionTreeRegisters();
-            sorted_train_set->setOption("report_progress", tostring(report_progress));
-            sorted_train_set->setOption("verbosity", tostring(verbosity));
-            sorted_train_set->initRegisters(train_set);
-        }
     }
 
     VMat unweighted_data = train_set.subMatColumns(0, inputsize()+1);
@@ -373,7 +363,6 @@ void AdaBoost::train()
     for ( ; stage < nstages ; ++stage)
     {
         VMat weak_learner_training_set;
-        PP<RegressionTreeRegisters> weak_learner_sorted_training_set;
         { 
             PP<ProgressBar> pb;
             if(report_progress) pb = new ProgressBar(
@@ -415,13 +404,14 @@ void AdaBoost::train()
                     new SelectRowsVMatrix(unweighted_data, train_indices);
                 weak_learner_training_set->defineSizes(inputsize(), 1, 0);
             }
-            else if(weak_learner_template->classname()=="RegressionTree" && ! weight_by_resampling)
+            else if(modif_train_set_weights)
             {
                 //No Need for deep copy of the sorted_train_set as after the train it is not used anymore
                 // and the data are not modofied, but we need to change the weight
-                weak_learner_sorted_training_set = sorted_train_set;
-                for(int i=0;i<example_weights.size();i++)
-                    weak_learner_sorted_training_set->setWeight(i,example_weights[i]);
+                weak_learner_training_set = train_set;
+                int weight_col=train_set->inputsize()+train_set->targetsize();
+                for(int i=0;i<train_set->length();i++)
+                    train_set->put(i,weight_col,example_weights[i]);
             }
             else
             {
@@ -438,10 +428,7 @@ void AdaBoost::train()
 
         // Create new weak-learner and train it
         PP<PLearner> new_weak_learner = ::PLearn::deepCopy(weak_learner_template);
-        if(weak_learner_template->classname()=="RegressionTree" && ! weight_by_resampling)
-            ((PP<RegressionTree>)(new_weak_learner))->setSortedTrainSet(weak_learner_sorted_training_set);
-        else
-            new_weak_learner->setTrainingSet(weak_learner_training_set);
+        new_weak_learner->setTrainingSet(weak_learner_training_set);
         new_weak_learner->setTrainStatsCollector(new VecStatsCollector);
         if(expdir!="" && provide_learner_expdir)
             new_weak_learner->setExperimentDirectory( expdir / ("WeakLearner"+tostring(stage)+"Expdir") );
@@ -744,11 +731,6 @@ TVec<string> AdaBoost::getTestCostNames() const
 {
     TVec<string> costs=getTrainCostNames();
 
-    PP<VMatrix> the_train_set = train_set;
-    if(!train_set)
-        the_train_set=sorted_train_set;
-    PLASSERT(the_train_set);
-
     if(forward_sub_learner_test_costs){
         TVec<string> subcosts=weak_learners[0]->getTestCostNames();
         for(int i=0;i<subcosts.length();i++){
@@ -774,11 +756,8 @@ void AdaBoost::computeTrainingError(Vec input, Vec target)
 {
     if (compute_training_error)
     {
-        PP<VMatrix> the_train_set = train_set;
-        if(!train_set)
-            the_train_set=sorted_train_set;
-        PLASSERT(the_train_set);
-        int n=the_train_set->length();
+        PLASSERT(train_set);
+        int n=train_set->length();
         PP<ProgressBar> pb;
         if(report_progress) pb = new ProgressBar("computing weighted training error of whole model",n);
         train_stats->forget();
