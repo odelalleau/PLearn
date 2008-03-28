@@ -86,6 +86,7 @@ void ConstantVMatrix::build()
 ////////////
 void ConstantVMatrix::build_()
 {
+    computeMissingSizeValue(false);
 }
 
 /////////
