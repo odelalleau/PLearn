@@ -172,6 +172,11 @@ void SubVMatrix::build_()
     }
 
     // determine sizes
+    if(jstart==0 && width()==source->width() &&
+       inputsize()<0 && targetsize()<0 && weightsize()<0)
+        //We don't change the columns, so we can copy their size
+        copySizesFrom(source);
+    computeMissingSizeValue(false);
 /*
     if (width_ == source->width())
     {

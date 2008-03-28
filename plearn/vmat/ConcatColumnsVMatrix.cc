@@ -145,6 +145,8 @@ void ConcatColumnsVMatrix::build_()
     if (no_duplicate_fieldnames) {
         unduplicateFieldNames();
     }
+
+    computeMissingSizeValue(false);
 }
 
 void ConcatColumnsVMatrix::getNewRow(int i, const Vec& samplevec) const
