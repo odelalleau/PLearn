@@ -101,6 +101,7 @@ protected:
     //! v is assumed to be the right size.
     virtual void getNewRow(int i, const Vec& v) const;
     virtual void getColumn(int j, Vec v) const;
+    virtual void getMat(int i, int j, Mat m) const;
 
 public:
 

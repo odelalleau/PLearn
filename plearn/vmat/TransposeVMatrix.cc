@@ -128,6 +128,24 @@ void TransposeVMatrix::getColumn(int j, Vec v) const
     source->getRow(j, v);
 }
 
+////////////
+// getMat //
+////////////
+void TransposeVMatrix::getMat(int i, int j, Mat m) const
+{
+#ifdef BOUNDCHECK
+    if(i<0 || j<0 || i+m.length()>length() || j+m.width()>width())
+        PLERROR("In VMatrix::getMat(i,j,m) OUT OF BOUNDS");
+#endif
+    Vec tmp(m.length());
+    for(int ii=0; ii<m.width(); ii++)
+    {
+        source->getSubRow(i+ii, j,tmp);
+        for(int k=0;k<m.length();k++)
+            m(k,ii)=tmp[k];
+    }
+}
+
 /////////////////////////////////
 // makeDeepCopyFromShallowCopy //
 /////////////////////////////////
