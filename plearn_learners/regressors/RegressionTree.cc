@@ -220,7 +220,7 @@ void RegressionTree::train()
     Vec sample_input(sorted_train_set->inputsize());
     Vec sample_output(outputsize());
     Vec sample_target(sorted_train_set->targetsize());
-    Vec sample_costs(getTestCostNames().size());
+    Vec sample_costs(nTestCosts());
 
     for (int train_sample_index = 0; train_sample_index < length;
          train_sample_index++)
