@@ -42,11 +42,11 @@
 #ifndef RegressionTreeLeave_INC
 #define RegressionTreeLeave_INC
 
-#include "RegressionTreeRegisters.h"
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;
-
+class RegressionTreeRegisters;
 
 class RegressionTreeLeave: public Object
 {

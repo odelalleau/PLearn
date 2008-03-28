@@ -42,10 +42,11 @@
 #ifndef RegressionTreeQueue_INC
 #define RegressionTreeQueue_INC
 
-#include "RegressionTreeNode.h"
+#include <plearn/base/Object.h>
 
 namespace PLearn {
 using namespace std;
+class RegressionTreeNode;
 
 class RegressionTreeQueue: public Object
 {

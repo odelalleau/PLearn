@@ -45,13 +45,12 @@
 #define BaseRegressorWrapper_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include <plearn/vmat/MeanImputationVMatrix.h>
-#include <plearn/base/stringutils.h>
-#include "BaseRegressorConfidence.h"
-#include "RegressionTree.h"
 
 namespace PLearn {
 using namespace std;
+class RegressionTree;
+class BaseRegressorConfidence;
+class RegressionTreeRegisters;
 
 class BaseRegressorWrapper: public PLearner
 {

@@ -45,10 +45,13 @@
 #define RegressionTree_INC
 
 #include <plearn_learners/generic/PLearner.h>
-#include "RegressionTreeQueue.h"
 
 namespace PLearn {
 using namespace std;
+class RegressionTreeQueue;
+class RegressionTreeLeave;
+class RegressionTreeRegisters;
+class RegressionTreeNode;
 
 class RegressionTree: public PLearner
 {

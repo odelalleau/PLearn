@@ -40,6 +40,11 @@
  ******************************************************************************** */
 
 #include "BaseRegressorWrapper.h"
+#include "BaseRegressorConfidence.h"
+#include "RegressionTree.h"
+#include <plearn/vmat/MeanImputationVMatrix.h>
+#include <plearn/base/stringutils.h>
+#include "RegressionTreeRegisters.h"
 
 namespace PLearn {
 using namespace std;

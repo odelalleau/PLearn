@@ -40,6 +40,7 @@
  ******************************************************************************** */
 
 #include "RegressionTreeQueue.h"
+#include "RegressionTreeNode.h"
 
 namespace PLearn {
 using namespace std;

@@ -42,7 +42,7 @@
 #ifndef RegressionTreeRegisters_INC
 #define RegressionTreeRegisters_INC
 
-#include <plearn/vmat/SourceVMatrix.h>
+#include <plearn/vmat/VMatrix.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/math/TMat.h>
 #include <plearn/vmat/VMat.h>

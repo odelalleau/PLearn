@@ -39,6 +39,9 @@
  ******************************************************************************** */
 
 #include "LocalMedBoost.h"
+#include "RegressionTree.h"
+#include "RegressionTreeRegisters.h"
+#include "BaseRegressorWrapper.h"
 
 namespace PLearn {
 using namespace std;

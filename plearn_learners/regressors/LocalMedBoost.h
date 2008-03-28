@@ -41,11 +41,13 @@
 #ifndef LocalMedBoost_INC
 #define LocalMedBoost_INC
 
-#include "RegressionTree.h"
-#include "BaseRegressorWrapper.h"
+#include <plearn_learners/generic/PLearner.h>
 
 namespace PLearn {
 using namespace std;
+class RegressionTree;
+class BaseRegressorWrapper;
+class RegressionTreeRegisters;
 
 class LocalMedBoost: public PLearner
 {
