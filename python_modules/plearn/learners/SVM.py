@@ -38,13 +38,17 @@ class SVMHyperParamOracle__kernel(object):
 
         'best_cost': <float> Best cost obtained
 
-        'input_std': <float> the average standard deviation
+        'inputsize': <int> input dimension. Used also sometimes
+                     to choose the first hyperparameter values.
+
+        'input_avgstd': <float> the average standard deviation
                           of the input data. It is estimated on
                           the train set, and is used to choose first
                           hyperparameter values.
 
-        'inputsize': <int> input dimension. Used also sometimes
-                     to choose the first hyperparameter values.
+        'input_means': <list> of mean values for each input component.
+
+        'input_stds': <list> of standard deviation values for each input component.
 
     protected:
 
@@ -72,7 +76,7 @@ class SVMHyperParamOracle__kernel(object):
                         'param_names',
                         'trials_param_list',
                         'trials_cost_list',
-                        'input_std',
+                        'input_avgstd',
                         'inputsize'
                       ]                  
 
@@ -84,7 +88,9 @@ class SVMHyperParamOracle__kernel(object):
         self.best_cost      = None
         self.C_initvalue    = 1.
         self.stats_are_uptodate = False
-        self.input_std      = None
+        self.input_avgstd      = None
+        self.input_means = None
+        self.input_stds = None
         self.inputsize      = None
         self.verbosity      = 1
 
@@ -103,14 +109,14 @@ class SVMHyperParamOracle__kernel(object):
         #       a good candidate
 
 
-    def set_input_stats( self, inputsize, input_std ):
+    def set_input_stats( self, inputsize, input_avgstd ):
         self.stats_are_uptodate = True
         self.inputsize = int(inputsize)
-        self.input_std = input_std
+        self.input_avgstd = input_avgstd
 
     def get_input_stats( self, samples=None ):
         if self.stats_are_uptodate:
-            return ( self.inputsize, self.input_std )
+            return ( self.inputsize, self.input_avgstd )
         if samples == None:
             if self.verbosity > 0:
                 print "WARNING: get_data_stats() takes default value for input stats."
@@ -120,18 +126,18 @@ class SVMHyperParamOracle__kernel(object):
             print "  (computing input stats)"
         
         self.inputsize = len(samples[0])
-        self.input_std, std__std_per_component = mean_std(samples)
+        self.input_avgstd, std__std_per_component = mean_std(samples)
         if( self.verbosity > 0 ): 
-            if( self.input_std < 0.5
-            or  self.input_std > 10.
-            or  std__std_per_component/self.input_std > 0.1 ):
+            if( self.input_avgstd < 0.5
+            or  self.input_avgstd > 10.
+            or  std__std_per_component/self.input_avgstd > 0.1 ):
                 print "Warning in SVMHyperParamOracle__kernel::get_input_stats() " + \
                     "\n\tYour data does not seem to be normalized: " + \
                     "\n\t(E[std_comp] = %.2f, std[std_comp] = %.2f)" % \
-                    ( self.input_std, std__std_per_component )
+                    ( self.input_avgstd, std__std_per_component )
 
         self.stats_are_uptodate = True
-        return (self.inputsize, self.input_std)
+        return (self.inputsize, self.input_avgstd)
 
     """ Return a list of values to try for hyperparameter 'C'
         centered on a specified value 'C_value'.
@@ -640,7 +646,7 @@ class SVM(object):
 
         'inputsize': <int> input size
 
-        'input_std': <float> input std
+        'input_avgstd': <float> input std
 
        
     protected:
@@ -663,6 +669,7 @@ class SVM(object):
                         'validtype',
                         'n_fold',
                         'balanceC',
+                        'normalize_inputs',
                         'results_filename',
                         'preproc_optionnames',
                         'preproc_optionvalues',
@@ -678,7 +685,7 @@ class SVM(object):
                         'nclasses',
                         'class_priors',
                         'inputsize',
-                        'input_std',
+                        'input_avgstd',
                         'stats_are_uptodate',
                         'get_datalist'
                      ]
@@ -696,7 +703,8 @@ class SVM(object):
         self.validtype       = 'simple'
 
         self.n_fold   = 5
-        self.balanceC = False
+        self.balanceC = True
+        self.normalize_inputs = False
 
         self.HyperParamOracle__linear  = SVMHyperParamOracle__linear()
         self.HyperParamOracle__rbf     = SVMHyperParamOracle__rbf()
@@ -705,7 +713,7 @@ class SVM(object):
                                    self.HyperParamOracle__rbf,
                                    self.HyperParamOracle__poly,
                                   ]
-        self.param_names =['validtype','kernel_type','balanceC']
+        self.param_names =['validtype','normalize_inputs','kernel_type','balanceC']
         for expert in self.all_experts:
             for pn in expert.param_names:
                 if pn not in self.param_names:
@@ -719,7 +727,7 @@ class SVM(object):
  
         self.stats_are_uptodate = False
         self.inputsize = None
-        self.input_std = None
+        self.input_avgstd = None
         self.nclasses = None
         self.class_priors = None
         self.weight = None
@@ -779,7 +787,7 @@ class SVM(object):
                         inputsize, targetsize, length.
                         
     """
-    def get_datalist( input_vmat ):
+    def get_datalist(self, input_vmat ):
         data_array = input_vmat.getMat()
         inputsize = input_vmat.inputsize
         targetsize = input_vmat.targetsize
@@ -788,8 +796,19 @@ class SVM(object):
         samples   = [ [ float(x_t_i)    for x_t_i in x_t ]
                                         for x_t in data_array[:,:inputsize] ]
         assert targetsize == 1
-        targets   = [ float(t) for t in data_array[:,inputsize] ]
+        targets   = [ float(t) for t in data_array[:,inputsize] ]       
         return samples, targets
+
+    def get_svminputlist(self, input_vmat, isTrain=False):
+        samples, targets = self.get_datalist( input_vmat )
+        if self.normalize_inputs:
+            if isTrain:
+                self.input_means, self.input_stds = normalize_data(samples)
+            else:
+                assert self.input_means
+                normalize_data(samples, self.input_means, self.input_stds)
+        return samples, targets
+        
 
     """ Return a dictionary class label -> class frenquency,
         where frequencies are estimated from 'targets', a list of class labels
@@ -810,20 +829,20 @@ class SVM(object):
     def get_data_stats(self, vmat=None):
         if self.stats_are_uptodate:
             return ( self.nclasses, self.class_priors,
-                     self.inputsize, self.input_std )
+                     self.inputsize, self.input_avgstd )
         assert vmat <> None
 
-        samples, targets = self.get_datalist( vmat )
+        samples, targets = self.get_svminputlist( vmat, True )
 
-        self.inputsize, self.input_std = self.all_experts[0].get_input_stats(samples)
+        self.inputsize, self.input_avgstd = self.all_experts[0].get_input_stats(samples)
         for expert in self.all_experts[1:]:
-            expert.set_input_stats( self.inputsize, self.input_std )
+            expert.set_input_stats( self.inputsize, self.input_avgstd )
 
         if targets == None:
             if self.verbosity > 1:
                 print "WARNING: get_data_stats() takes default value for class info."
             return ( 2, [ .5, .5 ],
-                 self.inputsize, self.input_std )
+                 self.inputsize, self.input_avgstd )
 
         class_priors = self.get_class_priors( targets )
         self.nclasses = len( class_priors )
@@ -849,7 +868,7 @@ class SVM(object):
 
         self.stats_are_uptodate = True
         return ( self.nclasses, self.class_priors,
-                 self.inputsize, self.input_std )
+                 self.inputsize, self.input_avgstd )
 
     def get_expert(self, kernel_type ):
         return eval( 'self.HyperParamOracle__'+kernel_type.lower() )
@@ -899,7 +918,7 @@ class SVM(object):
     
 
     """ Write given results with corresponding parameters
-        In a PLearn format (.amat).
+        In a PLearn format (.amat).True
     """
     def write_results(  self, param,
                         valid_stats,
@@ -950,8 +969,10 @@ class SVM(object):
         else:
             raise TypeError, "preproc_optionvalues must be of type str or list"
         
+        
+        param_names=self.param_names
         param_values=[]
-        for pn in self.param_names:
+        for pn in param_names:
             if pn in param:
                 param_values.append(param[pn])
             elif pn in self.__attributes__:
@@ -991,7 +1012,7 @@ class SVM(object):
         os.system('makeresults  %s %s %s %s;' % \
                             (self.results_filename,
                               preproc_optionnames,
-                              ' '.join(self.param_names),
+                              ' '.join(param_names),
                               costnames_string
                             ) \
                + 'appendresults %s.amat %s %s %s' % \
@@ -1059,6 +1080,8 @@ class SVM(object):
             if not self.best_param:
                 return self.train_and_tune(dataspec)
             param = self.best_param.copy()
+        elif 'kernel_type' not in param:
+            param['kernel_type'] = self.kernel_type
         
         trainset = self.train_inputspec(dataspec)
         if self.balanceC:
@@ -1067,7 +1090,7 @@ class SVM(object):
                           'nr_weight':len(self.weight),
                           'weight_label':self.labels})
         
-        train_samples, train_targets = self.get_datalist( trainset )
+        train_samples, train_targets = self.get_svminputlist( trainset, True )
         train_problem = svm_problem( train_targets ,
                                      train_samples )
         if self.verbosity > 1:
@@ -1085,7 +1108,7 @@ class SVM(object):
         decision than the standard ones, for instance when
         classifying bags of data (where each bag correspond to a target)
     """
-    def update_predictions_targets(predictions, targets, vmat):
+    def update_predictions_targets(self, predictions, targets, vmat):
         return predictions, targets
 
     """ Return the costs obtained by a libSVM model
@@ -1104,11 +1127,9 @@ class SVM(object):
             assert self.best_model <> None
             model = self.best_model
 
-        samples, targets = self.get_datalist( testset )
+        samples, targets = self.get_svminputlist( testset )
         nclasses = self.nclasses
         nsamples = len(samples)
-        if self.verbosity > 3:
-            print "SVM::test() called on ",nsamples," samples"
 
         costnames = self.costnames
         # Translation of the cost 'confusion_matrix'
@@ -1136,6 +1157,10 @@ class SVM(object):
         
         class_priors = self.get_class_priors( targets )
                                             # [int(t) for t in targets ]
+        if self.verbosity > 3:
+            print "SVM::test() called on ",len(targets)," samples"
+            print "class priors: ", class_priors
+
         cm_weights = [ 1./class_priors[t] for t in range(nclasses) ]
         if 'norm_ce' in self.costnames:
             if self.errorcosts == None:        
@@ -1170,8 +1195,6 @@ class SVM(object):
                     raise ValueError, "computation of cost %s not implemented in SVM::test()" % cn
             teststats.update(statVec,1.)
         
-        if self.verbosity > 3:
-            print "SVM::test() computed:", teststats
         return teststats #, outputs, costs
 
 
@@ -1339,7 +1362,7 @@ class SVM(object):
         return dataspec
 
 
-def normalize_data(data,mean,std):
+def normalize_data(data, mean=None, std=None):
     if mean == None:
         mean=[]
         for i in range(len(data[0])):
@@ -1348,8 +1371,7 @@ def normalize_data(data,mean,std):
         std=[]
         for i in range(len(data[0])):
             std_tmp=get_std_cmp(data,i)
-            if std_tmp == 0. and self.verbosity > 0:
-                print "WARNING : standard deviation is 0 on component "+str(i)
+            if std_tmp == 0.:
                 std.append( 1. )
             else:
                 std.append( std_tmp )
@@ -1359,7 +1381,10 @@ def normalize_data(data,mean,std):
     return mean, std
 
 def mean_std(data):
-    stds=array([get_std_cmp(data,i) for i in range(len(data[0]))])
+    stds=[get_std_cmp(data,i) for i in range(len(data[0]))]
+    while 0 in stds:
+        stds.remove(0)
+    stds=array(stds)
     return stds.mean(), stds.std()
 
 def get_std_cmp(data,i):
@@ -1372,11 +1397,6 @@ def get_mean_cmp(data,i):
     values=[float(vec[i]) for vec in data]
     return  sum(values)/len(values)
 
-def arithm_mean(data):
-    if type(data[0]) == list:
-     return [sum( [data[i][coor] for i in range(len(data))] )*1.0/len(data) for coor in range(len(data[0]))]
-    else:
-     return sum(data)*1.0/len(data)
 def geom_mean(data):
     if type(data[0]) == list:
         res=[]
@@ -1389,10 +1409,100 @@ def geom_mean(data):
             prod *= value
         return prod**(1./len(data))
 
+
 if __name__ == '__main__':
 
-    # an EXAMPLE to use the class...
+    import os.path
 
+
+    """ =============================================================== """
+    """ 1. BUILD a SVM Hyper-Optimizer. """
 
     svm=SVM()
+    svm.costnames = ['class_error']
+    svm.verbosity = 1
 
+    """ ............................................................... """
+    """ Uncomment following lines to change default values (indicated). """
+
+    """ <bool> weight the coeff 'C' with the inverse prior proba of each class
+               (scaled so as to have average=1 on weights). Useful when classes are unbalanced. """
+    # svm.balanceC = 1
+
+    """ <list> of cost names to compute. """
+    # svm.costnames = ['class_error','confusion_matrix']
+
+    """ <string> name of the final cost to be minimized. """
+    # svm.maincost_name = svm.costnames[0]
+
+    """ <bool> let the algo automatically decide when to stop tuning hyperparameters. """
+    # svm.retrain_until_local_optimum_is_found = 1
+
+    """ <bool> after simple validation, retrain a model on {train + valid sets} before computing test error. """
+    # svm.retrain_on_valid = 1
+
+    """ <int> verbosity level. """
+    # svm.verbosity = 0
+
+    """ ............................................................... """
+    """ =============================================================== """
+
+
+    """ =============================================================== """
+    """ 2. PREPARE inputs and outputs. """
+
+    inputPath = '/u/larocheh/myUserExp/deep_non-local_benchmark/data/mnist-rotation'
+    outputPath = '.'
+
+    train_file, valid_file, test_file = [ os.path.join(inputPath,
+                                              'mnist_all_rotation_normalized_float_'+dataType+'.amat')
+                                          for dataType in ['train','valid','test']
+                                        ]
+
+    trainset, validset, testset = [ pl.AutoVMatrix(
+                                        specification = filename,
+                                        inputsize = 784,
+                                        targetsize = 1,
+                                    )
+                                    for filename in [ train_file, valid_file, test_file ]
+                                  ]
+
+    dataspec = {'trainset':trainset,
+                'validset':validset,
+                'testset': testset,
+               }
+    """ Note1: This dataspec corresponds to the standard setting for simple validation.
+               -> Do not specify any 'validset' to do cross-validation.
+               -> Do not specify any 'testset' if you do not want to check the test error
+                  during the model selection.
+        Note2: Keys of this dictionary can be changed using svm.trainset_key ['trainset'],
+               svm.validset_key ['validset'] and svm.testset_key ['testset'].
+    """
+
+    svm.results_filename = os.path.join( outputPath,
+                                         'results_%s_svm' % ( os.path.basename(train_file) )
+                           )
+
+    """ ................................................................. """
+    """ Uncomment following lines to change default values (empty lists). """
+
+    """ <list> of front-end hyperparameter names and values, to report in results_filename. """
+    # svm.preproc_optionnames = [ 'train_file', 'simple_valid' ]
+    # svm.preproc_optionvalues = [ train_file,   svm.validset_key in dataspec ]
+    """ ................................................................. """
+    """ =============================================================== """
+
+
+    """ =============================================================== """
+    """ 3. RUN EXPERIMENTS. """
+    
+    svm.kernel_type = 'rbf'
+    svm.train_and_tune(dataspec)
+
+    svm.kernel_type = 'poly'
+    svm.train_and_tune(dataspec)
+
+    svm.kernel_type = 'linear'
+    svm.train_and_tune(dataspec)
+
+    """ =============================================================== """
