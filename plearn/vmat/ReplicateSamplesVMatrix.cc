@@ -50,6 +50,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "the first 'n-n_j' samples of class j (having n_j samples) will be\n"
     "replicated so that each class also has n samples. If required, samples\n"
     "will be replicated more than once.\n"
+    "The class index is assumed to be the first element of the target. When\n"
+    "the 'operate_on_bags' option is set to true, the bag information must\n"
+    "be stored in the last element of the target.\n"
     "All samples are also shuffled so as to mix classes together."
 );
 
@@ -107,14 +110,15 @@ void ReplicateSamplesVMatrix::build_()
 {
     if (!source)
         return;
-    PLCHECK_MSG(operate_on_bags || source->targetsize() == 1,
+
+    PLCHECK_MSG(operate_on_bags || source->targetsize() >= 1,
             "In ReplicateSamplesVMatrix::build_ - The source VMat must have a "
-            "targetsize equal to 1 when not operating on bags, but its "
+            "targetsize at least 1 when not operating on bags, but its "
             "targetsize is " + tostring(source->targetsize()));
 
-    PLCHECK_MSG(!operate_on_bags || source->targetsize() == 2,
+    PLCHECK_MSG(!operate_on_bags || source->targetsize() >= 2,
             "In ReplicateSamplesVMatrix::build_ - The source VMat must have a "
-            "targetsize equal to 2 when operating on bags, but its targetsize "
+            "targetsize at least 2 when operating on bags, but its targetsize "
             "is " + tostring(source->targetsize()));
 
     updateMtime(indices_vmat);
@@ -135,7 +139,7 @@ void ReplicateSamplesVMatrix::build_()
             for (int j = 0; j < n_to_add; j++)
                 class_indices.append(TVec<int>());
         }
-        if (!operate_on_bags || int(round(target[1])) &
+        if (!operate_on_bags || int(round(target.lastElement())) &
                                 SumOverBagsVariable::TARGET_COLUMN_FIRST) {
             class_indices[c].append(i);
             indices.append(i);
