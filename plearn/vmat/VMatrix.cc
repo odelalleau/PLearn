@@ -1876,8 +1876,10 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
         PLERROR("In VMat::save - Saving in a pmat file is only possible for constant width VMats (where width()!=-1)");
 
     int nsamples = length();
+    PPath pmatfiletmp=pmatfile+".tmp";
 
-    FileVMatrix m(pmatfile,nsamples,width());
+    {        
+    FileVMatrix m(pmatfiletmp,nsamples,width());
     m.setMetaInfoFrom(this);
     // m.setFieldInfos(getFieldInfos());
     // m.copySizesFrom(this);
@@ -1893,6 +1895,10 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
     }
     m.saveFieldInfos();
     m.saveAllStringMappings();
+    }// to ensure that m is deleted?
+    
+    mv(pmatfiletmp,pmatfile);
+    mv(pmatfiletmp+".metadata",pmatfile+".metadata");
 }
 
 //////////////
