@@ -797,6 +797,7 @@ class DBICondor(DBIBase):
                 output         = %s/condor.%s.$(Process).out
                 error          = %s/condor.%s.$(Process).error
                 log            = %s/condor.log
+                getenv         = True
                 ''' % (self.tmp_dir,req,
                        self.log_dir,self.unique_id,
                        self.log_dir,self.unique_id,
@@ -810,7 +811,7 @@ class DBICondor(DBIBase):
                 condor_dat.write("arguments      = %s \nqueue\n" %(' ; '.join(task.commands)))
         condor_dat.close()
 
-        launch_file = os.path.join(self.tmp_dir, 'launch.sh')
+        launch_file = os.path.join(self.log_dir, 'launch.sh')
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
         if not os.path.exists(dbi_file):
@@ -830,7 +831,7 @@ class DBICondor(DBIBase):
                 #!/bin/sh
                 PROGRAM=$1
                 shift\n'''))
-            if None != os.getenv("CONDOR_LOCAL_SOURCE"):
+            if os.getenv("CONDOR_LOCAL_SOURCE"):
                 launch_dat.write('source ' + os.getenv("CONDOR_LOCAL_SOURCE") + '\n')
             launch_dat.write(dedent('''\
                     echo "Executing on ${HOSTNAME}" 1>&2
