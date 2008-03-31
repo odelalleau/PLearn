@@ -217,6 +217,8 @@ void GaussianizeVMatrix::build_()
                 values_j.append(it->first);
             }
         }
+
+        stats[j].forget();//to keep the total memory used lower.
     }
     if(features_to_gaussianize.size()==0)
         PLWARNING("GaussianizeVMatrix::build_() 0 variable was gaussianized");
