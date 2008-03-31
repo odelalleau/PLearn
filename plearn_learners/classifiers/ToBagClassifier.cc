@@ -199,19 +199,22 @@ void ToBagClassifier::updateCostAndBagOutput(const Vec& target,
 {
     costs.resize(nTestCosts());
     costs.fill(MISSING_VALUE);
+
+    int bag_info = int(round(target.lastElement()));
+    if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
+        bag_output.resize(0, 0);
+
+    // Ignore missing outputs from learner.
     if (is_missing(output[0])) {
-        // Ignore missing outputs from learner.
 #ifdef BOUNDCHECK
         for (int i = 1; i < output.length(); i++) {
             PLASSERT( is_missing(output[i]) );
         }
-        return;
 #endif
+        return;
     }
+
     PLASSERT( sum(output) < 1.001 & sum(output) > 0.999);
-    int bag_info = int(round(target.lastElement()));
-    if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
-        bag_output.resize(0, 0);
     bag_output.appendRow(output);
     if (bag_info & SumOverBagsVariable::TARGET_COLUMN_LAST) {
         // Perform majority vote.
