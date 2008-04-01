@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--mem=X] [--os=X] [--test|--no_test] [--long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--force] [--interruptible] [--cpu=nb_cpu_per_node] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value.'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|*--nodbilog] [--condor|--bqtools[=nb_process]|--cluster[=nb_process]|--local[=nb_process]|--ssh[=nb_process]] [--nb_proc=nb_process] [--mem=X] [--os=X] [--test|*--no_test] [--long|*--no_long] [--micro[=nb_batch]] [--duree=X] [--wait|--nowait] [--req="CONDOR_REQUIREMENT"] [--force|*--no_force] [--interruptible|*--no_interruptible] [--cpu=nb_cpu_per_node] [*--getenv|--no_getenv] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value.'
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
 %(ShortHelp)s
@@ -56,6 +56,7 @@ cluster only options:
   The '--cpu=nb_cpu_per_node' option is passed to cluster
 
 condor only options:
+  The '--getenv'('--no_getenv') option is forwarded to condor. If True, the current environnement variable will be forwarded to the execution node.
   The '--req=\"CONDOR_REQUIREMENT\"' option makes dbidispatch send additional option to DBI that will be used to generate additional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writen in the following way:
 
   dbidispatch \"--req=Machine==\\\"computer.example.com\\\"\"
@@ -94,6 +95,10 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.001
 
 In the file of the option --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
+
+
+Not defined but existing parameter: --no_clean_up.
+
 
 The environnement variable DBIDISPATCH_DEFAULT_OPTION can contain default option that you always want to pass to dbidispatch. You can override them on the command line.
 """%{'ShortHelp':ShortHelp,'ScriptName':ScriptName}
@@ -155,9 +160,10 @@ for argv in to_parse:
         if len(argv)>7:
             assert(argv[7]=="=")
             dbi_param["micro"]=argv[8:]
-    elif argv in  ["--force", "--interruptible", "--long", "--test"]:
+    elif argv in  ["--force", "--interruptible", "--long", "--test", "--getenv"]:
         dbi_param[argv[2:]]=True
-    elif argv in ["--no_test","--no_clean_up"]:
+    elif argv in ["--no_force", "--no_interruptible", "--no_long", "--no_test",\
+                      "--no_getenv", "--no_clean_up" ]:
         dbi_param[argv[5:]]=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc"]:
         dbi_param[argv.split('=')[0][2:]]=argv.split('=')[1]
@@ -173,13 +179,13 @@ if len(command_argv) == 0 and FILE == "":
     print ShortHelp
     sys.exit(1)
 
-valid_dbi_param=["clean_up","test","arch","dolog"]
+valid_dbi_param=["clean_up", "test", "arch", "dolog"]
 if launch_cmd=="Ssh":
     valid_dbi_param+=["nb_proc"]
 elif launch_cmd=="Cluster":
     valid_dbi_param +=["cluster_wait","force","nb_proc",'--duree','--3264', '--32', '--64',"--interruptible","--duree","--cpu","--mem","--os"]
 elif launch_cmd=="Condor":
-    valid_dbi_param +=["requirements", "--3264", "--32", "--64"]
+    valid_dbi_param +=["requirements", "--3264", "--32", "--64", "getenv"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["--micro", "--long","nb_proc",'--duree','--micro']
 elif launch_cmd=="Local":

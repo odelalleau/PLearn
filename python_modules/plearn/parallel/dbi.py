@@ -527,7 +527,7 @@ class DBICluster(DBIBase):
         print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
         print "[DBI] Their was %d jobs that returned a failure status."%(self.jobs_failed)
 
-class DBIbqtools(DBIBase):
+class DBIBqtools(DBIBase):
 
     def __init__( self, commands, **args ):
         self.nb_proc = 1
@@ -664,6 +664,8 @@ class DBICondor(DBIBase):
         from socket import gethostname
         if (not os.path.abspath(os.path.curdir).startswith("/home/fringant2/")) and gethostname().endswith(".iro.umontreal.ca"):
             raise Exception("You must be in a subfolder of /home/fringant2/")
+
+        self.getenv = True
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
@@ -797,11 +799,11 @@ class DBICondor(DBIBase):
                 output         = %s/condor.%s.$(Process).out
                 error          = %s/condor.%s.$(Process).error
                 log            = %s/condor.log
-                getenv         = True
+                getenv         = %s
                 ''' % (self.log_dir,req,
                        self.log_dir,self.unique_id,
                        self.log_dir,self.unique_id,
-                       self.log_dir)))
+                       self.log_dir,str(self.getenv))))
 
         if len(condor_datas)!=0:
             for i in condor_datas:
@@ -834,7 +836,8 @@ class DBICondor(DBIBase):
             if os.getenv("CONDOR_LOCAL_SOURCE"):
                 launch_dat.write('source ' + os.getenv("CONDOR_LOCAL_SOURCE") + '\n')
             launch_dat.write(dedent('''\
-                    echo "Executing on ${HOSTNAME}" 1>&2
+                    echo "Executing on " `hostname` 1>&2
+                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
                     echo "PYTHONPATH: $PYTHONPATH" 1>&2
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
@@ -869,7 +872,6 @@ class DBICondor(DBIBase):
             for task in self.tasks:
                 task.set_scheduled_time()
             self.p = Popen( 'condor_submit '+ condor_file, shell=True)
-#            self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
             self.p.wait()
             if self.p.returncode != 0:
                 print "[DBI] condor_submit failed! We can't stard the jobs"
@@ -1254,7 +1256,7 @@ def DBI(commands, launch_system, **args):
 
 def main():
     if len(sys.argv)!=2:
-        print "Usage:%s {Condor|Cluster|Ssh|Local|bqtools} < joblist"%(sys.argv[0])
+        print "Usage:%s {Condor|Cluster|Ssh|Local|Bqtools} < joblist"%(sys.argv[0])
         print "Where joblist is a file containing one exeperiement by line"
         sys.exit(0)
     DBI([ s[0:-1] for s in sys.stdin.readlines() ], sys.argv[1]).run()
