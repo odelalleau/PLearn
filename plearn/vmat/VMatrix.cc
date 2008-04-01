@@ -1900,6 +1900,8 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
     m.saveAllStringMappings();
     }// to ensure that m is deleted?
     
+    rm(pmatfile);
+    force_rmdir(pmatfile+".metadata");
     mv(pmatfiletmp,pmatfile);
     mv(pmatfiletmp+".metadata",pmatfile+".metadata");
 }
