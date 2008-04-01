@@ -798,7 +798,7 @@ class DBICondor(DBIBase):
                 error          = %s/condor.%s.$(Process).error
                 log            = %s/condor.log
                 getenv         = True
-                ''' % (self.tmp_dir,req,
+                ''' % (self.log_dir,req,
                        self.log_dir,self.unique_id,
                        self.log_dir,self.unique_id,
                        self.log_dir)))
@@ -868,7 +868,11 @@ class DBICondor(DBIBase):
             print "[DBI] Executing: condor_submit " + condor_file
             for task in self.tasks:
                 task.set_scheduled_time()
-            self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
+            self.p = Popen( 'condor_submit '+ condor_file, shell=True)
+#            self.p = Popen( 'condor_submit '+ condor_file, shell=True , stdout=output, stderr=error)
+            self.p.wait()
+            if self.p.returncode != 0:
+                print "[DBI] condor_submit failed! We can't stard the jobs"
         else:
             print "[DBI] Created condor file: " + condor_file
             if self.dolog:
