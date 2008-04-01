@@ -58,10 +58,11 @@ cluster only options:
 condor only options:
   The '--req=\"CONDOR_REQUIREMENT\"' option makes dbidispatch send additional option to DBI that will be used to generate additional requirement for condor. CONDOR_REQUIREMENT must follow the syntax of requirement for condor with one exception. The symbol '\"' must be escaped 3 times! So the requirement (Machine == \"computer.example.com\") must be writen in the following way:
 
-  dbidispatch \"--req=Machine==\\\\\\\"computer.example.com\\\\\\\"\"
+  dbidispatch \"--req=Machine==\\\"computer.example.com\\\"\"
      or
-  dbidispatch '--req=Machine==\\\"computer.example.com\\\"' 
-
+  dbidispatch '--req=Machine=="computer.example.com"' 
+     or
+  dbidispatch '--req=regexp("mona0*", target.Machine)'
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -148,7 +149,7 @@ for argv in to_parse:
     elif argv == "--nowait":
         dbi_param["cluster_wait"]=False
     elif argv[0:6] == "--req=":
-        dbi_param["requirements"]="\"%s\""%argv[6:]
+        dbi_param["requirements"]="%s"%argv[6:]
     elif argv.startswith("--micro"):
         dbi_param["micro"]=20
         if len(argv)>7:
@@ -172,8 +173,23 @@ if len(command_argv) == 0 and FILE == "":
     print ShortHelp
     sys.exit(1)
 
+valid_dbi_param=["clean_up","test","arch","dolog"]
+if launch_cmd=="Ssh":
+    valid_dbi_param+=["nb_proc"]
+elif launch_cmd=="Cluster":
+    valid_dbi_param +=["cluster_wait","force","nb_proc",'--duree','--3264', '--32', '--64',"--interruptible","--duree","--cpu","--mem","--os"]
+elif launch_cmd=="Condor":
+    valid_dbi_param +=["requirements", "--3264", "--32", "--64"]
+elif launch_cmd=="Bqtools":
+    valid_dbi_param +=["--micro", "--long","nb_proc",'--duree','--micro']
+elif launch_cmd=="Local":
+    valid_dbi_param +=["nb_proc"]
+
 print "\n\nThe jobs will be launched on the system:", launch_cmd
 print "With options: ",dbi_param
+for i in dbi_param:
+    if i not in valid_dbi_param:
+        print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end"
 print "With the command to be expended:"," ".join(command_argv),"\n\n"
 
 def generate_combination(repl):
