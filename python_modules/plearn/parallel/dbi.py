@@ -171,7 +171,6 @@ class DBIBase:
         self.redirect_stderr_to_stdout = False
 
         # Initialize the namespace
-        self.requirements = ''
         self.test = False
         self.dolog = False
         self.temp_files = []
@@ -388,7 +387,7 @@ class DBICluster(DBIBase):
     def __init__(self, commands, **args ):
         self.duree=None
         self.arch=None
-        self.cluster_wait=True
+        self.cwait=True
         self.force=False
         self.interruptible=False
         self.cpu=1
@@ -446,7 +445,7 @@ class DBICluster(DBIBase):
             command += " --typecpu all"
         if self.duree:
             command += " --duree "+self.duree
-        if self.cluster_wait:
+        if self.cwait:
             command += " --wait"
         if self.mem:
             command += " --memoire "+self.mem
@@ -666,6 +665,7 @@ class DBICondor(DBIBase):
             raise Exception("You must be in a subfolder of /home/fringant2/")
 
         self.getenv = True
+        self.req = ''
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
@@ -789,8 +789,8 @@ class DBICondor(DBIBase):
         else :
             req="(Arch == \"%s\")"%(self.targetcondorplatform)
 
-        if self.requirements != "":
-            req = req+'&&('+self.requirements+')'
+        if self.req != "":
+            req = req+'&&('+self.req+')'
 
         condor_dat.write( dedent('''\
                 executable     = %s/launch.sh
