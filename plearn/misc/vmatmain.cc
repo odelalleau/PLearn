@@ -53,6 +53,7 @@
 #include <plearn/db/getDataSet.h>
 #include <plearn/display/Gnuplot.h>
 #include <plearn/io/openFile.h>
+#include <plearn/io/load_and_save.h>
 #include <plearn/base/HelpSystem.h>
 #include <plearn/base/PDate.h>
 #include <algorithm>                         // for max
@@ -491,7 +492,7 @@ int vmatmain(int argc, char** argv)
         bool mat_to_mem=false;
         if(argc<4)
             PLERROR("Usage: vmat convert <source> <destination> "
-                    "[--mat_to_mem] [--cols=col1,col2,col3,...]");
+                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [save_vmat]");
 
         /**
          * Interpret the following options:
@@ -519,6 +520,7 @@ int vmatmain(int argc, char** argv)
         int precision = 12;
         string delimiter = ",";
         bool convert_date = false;
+        bool save_vmat = false;
         for (int i=4 ; i < argc && argv[i] ; ++i) {
             string curopt = removeblanks(argv[i]);
             if (curopt == "")
@@ -539,6 +541,8 @@ int vmatmain(int argc, char** argv)
                 convert_date = true;
             else if (curopt =="--mat_to_mem")
                 mat_to_mem = true;
+            else if (curopt == "save_vmat")
+                save_vmat = true;
             else
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                           curopt.c_str());
@@ -580,6 +584,10 @@ int vmatmain(int argc, char** argv)
             cerr << "ERROR: can only convert to .amat .pmat .dmat or .csv" << endl
                  << "Please specify a destination name with a valid extension " << endl;
         }
+        if(save_vmat && extract_extension(source)==".vmat")
+            PLearn::save(destination+".metadata/orig.vmat",vm);
+        else if(save_vmat)
+            PLWARNING("We haven't saved the original file as it is not a vmat");
     }
     else if(command=="info")
     {
