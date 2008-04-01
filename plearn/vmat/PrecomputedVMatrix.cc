@@ -176,14 +176,15 @@ void PrecomputedVMatrix::usePrecomputed()
     }
 
     else
-        PLERROR("Invalid precomp_type=%s. Must be one of: dmat, pmat.",precomp_type.c_str());
+        PLERROR("Invalid precomp_type=%s. Must be one of: dmat, pmat.",
+                precomp_type.c_str());
 }
 
 void PrecomputedVMatrix::build_()
 {
-    //We only call it their, as some matrix(FilteredVMatrix) are only completly
-    //set if they have a metadatadir.
-    if(hasMetaDataDir())
+    //We don't always call it as some matrix(FilteredVMatrix) are only
+    //completly set if they have a metadatadir.
+    if(hasMetaDataDir() ||(source->width()>0 && source->length()>0))
         setMetaInfoFromSource();
 }
 
