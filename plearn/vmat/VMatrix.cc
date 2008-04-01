@@ -1184,22 +1184,22 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
     // Copy sizes from vm if not set and they do not conflict with the width.
     int current_w = max(0, inputsize_) + max(0, targetsize_) +
                     max(0, weightsize_) + max(0, extrasize_);
-    if(inputsize_<0) {
-        int is = vm->inputsize();
+    int is = vm->inputsize();
+    if(inputsize_<0 && is>=0) {
         if (is + current_w <= width_) {
             inputsize_ = is;
             current_w += is;
         }
     }
-    if(targetsize_<0) {
-        int ts = vm->targetsize();
+    int ts = vm->targetsize();
+    if(targetsize_<0 && ts>=0) {
         if (ts + current_w <= width_) {
             targetsize_ = ts;
             current_w += ts;
         }
     }
-    if(weightsize_<0) {
-        int ws = vm->weightsize();
+    int ws = vm->weightsize();
+    if(weightsize_<0 && ws>=0) {
         if (ws + current_w <= width_) {
             // We must also ensure the total sum of sizes (if available)
             // will match the width. Otherwise we may end up with sizes
@@ -1212,8 +1212,8 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
             }
         }
     }
-    if(extrasize_<=0) {
-        int es = vm->extrasize();
+    int es = vm->extrasize();
+    if(extrasize_<=0 && es>=0) {
         if (es + current_w <= width_) {
             // Same as above.
             if (inputsize_ < 0 || targetsize_ < 0 || weightsize_ < 0 ||
@@ -1309,9 +1309,12 @@ string getUser()
 void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 {
     if(!hasMetaDataDir())
-        PLERROR("In VMatrix::lockMetaDataDir(): metadatadir was not set");
+        PLERROR("In VMatrix::lockMetaDataDir() subclass %s -"
+                " metadatadir was not set", classname().c_str());
     if(lockf_) // Already locked by this object!
-        PLERROR("VMatrix::lockMetaDataDir() called while already locked by this object.");
+        PLERROR("VMatrix::lockMetaDataDir() subclass %s -"
+                " called while already locked by this object.",
+                classname().c_str());
     if(!pathexists(metadatadir))
         force_mkdir(metadatadir);
 
