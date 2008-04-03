@@ -19,6 +19,11 @@ def yyyymmdd_to_date(x):
 
     return date(yyyy,mm,dd)
 
+def pljulian_to_date(x):
+    """Convert a PLearn Julian Number to a Python date.
+    """
+    assert not isNaN(x)
+    return date.fromordinal(int(x - 1721425))
   
 def date_to_cyymmdd(d):
     return (d.year-1900)*10000 + d.month*100 +d.day
