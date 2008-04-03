@@ -53,6 +53,7 @@
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/VMat.h>
 #include <plearn/vmat/VVMatrix.h>
+#include <nspr/prtime.h>
 
 namespace PLearn {
 using namespace std;
@@ -97,6 +98,7 @@ VMat getDataSet(const PPath& dataset_path)
             Mat tempMat;
             loadAsciiSingleBinaryDescriptor(dataset, tempMat);
             vm = VMat(tempMat);
+            vm->updateMtime(dataset);
         } else if (ext == "pmat") {
             vm = new FileVMatrix(dataset);
         } 
@@ -136,11 +138,31 @@ VMat getDataSet(const PPath& dataset_path)
             if (vm.isNull())
                 PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
                         dataset.absolute().c_str());
+            //Their is two case:
+            //1) params.size()>0, The mtime should be now
+            //2) params.size()==0 the mtime should be the file mtime
+            //     But as we can't trust the file mtime as it can
+            //     have dependency in it that we don't look,
+            //     we set it to 0 to be safe.
+            if(params.size()==0)
+                vm->updateMtime(0);
+            else{
+    // The NSPR PRTime is number of microseconds since the epoch, while
+    // time_t is the number of seconds since the (same) epoch.
+    // Translate from the former to the later by dividing by 1e6, using
+    // NSPR long long manipulation macros to be extra safe.
+                PRInt64 time_t_compatible_value;
+                PRInt64 one_million = LL_INIT(0, 1000000);
+                LL_DIV(time_t_compatible_value, PR_Now(), one_million);
+                vm->updateMtime((time_t)time_t_compatible_value);
+
+            }
         } else if (VMatrixExtensionRegistrar::VMatrixInstantiator inst =
                    VMatrixExtensionRegistrar::getInstantiator(ext))
         {
             // Support user-added extensions
             vm = inst(dataset);
+            vm->updateMtime(0);
         }
         else 
             PLERROR("In getDataSet - Unknown extension for VMat file: %s", ext.c_str());
