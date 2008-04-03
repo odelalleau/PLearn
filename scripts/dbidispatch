@@ -180,7 +180,7 @@ elif launch_cmd=="Cluster":
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv"]
 elif launch_cmd=="Bqtools":
-    valid_dbi_param +=["micro", "long","nb_proc",'duree','micro']
+    valid_dbi_param +=["micro", "long","nb_proc","duree"]
 elif launch_cmd=="Local":
     valid_dbi_param +=["nb_proc"]
 
