@@ -1,12 +1,12 @@
 import os
 
-#import plearn.utilities
 from libsvm import *
 
 from plearn.pyext import *
 from numpy.numarray import *
 from math import *
 import random
+
 
 class SVMHyperParamOracle__kernel(object):
     """ An oracle that gives values of hyperparameters      
@@ -534,6 +534,8 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
     """ Return <bool>: whether or not we should try other hyperparameter values.
     """
     def should_be_tuned_again(self):
+        if len(self.trials_param_list) > 50:
+            return False
         best_degree = self.best_param['degree']
         tried_degrees = self.get_trials_oneparam_list('degree')
         if( best_degree in tried_degrees
@@ -732,8 +734,7 @@ class SVM(object):
         self.class_priors = None
         self.weight = None
         self.labels = None
-        
-        
+                
         self.results_filename      = None
         self.preproc_optionnames  = []
         self.preproc_optionvalues = []
@@ -749,6 +750,8 @@ class SVM(object):
         self.validset_key = 'validset'
         self.testset_key  = 'testset'
 
+        self.compute_outputs_from_probabilities = None
+
     def forget(self):
         for expert in self.all_experts:
              expert.forget()
@@ -762,14 +765,18 @@ class SVM(object):
         #       a good candidate
 
     def train_inputspec(self, dataspec):
+        assert type(dataspec) == dict
         if self.trainset_key not in dataspec:
-            return None
+            raise KeyError, "Key %s not in dataspec (keys %s)" % \
+                            ( self.trainset_key, dataspec.keys() )
         return dataspec[ self.trainset_key ]
     def valid_inputspec(self, dataspec):
+        assert type(dataspec) == dict
         if self.validset_key not in dataspec:
             return None
         return dataspec[ self.validset_key ]
     def test_inputspec(self, dataspec):
+        assert type(dataspec) == dict
         if self.testset_key not in dataspec:
             return None
         return dataspec[ self.testset_key ]
@@ -913,8 +920,13 @@ class SVM(object):
                       for pn in param )
         if len(s)>0:s=', '+s
 
-        # Note: 'svm_type = C_SVC' stands for classification
-        return eval('svm_parameter( svm_type = C_SVC '+s+')' )
+        
+        if self.compute_outputs_from_probabilities:
+            # if this function is defined (see 
+            return eval('svm_parameter( svm_type = C_SVC, probability = 1 '+s+')' )
+        else:
+            # Note: 'svm_type = C_SVC' stands for classification
+            return eval('svm_parameter( svm_type = C_SVC '+s+')' )
     
 
     """ Write given results with corresponding parameters
@@ -1146,11 +1158,23 @@ class SVM(object):
             teststats= VecStatsCollector()        
             teststats.setFieldNames( costnames )
 
-        predictions=[]
-        for x in samples:
-            ## specific to libsvm
-            predictions.append( int(model.predict(x)) )
-        predictions, targets = self.update_predictions_targets( predictions, targets, testset)
+        if self.compute_outputs_from_probabilities:
+            predictions=[]
+            probas=[]
+            for x in samples:
+                ## specific to libsvm
+                prd, prb = model.predict_probability(x)
+                probas.append(prb)
+                predictions.append( int(prd) )
+            predictions, targets = self.compute_outputs_from_probabilities( probas, targets, testset)
+
+        else:
+            predictions=[]
+            for x in samples:
+                ## specific to libsvm
+                predictions.append( int(model.predict(x)) )
+            predictions, targets = self.update_predictions_targets( predictions, targets, testset)
+
 
         # Computing misclassification costs for the default normalized
         # classification error (= class error weighted w.r.t class priors)
@@ -1265,8 +1289,11 @@ class SVM(object):
         return validstats
 
 
-    """ THE interesting function of the class
-# TODO: document the function
+    """ THE interesting function of the class.
+        See __main__ below for usage.
+        dataspec is a dictionary which specifies train, valid, test sets.
+        The train set is mandatory, but valid and/or test sets can be missing.
+        cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
     def train_and_tune(self, dataspec):
 
@@ -1293,13 +1320,17 @@ class SVM(object):
 
             valid_stats = self.valid(dataspec, param)
 
-            # Better valid cost is obtained!
+            # No improvement measured
             if not self.update_trials( param, valid_stats ):
                 if self.verbosity > 0:
                     print " -- valid costs: ", self.get_all_costs( valid_stats )
 
                 # We reject the model (to avoid testing on it)
                 self.model = None
+                
+                self.write_results( param, valid_stats )
+
+            # Better valid cost is obtained!
             else:
 
                 # Cross Validation
@@ -1308,26 +1339,26 @@ class SVM(object):
 
                 # Simple Validation
                 else:
+                    self.validtype = 'simple'
                     self.best_model = self.model
                     if self.retrain_on_valid:
 
-                        # TODO: remove this part
-
-                        self.validtype = 'simple'
-
-                        train_stats = None
-                        test_stats = None
-                        if self.test_on_train:
-                            if self.verbosity > 2:
-                                print "\n** (testing simple valid on "+self.trainset_key+")"
-                            train_stats = self.test( trainset )
-                        if testset <> None:
-                            if self.verbosity > 2:
-                                print "\n** (testing simple valid on "+self.testset_key+")"
-                        test_stats = self.test( testset  )
-
-                        self.write_results( self.best_param,
-                                            valid_stats, test_stats, train_stats )
+                        """ Uncomment following lines if you want to check that
+                            retraining on {train + valid} sets does not degrade.
+                        """
+                        #train_stats = None
+                        #test_stats = None
+                        #if self.test_on_train:
+                        #    if self.verbosity > 2:
+                        #        print "\n** (testing simple valid on "+self.trainset_key+")"
+                        #    train_stats = self.test( trainset )
+                        #if testset <> None:
+                        #    if self.verbosity > 2:
+                        #        print "\n** (testing simple valid on "+self.testset_key+")"
+                        #test_stats = self.test( testset  )
+                        #
+                        #self.write_results( self.best_param,
+                        #                    valid_stats, test_stats, train_stats )
 
                         self.validtype = 'simple+retrain'
 
@@ -1361,6 +1392,26 @@ class SVM(object):
 
         return dataspec
 
+""" Some AUXILIARY FUNCTIONS, to have access or modify 
+    the input statistics.
+"""
+def get_std_cmp(data,i):
+    values=[float(vec[i]) for vec in data]
+    tot = sum(values)
+    avg = tot*1.0/len(values)
+    sdsq = sum([(i-avg)**2 for i in values])
+    return (sdsq*1.0/(len(values)-1 or 1))**.5
+
+def mean_std(data):
+    stds=[get_std_cmp(data,i) for i in range(len(data[0]))]
+    while 0 in stds:
+        stds.remove(0)
+    stds=array(stds)
+    return stds.mean(), stds.std()
+
+def get_mean_cmp(data,i):
+    values=[float(vec[i]) for vec in data]
+    return  sum(values)/len(values)
 
 def normalize_data(data, mean=None, std=None):
     if mean == None:
@@ -1380,23 +1431,9 @@ def normalize_data(data, mean=None, std=None):
             data[j][i]=(data[j][i]-mean[i])/std[i]
     return mean, std
 
-def mean_std(data):
-    stds=[get_std_cmp(data,i) for i in range(len(data[0]))]
-    while 0 in stds:
-        stds.remove(0)
-    stds=array(stds)
-    return stds.mean(), stds.std()
-
-def get_std_cmp(data,i):
-    values=[float(vec[i]) for vec in data]
-    tot = sum(values)
-    avg = tot*1.0/len(values)
-    sdsq = sum([(i-avg)**2 for i in values])
-    return (sdsq*1.0/(len(values)-1 or 1))**.5
-def get_mean_cmp(data,i):
-    values=[float(vec[i]) for vec in data]
-    return  sum(values)/len(values)
-
+""" Geometric mean (useful to deal with multiplicative hyperparameters
+                    such as 'C', 'gamma', ...)
+"""
 def geom_mean(data):
     if type(data[0]) == list:
         res=[]
@@ -1408,6 +1445,79 @@ def geom_mean(data):
         for value in data:
             prod *= value
         return prod**(1./len(data))
+
+""""""
+
+""" In the following:
+    Some (API) Functions that can be assigned
+    to a SVM object, to deal with bags of data
+    to classify.
+"""
+"""
+
+# Usage:
+#-------
+    
+svm = SVM()
+svm.get_datalist = ToBagClassifier_get_datalist
+
+vote_with_proba = 1 # whether or not to use probabiblity
+                    # instead of hard vote [0,1] for each element of a bag.
+if vote_with_proba:
+    svm.compute_outputs_from_probabilities = ToBagClassifier_compute_outputs_from_probabilities
+else:
+    svm.update_predictions_targets = ToBagClassifier_update_predictions_targets
+"""         
+def get_baginfo( input_vmat ):
+    data_array = input_vmat.getMat()
+    inputsize = input_vmat.inputsize
+    targetsize = input_vmat.targetsize
+    assert targetsize == 2
+    baginfo = [ int(t) for t in data_array[:,inputsize+1] ]
+    return baginfo
+
+def ToBagClassifier_get_datalist( input_vmat ):
+    data_array = input_vmat.getMat()
+    inputsize = input_vmat.inputsize
+    targetsize = input_vmat.targetsize
+    nsamples = input_vmat.length
+    assert shape(data_array)[0] == nsamples
+    assert targetsize==2
+    samples   = [ [ float(x_t_i)    for x_t_i in x_t ]
+                                    for x_t in data_array[:,:inputsize] ]
+    targets   = [ float(t) for t in data_array[:,inputsize] ]
+    return samples, targets
+
+def ToBagClassifier_update_predictions_targets(predictions, targets, vmat):
+    baginfo = get_baginfo(vmat)
+    assert len(predictions) == len(targets) == len(baginfo)
+    nclasses = max(predictions)+1
+    bag_predictions=[]
+    bag_targets=[]
+    for p, t, b in zip(predictions, targets, baginfo):
+        if b in [1,3]: # beginning of a bag
+            votes = zeros(nclasses)
+        votes[p] +=1
+        if b in [2,3]: # end of a bag
+            bag_predictions.append( votes.argmax() )
+            bag_targets.append( t )
+    return bag_predictions, bag_targets
+
+def ToBagClassifier_compute_outputs_from_probabilities(probas, targets, vmat):
+    baginfo = get_baginfo(vmat)
+    assert len(probas) == len(targets) == len(baginfo)
+    nclasses = len(probas[0])
+    bag_predictions=[]
+    bag_targets=[]
+    for p, t, b in zip(probas, targets, baginfo):
+        if b in [1,3]: # beginning of a bag
+            votes = zeros(nclasses)
+        for c in p:
+            votes[c] += p[c]
+        if b in [2,3]: # end of a bag
+            bag_predictions.append( votes.argmax() )
+            bag_targets.append( t )
+    return bag_predictions, bag_targets
 
 
 if __name__ == '__main__':
