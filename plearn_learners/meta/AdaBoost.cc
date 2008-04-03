@@ -335,13 +335,10 @@ void AdaBoost::train()
         if (train_set->weightsize()>0)
         {
             PP<ProgressBar> pb;
-            if(report_progress) pb = new ProgressBar(
-                "AdaBoost round " + tostring(stage) +
-                ": extracting initial weights", n);
             initial_sum_weights=0;
+            int weight_col = train_set->inputsize()+train_set->targetsize();
             for (int i=0; i<n; ++i) {
-                if(report_progress) pb->update(i);
-                train_set->getExample(i, input, target, weight);
+                weight=train_set->get(i,weight_col);
                 example_weights[i]=weight;
                 initial_sum_weights += weight;
             }
