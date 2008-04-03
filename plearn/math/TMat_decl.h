@@ -215,7 +215,7 @@ public:
         else
         {
             int usage = storage->usage();
-            if (usage > 1 && new_width > mod()-offset_%mod())
+            if (usage > 1 && mod() != 0 && new_width > mod()-offset_%mod())
                 resizeModError();
             else if (preserve_content && size() > 0)
                 resizePreserve(new_length, new_width, extra);
