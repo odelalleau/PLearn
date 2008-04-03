@@ -222,6 +222,13 @@ void ConjGradientOptimizer::computeCostAndDerivative(
         this->params.update(alpha, this->search_direction);
         computeGradient(this->delta);
         cost = this->cost->value[0];
+
+#if 0
+        Vec tmpparams(this->params.nelems());
+        this->params >> tmpparams;
+        perr << "Params: " << tmpparams << "   Cost: " << cost << endl;
+#endif
+        
         derivative = dot(this->search_direction, this->delta);
         this->params.copyFrom(this->tmp_storage);
     }
@@ -238,6 +245,13 @@ real ConjGradientOptimizer::computeCostValue(real alpha)
     this->params.update(alpha, this->search_direction);
     this->proppath.fprop();
     real c = this->cost->value[0];
+
+#if 0
+    Vec tmpparams(this->params.nelems());
+    this->params >> tmpparams;
+    perr << "Params: " << tmpparams << "   Cost: " << c << endl;
+#endif
+
     this->params.copyFrom(this->tmp_storage);
     return c;
 }
@@ -252,6 +266,13 @@ real ConjGradientOptimizer::computeDerivative(real alpha)
     this->params.copyTo(this->tmp_storage);
     this->params.update(alpha, this->search_direction);
     computeGradient(this->delta);
+
+#if 0
+    Vec tmpparams(this->params.nelems());
+    this->params >> tmpparams;
+    perr << "Params: " << tmpparams << "   Cost: " << this->cost->value[0] << endl;
+#endif
+
     this->params.copyFrom(this->tmp_storage);
     return dot(this->search_direction, this->delta);
 }
