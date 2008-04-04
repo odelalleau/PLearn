@@ -1227,7 +1227,7 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
 
     // Fill missing size if possible, also display warning when sizes are not
     // compatible with the width.
-    computeMissingSizeValue();
+    computeMissingSizeValue(false);
 
     // Copy fieldnames from vm if not set and they look good.
     bool same_fields_as_source =
