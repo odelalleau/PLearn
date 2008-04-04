@@ -142,12 +142,26 @@ void KS_test(Vec& v1, Vec& v2, int conv, real& D, real& p_value);
  */
 real KS_test(Vec& v1, Vec& v2, int conv=10);
 
+/** 
+ * Returns result of Kolmogorov-Smirnov test between 2 samples
+ * (D and p-value)
+ * The call sorts v1 and v2.
+ */
+tuple<real,real> remote_KS_test(Vec& v1, Vec& v2, int conv);
 
 /** 
  * Returns result of Kolmogorov-Smirnov test for each pair of variable
  * between the two VMat
  */
 void KS_test(const VMat& m1, const VMat& m2, const int conv, Vec& Ds, Vec& p_values, const bool report_progress = false);
+
+/** 
+ * Returns result of Kolmogorov-Smirnov test for each pair of variable
+ * between the two VMat
+ * (Ds and p-values)
+ * The call sorts v1 and v2.
+ */
+tuple<Vec,Vec> remote_KS_tests(VMat& m1, VMat& m2, int conv);
 
 /**
  * Given two paired sets u and v of n measured values, the paired t-test 
