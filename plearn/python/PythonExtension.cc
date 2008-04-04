@@ -413,7 +413,7 @@ void removeFromWrappedObjectsSet(PyObject* o)
 {
     PLASSERT(the_PLearn_python_module);
     if(-1 == PyObject_SetAttrString(the_PLearn_python_module, "_tmp_wrapped_instance", o))
-        PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to module.");
+        PLERROR("in removeFromWrappedObjectsSet : cannot add wrapped object to module.");
     PyObject* res= PyRun_String("\nwrapped_PLearn_instances.remove(_tmp_wrapped_instance)"
                                 "\ndel _tmp_wrapped_instance\n", 
                                 Py_file_input, 
@@ -422,7 +422,7 @@ void removeFromWrappedObjectsSet(PyObject* o)
     if(!res)
     {
         if(PyErr_Occurred()) PyErr_Print();
-        PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to set.");
+        PLERROR("in removeFromWrappedObjectsSet : cannot remove wrapped object from set.");
     }
     Py_DECREF(res);
 }
