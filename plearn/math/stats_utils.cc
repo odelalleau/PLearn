@@ -44,6 +44,7 @@
 #include "TMat_maths.h"
 #include "pl_erf.h"
 #include "random.h"
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;
@@ -339,6 +340,20 @@ real KS_test(Vec& v1, Vec& v2, int conv)
     return ks_stat;
 }
 
+tuple<real,real> remote_KS_test(Vec& v1, Vec& v2, int conv)
+{
+    real D, pvalue;
+    KS_test(v1,v2,conv,D, pvalue);
+    return make_tuple(D, pvalue);
+}
+
+tuple<Vec,Vec> remote_KS_tests(VMat& m1, VMat& m2, int conv)
+{
+    Vec Ds, pvalues;
+    KS_test(m1, m2, conv, Ds, pvalues);
+    return make_tuple(Ds, pvalues);
+}
+
 real paired_t_test(Vec u, Vec v)
 {
     int n = u.length();
@@ -407,6 +422,28 @@ void DirichletEstimatorMaxLik(const Mat& p, Vec alpha)
 }
 
 
+
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("KS_test", &remote_KS_test,
+                    (BodyDoc("Returns result of Kolmogorov-Smirnov test between 2 samples.\n"),
+                     ArgDoc ("v1","Vec1: first distr."),
+                     ArgDoc ("v2","Vec2: second distr."),
+                     ArgDoc ("conv","precision"),
+                     RetDoc ("tuple of (D, p-value)")));
+
+    declareFunction("KS_tests", &remote_KS_tests,
+                    (BodyDoc("Returns result of Kolmogorov-Smirnov test between 2 VMats, for each column.\n"),
+                     ArgDoc ("m1","VMat1: first distr."),
+                     ArgDoc ("m2","VMat2: second distr."),
+                     ArgDoc ("conv","precision"),
+                     RetDoc ("tuple of (Ds, p-values)")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
+
+
 } // end of namespace PLearn
 
 /* 
@@ -463,6 +500,7 @@ int main()
 }
 
 */
+
 
 
 /*
