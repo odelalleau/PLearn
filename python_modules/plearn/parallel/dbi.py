@@ -664,7 +664,8 @@ class DBICondor(DBIBase):
         if (not os.path.abspath(os.path.curdir).startswith("/home/fringant2/")) and gethostname().endswith(".iro.umontreal.ca"):
             raise Exception("You must be in a subfolder of /home/fringant2/")
 
-        self.getenv = True
+        self.getenv = False
+        self.nice = False
         self.req = ''
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
@@ -800,10 +801,11 @@ class DBICondor(DBIBase):
                 error          = %s/condor.%s.$(Process).error
                 log            = %s/condor.log
                 getenv         = %s
+                nice_user      = %s
                 ''' % (self.log_dir,req,
                        self.log_dir,self.unique_id,
                        self.log_dir,self.unique_id,
-                       self.log_dir,str(self.getenv))))
+                       self.log_dir,str(self.getenv),str(self.nice))))
 
         if len(condor_datas)!=0:
             for i in condor_datas:
