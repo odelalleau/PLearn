@@ -790,8 +790,14 @@ class DBICondor(DBIBase):
         if self.req != "":
             req = req+'&&('+self.req+')'
 
+        source_file=os.getenv("CONDOR_LOCAL_SOURCE")
+        if source_file and source_file.endswith(".cshrc"):
+            launch_file = os.path.join(self.log_dir, 'launch.csh')
+        else:
+            launch_file = os.path.join(self.log_dir, 'launch.sh')
+
         condor_dat.write( dedent('''\
-                executable     = %s/launch.sh
+                executable     = %s
                 universe       = vanilla
                 requirements   = %s
                 output         = %s/condor.%s.$(Process).out
@@ -799,7 +805,7 @@ class DBICondor(DBIBase):
                 log            = %s/condor.log
                 getenv         = %s
                 nice_user      = %s
-                ''' % (self.log_dir,req,
+                ''' % (launch_file,req,
                        self.log_dir,self.unique_id,
                        self.log_dir,self.unique_id,
                        self.log_dir,str(self.getenv),str(self.nice))))
@@ -812,7 +818,6 @@ class DBICondor(DBIBase):
                 condor_dat.write("arguments      = %s \nqueue\n" %(' ; '.join(task.commands)))
         condor_dat.close()
 
-        launch_file = os.path.join(self.log_dir, 'launch.sh')
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
         if not os.path.exists(dbi_file):
@@ -824,7 +829,6 @@ class DBICondor(DBIBase):
                 if mtimed>mtimel:
                     print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
                     overwrite_launch_file=True
-        source_file=os.getenv("CONDOR_LOCAL_SOURCE")
         
         if self.copy_local_source_file:
             source_file_dest = os.path.join(self.log_dir,
@@ -837,13 +841,15 @@ class DBICondor(DBIBase):
         if not os.path.exists(launch_file) or overwrite_launch_file:
             self.temp_files.append(launch_file)
             launch_dat = open(launch_file,'w')
-            launch_dat.write(dedent('''\
+            if source_file and not source_file.endswith(".cshrc"):
+
+                launch_dat.write(dedent('''\
                 #!/bin/sh
                 PROGRAM=$1
                 shift\n'''))
-            if source_file:
-                launch_dat.write('source ' + source_file_dest + '\n')
-            launch_dat.write(dedent('''\
+                if source_file:
+                    launch_dat.write('source ' + source_file + '\n')
+                launch_dat.write(dedent('''\
                     echo "Executing on " `hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
@@ -856,6 +862,26 @@ class DBICondor(DBIBase):
                     #/usr/bin/python -V 1>&2
                     echo ${PROGRAM} $@ 1>&2
                     ${PROGRAM} "$@"'''))
+            else:
+                launch_dat.write(dedent('''\
+                    #!/bin/csh
+                    \n'''))
+                if source_file:
+                    launch_dat.write('source ' + source_file + '\n')
+                launch_dat.write(dedent('''\
+                    echo "Executing on " `hostname`
+                    echo "HOSTNAME: ${HOSTNAME}"
+                    echo "PATH: $PATH"
+                    echo "PYTHONPATH: $PYTHONPATH"
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+                    #which python
+                    #echo -n python version:
+                    #python -V
+                    #echo -n /usr/bin/python version:
+                    #/usr/bin/python -V
+                    #echo ${PROGRAM} $@
+                    #${PROGRAM} "$@"
+                    $argv'''))
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
