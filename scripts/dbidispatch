@@ -105,9 +105,7 @@ is equivalent to:
 
 In the file of the option --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
 
-
-Not defined but existing parameter: --no_clean_up.
-
+The '--no_clean_up' set the DBI option clean_up to false
 
 The environnement variable DBIDISPATCH_DEFAULT_OPTION can contain default option that you always want to pass to dbidispatch. You can override them on the command line.
 """%{'ShortHelp':ShortHelp,'ScriptName':ScriptName}
@@ -217,6 +215,13 @@ for i in dbi_param:
     if i not in valid_dbi_param:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end"
 print "With the command to be expended:"," ".join(command_argv),"\n\n"
+
+from socket import gethostname
+if gethostname().endswith(".iro.umontreal.ca"):
+    if not os.path.abspath(os.path.curdir).startswith("/home/fringant2/"):
+        raise Exception("You must be in a subfolder of /home/fringant2/")
+    if not os.getenv("CONDOR_LOCAL_SOURCE").startswith("/home/fringant2/"):
+        dbi_param['copy_local_source_file']=True
 
 def generate_combination(repl):
     if repl == []:

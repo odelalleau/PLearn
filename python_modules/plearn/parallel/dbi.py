@@ -660,13 +660,10 @@ class DBIBqtools(DBIBase):
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
-        from socket import gethostname
-        if (not os.path.abspath(os.path.curdir).startswith("/home/fringant2/")) and gethostname().endswith(".iro.umontreal.ca"):
-            raise Exception("You must be in a subfolder of /home/fringant2/")
-
         self.getenv = False
         self.nice = False
         self.req = ''
+        self.copy_local_source_file = False
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
@@ -827,6 +824,15 @@ class DBICondor(DBIBase):
                 if mtimed>mtimel:
                     print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
                     overwrite_launch_file=True
+        source_file=os.getenv("CONDOR_LOCAL_SOURCE")
+        
+        if self.copy_local_source_file:
+            source_file_dest = os.path.join(self.log_dir,
+                                            os.path.basename(source_file))
+            shutil.copy( source_file, source_file_dest)
+            self.temp_files.append(source_file_dest)
+            os.chmod(source_file_dest, 0755)   
+            source_file=source_file_dest
 
         if not os.path.exists(launch_file) or overwrite_launch_file:
             self.temp_files.append(launch_file)
@@ -835,8 +841,8 @@ class DBICondor(DBIBase):
                 #!/bin/sh
                 PROGRAM=$1
                 shift\n'''))
-            if os.getenv("CONDOR_LOCAL_SOURCE"):
-                launch_dat.write('source ' + os.getenv("CONDOR_LOCAL_SOURCE") + '\n')
+            if source_file:
+                launch_dat.write('source ' + source_file_dest + '\n')
             launch_dat.write(dedent('''\
                     echo "Executing on " `hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
