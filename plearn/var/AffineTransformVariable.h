@@ -51,20 +51,21 @@ namespace PLearn {
 using namespace std;
 
 
-//! Affine transformation of a vector variable.
-//! Should work for both column and row vectors: result vector will be of same kind (row or col)
-//! First row of transformation matrix contains bias b, following rows contain linear-transformation T
-//! Will compute b + x.T (if you consider b and x to be row vectors)
-//! which is equivalent to b + 
 class AffineTransformVariable: public BinaryVariable
 {
     typedef BinaryVariable inherited;
 
 public:
+
+    // Public options.
+
+    bool force_row_vec;
+
     //!  Default constructor for persistence
     AffineTransformVariable() {}
     AffineTransformVariable(Variable* vec, Variable* transformation,
                             bool call_build_ = true);
+
 
     PLEARN_DECLARE_OBJECT(AffineTransformVariable);
 
@@ -75,17 +76,33 @@ public:
     virtual void bprop();
     virtual void symbolicBprop();
 
-protected:
+private:
+
     void build_();
+
+protected:
+
+    static void declareOptions(OptionList& ol);
+
 };
 
 DECLARE_OBJECT_PTR(AffineTransformVariable);
 
-//! first row of transformation is the bias.
-inline Var affine_transform(Var vec, Var transformation)
+//! First row of transformation is the bias.
+//! The boolean 'force_row_vec' may be used when the first input is a
+//! a vector, to force the resulting variable to be a row vector, even
+//! when the input is a column vector or a scalar.
+//! If the first input is a matrix, this parameter is ignored.
+inline Var affine_transform(Var vec, Var transformation,
+                            bool force_row_vec = false)
 { 
-    if (vec->isVec())
-        return new AffineTransformVariable(vec, transformation); 
+    if (vec->isVec()) {
+        PP<AffineTransformVariable> res =
+            new AffineTransformVariable(vec, transformation, false);
+        res->force_row_vec = force_row_vec;
+        res->build();
+        return get_pointer(res);
+    }
     else return new MatrixAffineTransformVariable(vec, transformation);
 }
 

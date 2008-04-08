@@ -51,7 +51,13 @@ PLEARN_IMPLEMENT_OBJECT(
         "Affine transformation of a vector variable.",
         "The first input is the vector variable.\n"
         "The second input is the matrix of biases (on the first row) and\n"
-        "weights (in other rows).");
+        "weights (in other rows).\n"
+        "If the first input vector is a row vector, then the result is a\n"
+        "row vector as well. If it is a column vector, then the result is\n"
+        "also a column vector. If it is a scalar, then the result is a\n"
+        "column vector as well, unless the option 'force_row_vec' is set\n"
+        "to true."
+);
 
 /////////////////////////////
 // AffineTransformVariable //
@@ -60,13 +66,12 @@ AffineTransformVariable::AffineTransformVariable(Variable* vec,
                                                  Variable* transformation,
                                                  bool call_build_):
     inherited(vec, transformation, 
-            (vec->size() == 1) ? transformation->width()
-                               : (vec->isRowVec() ? 1
-                                                  : transformation->width()),
-            (vec->size() == 1) ? 1
-                               : (vec->isRowVec() ? transformation->width()
-                                                  : 1),
-            call_build_)
+            vec->isScalar() || vec->isColumnVec() ? transformation->width()
+                                                  : 1,
+            vec->isScalar() || vec->isColumnVec() ? 1
+                                                  : transformation->width(),
+            call_build_),
+    force_row_vec(false)
 {
     if (call_build_)
         build_();
@@ -91,19 +96,41 @@ void AffineTransformVariable::build_()
         PLERROR("In AffineTransformVariable: expecting a vector Var (row or column) as first argument");
 }
 
+////////////////////
+// declareOptions //
+////////////////////
+void AffineTransformVariable::declareOptions(OptionList& ol)
+{
+     declareOption(ol, "force_row_vec", &AffineTransformVariable::force_row_vec,
+                   OptionBase::buildoption,
+        "If set to true, then the resulting vector will always be a row\n"
+        "vector, even when the input is a column or a scalar.");
+
+    inherited::declareOptions(ol);
+}
+
 ///////////////////
 // recomputeSize //
 ///////////////////
 void AffineTransformVariable::recomputeSize(int& l, int& w) const
 { 
     if (input1 && input2) {
-        l = input1->isRowVec() ? 1 : input2->width();
-        w = input1->isColumnVec() ? 1 : input2->width(); 
+        if (force_row_vec || (!input1->isScalar() && input1->isRowVec())) {
+            // Result is a row vector.
+            l = 1;
+            w = input2->width();
+        } else {
+            // Result is a column vector.
+            l = input2->width();
+            w = 1;
+        }
     } else
         l = w = 0;
 }
 
-
+///////////
+// fprop //
+///////////
 void AffineTransformVariable::fprop()
 {
     value << input2->matValue.firstRow();
@@ -111,7 +138,9 @@ void AffineTransformVariable::fprop()
     transposeProductAcc(value, lintransform, input1->value);
 }
 
-
+///////////
+// bprop //
+///////////
 void AffineTransformVariable::bprop()
 {
     Mat&  afftr = input2->matValue;
