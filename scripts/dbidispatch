@@ -210,7 +210,7 @@ elif launch_cmd=="Local":
     valid_dbi_param +=["nb_proc"]
 
 from socket import gethostname
-if gethostname().endswith(".iro.umontreal.ca"):
+if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     if not os.path.abspath(os.path.curdir).startswith("/home/fringant2/"):
         raise Exception("You must be in a subfolder of /home/fringant2/")
     f=os.getenv("CONDOR_LOCAL_SOURCE")
