@@ -152,15 +152,9 @@ TVec<string> ToBagClassifier::getTestCostNames() const
 void ToBagClassifier::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("ToBagClassifier::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(sub_target, copies);
+    deepCopyField(bag_output, copies);
+    deepCopyField(votes, copies);
 }
 
 ////////////////////
