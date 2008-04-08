@@ -456,7 +456,7 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
                    coef0= None):
         if not coef0:
             coef0 = self.coef0_initvalue
-        return [  coef0, coef0/100., coef0*100. ]
+        return [  coef0, coef0/10., coef0*10. ]
 
     """ Return <list> of <dict>: which hyperparameter values to try FIRST.
         - 'samples': <array>(n_samples,dim) of (train/valid) samples.
@@ -522,7 +522,7 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
             elif( tried_coef0[0] == min(tried_coef0)
                or tried_coef0[0] == max(tried_coef0) ):
                 new_param_list += self.choose_first_C_param( \
-                                       [ {'degree':d, 'coef0':c} for c in self.choose_new_param_geom( tried_coef0 ) ], \
+                                       [ {'degree':d, 'coef0':c} for c in self.choose_new_param_geom( tried_coef0 )[:2] ], \
                                        tried_C[0] )
                                        
             # we try other 'C'
@@ -751,6 +751,7 @@ class SVM(object):
         self.testset_key  = 'testset'
 
         self.compute_outputs_from_probabilities = None
+        self.use_proba = False
 
     def forget(self):
         for expert in self.all_experts:
@@ -921,7 +922,7 @@ class SVM(object):
         if len(s)>0:s=', '+s
 
         
-        if self.compute_outputs_from_probabilities:
+        if self.use_proba or self.compute_outputs_from_probabilities:
             # if this function is defined (see 
             return eval('svm_parameter( svm_type = C_SVC, probability = 1 '+s+')' )
         else:
@@ -1590,7 +1591,7 @@ if __name__ == '__main__':
     """
 
     svm.results_filename = os.path.join( outputPath,
-                                         'results_%s_svm' % ( os.path.basename(train_file) )
+                                         'RES_%s_svm' % ( os.path.basename(train_file) )
                            )
 
     """ ................................................................. """
@@ -1605,11 +1606,21 @@ if __name__ == '__main__':
 
     """ =============================================================== """
     """ 3. RUN EXPERIMENTS. """
+
+
+    normalize_inputs = 0
+    use_proba = 0
     
-    svm.kernel_type = 'rbf'
+    svm.normalize_inputs = normalize_inputs
+    svm.use_proba = use_proba
+    
+    svm.preproc_optionnames = [ 'renormalize_inputs', 'use_proba' ]
+    svm.preproc_optionvalues = [ normalize_inputs ,  use_proba ]
+    
+    svm.kernel_type = 'poly'
     svm.train_and_tune(dataspec)
 
-    svm.kernel_type = 'poly'
+    svm.kernel_type = 'rbf'
     svm.train_and_tune(dataspec)
 
     svm.kernel_type = 'linear'
