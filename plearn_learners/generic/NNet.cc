@@ -380,8 +380,41 @@ void NNet::declareOptions(OptionList& ol)
         ol, "paramsvalues", &NNet::paramsvalues, OptionBase::learntoption, 
         "The learned parameter vector\n");
 
-    inherited::declareOptions(ol);
+    // Introspective options.  The following are direct views on the individual
+    // parameters of the NNet.  They are marked 'nosave' since they overlap
+    // with paramsvalues, but are useful for inspecting the NNet structure from
+    // a Python program.
+    declareOption(
+        ol, "w1", &NNet::w1,
+        OptionBase::learntoption | OptionBase::nosave,
+        "(Introspection option)  bias and weights of first hidden layer");
+    
+    declareOption(
+        ol, "w2", &NNet::w2,
+        OptionBase::learntoption | OptionBase::nosave,
+        "(Introspection option)  bias and weights of second hidden layer");
+    
+    declareOption(
+        ol, "wout", &NNet::wout,
+        OptionBase::learntoption | OptionBase::nosave,
+        "(Introspection option)  bias and weights of output layer");
 
+    declareOption(
+        ol, "outbias", &NNet::outbias,
+        OptionBase::learntoption | OptionBase::nosave,
+        "(Introspection option)  bias used only if fixed_output_weights");
+    
+    declareOption(
+        ol, "wdirect", &NNet::wdirect,
+        OptionBase::learntoption | OptionBase::nosave,
+        "(Introspection option)  bias and weights for direct in-to-out connection");
+
+    declareOption(
+        ol, "wrec", &NNet::wrec,
+        OptionBase::learntoption | OptionBase::nosave,
+        "(Introspection option)  input reconstruction weights (optional), from hidden layer to predicted input");
+    
+    inherited::declareOptions(ol);
 }
 
 ///////////
