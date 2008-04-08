@@ -800,7 +800,7 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     // Output layer before transfer function.
     if (!first_hidden_layer_is_output) {
         wout = Var(1 + output->width(), outputsize(), "wout");
-        output = affine_transform(output, wout);
+        output = affine_transform(output, wout, true);
         output->setName("output_activations");
         if (!fixed_output_weights)
             params.append(wout);
@@ -897,7 +897,7 @@ void NNet::buildPenalties(const Var& hidden_layer) {
     if (input_reconstruction_penalty>0)
     {
         wrec = Var(1 + hidden_layer->width(),input->width(),"wrec");
-        predicted_input = affine_transform(hidden_layer, wrec);
+        predicted_input = affine_transform(hidden_layer, wrec, true);
         params.append(wrec);
         penalties.append(input_reconstruction_penalty*sumsquare(predicted_input - input));
     }
@@ -1040,7 +1040,7 @@ TVec<string> NNet::getTestCostNames() const
 // hiddenLayer //
 /////////////////
 Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func) {
-    Var hidden = affine_transform(input, weights); 
+    Var hidden = affine_transform(input, weights, true);
     hidden->setName("hidden_layer_activations");
     Var result;
     if (transfer_func == "default")
