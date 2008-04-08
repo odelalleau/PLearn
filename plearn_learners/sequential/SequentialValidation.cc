@@ -621,7 +621,7 @@ void SequentialValidation::trainLearners(VMat training_set)
 
 void SequentialValidation::testLearners(VMat test_set)
 {
-    double weight;
+    real weight;
     test_set.getExample(test_set.length()-1, input, target, weight);
     for (int a=0, n=accessory_learners.length() ; a<n ; ++a )
     {

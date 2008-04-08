@@ -67,6 +67,7 @@ void PLPythonConversionError(const char* function_name,
         fprintf(stderr,"For python object: ");
         PyObject_Print(pyobj, stderr, Py_PRINT_RAW);
     }
+    if (PyErr_Occurred()) PyErr_Print();
     PLERROR("Cannot convert Python object using %s", function_name);
 }
 
@@ -78,6 +79,7 @@ void PythonObjectWrapper::initializePython()
         // must be in each translation unit that makes use of libnumarray;
         // weird stuff related to table of function pointers that's being
         // initialized into a STATIC VARIABLE of the translation unit!
+        import_array();//needed for PyArray_DescFromType (will segfault otherwise)
         import_libnumarray();
         numarray_initialized = true;
     }
@@ -109,6 +111,12 @@ double ConvertFromPyObject<double>::convert(PyObject* pyobj,
         return PyLong_AsDouble(pyobj);
     if(PyInt_Check(pyobj))
         return (double)PyInt_AS_LONG(pyobj);
+    if(PyArray_CheckScalar(pyobj))
+    {
+        double ret= 0.;
+        PyArray_CastScalarToCtype(pyobj, &ret, PyArray_DescrFromType(NPY_DOUBLE));
+        return ret;
+    }
     PLPythonConversionError("ConvertFromPyObject<double>", pyobj,
                             print_traceback);
     return 0;//shut up compiler
@@ -124,6 +132,12 @@ float ConvertFromPyObject<float>::convert(PyObject* pyobj,
         return (float)PyLong_AsDouble(pyobj);
     if(PyInt_Check(pyobj))
         return (float)PyInt_AS_LONG(pyobj);
+    if(PyArray_CheckScalar(pyobj))
+    {
+        float ret= 0.;
+        PyArray_CastScalarToCtype(pyobj, &ret, PyArray_DescrFromType(NPY_FLOAT));
+        return ret;
+    }
     PLPythonConversionError("ConvertFromPyObject<float>", pyobj,
                             print_traceback);
     return 0;//shut up compiler
@@ -187,19 +201,17 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
 void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v,
                                        bool print_traceback)
 {
-    // NA_InputArray possibly creates a well-behaved temporary (i.e. not
-    // discontinuous is memory)
     PLASSERT( pyobj );
-    PyArrayObject* pyarr = NA_InputArray(pyobj, tReal, NUM_C_ARRAY);
+    PyObject* pyarr0= PyArray_CheckFromAny(pyobj, NULL,
+                                           1, 1, NPY_CARRAY_RO, Py_None);
+    PyObject* pyarr= 
+        PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
+                           PyArray_DescrFromType(PL_NPY_REAL), 0);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj,
                                 print_traceback);
-    if (pyarr->nd != 1)
-        PLERROR("ConvertFromPyObject<Vec>: Dimensionality of the returned array "
-                "should be 1; got %d", pyarr->nd);
-
-    v.resize(pyarr->dimensions[0]);
-    v.copyFrom((real*)(NA_OFFSETDATA(pyarr)), pyarr->dimensions[0]);
+    v.resize(PyArray_DIM(pyarr,0));
+    v.copyFrom((real*)(PyArray_DATA(pyarr)), PyArray_DIM(pyarr,0));
     Py_XDECREF(pyarr);
 }
 
@@ -213,20 +225,18 @@ Vec ConvertFromPyObject<Vec>::convert(PyObject* pyobj, bool print_traceback)
 void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m,
                                        bool print_traceback)
 {
-    // NA_InputArray possibly creates a well-behaved temporary (i.e. not
-    // discontinuous is memory)
     PLASSERT( pyobj );
-    PyArrayObject* pyarr = NA_InputArray(pyobj, tReal, NUM_C_ARRAY);
+    PyObject* pyarr0= PyArray_CheckFromAny(pyobj, NULL,
+                                           2, 2, NPY_CARRAY_RO, Py_None);
+    PyObject* pyarr= 
+        PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
+                           PyArray_DescrFromType(PL_NPY_REAL), 0);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj,
                                 print_traceback);
-    if (pyarr->nd != 2)
-        PLERROR("ConvertFromPyObject<Mat>: Dimensionality of the returned array "
-                "should be 2; got %d", pyarr->nd);
-
-    m.resize(pyarr->dimensions[0], pyarr->dimensions[1]);
-    m.toVec().copyFrom((real*)(NA_OFFSETDATA(pyarr)),
-                       pyarr->dimensions[0] * pyarr->dimensions[1]);
+    m.resize(PyArray_DIM(pyarr,0), PyArray_DIM(pyarr,1));
+    m.toVec().copyFrom((real*)(PyArray_DATA(pyarr)),
+                       PyArray_DIM(pyarr,0) * PyArray_DIM(pyarr,1));
     Py_XDECREF(pyarr);
 }
 

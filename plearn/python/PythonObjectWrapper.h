@@ -70,8 +70,10 @@
 
 
 #ifdef USEFLOAT
+#define PL_NPY_REAL NPY_FLOAT
 #define tReal tFloat32
 #else
+#define PL_NPY_REAL NPY_DOUBLE
 #define tReal tFloat64
 #endif
 

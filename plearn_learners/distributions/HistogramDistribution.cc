@@ -196,13 +196,13 @@ void HistogramDistribution::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(smoother, copies);
 }
 
-double HistogramDistribution::log_density(const Vec& x) const
+real HistogramDistribution::log_density(const Vec& x) const
 {
     return pl_log(density(x));
 }
 
 
-double HistogramDistribution::density(const Vec& x) const
+real HistogramDistribution::density(const Vec& x) const
 {
     if(x.size() != 1)
         PLERROR("HistogramDistribution::density implemented only for univariate data (vec size == 1).");
@@ -210,7 +210,7 @@ double HistogramDistribution::density(const Vec& x) const
 }
 
 
-double HistogramDistribution::survival_fn(const Vec& x) const
+real HistogramDistribution::survival_fn(const Vec& x) const
 {
     if(x.size() != 1)
         PLERROR("HistogramDistribution::survival_fn implemented only for univariate data (vec size == 1).");
@@ -228,7 +228,7 @@ double HistogramDistribution::survival_fn(const Vec& x) const
     return survival_values[bin];
 }
 
-double HistogramDistribution::cdf(const Vec& x) const
+real HistogramDistribution::cdf(const Vec& x) const
 {
     return 1.0-survival_fn(x);
 }
@@ -259,7 +259,7 @@ void HistogramDistribution::variance(Mat& cov) const
     cov(0,0) = abs(sumsq-(sum*sum)/n)/n;
 }
 
-double HistogramDistribution::prob_in_range(const Vec& x0, const Vec& x1) const
+real HistogramDistribution::prob_in_range(const Vec& x0, const Vec& x1) const
 {
     return survival_fn(x0) - survival_fn(x1);
 }

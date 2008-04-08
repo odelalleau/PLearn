@@ -134,17 +134,17 @@ public:
     // ************************
 
     //! return log of probability density log(p(x))
-    virtual double log_density(const Vec& x) const;
+    virtual real log_density(const Vec& x) const;
 
     //! return probability density p(x)
     //! [ default version returns exp(log_density(x)) ]
-    virtual double density(const Vec& x) const;
+    virtual real density(const Vec& x) const;
 
     //! return survival fn = P(X>x)
-    virtual double survival_fn(const Vec& x) const;
+    virtual real survival_fn(const Vec& x) const;
 
     //! return survival fn = P(X<x)
-    virtual double cdf(const Vec& x) const;
+    virtual real cdf(const Vec& x) const;
 
     //! return E[X]
     virtual void expectation(Vec& mu) const;
@@ -153,7 +153,7 @@ public:
     virtual void variance(Mat& cov) const;
 
     //! return P(x0 < X < x1)
-    virtual double prob_in_range(const Vec& x0, const Vec& x1) const;
+    virtual real prob_in_range(const Vec& x0, const Vec& x1) const;
 
     //protected:
     //the following methods are used internally by HistogramDistribution

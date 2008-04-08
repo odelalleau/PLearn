@@ -227,7 +227,7 @@ void ProjectionErrorVariable::fprop()
     {
         // use SVD of (F' -T')
         FT1 << F;
-        multiply(FT2,TT,-1.0);
+        multiply(FT2,TT,static_cast<real>(-1.0));
         lapackSVD(FT, Ut, S, V);
         wwuu.clear();//
         for (int k=0;k<S.length();k++)
@@ -254,7 +254,7 @@ void ProjectionErrorVariable::fprop()
             Vec res(ww.length());
             product(res,A11,ww);
             productAcc(res,A12,uu);
-            res -= 1.0;
+            res -= static_cast<real>(1.0);
             cout << "norm of error in w equations: " << norm(res) << endl;
             Vec res2(uu.length());
             transposeProduct(res2,A12,ww);
