@@ -62,6 +62,7 @@ namespace PLearn {
 class Object;
 template<class ObjectType, class OptionType> class Option;
 //template <class T> class TVec; TODO Use this if possible.
+class Var;
 class VMat;
 class VMatrix;
 class PLearnDiff;
@@ -346,7 +347,6 @@ int diff(const string& refer, const string& other, const Option<ObjectType, PP<P
     return n_diffs;
 }
 
-
 /*
 //! diff for Object.
 template<class ObjectType, class OptionType>
@@ -393,6 +393,14 @@ int diff(const string& refer, const string& other, const Option<ObjectType, VMat
                 (Option<ObjectType, PP<VMatrix> >*) opt, diffs);
 }
 #endif
+
+//! diff for Var.
+template<class ObjectType>
+int diff(const string& refer, const string& other, const Option<ObjectType, Var >* opt, PLearnDiff* diffs)
+{
+    return diff(refer, other,
+                (Option<ObjectType, PP<Variable> >*) opt, diffs);
+}
 
 
 //! Add 'prefix' in front of the last 'n' difference names in 'diffs'.
