@@ -102,7 +102,7 @@ class MultiThread:
         if maxThreads==-1:
             nb_thread=len(argsVector)
         elif maxThreads<=0:
-            print "[DBI] you set %d concurent jobs. Must be higher then 0!!"%(maxThreads)
+            print "[DBI] you set %d concurrent jobs. Must be higher then 0!!"%(maxThreads)
             sys.exit(1)
         else:
             nb_thread=maxThreads
@@ -202,8 +202,8 @@ class DBIBase:
     def add_commands(self,commands): raise NotImplementedError, "DBIBase.add_commands()"
 
     def get_redirection(self,stdout_file,stderr_file):
-        """Calcule the needed redirection based of the objects attribute
-        return a tuple (stdout,stderr) that can be used with popen
+        """Compute the needed redirection based of the objects attribute.
+        Return a tuple (stdout,stderr) that can be used with popen.
         """
         output = PIPE
         error = PIPE
@@ -461,7 +461,7 @@ class DBICluster(DBIBase):
 
         self.started+=1
         started=self.started# not thread safe!!!
-        print "[DBI,%d/%d,%s] %s"%(started,len(self.tasks),time.ctime(),command)
+        print "[DBI, %d/%d, %s] %s"%(started,len(self.tasks),time.ctime(),command)
         if self.test:
             task.status=STATUS_FINISHED
             return
@@ -482,7 +482,12 @@ class DBICluster(DBIBase):
                 task.dbi_return_status=int(last.split()[-1])
 #        print "[DBI,%d/%d,%s] Job ended, popen returncode:%d, popen.wait.return:%d, dbi echo return code:%s"%(started,len(self.tasks),time.ctime(),task.p.returncode,task.p_wait_ret,task.dbi_return_status)
         if task.dbi_return_status==None:
-            print "[DBI,%d/%d,%s] Trouble with launching/executing '%s'. Its execution did not finished. Probable cause is the back-end itself. Meaby you want to rerun it. popen returncode:%d, popen.wait.return:%d, dbi echo return code:%s"%(started,len(self.tasks),time.ctime(),command,task.p.returncode,task.p_wait_ret,task.dbi_return_status)
+            print "[DBI, %d/%d, %s] Trouble with launching/executing '%s'." % (started,len(self.tasks),time.ctime(),command)
+            print "    Its execution did not finished. Probable cause is the back-end itself."
+            print "    You may want to run the task again."
+            print "    popen returncode: %d"     % task.p.returncode
+            print "    popen.wait.return: %d"    % task.p_wait_ret
+            print "    dbi echo return code: %s" % task.dbi_return_status
             self.backend_failed+=1
         elif task.dbi_return_status!=0:
             self.jobs_failed+=1
@@ -523,8 +528,8 @@ class DBICluster(DBIBase):
         else:
             print "[DBI] WARNING jobs not started!"
         self.print_jobs_status()
-        print "[DBI] Their was %d jobs where the back-end failled"%(self.backend_failed)
-        print "[DBI] Their was %d jobs that returned a failure status."%(self.jobs_failed)
+        print "[DBI] %d jobs where the back-end failed." % (self.backend_failed)
+        print "[DBI] %d jobs returned a failure status." % (self.jobs_failed)
 
 class DBIBqtools(DBIBase):
 
@@ -727,7 +732,7 @@ class DBICondor(DBIBase):
                 newcommand+='; else '
                 newcommand+=c+".32"+c2+'; fi'
                 if not os.access(c+".64", os.X_OK):
-                    raise Exception("The command '"+c+".64' do not have execution permission!")
+                    raise Exception("The command '"+c+".64' does not have execution permission!")
 #                newcommand=command
                 c+=".32"
             elif self.cplat=="INTEL" and os.path.exists(c+".32"):
@@ -745,9 +750,9 @@ class DBICondor(DBIBase):
             if shellcommand:
                 pass
             elif not os.path.exists(c):
-                raise Exception("The command '"+c+"' do not exist! You must provide the full path to the executable")
+                raise Exception("The command '"+c+"' does not exist! You must provide the full path to the executable")
             elif not os.access(c, os.X_OK):
-                raise Exception("The command '"+c+"' do not have execution permission!")
+                raise Exception("The command '"+c+"' does not have execution permission!")
 
             self.tasks.append(Task(newcommand, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
@@ -821,13 +826,13 @@ class DBICondor(DBIBase):
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
         if not os.path.exists(dbi_file):
-            print '[DBI] WARNING: Can\' locate dbi.py file. Meaby the file "'+launch_file+'" is not up to date!'
+            print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+launch_file+'" is not up to date!'
         else:
             if os.path.exists(launch_file):
                 mtimed=os.stat(dbi_file)[8]
                 mtimel=os.stat(launch_file)[8]
                 if mtimed>mtimel:
-                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your need!'
+                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your needs!'
                     overwrite_launch_file=True
         
         if self.copy_local_source_file:
@@ -985,7 +990,7 @@ class DBILocal(DBIBase):
             # same architecture as the architecture of the launch computer
 
             if not os.access(c, os.X_OK):
-                raise Exception("The command '"+c+"' do not exist or have execution permission!")
+                raise Exception("The command '"+c+"' does not exist or does not have execution permission!")
             self.tasks.append(Task(command, tmp_dir, log_dir,
                                    time_format, pre_tasks,
                                    post_tasks,dolog,id,False,self.args))
@@ -1278,7 +1283,7 @@ class DBISsh(DBIBase):
 def DBI(commands, launch_system, **args):
     """The Distributed Batch Interface is a collection of python classes
     that make it easy to execute commands in parallel using different
-    systems like condor, bqtools on Mammoth, the cluster command or localy.
+    systems like condor, bqtools on Mammouth, the cluster command or localy.
     """
     try:
         jobs = eval('DBI'+launch_system+'(commands,**args)')
@@ -1290,8 +1295,8 @@ def DBI(commands, launch_system, **args):
 
 def main():
     if len(sys.argv)!=2:
-        print "Usage:%s {Condor|Cluster|Ssh|Local|Bqtools} < joblist"%(sys.argv[0])
-        print "Where joblist is a file containing one exeperiement by line"
+        print "Usage: %s {Condor|Cluster|Ssh|Local|Bqtools} < joblist"%(sys.argv[0])
+        print "Where joblist is a file containing one experiment on each line"
         sys.exit(0)
     DBI([ s[0:-1] for s in sys.stdin.readlines() ], sys.argv[1]).run()
 #    jobs.clean()
