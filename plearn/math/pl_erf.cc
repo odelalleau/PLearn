@@ -179,6 +179,12 @@ real gauss_01_quantile(real q) {
     PLASSERT(!is_missing(q));
 #endif
 
+    // Handle special cases that can lead to infinite loops below.
+    if (fast_exact_is_equal(q, real(0)))
+        return -INFINITY;
+    else if (fast_exact_is_equal(q, real(1)))
+        return INFINITY;
+
     // first find a reasonable interval (a,b) s.t. cum(a)<q<cum(b)
     real a=-2;
     real b=2;
@@ -245,8 +251,9 @@ PLGaussQuantileInitializer::PLGaussQuantileInitializer()
 {
     //! Fill the table
     real scaling = 1./(GAUSSQUANTILETABLESIZE-1);
-    for(int i=0; i<GAUSSQUANTILETABLESIZE; i++)
+    for(int i=0; i<GAUSSQUANTILETABLESIZE; i++) {
         gaussQuantiletable[i] = (float) gauss_01_quantile(i*scaling);
+    }
 }
 
 PLGaussQuantileInitializer::~PLGaussQuantileInitializer() {}
