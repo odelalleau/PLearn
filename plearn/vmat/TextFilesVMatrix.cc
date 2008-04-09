@@ -185,7 +185,7 @@ bool TextFilesVMatrix::isValidNonSkipFieldType(const string& ftype) const {
     return (ftype=="auto" || ftype=="num" || ftype=="date" || ftype=="jdate" ||
             ftype=="postal" || ftype=="dollar" || ftype=="dollar-comma" ||
             ftype=="YYYYMM" || ftype=="sas_date" || ftype == "bell_range" ||
-            ftype == "char" || ftype=="num-comma" );
+            ftype == "char" || ftype=="num-comma" || ftype=="auto-num");
 }
 
 void TextFilesVMatrix::setColumnNamesAndWidth()
@@ -625,6 +625,24 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
             dest[0] = real(val);
         else
             dest[0] = getMapping(k, strval);
+    }
+    else if(fieldtype=="auto-num")
+    {//We suppose the decimal point is '.'
+        string s=strval;
+        if(strval[0]=='$')
+            s.erase(0,1);
+        if(strval[strval.size()-1]=='$')
+            s.erase(s.end());
+        
+        for(unsigned int pos=0; pos<strval.size(); pos++)
+            if(s[pos]==',')
+                s.erase(pos--,1);
+        if(pl_isnumber(s,&val))
+            dest[0] = real(val);
+        else
+            PLERROR("In TextFilesVMatrix::transformStringToValue -"
+                    " expedted [$]number[$] as the value for field %d(%s)."
+                    " Got %s", k, fieldname.c_str(), strval.c_str());
     }
     else if(fieldtype=="char")
     {
