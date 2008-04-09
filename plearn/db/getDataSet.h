@@ -44,15 +44,12 @@
 #ifndef getDataSet_INC
 #define getDataSet_INC
 
-//#include <map>
-//#include <string>
-//#include <plearn/vmat/VMat.h>
-#include <plearn/io/PPath.h>
 
 namespace PLearn {
 using namespace std;
 
 class VMat;
+class PPath;
 
 //! Return help on the dataset syntax.
 string getDataSetHelp();
