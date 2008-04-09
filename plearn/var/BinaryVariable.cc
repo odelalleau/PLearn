@@ -171,8 +171,7 @@ VarArray BinaryVariable::sources()
         return input2->sources();
     if (!input2)
         return input1->sources();
-    return (input1 ? input1->sources() : VarArray(0, 0)) &
-           (input2 ? input2->sources() : VarArray(0, 0));
+    return input1->sources() & input2->sources();
 }
 
 ////////////////////
