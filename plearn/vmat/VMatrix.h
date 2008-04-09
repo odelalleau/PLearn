@@ -385,8 +385,6 @@ public:
 
     void updateMtime(const PPath& p);
 
-    void updateMtime(const VMatrix& v){updateMtime(v.getMtime());}
-
     void updateMtime(VMat v);
 
     /**
