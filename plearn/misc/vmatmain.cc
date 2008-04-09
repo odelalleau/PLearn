@@ -492,7 +492,7 @@ int vmatmain(int argc, char** argv)
         bool mat_to_mem=false;
         if(argc<4)
             PLERROR("Usage: vmat convert <source> <destination> "
-                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [save_vmat]");
+                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR]");
 
         /**
          * Interpret the following options:
@@ -514,6 +514,9 @@ int vmatmain(int argc, char** argv)
          *           :: conversion to CSV uses specified character as field delimiter
          *     --mat_to_mem
          *           :: load the source vmat in memory before saving
+         *     --save_vmat 
+         *           :: if the source is a vmat, we serialize the constructed
+         *           ::object in the metadatadir of the destination
          */
         TVec<string> columns;
         bool skip_missings = false;
@@ -541,7 +544,7 @@ int vmatmain(int argc, char** argv)
                 convert_date = true;
             else if (curopt =="--mat_to_mem")
                 mat_to_mem = true;
-            else if (curopt == "save_vmat")
+            else if (curopt == "--save_vmat")
                 save_vmat = true;
             else
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
@@ -578,10 +581,11 @@ int vmatmain(int argc, char** argv)
                 save_vmat_as_csv(vm, out, skip_missings, precision, delimiter, true /*verbose*/,
                                  convert_date);
             }
-        }
+        }else if(ext == ".vmat")
+            PLearn::save(destination,vm);
         else
         {
-            cerr << "ERROR: can only convert to .amat .pmat .dmat or .csv" << endl
+            cerr << "ERROR: can only convert to .amat .pmat .dmat, .vmat or .csv" << endl
                  << "Please specify a destination name with a valid extension " << endl;
         }
         if(save_vmat && extract_extension(source)==".vmat")
