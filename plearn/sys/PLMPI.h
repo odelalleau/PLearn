@@ -51,17 +51,16 @@
 #include <mpi.h>
 #endif
 
-#include <plearn/math/Mat.h>
-#include <plearn/base/plerror.h>
 // norman: changed to standard calls
 #include <iostream>
 #include <fstream>
-#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;
 
-
+//! Forward declarations.
+class Mat;
+class PStream;
 /*! Example of code using the PLMPI facility:
 
 In your main function, make sure to call

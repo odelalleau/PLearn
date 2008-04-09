@@ -38,11 +38,13 @@
  ******************************************************* */
 
 #include "PLMPI.h"
-#include "string.h"
 #include <plearn/base/plerror.h>
-#include <stdio.h>
 #include <plearn/io/FdPStreamBuf.h>
+#include <plearn/io/PStream.h>
+#include <plearn/math/Mat.h>
 
+#include "string.h"
+#include <stdio.h>
 namespace PLearn {
 using namespace std;
 
