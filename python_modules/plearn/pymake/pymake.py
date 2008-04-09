@@ -2071,7 +2071,7 @@ class FileInfo:
         # single error message for a syntax error, etc.
         if not hasattr(self,"compilation_status"):
             if warningmsgs:
-                if warningmsgs[0].startswith('ssh: '):
+                if warningmsgs[0].startswith('ssh: ') or warningmsgs[0].startswith('Connection closed by'):
                     # The hostname has a problem, so we remove it from the list
                     # and retry on another machine
                     self.remove_hostname = True
