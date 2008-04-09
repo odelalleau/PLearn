@@ -1523,7 +1523,9 @@ real GaussMix::computeLogLikelihood(const Vec& y, int j, bool is_predictor) cons
                     // real squared_norm_y_centered = pownorm(y_centered);
                     int n_eig = n_non_missing;
 
-                    real lambda0 = max(var_min, eigenvals.lastElement());
+                    real lambda0 = var_min;
+                    if (!eigenvals.isEmpty() && eigenvals.lastElement() > lambda0)
+                        lambda0 = eigenvals.lastElement();
                     PLASSERT( lambda0 > 0 );
                     real one_over_lambda0 = 1.0 / lambda0;
 
