@@ -523,7 +523,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
 
 TVec<string> TextFilesVMatrix::splitIntoFields(const string& raw_row) const
 {
-    return split_quoted_delimiter(raw_row, delimiter[0],quote_delimiter);
+    return split_quoted_delimiter(removeblanks(raw_row), delimiter[0],quote_delimiter);
 }
 
 TVec<string> TextFilesVMatrix::getTextFields(int i) const
