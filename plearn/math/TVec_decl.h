@@ -651,10 +651,24 @@ public:
     }
 
     inline T& lastElement() const
-    { return storage->data[offset_+length()-1]; }
+    { 
+#ifdef BOUNDCHECK
+        if(length()==0)
+            PLERROR("TVec::lastElement() - can't access last"
+                    " element of TVec as there is 0 element!");
+#endif
+        return storage->data[offset_+length()-1];
+    }
 
     inline T& firstElement() const
-    { return storage->data[offset_]; }
+    { 
+#ifdef BOUNDCHECK
+        if(length()==0)
+            PLERROR("TVec::firstElement() - can't access first"
+                    " element of TVec as there is 0 element!");
+#endif 
+        return storage->data[offset_]; 
+    }
 
     inline T& front() const { return firstElement(); }
     inline T& back() const { return lastElement(); }
