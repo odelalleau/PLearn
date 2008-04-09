@@ -63,7 +63,6 @@ void DERIVEDCLASS::build_()
     updateMtime(0);
     //updateMtime(filename);
     //updateMtime(VMat);
-    //updateMtime(VMatrix);
 }
 
 // ### Nothing to add here, simply calls build_

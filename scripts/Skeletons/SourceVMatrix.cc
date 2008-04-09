@@ -73,13 +73,14 @@ void DERIVEDCLASS::build_()
     // ### In a SourceVMatrix, you will typically end build_() with:
     // setMetaInfoFromSource();
 
-    // ### You should keep the line 'updateMtime(0);' if you don't implement the 
-    // ### update of the mtime. Otherwise you can have an mtime != 0 that is not valid.
-    // ### setMetaInfoFromSource() update the mtime to the same as the source.
+    // ### You should keep the line 'updateMtime(0);' if you do not implement
+    // ### the update of the mtime. Otherwise you can have an mtime != 0 that
+    // ### is not valid.
+    // ### Note that setMetaInfoFromSource() updates the mtime to the same as
+    // ### the source, but this value will be erased with 'updateMtime(0)'.
     updateMtime(0);
     //updateMtime(filename);
     //updateMtime(VMat);
-    //updateMtime(VMatrix);
 }
 
 ///////////////
