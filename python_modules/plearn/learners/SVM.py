@@ -192,7 +192,7 @@ class SVMHyperParamOracle__kernel(object):
                              (paramname, self.param_names)
 
         if not len(self.trials_param_list):
-            return None
+            return []
 
         param_list=[]
         cost_list=[]
@@ -349,7 +349,7 @@ class SVMHyperParamOracle__kernel(object):
             if cost <= self.trials_cost_list[i]:
                 self.trials_cost_list[i] = cost
 
-        if( self.best_cost == None or cost <= self.best_cost):
+        if( self.best_cost == None or cost < self.best_cost):
         # TODO: what if cost == bestcost and param <> self.best_param?
         #       -> best param should be a list...
             self.best_param = param
@@ -498,7 +498,7 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
 
             if not tried_C:
                 new_param_list += self.choose_first_C_param( \
-                                        [ {'degree':d, 'coef0':self.coef0_initvalue} ], \
+                                        [ {'degree':d, 'coef0':self.best_param['coef0']} ], \
                                         self.best_param['C'] )
             
             elif( tried_C[0] == min(tried_C)
@@ -534,8 +534,6 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
     """ Return <bool>: whether or not we should try other hyperparameter values.
     """
     def should_be_tuned_again(self):
-        if len(self.trials_param_list) > 50:
-            return False
         best_degree = self.best_param['degree']
         tried_degrees = self.get_trials_oneparam_list('degree')
         if( best_degree in tried_degrees
@@ -590,37 +588,48 @@ class SVM(object):
                          By default (if set to None), the first cost of costnames
                          is taken. 
 
-        'validtype': <str> type of validation: 'simple' or 'cross'.
-        
         'n_fold': <int> Number of folds in the cross-validation
 
+        'normalize_inputs': <bool> Whether to normalize inputs so as to have
+                            mean=0, std=1 for each input component on the train set.
+        
         'balanceC': <bool> Whether to use a different 'C' for each class,
-                         class SVM(    based on the frequency of each class in the training
-                             set. Useful when: classes are unbalanced and the cost
-                             of interest is normalized w.r.t class prior probas.
+                           based on the frequency of each class in the training
+                           set. Useful when: classes are unbalanced and the cost
+                           of interest is normalized w.r.t class prior probas.
+
+        'use_proba': <int> in [-1,0,1] specifies the kinds of SVM outputs (of which
+                     will depend the predictions).
+                     0 is a simple onehot of the prediction.
+                     -1 is the vote counts (one-against-one strategy for multi-class).
+                     1 is the posterior emperical probability (using sigmoids of SVM standard outputs).
                                      
-        'results_filename'
-        'preproc_optionnames'        
-        'preproc_optionvalues'
-
-
-
-        - 'retrain_on_valid': <bool> Use the best hyperparameters (found on valid)
+        'retrain_on_valid': <bool> Use the best hyperparameters (found on valid)
                              to re-train a bigger model on {train, valid}.
                              Note: this option is obsolete for cross-validation
                              (valid_samples = None), were the model is re-trained
                              in any case.
 
-        - 'retrain_until_local_optimum_is_found': <bool> Should train_and_tune()
-                         class SVM(continue to tune hyperparameters until a local optimum
-                         is found. If False, you can re-run train_and_tune()
-                         several times. If True, you can also re-run to possibly
-                         find better performance.
+        'retrain_until_local_optimum_is_found': <bool> when calling run(), whether or
+                         not to continue to tune hyperparameters until a local optimum
+                         is found. If False, you can re-run run() several times. If True,
+                         you can also re-run to possibly find better performance.
 
-        - 'test_on_train': <bool> Should we test best models on {test, train} (1)
+        'max_ntries': <int> when calling run(), maximum number of hyperparameters to try
+                      since the last forget().
 
+        'test_on_train': <bool> Should we test best models on {test, train} (1)
 
-        - 'verbosity': <int> Level of verbosity.
+        'results_filename': <string> Path to an output file for results
+        
+        'preproc_optionnames': <string> or <list of strings> indicating the names of the
+                               hyperparameters of the pre-processing that should appear
+                               in the results (results_filename)
+
+        'preproc_optionvalues': <string> or <list> indicating the values of the hyperparameters
+                                corresponding to preproc_optionnames.
+
+        'verbosity': <int> Level of verbosity.
 
     public: learntoption
 
@@ -650,6 +659,8 @@ class SVM(object):
 
         'input_avgstd': <float> input std
 
+        'validtype': <str> type of validation: 'simple' or 'cross'.
+        
        
     protected:
 
@@ -668,14 +679,20 @@ class SVM(object):
                         'costnames',
                         'errorcosts',
                         'maincost_name',
-                        'validtype',
                         'n_fold',
-                        'balanceC',
                         'normalize_inputs',
+                        'balanceC',
+                        'use_proba',
+                        'retrain_until_local_optimum_is_found',
+                        'max_ntries',
+                        'retrain_on_valid',
+                        'test_on_train',
+                        'verbosity',
                         'results_filename',
                         'preproc_optionnames',
                         'preproc_optionvalues',
-                        'verbosity',
+                        \
+                        'validtype',
                         'param',
                         'best_param',
                         'model',
@@ -683,13 +700,13 @@ class SVM(object):
                         'valid_stats',
                         'test_stats',
                         'train_stats',
-                        'param_names',
                         'nclasses',
                         'class_priors',
                         'inputsize',
                         'input_avgstd',
-                        'stats_are_uptodate',
-                        'get_datalist'
+                        \
+                        'param_names',
+                        'stats_are_uptodate'
                      ]
      
     def __init__(self):
@@ -741,6 +758,7 @@ class SVM(object):
 
         self.retrain_on_valid = True
         self.retrain_until_local_optimum_is_found = True
+        self.max_ntries = 50
         self.test_on_train = True
 
         
@@ -750,7 +768,6 @@ class SVM(object):
         self.validset_key = 'validset'
         self.testset_key  = 'testset'
 
-        self.compute_outputs_from_probabilities = None
         self.use_proba = False
 
     def forget(self):
@@ -842,6 +859,7 @@ class SVM(object):
 
         samples, targets = self.get_svminputlist( vmat, True )
 
+        self.all_experts[0].verbosity = self.verbosity
         self.inputsize, self.input_avgstd = self.all_experts[0].get_input_stats(samples)
         for expert in self.all_experts[1:]:
             expert.set_input_stats( self.inputsize, self.input_avgstd )
@@ -922,7 +940,7 @@ class SVM(object):
         if len(s)>0:s=', '+s
 
         
-        if self.use_proba or self.compute_outputs_from_probabilities:
+        if self.use_proba:
             # if this function is defined (see 
             return eval('svm_parameter( svm_type = C_SVC, probability = 1 '+s+')' )
         else:
@@ -1070,7 +1088,7 @@ class SVM(object):
             kernel_param[pn] = param[pn]
         expert.update_trials(kernel_param, maincost)
 
-        if( bestcost == None or maincost <= bestcost):
+        if( bestcost == None or maincost < bestcost):
             self.best_param = param
             self.valid_stats = valid_stats
             self.test_stats  = test_stats
@@ -1091,7 +1109,7 @@ class SVM(object):
         
         if param == None:
             if not self.best_param:
-                return self.train_and_tune(dataspec)
+                return self.run(dataspec)
             param = self.best_param.copy()
         elif 'kernel_type' not in param:
             param['kernel_type'] = self.kernel_type
@@ -1121,16 +1139,15 @@ class SVM(object):
         decision than the standard ones, for instance when
         classifying bags of data (where each bag correspond to a target)
     """
-    def update_predictions_targets(self, predictions, targets, vmat):
+    def predict_from_outputs(self, outputs, targets, vmat):
+        assert self.nclasses == len(outputs[0])
+        predictions = []
+        for o in outputs:
+            predictions.append( array(o).argmax() )
         return predictions, targets
 
-    """ Return the costs obtained by a libSVM model
-        on a given dataset
-    """
-    def test( self,
-              testset,
-              teststats = None
-             ):
+    def get_outputs_targets( self,
+                                 testset ):
         assert testset <> None
         # By default take the LAST model trained
         if self.model <> None:
@@ -1144,6 +1161,48 @@ class SVM(object):
         nclasses = self.nclasses
         nsamples = len(samples)
 
+        ## specific to libsvm
+        ##
+        # Note: model.predict_values(x)
+        #           gives a dictionary with the SVM scores for one-against-one
+        #       model.predict(x)
+        #           gives the prediction by "max win" strategy (each SVM has a vote 1 for a class)
+        #       model.predict_probability(x)
+        #           gives a dictionary with proabilities corresponding to each class
+        outputs = []
+        if self.use_proba == 1:
+            for x in samples:
+                prd, prb = model.predict_probability(x)
+                output = [0]*nclasses
+                for c in prb:
+                    output[int(c)] = prb[c]
+                outputs.append(output)
+        elif self.use_proba == 0:
+            for x in samples:
+                output = [0]*nclasses
+                output[ int(model.predict(x)) ] += 1
+                outputs.append( output )                
+        elif self.use_proba == -1:
+            for x in samples:
+                output = [0]*nclasses
+                oneagainstone_dict = model.predict_values(x)
+                for cl1cl2 in oneagainstone_dict:
+                    if oneagainstone_dict[cl1cl2] > 0:
+                        output[cl1cl2[0]] += 1
+                    else:
+                        output[cl1cl2[1]] += 1
+                outputs.append( output )
+
+        return outputs, targets
+
+    """ Return the costs obtained by a libSVM model
+        on a given dataset
+    """
+    def test( self,
+              testset,
+              teststats = None
+             ):
+        nclasses = self.nclasses
         costnames = self.costnames
         # Translation of the cost 'confusion_matrix'
         # to several costs (one per matrix component)
@@ -1159,23 +1218,8 @@ class SVM(object):
             teststats= VecStatsCollector()        
             teststats.setFieldNames( costnames )
 
-        if self.compute_outputs_from_probabilities:
-            predictions=[]
-            probas=[]
-            for x in samples:
-                ## specific to libsvm
-                prd, prb = model.predict_probability(x)
-                probas.append(prb)
-                predictions.append( int(prd) )
-            predictions, targets = self.compute_outputs_from_probabilities( probas, targets, testset)
-
-        else:
-            predictions=[]
-            for x in samples:
-                ## specific to libsvm
-                predictions.append( int(model.predict(x)) )
-            predictions, targets = self.update_predictions_targets( predictions, targets, testset)
-
+        outputs, targets = self.get_outputs_targets( testset )
+        predictions, targets = self.predict_from_outputs( outputs, targets, testset)
 
         # Computing misclassification costs for the default normalized
         # classification error (= class error weighted w.r.t class priors)
@@ -1229,7 +1273,6 @@ class SVM(object):
         if self.validtype[:6]=='simple' and self.validset_key in dataspec:
             return self.simplevalid(dataspec, param)
         else:
-            assert self.validset_key in dataspec
             return self.crossvalid(dataspec, param)
 
     """ Return the costs obtained by (simple) validation
@@ -1238,11 +1281,11 @@ class SVM(object):
     def simplevalid( self,
                      dataspec,
                      param= None,
-                     validstats = None ):
-        self.validtype = 'simple'
+                     validstats = None,
+                     verbosity = True ):
         if not param:
             param = self.best_param
-        if self.verbosity > 0:
+        if self.verbosity > 0 and verbosity:
             print "\n** Simple Validation"
             print "   with param %s" % param
         self.train(dataspec, param)
@@ -1267,25 +1310,45 @@ class SVM(object):
             print "   with param %s" % param
         
         trainset = self.train_inputspec(dataspec)
-        N=trainset.length
+        trainset_class = [None]*self.nclasses
+        N=[0]*self.nclasses
+        Nfold=[0]*self.nclasses
+        Nlastfold=[0]*self.nclasses
+        for c in range(self.nclasses):
+            trainset_class[c] = ClassSubsetVMatrix( source = trainset,
+                                                    classes = [c],)
+            N[c] = trainset_class[c].length
+            Nfold[c] = int(N[c] / n_fold)
+            if Nfold[c] == 0:
+                raise ValueError, "%d-fold cross-validation is not possible as class %d has only %d samples" % \
+                                 (n_fold, c, N[c])
+            Nlastfold[c] = N[c] - Nfold[c] * (n_fold-1)
         
         validstats = None
+        sub_trainset_class = [None]*self.nclasses
+        sub_testset_class = [None]*self.nclasses
         for i in range(n_fold):
-            sub_testset = SelectRowsVMatrix(
-                                source = trainset,
-                                indices = range(i,N,n_fold)
-                            )
-            indices = []
-            for j in range(0,i)+range(i+1,n_fold):
-                indices += range(j,N,n_fold)
-            sub_trainset = SelectRowsVMatrix(
-                                source = trainset,
-                                indices = indices
-                            )
+            for c in range(self.nclasses):
+                if i < n_fold-1:
+                    test_indices = range( i*Nfold[c], (i+1)*Nfold[c] )
+                    train_indices = range( 0,i*Nfold[c])+range((i+1)*Nfold[c], N[c] )
+                else:
+                    test_indices = range( i*Nfold[c], N[c] )
+                    train_indices = range( 0, N[c]-Nlastfold[c] )
+                sub_testset_class[c] = SelectRowsVMatrix(
+                                    source = trainset_class[c],
+                                    indices = test_indices,)
+                sub_trainset_class[c] = SelectRowsVMatrix(
+                                    source = trainset_class[c],
+                                    indices = train_indices,)
+            sub_testset = ConcatRowsVMatrix( sources = sub_testset_class,
+                                             fully_check_mappings = False,)
+            sub_trainset = ConcatRowsVMatrix( sources = sub_trainset_class,
+                                             fully_check_mappings = False,)
             validstats = self.simplevalid({self.trainset_key:sub_trainset,
                                            self.validset_key:sub_testset},
                                             param,
-                                            validstats)
+                                            validstats, False)
 
         return validstats
 
@@ -1296,10 +1359,10 @@ class SVM(object):
         The train set is mandatory, but valid and/or test sets can be missing.
         cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
-    def train_and_tune(self, dataspec):
+    def run(self, dataspec):
 
         if self.verbosity > 3:
-            print "SVM::train_and_tune() called ", dataspec.keys()
+            print "SVM::run() called ", dataspec.keys()
 
         trainset = self.train_inputspec(dataspec)
         validset = self.valid_inputspec(dataspec)
@@ -1388,8 +1451,10 @@ class SVM(object):
                 self.write_results( self.best_param,
                                     self.valid_stats, self.test_stats, self.train_stats )
 
-        if self.retrain_until_local_optimum_is_found and expert.should_be_tuned_again():
-           self.train_and_tune( dataspec )
+        if( self.retrain_until_local_optimum_is_found
+        and expert.should_be_tuned_again()
+        and len(expert.trials_param_list) < self.max_ntries):
+           self.run( dataspec )
 
         return dataspec
 
@@ -1449,25 +1514,18 @@ def geom_mean(data):
 
 """"""
 
-""" In the following:
+""" Below:
     Some (API) Functions that can be assigned
     to a SVM object, to deal with bags of data
     to classify.
-"""
-"""
 
 # Usage:
 #-------
     
 svm = SVM()
 svm.get_datalist = ToBagClassifier_get_datalist
+svm.predict_from_outputs = ToBagClassifier_predict_from_outputs
 
-vote_with_proba = 1 # whether or not to use probabiblity
-                    # instead of hard vote [0,1] for each element of a bag.
-if vote_with_proba:
-    svm.compute_outputs_from_probabilities = ToBagClassifier_compute_outputs_from_probabilities
-else:
-    svm.update_predictions_targets = ToBagClassifier_update_predictions_targets
 """         
 def get_baginfo( input_vmat ):
     data_array = input_vmat.getMat()
@@ -1489,32 +1547,18 @@ def ToBagClassifier_get_datalist( input_vmat ):
     targets   = [ float(t) for t in data_array[:,inputsize] ]
     return samples, targets
 
-def ToBagClassifier_update_predictions_targets(predictions, targets, vmat):
+def ToBagClassifier_predict_from_outputs(outputs, targets, vmat):
     baginfo = get_baginfo(vmat)
-    assert len(predictions) == len(targets) == len(baginfo)
-    nclasses = max(predictions)+1
+    assert len(outputs) == len(targets) == len(baginfo)
+    nclasses = len(outputs[0])
     bag_predictions=[]
     bag_targets=[]
-    for p, t, b in zip(predictions, targets, baginfo):
+    votes = zeros(nclasses)
+    for output, t, b in zip(outputs, targets, baginfo):
         if b in [1,3]: # beginning of a bag
             votes = zeros(nclasses)
-        votes[p] +=1
-        if b in [2,3]: # end of a bag
-            bag_predictions.append( votes.argmax() )
-            bag_targets.append( t )
-    return bag_predictions, bag_targets
-
-def ToBagClassifier_compute_outputs_from_probabilities(probas, targets, vmat):
-    baginfo = get_baginfo(vmat)
-    assert len(probas) == len(targets) == len(baginfo)
-    nclasses = len(probas[0])
-    bag_predictions=[]
-    bag_targets=[]
-    for p, t, b in zip(probas, targets, baginfo):
-        if b in [1,3]: # beginning of a bag
-            votes = zeros(nclasses)
-        for c in p:
-            votes[c] += p[c]
+        for o, c in zip(output, range(nclasses)):
+            votes[c] += o
         if b in [2,3]: # end of a bag
             bag_predictions.append( votes.argmax() )
             bag_targets.append( t )
@@ -1618,12 +1662,12 @@ if __name__ == '__main__':
     svm.preproc_optionvalues = [ normalize_inputs ,  use_proba ]
     
     svm.kernel_type = 'poly'
-    svm.train_and_tune(dataspec)
+    svm.run(dataspec)
 
     svm.kernel_type = 'rbf'
-    svm.train_and_tune(dataspec)
+    svm.run(dataspec)
 
     svm.kernel_type = 'linear'
-    svm.train_and_tune(dataspec)
+    svm.run(dataspec)
 
     """ =============================================================== """
