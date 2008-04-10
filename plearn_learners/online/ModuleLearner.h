@@ -63,6 +63,8 @@ public:
     TVec<string> target_ports;
     TVec<string> weight_ports;
 
+    bool operate_on_bags;
+
     int reset_seed_upon_train;
 
 public:

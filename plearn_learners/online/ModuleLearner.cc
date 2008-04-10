@@ -42,6 +42,7 @@
 #include "ModuleLearner.h"
 #include <plearn_learners/online/NullModule.h>
 #include <plearn/io/pl_log.h>
+#include <plearn/var/SumOverBagsVariable.h>
 
 namespace PLearn {
 using namespace std;
@@ -79,6 +80,7 @@ ModuleLearner::ModuleLearner():
     target_ports(TVec<string>(1, "target")),
     // Note: many learners do not use weights, thus the default behavior is not
     // to have a 'weight' port in 'weight_ports'.
+    operate_on_bags(false),
     reset_seed_upon_train(0),
     mbatch_size(-1)
 {
@@ -122,6 +124,11 @@ void ModuleLearner::declareOptions(OptionList& ol)
     declareOption(ol, "weight_ports", &ModuleLearner::weight_ports,
                   OptionBase::buildoption,
        "List of ports that take the weight part of a sample as input.");
+
+    declareOption(ol, "operate_on_bags", &ModuleLearner::operate_on_bags,
+                  OptionBase::buildoption,
+       "If true, then each training step will be done on batch_size *bags*\n"
+       "of samples (instead of batch_size samples).");
 
     declareOption(ol, "mbatch_size", &ModuleLearner::mbatch_size,
                   OptionBase::learntoption,
@@ -316,22 +323,61 @@ void ModuleLearner::train()
     if (report_progress)
         pb = new ProgressBar( "Training " + classname(), nstages - stage);
 
-    while (stage + mbatch_size <= nstages) {
-        // Obtain training samples.
-        int sample_start = stage % train_set->length();
-        train_set->getExamples(sample_start, mbatch_size, inputs, targets,
-                weights, NULL, true);
-        // Perform a training step.
-        trainingStep(inputs, targets, weights);
-        // Handle training progress.
-        stage += mbatch_size;
-        if (report_progress)
-            pb->update(stage - stage_init);
-    }
+    if( operate_on_bags && batch_size>0 )
+        while ( stage < nstages ) {
+            // Obtain training samples.
+            int sample_start = stage % train_set->length();
+            int isample = sample_start;
+            inputs.resize(0,0);
+            targets.resize(0,0);
+            weights.resize(0);
+            for( int nbags = 0; nbags < mbatch_size; nbags++ ) {
+                int bag_info = 0;
+                while( !(bag_info & SumOverBagsVariable::TARGET_COLUMN_LAST) ) {
+                    PLASSERT( isample < train_set->length() );
+                    Vec input, target; real weight;
+                    train_set->getExample(isample, input, target, weight);
+                    inputs.appendRow(input);
+                    targets.appendRow(target);
+                    weights.append( weight );
+                    bag_info = int(round(target.lastElement()));
+                    isample ++;
+                }
+                isample = isample % train_set->length();                 
+            }
+            if( stage + inputs.length() > nstages )
+                break;
+            // Perform a training step.
+            trainingStep(inputs, targets, weights);              
+            // Handle training progress.
+            stage += inputs.length();
+            if (report_progress)
+                pb->update(stage - stage_init);
+        }    
+    else
+        while (stage + mbatch_size <= nstages) {
+            // Obtain training samples.
+            int sample_start = stage % train_set->length();
+            train_set->getExamples(sample_start, mbatch_size, inputs, targets,
+                    weights, NULL, true);
+            // Perform a training step.
+            trainingStep(inputs, targets, weights);
+            // Handle training progress.
+            stage += mbatch_size;
+            if (report_progress)
+                pb->update(stage - stage_init);
+        }
     if (stage != nstages)
+    {
+        if( operate_on_bags && batch_size>0 )
+        PLWARNING("In ModuleLearner::train - The network was trained for "
+                "only %d stages (instead of nstages = %d, which could not "
+                "be fulfilled with batch_size of %d bags)", stage, nstages, batch_size);
+        else
         PLWARNING("In ModuleLearner::train - The network was trained for "
                 "only %d stages (instead of nstages = %d, which is not a "
-                "multiple of batch_size = %d", stage, nstages, batch_size);
+                "multiple of batch_size = %d)", stage, nstages, batch_size);
+    }
     OnlineLearningModule::during_training=false;
 
     // finalize statistics for this call
