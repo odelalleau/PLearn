@@ -31,10 +31,16 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
+
+import warnings
+
 global plearn_module
 plearn_module= None
 
 class WrappedPLearnObject(object):
+
+    allowed_non_PLearn_options= ['_cptr']
+    warn_non_PLearn_options= True
 
     def __init__(self, **kwargs):
         #print 'WrappedPLearnObject.__init__',type(self),kwargs
@@ -61,6 +67,10 @@ class WrappedPLearnObject(object):
         if attr != '_optionnames' and attr in self._optionnames:
             self.setOptionFromPython(attr, val)
         else:
+            if self.warn_non_PLearn_options \
+                    and attr not in self.allowed_non_PLearn_options:
+                warnings.warn("This is not a PLearn option: '"+attr
+                              +"' (for class "+self.__class__.__name__+")")
             object.__setattr__(self, attr, val)
 
     def __getattr__(self, attr):
