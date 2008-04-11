@@ -110,10 +110,7 @@ void ToBagSplitter::build_()
         int num_instance = 0;
         int bag_signal_column = dataset->inputsize() + dataset->targetsize() - 1; // Bag signal in the last target column.
         for (int i = 0; i < dataset->length(); i++) {
-            if (num_instance + 1 >= bags_store.width()) {
-                if (num_instance > 10*(expected_size_of_bag+1))
-                    PLERROR("ToBagSplitter: found bag size (%d) more than 10 times bigger than expected_size_of_bag (%d)!\n",
-                            num_instance,expected_size_of_bag);
+            while (num_instance + 1 >= bags_store.width()) {
                 // Need to resize bags_store.
                 bags_store.resize(bags_store.length(), bags_store.width() * 2, 0, true);
             }
