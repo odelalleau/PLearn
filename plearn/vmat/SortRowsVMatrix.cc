@@ -58,6 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // SortRowsVMatrix //
 /////////////////////
 SortRowsVMatrix::SortRowsVMatrix():
+    ignore_missing_fields(false),
     increasing_order(true)
 {}
 
@@ -77,6 +78,12 @@ void SortRowsVMatrix::declareOptions(OptionList &ol)
         "Names of the column(s) that must be sorted (the first one is the\n"
         "first criterion). This option is optional and, if provided, the\n"
         "'sort_columns' option will be ignored.");
+
+    declareOption(ol, "ignore_missing_fields",
+                  &SortRowsVMatrix::ignore_missing_fields,
+                  OptionBase::buildoption,
+        "If true, then no error will be thrown when a column given in\n"
+        "sort_columns or sort_columns_by_name is missing.");
 
     declareOption(ol, "increasing_order", &SortRowsVMatrix::increasing_order, OptionBase::buildoption,
                   "    if set to 1, the data will be sorted in increasing order");
@@ -117,13 +124,23 @@ void SortRowsVMatrix::build_()
 {
     if (sort_columns_by_name.isNotEmpty() && source) {
         // Convert column names into column indices.
-        sort_columns.resize(sort_columns_by_name.length());
-        for (int i = 0; i < sort_columns_by_name.length(); i++)
-            sort_columns[i] = source->getFieldIndex(sort_columns_by_name[i]);
+        sort_columns.resize(0);
+        for (int i = 0; i < sort_columns_by_name.length(); i++) {
+            int idx = source->getFieldIndex(sort_columns_by_name[i],
+                                            !ignore_missing_fields);
+            if (idx >= 0)
+                sort_columns.append(i);
+        }
     }
     // Check we don't try to sort twice by the same column (this can be confusing).
+    // Also verify fields do exist, just in case.
     if (sort_columns.isNotEmpty()) {
         for (int i = 0; i < sort_columns.length(); i++) {
+            if (!ignore_missing_fields &&
+                    (sort_columns[i] < 0 || sort_columns[i] >= source->width()))
+                PLERROR("In SortRowsVMatrix::build_ - Field with index %d "
+                        "cannot exist in the source VMatrix, whose width is "
+                        "%d", sort_columns[i], source->width());
             for (int j = i + 1; j < sort_columns.length(); j++) {
                 if (sort_columns[j] == sort_columns[i]) {
                     PLERROR("In SortRowsVMatrix::build_ - You have a duplicated index in the 'sort_columns' vector");

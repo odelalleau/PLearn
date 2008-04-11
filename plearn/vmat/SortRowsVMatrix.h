@@ -59,6 +59,7 @@ private:
 public:
 
     //! Public build options.
+    bool ignore_missing_fields;
     bool increasing_order;
     TVec<int> sort_columns;
     TVec<string> sort_columns_by_name;
