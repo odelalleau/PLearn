@@ -10,7 +10,6 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 DERIVEDCLASS::DERIVEDCLASS()
-    :Splitter()
     /* ### Initialize all fields to their default value */
 {
     // ...
