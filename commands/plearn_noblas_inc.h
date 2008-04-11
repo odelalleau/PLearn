@@ -265,6 +265,7 @@
 #include <plearn/vmat/NoSplitSplitter.h>
 #include <plearn/vmat/MultiTaskSeparationSplitter.h>
 #include <plearn/vmat/RepeatSplitter.h>
+#include <plearn/vmat/SelectSetsSplitter.h>
 #include <plearn/vmat/SourceVMatrixSplitter.h>
 #include <plearn/vmat/StackedSplitter.h>
 #include <plearn/vmat/TestInTrainSplitter.h>
