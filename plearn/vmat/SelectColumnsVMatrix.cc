@@ -112,7 +112,7 @@ real SelectColumnsVMatrix::get(int i, int j) const {
                 i,j,width_,length_);
 #endif
     static int col;
-    col = indices[j];
+    col = sel_indices[j];
     if (col == -1)
         return MISSING_VALUE;
     return source->get(i, col);
@@ -131,7 +131,7 @@ void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
 #endif
     static int col;
     for(int jj=0; jj<v.length(); jj++) {
-        col = indices[j+jj];
+        col = sel_indices[j+jj];
         if (col == -1)
             v[jj] = MISSING_VALUE;
         else
@@ -157,10 +157,12 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "extend_with_missing", &SelectColumnsVMatrix::extend_with_missing, OptionBase::buildoption,
                   "If set to 1, then fields specified in the 'fields' option that do not exist\n"
                   "in the source VMatrix will be filled with missing values.");
-    declareOption(ol, "inverse_fields_selection", &SelectColumnsVMatrix::inverse_fields_selection,
+
+    declareOption(ol, "inverse_fields_selection",
+                  &SelectColumnsVMatrix::inverse_fields_selection,
                   OptionBase::buildoption,
-                  "If set to true, after all previous fields selection, we inverse the selection.\n"
-                  "This way we can specify the indicies we don't want.");
+        "If set to true, the selection is reversed. This provides an easy\n"
+        "way to specify columns we do not want.");
 
     inherited::declareOptions(ol);
 }
@@ -174,6 +176,7 @@ void SelectColumnsVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(sinput, copies);
     deepCopyField(indices, copies);
     deepCopyField(fields, copies);
+    deepCopyField(sel_indices, copies);
 }
 
 ///////////
@@ -261,10 +264,12 @@ void SelectColumnsVMatrix::build_()
                 if(!found)
                     newindices.append(i);
             }
-            indices = newindices;
-        }
+            sel_indices = newindices;
+        } else
+            sel_indices = indices;
+
         // Copy matrix dimensions
-        width_ = indices.length();
+        width_ = sel_indices.length();
         length_ = source->length();
 
         if(!extend_with_missing)
@@ -299,7 +304,7 @@ void SelectColumnsVMatrix::build_()
         fieldinfos.resize(width());
         if (source->getFieldInfos().size() > 0) {
             for (int i=0; i<width(); ++i) {
-                int col = indices[i];
+                int col = sel_indices[i];
                 if (col == -1) {
                     if (extend_with_missing)
                         // This must be because it is a field that did not exist in
@@ -324,7 +329,7 @@ void SelectColumnsVMatrix::build_()
 const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) const {
     static int the_col;
     static map<string, real> empty_mapping;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         return empty_mapping;
     return source->getStringToRealMapping(the_col);
@@ -335,7 +340,7 @@ const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) co
 //////////////////
 real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
     static int the_col;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         return MISSING_VALUE;
     return source->getStringVal(the_col, str);
@@ -347,7 +352,7 @@ real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
 const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) const {
     static int the_col;
     static map<real, string> empty_mapping;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         return empty_mapping;
     return source->getRealToStringMapping(the_col);
@@ -358,7 +363,7 @@ const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) co
 //////////////////
 string SelectColumnsVMatrix::getValString(int col, real val) const {
     static int the_col;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         return "";
     return source->getValString(the_col, val);
@@ -369,7 +374,7 @@ PP<Dictionary> SelectColumnsVMatrix::getDictionary(int col) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     static int the_col;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         return 0;
     return source->getDictionary(the_col);
@@ -381,7 +386,7 @@ void SelectColumnsVMatrix::getValues(int row, int col, Vec& values) const
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     static int the_col;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         values.resize(0);
     else
@@ -393,13 +398,13 @@ void SelectColumnsVMatrix::getValues(const Vec& input, int col, Vec& values) con
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
     static int the_col;
-    the_col = indices[col];
+    the_col = sel_indices[col];
     if (the_col == -1)
         values.resize(0);
     else
     {
-        for(int i=0; i<indices.length(); i++)
-            sinput[indices[i]] = input[i];
+        for(int i=0; i<sel_indices.length(); i++)
+            sinput[sel_indices[i]] = input[i];
         source->getValues(sinput, the_col, values);
     }
 }

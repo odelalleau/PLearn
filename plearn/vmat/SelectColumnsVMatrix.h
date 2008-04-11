@@ -99,6 +99,9 @@ public:
 
 protected:
 
+    //! Final column indices to be selected.
+    TVec<int> sel_indices;
+
     static void declareOptions(OptionList &ol);
     void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
 
