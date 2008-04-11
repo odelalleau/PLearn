@@ -128,8 +128,6 @@ public:
      */
     string m_code;
 
-    PPath code_path;
-
     /**
      *  General-purpose parameters that are injected into the Python code
      *  snippet and accessible via the getParam/setParam functions.  Can be

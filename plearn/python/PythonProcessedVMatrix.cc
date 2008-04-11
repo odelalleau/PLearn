@@ -42,7 +42,6 @@
 
 
 #include "PythonProcessedVMatrix.h"
-#include <plearn/io/fileutils.h>    // For loadFileAsString().
 
 namespace PLearn {
 using namespace std;
@@ -125,11 +124,6 @@ void PythonProcessedVMatrix::declareOptions(OptionList& ol)
                   "described in the class documentation must be provided.  Note that,\n"
                   "after an initial build(), changing this string calling build() again\n"
                   "DOES NOT result in the recompilation of the code.\n");
-
-    declareOption(ol, "code_path", &PythonProcessedVMatrix::code_path,
-                  OptionBase::buildoption,
-        "If set, the 'code' option will be ignored (it should be left empty)\n"
-        "and the code will be loaded from the given file.");
 
     declareOption(ol, "params", &PythonProcessedVMatrix::m_params,
                   OptionBase::buildoption,
@@ -295,15 +289,7 @@ PythonProcessedVMatrix::setParam(const TVec<PythonObjectWrapper>& args)
 void PythonProcessedVMatrix::compileAndInject()
 {
     if (! python) {
-        string the_code = m_code;
-        if (!code_path.isEmpty()) {
-            // Load code from file.
-            the_code = loadFileAsString(code_path);
-            PLCHECK_MSG( m_code.empty(),
-                         "When using 'code_path' the 'code' option should "
-                         "not be used" );
-        }
-        python = new PythonCodeSnippet(the_code);
+        python = new PythonCodeSnippet(m_code);
         PLASSERT( python );
         python->build();
         python->inject("getSourceRow", this, &PythonProcessedVMatrix::getSourceRow);
