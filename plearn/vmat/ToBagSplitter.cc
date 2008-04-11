@@ -41,9 +41,10 @@
 /*! \file ToBagSplitter.cc */
 
 
-#include "SelectRowsVMatrix.h"
-#include <plearn/var/SumOverBagsVariable.h>  //!< For SumOverBagsVariable::TARGET_COLUMN_LAST.
 #include "ToBagSplitter.h"
+#include <plearn/var/SumOverBagsVariable.h>  //!< For SumOverBagsVariable::TARGET_COLUMN_LAST.
+#include <plearn/vmat/SelectColumnsVMatrix.h>
+#include <plearn/vmat/SelectRowsVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -51,26 +52,34 @@ using namespace std;
 ///////////////////
 // ToBagSplitter //
 ///////////////////
-ToBagSplitter::ToBagSplitter()
-    : Splitter(),
-      expected_size_of_bag(10)
+ToBagSplitter::ToBagSplitter():
+    expected_size_of_bag(10),
+    remove_bag(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(ToBagSplitter,
-                        "A Splitter that makes any existing splitter operate on bags only.",
-                        "The dataset provided must contain bag information, as described in\n"
-                        "SumOverBagsVariable");
+        "A Splitter that makes any existing splitter operate on bags only.",
+        "The dataset provided must contain bag information, as described in\n"
+        "SumOverBagsVariable."
+);
 
 ////////////////////
 // declareOptions //
 ////////////////////
 void ToBagSplitter::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "expected_size_of_bag", &ToBagSplitter::expected_size_of_bag, OptionBase::buildoption,
-                  "The expected size of each bag. It is not compulsory to change this option.");
+    declareOption(ol, "expected_size_of_bag",
+                  &ToBagSplitter::expected_size_of_bag,
+                  OptionBase::buildoption,
+        "The expected size of each bag (optional).");
 
-    declareOption(ol, "sub_splitter", &ToBagSplitter::sub_splitter, OptionBase::buildoption,
-                  "The underlying splitter we want to make operate on bags.");
+    declareOption(ol, "sub_splitter",
+                  &ToBagSplitter::sub_splitter, OptionBase::buildoption,
+        "The underlying splitter we want to make operate on bags.");
+
+    declareOption(ol, "remove_bag",
+                  &ToBagSplitter::remove_bag, OptionBase::buildoption,
+        "If true, then the bag column will be removed from the data splits.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -127,7 +136,7 @@ void ToBagSplitter::build_()
         // Resize to the minimum size needed.
         bags_store.resize(num_bag, max_ninstances + 1, 0, true);
         bags_index = VMat(bags_store);
-        bags_index->savePMAT("HOME:tmp/bid.pmat");
+        //bags_index->savePMAT("HOME:tmp/bid.pmat");
         // Provide this index to the sub_splitter.
         sub_splitter->setDataSet(bags_index);
     }
@@ -138,7 +147,6 @@ void ToBagSplitter::build_()
 //////////////
 TVec<VMat> ToBagSplitter::getSplit(int k)
 {
-    // ### Build and return the kth split
     TVec<VMat> sub_splits = sub_splitter->getSplit(k);
     TVec<VMat> result;
     for (int i = 0; i < sub_splits.length(); i++) {
@@ -152,7 +160,23 @@ TVec<VMat> ToBagSplitter::getSplit(int k)
                 indices_int.append(indice);
             }
         }
-        result.append(new SelectRowsVMatrix(dataset, indices_int));
+        VMat selected_rows = new SelectRowsVMatrix(dataset, indices_int);
+        if (remove_bag) {
+            // Remove the bag column.
+            int bag_column = selected_rows->inputsize() +
+                             selected_rows->targetsize() - 1;
+            TVec<int> removed_col(1, bag_column);
+            PP<SelectColumnsVMatrix> new_sel =
+                new SelectColumnsVMatrix(selected_rows, removed_col, false);
+            new_sel->inverse_fields_selection = true;
+            new_sel->defineSizes(selected_rows->inputsize(),
+                                 selected_rows->targetsize() - 1,
+                                 selected_rows->weightsize(),
+                                 selected_rows->extrasize());
+            new_sel->build();
+            selected_rows = get_pointer(new_sel);
+        }
+        result.append(selected_rows);
     }
     return result;
 }

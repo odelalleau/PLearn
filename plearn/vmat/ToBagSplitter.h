@@ -52,7 +52,7 @@ using namespace std;
 class ToBagSplitter: public Splitter
 {
 
-public:
+private:
 
     typedef Splitter inherited;
 
@@ -78,6 +78,7 @@ public:
     // ************************
 
     int expected_size_of_bag;
+    bool remove_bag;
     PP<Splitter> sub_splitter;
 
     // ****************
