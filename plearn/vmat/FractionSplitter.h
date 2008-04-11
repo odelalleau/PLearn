@@ -67,6 +67,7 @@ public:
     // * public build options *
     // ************************
 
+    bool one_is_absolute;
     bool round_to_closest;
     TMat< pair<real, real> > splits;
 

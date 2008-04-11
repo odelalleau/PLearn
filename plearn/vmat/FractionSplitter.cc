@@ -42,17 +42,22 @@
 namespace PLearn {
 using namespace std;
 
-FractionSplitter::FractionSplitter()
-    : Splitter(),
-      round_to_closest(0)
+//////////////////////
+// FractionSplitter //
+//////////////////////
+FractionSplitter::FractionSplitter():
+    one_is_absolute(false),
+    round_to_closest(0)
 {}
-
 
 PLEARN_IMPLEMENT_OBJECT(FractionSplitter,
                         "A Splitter that can extract several subparts of a dataset in each split.",
                         "Ranges of the dataset are specified explicitly as start:end positions,\n"
                         "that can be absolute or relative to the number of samples in the training set.");
 
+////////////////////
+// declareOptions //
+////////////////////
 void FractionSplitter::declareOptions(OptionList& ol)
 {
 
@@ -72,15 +77,27 @@ void FractionSplitter::declareOptions(OptionList& ol)
                   "Ex: 1 2 [ 0:0.80, 0.80:1 ]  yields a single split with the first part being the first 80% \n"
                   "of the data, and the second the next 20% \n");
 
+    declareOption(ol, "one_is_absolute",
+                  &FractionSplitter::one_is_absolute, OptionBase::buildoption,
+        "If true, then 1 is always considered as an absolute index, not as a\n"
+        "fraction giving the end of the dataset. This can be useful if you\n"
+        "actually want a split with a single element in it.",
+        OptionBase::advanced_level);
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void FractionSplitter::build_()
 {
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void FractionSplitter::build()
 {
     inherited::build();
@@ -117,8 +134,8 @@ TVec<VMat> FractionSplitter::getSplit(int k)
         real fstart = frac_k[i].first;
         real fend = frac_k[i].second;
 
-        if(fstart>1) // absolute position
-            start = int(fstart);
+        if(fstart>1 || (one_is_absolute && is_equal(fstart, 1))) // absolute position
+            start = int(round(fstart));
         else {// relative position
             if (round_to_closest) {
                 start = int(fstart*l + 0.5);
@@ -127,8 +144,8 @@ TVec<VMat> FractionSplitter::getSplit(int k)
             }
         }
 
-        if(fend>1) // absolute end position
-            end = int(fend);
+        if(fend>1 || (one_is_absolute && is_equal(fend, 1))) // absolute end position
+            end = int(round(fend));
         else if(is_equal(fend,1)) // until last element inclusive
             end = l;
         else {// relative end position
