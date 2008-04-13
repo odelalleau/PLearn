@@ -1171,6 +1171,12 @@ def find_dependency(args):
         cctarget = target
     else:
         cctarget = get_ccpath_from_noncc_path(target)
+
+    if not cctarget:
+        raise IOError("File not found: "+target)
+    elif not os.path.exists(cctarget):
+        raise IOError("File not found: "+cctarget)
+
     info = file_info(cctarget)
 
     if len(args) == 1: # only the target was specified: generate the full graph
