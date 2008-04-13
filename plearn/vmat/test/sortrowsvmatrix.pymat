@@ -1,0 +1,13 @@
+from plearn.pyplearn import pl
+
+def main():
+    return pl.SortRowsVMatrix(
+            source = pl.SubVMatrix(
+                length = 10,
+                source = pl.AutoVMatrix(
+                    filename = 'PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat',
+                    ),
+                ),
+            sort_columns_by_name = [ 'y1', 'x2', ],
+            )
+
