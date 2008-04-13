@@ -129,7 +129,7 @@ void SortRowsVMatrix::build_()
             int idx = source->getFieldIndex(sort_columns_by_name[i],
                                             !ignore_missing_fields);
             if (idx >= 0)
-                sort_columns.append(i);
+                sort_columns.append(idx);
         }
     }
     // Check we don't try to sort twice by the same column (this can be confusing).
