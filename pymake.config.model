@@ -85,7 +85,7 @@ cpp_definitions = []
 # We add -fPIC, as it is requested to make a shared '.so' file, it does not
 # have any speed impact, and is ignored by the compiler if it cannot use it.
 # We do not add it under Windows since it generates a useless compiler warning.
-if platform != 'win32':
+if platform != 'win32' and platform != 'cygwin':
     compileflags += ' -fPIC'
 
 # The platform variable contains the type of platform from which pymake has been invoked. 
