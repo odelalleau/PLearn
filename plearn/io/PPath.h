@@ -173,294 +173,294 @@ Finally, note that PPath also provide some useful static methods like
 PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
 */
 
-             class PPath: public string
-             {
-             public:
+class PPath: public string
+{
+public:
 
-                 static PPath home  ();
-                 static PPath getcwd();
-                 static PPath getenv(const string& var, const PPath& default_="")  ;
-                 
-                 /*!
-                  *  Add a new metaprotocol-to-metapath binding.
-                  *  Return 'true' iff the given metaprotocol was not already
-                  *  binded.
-                  *  If 'force' is set to true, the binding will be made even
-                  *  if the given metaprotocol was already binded. Otherwise,
-                  *  the existing metaprotocol will be preserved.
-                  */
-                 static bool addMetaprotocolBinding(const string& metaprotocol,
-                                                    const PPath& metapath,
-                                                    bool  force = true);
-
-                 /*!
-                  *  Decide whether or not to display canonical paths in error
-                  *  messages. The default behavior is to display absolute
-                  *  paths, but canonical paths might sometimes be preferred
-                  *  (e.g. in testing, for cross-platform compatibility, or for
-                  *  debug purpose).
-                  */
-                 static void setCanonicalInErrors(bool canonical);
-
-             protected:
-
-                 /***********************
-                  *  protected methods  *
-                  **********************/
-
-                 /*! OS dependent list of forbidden chars.
-                  *
-                  * POSIX SETTINGS: "\\"
-                  *  Even if the posix standard allows backslashes in file paths,
-                  *  PLearn users should never use those since PLearn aims at full and
-                  *  easy portability.
-                  *
-                  *  Other chars may be forbidden soon.
-                  *
-                  * DOS SETTINGS: ""
-                  *  None for now; coming soon.
-                  */
-                 static string forbidden_chars();
-
-                 /*!
-                   Builds a static metaprotocol-to-metapath map once and returns it at
-                   each call.
-                 */
-                 static  const map<string, PPath>&  metaprotocolToMetapath();
-
-                 /*!
-                   Within PPath(const string& path_) ctor, the path_ argument may
-                   contain environment variables that must be expanded prior to any other
-                   processing. This method MUST NOT return a path since it would lead to
-                   an infinite loop of ctors.
-                 */
-                 static string expandEnvVariables(const string& path);
-
-                 /*!
-                   Replace any slash character (canonical '/' or '_slash_char') by the
-                   '_slash_char' character, removing duplicated slashes.
-                 */
-                 void resolveSlashChars   ( );
-  
-                 //! Remove extra dots from the path.
-                 void resolveDots         ( );
-
-                 //! Remove only extra single dots from the path. Assume there is no explicit
-                 //! protocol in the path.
-                 void resolveSingleDots   ( );
-
-                 //! Remove only extra double dots from the path (assume there are no extra
-                 //! single dots, i.e. in general that resolveSingleDots() was called first).
-                 //! Also assume there is no explicit protocol in the path.
-                 void resolveDoubleDots   ( );
-  
-                 /*!
-                   Used in operator= (and therefore in the ctor) to transform
-                   recognized metaprotocol contained in the path, if any.
-                 */
-                 void expandMetaprotocols ( );
-
-                 /*!
-                   Used in operator= (and therefore in the ctor) to assign the _protocol
-                   member.
-                 */
-                 void parseProtocol       ( );
-
-                 /***********************
-                  *  protected members  *
-                  **********************/
-
-                 /*!
-                   Even if the default protocol is considered to be the file protocol,
-                   the _protocol member keeps the exact protocol value in the
-                   string. The protocol() method, however, returns FILE_PROTOCOL if the
-                   protocol was not specified.
-                 */
-                 string _protocol;
-
-             public:
-
-                 //! Constructs a PPath from a string (which can be a serialized PPath).
-                 PPath(const string &path_="");
-
-                 // Shorthand.
-                 PPath(const char* path);
-
-                 //! Returns an absolute path in the form appropriate for the OS.
-                 //! The returned path never ends with a slash unless it is a root directory.
-                 //!  - if 'add_protocol' is false, then only the FILE_PROTOCOL is allowed
-                 //!    and the protocol will be systematically removed,
-                 //!  - if 'add_protocol' is true, then all protocols are allowed and the
-                 //!    protocol will be systematically added.
-                 PPath absolute(bool add_protocol = false) const;
-
-                 //! Returns a PPath in the canonical (serialized form).
-                 //! It is a string because it needs to be converted to a system-dependent
-                 //! version before it can be used directly as a PPath.
-                 string canonical() const;
-
-                 //! Return the string that should be displayed in an error
-                 //! message. It will be either the absolute or canonical
-                 //! string, depending on the value of the global PPath
-                 //! boolean 'canonical_in_errors' (the default being to
-                 //! display the absolute path).
-                 string errorDisplay() const;
-  
-                 /*!
-                   Even if the default protocol is considered to be the file protocol,
-                   the _protocol member keeps the exact protocol value in the
-                   string. This is to be able to quickly know whether there is a protocol
-                   in the actual string or not.
-                   The protocol() method, however, returns FILE_PROTOCOL if the
-                   protocol was not specified.
-                 */
-                 string protocol      ()  const { return _protocol.empty() ? FILE_PROTOCOL : _protocol;   }
-                 //! Return either a copy of this PPath if it has an explicit protocol,
-                 //! or a copy with an explicit FILE_PROTOCOL (the default) otherwise.
-                 PPath  addProtocol   ()  const ; 
-                 //! Return a copy of this PPath without its explicit protocol.
-                 PPath  removeProtocol()  const ; 
-                 //! Remove the current trailing slash if there is one and it is not a
-                 //! root directory.
-                 void removeTrailingSlash();
-
-                 //! Parse a PPath url-like parameters. For instance, if the PPath is
-                 //! protocol:/path?param1=value1&param2=value2&param3=value3
-                 //! then after calling this method, 'base_path' will be equal to
-                 //! protocol:/path, and the 'parameters' map will be such that
-                 //! parameters["paramX"] = "valueX".
-                 //! Note that existing mappings in 'parameters' are not removed (unless
-                 //! they are overwritten by the PPath parameters).
-                 void parseUrlParameters(PPath& base_path, map<string, string>& parameters) const;
-
-                 //! Return true iff this is an absolute path.
-                 bool   isAbsPath     ()  const { return isabs();   } 
-                 bool   isFilePath    ()  const { return  protocol() == FILE_PROTOCOL; }
-                 bool   isHttpPath    ()  const { return _protocol   == HTTP_PROTOCOL; }
-                 bool   isFtpPath     ()  const { return _protocol   ==  FTP_PROTOCOL; }  
-
-                 //! Return true iff this is an empty path, i.e. it is equal to "" after its
-                 //! protocol has been removed.
-                 bool   isEmpty       ()  const { return removeProtocol().empty(); }
-                 //! Return true iff this is an (absolute) root directory.
-                 bool   isRoot        ()  const;
-
-                 static const string& _slash();       //!< System-dependent slash string.
-                 static       char   _slash_char();  //!< System-dependent slash character.
-
-                 //! Path concatenation. Note there is no need for an
-                 //! operator/(const string& other)
-                 //! because a string will be automatically converted to a PPath.
-                 PPath  operator/  (const char*    other) const { return operator/ (PPath(other)); }
-                 PPath& operator/= (const char*    other)       { return operator/=(PPath(other)); }
-                 PPath  operator/  (const PPath&   other) const;
-                 PPath& operator/= (const PPath&   other);
-
-                 //! The operator '==' returns true iff the two paths represent the same file or
-                 //! directory. The final slash is systematically ignored. For instance:
-                 //!   "/foo/bar"    == "/foo/bar/"
-                 //!   "/foo/bar/.." == "/foo"
-                 //!   "bar"         == "/foo/bar" if the current working directory is "/foo"
-                 //! This is done by comparing this->absolute() to other.absolute().
-                 bool   operator== (const char*   other) const  { return operator==(string(other)); }
-                 bool   operator== (const string& other) const;
-                 bool   operator== (const PPath&  other) const;
-
-                 //! The operator '!=' is defined as the contrary of '=='.
-                 inline bool operator!= (const char*    other) const { return !(operator==(string(other))); }
-                 inline bool operator!= (const string&  other) const { return !(operator==(other));         }
-                 inline bool operator!= (const PPath&   other) const { return !(operator==(other));         }
-
-                 /*!
-                   Return a PPath pointing to the parent directory of the PPath, assuming the
-                   PPath represents a directory: you should never call this method on a PPath
-                   pointing to a file, but instead use file_path.dirname().up().
-                   The final '/' in the PPath is ignored.
-
-                   If there is no parent directory, throws a PLERROR.
-
-                   PPath::up examples:
-
-                   PPath("/").up()                      // PLERROR
-                   PPath("").up()                       // PLERROR
-                   PPath("/foo").up()                   // "/"
-                   PPath("foo").up()                    // "."
-                   PPath(".").up()                      // ".."
-                   PPath("foo/bar").up()                // "foo"
-                   PPath("foo/bar/").up()               // "foo"
-                   PPath("foo/bar/hi.cc").up()          // "foo/bar", but never do this
-                 */
-                 PPath up() const;
-
-                 /*!
-                   Returns a PPath that points to the directory component of the PPath.
-                   Contrary to the up() method, the final slash is important, and the PPath
-                   may point either to a file or to a directory ressource.
-                   The returned PPath will never end with a slash, unless it is a root directory.
-
-                   It is always true that
-
-                   path.dirname() / path.basename() == path
+    static PPath home  ();
+    static PPath getcwd();
+    static PPath getenv(const string& var, const PPath& default_="")  ;
     
-                   PPath::dirname examples:
+    /*!
+     *  Add a new metaprotocol-to-metapath binding.
+     *  Return 'true' iff the given metaprotocol was not already
+     *  binded.
+     *  If 'force' is set to true, the binding will be made even
+     *  if the given metaprotocol was already binded. Otherwise,
+     *  the existing metaprotocol will be preserved.
+     */
+    static bool addMetaprotocolBinding(const string& metaprotocol,
+                                       const PPath& metapath,
+                                       bool  force = true);
 
-                   PPath("").dirname()                  // ""
-                   PPath("foo.cc").dirname()            // "."
-                   PPath(".").dirname()                 // "."
-                   PPath("./").dirname()                // "."
-                   PPath("/").dirname()                 // "/"
-                   PPath("/foo.cc").dirname()           // "/"
-                   PPath("foo/bar").dirname()           // "foo"
-                   PPath("foo/bar/").dirname()          // "foo/bar"
-                   PPath("foo/bar/hi.cc").dirname()     // "foo/bar"
-                 */
-                 PPath dirname() const;
+    /*!
+     *  Decide whether or not to display canonical paths in error
+     *  messages. The default behavior is to display absolute
+     *  paths, but canonical paths might sometimes be preferred
+     *  (e.g. in testing, for cross-platform compatibility, or for
+     *  debug purpose).
+     */
+    static void setCanonicalInErrors(bool canonical);
 
-                 /*!
-                   Returns the final component of a pathname (which will be "" if it ends
-                   with a slash). The basename never contains a slash.
+protected:
 
-                   It is always true that
+    /***********************
+     *  protected methods  *
+     **********************/
 
-                   path.dirname() / path.basename() == path
+    /*! OS dependent list of forbidden chars.
+     *
+     * POSIX SETTINGS: "\\"
+     *  Even if the posix standard allows backslashes in file paths,
+     *  PLearn users should never use those since PLearn aims at full and
+     *  easy portability.
+     *
+     *  Other chars may be forbidden soon.
+     *
+     * DOS SETTINGS: ""
+     *  None for now; coming soon.
+     */
+    static string forbidden_chars();
 
-                   PPath::basename examples:
+    /*!
+      Builds a static metaprotocol-to-metapath map once and returns it at
+      each call.
+    */
+    static  const map<string, PPath>&  metaprotocolToMetapath();
 
-                   PPath("").basename()                 // ""
-                   PPath("foo.cc").basename()           // "foo.cc"
-                   PPath("/").basename()                // ""
-                   PPath(".").basename()                // "."
-                   PPath("./").basename()               // ""
-                   PPath("foo/bar").basename()          // "bar"
-                   PPath("foo/bar/").basename()         // ""
-                   PPath("foo/bar/hi.cc").basename()    // "hi.cc"
-                 */
-                 PPath basename  () const;
+    /*!
+      Within PPath(const string& path_) ctor, the path_ argument may
+      contain environment variables that must be expanded prior to any other
+      processing. This method MUST NOT return a path since it would lead to
+      an infinite loop of ctors.
+    */
+    static string expandEnvVariables(const string& path);
 
-                 /*!
-                   Return the hostname of a PPath representing an url.
-                   Although this method is meant to be called on a PPath with
-                   a HTTP or FTP protocol, it may also be used with other
-                   protocols.
+    /*!
+      Replace any slash character (canonical '/' or '_slash_char') by the
+      '_slash_char' character, removing duplicated slashes.
+    */
+    void resolveSlashChars   ( );
 
-                   PPath::hostname example:
+    //! Remove extra dots from the path.
+    void resolveDots         ( );
 
-                   PPath("http://foo.com/bar/hi").hostname() // "foo.com"
-                 */
-                 string hostname() const;
+    //! Remove only extra single dots from the path. Assume there is no explicit
+    //! protocol in the path.
+    void resolveSingleDots   ( );
 
-                 /*!
-                   Return the extension of basename() (or an empty string if it has no
-                   extension). The dot may or may not be included, depending on the value
-                   of the 'with_dot' parameter.
-                 */
-                 string extension (bool with_dot = false) const;
+    //! Remove only extra double dots from the path (assume there are no extra
+    //! single dots, i.e. in general that resolveSingleDots() was called first).
+    //! Also assume there is no explicit protocol in the path.
+    void resolveDoubleDots   ( );
 
-                 /*!
-                   Return a copy of the path, but without its extension (as computed by the
-                   extension() method).
-                 */
-                 PPath no_extension () const;
+    /*!
+      Used in operator= (and therefore in the ctor) to transform
+      recognized metaprotocol contained in the path, if any.
+    */
+    void expandMetaprotocols ( );
+
+    /*!
+      Used in operator= (and therefore in the ctor) to assign the _protocol
+      member.
+    */
+    void parseProtocol       ( );
+
+    /***********************
+     *  protected members  *
+     **********************/
+
+    /*!
+      Even if the default protocol is considered to be the file protocol,
+      the _protocol member keeps the exact protocol value in the
+      string. The protocol() method, however, returns FILE_PROTOCOL if the
+      protocol was not specified.
+    */
+    string _protocol;
+
+public:
+
+    //! Constructs a PPath from a string (which can be a serialized PPath).
+    PPath(const string &path_="");
+
+    // Shorthand.
+    PPath(const char* path);
+
+    //! Returns an absolute path in the form appropriate for the OS.
+    //! The returned path never ends with a slash unless it is a root directory.
+    //!  - if 'add_protocol' is false, then only the FILE_PROTOCOL is allowed
+    //!    and the protocol will be systematically removed,
+    //!  - if 'add_protocol' is true, then all protocols are allowed and the
+    //!    protocol will be systematically added.
+    PPath absolute(bool add_protocol = false) const;
+
+    //! Returns a PPath in the canonical (serialized form).
+    //! It is a string because it needs to be converted to a system-dependent
+    //! version before it can be used directly as a PPath.
+    string canonical() const;
+
+    //! Return the string that should be displayed in an error
+    //! message. It will be either the absolute or canonical
+    //! string, depending on the value of the global PPath
+    //! boolean 'canonical_in_errors' (the default being to
+    //! display the absolute path).
+    string errorDisplay() const;
+
+    /*!
+      Even if the default protocol is considered to be the file protocol,
+      the _protocol member keeps the exact protocol value in the
+      string. This is to be able to quickly know whether there is a protocol
+      in the actual string or not.
+      The protocol() method, however, returns FILE_PROTOCOL if the
+      protocol was not specified.
+    */
+    string protocol      ()  const { return _protocol.empty() ? FILE_PROTOCOL : _protocol;   }
+    //! Return either a copy of this PPath if it has an explicit protocol,
+    //! or a copy with an explicit FILE_PROTOCOL (the default) otherwise.
+    PPath  addProtocol   ()  const ; 
+    //! Return a copy of this PPath without its explicit protocol.
+    PPath  removeProtocol()  const ; 
+    //! Remove the current trailing slash if there is one and it is not a
+    //! root directory.
+    void removeTrailingSlash();
+
+    //! Parse a PPath url-like parameters. For instance, if the PPath is
+    //! protocol:/path?param1=value1&param2=value2&param3=value3
+    //! then after calling this method, 'base_path' will be equal to
+    //! protocol:/path, and the 'parameters' map will be such that
+    //! parameters["paramX"] = "valueX".
+    //! Note that existing mappings in 'parameters' are not removed (unless
+    //! they are overwritten by the PPath parameters).
+    void parseUrlParameters(PPath& base_path, map<string, string>& parameters) const;
+
+    //! Return true iff this is an absolute path.
+    bool   isAbsPath     ()  const { return isabs();   } 
+    bool   isFilePath    ()  const { return  protocol() == FILE_PROTOCOL; }
+    bool   isHttpPath    ()  const { return _protocol   == HTTP_PROTOCOL; }
+    bool   isFtpPath     ()  const { return _protocol   ==  FTP_PROTOCOL; }  
+
+    //! Return true iff this is an empty path, i.e. it is equal to "" after its
+    //! protocol has been removed.
+    bool   isEmpty       ()  const { return removeProtocol().empty(); }
+    //! Return true iff this is an (absolute) root directory.
+    bool   isRoot        ()  const;
+
+    static const string& _slash();       //!< System-dependent slash string.
+    static       char   _slash_char();  //!< System-dependent slash character.
+
+    //! Path concatenation. Note there is no need for an
+    //! operator/(const string& other)
+    //! because a string will be automatically converted to a PPath.
+    PPath  operator/  (const char*    other) const { return operator/ (PPath(other)); }
+    PPath& operator/= (const char*    other)       { return operator/=(PPath(other)); }
+    PPath  operator/  (const PPath&   other) const;
+    PPath& operator/= (const PPath&   other);
+
+    //! The operator '==' returns true iff the two paths represent the same file or
+    //! directory. The final slash is systematically ignored. For instance:
+    //!   "/foo/bar"    == "/foo/bar/"
+    //!   "/foo/bar/.." == "/foo"
+    //!   "bar"         == "/foo/bar" if the current working directory is "/foo"
+    //! This is done by comparing this->absolute() to other.absolute().
+    bool   operator== (const char*   other) const  { return operator==(string(other)); }
+    bool   operator== (const string& other) const;
+    bool   operator== (const PPath&  other) const;
+
+    //! The operator '!=' is defined as the contrary of '=='.
+    inline bool operator!= (const char*    other) const { return !(operator==(string(other))); }
+    inline bool operator!= (const string&  other) const { return !(operator==(other));         }
+    inline bool operator!= (const PPath&   other) const { return !(operator==(other));         }
+
+    /*!
+      Return a PPath pointing to the parent directory of the PPath, assuming the
+      PPath represents a directory: you should never call this method on a PPath
+      pointing to a file, but instead use file_path.dirname().up().
+      The final '/' in the PPath is ignored.
+
+      If there is no parent directory, throws a PLERROR.
+
+      PPath::up examples:
+
+      PPath("/").up()                      // PLERROR
+      PPath("").up()                       // PLERROR
+      PPath("/foo").up()                   // "/"
+      PPath("foo").up()                    // "."
+      PPath(".").up()                      // ".."
+      PPath("foo/bar").up()                // "foo"
+      PPath("foo/bar/").up()               // "foo"
+      PPath("foo/bar/hi.cc").up()          // "foo/bar", but never do this
+    */
+    PPath up() const;
+
+    /*!
+      Returns a PPath that points to the directory component of the PPath.
+      Contrary to the up() method, the final slash is important, and the PPath
+      may point either to a file or to a directory ressource.
+      The returned PPath will never end with a slash, unless it is a root directory.
+
+      It is always true that
+
+      path.dirname() / path.basename() == path
+
+      PPath::dirname examples:
+
+      PPath("").dirname()                  // ""
+      PPath("foo.cc").dirname()            // "."
+      PPath(".").dirname()                 // "."
+      PPath("./").dirname()                // "."
+      PPath("/").dirname()                 // "/"
+      PPath("/foo.cc").dirname()           // "/"
+      PPath("foo/bar").dirname()           // "foo"
+      PPath("foo/bar/").dirname()          // "foo/bar"
+      PPath("foo/bar/hi.cc").dirname()     // "foo/bar"
+    */
+    PPath dirname() const;
+
+    /*!
+      Returns the final component of a pathname (which will be "" if it ends
+      with a slash). The basename never contains a slash.
+
+      It is always true that
+
+      path.dirname() / path.basename() == path
+
+      PPath::basename examples:
+
+      PPath("").basename()                 // ""
+      PPath("foo.cc").basename()           // "foo.cc"
+      PPath("/").basename()                // ""
+      PPath(".").basename()                // "."
+      PPath("./").basename()               // ""
+      PPath("foo/bar").basename()          // "bar"
+      PPath("foo/bar/").basename()         // ""
+      PPath("foo/bar/hi.cc").basename()    // "hi.cc"
+    */
+    PPath basename  () const;
+
+    /*!
+      Return the hostname of a PPath representing an url.
+      Although this method is meant to be called on a PPath with
+      a HTTP or FTP protocol, it may also be used with other
+      protocols.
+
+      PPath::hostname example:
+
+      PPath("http://foo.com/bar/hi").hostname() // "foo.com"
+    */
+    string hostname() const;
+
+    /*!
+      Return the extension of basename() (or an empty string if it has no
+      extension). The dot may or may not be included, depending on the value
+      of the 'with_dot' parameter.
+    */
+    string extension (bool with_dot = false) const;
+
+    /*!
+      Return a copy of the path, but without its extension (as computed by the
+      extension() method).
+    */
+    PPath no_extension () const;
 
 
 //   /*! Migrated from fileutils.{h,cc}
@@ -477,40 +477,39 @@ PPath::home, PPath::getenv (with a default value!) and PPath::getcwd.
 //!<   bool endsWith  (const string& s) const;
 
 
-                 /*************************************************************************
-                  * Dos/Posix dependent methods
-                  ************************************************************************/
-  
-  
-                 /**
-                    Returns the drive specification of a path (a drive letter followed by a
-                    colon) under dos. Under posix, always returns "".
-                 */
-                 PPath drive() const;
+    /*************************************************************************
+     * Dos/Posix dependent methods
+     ************************************************************************/
 
 
-             protected:
+    /**
+       Returns the drive specification of a path (a drive letter followed by a
+       colon) under dos. Under posix, always returns "".
+    */
+    PPath drive() const;
 
-                 /**
-                    Returns whether a path is absolute.
+protected:
 
-                    Trivial in Posix, harder on the Mac or MS-DOS. For DOS it is absolute
-                    if it starts with a slash or backslash (current volume), or if a
-                    pathname after the volume letter and colon starts with a slash or
-                    backslash.
+    /**
+       Returns whether a path is absolute.
 
-                    It is protected because one should use isAbsPath().
-                 */
-                 bool isabs() const;  
+       Trivial in Posix, harder on the Mac or MS-DOS. For DOS it is absolute
+       if it starts with a slash or backslash (current volume), or if a
+       pathname after the volume letter and colon starts with a slash or
+       backslash.
 
-             private:
+       It is protected because one should use isAbsPath().
+    */
+    bool isabs() const;  
 
-                 //! Whether or not to display the canonical path in
-                 //! errorDisplay(). Default value is 'false', and it can be
-                 //! modified through the setCanonicalInErrors(..) function.
-                 static bool canonical_in_errors;
+private:
 
-             };
+    //! Whether or not to display the canonical path in
+    //! errorDisplay(). Default value is 'false', and it can be
+    //! modified through the setCanonicalInErrors(..) function.
+    static bool canonical_in_errors;
+
+};
 
 DECLARE_TYPE_TRAITS(PPath);
   
