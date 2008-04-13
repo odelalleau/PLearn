@@ -2804,7 +2804,9 @@ def main( args ):
 
         print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
         print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
-        print '++++ Computing dependencies of '+target+' ...'
+        print '++++ Computing dependencies of '+target+' ...',
+        get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+        print ' done'
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
 
         if distribute:
