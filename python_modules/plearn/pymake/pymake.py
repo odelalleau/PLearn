@@ -960,6 +960,8 @@ def parallel_compile(files_to_compile, list_of_hosts, nice_values={},
         # print error messages, warnings, and get failure/success status
         info.finished_compilation()
         if info.remove_hostname:
+            if verbose>=3:
+                print "Removing host from list:", info.hostname
             list_of_hosts.remove(info.hostname)
             info.hostname = ''
 
