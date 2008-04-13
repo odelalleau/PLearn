@@ -669,6 +669,7 @@ class DBICondor(DBIBase):
         self.nice = False
         self.req = ''
         self.copy_local_source_file = False
+        self.files = ''
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
@@ -698,7 +699,7 @@ class DBICondor(DBIBase):
             autorized_shell_command=[ "touch", "echo"]
             if c in autorized_shell_command:
                 shellcommand=True
-            else:
+            elif not self.files:
                 c = os.path.normpath(os.path.join(os.getcwd(), c))
             command = "".join([c,c2])
 
@@ -800,21 +801,26 @@ class DBICondor(DBIBase):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
-
+            
         condor_dat.write( dedent('''\
                 executable     = %s
                 universe       = vanilla
                 requirements   = %s
-                output         = %s/condor.%s.$(Process).out
-                error          = %s/condor.%s.$(Process).error
+                output         = %s/condor.$(Process).out
+                error          = %s/condor.$(Process).error
                 log            = %s/condor.log
                 getenv         = %s
                 nice_user      = %s
                 ''' % (launch_file,req,
-                       self.log_dir,self.unique_id,
-                       self.log_dir,self.unique_id,
+                       self.log_dir,
+                       self.log_dir,
                        self.log_dir,str(self.getenv),str(self.nice))))
-
+        if self.files: #ON_EXIT_OR_EVICT
+            condor_dat.write( dedent('''\
+                when_to_transfer_output = ON_EXIT
+                should_transfer_files = Yes
+                transfer_input_files = %s
+                '''%(self.files+','+launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
         if len(condor_datas)!=0:
             for i in condor_datas:
                 condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")

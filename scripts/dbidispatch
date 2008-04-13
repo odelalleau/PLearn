@@ -164,7 +164,7 @@ for argv in to_parse:
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice"]:
         dbi_param[argv[5:]]=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os",
-                                "--nb_proc","--req"]:
+                                "--nb_proc","--req", "--files"]:
         dbi_param[argv.split('=')[0][2:]]=argv.split('=')[1]
     elif argv.startswith('--machine=') or argv.startswith('--machines='):
         if argv.split('=')[0] == "--machine":
@@ -203,7 +203,7 @@ elif launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","nb_proc","arch","interruptible",
                        "duree","cpu","mem","os"]
 elif launch_cmd=="Condor":
-    valid_dbi_param +=["req", "arch", "getenv", "nice"]
+    valid_dbi_param +=["req", "arch", "getenv", "nice", "files"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["micro", "long","nb_proc","duree"]
 elif launch_cmd=="Local":
@@ -211,7 +211,7 @@ elif launch_cmd=="Local":
 
 from socket import gethostname
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
-    if not os.path.abspath(os.path.curdir).startswith("/home/fringant2/"):
+    if not os.path.abspath(os.path.curdir).startswith("/home/fringant2/") and not dbi_param.get('files'):
         raise Exception("You must be in a subfolder of /home/fringant2/")
     f=os.getenv("CONDOR_LOCAL_SOURCE")
     if f and not f.startswith("/home/fringant2/"):
