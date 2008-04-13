@@ -52,6 +52,7 @@
  *****************/
 #include <plearn/db/UCISpecification.h>
 #include <plearn/io/openUrl.h>
+#include <plearn/io/RPPath.h>
 #include <plearn/math/ManualBinner.h>
 #include <plearn/math/SoftHistogramBinner.h>
 #include <plearn/misc/ShellScript.h>
