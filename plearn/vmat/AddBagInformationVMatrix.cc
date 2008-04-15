@@ -60,6 +60,7 @@ PLEARN_IMPLEMENT_OBJECT(
 // AddBagInformationVMatrix //
 //////////////////////////////
 AddBagInformationVMatrix::AddBagInformationVMatrix():
+    remove_bag_info_column(false),
     bag_info_idx(-1)
 {
 }
@@ -75,6 +76,12 @@ void AddBagInformationVMatrix::declareOptions(OptionList& ol)
         "The source's column that is used to find bags in the data. It can\n"
         "be either a number or a column's name.");
 
+    declareOption(ol, "remove_bag_info_column",
+                  &AddBagInformationVMatrix::remove_bag_info_column,
+                  OptionBase::buildoption,
+        "If true, then the source's column given by bag_info_column is\n"
+        "removed from the resulting data.");
+ 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -84,7 +91,6 @@ void AddBagInformationVMatrix::declareOptions(OptionList& ol)
 ///////////
 void AddBagInformationVMatrix::build()
 {
-    // ### Nothing to add here, simply calls build_
     inherited::build();
     build_();
 }
@@ -98,7 +104,6 @@ void AddBagInformationVMatrix::build_()
         updateMtime(source);
         bag_info_idx = source->getFieldIndex(bag_info_column);
         sourcerow.resize(source->width());
-        width_ = source->width() + 1;
         int st = source->targetsize();
         if (st >= 0)
             targetsize_ = st + 1;
@@ -106,8 +111,22 @@ void AddBagInformationVMatrix::build_()
         // Set field infos.
         Array<VMField> fields = source->getFieldInfos().copy();
         fields.append(VMField("bag_info"));
-        setFieldInfos(fields);
 
+        width_ = source->width() + 1;
+        inputsize_ = source->inputsize();
+
+        if (remove_bag_info_column) {
+            // We need to remove a column from the source VMat.
+            width_--;
+            inputsize_--;
+            Array<VMField> new_fields;
+            for (int i = 0; i < fields.length(); i++)
+                if (i != bag_info_idx)
+                    new_fields.append(fields[i]);
+            fields = new_fields;
+        }
+
+        setFieldInfos(fields);
         setMetaInfoFromSource();
     }
 }
@@ -142,7 +161,13 @@ void AddBagInformationVMatrix::getNewRow(int i, const Vec& v) const
                                     : 1
                            : is_end ? 2
                                     : 0;
-    v.subVec(0, sourcerow.length()) << sourcerow;
+    if (remove_bag_info_column) {
+        v.subVec(0, bag_info_idx) << sourcerow.subVec(0, bag_info_idx);
+        int n_left = sourcerow.length() - bag_info_idx - 1;
+        v.subVec(bag_info_idx, n_left) <<
+            sourcerow.subVec(bag_info_idx + 1, n_left);
+    } else
+        v.subVec(0, sourcerow.length()) << sourcerow;
     v.lastElement() = bag_info;
 }
 

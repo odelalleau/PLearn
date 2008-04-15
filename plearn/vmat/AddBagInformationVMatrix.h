@@ -62,6 +62,7 @@ public:
     //#####  Public Build Options  ############################################
 
     string bag_info_column;
+    bool remove_bag_info_column;
 
 public:
     //#####  Public Member Functions  #########################################
