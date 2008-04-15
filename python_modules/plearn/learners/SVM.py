@@ -122,7 +122,7 @@ class SVMHyperParamOracle__kernel(object):
                 print "WARNING: get_data_stats() takes default value for input stats."
             return ( 2, 1. )
 
-        if self.verbosity > 0:
+        if self.verbosity > 1:
             print "  (computing input stats)"
         
         self.inputsize = len(samples[0])
@@ -131,7 +131,7 @@ class SVMHyperParamOracle__kernel(object):
             if( self.input_avgstd < 0.5
             or  self.input_avgstd > 10.
             or  std__std_per_component/self.input_avgstd > 0.1 ):
-                print "Warning in SVMHyperParamOracle__kernel::get_input_stats() " + \
+                print "WARNING in SVMHyperParamOracle__kernel::get_input_stats() " + \
                     "\n\tYour data does not seem to be normalized: " + \
                     "\n\t(E[std_comp] = %.2f, std[std_comp] = %.2f)" % \
                     ( self.input_avgstd, std__std_per_component )
@@ -731,7 +731,8 @@ class SVM(object):
         self.validtype       = 'simple'
 
         self.n_fold   = 5
-        self.balanceC = True
+        self.balanceC = False
+        self.balance_classes = False
         self.normalize_inputs = False
 
         self.HyperParamOracle__linear  = SVMHyperParamOracle__linear()
@@ -756,6 +757,8 @@ class SVM(object):
         self.stats_are_uptodate = False
         self.inputsize = None
         self.input_avgstd = None
+        self.input_means = None
+        self.input_stds = None
         self.nclasses = None
         self.class_priors = None
         self.weight = None
@@ -786,6 +789,8 @@ class SVM(object):
         self.test_stats      = None
         self.train_stats     = None
         self.stats_are_uptodate = False
+        self.input_means = None
+        self.input_stds = None
         # Note: when we forget, we keep the value of
         #       'self.best_param'. This allow to initialize
         #       a new search (when data changed a bit) to
@@ -807,6 +812,11 @@ class SVM(object):
         if self.testset_key not in dataspec:
             return None
         return dataspec[ self.testset_key ]
+
+    def additional_preproc(self, input_vmat, isTrain=False):
+        if self.balance_classes and isTrain:
+            return ReplicateSamplesVMatrix(source = input_vmat, operate_on_bags = True)
+        return input_vmat
 
     ## specific to libsvm
     """ Return samples and targets in the format required
@@ -834,9 +844,10 @@ class SVM(object):
         return samples, targets
 
     def get_svminputlist(self, input_vmat, isTrain=False):
+        input_vmat = self.additional_preproc( input_vmat, isTrain )
         samples, targets = self.get_datalist( input_vmat )
         if self.normalize_inputs:
-            if isTrain:
+            if self.input_means == None:
                 self.input_means, self.input_stds = normalize_data(samples)
             else:
                 assert self.input_means
@@ -866,7 +877,7 @@ class SVM(object):
                      self.inputsize, self.input_avgstd )
         assert vmat <> None
 
-        samples, targets = self.get_svminputlist( vmat, True )
+        samples, targets = self.get_svminputlist( vmat )
 
         self.all_experts[0].verbosity = self.verbosity
         self.inputsize, self.input_avgstd = self.all_experts[0].get_input_stats(samples)
@@ -928,8 +939,13 @@ class SVM(object):
         return self.get_cost( stats, maincost_name )
     def get_all_costs(self, stats):
         allcosts={}
+        allNones = True
         for cost_name in self.costnames:
             allcosts[cost_name] = self.get_cost(stats, cost_name)
+            if allNones and allcosts[cost_name] <> None:
+                allNones = False
+        if allNones:
+            return None
         return allcosts
 
     """ Return a svm_parameter in the format for libsvm.
@@ -1042,7 +1058,7 @@ class SVM(object):
                     continue
 
                 costnames_string += "E[%s.E[%s]] " % (dataset, cn)
-                if cn in costs:
+                if costs <> None and cn in costs:
                     costvalues_string += "%s " % costs[cn]
                 else:
                     costvalues_string += "None "
@@ -1380,21 +1396,21 @@ class SVM(object):
     def crossvalid( self,
                     dataspec,
                     param = None ):
-        n_fold = self.n_fold
-        self.validtype = '%s-fold' % n_fold
         if not param:
             param = self.best_param
-
+        nclasses = self.nclasses
+        n_fold = self.n_fold
+        self.validtype = '%s-fold' % n_fold
         if self.verbosity > 0:
             print "\n** %d-fold Cross Validation" % n_fold
             print "   with param %s" % param
         
         trainset = self.train_inputspec(dataspec)
-        trainset_class = [None]*self.nclasses
-        N=[0]*self.nclasses
-        Nfold=[0]*self.nclasses
-        Nlastfold=[0]*self.nclasses
-        for c in range(self.nclasses):
+        trainset_class = [None]*nclasses
+        N=[0]*nclasses
+        Nfold=[0]*nclasses
+        Nlastfold=[0]*nclasses
+        for c in range(nclasses):
             trainset_class[c] = ClassSubsetVMatrix( source = trainset,
                                                     classes = [c],)
             N[c] = trainset_class[c].length
@@ -1405,10 +1421,10 @@ class SVM(object):
             Nlastfold[c] = N[c] - Nfold[c] * (n_fold-1)
         
         validstats = None
-        sub_trainset_class = [None]*self.nclasses
-        sub_testset_class = [None]*self.nclasses
+        sub_trainset_class = [None]*nclasses
+        sub_testset_class = [None]*nclasses
         for i in range(n_fold):
-            for c in range(self.nclasses):
+            for c in range(nclasses):
                 if i < n_fold-1:
                     test_indices = range( i*Nfold[c], (i+1)*Nfold[c] )
                     train_indices = range( 0,i*Nfold[c])+range((i+1)*Nfold[c], N[c] )
@@ -1467,8 +1483,6 @@ class SVM(object):
 
             # No improvement measured
             if not self.update_trials( param, valid_stats ):
-                if self.verbosity > 0:
-                    print " -- valid costs: ", self.get_all_costs( valid_stats )
 
                 # We reject the model (to avoid testing on it)
                 self.model = None
