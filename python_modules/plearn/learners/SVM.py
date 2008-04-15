@@ -1380,8 +1380,8 @@ class SVM(object):
     def crossvalid( self,
                     dataspec,
                     param = None ):
-        self.validtype = 'cross'
         n_fold = self.n_fold
+        self.validtype = '%s-fold' % n_fold
         if not param:
             param = self.best_param
 
@@ -1452,6 +1452,8 @@ class SVM(object):
 
         expert = self.get_expert( self.kernel_type )
         expert.verbosity = self.verbosity
+        
+        L0=len(expert.trials_param_list)
 
         # HyperParamOracle__kernel.best_param is None just at the __init__
         if expert.best_param  == None:
@@ -1477,7 +1479,7 @@ class SVM(object):
             else:
 
                 # Cross Validation
-                if self.validtype == 'cross':
+                if 'fold' in self.validtype:
                     self.train( dataspec )
 
                 # Simple Validation
@@ -1530,7 +1532,7 @@ class SVM(object):
                 self.write_results( self.best_param,
                                     self.valid_stats, self.test_stats, self.train_stats )
 
-            if len(expert.trials_param_list) >= self.max_ntrials:
+            if len(expert.trials_param_list)-L0 >= self.max_ntrials:
                 return dataspec
 
         if( self.retrain_until_local_optimum_is_found
