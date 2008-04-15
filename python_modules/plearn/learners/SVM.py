@@ -741,7 +741,7 @@ class SVM(object):
                                    self.HyperParamOracle__rbf,
                                    self.HyperParamOracle__poly,
                                   ]
-        self.param_names =['validtype','normalize_inputs','kernel_type','balanceC']
+        self.param_names =['outputs_type','multiclass_strategy','validtype','normalize_inputs','kernel_type','balanceC']
         for expert in self.all_experts:
             for pn in expert.param_names:
                 if pn not in self.param_names:
@@ -1008,7 +1008,6 @@ class SVM(object):
             preproc_optionvalues = ' '.join('%s' % v for v in self.preproc_optionvalues)
         else:
             raise TypeError, "preproc_optionvalues must be of type str or list"
-        
         
         param_names=self.param_names
         param_values=[]
