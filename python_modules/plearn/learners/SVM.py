@@ -417,10 +417,12 @@ class SVMHyperParamOracle__rbf(SVMHyperParamOracle__kernel):
         tried_gamma = self.get_trials_oneparam_list('gamma')
         if best_gamma in tried_gamma:
             if best_gamma <> tried_gamma[0]:
-                raise ValueError,"in SVMHyperParamOracle__rbf::choose_new_param() " + \
+                print "WARNING in SVMHyperParamOracle__rbf::choose_new_param() " + \
                                  "best gamma %s is not the 1st of tried_gamma %s." % \
                                  (best_gamma, tried_gamma ) + \
                                  "\nThis list should be ordered w.r.t. costs."
+                tried_gamma.remove(best_gamma)
+                tried_gamma = [best_gamma]+tried_gamma
             gamma_list = self.choose_new_param_geom( tried_gamma )
         else:
             gamma_list = self.init_gamma(best_gamma)
@@ -586,7 +588,7 @@ class SVM(object):
         'maincost_name': <str> Cost that leads the choice of hyperparameters.
                          The main cost is the cost to minimize it by validation.
                          By default (if set to None), the first cost of costnames
-                         is taken. 
+                         is considered. 
 
         'n_fold': <int> Number of folds in the cross-validation
 
@@ -598,11 +600,17 @@ class SVM(object):
                            set. Useful when: classes are unbalanced and the cost
                            of interest is normalized w.r.t class prior probas.
 
-        'use_proba': <int> in [-1,0,1] specifies the kinds of SVM outputs (of which
-                     will depend the predictions).
-                     0 is a simple onehot of the prediction.
-                     -1 is the vote counts (one-against-one strategy for multi-class).
-                     1 is the posterior emperical probability (using sigmoids of SVM standard outputs).
+        'multiclass_strategy': <string> Kind of strategy to compute outputs.
+                           - 'onevsone': One-against-one
+                           - 'onevsall': One-against-all
+
+        'outputs_type': <string> that specifies the kinds of SVM outputs (of which
+                        may depend the predictions).
+                        - 'onehot' is a simple onehot of the prediction.
+                        - 'votes' is the vote counts (one-against-one strategy for multi-class).
+                        - 'dist' is the usual output for a SVM (distance to the boundary). For one-vs-one, it is the sum of distances (not recommended).
+                        - 'proba' is the posterior emperical probability (using sigmoids of SVM standard outputs).
+                        Note: with the one-vs-all strategy, 'votes' and 'onehot' give the same outputs.
                                      
         'retrain_on_valid': <bool> Use the best hyperparameters (found on valid)
                              to re-train a bigger model on {train, valid}.
@@ -615,7 +623,7 @@ class SVM(object):
                          is found. If False, you can re-run run() several times. If True,
                          you can also re-run to possibly find better performance.
 
-        'max_ntries': <int> when calling run(), maximum number of hyperparameters to try
+        'max_ntrials': <int> when calling run(), maximum number of hyperparameters to try
                       since the last forget().
 
         'test_on_train': <bool> Should we test best models on {test, train} (1)
@@ -682,9 +690,10 @@ class SVM(object):
                         'n_fold',
                         'normalize_inputs',
                         'balanceC',
-                        'use_proba',
+                        'multiclass_strategy',
+                        'outputs_type',
                         'retrain_until_local_optimum_is_found',
-                        'max_ntries',
+                        'max_ntrials',
                         'retrain_on_valid',
                         'test_on_train',
                         'verbosity',
@@ -758,7 +767,7 @@ class SVM(object):
 
         self.retrain_on_valid = True
         self.retrain_until_local_optimum_is_found = True
-        self.max_ntries = 50
+        self.max_ntrials = 50
         self.test_on_train = True
 
         
@@ -768,7 +777,7 @@ class SVM(object):
         self.validset_key = 'validset'
         self.testset_key  = 'testset'
 
-        self.use_proba = False
+        self.outputs_type = 'votes'
 
     def forget(self):
         for expert in self.all_experts:
@@ -940,7 +949,7 @@ class SVM(object):
         if len(s)>0:s=', '+s
 
         
-        if self.use_proba:
+        if 'proba' in self.outputs_type:
             # if this function is defined (see 
             return eval('svm_parameter( svm_type = C_SVC, probability = 1 '+s+')' )
         else:
@@ -1106,6 +1115,8 @@ class SVM(object):
              ):
         if self.verbosity > 3:
             print "SVM::train() called ", dataspec.keys()
+        if self.verbosity > 1:
+            print "launching libsvm with param %s " % param    
         
         if param == None:
             if not self.best_param:
@@ -1115,18 +1126,33 @@ class SVM(object):
             param['kernel_type'] = self.kernel_type
         
         trainset = self.train_inputspec(dataspec)
-        if self.balanceC:
-            self.get_data_stats( trainset )
-            param.update({'weight':self.weight,
-                          'nr_weight':len(self.weight),
-                          'weight_label':self.labels})
+        self.get_data_stats( trainset )
         
         train_samples, train_targets = self.get_svminputlist( trainset, True )
-        train_problem = svm_problem( train_targets ,
-                                     train_samples )
-        if self.verbosity > 1:
-            print "launching libsvm with param %s " % param    
-        model = svm_model(train_problem, self.get_libsvm_param( param ) )
+        # one-against-one strategy is the only one implemented in libsvm
+        if self.multiclass_strategy == 'onevsone':
+            if self.balanceC:
+                param.update({'weight':self.weight,
+                              'nr_weight':len(self.weight),
+                              'weight_label':self.labels})
+            train_problem = svm_problem( train_targets ,
+                                         train_samples )
+            model = svm_model(train_problem, self.get_libsvm_param( param ) )
+        elif self.multiclass_strategy == 'onevsall':
+            model = []
+            for c in range(self.nclasses):
+                if self.balanceC:
+                    p = self.class_priors[c]
+                    cst = 2*p*(1-p) # constant to have average 1 on weights
+                    param.update({'weight':[ cst/p,cst/(1-p) ],
+                                  'nr_weight':2,
+                                  'weight_label':[1,-1]})
+                onevsall_targets = [ int(t)==c and 1 or -1 for t in train_targets ]
+                train_problem = svm_problem( onevsall_targets ,
+                                             train_samples )
+                model.append( svm_model(train_problem, self.get_libsvm_param( param ) ) )
+        else:
+            raise ValueError, "Unknown value %s for option 'multiclass_strategy'" % self.multiclass_strategy
         
         if param == self.best_param:
             self.best_model = model
@@ -1141,13 +1167,14 @@ class SVM(object):
     """
     def predict_from_outputs(self, outputs, targets, vmat):
         assert self.nclasses == len(outputs[0])
+        assert type(outputs[0]) == list
         predictions = []
         for o in outputs:
             predictions.append( array(o).argmax() )
         return predictions, targets
 
     def get_outputs_targets( self,
-                                 testset ):
+                             testset ):
         assert testset <> None
         # By default take the LAST model trained
         if self.model <> None:
@@ -1161,7 +1188,7 @@ class SVM(object):
         nclasses = self.nclasses
         nsamples = len(samples)
 
-        ## specific to libsvm
+        ## The following is specific to libsvm
         ##
         # Note: model.predict_values(x)
         #           gives a dictionary with the SVM scores for one-against-one
@@ -1169,30 +1196,84 @@ class SVM(object):
         #           gives the prediction by "max win" strategy (each SVM has a vote 1 for a class)
         #       model.predict_probability(x)
         #           gives a dictionary with proabilities corresponding to each class
-        outputs = []
-        if self.use_proba == 1:
-            for x in samples:
-                prd, prb = model.predict_probability(x)
-                output = [0]*nclasses
-                for c in prb:
-                    output[int(c)] = prb[c]
-                outputs.append(output)
-        elif self.use_proba == 0:
-            for x in samples:
-                output = [0]*nclasses
-                output[ int(model.predict(x)) ] += 1
-                outputs.append( output )                
-        elif self.use_proba == -1:
-            for x in samples:
-                output = [0]*nclasses
-                oneagainstone_dict = model.predict_values(x)
-                for cl1cl2 in oneagainstone_dict:
-                    if oneagainstone_dict[cl1cl2] > 0:
-                        output[cl1cl2[0]] += 1
-                    else:
-                        output[cl1cl2[1]] += 1
-                outputs.append( output )
+        if self.multiclass_strategy == 'onevsone':
+            outputs = []
+            if self.outputs_type == 'proba':
+                for x in samples:
+                    prd, prb = model.predict_probability(x)
+                    output = [0]*nclasses
+                    for c in prb:
+                        output[int(c)] = prb[c]
+                    outputs.append(output)
+            elif self.outputs_type == 'onehot':
+                for x in samples:
+                    output = [0]*nclasses
+                    output[ int(model.predict(x)) ] += 1
+                    outputs.append( output )                
+            elif self.outputs_type == 'votes':
+                for x in samples:
+                    output = [0]*nclasses
+                    onevsone_dict = model.predict_values(x)
+                    for cl1cl2 in onevsone_dict:
+                        if onevsone_dict[cl1cl2] > 0:
+                            output[cl1cl2[0]] += 1
+                    outputs.append( output )
+            elif self.outputs_type == 'dist':
+                for x in samples:
+                    output = [0]*nclasses
+                    onevsone_dict = model.predict_values(x)
+                    for cl1cl2 in onevsone_dict:
+                        if onevsone_dict[cl1cl2] > 0:
+                            output[cl1cl2[0]] += onevsone_dict[cl1cl2]
+                    outputs.append( output )
+            else:
+                raise ValueError, "Unknown value %s for option 'outputs_type'" % self.outputs_type
+        elif self.multiclass_strategy == 'onevsall':
+            assert type(model) == list
+            outputs = []
+            if self.outputs_type == 'proba':
+                for x in samples:
+                    output = [0]*nclasses
+                    for c in range(nclasses):
+                        prd, prb = model[c].predict_probability(x)
+                        output[c] = prb[1]
+                    outputs.append(output)
+            elif self.outputs_type == 'proba2':
+                for x in samples:
+                    output = [0]*nclasses
+                    for c in range(nclasses):
+                        prd, prb = model[c].predict_probability(x)
+                        output[c] = prb[1]
+                    outputs.append( softmax(output) )
+            elif self.outputs_type == 'onehot' or self.outputs_type == 'votes':
+                for x in samples:
+                    output = [0]*nclasses
+                    svm_outputs = zeros(nclasses)
+                    for c in range(nclasses):
+                        onevsone_dict = model[c].predict_values(x)
+                        svm_outputs[c] = onevsone_dict[(1,-1)]
+                    output[ svm_outputs.argmax() ] += 1
+                    outputs.append( output )                
+            elif self.outputs_type == 'dist':
+                for x in samples:
+                    output = [0]*nclasses
+                    for c in range(nclasses):
+                        onevsone_dict = model[c].predict_values(x)
+                        output[c] = onevsone_dict[(1,-1)]
+                    outputs.append( output )
+            elif self.outputs_type == 'dist2':
+                for x in samples:
+                    output = [0]*nclasses
+                    for c in range(nclasses):
+                        onevsone_dict = model[c].predict_values(x)
+                        output[c] = onevsone_dict[(1,-1)]
+                    outputs.append( softmax(output) )
+            else:
+                raise ValueError, "Unknown value %s for option 'outputs_type'" % self.outputs_type
+        else:
+            raise ValueError, "Unknown value %s for option 'multiclass_strategy'" % self.multiclass_strategy
 
+        assert len(outputs) == len(targets)
         return outputs, targets
 
     """ Return the costs obtained by a libSVM model
@@ -1360,7 +1441,6 @@ class SVM(object):
         cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
     def run(self, dataspec):
-
         if self.verbosity > 3:
             print "SVM::run() called ", dataspec.keys()
 
@@ -1368,7 +1448,7 @@ class SVM(object):
         validset = self.valid_inputspec(dataspec)
         testset  = self.test_inputspec(dataspec)
 
-        
+        # Input statistics are needed to choose the first values of some hyperparameters
         self.get_data_stats( trainset )
 
         expert = self.get_expert( self.kernel_type )
@@ -1451,9 +1531,11 @@ class SVM(object):
                 self.write_results( self.best_param,
                                     self.valid_stats, self.test_stats, self.train_stats )
 
+            if len(expert.trials_param_list) >= self.max_ntrials:
+                return dataspec
+
         if( self.retrain_until_local_optimum_is_found
-        and expert.should_be_tuned_again()
-        and len(expert.trials_param_list) < self.max_ntries):
+        and expert.should_be_tuned_again() ):
            self.run( dataspec )
 
         return dataspec
@@ -1512,6 +1594,13 @@ def geom_mean(data):
             prod *= value
         return prod**(1./len(data))
 
+""" Softmax function
+"""
+def softmax(output):
+    expterms = [ exp(o) for o in output ]
+    S = sum(expterms)
+    return [ e/S for e in expterms ]
+
 """"""
 
 """ Below:
@@ -1523,8 +1612,8 @@ def geom_mean(data):
 #-------
     
 svm = SVM()
-svm.get_datalist = ToBagClassifier_get_datalist
-svm.predict_from_outputs = ToBagClassifier_predict_from_outputs
+svm.get_datalist = get_datalist_onBags
+svm.predict_from_outputs = predict_from_outputs_onBags
 
 """         
 def get_baginfo( input_vmat ):
@@ -1535,22 +1624,19 @@ def get_baginfo( input_vmat ):
     baginfo = [ int(t) for t in data_array[:,inputsize+1] ]
     return baginfo
 
-def ToBagClassifier_get_datalist( input_vmat ):
+def get_datalist_onBags( input_vmat ):
     data_array = input_vmat.getMat()
     inputsize = input_vmat.inputsize
-    targetsize = input_vmat.targetsize
-    nsamples = input_vmat.length
-    assert shape(data_array)[0] == nsamples
-    assert targetsize==2
     samples   = [ [ float(x_t_i)    for x_t_i in x_t ]
                                     for x_t in data_array[:,:inputsize] ]
     targets   = [ float(t) for t in data_array[:,inputsize] ]
     return samples, targets
 
-def ToBagClassifier_predict_from_outputs(outputs, targets, vmat):
+def predict_from_outputs_onBags(outputs, targets, vmat):
     baginfo = get_baginfo(vmat)
     assert len(outputs) == len(targets) == len(baginfo)
     nclasses = len(outputs[0])
+    assert type(outputs[0]) == list
     bag_predictions=[]
     bag_targets=[]
     votes = zeros(nclasses)
@@ -1653,13 +1739,13 @@ if __name__ == '__main__':
 
 
     normalize_inputs = 0
-    use_proba = 0
+    outputs_type = 'votes'
     
     svm.normalize_inputs = normalize_inputs
-    svm.use_proba = use_proba
+    svm.outputs_type = outputs_type
     
-    svm.preproc_optionnames = [ 'renormalize_inputs', 'use_proba' ]
-    svm.preproc_optionvalues = [ normalize_inputs ,  use_proba ]
+    svm.preproc_optionnames = [ 'renormalize_inputs', 'outputs_type' ]
+    svm.preproc_optionvalues = [ normalize_inputs ,  outputs_type ]
     
     svm.kernel_type = 'poly'
     svm.run(dataspec)
