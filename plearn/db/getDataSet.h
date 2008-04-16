@@ -45,8 +45,8 @@
 #define getDataSet_INC
 
 #include <string>
+#include <map>
 #include <time.h>
-#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 using namespace std;
