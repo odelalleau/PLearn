@@ -692,6 +692,11 @@ public:
      */
     virtual string asString() const; 
 
+    /**
+     * Returns a string representation of the object, including "remotetransmit" options
+     */
+    virtual string asStringRemoteTransmit() const; 
+
     //#####  Options-Related Functions  #######################################
     
     /**

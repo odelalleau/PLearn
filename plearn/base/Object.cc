@@ -145,6 +145,16 @@ string Object::asString() const
     return removeblanks(s);
 }
 
+string Object::asStringRemoteTransmit() const
+{
+    string s;
+    PStream out= openString(s, PStream::plearn_ascii, "w");
+    out.remote_plearn_comm= true;
+    out << this;
+    out.flush();
+    return removeblanks(s);
+}
+
 //#####  Option-Manipulation Functions  #######################################
 
 void Object::setOption(const string& optionname, const string& value)
@@ -706,6 +716,11 @@ void Object::declareMethods(RemoteMethodMap& rmm)
     declareMethod(rmm, "asString", &Object::asString,
                   (BodyDoc("Returns a string representation of this object."),
                    RetDoc ("string representation of the object")));
+
+    declareMethod(rmm, "asStringRemoteTransmit", &Object::asStringRemoteTransmit,
+                  (BodyDoc("Returns a string representation of this object,"
+                           " including remotetransmit options."),
+                   RetDoc ("string representation of the object (w/remotetransmit)")));
 
     declareMethod(rmm, "run", &Object::run,
                   (BodyDoc("Run the given object, if it is runnable; "

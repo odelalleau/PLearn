@@ -36,11 +36,30 @@ import warnings
 
 global plearn_module
 plearn_module= None
+def get_plearn_module():
+    global plearn_module
+    return plearn_module
+
+# remote pickle: when true, __getstate__ includes remotetransmit options;
+#                    used to transmit objects to remote processes
+#                when false, __getstate__ does not include nosave options;
+#                    used to save objects to disk
+global remote_pickle
+remote_pickle= False
+def get_remote_pickle():
+    global remote_pickle
+    return remote_pickle
+def set_remote_pickle(rp):
+    global remote_pickle
+    prev= remote_pickle
+    remote_pickle= rp
+    return prev
+
 
 class WrappedPLearnObject(object):
 
     allowed_non_PLearn_options= ['_cptr']
-    warn_non_PLearn_options= True
+    warn_non_PLearn_options= False # you can turn this on to help debugging
 
     def __init__(self, **kwargs):
         #print 'WrappedPLearnObject.__init__',type(self),kwargs
@@ -106,7 +125,10 @@ class WrappedPLearnObject(object):
 
     def __getstate__(self):
         d= self.__dict__.copy()
-        d['_cptr']= self.asString()
+        if remote_pickle:
+            d['_cptr']= self.asStringRemoteTransmit()
+        else:
+            d['_cptr']= self.asString()
         return d
     
     def __setstate__(self, dict):
