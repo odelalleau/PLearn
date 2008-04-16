@@ -167,6 +167,7 @@ void Function::build_()
         bproppath = propagationPath(inputs, outputs);
 
     parentspath = propagationPathToParentsOfPath(inputs, outputs);
+    recomputeParents();
 
     //parameters_to_optimize.printNames();
     //cout<<"**************Func::printInfo(inputs, outputs);"<<endl;
