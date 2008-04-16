@@ -447,6 +447,24 @@ void setPythonModuleAndInject(PyObject* module)
 
 PyObject* the_PLearn_python_module= 0;
 
+
+
+
+void setNullPout()
+{
+    pout= pnull;
+}
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("setNullPout", &setNullPout,
+                    (BodyDoc("Sets the pout output stream to be null.\n")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+        
+
+
+
 } // end of namespace PLearn
 
 
