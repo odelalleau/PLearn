@@ -217,8 +217,7 @@ void RegressionTreeNode::lookForBestSplit()
 {
     if(leave->length<=1)
         return;
-    TVec<int> candidate(train_set->length());//list of candidate row to split
-    candidate.resize(0);
+    TVec<int> candidate(0,train_set->length());//list of candidate row to split
     TVec<int> registered_row;
     tmp_vec.resize(2);
     Vec left_error(3);
@@ -363,6 +362,11 @@ real RegressionTreeNode::getErrorImprovment()const
 int RegressionTreeNode::getSplitCol()const
 {
     return split_col;
+}
+
+real RegressionTreeNode::getSplitValue() const
+{
+    return split_feature_value;
 }
 
 TVec< PP<RegressionTreeNode> > RegressionTreeNode::getNodes()

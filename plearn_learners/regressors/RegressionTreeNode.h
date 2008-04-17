@@ -105,6 +105,7 @@ public:
     int          getSplitBalance()const;
     real         getErrorImprovment()const;
     int          getSplitCol() const;
+    real         getSplitValue() const;
     TVec< PP<RegressionTreeNode> >  getNodes();
     void         computeOutputAndNodes(const Vec& inputv, Vec& outputv, TVec<PP<RegressionTreeNode> >* nodes=0);
     void         computeOutput(const Vec& inputv, Vec& outputv)
@@ -115,7 +116,7 @@ public:
     
 private:
     void         build_();
-    void         verbose(string msg, int level);    
+    void         verbose(string msg, int level); 
 };
 
 DECLARE_OBJECT_PTR(RegressionTreeNode);

@@ -211,8 +211,7 @@ void RegressionTree::train()
             PP<RegressionTreeNode> node= expandTree();
             if (node == NULL) break;
             split_cols.append(node->getSplitCol());
-            //split_values.append(node->getSplitValue());
-            PLCHECK_MSG( false, "Fred, please check this!" );
+            split_values.append(node->getSplitValue());
         }
         if (report_progress) pb->update(stage);
     }
