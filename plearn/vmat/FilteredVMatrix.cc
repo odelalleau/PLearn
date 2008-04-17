@@ -46,91 +46,117 @@
 namespace PLearn {
 using namespace std;
 
+PLEARN_IMPLEMENT_OBJECT(
+    FilteredVMatrix,
+    "A filtered view of its source VMatrix.",
+    "The filter is an expression in VPL language.\n"
+    "If a metadata directory is provided, the filtered indexes are saved in\n"
+    "this directory. Otherwise the filtered indexes are re-computed at each\n"
+    "call to build()."
+);
 
-FilteredVMatrix::FilteredVMatrix()
-    : inherited(),
-      build_complete(false),
-      allow_repeat_rows(false),
-      repeat_id_field_name(""),
-      repeat_count_field_name(""),
-      report_progress(true)
-{
-}
+/////////////////////
+// FilteredVMatrix //
+/////////////////////
+FilteredVMatrix::FilteredVMatrix():
+    build_complete(false),
+    allow_repeat_rows(false),
+    repeat_id_field_name(""),
+    repeat_count_field_name(""),
+    report_progress(true)
+{}
 
 FilteredVMatrix::FilteredVMatrix( VMat the_source, const string& program_string,
                                   const PPath& the_metadatadir, bool the_report_progress,
                                   bool allow_repeat_rows_, 
                                   const string& repeat_id_field_name_,
-                                  const string& repeat_count_field_name_)
-
-    : SourceVMatrix(the_source),
-      allow_repeat_rows(allow_repeat_rows_),
-      repeat_id_field_name(repeat_id_field_name_),
-      repeat_count_field_name(repeat_count_field_name_),
-      report_progress(the_report_progress),
-      prg(program_string)
-
+                                  const string& repeat_count_field_name_,
+                                  bool call_build_):
+    inherited(the_source, call_build_),
+    allow_repeat_rows(allow_repeat_rows_),
+    repeat_id_field_name(repeat_id_field_name_),
+    repeat_count_field_name(repeat_count_field_name_),
+    report_progress(the_report_progress),
+    prg(program_string)
 {
+    // Note that although VMatrix::build_ would be tempted to call
+    // setMetaDataDir when inherited(the_source, true) is called above (if
+    // call_build_ is true), the metadatadir is only set below, so it will not
+    // happen.
     metadatadir = the_metadatadir;
-    build_();
+
+    if (call_build_)
+        build_();
 }
 
-PLEARN_IMPLEMENT_OBJECT(FilteredVMatrix, "A filtered view of its source vmatrix",
-                        "The filter is an exression in VPL language.\n"
-                        "The filtered indexes are saved in the metadata directory, that NEEDS to\n"
-                        "be provided.\n" );
+////////////////////////////
+// computeFilteredIndices //
+////////////////////////////
+void FilteredVMatrix::computeFilteredIndices()
+{
+    int l = source.length();
+    Vec result(1);
+    PP<ProgressBar> pb;
+    if (report_progress)
+        pb = new ProgressBar("Filtering source vmat", l);
+    mem_indices.resize(0);
+    for(int i=0; i<l; i++)
+    {
+        if (report_progress)
+            pb->update(i);
+        program.run(i,result);
+        if(!allow_repeat_rows)
+        {
+            if(!fast_exact_is_equal(result[0], 0))
+                mem_indices.append(i);
+        }
+        else
+            for(int x = int(round(result[0])); x > 0; --x)
+                mem_indices.append(i);
+    }
+    length_ = mem_indices.length();
+}
 
-
-
+///////////////
+// openIndex //
+///////////////
 void FilteredVMatrix::openIndex()
 {
     PLASSERT(hasMetaDataDir());
-    string idxfname = getMetaDataDir() / "filtered.idx";
-    if(!force_mkdir(getMetaDataDir()))
-        PLERROR("In FilteredVMatrix::openIndex could not create directory %s",getMetaDataDir().absolute().c_str());
 
+    PPath idxfname = getMetaDataDir() / "filtered.idx";
+    if(!force_mkdir(getMetaDataDir()))
+        PLERROR("In FilteredVMatrix::openIndex - Could not create "
+                "directory %s", getMetaDataDir().absolute().c_str());
 
     lockMetaDataDir();
     if(isUpToDate(idxfname))
-        indexes.open(idxfname);
+        indexes.open(idxfname.absolute());
     else  // let's (re)create the index
     {
+        computeFilteredIndices();
         rm(idxfname);       // force remove it
-        int l = source.length();
-        Vec result(1);
-        indexes.open(idxfname,true);
-        PP<ProgressBar> pb;
-        if (report_progress)
-            pb = new ProgressBar("Filtering source vmat", l);
-        for(int i=0; i<l; i++)
-        {
-            if (report_progress)
-                pb->update(i);
-            program.run(i,result);
-            if(!allow_repeat_rows)
-            {
-                if(!fast_exact_is_equal(result[0], 0))
-                    indexes.append(i);
-            }
-            else
-                for(int x = int(round(result[0])); x > 0; --x)
-                    indexes.append(i);
-
-        }
+        indexes.open(idxfname.absolute(), true);
+        for (int i = 0; i < mem_indices.length(); i++)
+            indexes.append(i);
         indexes.close();
-        indexes.open(idxfname);
+        indexes.open(idxfname.absolute());
+        mem_indices = TVec<int>();  // Free memory.
     }
     unlockMetaDataDir();
 
     length_ = indexes.length();
 }
 
+////////////////////
+// setMetaDataDir //
+////////////////////
 void FilteredVMatrix::setMetaDataDir(const PPath& the_metadatadir)
 {
     inherited::setMetaDataDir(the_metadatadir);
     if (build_complete) {
         // Only call openIndex() if the build has been completed,
-        // otherwise the filtering program won't be ready yet.
+        // otherwise the filtering program will not be ready yet.
         openIndex();
         // We call 'setMetaInfoFromSource' only after the index file has been
         // correctly read.
@@ -138,37 +164,51 @@ void FilteredVMatrix::setMetaDataDir(const PPath& the_metadatadir)
     }
 }
 
+///////////////
+// getNewRow //
+///////////////
 void FilteredVMatrix::getNewRow(int i, const Vec& v) const
 {
-    if (indexes.length() == -1)
-        PLERROR("In FilteredVMatrix::getNewRow - The filtered indexes are not set, make sure you provided a metadatadir");
+    if (mem_indices.isEmpty() && indexes.length() == -1)
+        PLERROR("In FilteredVMatrix::getNewRow - Filtered indices are not\n"
+                "set yet.");
 
     int j= source->width();
+    int idx = mem_indices.isEmpty() ? indexes[i] : mem_indices[i];
 
-    source->getRow(indexes[i],v.subVec(0, j));
+    source->getRow(idx, v.subVec(0, j));
 
-    if("" != repeat_id_field_name)
+    if(!repeat_id_field_name.empty())
     {
         int k= 1;
-        while(k <= i && indexes[i]==indexes[i-k])
+        while(k <= i && (mem_indices.isEmpty()
+                                ? indexes[i]==indexes[i-k]
+                                : mem_indices[i] == mem_indices[i-k]))
             ++k;
         v[j++]= static_cast<real>(k-1);
     }
 
-    if("" != repeat_count_field_name)
+    if(!repeat_count_field_name.empty())
     {
         int k0= 1;
-        while(k0 <= i && indexes[i]==indexes[i-k0])
+        while(k0 <= i && (mem_indices.isEmpty()
+                                ? indexes[i]==indexes[i-k0]
+                                : mem_indices[i] == mem_indices[i-k0]))
             ++k0;
         --k0;
         int k1= 1;
-        while(k1+i < length() && indexes[i]==indexes[i+k1])
+        while(k1+i < length() && (mem_indices.isEmpty()
+                                        ? indexes[i]==indexes[i+k1]
+                                        : mem_indices[i] == mem_indices[i+k1]))
             ++k1;
         v[j++]= static_cast<real>(k0+k1);
     }
 
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void FilteredVMatrix::declareOptions(OptionList& ol)
 {
     declareOption(ol, "prg", &FilteredVMatrix::prg, OptionBase::buildoption,
@@ -192,6 +232,9 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void FilteredVMatrix::build_()
 {
     if (source) {
@@ -201,21 +244,24 @@ void FilteredVMatrix::build_()
         program.compileString(prg,fieldnames);
         build_complete = true;
         if (hasMetaDataDir())
+            // Calling setMetaDataDir() will compute indices and save them
+            // in the give metadata directory.
             setMetaDataDir(getMetaDataDir());
-        else
-            // Ensure we do not retain a previous value for length and width.
-            length_ = width_ = -1;
+        else {
+            // Compute selected indices in memory only.
+            computeFilteredIndices();
+        }
 
         Array<VMField> finfos= source->getFieldInfos().copy();
             
-        if("" != repeat_id_field_name)
+        if(!repeat_id_field_name.empty())
         {
             finfos.append(VMField(repeat_id_field_name));
             if(0 < width_)
                 ++width_;
         }
 
-        if("" != repeat_count_field_name)
+        if(!repeat_count_field_name.empty())
         {
             finfos.append(VMField(repeat_count_field_name));
             if(0 < width_)
@@ -223,14 +269,14 @@ void FilteredVMatrix::build_()
         }
 
         setFieldInfos(finfos);
-
+        setMetaInfoFromSource();
     } else
         length_ = width_ = 0;
-
-
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void FilteredVMatrix::build()
 {
     build_complete = false;
@@ -238,9 +284,13 @@ void FilteredVMatrix::build()
     build_();
 }
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void FilteredVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(mem_indices, copies);
 }
 
 } // end of namespace PLearn

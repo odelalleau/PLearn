@@ -61,11 +61,16 @@ private:
     //! the build is complete.
     bool build_complete;
 
-
 protected:
 
     VMatLanguage program;
-    IntVecFile indexes;  // indexes[i] is the
+
+    //! The i-th element is the index of the i-th selected item in the source
+    //! VMatrix.
+    IntVecFile indexes;
+
+    //! Indices stored in memory when no metadata directory is available.
+    TVec<int> mem_indices;
 
     bool allow_repeat_rows;
     string repeat_id_field_name; // 0, 1, ..., n-1; "" means no field is added
@@ -74,6 +79,9 @@ protected:
     //! Generates the index file if it does not already exist.
     //! If it exists and is up to date, simply opens it.
     void openIndex();
+
+    //! Compute the filtered indices.
+    void computeFilteredIndices();
 
 public:
 
@@ -96,18 +104,17 @@ public:
                     const PPath& the_metadatadir = "", bool the_report_progress = true,
                     bool allow_repeat_rows_= false, 
                     const string& repeat_id_field_name_= "",
-                    const string& repeat_count_field_name_= "");
+                    const string& repeat_count_field_name_= "",
+                    bool call_build_ = true);
 
     virtual void setMetaDataDir(const PPath& the_metadatadir);
 
 private:
     //! This does the actual building.
-    // (Please implement in .cc)
     void build_();
 
 protected:
     //! Declares this class' options
-    // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
     //!  This is the only method requiring implementation
