@@ -232,6 +232,7 @@ public:
 
     //! Updates parameters according to the given gradient
     virtual void update( const Vec& grad );
+    virtual void update( const Mat& grad );
 
     //! Update parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
@@ -345,6 +346,9 @@ protected:
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
+
+    //! Declares the class Methods.
+    static void declareMethods(RemoteMethodMap& rmm);
 
 private:
     //#####  Private Member Functions  ########################################

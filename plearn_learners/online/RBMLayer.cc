@@ -154,6 +154,17 @@ void RBMLayer::declareOptions(OptionList& ol)
                     "output_size = size");
 }
 
+void RBMLayer::declareMethods(RemoteMethodMap& rmm)
+{
+    // Make sure that inherited methods are declared
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(rmm, "setAllBias", &RBMLayer::setAllBias,
+                  (BodyDoc("Set the biases values"),
+                   ArgDoc ("bias", "the vector of biases")
+                  ));
+}
+
 ////////////
 // build_ //
 ////////////
@@ -311,7 +322,8 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
 void RBMLayer::fprop( const Vec& input, const Vec& rbm_bias,
                       Vec& output ) const
 {
-    PLERROR("In RBMLayer::fprop(): not implemented");
+    PLERROR("In RBMLayer::fprop(): not implemented in subclass %s",
+            this->classname().c_str());
 }
 
 void RBMLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
@@ -319,29 +331,56 @@ void RBMLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
                            Vec& input_gradient, Vec& rbm_bias_gradient,
                            const Vec& output_gradient)
 {
-    PLERROR("In RBMLayer::bpropUpdate(): not implemented");
+    PLERROR("In RBMLayer::bpropUpdate(): not implemented in subclass %s",
+            this->classname().c_str());
 }
 
 real RBMLayer::fpropNLL(const Vec& target)
 {
-    PLERROR("In RBMLayer::fpropNLL(): not implemented");
+    PLERROR("In RBMLayer::fpropNLL(): not implemented in subclass %s",
+            this->classname().c_str());
     return REAL_MAX;
 }
 
 void RBMLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
-    PLERROR("In RBMLayer::fpropNLL(): not implemented");
+    PLWARNING("batch version of RBMLayer::fpropNLL may not be optimized in subclass %s",
+              this->classname().c_str());
+    PLASSERT( targets.width() == input_size );
+    PLASSERT( targets.length() == batch_size );
+    PLASSERT( costs_column.width() == 1 );
+    PLASSERT( costs_column.length() == batch_size );
+
+    Mat tmp;
+    tmp.resize(1,input_size);
+    Vec target;
+    target.resize(input_size);
+
+    computeExpectations();
+    expectation_is_up_to_date = false;
+    for (int k=0;k<batch_size;k++) // loop over minibatch
+    {
+        selectRows(expectations, TVec<int>(1, k), tmp );
+        expectation << tmp;
+        selectRows( activations, TVec<int>(1, k), tmp );
+        activation << tmp;
+        selectRows( targets, TVec<int>(1, k), tmp );
+	target << tmp;
+        costs_column(k,0) = fpropNLL( target );
+    }
 }
 
 void RBMLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
-    PLERROR("In RBMLayer::bpropNLL(): not implemented");
+    PLERROR("In RBMLayer::bpropNLL(): not implemented in subclass %s",
+            this->classname().c_str());
 }
 
 void RBMLayer::bpropNLL(const Mat& targets,  const Mat& costs_column, 
                         Mat& bias_gradients)
 {
-    PLERROR("In RBMLayer::bpropNLL(): not implemented");
+    PLERROR("In RBMLayer::bpropNLL(): not implemented in subclass %s",
+            this->classname().c_str());
 }
 
 ////////////////////////
@@ -388,7 +427,7 @@ void RBMLayer::update()
     real* bps = bias_pos_stats.data();
     real* bns = bias_neg_stats.data();
 
-    if( momentum == 0. )
+    if( fast_is_equal( momentum, 0.) )
     {
         // no need to use bias_inc
         for( int i=0 ; i<size ; i++ )
@@ -425,7 +464,7 @@ void RBMLayer::update( const Vec& grad )
 
     for( int i=0 ; i<size ; i++ )
     {
-        if( momentum == 0. )
+        if( fast_is_equal( momentum, 0.) )
         {
             // update the bias: bias -= learning_rate * input_gradient
             b[i] -= learning_rate * gb[i];
@@ -443,6 +482,33 @@ void RBMLayer::update( const Vec& grad )
     applyBiasDecay();
 }
 
+void RBMLayer::update( const Mat& grad )
+{
+    int batch_size = grad.length();
+    real* b = bias.data();
+    real* binc = momentum==0?0:bias_inc.data();
+    real avg_lr = learning_rate / (real)batch_size;
+
+    for( int isample=0; isample<batch_size; isample++)
+        for( int i=0 ; i<size ; i++ )
+        {
+            if( fast_is_equal( momentum, 0.) )
+            {
+                // update the bias: bias -= learning_rate * input_gradient
+                b[i] -= avg_lr * grad(isample,i);
+            }
+            else
+            {
+                // The update rule becomes:
+                // bias_inc = momentum * bias_inc - learning_rate * input_gradient
+                // bias += bias_inc
+                binc[i] = momentum * binc[i] - avg_lr * grad(isample,i);
+                b[i] += binc[i];
+            }
+        }
+}
+
+
 void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
 {
     // bias += learning_rate * (pos_values - neg_values)
@@ -450,7 +516,7 @@ void RBMLayer::update( const Vec& pos_values, const Vec& neg_values)
     real* pv = pos_values.data();
     real* nv = neg_values.data();
 
-    if( momentum == 0. )
+    if( fast_is_equal( momentum, 0.) )
     {
         for( int i=0 ; i<size ; i++ )
             b[i] += learning_rate * ( pv[i] - nv[i] );
@@ -487,7 +553,7 @@ void RBMLayer::update( const Mat& pos_values, const Mat& neg_values)
     // We take the average gradient over the mini-batch.
     real avg_lr = learning_rate / n;
 
-    if( momentum == 0. )
+    if( fast_is_equal( momentum, 0.) )
     {
         transposeProductScaleAcc(bias, pos_values, ones,  avg_lr, real(1));
         transposeProductScaleAcc(bias, neg_values, ones, -avg_lr, real(1));
@@ -706,7 +772,6 @@ void RBMLayer::getConfiguration(int conf_index, Vec& output)
     PLERROR("RBMLayer::getConfiguration(int, Vec) not implemented in subclass %s\n",classname().c_str());
 }
 
-
 void RBMLayer::addBiasDecay(Vec& bias_gradient)
 {
     PLASSERT(bias_gradient.size()==size);
@@ -775,6 +840,7 @@ void RBMLayer::applyBiasDecay()
                 " the list, in subclass %s\n",bias_decay_type.c_str(),classname().c_str());
 
 }   
+
 } // end of namespace PLearn
 
 
