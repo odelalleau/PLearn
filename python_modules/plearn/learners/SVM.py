@@ -1252,37 +1252,23 @@ class SVM(object):
                     for c in range(nclasses):
                         prd, prb = model[c].predict_probability(x)
                         output[c] = prb[1]
-                    outputs.append(output)
-            elif self.outputs_type == 'proba2':
-                for x in samples:
-                    output = [0]*nclasses
-                    for c in range(nclasses):
-                        prd, prb = model[c].predict_probability(x)
-                        output[c] = prb[1]
                     outputs.append( softmax(output) )
             elif self.outputs_type == 'onehot' or self.outputs_type == 'votes':
                 for x in samples:
                     output = [0]*nclasses
                     svm_outputs = zeros(nclasses)
                     for c in range(nclasses):
-                        onevsone_dict = model[c].predict_values(x)
-                        svm_outputs[c] = onevsone_dict[(1,-1)]
+                        onevsall_dict = model[c].predict_values(x)
+                        svm_outputs[c] = onevsall_dict[(1,-1)]
                     output[ svm_outputs.argmax() ] += 1
                     outputs.append( output )                
             elif self.outputs_type == 'dist':
                 for x in samples:
                     output = [0]*nclasses
                     for c in range(nclasses):
-                        onevsone_dict = model[c].predict_values(x)
-                        output[c] = onevsone_dict[(1,-1)]
+                        onevsall_dict = model[c].predict_values(x)
+                        output[c] = onevsall_dict[(1,-1)]
                     outputs.append( output )
-            elif self.outputs_type == 'dist2':
-                for x in samples:
-                    output = [0]*nclasses
-                    for c in range(nclasses):
-                        onevsone_dict = model[c].predict_values(x)
-                        output[c] = onevsone_dict[(1,-1)]
-                    outputs.append( softmax(output) )
             else:
                 raise ValueError, "Unknown value %s for option 'outputs_type'" % self.outputs_type
         else:
