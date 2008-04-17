@@ -106,9 +106,13 @@ void RegressionTree::declareOptions(OptionList& ol)
                   "The heap to store potential nodes to expand\n");
     declareOption(ol, "first_leave", &RegressionTree::first_leave, OptionBase::learntoption,
                   "The first leave built with the root containing all train set rows at the beginning\n");
-    declareOption(ol, "split_cols", &RegressionTree::split_cols, OptionBase::learntoption,
-                  "contain in order of first to last the columns used to split the tree.\n");
-
+    declareOption(ol, "split_cols", &RegressionTree::split_cols,
+                  OptionBase::learntoption,
+                  "Contain in order of addition of node the columns used to"
+                  " split the tree.\n");
+    declareOption(ol, "split_values", &RegressionTree::split_values,
+                  OptionBase::learntoption,
+                  "Contain in order of addition of node the split value.\n");
 
     declareOption(ol, "first_leave_output", &RegressionTree::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
@@ -136,6 +140,7 @@ void RegressionTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(priority_queue, copies);
     deepCopyField(first_leave, copies);
     deepCopyField(split_cols, copies);
+    deepCopyField(split_values, copies);
     deepCopyField(tmp_vec, copies);
     
 }
@@ -203,9 +208,10 @@ void RegressionTree::train()
     {    
         if (stage > 0)
         {
-            int split_col = expandTree();
-            if (split_col < 0) break;
-            split_cols.append(split_col);
+            PP<RegressionTreeNode> node= expandTree();
+            if (node == NULL) break;
+            split_cols.append(node->getSplitCol());
+            split_values.append(node->getSplitValue());
         }
         if (report_progress) pb->update(stage);
     }
@@ -233,6 +239,7 @@ void RegressionTree::train()
     }
     train_stats->finalize();
     verbose("split_cols: "+tostring(split_cols),2);
+    verbose("split_values: "+tostring(split_values),2);
 }
 
 void RegressionTree::verbose(string the_msg, int the_level)
@@ -295,12 +302,12 @@ void RegressionTree::initialiseTree()
     priority_queue->addHeap(root);
 }
 
-int RegressionTree::expandTree()
+PP<RegressionTreeNode> RegressionTree::expandTree()
 {
     if (priority_queue->isEmpty() <= 0)
     {
         verbose("RegressionTree: priority queue empty, stage: " + tostring(stage), 3);
-        return -1;
+        return NULL;
     }
     PP<RegressionTreeNode> node = priority_queue->popHeap();
     if (node->getErrorImprovment() < complexity_penalty_factor * sqrt((real)stage))
@@ -308,19 +315,19 @@ int RegressionTree::expandTree()
         verbose("RegressionTree: early stopping at stage: " + tostring(stage)
                 + ", error improvement: " + tostring(node->getErrorImprovment())
                 + ", penalty: " + tostring(complexity_penalty_factor * sqrt((real)stage)), 3);
-        return -1;
+        return NULL;
     }
     int split_col = node->expandNode();
     if (split_col < 0)
     {
         verbose("RegressionTree: expand is negative?", 3);
-        return -1;
+        return NULL;
     }
     TVec< PP<RegressionTreeNode> > subnode = node->getNodes();
     priority_queue->addHeap(subnode[0]); 
     priority_queue->addHeap(subnode[1]);
     if (missing_is_valid) priority_queue->addHeap(subnode[2]);
-    return split_col; 
+    return node; 
 }
 
 int RegressionTree::outputsize() const

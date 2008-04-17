@@ -1,6 +1,11 @@
 HyperLearner: starting the optimization
 split_cols: []
 
+split_values: []
+
 split_cols: 1 
+split_values: 0.14412705026016423 
 split_cols: 1 0 
+split_values: 0.14412705026016423 2.81501972474946704 
 split_cols: 1 0 0 
+split_values: 0.14412705026016423 2.81501972474946704 3.90430461537466744 

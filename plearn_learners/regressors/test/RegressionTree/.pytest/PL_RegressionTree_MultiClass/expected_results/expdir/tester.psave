@@ -97,6 +97,8 @@ priority_queue = *0 ;
 first_leave = *0 ;
 split_cols = []
 ;
+split_values = []
+;
 random_gen = *0 ;
 seed = 1827 ;
 stage = 0 ;

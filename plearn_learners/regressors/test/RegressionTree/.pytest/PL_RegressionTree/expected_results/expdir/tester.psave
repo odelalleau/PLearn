@@ -18,6 +18,7 @@ jstart = 0 ;
 fistart = -1 ;
 flength = -1 ;
 source = *2  ;
+deep_copy_source = 1 ;
 writable = 0 ;
 length = 200 ;
 width = 5 ;
@@ -81,6 +82,8 @@ root = *0 ;
 priority_queue = *0 ;
 first_leave = *0 ;
 split_cols = []
+;
+split_values = []
 ;
 random_gen = *0 ;
 seed = 1827 ;

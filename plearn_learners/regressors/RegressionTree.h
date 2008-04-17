@@ -88,6 +88,7 @@ private:
     real l2_loss_function_factor;
     real l1_loss_function_factor;
     TVec<int> split_cols;
+    Vec       split_values;
     TVec<PP<RegressionTreeNode> > *nodes;
 
     Vec tmp_vec;
@@ -114,10 +115,10 @@ public:
     virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
   
 private:
-    void         build_();
-    void         initialiseTree();
-    int          expandTree();
-    void         verbose(string msg, int level);
+    void                   build_();
+    void                   initialiseTree();
+    PP<RegressionTreeNode> expandTree();
+    void                   verbose(string msg, int level);
 };
 
 DECLARE_OBJECT_PTR(RegressionTree);
