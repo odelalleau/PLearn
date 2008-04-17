@@ -95,6 +95,29 @@ void RBMTruncExpLayer::generateSample()
     }
 }
 
+void RBMTruncExpLayer::generateSamples()
+{
+    PLASSERT_MSG(random_gen,
+                 "random_gen should be initialized before generating samples");
+
+    PLCHECK_MSG(expectations_are_up_to_date, "Expectations should be computed "
+            "before calling generateSamples()");
+
+    PLASSERT( samples.width() == size && samples.length() == batch_size );
+
+    for (int k = 0; k < batch_size; k++)
+        for (int i=0 ; i<size ; i++)
+        {
+            real s = random_gen->uniform_sample();
+            real a_i = activations(k,i);
+            if( fabs( a_i ) <= 1e-5 )
+                samples(k, i) = s + a_i*( s*(1 - s)/2 );
+            else
+                samples(k, i) = logadd( pl_log( 1-s ), pl_log(s) + a_i ) / a_i;
+        }
+
+}
+
 void RBMTruncExpLayer::computeExpectation()
 {
     if( expectation_is_up_to_date )
@@ -117,6 +140,35 @@ void RBMTruncExpLayer::computeExpectation()
     }
 
     expectation_is_up_to_date = true;
+}
+
+
+void RBMTruncExpLayer::computeExpectations()
+{
+    if( expectations_are_up_to_date )
+        return;
+
+    /* Conditional expectation:
+     * E[u|x] = 1/(1-exp(-a)) - 1/a
+     */
+
+    PLASSERT( expectations.width() == size
+              && expectations.length() == batch_size );
+
+    for (int k = 0; k < batch_size; k++)
+        for( int i=0 ; i<size ; i++ )
+        {
+            real a_i = activations(k,i);
+
+            // Polynomial approximation to avoid numerical instability
+            // f(a) = 1/2 + a/12 - a^3/720 + O(a^5)
+            if( fabs( a_i ) <= 0.01 )
+                expectations(k,i) = 0.5 + a_i*(1./12. - a_i*a_i/720.);
+            else
+                expectations(k,i) = 1/(1-exp(-a_i)) - 1/a_i;
+        }
+
+    expectations_are_up_to_date = true;
 }
 
 
