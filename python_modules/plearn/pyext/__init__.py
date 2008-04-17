@@ -30,20 +30,17 @@
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
 
+# Import correct PLearn python extension module as set by plearn.getLib()
 from plearn import getLib
-
 pl_lib_dir, pl_lib_name = getLib()
 exec 'from %s.%s import *' % (pl_lib_dir, pl_lib_name)
 exec 'from %s import %s as pl' % (pl_lib_dir, pl_lib_name)
 
+import gc, atexit
 from plearn.pyplearn.plargs import *
-import os
-import cgitb
-cgitb.enable(format='PLearn')
+from plearn.utilities.options_dialog import *
 
-import atexit
 def cleanupWrappedObjects():
-    import gc
     gc.collect()
     if pl: #if plext still loaded
         ramassePoubelles()
@@ -75,8 +72,7 @@ def TMat( *args ):
         return [ content[i*ncols:(i+1)*ncols] for i in range(nrows) ]
 
 
-from plearn.utilities.options_dialog import *
-verb, logs, namespaces, use_gui= getGuiInfo(sys.argv)
+verb, logs, namespaces, use_gui = getGuiInfo(sys.argv)
 
 # Enact the use of plargs: the current behavior is to consider as a plargs
 # any command-line argument that contains a '=' char and to neglect all
