@@ -447,11 +447,11 @@ void WPLS::train()
     if (stage == nstages) {
         // Already trained.
         if (verbosity >= 1)
-            cout << "Skipping WPLS training" << endl;
+            pout << "Skipping WPLS training" << endl;
         return;
     }
     if (verbosity >= 1)
-        cout << "WPLS training started" << endl;
+        pout << "WPLS training started" << endl;
 
     int n    = train_set->length();
     int wlen = train_set->weightsize();
@@ -460,8 +460,8 @@ void WPLS::train()
     Vec means, stddev;
     computeWeightedInputOutputMeansAndStddev(d, means, stddev);
     if (verbosity >= 2) {
-        cout << "means = " << means << endl;
-        cout << "stddev = " << stddev << endl;
+        pout << "means = " << means << endl;
+        pout << "stddev = " << stddev << endl;
     }
     normalize(d, means, stddev);
     mean_input  = means.subVec(0, p);
@@ -584,7 +584,7 @@ void WPLS::train()
         }
         while (stage < nstages) {
             if (verbosity >= 1)
-                cout << "stage=" << stage << endl;
+                pout << "stage=" << stage << endl;
             s << Y;
             normalize(s, 2.0);  
             finished = false;
@@ -602,9 +602,9 @@ void WPLS::train()
                     finished = true;
                 else {
                     if (verbosity >= 2)
-                        cout << "dold = " << dold << endl;
+                        pout << "dold = " << dold << endl;
                     if (count%100==0 && verbosity>=1)
-                        cout << "loop counts = " << count << endl;
+                        pout << "loop counts = " << count << endl;
                 }
             }
             transposeProduct(lx, X, s);
@@ -622,21 +622,21 @@ void WPLS::train()
         productTranspose(tmp_np, T, P);
         
         if (verbosity >= 2) {
-            cout << "T = " << endl << T << endl;
-            cout << "P = " << endl << P << endl;
-            cout << "Q = " << endl << Q << endl;
-            cout << "tmp_np = " << endl << tmp_np << endl;
-            cout << endl;
+            pout << "T = " << endl << T << endl;
+            pout << "P = " << endl << P << endl;
+            pout << "Q = " << endl << Q << endl;
+            pout << "tmp_np = " << endl << tmp_np << endl;
+            pout << endl;
         }
         Mat U, Vt;
         Vec D;
         real safeguard = 1.1;
         SVD(tmp_np, U, D, Vt, 'S', safeguard);
         if (verbosity >= 2) {
-            cout << "U = " << endl << U << endl;  
-            cout << "D = " << endl << D << endl;
-            cout << "Vt = " << endl << Vt << endl;
-            cout << endl;
+            pout << "U = " << endl << U << endl;  
+            pout << "D = " << endl << D << endl;
+            pout << "Vt = " << endl << Vt << endl;
+            pout << endl;
         }
         
         Mat invDmat(p,p);
@@ -654,11 +654,11 @@ void WPLS::train()
         B.resize(p,1);
         productTranspose(B, W, Q);
         if (verbosity >= 2) {
-            cout << "W = " << W << endl;
-            cout << "B = " << B << endl;
+            pout << "W = " << W << endl;
+            pout << "B = " << B << endl;
         }
         if (verbosity >= 1)
-            cout << "WPLS training ended" << endl;
+            pout << "WPLS training ended" << endl;
     }
 }
 
