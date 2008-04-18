@@ -332,7 +332,7 @@ void TextFilesVMatrix::build_()
         buildIdx(); // (re)build it first!
     idxfile = fopen(idxfname.c_str(),"rb");
     if(fgetc(idxfile) != byte_order())
-        PLERROR("Wrong endianness. Remove the index file for it to be automatically rebuilt");
+        PLERROR("In TextFilesVMatrix::build_ - Wrong endianness. Remove the index file for it to be automatically rebuilt");
     fread(&length_, 4, 1, idxfile);
 
     // Initialize some sizes
@@ -352,7 +352,7 @@ void TextFilesVMatrix::build_()
 
     // Sanity checking
     if (delimiter.size() != 1)
-        PLERROR("TextFilesVMatrix: the 'delimiter' option '%s' must contain exactly one character",
+        PLERROR("In TextFilesVMatrix::build_ - the 'delimiter' option '%s' must contain exactly one character",
                 delimiter.c_str());
 }
 
@@ -365,7 +365,7 @@ string TextFilesVMatrix::getTextRow(int i) const
     FILE* f = txtfiles[(int)fileno];
     fseek(f,pos,SEEK_SET);
     if(!fgets(buf, sizeof(buf), f))
-        PLERROR("Problem in TextFilesVMatrix::getTextRow fgets for row %d returned NULL",i);
+        PLERROR("In TextFilesVMatrix::getTextRow - fgets for row %d returned NULL",i);
     return removenewline(buf);
 }
 
@@ -502,7 +502,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
 
     // strval not found
     if(!auto_extend_map)
-        PLERROR("No mapping found for field %d (%s) string-value \"%s\" ", fieldnum, fieldspec[fieldnum].first.c_str(), strval.c_str());
+        PLERROR("In TextFilesVMatrix::getMapping - No mapping found for field %d (%s) string-value \"%s\" ", fieldnum, fieldspec[fieldnum].first.c_str(), strval.c_str());
 
     // OK, let's extend the mapping...
     real val = real(-1000 - int(m.size()));
@@ -514,7 +514,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
         force_mkdir_for_file(fname);
         mapfiles[fieldnum] = fopen(fname.c_str(),"a");
         if(!mapfiles[fieldnum])
-            PLERROR("Could not open map file %s\n for appending\n",fname.c_str());
+            PLERROR("In TextFilesVMatrix::getMapping - Could not open map file %s\n for appending\n",fname.c_str());
     }
 
     fprintf(mapfiles[fieldnum],"\n\"%s\" %f", strval.c_str(), val);
@@ -531,7 +531,7 @@ TVec<string> TextFilesVMatrix::getTextFields(int i) const
     string rowi = getTextRow(i);
     TVec<string> fields =  splitIntoFields(rowi);
     if(fields.size() != fieldspec.size())
-        PLERROR("In getting fields of row %d, wrong number of fields: %d (should be %d):\n%s\n",i,fields.size(),fieldspec.size(),rowi.c_str());
+        PLERROR("In TextFilesVMatrix::getMapping - In getting fields of row %d, wrong number of fields: %d (should be %d):\n%s\n",i,fields.size(),fieldspec.size(),rowi.c_str());
     for(int k=0; k<fields.size(); k++)
         fields[k] = removeblanks(fields[k]);
     return fields;
@@ -671,11 +671,13 @@ void TextFilesVMatrix::transformStringToValue(int k, string strval, Vec dest) co
         else if(pl_isnumber(strval,&val)) {
             dest[0] = val;
             if (val <= 0) {
-                PLERROR("I didn't know a sas_date could be negative");
+                PLERROR("In TextFilesVMatrix::transformStringToValue - "
+                        "I didn't know a sas_date could be negative");
             }
         }
         else
-            PLERROR("Error while parsing a sas_date");
+            PLERROR("In TextFilesVMatrix::transformStringToValue - "
+                    "Error while parsing a sas_date");
     }
     else if(fieldtype=="YYYYMM")
     {
@@ -851,7 +853,8 @@ void TextFilesVMatrix::readAndCheckOptionName(PStream& in, const string& optionn
     in.skipBlanksAndComments();
     char eq = in.get();
     if(option!=optionname || eq!='=')
-        PLERROR("Bad syntax in .txtmat file.\n"
+        PLERROR("In TextFilesVMatrix::readAndCheckOptionName - "
+                "Bad syntax in .txtmat file.\n"
                 "Expected option %s = ...\n"
                 "Read %s %c\n", optionname.c_str(), option.c_str(), eq);
 }
