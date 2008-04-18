@@ -2584,7 +2584,7 @@ void DeepBeliefNet::computeOutputsAndCosts(const Mat& inputs, const Mat& targets
     {
         Vec in_i = inputs(isample);
         Vec out_i = outputs(isample); 
-	computeOutput(in_i, out_i);
+        computeOutput(in_i, out_i);
         if( !partial_costs.isEmpty() )
         {
             Vec pcosts;
@@ -2599,7 +2599,7 @@ void DeepBeliefNet::computeOutputsAndCosts(const Mat& inputs, const Mat& targets
                         << pcosts;
                 }
         }
-	if (reconstruct_layerwise)
+        if (reconstruct_layerwise)
            costs(isample).subVec(reconstruction_cost_index, reconstruction_costs.length())
                 << reconstruction_costs;
     }
