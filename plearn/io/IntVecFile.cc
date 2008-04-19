@@ -50,7 +50,7 @@ namespace PLearn {
 using namespace std;
 
 const char IntVecFile::signature[] = {
-    0xDE, 0xAD, 0xBE, 0xEF, 0x00               //!< deadbeef, really...
+    '\xDE', '\xAD', '\xBE', '\xEF', '\x00'     //!< deadbeef, really...
 };
 
 const int IntVecFile::header_size[] = {      //!< in number of ints

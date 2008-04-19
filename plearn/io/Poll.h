@@ -62,7 +62,7 @@ class Poll {
 public:
     void setStreamsToWatch(const vector<PStream>& streams);
 
-    int waitForEvents(int timeout = 0, bool shuffle_events_= false);
+    int waitForEvents(uint32_t timeout = 0, bool shuffle_events_= false);
 
     PStream getNextPendingEvent();
 

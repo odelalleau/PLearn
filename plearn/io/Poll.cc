@@ -71,7 +71,7 @@ void Poll::setStreamsToWatch(const vector<PStream>& streams) {
 
 }
 
-int Poll::waitForEvents(int timeout, bool shuffle_events_) 
+int Poll::waitForEvents(uint32_t timeout, bool shuffle_events_) 
 {
     if (m_poll_descriptors.size() == 0)
         PLERROR("Poll::waitforEvents: called with no streams to watch.");
