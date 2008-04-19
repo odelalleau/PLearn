@@ -1943,7 +1943,7 @@ void DeepBeliefNet::upDownStep( const Vec& input, const Vec& target,
     }
 
     // Updates
-    real nll;
+    real nll = 0.; // Actually unused
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
         // Update recognition weights
