@@ -294,7 +294,7 @@ void ConjGradientOptimizer::findDirection() {
         real delta_n = pownorm(delta);
         if (abs(dp) > restart_coeff *delta_n ) {
             if (verbosity >= 5)
-                cout << "Restart triggered !" << endl;
+                pout << "Restart triggered !" << endl;
             gamma = 0;
         }
     }
