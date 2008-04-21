@@ -66,7 +66,7 @@ public:
     string vector_logadd;
 
     //! Default constructor.
-    LogAddVariable() {}
+    LogAddVariable();
 
     //! Convenience constructor.
     LogAddVariable(Variable* input1, Variable* input2,

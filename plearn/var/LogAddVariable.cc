@@ -70,6 +70,11 @@ PLEARN_IMPLEMENT_OBJECT(
 ////////////////////
 // LogAddVariable //
 ////////////////////
+LogAddVariable::LogAddVariable():
+    vector_logadd("none"),
+    vector_logadd_id(0)
+{}
+    
 LogAddVariable::LogAddVariable(Variable* input1, Variable* input2,
                                const string& vl,
                                bool call_build_):
@@ -135,6 +140,9 @@ void LogAddVariable::build_()
             PLERROR("In LogAddVariable::build_ - input1 and input2 must "
                     "have the same size");
     }
+
+    // Need to rebuild since correct sizes depend on 'vector_logadd_id'.
+    inherited::build();
 }
 
 /////////////////////////////////
