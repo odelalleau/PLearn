@@ -67,7 +67,9 @@ RegressionTree::RegressionTree()
       loss_function_weight(1.0),
       maximum_number_of_nodes(400),
       compute_train_stats(1),
-      complexity_penalty_factor(0.0)
+      complexity_penalty_factor(0.0),
+      output_confidence_target(false)
+
 {
 }
 
@@ -91,6 +93,15 @@ void RegressionTree::declareOptions(OptionList& ol)
                   "A factor that is multiplied with the square root of the number of leaves.\n"
                   "If the error inprovement for the next split is less than the result, the algorithm proceed to an early stop."
                   "(When set to 0.0, the default value, it has no impact).");
+
+    declareOption(ol, "output_confidence_target",
+                  &RegressionTree::output_confidence_target,
+                  OptionBase::buildoption,
+                  "If false the output size is 1 and contain only the predicted"
+                  " target. Else output size is 2 and contain also the"
+                  " confidence\n");
+
+
     declareOption(ol, "multiclass_outputs", &RegressionTree::multiclass_outputs, OptionBase::buildoption,
                   "A vector of possible output values when solving a multiclass problem.\n"
                   "When making a prediction, the tree will adjust the output value of each leave to the closest value provided in this vector.");
@@ -182,6 +193,8 @@ void RegressionTree::build_()
             PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d",
                     weightsize);
         nodes = new TVec<PP<RegressionTreeNode> >();
+        if(!output_confidence_target)
+            tmp_vec.resize(2);
     }
 
     if (loss_function_weight != 0.0)
@@ -332,7 +345,10 @@ PP<RegressionTreeNode> RegressionTree::expandTree()
 
 int RegressionTree::outputsize() const
 {
-    return 2;
+    if(output_confidence_target)
+        return 2;
+    else
+        return 1;
 }
 
 TVec<string> RegressionTree::getTrainCostNames() const
@@ -364,13 +380,25 @@ TVec<string> RegressionTree::getTestCostNames() const
 
 void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
-    computeOutputAndNodes(inputv,outputv);
+    if(!output_confidence_target){
+        computeOutputAndNodes(inputv, tmp_vec);
+        outputv[0]=tmp_vec[0];
+    }
+    else
+        computeOutputAndNodes(inputv, outputv);
+        
 }
 
 void RegressionTree::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
                                            TVec<PP<RegressionTreeNode> >* nodes) const
 {
-    root->computeOutputAndNodes(inputv, outputv, nodes);
+    if(!output_confidence_target){
+        root->computeOutputAndNodes(inputv, tmp_vec, nodes);
+        outputv[0]=tmp_vec[0];
+    }
+    else
+        root->computeOutputAndNodes(inputv, outputv, nodes);
+
     if (multiclass_outputs.length() <= 0) return;
     real closest_value=multiclass_outputs[0];
     real margin_to_closest_value=abs(outputv[0] - multiclass_outputs[0]);
@@ -393,10 +421,17 @@ void RegressionTree::computeOutputAndCosts(const Vec& inputv,
     PLASSERT(costsv.size()==nTestCosts());
     PLASSERT(nodes);
     nodes->resize(0);
-    computeOutputAndNodes(inputv, outputv, nodes);
+
+    computeOutputAndNodes(inputv, tmp_vec, nodes);
+    if(!output_confidence_target)
+        outputv[0]=tmp_vec[0];
+    else
+        outputv<<tmp_vec;
+
     costsv.clear();
     costsv[0] = pow((outputv[0] - targetv[0]), 2);
-    costsv[1] = outputv[1];
+    
+    costsv[1] = tmp_vec[1];
     costsv[2] = 1.0 - (l2_loss_function_factor * costsv[0]);
     costsv[3] = 1.0 - (l1_loss_function_factor * abs(outputv[0] - targetv[0]));
     costsv[4] = !fast_is_equal(targetv[0],outputv[0]);

@@ -68,6 +68,7 @@ private:
     int maximum_number_of_nodes;
     int compute_train_stats;   
     real complexity_penalty_factor;
+    bool output_confidence_target;
     Vec multiclass_outputs;
     PP<RegressionTreeLeave> leave_template;    
     PP<RegressionTreeRegisters> sorted_train_set;
@@ -91,7 +92,7 @@ private:
     Vec       split_values;
     TVec<PP<RegressionTreeNode> > *nodes;
 
-    Vec tmp_vec;
+    mutable Vec tmp_vec;
 public:
     RegressionTree();
     virtual              ~RegressionTree();
