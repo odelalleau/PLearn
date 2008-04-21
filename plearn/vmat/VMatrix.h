@@ -484,6 +484,9 @@ public:
      */
     virtual void getExample(int i, Vec& input, Vec& target, real& weight);
 
+    //! Remote version of getExample.
+    boost::tuple<Vec, Vec, real> remote_getExample(int i);
+
     //! Obtain a subset of 'length' examples, starting from 'i_start'.
     //! The 'extra' matrix is provided as a pointer so that it can be omitted
     //! without significant overhead.

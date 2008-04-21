@@ -167,6 +167,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("row i vector")));
 
     declareMethod(
+        rmm, "getExample", &VMatrix::remote_getExample,
+        (BodyDoc("Returns the input, target and weight parts of a row.\n"),
+         ArgDoc ("i", "Position of the row to get.\n"),
+         RetDoc ("An (input, target, weight) tuple.")));
+
+    declareMethod(
         rmm, "getColumn", &VMatrix::remote_getColumn,
         (BodyDoc("Returns a row of a matrix \n"),
          ArgDoc ("i", "Position of the row to get.\n"),
@@ -587,6 +593,17 @@ void VMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
         PLERROR("In VMatrix::getExample, weightsize_ >1 not supported by this call");
     else
         weight = get(i,inputsize_+targetsize_);
+}
+
+///////////////////////
+// remote_getExample //
+///////////////////////
+boost::tuple<Vec, Vec, real> VMatrix::remote_getExample(int i)
+{
+    Vec input, target;
+    real weight;
+    getExample(i, input, target, weight);
+    return boost::tuple<Vec, Vec, real>(input, target, weight);
 }
 
 /////////////////
