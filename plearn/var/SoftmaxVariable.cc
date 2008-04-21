@@ -48,9 +48,11 @@ using namespace std;
 
 /** SoftmaxVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SoftmaxVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        SoftmaxVariable,
+       "Softmax of its input variable.",
+       ""
+);
 
 SoftmaxVariable::SoftmaxVariable(Variable* input) 
     : inherited(input, input->length(), input->width())
