@@ -45,19 +45,40 @@
 namespace PLearn {
 using namespace std;
 
-
-/** UnaryVariable **/
-
-UnaryVariable::UnaryVariable(Variable* v, int thelength, int thewidth)
-    : Variable(thelength,thewidth), input(v) 
-{}
-
-
 PLEARN_IMPLEMENT_OBJECT(
     UnaryVariable,
     "Variable that has a single parent.",
     ""
 );
+
+///////////////////
+// UnaryVariable //
+///////////////////
+UnaryVariable::UnaryVariable(Variable* v, int thelength, int thewidth,
+                             bool call_build_):
+    Variable(thelength, thewidth, call_build_),
+    input(v) 
+{
+    if (call_build_)
+        build_();
+}
+
+///////////
+// build //
+///////////
+void UnaryVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void UnaryVariable::build_()
+{
+    // Nothing to do here.
+}
 
 void UnaryVariable::declareOptions(OptionList& ol)
 {

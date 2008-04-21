@@ -51,24 +51,24 @@ using namespace std;
 
 class UnaryVariable: public Variable
 {
-public:
     typedef Variable inherited;
 
-public:
-
-    //!  Default constructor for persistence
-    UnaryVariable() {}
-
 protected:
-    static void declareOptions(OptionList & ol);
 
-protected:
     Var input;
 
 public:
-    UnaryVariable(Variable* v, int thelength, int thewidth);
+
+    //! Default constructor for persistence
+    UnaryVariable() {}
+
+    //! Convenience constructor.
+    UnaryVariable(Variable* v, int thelength, int thewidth,
+                  bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(UnaryVariable);
+
+    virtual void build();
   
     //! Set this Variable's input (simply call build after setting the new
     //! input).
@@ -97,6 +97,13 @@ public:
     //! will issue a PLERROR if any of the input or current value or gradient matrices are not contiguous.
     void checkContiguity() const;
 
+protected:
+
+    static void declareOptions(OptionList & ol);
+
+private:
+
+    void build_();
 };
 
 // Declares a few other classes and functions related to this class.
