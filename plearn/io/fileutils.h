@@ -58,6 +58,7 @@
 
 #include "PPath.h"
 #include "PStream.h"
+#include <nspr/prlong.h> //< for PRUint64
 
 namespace PLearn {
 using namespace std;
