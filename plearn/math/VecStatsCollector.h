@@ -224,6 +224,11 @@ public:
         getMean(mean);
         return mean;
     }
+
+    //! Remote version of getMean.
+    Vec remote_getMean() {
+        return getMean();
+    }
   
     //! Store the empirical mean in the given vec (which is resized)
     void getMean(Vec& mean) const;

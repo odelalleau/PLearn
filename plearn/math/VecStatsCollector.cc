@@ -211,6 +211,11 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Requested statistic (a real number).")));
 
     declareMethod(
+        rmm, "getMean", &VecStatsCollector::remote_getMean,
+        (BodyDoc("Return the mean of each field..\n"),
+         RetDoc ("The vector of means for each field.")));
+
+    declareMethod(
         rmm, "setFieldNames", &VecStatsCollector::setFieldNames,
         (BodyDoc("Set field names.\n"),
          ArgDoc ("fieldnames", 
