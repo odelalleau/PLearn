@@ -50,14 +50,41 @@ using namespace std;
 
 /** NegateElementsVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(NegateElementsVariable,
-                        "Elementwise negation and inversion...",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        NegateElementsVariable,
+        "Elementwise negation of the input value.",
+        ""
+);
 
-NegateElementsVariable::NegateElementsVariable(Variable* input)
-    : inherited(input, input->length(), input->width())
-{}
+////////////////////////////
+// NegateElementsVariable //
+////////////////////////////
+NegateElementsVariable::NegateElementsVariable(Variable* input,
+                                               bool call_build_):
+    inherited(input, input->length(), input->width(), call_build_)
+{
+    if (call_build_)
+        build_();
+}
 
+
+///////////
+// build //
+///////////
+void NegateElementsVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+
+////////////
+// build_ //
+////////////
+void NegateElementsVariable::build_()
+{
+    // Nothing to do here.
+}
 
 void NegateElementsVariable::recomputeSize(int& l, int& w) const
 {

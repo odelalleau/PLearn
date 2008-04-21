@@ -49,18 +49,21 @@ namespace PLearn {
 using namespace std;
 
 
-/*! * Elementwise negation and inversion... * */
-
 class NegateElementsVariable: public UnaryVariable
 {
     typedef UnaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    //! Default constructor.
     NegateElementsVariable() {}
-    NegateElementsVariable(Variable* input);
+
+    //! Convenience constructor.
+    NegateElementsVariable(Variable* input, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(NegateElementsVariable);
+
+    virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;
     
@@ -69,6 +72,11 @@ public:
     virtual void bbprop();
     virtual void symbolicBprop();
     virtual void rfprop();
+
+private:
+
+    void build_();
+
 };
 
 DECLARE_OBJECT_PTR(NegateElementsVariable);
