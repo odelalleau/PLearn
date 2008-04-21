@@ -50,18 +50,27 @@ using namespace std;
 
 /** TimesScalarVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(TimesScalarVariable,
-                        "Multiplies a matrix var by a scalar var",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        TimesScalarVariable,
+       "Multiplies a matrix variable by a scalar variable.",
+       "The first input is the matrix, while the second one is the scalar."
+);
 
-TimesScalarVariable::TimesScalarVariable(Variable* input1, Variable* input2)
-    : inherited(input1, input2, input1->length(), input1->width())
+/////////////////////////
+// TimesScalarVariable //
+/////////////////////////
+TimesScalarVariable::TimesScalarVariable(Variable* input1, Variable* input2,
+                                         bool call_build_):
+    inherited(input1, input2, input1->length(), input1->width(), call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-TimesScalarVariable::build()
+///////////
+// build //
+///////////
+void TimesScalarVariable::build()
 {
     inherited::build();
     build_();

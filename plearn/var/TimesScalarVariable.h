@@ -55,9 +55,13 @@ class TimesScalarVariable: public BinaryVariable
     typedef BinaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    //! Default constructor.
     TimesScalarVariable() {}
-    TimesScalarVariable(Variable* input1, Variable* input2);
+
+    //! Convenience constructor.
+    TimesScalarVariable(Variable* input1, Variable* input2,
+                        bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(TimesScalarVariable);
 
@@ -69,7 +73,8 @@ public:
     virtual void symbolicBprop();
     virtual void rfprop();
 
-protected:
+private:
+
     void build_();
 };
 
