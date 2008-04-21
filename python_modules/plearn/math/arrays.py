@@ -39,6 +39,9 @@ from numpy.numarray.linear_algebra import inverse as __numarray_inverse
 from numpy.numarray.linear_algebra import determinant
 from numpy import *
 import numpy.numarray as ufunc #most ufuncs are part of the numpy module
+import numpy
+
+import plearn.math
 
 def _2D_shape(M):
     if len(M.shape)==1:
@@ -224,6 +227,23 @@ def any(x):
 
 def all(x):
     return logical_and.reduce(ravel(x))
+
+def vectorLogadd(v):
+    """Logadd on a vector."""
+    if len(v) == 0:
+        return -numpy.inf
+    result = v[0]
+    for i in range(1, len(v)):
+        result = plearn.math.logadd(result, v[i])
+    return result
+
+def columnLogadd(m):
+    """Logadd on columns of a matrix."""
+    n_cols = m.shape[1]
+    result = numpy.zeros(n_cols)
+    for i in range(n_cols):
+        result[i] = vectorLogadd(m[:, i])
+    return result
 
 if __name__ == '__main__':
     a = array(range(10))
