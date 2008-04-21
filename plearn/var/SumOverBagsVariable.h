@@ -89,7 +89,9 @@ public:
     //!   last_column_of_target == 1+2==3 ==> single-row bag (both first and last)
     //! the last column of the target is not given in the call to f, but a bag_size input is provided instead.
     //! The inputs to f are: (matrix of bag inputs, the bag size, the bag target, the bag weight).
-    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize, int nsamples, bool average, bool transpose = false);
+    SumOverBagsVariable(VMat the_vmat, Func the_f, int maxbagsize,
+                        int nsamples, bool average,
+                        bool transpose = false, bool call_build_ = true);
 
     //! Tags to use in the vmat given to this variable.
     static const int TARGET_COLUMN_FIRST = 1;

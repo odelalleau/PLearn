@@ -75,25 +75,29 @@ PLEARN_IMPLEMENT_OBJECT(SumOverBagsVariable, "Variable that sums the value of a 
 /////////////////////////
 // SumOverBagsVariable //
 /////////////////////////
-SumOverBagsVariable::SumOverBagsVariable()
-    : vmat(), f(),
-      average(0),
-      max_bag_size(-1), n_samples(1),
-      transpose(0),
-      curpos()
+SumOverBagsVariable::SumOverBagsVariable():
+    average(false),
+    max_bag_size(-1),
+    n_samples(1),
+    transpose(false),
+    curpos()
 {}
 
-SumOverBagsVariable::SumOverBagsVariable(VMat the_vmat, Func the_f, int max_bagsize, int nsamples, bool the_average, bool the_transpose)
-    : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
-                the_f->outputs[0]->length(), 
-                the_f->outputs[0]->width()),
-      vmat(the_vmat), f(the_f),
-      average(the_average),
-      max_bag_size(max_bagsize), n_samples(nsamples),
-      transpose(the_transpose),
-      curpos(0), bag_size(0)
+SumOverBagsVariable::SumOverBagsVariable(
+        VMat the_vmat, Func the_f, int max_bagsize, int nsamples,
+        bool the_average, bool the_transpose, bool call_build_):
+    inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
+            the_f->outputs[0]->length(), 
+            the_f->outputs[0]->width(),
+            call_build_),
+    vmat(the_vmat), f(the_f),
+    average(the_average),
+    max_bag_size(max_bagsize), n_samples(nsamples),
+    transpose(the_transpose),
+    curpos(0), bag_size(0)
 {
-    build();
+    if (call_build_)
+        build_();
 }
 
 ///////////
@@ -112,6 +116,12 @@ void SumOverBagsVariable::build_()
 {
     if (vmat)
     {
+        PLASSERT( f );
+
+        varray = nonInputParentsOfPath(f->inputs, f->outputs);
+        // We need to rebuild the parent class since a build option changed.
+        inherited::build();
+
         if (f->outputs.size()!=1)
             PLERROR("SumOverBagsVariable: expected a func with a single output variable (you may use concat to form a single output Var)");
         if (vmat->weightsize()!=0 && vmat->weightsize()!=1)
