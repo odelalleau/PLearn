@@ -62,7 +62,7 @@ SourceVariable::SourceVariable():
     random_type("none"),
     random_a(0.),
     random_b(1.),
-    random_clear_first_row(0)
+    random_clear_first_row(false)
 {}
 
 SourceVariable::SourceVariable(int thelength, int thewidth, bool call_build_):
@@ -72,7 +72,7 @@ SourceVariable::SourceVariable(int thelength, int thewidth, bool call_build_):
     random_type("none"),
     random_a(0.),
     random_b(1.),
-    random_clear_first_row(0)
+    random_clear_first_row(false)
 {
     if (call_build_)
         build_();
@@ -86,7 +86,7 @@ SourceVariable::SourceVariable(const Vec& v, bool vertical, bool call_build_):
     random_type("none"),
     random_a(0.),
     random_b(1.),
-    random_clear_first_row(0)
+    random_clear_first_row(false)
 {
     if (call_build_)
         build_();
@@ -99,7 +99,7 @@ SourceVariable::SourceVariable(const Mat& m, bool call_build_):
     random_type("none"),
     random_a(0.),
     random_b(1.),
-    random_clear_first_row(0)
+    random_clear_first_row(false)
 {
     if (call_build_)
         build_();
