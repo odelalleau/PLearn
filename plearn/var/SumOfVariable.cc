@@ -65,38 +65,63 @@ PLEARN_IMPLEMENT_OBJECT(
     "the VMatrix we are summing over).\n");
     
 
-SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples,bool the_do_sizeprop)
-    : inherited(nonInputParentsOfPath(the_f->inputs,the_f->outputs), 
-                the_f->outputs[0]->length(), 
-                the_f->outputs[0]->width()),
-      distr(the_distr), f(the_f), nsamples(the_nsamples), curpos(0), loop(false),
-      //input_value(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
-      //input_gradient(the_distr->inputsize()+the_distr->targetsize()+the_distr->weightsize()), 
-      input_value(the_distr->width()),
-      input_gradient(the_distr->width()),
-      output_value(the_f->outputs[0]->size()),
-      do_sizeprop(the_do_sizeprop)
+///////////////////
+// SumOfVariable //
+///////////////////
+SumOfVariable::SumOfVariable():
+    nsamples(0),
+    curpos(0),
+    loop(false),
+    do_sizeprop(false)
+{}
+
+SumOfVariable::SumOfVariable(VMat the_distr, Func the_f, int the_nsamples,
+                             bool the_do_sizeprop, bool call_build_):
+    inherited(nonInputParentsOfPath(the_f->inputs, the_f->outputs), 
+            the_f->outputs[0]->length(), 
+            the_f->outputs[0]->width(),
+            call_build_),
+    distr(the_distr),
+    f(the_f),
+    nsamples(the_nsamples),
+    curpos(0),
+    loop(false),
+    input_value(the_distr->width()),
+    input_gradient(the_distr->width()),
+    output_value(the_f->outputs[0]->size()),
+    do_sizeprop(the_do_sizeprop)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-SumOfVariable::build()
+///////////
+// build //
+///////////
+void SumOfVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-SumOfVariable::build_()
+////////////
+// build_ //
+////////////
+void SumOfVariable::build_()
 {
     if (f && distr) 
     {
+        varray = nonInputParentsOfPath(f->inputs, f->outputs);
+        // We need to rebuild the parent class since a build option changed.
+        inherited::build();
+
         input_value.resize(distr->inputsize() + distr->targetsize() + distr->weightsize());
         input_gradient.resize(distr->inputsize() + distr->targetsize() + distr->weightsize());
         if(f->outputs.size() != 1)
-            PLERROR("In SumOfVariable: function must have a single variable output (maybe you can vconcat the vars into a single one prior to calling sumOf, if this is really what you want)");
-
+            PLERROR("In SumOfVariable::build_: function must have a single "
+                    "variable output (maybe you can vconcat the vars into a "
+                    "single one prior to calling sumOf, if this is really "
+                    "what you want)");
         if(nsamples == -1)
             nsamples = distr->length();
         f->inputs.setDontBpropHere(true);

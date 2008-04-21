@@ -88,11 +88,14 @@ public:
     int endpos;
     
 public:
-    //!  protected default constructor for persistence
-    SumOfVariable() : distr(), f(), nsamples(0), curpos(0), loop(false) {}
 
-    //!  Sum_{inputs \in distr} f(inputs)
-    SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1, bool the_do_resizeprop=false);
+    //! Default constructor.
+    SumOfVariable();
+
+    //! Convenience constructor.
+    SumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1,
+                  bool the_do_resizeprop = false,
+                  bool call_build_ = true);
     
     PLEARN_DECLARE_OBJECT(SumOfVariable);
     static void declareOptions(OptionList &ol);
