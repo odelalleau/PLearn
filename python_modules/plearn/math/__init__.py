@@ -47,3 +47,17 @@ def floats_are_equal(a, b, numtol=1e-6):
     if minabs<1.0:
         return abs(a-b) <= numtol
     return abs(a-b) <= numtol*minabs
+
+def logadd(log_a, log_b):
+    """Stable computation of log(exp(log_a) + exp(log_b))."""
+    if log_a < log_b:
+        tmp = log_a
+        log_a = log_b
+        log_b = tmp
+    elif log_a == log_b:
+        return math.log(2.0) + log_a
+    negative_absolute_difference = log_b - log_a
+    if negative_absolute_difference < -18.42:
+        return log_a
+    return log_a + math.log(1.0 + math.exp(negative_absolute_difference))
+
