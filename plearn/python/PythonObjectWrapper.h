@@ -82,6 +82,7 @@ namespace PLearn {
 class PythonObjectWrapper;                   // Forward-declare
 class Object;
 class VMatrix;
+class VarArray;
 
 //! Used for error reporting.  If 'print_traceback' is true, a full
 //! Python traceback is printed to stderr.  Otherwise, raise PLERROR.
@@ -444,6 +445,13 @@ struct ConvertFromPyObject<CopiesMap>
     static CopiesMap convert(PyObject*, bool print_traceback);
 };
 
+template <>
+struct ConvertFromPyObject<VarArray>
+{
+    static VarArray convert(PyObject*, bool print_traceback);
+};
+
+
 
 //! Used to convert integer values to python, using PyInt if possible
 template <class I>
@@ -654,6 +662,8 @@ template<> struct ConvertToPyObject<PythonObjectWrapper>
 template<> struct ConvertToPyObject<CopiesMap>
 { static PyObject* newPyObject(const CopiesMap& copies); };
 
+template <> struct ConvertToPyObject<VarArray>
+{ static PyObject* newPyObject(const VarArray&); };
 
 struct PLPyClass
 {

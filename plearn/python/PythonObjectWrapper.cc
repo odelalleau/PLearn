@@ -55,6 +55,7 @@
 #include <plearn/vmat/VMat.h>
 #include <plearn/base/RemoteTrampoline.h>
 #include <plearn/base/HelpSystem.h>
+#include <plearn/var/VarArray.h>
 
 namespace PLearn {
 using namespace std;
@@ -295,6 +296,12 @@ CopiesMap ConvertFromPyObject<CopiesMap>::convert(PyObject* pyobj,
                                 PyCObject_AsVoidPtr(val)));
     }
     return copies;
+}
+
+VarArray ConvertFromPyObject<VarArray>::convert(PyObject* pyobj,
+                                                bool print_traceback)
+{
+    return static_cast<VarArray>(ConvertFromPyObject<TVec<Var> >::convert(pyobj, print_traceback));
 }
 
 //#####  Constructors+Destructors  ############################################
@@ -719,6 +726,11 @@ PyObject* ConvertToPyObject<CopiesMap>::newPyObject(const CopiesMap& copies)
                     "into Python dict");
     }
     return pyobj;
+}
+
+PyObject* ConvertToPyObject<VarArray>::newPyObject(const VarArray& var)
+{
+    return ConvertToPyObject<TVec<Var> >::newPyObject(var);
 }
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v)
