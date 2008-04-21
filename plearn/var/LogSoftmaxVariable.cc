@@ -48,13 +48,37 @@ using namespace std;
 
 /** LogSoftmaxVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(LogSoftmaxVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        LogSoftmaxVariable,
+        "Compute the logarithm of the softmax of its input.",
+        "This is more stable than combinining a softmax and a logarithm."
+);
 
-LogSoftmaxVariable::LogSoftmaxVariable(Variable* input) 
-    : inherited(input, input->length(), input->width())
+////////////////////////
+// LogSoftmaxVariable //
+////////////////////////
+LogSoftmaxVariable::LogSoftmaxVariable(Variable* input, bool call_build_):
+    inherited(input, input->length(), input->width(), call_build_)
 {
+    if (call_build_)
+        build_();
+}
+
+///////////
+// build //
+///////////
+void LogSoftmaxVariable::build()
+{
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void LogSoftmaxVariable::build_()
+{
+    // Nothing to do here.
 }
 
 void LogSoftmaxVariable::recomputeSize(int& l, int& w) const

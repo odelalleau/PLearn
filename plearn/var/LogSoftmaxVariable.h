@@ -54,9 +54,12 @@ class LogSoftmaxVariable: public UnaryVariable
     typedef UnaryVariable inherited;
 
 public:
-    //! Default constructor for pestilence
+
+    //! Default constructor.
     LogSoftmaxVariable() {};
-    LogSoftmaxVariable(Variable *input);
+
+    //! Convenience constructor.
+    LogSoftmaxVariable(Variable* input, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(LogSoftmaxVariable);
 
@@ -65,6 +68,13 @@ public:
     virtual void bprop();
     virtual void bbprop();
     virtual void symbolicBprop();
+
+    virtual void build();
+
+private:
+
+    void build_();
+
 }; // class LogSoftmaxVariable
 
 DECLARE_OBJECT_PTR(LogSoftmaxVariable);
