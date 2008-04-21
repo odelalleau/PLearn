@@ -45,7 +45,7 @@
 #define FileVMatrix_INC
 
 #include "RowBufferedVMatrix.h"
-
+#include <nspr/prlong.h>
 // While under development, we use this define to control
 // whether to use the NSPR 64 bit file access or the old std C FILE*
 #define USE_NSPR_FILE

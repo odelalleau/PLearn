@@ -272,6 +272,20 @@ void FileVMatrix::build_()
             map_sr = TVec<map<string,real> >(width_);
             map_rs = TVec<map<real,string> >(width_);
         }
+#ifdef USE_NSPR_FILE
+        //check if the file have all data
+        PRFileInfo64 info;
+        if(PR_FAILURE==PR_GetFileInfo64(filename_.absolute().c_str(), &info))
+            PLERROR("In FileVMatrix::build_() - can't get file info for file '%s'",
+                    filename_.c_str());
+        PRInt64 elemsize = file_is_float ? sizeof(float) : sizeof(double);
+        PRInt64 expectedsize=DATAFILE_HEADERLENGTH+length_*width_*elemsize;
+        if(info.size!=expectedsize)
+            PLWARNING("In FileVMatrix::build_() - The file '%s' have a size"
+                      " of %d, expected %d",
+                      filename_.c_str(), info.size, expectedsize);
+#endif
+        
     }
 
     setMetaDataDir(filename_ + ".metadata");
