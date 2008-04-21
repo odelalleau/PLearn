@@ -33,6 +33,7 @@
             loss_function_weight = 1,
             maximum_number_of_nodes = 50,
             nstages = 10,
+            output_confidence_target = 1,
             report_progress = 1,
             verbosity = 2
             ),

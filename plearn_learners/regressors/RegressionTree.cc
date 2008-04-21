@@ -193,8 +193,7 @@ void RegressionTree::build_()
             PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d",
                     weightsize);
         nodes = new TVec<PP<RegressionTreeNode> >();
-        if(!output_confidence_target)
-            tmp_vec.resize(2);
+        tmp_vec.resize(2);
     }
 
     if (loss_function_weight != 0.0)

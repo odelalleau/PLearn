@@ -41,7 +41,8 @@ round_to_closest = 0 ;
 splits = 1  3  [ 
 (0 , 1 )	(0 , 200 )	(200 , 1 )	
 ]
- )
+;
+one_is_absolute = 0  )
 ;
 statnames = 8 [ "E[test1.E[class_error]]" "E[test1.E[base_confidence]]" "E[test1.E[base_reward_l2]]" "E[test1.E[base_reward_l1]]" "E[test2.E[class_error]]" "E[test2.E[base_confidence]]" "E[test2.E[base_reward_l2]]" "E[test2.E[base_reward_l1]]" ] ;
 statmask = []
@@ -55,7 +56,8 @@ round_to_closest = 0 ;
 splits = 1  3  [ 
 (0 , 200 )	(0 , 200 )	(200 , 1 )	
 ]
- )
+;
+one_is_absolute = 0  )
 ;
 statnames = 8 [ "E[test1.E[class_error]]" "E[test1.E[base_confidence]]" "E[test1.E[base_reward_l2]]" "E[test1.E[base_reward_l1]]" "E[test2.E[class_error]]" "E[test2.E[base_confidence]]" "E[test2.E[base_reward_l2]]" "E[test2.E[base_reward_l1]]" ] ;
 statmask = []
@@ -66,6 +68,7 @@ loss_function_weight = 1 ;
 maximum_number_of_nodes = 50 ;
 compute_train_stats = 1 ;
 complexity_penalty_factor = 0 ;
+output_confidence_target = 1 ;
 multiclass_outputs = []
 ;
 leave_template = *9 ->RegressionTreeMulticlassLeave(
@@ -161,7 +164,8 @@ sub_strategy = []
 rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
 save_best_learner = 0 ;
-splitter = *0  )
+splitter = *0 ;
+verbosity = 0  )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 0 ;
