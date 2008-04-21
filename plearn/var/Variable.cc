@@ -245,6 +245,9 @@ Variable::Variable(const Variable& v)
 {}
 
 
+////////////////////
+// declareOptions //
+////////////////////
 void Variable::declareOptions(OptionList& ol)
 {
     declareOption(ol, "varname", &Variable::varname, OptionBase::buildoption, 
@@ -265,6 +268,26 @@ void Variable::declareOptions(OptionList& ol)
     */
 
     inherited::declareOptions(ol);
+}
+
+////////////////////
+// declareMethods //
+////////////////////
+void Variable::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+            rmm, "fillValue", &Variable::fillValue,
+            (BodyDoc("Fill value with the given constant"),
+             ArgDoc ("val", "Value to fill with")));
+
+    declareMethod(
+            rmm, "fprop", &Variable::fprop,
+            (BodyDoc("Update value of this Var")));
+
 }
 
 ////////////

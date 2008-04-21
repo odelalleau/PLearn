@@ -116,6 +116,9 @@ public:
 
 protected:
     static void declareOptions(OptionList & ol);
+
+    //! Declare the methods that are remote-callable.
+    static void declareMethods(RemoteMethodMap& rmm);
   
     friend class Var;
     friend class RandomVariable;
@@ -273,6 +276,7 @@ public:
     bool isMarked() { return marked; }
 
     void fillGradient(real value) { gradient.fill(value); }
+    void fillValue(real val) { value.fill(val); }
     void clearRowsToUpdate()
     {
         rows_to_update.resize(0);
