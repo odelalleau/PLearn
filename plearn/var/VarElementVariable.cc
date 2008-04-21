@@ -49,25 +49,39 @@ using namespace std;
 
 /** VarElementVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(VarElementVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+    VarElementVariable,
+    "Variable that is the element of input1 indexed by input2.",
+    "If input2 has 2 elements, it is interpreted as a (i,j) pair of indices\n"
+    "in the matrix view of input1.\n"
+    "If input2 is scalar, it is interpreted as the index in the vector view\n"
+    "of input1."
+);
 
-VarElementVariable::VarElementVariable(Variable* input1, Variable* input2)
-    : inherited(input1, input2, 1, 1)
+////////////////////////
+// VarElementVariable //
+////////////////////////
+VarElementVariable::VarElementVariable(Variable* input1, Variable* input2,
+                                       bool call_build_):
+    inherited(input1, input2, 1, 1, call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-VarElementVariable::build()
+///////////
+// build //
+///////////
+void VarElementVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-VarElementVariable::build_()
+////////////
+// build_ //
+////////////
+void VarElementVariable::build_()
 {
     if (input2 && input2->nelems() > 2)
         PLERROR("IN VarElementVariable(Variable* input1, Variable* input2) input2 must have 1 (a k position index) or 2 elements (an i,j position index)");

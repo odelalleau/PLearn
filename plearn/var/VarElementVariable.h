@@ -49,19 +49,18 @@ namespace PLearn {
 using namespace std;
 
 
-/*!   Variable that is the element of the input1 variable indexed 
-  by the input2 variable.
-  If input2 has 2 elements, they are interpreted as the (i,j) indexes
-  If input2 is a scalar, it is interpreted as the k index of a vec view of input1
-*/
 class VarElementVariable: public BinaryVariable
 {
     typedef BinaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    //! Default constructor.
     VarElementVariable() {}
-    VarElementVariable(Variable* input1, Variable* input2);
+
+    //! Convenience constructor.
+    VarElementVariable(Variable* input1, Variable* input2,
+                       bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(VarElementVariable);
 
@@ -74,8 +73,10 @@ public:
     virtual void symbolicBprop();
     virtual void rfprop();
 
-protected:
+private:
+
     void build_();
+
 };
 
 DECLARE_OBJECT_PTR(VarElementVariable);
