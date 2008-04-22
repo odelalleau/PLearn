@@ -94,7 +94,33 @@ void Optimizer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "nstages", &Optimizer::nstages, OptionBase::buildoption, 
         "Number of iterations to perform on the next call to optimizeN(..).");
+
+    declareOption(ol, "early_stop", &Optimizer::early_stop,
+                  OptionBase::learntoption, 
+        "Whether an early stopping criterion has been met.");
+
     inherited::declareOptions(ol);
+}
+
+////////////////////
+// declareMethods //
+////////////////////
+void Optimizer::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this
+    // different than for declareOptions()
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+        
+    declareMethod(rmm, "setToOptimize", &Optimizer::remote_setToOptimize,
+            (BodyDoc("Set cost to minimize with respect to given parameters"),
+             ArgDoc("params", "List of parameters (variables) to optimize"),
+             ArgDoc("cost", "Cost to be minimized")));
+
+    declareMethod(rmm, "optimizeN", &Optimizer::remote_optimizeN,
+            (BodyDoc("Launch nstages steps of optimization."),
+             ArgDoc("stats", "VecStatsCollector to collect training statistics"),
+             RetDoc("Boolean value indicating whether a stopping criterion "
+                    "has been met.")));
 }
 
 ///////////////////
@@ -116,6 +142,14 @@ void Optimizer::setToOptimize(const VarArray& the_params, Var the_cost, VarArray
     for(int i=0; i<other_proppaths.length(); i++)
         other_proppaths[i] = propagationPath(other_params[i],other_costs[i]);
     other_weight = the_other_weight;
+}
+
+//////////////////////////
+// remote_setToOptimize //
+//////////////////////////
+void Optimizer::remote_setToOptimize(const VarArray& params, Var cost)
+{
+    setToOptimize(params, cost);
 }
 
 /*

@@ -104,6 +104,9 @@ public:
 
     virtual void setToOptimize(const VarArray& the_params, Var the_cost, VarArray the_other_costs = VarArray(0), TVec<VarArray> the_other_params = TVec<VarArray>(0), real the_other_weight = 1);
 
+    //! Remote version of setToOptimize.
+    void remote_setToOptimize(const VarArray& params, Var cost);
+
     /*
     virtual void setVarArrayOption(const string& optionname,
                                    const VarArray& value);
@@ -126,6 +129,11 @@ public:
      * }
      * return false
      */
+
+    bool remote_optimizeN(PP<VecStatsCollector> stats_coll) {
+        PLASSERT( stats_coll.isNotNull() );
+        return optimizeN(*stats_coll);
+    }
       
     //!  verify gradient with uniform random initialization of parameters
     //!  using step for the finite difference approximation of the gradient
@@ -143,6 +151,9 @@ public:
 protected:
 
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable.
+    static void declareMethods(RemoteMethodMap& rmm);
 
 public:
 
