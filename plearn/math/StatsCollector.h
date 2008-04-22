@@ -236,10 +236,13 @@ public:
     real nmissing() const               { return nmissing_; }
     real nnonmissing() const            { return nnonmissing_; }
     real sumsquarew() const             { return sumsquarew_; }
-    real sum() const                    { return real(sum_+nnonmissing_*first_); }
-    //real sumsquare() const { return real(sumsquare_); }
-    real sumsquare() const              { return real(sumsquare_+2*first_*sum() -
-                                                      first_*first_*nnonmissing_); }
+    real sum() const                    { return real(nnonmissing_ > 0
+                                                ? sum_ + nnonmissing_*first_
+                                                : 0); }
+    real sumsquare() const              { return real(nnonmissing_ > 0
+                                                ? sumsquare_+2*first_*sum() -
+                                                    first_*first_*nnonmissing_
+                                                : 0); }
     real min() const                    { return min_; }
     real max() const                    { return max_; }
     real agemin() const                 { return agemin_; }
