@@ -164,8 +164,7 @@ sub_strategy = []
 rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
 save_best_learner = 0 ;
-splitter = *0 ;
-verbosity = 0  )
+splitter = *0 )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 0 ;
