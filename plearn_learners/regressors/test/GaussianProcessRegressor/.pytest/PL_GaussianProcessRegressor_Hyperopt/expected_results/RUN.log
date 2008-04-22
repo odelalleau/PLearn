@@ -58,7 +58,8 @@ max_eval_per_line_search = 20 ;
 slope_ratio = 10 ;
 minibatch_n_samples = 0 ;
 minibatch_n_line_searches = 3 ;
-nstages = 1  )
+nstages = 1 ;
+early_stop = 0  )
 ;
 save_gram_matrix = 0 ;
 alpha = 5  1  [ 
