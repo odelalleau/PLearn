@@ -207,8 +207,10 @@ void ToBagClassifier::updateCostAndBagOutput(const Vec& target,
 #endif
         return;
     }
-
-    PLASSERT( sum(output) < 1.001 & sum(output) > 0.999);
+    // Ensure the distribution probabilities sum to 1. We relax a
+    // bit the default tolerance as probabilities using
+    // exponentials could suffer numerical imprecisions.
+    PLASSERT( is_equal( sum(output), 1., 1., 1e-5, 1e-5 ) );
     bag_output.appendRow(output);
     if (bag_info & SumOverBagsVariable::TARGET_COLUMN_LAST) {
         // Perform majority vote.

@@ -151,7 +151,7 @@ void NLLCostModule::fprop(const TVec<Mat*>& ports_value)
 
         for( int i=0; i<batch_size; i++ )
         {
-            if( (*prediction)(i).hasMissing() )
+            if( (*prediction)(i).hasMissing() || is_missing((*target)(i,0)) )
                 (*cost)(i,0) = MISSING_VALUE;
             else
             {
