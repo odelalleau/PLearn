@@ -143,24 +143,31 @@ class PyPLearnOptionsHolder( object ):
 
 class PyPLearnOptionsDialog( GladeDialog ):
     """Class which is inialized with a PyPLearnScript code (string) and
-    creates a dialog box to query the script options.
+    creates a dialog box to query the script options. If the argument
+    include_standard_script_options is set to false, the tabs for the expdir,
+    logging and manual overrides will not be created.
     """
-    def __init__( self, options_holder ):
+    def __init__( self, options_holder, include_standard_script_options=True ):
         GladeDialog.__init__(self, gladeFile())
         self.options_holder = options_holder
-        self.set_title('Script Options ['+options_holder.script_name+']')
-        
-        ## Fill out the first page of notebook
-        self.w_launch_directory.set_text(options_holder.launch_directory)
-        for v in options_holder.log_verbosities:
-            self.w_plearn_log_verbosity.append_text(v)
-        self.w_plearn_log_verbosity.set_active(options_holder.log_verbosity)
-        self.w_named_logs_activate.set_text(' '.join(options_holder.log_enable))
+        self.set_title('Script Options [' + options_holder.script_name + ']')
+        self.include_standard_script_options = include_standard_script_options
 
-        ## Fill out the manual overrides page
-        buf = gtk.TextBuffer()
-        buf.set_text('\n'.join(options_holder.option_overrides))
-        self.w_manual_script_options.set_buffer(buf)
+        if self.include_standard_script_options:
+            ## Fill out the first page of notebook
+            self.w_launch_directory.set_text(options_holder.launch_directory)
+            for v in options_holder.log_verbosities:
+                self.w_plearn_log_verbosity.append_text(v)
+            self.w_plearn_log_verbosity.set_active(options_holder.log_verbosity)
+            self.w_named_logs_activate.set_text(' '.join(options_holder.log_enable))
+
+            ## Fill out the manual overrides page
+            buf = gtk.TextBuffer()
+            buf.set_text('\n'.join(options_holder.option_overrides))
+            self.w_manual_script_options.set_buffer(buf)
+        else:
+            self.w_option_groups.remove_page(0)
+            self.w_option_groups.remove_page(0)
 
         ## This holds a map from a widget-value-getting function to the
         ## associated group/field of the OptionsHolder.  Used to update the
@@ -366,15 +373,16 @@ class PyPLearnOptionsDialog( GladeDialog ):
             if value!='None' and opt.cast(value) != dftval:
                 group.set(option_name, value)
 
-        ## Updates from the first page of the dialog
-        self.options_holder.launch_directory = self.w_launch_directory.get_text()
-        self.options_holder.log_verbosity    = self.w_plearn_log_verbosity.get_active()
-        self.options_holder.log_enable       = self.w_named_logs_activate.get_text().split()
+        if self.include_standard_script_options:
+            ## Updates from the first page of the dialog
+            self.options_holder.launch_directory = self.w_launch_directory.get_text()
+            self.options_holder.log_verbosity    = self.w_plearn_log_verbosity.get_active()
+            self.options_holder.log_enable       = self.w_named_logs_activate.get_text().split()
 
-        ## Updates from manual overrides
-        buf  = self.w_manual_script_options.get_buffer()
-        text = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
-        self.options_holder.option_overrides = text.split()
+            ## Updates from manual overrides
+            buf  = self.w_manual_script_options.get_buffer()
+            text = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
+            self.options_holder.option_overrides = text.split()
 
     def on_pick_directory_clicked( self, button ):
         chooser = gtk.FileChooserDialog(

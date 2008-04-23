@@ -114,3 +114,26 @@ def optionsDialog(name, expdir, verbosity, named_logging, namespaces):
     return result == gtk.RESPONSE_OK, \
            options_holder.verbosity_map.get(options_holder.log_verbosity, 5), \
            options_holder.log_enable
+
+def simpleOptionsDialog(plnamespaces, name=''):
+    """Pops a dialog showing only the given plnamespaces. No extra
+    tabs (expdir, verbosity, manual overrides) added.
+
+    @param plnamespaces   A list of strings naming the plnamespace subclasses.
+    @return True if the user clicked ok, false otherwise."""
+    
+    from plearn.plide.plide_options import PyPLearnOptionsDialog, PyPLearnOptionsHolder
+    import gtk
+    
+    PyPLearnOptionsDialog.define_injected(None, gladeFile)
+    options_holder = PyPLearnOptionsHolder(name, None, '', plnamespaces)
+    
+    options_dialog = PyPLearnOptionsDialog(options_holder,
+                                           include_standard_script_options=False)
+    result = options_dialog.run()
+    if result == gtk.RESPONSE_OK:
+        options_dialog.update_options_holder()
+    options_dialog.destroy()
+    del options_dialog
+
+    return result == gtk.RESPONSE_OK
