@@ -558,9 +558,8 @@ def computeOutputsTargets(learner,dataSet):
        targetsize = dataSet.targetsize,
        weightsize=0,
        indices = range(dataSet.inputsize, dataSet.inputsize+dataSet.targetsize)
-    ).getMat()
-    return outputs, [int(target) for target in targets]
-
+    )
+    return outputs, targets
     
 if __name__ == '__main__':
 
