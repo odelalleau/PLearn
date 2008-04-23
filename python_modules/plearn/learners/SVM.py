@@ -731,7 +731,7 @@ class SVM(object):
         self.test_stats      = None
         self.train_stats     = None
         self.validtype       = 'simple'
-        self.multiclass_strategy == 'onevsone'
+        self.multiclass_strategy = 'onevsone'
         
         self.n_fold   = 5
         self.balanceC = False
