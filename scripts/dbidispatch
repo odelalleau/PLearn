@@ -179,13 +179,11 @@ for argv in to_parse:
             dbi_param[param]=argv.split('=',1)[1]
     elif argv.startswith('--machine=') or argv.startswith('--machines='):
         if argv.split('=')[0] == "--machine":
-            new='Machine=="'+argv.split('=')[1]+'"'
+            new='&&(Machine=="'+argv.split('=')[1]+'")'
         elif argv.split('=')[0] == "--machines":
-            new=dbi_param["req"]='regexp("'+argv.split('=')[1]+'", target.Machine)'
-        s=dbi_param.get('req','')
-        if s:
-            s+=' && '
-        dbi_param["req"]=s+new
+            new='&&(regexp("'+argv.split('=')[1]+'", target.Machine))'
+        dbi_param.setdefault('req','True')
+        dbi_param["req"]+=new
     elif argv=="--server" or argv=="--no_server" \
             or argv=='--prefserver' or argv=="--no_prefserver":
         if argv.find('prefserver')!=-1:
