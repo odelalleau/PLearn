@@ -73,6 +73,10 @@ void HyperCommand::declareOptions(OptionList& ol)
 {
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    declareOption(
+        ol, "verbosity", &HyperCommand::verbosity, OptionBase::buildoption,
+        " The verbosity level. Default to 0.");
 }
 
 void HyperCommand::build_()
