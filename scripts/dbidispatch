@@ -166,9 +166,8 @@ for argv in to_parse:
     elif argv in ["--no_force", "--no_interruptible", "--no_long", "--no_test",
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice"]:
         dbi_param[argv[5:]]=False
-    elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os",
-                                "--nb_proc","--req", "--files", "--raw",
-                                "--rank"]:
+    elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
+                                "--req", "--files", "--raw", "--rank"]:
         param=argv.split('=')[0][2:]
         if param in ["req", "files", "raw", "rank"]:
             #param that we happend to if defined more then one time
