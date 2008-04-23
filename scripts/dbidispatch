@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|**--nodbilog] [--condor|--bqtools[=nb_proc]|--cluster[=nb_proc]|--local[=nb_proc]|--ssh[=nb_proc]] [--nb_proc=nb_proc] [--mem=X] [--os=X] [--test|*--no_test] [--long|**--no_long] [--micro[=nb_batch]] [--duree=X] [**--cwait|--no_cwait] [--req="CONDOR_REQUIREMENT"] [--force|**--no_force] [--nice|**--no_nice] [--interruptible|**--no_interruptible] [--cpu=nb_cpu_per_node] [**--getenv|--no_getenv] [--32|--64|--3264] [--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--raw=CONDOR_EXPRESSION] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value in dbidispatch. An ** before -- signal a default option value in dbi'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|**--nodbilog] [--condor|--bqtools[=nb_proc]|--cluster[=nb_proc]|--local[=nb_proc]|--ssh[=nb_proc]] [--nb_proc=nb_proc] [--mem=X] [--os=X] [--test|*--no_test] [--testdbi] [--long|**--no_long] [--micro[=nb_batch]] [--duree=X] [**--cwait|--no_cwait] [--req="CONDOR_REQUIREMENT"] [--force|**--no_force] [--nice|**--no_nice] [--interruptible|**--no_interruptible] [--cpu=nb_cpu_per_node] [**--getenv|--no_getenv] [--32|--64|--3264] [--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--raw=CONDOR_EXPRESSION] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value in dbidispatch. An ** before -- signal a default option value in dbi'
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
 %(ShortHelp)s
@@ -13,6 +13,7 @@ common options:
   The --condor, --bqtools, --cluster, --local or --ssh option specify on which system the jobs will be sent. If not present, we will use the first available in the previously given order. ssh is never automaticaly selected.
   The --dbilog (--nodbilog) tells dbi to generate (or not) an additional log
   The '--test' option makes dbidispatch generate the file %(ScriptName)s, without executing it. That way you can see what dbidispatch generates. Also, this file calls dbi in test mode, so dbi executes everything in the script except the experiment in %(ScriptName)s (so you can check the script).
+  The '--testdbi' set only dbi in test mode. Not dbidispatch
   The '--no_test' option cancel the '--test' option.
   The --file=FILEPATH specifies a file containing the jobs to execute, one per line. This is instead of specifying only one job on the command line.
 
@@ -118,7 +119,7 @@ if len(sys.argv) == 1:
     sys.exit(1)
 FILE = ""
 dbi_param={}
-
+testmode=False
 
 PATH=os.getenv('PATH')
 if search_file('condor_submit',PATH):
@@ -163,6 +164,9 @@ for argv in to_parse:
     elif argv in  ["--force", "--interruptible", "--long", "--test",
                    "--getenv", "--cwait", "--nice"]:
         dbi_param[argv[2:]]=True
+        testmode=True
+    elif argv=="--testdbi":
+        dbi_param["test"]=True
     elif argv in ["--no_force", "--no_interruptible", "--no_long", "--no_test",
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice"]:
         dbi_param[argv[5:]]=False
@@ -299,7 +303,7 @@ SCRIPT=open(os.getenv("HOME")+"/.dbidispatch.launched",'a');
 SCRIPT.write("["+time.ctime()+"] "+str(sys.argv)+"\n")
 SCRIPT.close()
 
-if "test" in dbi_param:
+if testmode:
     print "We generated %s command in the file"% len(commands)
     print "The script %s was not launched"% ScriptName
     SCRIPT=open(ScriptName,'w');
