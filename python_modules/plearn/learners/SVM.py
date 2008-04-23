@@ -3,6 +3,8 @@ import os
 from libsvm import *
 
 from plearn.pyext import *
+
+
 from numpy.numarray import *
 from math import *
 import random
@@ -729,7 +731,8 @@ class SVM(object):
         self.test_stats      = None
         self.train_stats     = None
         self.validtype       = 'simple'
-
+        self.multiclass_strategy == 'onevsone'
+        
         self.n_fold   = 5
         self.balanceC = False
         self.balance_classes = False
@@ -772,7 +775,6 @@ class SVM(object):
         self.retrain_until_local_optimum_is_found = True
         self.max_ntrials = 50
         self.test_on_train = True
-
         
         self.verbosity = 0
         
@@ -791,6 +793,8 @@ class SVM(object):
         self.stats_are_uptodate = False
         self.input_means = None
         self.input_stds = None
+        self.model = None
+        self.best_model = None
         # Note: when we forget, we keep the value of
         #       'self.best_param'. This allow to initialize
         #       a new search (when data changed a bit) to
@@ -1352,7 +1356,7 @@ class SVM(object):
     def valid( self,
                dataspec,
                param= None):
-        if self.validtype[:6]=='simple' and self.validset_key in dataspec:
+        if self.validset_key in dataspec:
             return self.simplevalid(dataspec, param)
         else:
             return self.crossvalid(dataspec, param)
