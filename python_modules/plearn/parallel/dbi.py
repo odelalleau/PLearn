@@ -668,6 +668,8 @@ class DBICondor(DBIBase):
         self.getenv = False
         self.nice = False
         self.req = ''
+        self.raw = ''
+        self.rank = ''
         self.copy_local_source_file = False
         self.files = ''
         DBIBase.__init__(self, commands, **args)
@@ -821,6 +823,12 @@ class DBICondor(DBIBase):
                 should_transfer_files = Yes
                 transfer_input_files = %s
                 '''%(self.files+','+launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
+        if self.raw:
+            condor_dat.write( self.raw+'\n')
+        if self.rank:
+            condor_dat.write( dedent('''\
+                rank = %s
+                ''' %(self.rank)))
         if len(condor_datas)!=0:
             for i in condor_datas:
                 condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")

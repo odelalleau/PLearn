@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|**--nodbilog] [--condor|--bqtools[=nb_proc]|--cluster[=nb_proc]|--local[=nb_proc]|--ssh[=nb_proc]] [--nb_proc=nb_proc] [--mem=X] [--os=X] [--test|*--no_test] [--long|**--no_long] [--micro[=nb_batch]] [--duree=X] [**--cwait|--no_cwait] [--req="CONDOR_REQUIREMENT"] [--force|**--no_force] [--nice|**--no_nice] [--interruptible|**--no_interruptible] [--cpu=nb_cpu_per_node] [**--getenv|--no_getenv] [--32|--64|--3264] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value in dbidispatch. An ** before -- signal a default option value in dbi'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|**--nodbilog] [--condor|--bqtools[=nb_proc]|--cluster[=nb_proc]|--local[=nb_proc]|--ssh[=nb_proc]] [--nb_proc=nb_proc] [--mem=X] [--os=X] [--test|*--no_test] [--long|**--no_long] [--micro[=nb_batch]] [--duree=X] [**--cwait|--no_cwait] [--req="CONDOR_REQUIREMENT"] [--force|**--no_force] [--nice|**--no_nice] [--interruptible|**--no_interruptible] [--cpu=nb_cpu_per_node] [**--getenv|--no_getenv] [--32|--64|--3264] [--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--raw=CONDOR_EXPRESSION] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value in dbidispatch. An ** before -- signal a default option value in dbi'
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
 %(ShortHelp)s
@@ -64,6 +64,8 @@ condor only options:
   dbidispatch '--req=Machine=="computer.example.com"' 
 
   The '--server'(--no_server) option add the requirement that the executing host must be a server dedicated to computing. This is equivalent to: dbidispatch '--req=SERVER==True'(SERVER==False)
+  The '--prefserver' option will tell that you prefer to execute on server first. This is equivalent to 'rank=SERVER=?=True' in the submit file.
+  The '--rank=STRING' option add rank=STRING in the submit file.
   The '--machine=full_host_name' option add the requirement that the executing host is full_host_name
      dbidispatch --machine=computer.example.com
         witch is equivalent to
@@ -73,6 +75,7 @@ condor only options:
         witch is equivalent to
      dbidispatch '--req=regexp("computer0*", target.Machine)'
   The '--nice'('--no_nice') option set the nice_user option to condor. If nice, the job(s) will have the lowest possible priority.
+  The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -164,8 +167,16 @@ for argv in to_parse:
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice"]:
         dbi_param[argv[5:]]=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os",
-                                "--nb_proc","--req", "--files"]:
-        dbi_param[argv.split('=')[0][2:]]=argv.split('=')[1]
+                                "--nb_proc","--req", "--files", "--raw",
+                                "--rank"]:
+        param=argv.split('=')[0][2:]
+        if param in ["req", "files", "raw", "rank"]:
+            #param that we happend to if defined more then one time
+            dbi_param.setdefault(param,'True')
+            dbi_param[param]+='&&('+argv.split('=',1)[1]+')'
+        else:
+            #otherwise we erase the old value
+            dbi_param[param]=argv.split('=',1)[1]
     elif argv.startswith('--machine=') or argv.startswith('--machines='):
         if argv.split('=')[0] == "--machine":
             new='Machine=="'+argv.split('=')[1]+'"'
@@ -175,15 +186,17 @@ for argv in to_parse:
         if s:
             s+=' && '
         dbi_param["req"]=s+new
-    elif argv=="--server" or argv=="--no_server":
-        if 'req' in dbi_param:
-            dbi_param["req"]+=' && '
+    elif argv=="--server" or argv=="--no_server" \
+            or argv=='--prefserver' or argv=="--no_prefserver":
+        if argv.find('prefserver')!=-1:
+            param='rank'
         else:
-            dbi_param['req']=''
-        if argv=="--server":
-            dbi_param["req"]+='SERVER==True'
+            param='req'
+        dbi_param.setdefault(param,'True')
+        if argv.find('no_')!=-1:
+            dbi_param[param]+='&&(SERVER==True)'
         else:
-            dbi_param["req"]+='SERVER==False'
+            dbi_param[param]+='&&(SERVER==False)'
     elif argv[0:1] == '-':
 	print "Unknow option (%s)"%argv
 	print ShortHelp
@@ -203,7 +216,7 @@ elif launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","nb_proc","arch","interruptible",
                        "duree","cpu","mem","os"]
 elif launch_cmd=="Condor":
-    valid_dbi_param +=["req", "arch", "getenv", "nice", "files"]
+    valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "raw"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["micro", "long","nb_proc","duree"]
 elif launch_cmd=="Local":
