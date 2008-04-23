@@ -108,14 +108,19 @@ def optionsDialog(name, expdir, verbosity, named_logging, namespaces):
     options_dialog= plide_options.PyPLearnOptionsDialog(options_holder)
     result= options_dialog.run()
     if result == gtk.RESPONSE_OK:
-        options_dialog.update_options_holder()
-    options_dialog.destroy()
-    #plargs.expdir= options_holder.launch_directory
+       options_dialog.update_options_holder()
+
+    # Because we are not running under the Gtk main loop, we need to call
+    # the Gtk main loop manually a couple of times to allow it to clean up
+    # and remove the window. 
+    for i in range(5):
+        gtk.main_iteration()
+    
     return result == gtk.RESPONSE_OK, \
            options_holder.verbosity_map.get(options_holder.log_verbosity, 5), \
            options_holder.log_enable
 
-def simpleOptionsDialog(plnamespaces, name=''):
+def simpleOptionsDialog(plnamespaces):
     """Pops a dialog showing only the given plnamespaces. No extra
     tabs (expdir, verbosity, manual overrides) added.
 
@@ -126,14 +131,18 @@ def simpleOptionsDialog(plnamespaces, name=''):
     import gtk
     
     PyPLearnOptionsDialog.define_injected(None, gladeFile)
-    options_holder = PyPLearnOptionsHolder(name, None, '', plnamespaces)
+    options_holder = PyPLearnOptionsHolder('', None, '', plnamespaces)
     
     options_dialog = PyPLearnOptionsDialog(options_holder,
                                            include_standard_script_options=False)
     result = options_dialog.run()
     if result == gtk.RESPONSE_OK:
         options_dialog.update_options_holder()
-    options_dialog.destroy()
-    del options_dialog
+
+    # Because we are not running under the Gtk main loop, we need to call
+    # the Gtk main loop manually a couple of times to allow it to clean up
+    # and remove the window. 
+    for i in range(5):
+        gtk.main_iteration()
 
     return result == gtk.RESPONSE_OK

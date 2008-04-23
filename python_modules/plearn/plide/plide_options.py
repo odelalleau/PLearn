@@ -32,8 +32,6 @@
 import gtk
 
 from plearn.utilities.metaprog import public_members
-#from plearn.pyplearn.pyplearn  import *
-#from plearn.pyplearn           import *
 from plearn.pyplearn           import plargs
 from plearn.utilities.toolkit  import doc as toolkit_doc
 
@@ -166,6 +164,10 @@ class PyPLearnOptionsDialog( GladeDialog ):
             buf.set_text('\n'.join(options_holder.option_overrides))
             self.w_manual_script_options.set_buffer(buf)
         else:
+            # The notebook tabs containing the options for expdir, logging
+            # and manual overrides (i.e. not the user-defined plnamespaces)
+            # correspond to the first two notebook tabs (see the .glade file).
+            # Remove those first two tabs.
             self.w_option_groups.remove_page(0)
             self.w_option_groups.remove_page(0)
 
