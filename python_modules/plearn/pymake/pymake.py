@@ -1910,11 +1910,12 @@ class FileInfo:
 
         # User-provided path for the link itself?
         if linkname == '':
-            symlink_from = join(self.filedir, self.filebase)
-            if create_so or create_pyso:
-                symlink_from += '.so'
-                if create_so:
-                    symlink_from = 'lib' + symlink_from
+            linkbase = self.filebase
+            if create_so:
+                linkbase = 'lib%s.so' % linkbase
+            elif create_pyso:
+                linkbase = '%s.so' % linkbase
+            symlink_from = join(self.filedir, linkbase)
         else:
             symlink_from = linkname
 
