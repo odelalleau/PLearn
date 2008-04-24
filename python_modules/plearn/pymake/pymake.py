@@ -2568,9 +2568,9 @@ def main( args ):
 
     if 'm32' in optionargs:
         force_32bits = 1
-        if platform=='linux-x86_64' or platform=='linux-ia64':
+        if platform.startswith('linux-x86_64') or platform.startswith('linux-ia64'):
             target_platform = 'linux-i386'
-        elif platform=='linux-i386':
+        elif platform.startswith('linux-i386'):
             pass
         else:
             print 'Warning: you probably should not be using the "-m32" option'
