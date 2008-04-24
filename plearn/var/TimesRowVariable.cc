@@ -50,34 +50,48 @@ using namespace std;
 
 /** TimesRowVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(TimesRowVariable,
-                        "Multiplies each row of a matrix var elementwise with a single row variable",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        TimesRowVariable,
+       "Multiplies each row of a matrix elementwise with a row variable.",
+       "More formally: result(i,j) = input1(i,j) * input2[j]."
+);
 
-TimesRowVariable::TimesRowVariable(Variable* input1, Variable* input2)
-    : inherited(input1, input2, input1->length(), input1->width())
+//////////////////////
+// TimesRowVariable //
+//////////////////////
+TimesRowVariable::TimesRowVariable(Variable* input1, Variable* input2,
+                                   bool call_build_):
+    inherited(input1, input2, input1->length(), input1->width(), call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-TimesRowVariable::build()
+///////////
+// build //
+///////////
+void TimesRowVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-TimesRowVariable::build_()
+////////////
+// build_ //
+////////////
+void TimesRowVariable::build_()
 {
     if (input1 && input2) {
-        if (!input2->isRowVec())
-            PLERROR("IN TimesRowVariable: input2 is not a row");
-        if (input2->width() != input1->width())
-            PLERROR("IN TimesRowVariable: input1 and input2 have a different width()");
+        PLCHECK_MSG(input2->isRowVec(),
+                    "input1 must be a row vector");
+        PLCHECK_MSG(input2->width() == input1->width(),
+                    "input1 and input2 must have same width");
     }
 }
 
+///////////////////
+// recomputeSize //
+///////////////////
 void TimesRowVariable::recomputeSize(int& l, int& w) const
 {
     if (input1) {
@@ -87,6 +101,9 @@ void TimesRowVariable::recomputeSize(int& l, int& w) const
         l = w = 0;
 }
 
+///////////
+// fprop //
+///////////
 void TimesRowVariable::fprop()
 {
     int k=0;
@@ -95,7 +112,9 @@ void TimesRowVariable::fprop()
             valuedata[k] = input1->valuedata[k] * input2->valuedata[j];
 }
 
-
+///////////
+// bprop //
+///////////
 void TimesRowVariable::bprop()
 {
     int k=0;
@@ -107,14 +126,18 @@ void TimesRowVariable::bprop()
         }
 }
 
-
+///////////////////
+// symbolicBprop //
+///////////////////
 void TimesRowVariable::symbolicBprop()
 {
     input1->accg(g*input2);
     input2->accg(columnSum(g*input1));
 }
 
-
+////////////
+// rfprop //
+////////////
 void TimesRowVariable::rfprop()
 {
     if (rValue.length()==0) resizeRValue();
@@ -123,7 +146,6 @@ void TimesRowVariable::rfprop()
         for(int j=0; j<width(); j++, k++)
             rvaluedata[k] = input1->rvaluedata[k] * input2->valuedata[j] + input1->valuedata[k] * input2->rvaluedata[j];
 }
-
 
 
 } // end of namespace PLearn

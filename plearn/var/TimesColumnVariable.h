@@ -49,15 +49,18 @@ namespace PLearn {
 using namespace std;
 
 
-//!  multiplies each column of a matrix var elementwise with a single column variable
 class TimesColumnVariable: public BinaryVariable
 {
     typedef BinaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    //! Default constructor.
     TimesColumnVariable() {}
-    TimesColumnVariable(Variable* input1, Variable* input2);
+
+    //! Convenience constructor.
+    TimesColumnVariable(Variable* input1, Variable* input2,
+                        bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(TimesColumnVariable);
 
@@ -69,7 +72,8 @@ public:
     virtual void symbolicBprop();
     virtual void rfprop();
 
-protected:
+private:
+
     void build_();
 };
 

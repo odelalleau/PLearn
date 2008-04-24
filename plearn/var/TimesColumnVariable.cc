@@ -47,38 +47,50 @@
 namespace PLearn {
 using namespace std;
 
-
 /** TimesColumnVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(TimesColumnVariable,
-                        "Multiplies each column of a matrix var elementwise with a single column variable",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        TimesColumnVariable,
+       "Multiplies each column of a matrix elementwise with a column variable",
+       "More formally: result(i,j) = input1(i,j) * input2[i]."
+);
 
-TimesColumnVariable::TimesColumnVariable(Variable* input1, Variable* input2)
-    : inherited(input1, input2, input1->length(), input1->width())
+/////////////////////////
+// TimesColumnVariable //
+/////////////////////////
+TimesColumnVariable::TimesColumnVariable(Variable* input1, Variable* input2,
+                                         bool call_build_):
+    inherited(input1, input2, input1->length(), input1->width(), call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-TimesColumnVariable::build()
+///////////
+// build //
+///////////
+void TimesColumnVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-TimesColumnVariable::build_()
+////////////
+// build_ //
+////////////
+void TimesColumnVariable::build_()
 {
     if (input1 && input2) {
-        if(!input2->isColumnVec())
-            PLERROR("IN TimesColumnVariable: input2 is not a column");
-        if(input2->length() != input1->length())
-            PLERROR("IN TimesColumnVariable: input1 and input2 have a different length()");
+        PLCHECK_MSG(input2->isColumnVec(),
+                    "input2 must be a column variable");
+        PLCHECK_MSG(input2->length() == input1->length(),
+                    "input1 and input2 must have same length");
     }
 }
 
-
+///////////////////
+// recomputeSize //
+///////////////////
 void TimesColumnVariable::recomputeSize(int& l, int& w) const
 {
     if (input1) {
@@ -88,6 +100,9 @@ void TimesColumnVariable::recomputeSize(int& l, int& w) const
         l = w = 0;
 }
 
+///////////
+// fprop //
+///////////
 void TimesColumnVariable::fprop()
 {
     int k=0;
@@ -96,7 +111,9 @@ void TimesColumnVariable::fprop()
             valuedata[k] = input1->valuedata[k] * input2->valuedata[i];
 }
 
-
+///////////
+// bprop //
+///////////
 void TimesColumnVariable::bprop()
 {
     int k=0;
@@ -108,15 +125,18 @@ void TimesColumnVariable::bprop()
         }
 }
 
-
+///////////////////
+// symbolicBprop //
+///////////////////
 void TimesColumnVariable::symbolicBprop()
 {
     input1->accg(g*input2);
     input2->accg(rowSum(g*input1));
 }
 
-
-//???
+////////////
+// rfprop //
+////////////
 void TimesColumnVariable::rfprop()
 {
     if (rValue.length()==0) resizeRValue();
