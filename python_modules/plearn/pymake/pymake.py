@@ -2825,7 +2825,20 @@ def main( args ):
             generate_vcproj_files(target, ccfiles_to_compile, executables_to_link, linkname)
 
         else:
-            print '++++ Compiling',len(ccfiles_to_compile),'files...'
+            l=reduce(lambda x,y:x+y.get_ccfiles_to_link(),
+                     executables_to_link,[])
+            if verbose >=4:
+                print "Link files:"
+                for i in l:
+                    print i.filebase
+                print 
+                print
+                print "Files to compile: "
+                for i in ccfiles_to_compile:
+                    print i.filebase
+            print '++++ Compiling',
+            print str(len(ccfiles_to_compile))+'/'+str(len(l)),'files...'
+
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
             else:
