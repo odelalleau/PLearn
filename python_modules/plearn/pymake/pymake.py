@@ -2542,7 +2542,7 @@ def main( args ):
             optionargs.append(option_to_parse[i][1:])
 
         else:
-            otherargs.append(args[i])
+            otherargs.append(option_to_parse[i])
         i = i + 1
     del i # We don't need it anymore and it might be confusing
     
