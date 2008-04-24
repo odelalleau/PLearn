@@ -24,14 +24,14 @@ class SVMHyperParamOracle__kernel(object):
         List of attributes:    
         -------------------    
 
-    public: buildoption
+    user options:
 
 
         'C_initvalue': <float> Default value for 'C'.
 
         'verbosity': <int> Level of verbosity.
 
-    public: learntoption
+    learnt options:
 
         'best_param': <dict> of hyperparameters'values      
                       which gave the best performance by    
@@ -52,7 +52,7 @@ class SVMHyperParamOracle__kernel(object):
 
         'input_stds': <list> of standard deviation values for each input component.
 
-    protected:
+    internally managed options:
 
         'kernel_type': <str> corresponding to the kernel.    
                        in ['gaussian','linear','poly'].
@@ -562,7 +562,7 @@ class SVM(object):
         List of attributes:    
         -------------------    
 
-    public: buildoption
+    user options:
 
         'costnames': <list> of cost names. By default, ['class_error'].
                  All cost names implemented are:
@@ -630,6 +630,11 @@ class SVM(object):
 
         'test_on_train': <bool> Should we test best models on {test, train} (1)
 
+        'testlevel': <int> Frequency of test:
+                     - 0: write results only at the end of the run()
+                     - 1: write results each time a better validation cost is found in run()
+                     - 2: write all intermediate results
+
         'results_filename': <string> Path to an output file for results
         
         'preproc_optionnames': <string> or <list of strings> indicating the names of the
@@ -641,7 +646,7 @@ class SVM(object):
 
         'verbosity': <int> Level of verbosity.
 
-    public: learntoption
+    learnt options:
 
         'best_model':
 
@@ -670,9 +675,8 @@ class SVM(object):
         'input_avgstd': <float> input std
 
         'validtype': <str> type of validation: 'simple' or 'cross'.
-        
-       
-    protected:
+               
+    internally managed options:
 
         'param_names': <list> of all hyperparameter names. It    
                        always includes at first the positive     
@@ -698,6 +702,7 @@ class SVM(object):
                         'max_ntrials',
                         'retrain_on_valid',
                         'test_on_train',
+                        'testlevel',
                         'verbosity',
                         'results_filename',
                         'preproc_optionnames',
@@ -774,9 +779,10 @@ class SVM(object):
         self.retrain_on_valid = True
         self.retrain_until_local_optimum_is_found = True
         self.max_ntrials = 50
-        self.test_on_train = True
+        self.test_on_train = False
         
         self.verbosity = 0
+        self.testlevel = 1
         
         self.trainset_key = 'trainset'
         self.validset_key = 'validset'
@@ -819,7 +825,8 @@ class SVM(object):
 
     def additional_preproc(self, input_vmat, isTrain=False):
         if self.balance_classes and isTrain:
-            return ReplicateSamplesVMatrix(source = input_vmat, operate_on_bags = True)
+            return ReplicateSamplesVMatrix(source = input_vmat,
+                                           operate_on_bags = (input_vmat.targetsize > 1 ))
         return input_vmat
 
     ## specific to libsvm
@@ -881,7 +888,7 @@ class SVM(object):
                      self.inputsize, self.input_avgstd )
         assert vmat <> None
 
-        samples, targets = self.get_svminputlist( vmat )
+        samples, targets = self.get_svminputlist( vmat, True )
 
         self.all_experts[0].verbosity = self.verbosity
         self.inputsize, self.input_avgstd = self.all_experts[0].get_input_stats(samples)
@@ -983,7 +990,8 @@ class SVM(object):
     def write_results(  self, param,
                         valid_stats,
                         test_stats = None,
-                        train_stats= None ):
+                        train_stats= None,
+                        only_stdout=False ):
         if valid_stats==None and param == self.best_param:
                 valid_stats = self.valid_stats
         if test_stats==None and param == self.best_param:
@@ -996,16 +1004,16 @@ class SVM(object):
         
         # If no file specified, print on stdout in a readable format
         if self.results_filename == None or self.verbosity > 0:
-            print "\n -- Trial with parameters"
-            for pn in param:
-                print "    ",pn," = ",param[pn]
+            #print "\n -- Trial with parameters"
+            #for pn in param:
+            #    print "    ",pn," = ",param[pn]
             if train_costs <> None:
                 print " -- train costs: ", train_costs
             if valid_costs <> None:
                 print " -- valid costs: ", valid_costs
             if test_costs <> None:
                 print " -- test costs: ",  test_costs
-            if self.results_filename == None:
+            if self.results_filename == None or only_stdout:
                 return
 
 
@@ -1041,8 +1049,13 @@ class SVM(object):
         
         costnames_string = ""
         costvalues_string = ""
+        
+        all_set_names = ['valid','test']
+        if self.test_on_train:
+            all_set_names = ['train']+all_set_names
+        
         for cn in self.costnames:
-            for dataset in ['train','valid','test']:
+            for dataset in all_set_names:
                 costs = eval(dataset+'_costs')
                 
                 # Special processing for the confusion matrix
@@ -1357,6 +1370,7 @@ class SVM(object):
                dataspec,
                param= None):
         if self.validset_key in dataspec:
+            self.validtype = 'simple'
             return self.simplevalid(dataspec, param)
         else:
             return self.crossvalid(dataspec, param)
@@ -1366,11 +1380,9 @@ class SVM(object):
     """
     def simplevalid( self,
                      dataspec,
-                     param= None,
+                     param,
                      validstats = None,
                      verbosity = True ):
-        if not param:
-            param = self.best_param
         if self.verbosity > 0 and verbosity:
             print "\n** Simple Validation"
             print "   with param %s" % param
@@ -1385,9 +1397,7 @@ class SVM(object):
     """
     def crossvalid( self,
                     dataspec,
-                    param = None ):
-        if not param:
-            param = self.best_param
+                    param ):
         nclasses = self.nclasses
         n_fold = self.n_fold
         self.validtype = '%s-fold' % n_fold
@@ -1439,6 +1449,63 @@ class SVM(object):
         return validstats
 
 
+    def retrain_and_writeresults(self, dataspec):
+        trainset = self.train_inputspec(dataspec)
+        validset = self.valid_inputspec(dataspec)
+        testset  = self.test_inputspec(dataspec)
+        # Cross Validation
+        if 'fold' in self.validtype:
+            self.train( dataspec )
+
+        # Simple Validation
+        else:
+            self.validtype = 'simple'
+            # CAUTION: in the case of simple validation without retraining on {train+valid},
+            #          self.best_model is supposed to be updated
+            if self.retrain_on_valid:
+                """ Uncomment following lines if you want to check that
+                    retraining on {train + valid} sets does not degrade.
+                """
+                #train_stats = None
+                #test_stats = None
+                #if self.test_on_train:
+                #    if self.verbosity > 2:
+                #        print "\n** (testing simple valid on "+self.trainset_key+")"
+                #    train_stats = self.test( trainset )
+                #if testset <> None:
+                #    if self.verbosity > 2:
+                #        print "\n** (testing simple valid on "+self.testset_key+")"
+                #test_stats = self.test( testset  )
+                #
+                #self.write_results( self.best_param,
+                #                    valid_stats, test_stats, train_stats )
+                self.validtype = 'simple+retrain'
+                tv_set = ConcatRowsVMatrix(
+                            sources = [ trainset,
+                                        validset
+                                        ],
+                            fully_check_mappings = False,
+                        )
+                if self.verbosity > 0:
+                    print "\n** re-training model on { train + valid } "
+                self.train( {self.trainset_key: tv_set} )
+
+        train_stats = None
+        test_stats = None
+        if self.test_on_train:
+            if self.verbosity > 2:
+               print "\n** (testing on "+self.trainset_key+")"
+            train_stats = self.test( trainset )
+        if testset <> None:
+            if self.verbosity > 2:
+                print "\n** (testing on "+self.testset_key+")"
+            test_stats = self.test( testset )
+        self.update_trials( self.best_param,
+                            None, test_stats, train_stats )
+        self.write_results( self.best_param,
+                            self.valid_stats, self.test_stats, self.train_stats )
+
+
     """ THE interesting function of the class.
         See __main__ below for usage.
         dataspec is a dictionary which specifies train, valid, test sets.
@@ -1446,9 +1513,6 @@ class SVM(object):
         cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
     def run(self, dataspec):
-        if self.verbosity > 3:
-            print "SVM::run() called ", dataspec.keys()
-
         trainset = self.train_inputspec(dataspec)
         validset = self.valid_inputspec(dataspec)
         testset  = self.test_inputspec(dataspec)
@@ -1476,72 +1540,29 @@ class SVM(object):
 
                 # We reject the model (to avoid testing on it)
                 self.model = None
-                
-                self.write_results( param, valid_stats )
+                self.write_results( param, valid_stats, None, None, self.testlevel < 2  )
 
             # Better valid cost is obtained!
             else:
-
-                # Cross Validation
-                if 'fold' in self.validtype:
-                    self.train( dataspec )
-
+                print "better cost was found!"
                 # Simple Validation
-                else:
-                    self.validtype = 'simple'
+                if 'fold' not in self.validtype:
                     self.best_model = self.model
-                    if self.retrain_on_valid:
-
-                        """ Uncomment following lines if you want to check that
-                            retraining on {train + valid} sets does not degrade.
-                        """
-                        #train_stats = None
-                        #test_stats = None
-                        #if self.test_on_train:
-                        #    if self.verbosity > 2:
-                        #        print "\n** (testing simple valid on "+self.trainset_key+")"
-                        #    train_stats = self.test( trainset )
-                        #if testset <> None:
-                        #    if self.verbosity > 2:
-                        #        print "\n** (testing simple valid on "+self.testset_key+")"
-                        #test_stats = self.test( testset  )
-                        #
-                        #self.write_results( self.best_param,
-                        #                    valid_stats, test_stats, train_stats )
-
-                        self.validtype = 'simple+retrain'
-
-                        tv_set = ConcatRowsVMatrix(
-                                    sources = [ trainset,
-                                                validset
-                                                ],
-                                    fully_check_mappings = False,
-                                )
-                        if self.verbosity > 0:
-                            print "\n** re-training model on { train + valid } "
-                        self.train( {self.trainset_key: tv_set} )
-
-                train_stats = None
-                test_stats = None
-                if self.test_on_train:
-                    if self.verbosity > 2:
-                        print "\n** (testing on "+self.trainset_key+")"
-                    train_stats = self.test( trainset )
-                if testset <> None:
-                    if self.verbosity > 2:
-                        print "\n** (testing on "+self.testset_key+")"
-                    test_stats = self.test( testset )
-                self.update_trials( self.best_param,
-                                    None, test_stats, train_stats )
-                self.write_results( self.best_param,
-                                    self.valid_stats, self.test_stats, self.train_stats )
+                    
+                if self.testlevel > 0:
+                    self.retrain_and_writeresults(dataspec)
+                else:
+                    self.write_results( param, valid_stats, None, None, True  )
 
             if len(expert.trials_param_list)-L0 >= self.max_ntrials:
                 return dataspec
 
         if( self.retrain_until_local_optimum_is_found
         and expert.should_be_tuned_again() ):
-           self.run( dataspec )
+           return self.run( dataspec )
+
+        if self.testlevel == 0:
+             self.retrain_and_writeresults(dataspec)
 
         return dataspec
 
