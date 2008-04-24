@@ -483,18 +483,28 @@ void ModuleLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
         }
         store_weights->setData(all_ones);
     }
-    PLASSERT( store_outputs );
-    // make the store_output temporarily point to output
-    Mat& net_out = store_outputs->getData();
-    Mat old_net_out = net_out;
-    output.resize(input.length(),outputsize());
-    net_out = output;
+    // Make the store_output temporarily point to output
+    Mat old_net_out;
+    Mat* net_out = store_outputs ? &store_outputs->getData()
+                                 : NULL;
+    output.resize(input.length(),outputsize() >= 0 ? outputsize() : 0);
+    if (net_out) {
+        old_net_out = *net_out;
+        *net_out = output;
+    }
 
     // Forward propagation.
     network->fprop(null_pointers);
 
-    // Restore output_store.
-    net_out = old_net_out;
+    // Restore store_outputs.
+    if (net_out)
+        *net_out = old_net_out;
+
+    if (!store_costs) {
+        // Do not bother with costs.
+        costs.resize(input.length(), 0);
+        return;
+    }
 
     // Copy costs.
     // Note that a more efficient implementation may be done when only one cost
