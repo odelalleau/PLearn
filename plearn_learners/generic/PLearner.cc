@@ -910,8 +910,9 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
     Vec input;
     Vec target;
     real weight;
+    int out_size = outputsize() >= 0 ? outputsize() : 0;
 
-    Vec output(outputsize());
+    Vec output(out_size);
     Vec costs(nTestCosts());
 
     if (test_stats) {
@@ -1076,7 +1077,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
         {
             int n_batches = len/test_minibatch_size, i=0;
             b_inputs.resize(test_minibatch_size,inputsize());
-            b_outputs.resize(test_minibatch_size,outputsize());
+            b_outputs.resize(test_minibatch_size, out_size);
             b_costs.resize(test_minibatch_size,costs.length());
             b_targets.resize(test_minibatch_size,targetsize());
             b_weights.resize(test_minibatch_size);
@@ -1095,7 +1096,7 @@ void PLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
             if (i<len)
             {
                 b_inputs.resize(len-i,inputsize());
-                b_outputs.resize(len-i,outputsize());
+                b_outputs.resize(len-i, out_size);
                 b_costs.resize(len-i,costs.length());
                 b_targets.resize(len-i,targetsize());
                 b_weights.resize(len-i);
@@ -1185,6 +1186,9 @@ tuple<PP<VecStatsCollector>, VMat, VMat> PLearner::remote_test(VMat testset, PP<
     VMat testoutputs= 0;
     VMat testcosts= 0;
     int outsize= outputsize();
+    if (outsize < 0)
+        // Negative outputsize: the output will be empty to avoid a crash.
+        outsize = 0;
     int costsize= nTestCosts();
     int len= testset.length();
     if(rtestoutputs) testoutputs= new MemoryVMatrix(len, outsize);
