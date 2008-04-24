@@ -47,21 +47,21 @@ namespace PLearn {
 using namespace std;
 
 EarlyStoppingOracle::EarlyStoppingOracle()
-    : min_value(-FLT_MAX),
-      max_value(FLT_MAX),
-      max_degradation(FLT_MAX),
+    : nreturned(0),
+      previous_objective(REAL_MAX),
+      best_objective(REAL_MAX),
+      best_step(-1),
+      met_early_stopping(false),
+      min_value(-REAL_MAX),
+      max_value(REAL_MAX),
+      max_degradation(REAL_MAX),
       relative_max_degradation(-1),
-      min_improvement(-FLT_MAX),
+      min_improvement(-REAL_MAX),
       relative_min_improvement(-1),
       max_degraded_steps(100),
       min_n_steps(0)
 {
     //    build_();
-    nreturned = 0;
-    previous_objective = FLT_MAX;
-    best_objective = FLT_MAX;
-    best_step = -1;
-    met_early_stopping = false;
 }
 
 PLEARN_IMPLEMENT_OBJECT(EarlyStoppingOracle, "ONE LINE DESCR", "NO HELP");
@@ -103,6 +103,23 @@ void EarlyStoppingOracle::declareOptions(OptionList& ol)
 
     declareOption(ol, "min_n_steps", &EarlyStoppingOracle::min_n_steps, OptionBase::buildoption,
                   "minimum required number of steps before allowing early stopping\n");
+
+    //learnt option
+    declareOption(ol, "nreturned", &EarlyStoppingOracle::nreturned,
+                  OptionBase::learntoption,
+                  "The number of returned option\n");
+
+    declareOption(ol, "best_objective", &EarlyStoppingOracle::best_objective,
+                  OptionBase::learntoption,
+                  "The best objective see up to date\n");
+
+    declareOption(ol, "best_step", &EarlyStoppingOracle::best_step,
+                  OptionBase::learntoption,
+                  "The step where we have see the best objective\n");
+
+    declareOption(ol, "met_early_stopping", &EarlyStoppingOracle::met_early_stopping,
+                  OptionBase::learntoption,
+                  "True if we met the early stopping criterion\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
