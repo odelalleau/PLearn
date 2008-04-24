@@ -297,7 +297,6 @@ rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
 save_best_learner = 0 ;
 splitter = *0 ;
-auto_save = 0 ;
 best_objective = 1.79769313486231571e+308 ;
 best_results = []
 ;
