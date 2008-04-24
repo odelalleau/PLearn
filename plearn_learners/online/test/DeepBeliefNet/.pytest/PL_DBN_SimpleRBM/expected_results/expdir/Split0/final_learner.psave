@@ -25,7 +25,8 @@ round_to_closest = 0 ;
 splits = 1  2  [ 
 (0 , 1 )	(0 , 1 )	
 ]
- )
+;
+one_is_absolute = 0  )
 ;
 statnames = 4 [ "E[train.E[NLL]]" "E[train.E[class_error]]" "E[test.E[NLL]]" "E[test.E[class_error]]" ] ;
 statmask = []
@@ -33,11 +34,14 @@ statmask = []
 learner = *5 ->DeepBeliefNet(
 cd_learning_rate = 0.0100000000000000002 ;
 cd_decrease_ct = 0 ;
+up_down_learning_rate = 0 ;
+up_down_decrease_ct = 0 ;
 grad_learning_rate = 0.100000000000000006 ;
 grad_decrease_ct = 0 ;
 batch_size = 1 ;
 n_classes = 2 ;
 training_schedule = 2 [ 20 10 ] ;
+up_down_nstages = 0 ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *6 ->RBMBinomialLayer(
@@ -60,7 +64,8 @@ expdir = "" ;
 random_gen = *7 ->PRandom(
 seed = 1827 ;
 fixed_seed = 0  )
- )
+;
+verbosity = 1  )
 *8 ->RBMBinomialLayer(
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
@@ -71,20 +76,21 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.0041988074813960885 0.00291521845148070419 ] ;
+bias = 2 [ -0.00419880748139610759 0.0029152184514807198 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
 use_fast_approximations = 0 ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *7   )
+random_gen = *7  ;
+verbosity = 1  )
 ] ;
 i_output_layer = 1 ;
 connections = 1 [ *9 ->RBMMatrixConnection(
 weights = 2  2  [ 
 -0.222066209664342068 	0.582925561708350082 	
-0.516883916989072545 	-0.316272804129796303 	
+0.516883916989072434 	-0.316272804129796303 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -93,6 +99,10 @@ gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 L1_penalty_factor = 0 ;
 L2_penalty_factor = 0 ;
+L2_decrease_constant = 0 ;
+L2_shift = 100 ;
+L2_decrease_type = "one_over_t" ;
+L2_n_updates = 0 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0.100000000000000006 ;
@@ -104,15 +114,16 @@ name = "RBMMatrixConnection" ;
 use_fast_approximations = 1 ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *7   )
+random_gen = *7  ;
+verbosity = 1  )
 ] ;
 classification_module = *10 ->RBMClassificationModule(
 previous_to_last = *9  ;
 last_layer = *8  ;
 last_to_target = *11 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.603392333131359426 	0.370787384786479657 	
-0.09708625652197031 	-0.668099599496062679 	
+-0.603392333131359537 	0.370787384786479657 	
+0.0970862565219703239 	-0.668099599496062679 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -121,6 +132,10 @@ gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
 L1_penalty_factor = 0 ;
 L2_penalty_factor = 0 ;
+L2_decrease_constant = 0 ;
+L2_shift = 100 ;
+L2_decrease_type = "one_over_t" ;
+L2_n_updates = 0 ;
 down_size = 2 ;
 up_size = 2 ;
 learning_rate = 0.100000000000000006 ;
@@ -132,7 +147,8 @@ name = "RBMMatrixConnection" ;
 use_fast_approximations = 1 ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *7   )
+random_gen = *7  ;
+verbosity = 1  )
 ;
 target_layer = *12 ->RBMMultinomialLayer(
 size = 2 ;
@@ -144,14 +160,15 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00487910443291659449 0.00487910443291660317 ] ;
+bias = 2 [ -0.00487910443291655199 0.00487910443291657281 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMMultinomialLayer" ;
 use_fast_approximations = 1 ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *7   )
+random_gen = *7  ;
+verbosity = 1  )
 ;
 joint_connection = *13 ->RBMMixedConnection(
 sub_connections = 1  2  [ 
@@ -172,7 +189,8 @@ name = "RBMMixedConnection" ;
 use_fast_approximations = 1 ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *7   )
+random_gen = *7  ;
+verbosity = 1  )
 ;
 last_size = 2 ;
 input_size = 2 ;
@@ -181,21 +199,28 @@ name = "RBMClassificationModule" ;
 use_fast_approximations = 1 ;
 estimate_simpler_diag_hessian = 0 ;
 expdir = "" ;
-random_gen = *7   )
+random_gen = *7  ;
+verbosity = 1  )
 ;
 final_module = *0 ;
 final_cost = *0 ;
 partial_costs = []
 ;
+use_sample_for_up_layer = 0 ;
 online = 0 ;
 background_gibbs_update_ratio = 0 ;
 gibbs_chain_reinit_freq = 2147483647 ;
+use_mean_field_contrastive_divergence = 0 ;
+train_stats_window = -1 ;
 top_layer_joint_cd = 0 ;
 n_layers = 2 ;
 minibatch_size = 1 ;
 gibbs_down_state = 1 [ 0  0  [ 
 ]
 ] ;
+up_down_stage = 0 ;
+generative_connections = []
+;
 random_gen = *7  ;
 seed = 1827 ;
 stage = 30 ;
@@ -243,21 +268,34 @@ option = "nstages" ;
 values = []
 ;
 range = 3 [ 0 31 2 ] ;
-min_value = -3.4028234663852886e+38 ;
-max_value = 3.4028234663852886e+38 ;
-max_degradation = 3.4028234663852886e+38 ;
+min_value = -1.79769313486231571e+308 ;
+max_value = 1.79769313486231571e+308 ;
+max_degradation = 1.79769313486231571e+308 ;
 relative_max_degradation = -1 ;
-min_improvement = -3.4028234663852886e+38 ;
+min_improvement = -1.79769313486231571e+308 ;
 relative_min_improvement = -1 ;
 max_degraded_steps = 31 ;
-min_n_steps = 0  )
+min_n_steps = 0 ;
+nreturned = 16 ;
+best_objective = 0.614096318051678636 ;
+best_step = 16 ;
+met_early_stopping = 0  )
 ;
 provide_tester_expdir = 0 ;
 sub_strategy = []
 ;
 rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
-splitter = *0  )
+save_best_learner = 0 ;
+splitter = *0 ;
+auto_save = 0 ;
+best_objective = 0.614096318051678636 ;
+best_results = 4 [ 0.651261219307483818 0.5 0.614096318051678636 0 ] ;
+best_learner = *5  ;
+trialnum = 16 ;
+option_vals = []
+;
+verbosity = 0  )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 1 ;
