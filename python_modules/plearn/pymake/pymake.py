@@ -174,6 +174,11 @@ Ex: If a non time-critical file takes too long to compile in optimized mode
 a corresponding .<target>.override_compile_options file:
 { 'opt': '-Wall -g',
   'opt_boundcheck': '-Wall -g -DBOUNDCHECK'  }
+
+
+The environnement variable PYMAKE_OPTION is prepended to the command line 
+option. So you can define your default option their is they won't conflict
+with the one you add on the command line.
 """
 
 
@@ -2518,23 +2523,29 @@ def main( args ):
     i=0
     linkname = ''
     link_target_override = None
-    while i < len(args):
-        if args[i] == '-o':
-            linkname = args[i+1]
+
+    env_options=os.getenv('PYMAKE_OPTION')
+    option_to_parse=[]
+    if env_options:
+        option_to_parse=env_options.split()
+    option_to_parse+=args
+    
+    while i < len(option_to_parse):
+        if option_to_parse[i] == '-o':
+            linkname = option_to_parse[i+1]
+            i = i + 1
+        elif option_to_parse[i] == '-link-target':
+            link_target_override = option_to_parse[i+1]
             i = i + 1
 
-        elif args[i] == '-link-target':
-            link_target_override = args[i+1]
-            i = i + 1
-
-        elif args[i][0]=='-':
-            optionargs.append(args[i][1:])
+        elif option_to_parse[i][0]=='-':
+            optionargs.append(option_to_parse[i][1:])
 
         else:
             otherargs.append(args[i])
         i = i + 1
     del i # We don't need it anymore and it might be confusing
-
+    
 
     ####  Checking optionargs to know which task to perform
 
