@@ -920,9 +920,10 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
         else:
             info = file_info(cctarget)
             if info.hasmain or create_dll or create_so or create_pyso:
-                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
-                    info.make_symbolic_link(linkname, None, info.corresponding_output) # remake the correct symbolic link
-                    print 'Target',info.filebase,'is up to date.'
+                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll:
+                    # Refresh symbolic link.
+                    info.make_symbolic_link(linkname, None, info.corresponding_output)
+                    print 'Target', info.filebase, 'is up to date.'
                 else:
                     executables_to_link[info] = 1
                     for ccfile in info.get_ccfiles_to_link():
@@ -1910,6 +1911,10 @@ class FileInfo:
         # User-provided path for the link itself?
         if linkname == '':
             symlink_from = join(self.filedir, self.filebase)
+            if create_so or create_pyso:
+                symlink_from += '.so'
+                if create_so:
+                    symlink_from = 'lib' + symlink_from
         else:
             symlink_from = linkname
 
@@ -2806,9 +2811,9 @@ def main( args ):
 
         print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
         print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
-        print '++++ Computing dependencies of '+target+' ...',
+        print '++++ Computing dependencies of '+target
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
-        print ' done'
+        print '++++ Dependencies computed'
 
         if distribute:
             # We dont want to compile. We will extract the necessary file to compile
