@@ -80,7 +80,7 @@ void RPPath::declareMethods(RemoteMethodMap& rmm)
     rmm.inherited(inherited::_getRemoteMethodMap_());
 
     declareMethod(rmm, "absolute", &RPPath::absolute,
-            (BodyDoc("Return the absolute path.")));
+            (BodyDoc("Return the absolute path as a RPPath object.")));
 
     declareMethod(rmm, "canonical", &RPPath::canonical,
             (BodyDoc("Return the canonic path.")));
@@ -104,9 +104,12 @@ void RPPath::build_()
 //////////////
 // absolute //
 //////////////
-PPath RPPath::absolute()
+PP<RPPath> RPPath::absolute()
 {
-    return path.absolute();
+    PP<RPPath> abs_path = new RPPath();
+    abs_path->path = path.absolute();
+    abs_path->build();
+    return abs_path;
 }
 
 ///////////////

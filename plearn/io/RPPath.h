@@ -57,12 +57,14 @@ public:
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor
+    //! Default constructor.
     RPPath();
 
-    // The methods below are forwarded to the underlying PPath.
+    //! Return the RPPath object that represents the same path, but in its
+    //! absolute form.
+    PP<RPPath> absolute();
 
-    PPath absolute();
+    //! Forwarded to the underlying PPath.
     string canonical();
 
     //#####  PLearn::Object Protocol  #########################################
