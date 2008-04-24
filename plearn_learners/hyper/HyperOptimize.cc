@@ -107,7 +107,9 @@ PLEARN_IMPLEMENT_OBJECT(
 
 
 HyperOptimize::HyperOptimize()
-    : which_cost_pos(-1),
+    : best_objective(REAL_MAX),
+      trialnum(0),
+      which_cost_pos(-1),
       which_cost(),
       min_n_trials(0),
       provide_tester_expdir(false),
@@ -170,6 +172,24 @@ void HyperOptimize::declareOptions(OptionList& ol)
         "functions through the getOption() mechanism. If an expdir is declared\n"
         "this matrix is available under the name 'results.pmat' in the expdir.");
     
+    declareOption(ol, "best_objective", &HyperOptimize::best_objective,
+                  OptionBase::learntoption,
+                  "The best objective seen up to date.");
+
+    declareOption(ol, "best_results", &HyperOptimize::best_results,
+                  OptionBase::learntoption,
+                  "The best result seen up to date." );
+
+    declareOption(ol, "best_learner", &HyperOptimize::best_learner,
+                  OptionBase::learntoption,
+                  "A copy of the learner to the best learner seen up to date." );
+
+    declareOption(ol, "trialnum", &HyperOptimize::trialnum,
+                  OptionBase::learntoption, "The number of trial done." );
+
+    declareOption(ol, "option_vals", &HyperOptimize::option_vals,
+                  OptionBase::learntoption,"The option value to try." );
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -290,21 +310,19 @@ TVec<string> HyperOptimize::getResultNames() const
 
 Vec HyperOptimize::optimize()
 {
-    real best_objective = REAL_MAX;
-    Vec best_results;
-    PP<PLearner> best_learner;
-
     TVec<string> option_names;
     option_names = oracle->getOptionNames();
 
-    TVec<string> option_vals = oracle->generateFirstTrial();
+    if(option_vals.size()==0 && trialnum>0)
+        return best_results;//the optimization if finished
+    else if(option_vals.size()==0)
+        option_vals = oracle->generateFirstTrial();
+//        option_vals = oracle->generateNextTrial(option_vals, MISSING_VALUE);
     if (option_vals.size() != option_names.size())
         PLERROR("HyperOptimize::optimize: the number (%d) of option values (%s) "
                 "does not match the number (%d) of option names (%s) ",
                 option_vals.size(), tostring(option_vals).c_str(),
                 option_names.size(), tostring(option_names).c_str());
-
-    int trialnum = 0;
 
     which_cost_pos= getResultNames().find(which_cost);
     if(which_cost_pos < 0){

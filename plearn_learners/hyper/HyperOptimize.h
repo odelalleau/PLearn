@@ -108,6 +108,11 @@ class HyperOptimize: public HyperCommand
 protected:
     //! Store the results computed for each trial
     VMat resultsmat;
+    real best_objective;
+    Vec best_results;
+    PP<PLearner> best_learner;
+    int trialnum;
+    TVec<string> option_vals;
 
 public:
 
