@@ -920,7 +920,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
         else:
             info = file_info(cctarget)
             if info.hasmain or create_dll or create_so or create_pyso:
-                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so and not create_pyso:
+                if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll and not create_so:
                     info.make_symbolic_link(linkname, None, info.corresponding_output) # remake the correct symbolic link
                     print 'Target',info.filebase,'is up to date.'
                 else:
@@ -2809,7 +2809,6 @@ def main( args ):
         print '++++ Computing dependencies of '+target+' ...',
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
         print ' done'
-        get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
 
         if distribute:
             # We dont want to compile. We will extract the necessary file to compile
