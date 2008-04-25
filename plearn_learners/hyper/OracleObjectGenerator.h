@@ -62,7 +62,6 @@ public:
 
     //! The template Object from which we will generate other Objects
     PP<OptionsOracle> oracle;
-    //PP<CartesianProductOracle> oracle;
 
 
     // ******************

@@ -54,7 +54,6 @@ void OracleObjectGenerator::build_()
 {
     if (oracle.isNull())
         PLERROR("An OracleObjectGenerator MUST contain an oracle (an OptionsOracle).");
-    //PLERROR("An OracleObjectGenerator MUST contain an oracle (a CartesianProductOracle).");
 
     oracle->build();
     last_params.resize(0);
@@ -77,7 +76,10 @@ void OracleObjectGenerator::declareOptions(OptionList& ol)
 {
     declareOption(ol, "oracle", &OracleObjectGenerator::oracle,
                   OptionBase::buildoption, "The OptionsOracle used to generate the new Object parameters. \n");
-    //OptionBase::buildoption, "The CartesianProductOracle used to generate the new Object parameters. \n");
+
+    declareOption(ol,"last_params", &OracleObjectGenerator::last_params,
+                  OptionBase::learntoption,
+                  "The last parameter returned by the oracle. \n");
 
     inherited::declareOptions(ol);
 }

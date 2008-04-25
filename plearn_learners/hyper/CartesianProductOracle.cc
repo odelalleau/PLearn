@@ -68,6 +68,10 @@ void CartesianProductOracle::declareOptions(OptionList& ol)
                   "options in the option_names field. Each sub-list contains the values to be tried"
                   "for the corresponding option."
         );
+    declareOption(ol, "option_values_indices",
+                  &CartesianProductOracle::option_values_indices,
+                  OptionBase::learntoption,
+                  "The indices of each option value.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
