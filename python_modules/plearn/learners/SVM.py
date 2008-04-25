@@ -620,20 +620,29 @@ class SVM(object):
                              (valid_samples = None), were the model is re-trained
                              in any case.
 
+        'test_on_train': <bool> Should we test best models on the train set.
+
         'retrain_until_local_optimum_is_found': <bool> when calling run(), whether or
                          not to continue to tune hyperparameters until a local optimum
                          is found. If False, you can re-run run() several times. If True,
                          you can also re-run to possibly find better performance.
 
-        'max_ntrials': <int> when calling run(), maximum number of hyperparameters to try
-                      since the last forget().
-
-        'test_on_train': <bool> Should we test best models on {test, train} (1)
-
         'testlevel': <int> Frequency of test:
                      - 0: write results only at the end of the run()
                      - 1: write results each time a better validation cost is found in run()
                      - 2: write all intermediate results
+
+        'max_ntrials': <int> when calling run(), maximum number of hyperparameters to try
+                      since the last forget(). If set to 1, then no hyperoptimization will be performed
+                      (first arbitrary hyperaparameters will be chosen, this is recommended for debugging only)
+                      
+        'min_cost': <float> minimum sufficient cost value. If this value is reached then the hyperoptimization
+                    will stop immediately. Recommended for speed-up when the optimization is easy.
+                    
+        'max_cost': <float> maximum admissible cost value. If this value is not reached during the first set
+                    of hyperoptimization (e.g. 9 trials with a RBF kernel), then the hyperoptimization will stop.
+                    Recommended when you test SVM with different front-end and you suspect some front-ends to be
+                    simply bad ones (you do not want to waste time with them).
 
         'results_filename': <string> Path to an output file for results
         
@@ -700,6 +709,8 @@ class SVM(object):
                         'outputs_type',
                         'retrain_until_local_optimum_is_found',
                         'max_ntrials',
+                        'min_cost',
+                        'max_cost',
                         'retrain_on_valid',
                         'test_on_train',
                         'testlevel',
@@ -778,8 +789,11 @@ class SVM(object):
 
         self.retrain_on_valid = True
         self.retrain_until_local_optimum_is_found = True
-        self.max_ntrials = 50
+
         self.test_on_train = False
+        self.max_ntrials = 50
+        self.min_cost = None
+        self.max_cost = None
         
         self.verbosity = 0
         self.testlevel = 1
@@ -823,12 +837,6 @@ class SVM(object):
             return None
         return dataspec[ self.testset_key ]
 
-    def additional_preproc(self, input_vmat, isTrain=False):
-        if self.balance_classes and isTrain:
-            return ReplicateSamplesVMatrix(source = input_vmat,
-                                           operate_on_bags = (input_vmat.targetsize > 1 ))
-        return input_vmat
-
     ## specific to libsvm
     """ Return samples and targets in the format required
         by libsvm, i.e. lists of float.
@@ -855,7 +863,9 @@ class SVM(object):
         return samples, targets
 
     def get_svminputlist(self, input_vmat, isTrain=False):
-        input_vmat = self.additional_preproc( input_vmat, isTrain )
+        if self.balance_classes and isTrain:
+            input_vmat = ReplicateSamplesVMatrix(source = input_vmat,
+                                                 operate_on_bags = (input_vmat.targetsize > 1 ) )
         samples, targets = self.get_datalist( input_vmat )
         if self.normalize_inputs:
             if self.input_means == None:
@@ -906,8 +916,8 @@ class SVM(object):
         self.class_priors = class_priors
 
         if self.verbosity > 0:
-            print "  ( class priors: %s  -- %d samples)" % \
-                     ( class_priors, len(targets) )
+            print "  ( class priors: %s  -- %d samples of dim %d )" % \
+                     ( class_priors, len(targets), len(samples[0]) )
 
         if self.balanceC:
             weight = [ 1./p for p in class_priors.values() ]
@@ -1147,15 +1157,18 @@ class SVM(object):
              ):
         if self.verbosity > 3:
             print "SVM::train() called ", dataspec.keys()
-        if self.verbosity > 1:
-            print "launching libsvm with param %s " % param    
         
         if param == None:
             if not self.best_param:
+                if self.verbosity > 0:
+                    print "WARNING: train() called without hyper-parameters "+\
+                          "and no best hyperparameters found => run() called"
                 return self.run(dataspec)
             param = self.best_param.copy()
         elif 'kernel_type' not in param:
             param['kernel_type'] = self.kernel_type
+        if self.verbosity > 1:
+            print "launching libsvm with param %s " % param    
         
         trainset = self.train_inputspec(dataspec)
         self.get_data_stats( trainset )
@@ -1454,17 +1467,16 @@ class SVM(object):
         validset = self.valid_inputspec(dataspec)
         testset  = self.test_inputspec(dataspec)
         # Cross Validation
-        if 'fold' in self.validtype:
+        if self.validset_key not in dataspec:
+            if self.verbosity > 0:
+                print "\n** training model on entire train"
             self.train( dataspec )
 
         # Simple Validation
         else:
-            self.validtype = 'simple'
-            # CAUTION: in the case of simple validation without retraining on {train+valid},
-            #          self.best_model is supposed to be updated
             if self.retrain_on_valid:
                 """ Uncomment following lines if you want to check that
-                    retraining on {train + valid} sets does not degrade.
+                    retraining on {train + valid} sets does not degrade test performance.
                 """
                 #train_stats = None
                 #test_stats = None
@@ -1490,6 +1502,12 @@ class SVM(object):
                     print "\n** re-training model on { train + valid } "
                 self.train( {self.trainset_key: tv_set} )
 
+            # CAUTION: in the case of simple validation without retraining on {train+valid},
+            #          self.best_model is supposed to be up-to-date or None
+            elif self.best_model == None:
+                self.validtype = 'simple'
+                self.train( dataspec )
+
         train_stats = None
         test_stats = None
         if self.test_on_train:
@@ -1504,7 +1522,7 @@ class SVM(object):
                             None, test_stats, train_stats )
         self.write_results( self.best_param,
                             self.valid_stats, self.test_stats, self.train_stats )
-
+        return dataspec
 
     """ THE interesting function of the class.
         See __main__ below for usage.
@@ -1513,6 +1531,8 @@ class SVM(object):
         cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
     def run(self, dataspec):
+        assert self.testlevel >= 0
+        assert self.max_ntrials > 0
         trainset = self.train_inputspec(dataspec)
         validset = self.valid_inputspec(dataspec)
         testset  = self.test_inputspec(dataspec)
@@ -1531,8 +1551,14 @@ class SVM(object):
         else:
             param_to_try = expert.choose_new_param()
         
+        local_retrain_until_local_optimum_is_found = True
         for param in param_to_try:
 
+            if self.max_ntrials == 1: # No hyper-optimization (debug)
+                self.best_param = param
+                self.validset = None
+                return self.retrain_and_writeresults(dataspec)
+            
             valid_stats = self.valid(dataspec, param)
 
             # No improvement measured
@@ -1544,9 +1570,8 @@ class SVM(object):
 
             # Better valid cost is obtained!
             else:
-                print "better cost was found!"
                 # Simple Validation
-                if 'fold' not in self.validtype:
+                if self.validset_key in dataspec:
                     self.best_model = self.model
                     
                 if self.testlevel > 0:
@@ -1554,15 +1579,19 @@ class SVM(object):
                 else:
                     self.write_results( param, valid_stats, None, None, True  )
 
-            if len(expert.trials_param_list)-L0 >= self.max_ntrials:
-                return dataspec
+            if( len(expert.trials_param_list)-L0 >= self.max_ntrials
+            or  ( self.min_cost <> None and expert.best_cost <= self.min_cost ) ):
+                local_retrain_until_local_optimum_is_found = False
+                break
 
         if( self.retrain_until_local_optimum_is_found
-        and expert.should_be_tuned_again() ):
+        and local_retrain_until_local_optimum_is_found
+        and expert.should_be_tuned_again()
+        and ( self.max_cost == None or expert.best_cost <= self.max_cost ) ):
            return self.run( dataspec )
 
         if self.testlevel == 0:
-             self.retrain_and_writeresults(dataspec)
+             return self.retrain_and_writeresults(dataspec)
 
         return dataspec
 
