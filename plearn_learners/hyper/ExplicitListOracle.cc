@@ -46,7 +46,8 @@ namespace PLearn {
 using namespace std;
 
 ExplicitListOracle::ExplicitListOracle()
-    :OptionsOracle()
+    :OptionsOracle(),
+     nreturned(0)
 /* ### Initialise all fields to their default value */
 {
     // ...
@@ -64,6 +65,10 @@ void ExplicitListOracle::declareOptions(OptionList& ol)
 
     declareOption(ol, "option_values", &ExplicitListOracle::option_values, OptionBase::buildoption,
                   "A matrix with as many columns as there are options, giving their values");
+
+    declareOption(ol, "nreturned", &ExplicitListOracle::nreturned,
+                  OptionBase::learntoption,
+                  "The number of returned option");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
