@@ -2650,8 +2650,8 @@ def main( args ):
             optionargs.remove(option)
             if (option != 'local'):
                 if (option[5] != '='):
-                    print 'Syntax for \'-local\' option is \'-local=<nb_proc>\', but' \
-                          ' read \'' + option + '\': one processor will be used'
+                    print 'Syntax is \'-local=<nb_proc>\''\
+                          '. Read \'' + option + '\'. Will ignoring the option'
                     # Keep default value (defined in config file or above
                     # nprocesses_on_localhost=1
                 else:
