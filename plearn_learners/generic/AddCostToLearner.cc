@@ -84,6 +84,7 @@ PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
 //////////////////////
 AddCostToLearner::AddCostToLearner()
     : bag_size(0),
+      train_time(0),
       check_output_consistency(1),
       combine_bag_outputs_method(1),
       compute_costs_on_bags(0),
@@ -184,6 +185,10 @@ void AddCostToLearner::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "If true, then during training we find the best threshold between\n"
         "classes.");
+
+    declareOption(ol, "train_time",
+                  &AddCostToLearner::train_time, OptionBase::buildoption,
+                  "The time it took to train in second.");
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
