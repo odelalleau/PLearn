@@ -73,12 +73,13 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
                   "The indicator to report progress through a progress bar\n");
     declareOption(ol, "verbosity", &RegressionTreeRegisters::verbosity, OptionBase::buildoption,
                   "The desired level of verbosity\n");
-    declareOption(ol, "tsource", &RegressionTreeRegisters::tsource, OptionBase::learntoption,
+    declareOption(ol, "tsource", &RegressionTreeRegisters::tsource,
+                  OptionBase::learntoption | OptionBase::nosave,
                   "The source VMatrix transposed");
 
     declareOption(ol, "source", &RegressionTreeRegisters::source,
-                  OptionBase::buildoption|OptionBase::nosave,
-                  "DEPRECATED The source VMatrix");
+                  OptionBase::buildoption,
+                  "The source VMatrix");
 
     declareOption(ol, "next_id", &RegressionTreeRegisters::next_id, OptionBase::learntoption,
                   "The next id for creating a new leave\n");
@@ -98,6 +99,8 @@ void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(tsorted_row, copies);
     deepCopyField(leave_register, copies);
     deepCopyField(getExample_tmp, copies);
+//    deepCopyField(tsource,copies);
+//    deepCopyField(source,copies);
 }
 
 void RegressionTreeRegisters::build()
@@ -114,6 +117,7 @@ void RegressionTreeRegisters::build_()
 
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {   
+    source = the_train_set;
     VMat tmp = VMat(new TransposeVMatrix(the_train_set));
     PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
     tsource = VMat(tmp2 );
