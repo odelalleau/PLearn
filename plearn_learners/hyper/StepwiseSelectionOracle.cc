@@ -80,6 +80,24 @@ void StepwiseSelectionOracle::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Maximum number of variables that should be permitted in the search");
 
+    declareOption(ol, "current_indexes_searchset",
+                  &StepwiseSelectionOracle:: current_indexes_searchset,
+                  OptionBase::learntoption,
+                  "Contains the remaining combinations to generate for the"
+                  " current variable.");
+
+    //Should be saved, but PLearn don't save priority_queue now.
+    //TODO: implement in PStream.h 
+    //void writePriorityQueue(PStream& out, const PriorityQueueTemplate& s)
+    //void readPriorityQueue(PStream& in, const PriorityQueueTemplate& s)
+    //operator>>(PStream &in, priority_queue<T> &v)
+    //operator>>(PStream &in, priority_queue<T> &v)
+//     declareOption(ol, "combination_performance",
+//                   &StepwiseSelectionOracle:: combination_performance,
+//                   OptionBase::learntoption,
+//                   "This remembers the performance of each combination tried in the"
+//                   " current search set.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
