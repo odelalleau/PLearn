@@ -99,7 +99,11 @@ void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(tsorted_row, copies);
     deepCopyField(leave_register, copies);
     deepCopyField(getExample_tmp, copies);
+//tsource should be deep copied, but as currently when it is deep copied
+// the copy is not used anymore to train. To save memory we don't do it.
+// It is deep copied eavily by HyperLearner and HyperOptimizer
 //    deepCopyField(tsource,copies);
+//no need to deep copy source as we don't reuse it after initialization
 //    deepCopyField(source,copies);
 }
 
@@ -117,6 +121,9 @@ void RegressionTreeRegisters::build_()
 
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {   
+    if(the_train_set==source && tsource)
+        //we set the existing source file
+        return;
     source = the_train_set;
     VMat tmp = VMat(new TransposeVMatrix(the_train_set));
     PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
