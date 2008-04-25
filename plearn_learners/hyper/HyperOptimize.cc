@@ -115,7 +115,9 @@ HyperOptimize::HyperOptimize()
       provide_tester_expdir(false),
       rerun_after_sub(false),
       provide_sub_expdir(true),
-      save_best_learner(false)
+      save_best_learner(false),
+      auto_save(0),
+      auto_save_test(0)
 { }
 
 
@@ -162,6 +164,17 @@ void HyperOptimize::declareOptions(OptionList& ol)
     declareOption(
         ol, "splitter", &HyperOptimize::splitter, OptionBase::buildoption,
         "If not specified, we'll use default splitter specified in the hyper-learner's tester option");
+
+    declareOption(
+        ol, "auto_save", &HyperOptimize::auto_save, OptionBase::buildoption,
+        "Save the hlearner and reload it if necessary.\n"
+        "0 mean never, 1 mean always and >0 save iff trialnum%auto_save == 0.\n"
+        "In the last case, it save after the last trial.\n");
+
+    declareOption(
+        ol, "auto_save_test", &HyperOptimize::auto_save_test, OptionBase::buildoption,
+        "exit after each auto_save. This is usefull to test auto_save.\n"
+        "0 mean never, 1 mean always and >0 save iff trialnum%auto_save == 0");
 
     declareOption(
         ol, "resultsmat", &HyperOptimize::resultsmat,
@@ -215,10 +228,10 @@ void HyperOptimize::build()
 void HyperOptimize::setExperimentDirectory(const PPath& the_expdir)
 {
     inherited::setExperimentDirectory(the_expdir);
-    createResultsMat();    
+    getResultsMat();    
 }
 
-void HyperOptimize::createResultsMat()
+void HyperOptimize::getResultsMat()
 {
     TVec<string> cost_fields = getResultNames();
     TVec<string> option_fields = hlearner->option_fields;
@@ -230,7 +243,12 @@ void HyperOptimize::createResultsMat()
     if (! expdir.isEmpty())
     {
         string fname = expdir+"results.pmat";
-        resultsmat = new FileVMatrix(fname,0,w);
+        if(isfile(fname)){
+            //we reload the old version if it exist
+            resultsmat = new FileVMatrix(fname, true);
+            return;
+        }else
+            resultsmat = new FileVMatrix(fname,0,w);
     }
     else
         resultsmat = new MemoryVMatrix(0,w);
@@ -310,20 +328,22 @@ TVec<string> HyperOptimize::getResultNames() const
 
 Vec HyperOptimize::optimize()
 {
+//in the case when auto_save is true. This function can be called even
+//if the optimisation is finished. We must not redo it in this case.
+    if(trialnum>0&&!option_vals&&resultsmat.length()==trialnum+1)
+        return best_results;
     TVec<string> option_names;
     option_names = oracle->getOptionNames();
 
-    if(option_vals.size()==0 && trialnum>0)
-        return best_results;//the optimization if finished
-    else if(option_vals.size()==0)
-        option_vals = oracle->generateFirstTrial();
-//        option_vals = oracle->generateNextTrial(option_vals, MISSING_VALUE);
-    if (option_vals.size() != option_names.size())
-        PLERROR("HyperOptimize::optimize: the number (%d) of option values (%s) "
-                "does not match the number (%d) of option names (%s) ",
-                option_vals.size(), tostring(option_vals).c_str(),
-                option_names.size(), tostring(option_names).c_str());
-
+    if(trialnum==0){
+        if(option_vals.size()==0)
+            option_vals = oracle->generateFirstTrial();
+        if (option_vals.size() != option_names.size())
+            PLERROR("HyperOptimize::optimize: the number (%d) of option values (%s) "
+                    "does not match the number (%d) of option names (%s) ",
+                    option_vals.size(), tostring(option_vals).c_str(),
+                    option_names.size(), tostring(option_names).c_str());
+    }
     which_cost_pos= getResultNames().find(which_cost);
     if(which_cost_pos < 0){
         if(!pl_islong(which_cost))
@@ -391,6 +411,13 @@ Vec HyperOptimize::optimize()
             }
         }
         ++trialnum;
+        if(auto_save>0 &&
+           (trialnum%auto_save==0 || !option_vals) ){
+            hlearner->auto_save();
+            if(auto_save_test>0 && trialnum%auto_save_test==0)
+                PLERROR("In HyperOptimize::optimize() - auto_save_test is true,"
+                        " exiting");
+        }
     }
 
     // Detect the case where no trials at all were performed!

@@ -133,6 +133,8 @@ public:
     bool rerun_after_sub;
     bool provide_sub_expdir; // should sub_strategy be provided an expdir
     bool save_best_learner;
+    int auto_save;
+    int auto_save_test;
     PP<Splitter> splitter;  // (if not specified, use default splitter specified in PTester)
 
     // ****************
@@ -158,7 +160,7 @@ protected:
     // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
-    void createResultsMat();
+    void getResultsMat();
     void reportResult(int trialnum,  const Vec& results);
     Vec runTest(int trialnum);
 

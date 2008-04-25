@@ -62,6 +62,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "They are accessible in the higher level PTester as: \n"
     "for ex: E[test1.E[mse]]");
 
+bool HyperLearner::reloading = false;
 
 TVec<string> HyperLearner::getTrainCostNames() const
 {
@@ -72,7 +73,9 @@ TVec<string> HyperLearner::getTrainCostNames() const
 }
 
 HyperLearner::HyperLearner()
-    : provide_strategy_expdir(true), save_final_learner(true)
+    : provide_strategy_expdir(true),
+      save_final_learner(true),
+      reloaded(false)
 {
     // Forward the 'test' method to the underlying learner.
     forward_test = true;
@@ -123,6 +126,12 @@ HyperLearner::declareOptions(OptionList &ol)
 
     declareOption(ol, "save_final_learner", &HyperLearner::save_final_learner, OptionBase::buildoption,
                   "should final learner be saved in expdir/final_learner.psave");
+
+    declareOption(ol, "reloaded", &HyperLearner::reloaded,
+                  OptionBase::learntoption|OptionBase::nosave,
+                  "Used internally to don't reload a file many as the build function\n"
+                  " can be called many time after the expdir is set. In particular\n"
+                  " PLearn::HyperLearner::setTrainingSet.");
 
     inherited::declareOptions(ol);
 
@@ -263,6 +272,8 @@ void HyperLearner::build_()
 
     for(int commandnum=0; commandnum<strategy.length(); commandnum++)
         strategy[commandnum]->setHyperLearner(this);
+
+    auto_load();
 }
 
 /////////
@@ -312,6 +323,42 @@ void HyperLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
+void HyperLearner::auto_save()
+{
+    if(expdir.isEmpty())
+        PLERROR("In HyperLearner::auto_save - we can't auto_save as"
+                " we don't have any expdir");
+    PPath f = expdir/"hyper_learner_auto_save.psave";
+    PPath tmp=f+".tmp";
+
+    if(verbosity>0)
+        perr << "In HyperLearner::auto_save() - We save the hlearner"
+             << endl;
+    PLearn::save(tmp, this);
+    mvforce(tmp,f);
+}
+
+void HyperLearner::auto_load()
+{
+    if(expdir.isEmpty()){
+        if(verbosity>1)
+            pout<<"In HyperLearner::auto_load() - no expdir. Can't reload."<<endl;
+        return;
+    }
+    PPath f = expdir/"hyper_learner_auto_save.psave";
+    bool isf=isfile(f);
+    if(stage==0 && !reloading && !reloaded && isf){
+        if(verbosity>0)
+            pout<<"In HyperLearner::auto_load() - reloading from file: "<<f<<endl;
+        reloading = true;
+        PLearn::load(f,*this);
+        reloading = false;
+        reloaded = true;
+    }
+    else if(isf && verbosity>1)
+        pout<<"In HyperLearner::auto_load() - no file to reload."<<endl;
+
+}
 
 } // end of namespace PLearn
 
