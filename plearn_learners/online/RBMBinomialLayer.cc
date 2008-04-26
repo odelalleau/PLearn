@@ -487,6 +487,27 @@ real RBMBinomialLayer::freeEnergyContribution(const Vec& unit_activations)
     return result;
 }
 
+void RBMBinomialLayer::freeEnergyContributionGradient(
+    const Vec& unit_activations,
+    Vec& unit_activations_gradient,
+    real output_gradient, bool accumulate) const
+{
+    PLASSERT( unit_activations.size() == size );
+    unit_activations_gradient.resize( size );
+    if( !accumulate ) unit_activations_gradient.clear();
+    real* a = unit_activations.data();
+    real* ga = unit_activations_gradient.data();
+    for (int i=0; i<size; i++)
+    {
+        if (use_fast_approximations)
+            ga[i] -= output_gradient *
+                fastsigmoid( a[i] );
+        else
+            ga[i] -= output_gradient *
+                sigmoid( a[i] );
+    }
+}
+
 int RBMBinomialLayer::getConfigurationCount()
 {
     return size < 31 ? 1<<size : INFINITE_CONFIGURATIONS;

@@ -761,6 +761,14 @@ real RBMLayer::freeEnergyContribution(const Vec& unit_activations) const
     return 0;
 }
 
+void RBMLayer::freeEnergyContributionGradient(const Vec& unit_activations,
+                                              Vec& unit_activations_gradient,
+                                              real output_gradient,
+                                              bool accumulate ) const
+{
+    PLERROR("RBMLayer::freeEnergyContributionGradient(Vec, Vec) not implemented in subclass %s\n",classname().c_str());
+}
+
 int RBMLayer::getConfigurationCount()
 {
     PLERROR("RBMLayer::getConfigurationCount() not implemented in subclass %s\n",classname().c_str());
