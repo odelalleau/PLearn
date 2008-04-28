@@ -29,33 +29,34 @@ transpose_first_hidden_layer = 0 ;
 margin = 1 ;
 do_not_change_params = 0 ;
 optimizer = *2 ->GradientOptimizer(
-start_learning_rate = 0.0100000000000000002 ;
-learning_rate = 0.0040016006402561026 ;
+start_learning_rate = 0.00100000000000000002 ;
+learning_rate = 0.000870322019147084396 ;
 decrease_constant = 0.00100000000000000002 ;
 lr_schedule = 0  0  [ 
 ]
 ;
 use_stochastic_hack = 0 ;
 verbosity = 0 ;
-nstages = 15  )
+nstages = 15 ;
+early_stop = 0  )
 ;
 batch_size = 10 ;
 initialization_method = "uniform_linear" ;
 operate_on_bags = 0 ;
 max_bag_size = 20 ;
-paramsvalues = 9 [ -13.1263168777845713 19.5941887064242941 -12.3293937074457105 -28.661808141978188 26.1194879580729342 2.86359530614624225 10.1351639859538007 -75.9476149878473024 -43.2771486529794842 ] ;
+paramsvalues = 9 [ -0.557025969227852968 1.14928163614964474 -0.45781959698541691 -2.16987919303079169 1.08539803737234242 3.51007804148783187 4.0760403120233013 -18.5217581493060095 -10.6940446511284577 ] ;
 random_gen = *3 ->PRandom(
 seed = 1827 ;
 fixed_seed = 0  )
 ;
 seed = 1827 ;
-stage = 100 ;
+stage = 10 ;
 n_examples = 150 ;
 inputsize = 4 ;
 targetsize = 2 ;
 weightsize = 0 ;
 forget_when_training_set_changes = 0 ;
-nstages = 100 ;
+nstages = 10 ;
 report_progress = 1 ;
 verbosity = 1 ;
 nservers = 0 ;

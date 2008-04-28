@@ -9,10 +9,11 @@ nnet = pl.NNet(
         direct_in_to_out = False,
         nhidden = 1,
         noutputs = 2,
-        nstages = 100,
+        nstages = 10,
         optimizer = pl.GradientOptimizer(
-            start_learning_rate = 1e-2,
+            start_learning_rate = 1e-3,
             decrease_constant = 1e-3,
+            verbosity = 0,
             ),
         output_transfer_func = '',
         weight_decay = 0,
