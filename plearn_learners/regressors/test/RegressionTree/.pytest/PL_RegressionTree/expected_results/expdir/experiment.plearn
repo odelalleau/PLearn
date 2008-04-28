@@ -84,7 +84,7 @@
                 "E[test2.E[base_reward_l1]]"
                 ]
             ),
-        verbosity = 2
+        verbosity = 1
         ),
     provide_learner_expdir = 1,
     save_learners = 0,

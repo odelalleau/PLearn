@@ -156,7 +156,11 @@ relative_max_degradation = -1 ;
 min_improvement = -3.40282000000000014e+38 ;
 relative_min_improvement = -1 ;
 max_degraded_steps = 120 ;
-min_n_steps = 2  )
+min_n_steps = 2 ;
+nreturned = 0 ;
+best_objective = 1.79769313486231571e+308 ;
+best_step = -1 ;
+met_early_stopping = 0  )
 ;
 provide_tester_expdir = 1 ;
 sub_strategy = []
@@ -164,7 +168,18 @@ sub_strategy = []
 rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
 save_best_learner = 0 ;
-splitter = *0 )
+splitter = *0 ;
+auto_save = 0 ;
+auto_save_diff_time = 10800 ;
+auto_save_test = 0 ;
+best_objective = 1.79769313486231571e+308 ;
+best_results = []
+;
+best_learner = *0 ;
+trialnum = 0 ;
+option_vals = []
+;
+verbosity = 0  )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 0 ;
@@ -181,7 +196,7 @@ weightsize = -1 ;
 forget_when_training_set_changes = 0 ;
 nstages = 1 ;
 report_progress = 1 ;
-verbosity = 2 ;
+verbosity = 1 ;
 nservers = 0 ;
 save_trainingset_prefix = "" ;
 test_minibatch_size = 1 ;
