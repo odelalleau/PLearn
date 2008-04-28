@@ -377,7 +377,7 @@ bool rm(const PPath& file)
 void mv(const PPath& source, const PPath& destination)
 {
     // TODO Cross-platform
-    string command = "\\mv " + source.absolute() + " " + destination.absolute();
+    string command = "\\mv '" + source.absolute() + "' '" + destination.absolute()+"'";
     system(command.c_str());
 }
 
@@ -386,7 +386,7 @@ void mv(const PPath& source, const PPath& destination)
 /////////////
 void mvforce(const PPath& source, const PPath& destination)
 {
-    string command = "\\mv -f " + source.absolute() + " " + destination.absolute();
+    string command = "\\mv -f '" + source.absolute() + "' '" + destination.absolute()+"'";
     system(command.c_str());
 }
 
