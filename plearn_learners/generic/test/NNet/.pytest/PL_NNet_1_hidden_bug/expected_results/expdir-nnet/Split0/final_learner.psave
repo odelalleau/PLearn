@@ -1,0 +1,64 @@
+*1 ->NNet(
+nhidden = 1 ;
+nhidden2 = 0 ;
+noutputs = 2 ;
+weight_decay = 0 ;
+bias_decay = 0 ;
+layer1_weight_decay = 0 ;
+layer1_bias_decay = 0 ;
+layer2_weight_decay = 0 ;
+layer2_bias_decay = 0 ;
+output_layer_weight_decay = 0 ;
+output_layer_bias_decay = 0 ;
+direct_in_to_out_weight_decay = 0 ;
+penalty_type = "L2_square" ;
+L1_penalty = 0 ;
+fixed_output_weights = 0 ;
+input_reconstruction_penalty = 0 ;
+direct_in_to_out = 0 ;
+rbf_layer_size = 0 ;
+first_class_is_junk = 1 ;
+output_transfer_func = "" ;
+hidden_transfer_func = "tanh" ;
+cost_funcs = 1 [ "mse" ] ;
+classification_regularizer = 0 ;
+first_hidden_layer = *0 ;
+first_hidden_layer_is_output = 0 ;
+n_non_params_in_first_hidden_layer = 0 ;
+transpose_first_hidden_layer = 0 ;
+margin = 1 ;
+do_not_change_params = 0 ;
+optimizer = *2 ->GradientOptimizer(
+start_learning_rate = 0.0100000000000000002 ;
+learning_rate = 0.0040016006402561026 ;
+decrease_constant = 0.00100000000000000002 ;
+lr_schedule = 0  0  [ 
+]
+;
+use_stochastic_hack = 0 ;
+verbosity = 0 ;
+nstages = 15  )
+;
+batch_size = 10 ;
+initialization_method = "uniform_linear" ;
+operate_on_bags = 0 ;
+max_bag_size = 20 ;
+paramsvalues = 9 [ -13.1263168777845713 19.5941887064242941 -12.3293937074457105 -28.661808141978188 26.1194879580729342 2.86359530614624225 10.1351639859538007 -75.9476149878473024 -43.2771486529794842 ] ;
+random_gen = *3 ->PRandom(
+seed = 1827 ;
+fixed_seed = 0  )
+;
+seed = 1827 ;
+stage = 100 ;
+n_examples = 150 ;
+inputsize = 4 ;
+targetsize = 2 ;
+weightsize = 0 ;
+forget_when_training_set_changes = 0 ;
+nstages = 100 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )

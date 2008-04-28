@@ -1,0 +1,38 @@
+# Simple basic NNet experiment for a multivariate regression task.
+# It has only one hidden neuron so as to serve as a test for a bug
+# that appeared with 1-hidden-neuron networks.
+
+from plearn.pyplearn import pl
+
+nnet = pl.NNet(
+        cost_funcs = [ 'mse' ],
+        direct_in_to_out = False,
+        nhidden = 1,
+        noutputs = 2,
+        nstages = 100,
+        optimizer = pl.GradientOptimizer(
+            start_learning_rate = 1e-2,
+            decrease_constant = 1e-3,
+            ),
+        output_transfer_func = '',
+        weight_decay = 0,
+        batch_size = 10,
+        )
+
+tester = pl.PTester(
+        expdir = 'expdir-nnet',
+        learner = nnet,
+        dataset = pl.MemoryVMatrix(
+            source = pl.AutoVMatrix( filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat" )),
+        statnames = [ 'E[test1.E[mse]]' ],
+        splitter = pl.FractionSplitter(
+            splits = TMat(1, 2, [ (0, 0.75), (0.75, 1) ]),
+            ),
+        save_initial_tester = False,
+        save_stat_collectors = False,
+        save_test_names = False,
+        )
+
+def main():
+    return tester
+
