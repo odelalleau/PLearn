@@ -50,7 +50,7 @@
 
 namespace PLearn {
 using namespace std;
-
+class Profiler;
 /**
  *  Carry out an hyper-parameter optimization according to an Oracle
  *
@@ -113,6 +113,7 @@ protected:
     PP<PLearner> best_learner;
     int trialnum;
     TVec<string> option_vals;
+    Profiler auto_save_timer;
 
 public:
 
@@ -135,6 +136,7 @@ public:
     bool save_best_learner;
     int auto_save;
     int auto_save_test;
+    int auto_save_diff_time;
     PP<Splitter> splitter;  // (if not specified, use default splitter specified in PTester)
 
     // ****************

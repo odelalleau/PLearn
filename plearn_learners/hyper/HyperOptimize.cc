@@ -48,6 +48,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
@@ -117,7 +118,8 @@ HyperOptimize::HyperOptimize()
       provide_sub_expdir(true),
       save_best_learner(false),
       auto_save(0),
-      auto_save_test(0)
+      auto_save_test(0),
+      auto_save_diff_time(3*60*60)
 { }
 
 
@@ -169,7 +171,14 @@ void HyperOptimize::declareOptions(OptionList& ol)
         ol, "auto_save", &HyperOptimize::auto_save, OptionBase::buildoption,
         "Save the hlearner and reload it if necessary.\n"
         "0 mean never, 1 mean always and >0 save iff trialnum%auto_save == 0.\n"
-        "In the last case, it save after the last trial.\n");
+        "In the last case, it save after the last trial.\n"
+        "See auto_save_diff_time as both condition must be true to save.\n");
+
+    declareOption(
+        ol, "auto_save_diff_time", &HyperOptimize::auto_save_diff_time,
+        OptionBase::buildoption,
+        "HyperOptimize::auto_save_diff_time is the mininum amount of time before the\n"
+        " first save point and between two save point in second. Default 3h.");
 
     declareOption(
         ol, "auto_save_test", &HyperOptimize::auto_save_test, OptionBase::buildoption,
@@ -203,6 +212,10 @@ void HyperOptimize::declareOptions(OptionList& ol)
     declareOption(ol, "option_vals", &HyperOptimize::option_vals,
                   OptionBase::learntoption,"The option value to try." );
 
+//     declareOption(ol, "auto_save_timer", &HyperOptimize::auto_save_timer,
+//                   OptionBase::learntoption|OptionBase::nosave,
+//                   "The last time a save was done." );
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -216,6 +229,8 @@ void HyperOptimize::build_()
     // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
     // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
     // ### You should assume that the parent class' build_() has already been called.
+
+    auto_save_timer.activate();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -356,6 +371,8 @@ Vec HyperOptimize::optimize()
     Vec results;
     while(option_vals)
     {
+        auto_save_timer.start("auto_save");
+
         if(verbosity>0)
             perr << "In HyperOptimize::optimize() - We optimize with "
                 "parameters " << option_names << " with value " << option_vals
@@ -411,12 +428,20 @@ Vec HyperOptimize::optimize()
             }
         }
         ++trialnum;
-        if(auto_save>0 &&
-           (trialnum%auto_save==0 || !option_vals) ){
-            hlearner->auto_save();
-            if(auto_save_test>0 && trialnum%auto_save_test==0)
-                PLERROR("In HyperOptimize::optimize() - auto_save_test is true,"
-                        " exiting");
+
+        auto_save_timer.end("auto_save");
+        if(auto_save>0){
+            if(trialnum%auto_save!=0 && option_vals)
+                continue;
+            int s=auto_save_timer.getStats("auto_save").wall_duration;
+            s/=auto_save_timer.ticksPerSecond();
+            if(s>auto_save_diff_time|| ! option_vals){
+                hlearner->auto_save();
+                auto_save_timer.reset("auto_save");
+                if(auto_save_test>0 && trialnum%auto_save_test==0)
+                    PLERROR("In HyperOptimize::optimize() - auto_save_test is true,"
+                            " exiting");
+            }
         }
     }
 

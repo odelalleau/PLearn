@@ -342,21 +342,21 @@ void HyperLearner::auto_load()
 {
     if(expdir.isEmpty()){
         if(verbosity>1)
-            pout<<"In HyperLearner::auto_load() - no expdir. Can't reload."<<endl;
+            PLWARNING("In HyperLearner::auto_load() - no expdir. Can't reload.");
         return;
     }
     PPath f = expdir/"hyper_learner_auto_save.psave";
     bool isf=isfile(f);
     if(stage==0 && !reloading && !reloaded && isf){
         if(verbosity>0)
-            pout<<"In HyperLearner::auto_load() - reloading from file: "<<f<<endl;
+            PLWARNING("In HyperLearner::auto_load() - reloading from file %s",f.c_str());
         reloading = true;
         PLearn::load(f,*this);
         reloading = false;
         reloaded = true;
     }
     else if(isf && verbosity>1)
-        pout<<"In HyperLearner::auto_load() - no file to reload."<<endl;
+        PLWARNING("In HyperLearner::auto_load() - no file to reload.");
 
 }
 
