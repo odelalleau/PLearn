@@ -173,10 +173,13 @@ for argv in to_parse:
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank"]:
         param=argv.split('=')[0][2:]
-        if param in ["req", "files", "raw", "rank"]:
+        if param in ["req", "files", "rank"]:
             #param that we happend to if defined more then one time
             dbi_param.setdefault(param,'True')
             dbi_param[param]+='&&('+argv.split('=',1)[1]+')'
+        elif param == "raw":
+            dbi_param.setdefault(param,'')
+            dbi_param[param]+='\n'+argv.split('=',1)[1]
         else:
             #otherwise we erase the old value
             dbi_param[param]=argv.split('=',1)[1]
