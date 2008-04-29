@@ -208,6 +208,7 @@ void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v,
     PyObject* pyarr= 
         PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
                            PyArray_DescrFromType(PL_NPY_REAL), 0);
+    Py_XDECREF(pyarr0);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj,
                                 print_traceback);
@@ -232,6 +233,7 @@ void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m,
     PyObject* pyarr= 
         PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
                            PyArray_DescrFromType(PL_NPY_REAL), 0);
+    Py_XDECREF(pyarr0);
     if (! pyarr)
         PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj,
                                 print_traceback);
