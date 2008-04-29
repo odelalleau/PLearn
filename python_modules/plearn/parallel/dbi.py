@@ -166,9 +166,12 @@ class DBIBase:
         # It should not take the "" or " " value. Use "." instead.
         self.tmp_dir = 'TMP_DBI'
         #
-        self.file_redirect_stdout = True
-        self.file_redirect_stderr = True
-        self.redirect_stderr_to_stdout = False
+        if not hasattr(self, 'file_redirect_stdout'):
+            self.file_redirect_stdout = True
+        if not hasattr(self, 'file_redirect_stderr'):
+            self.file_redirect_stderr = True
+        if not hasattr(self, 'redirect_stderr_to_stdout'):
+            self.redirect_stderr_to_stdout = False
 
         # Initialize the namespace
         self.test = False
@@ -672,6 +675,10 @@ class DBICondor(DBIBase):
         self.rank = ''
         self.copy_local_source_file = False
         self.files = ''
+        self.file_redirect_stdout = False
+        self.file_redirect_stderr = False
+        self.redirect_stderr_to_stdout = False
+
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
