@@ -228,10 +228,13 @@ elif launch_cmd=="Local":
 
 from socket import gethostname
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
-    if not os.path.abspath(os.path.curdir).startswith("/home/fringant2/") and not dbi_param.get('files'):
+    p = os.path.abspath(os.path.curdir)
+    if p.startswith("/home/fringant2/") or p.startswith("/cluster") or dbi_param.get('files'):
+        pass
+    else:
         raise Exception("You must be in a subfolder of /home/fringant2/")
     f=os.getenv("CONDOR_LOCAL_SOURCE")
-    if f and not f.startswith("/home/fringant2/"):
+    if f and not f.startswith("/home/fringant2/") and not f.startswith("/cluster"):
         dbi_param['copy_local_source_file']=True
 
 print "\n\nThe jobs will be launched on the system:", launch_cmd
