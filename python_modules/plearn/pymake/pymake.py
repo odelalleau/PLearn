@@ -136,6 +136,10 @@ instead perform various operations. These special options are:
           will look for dependency (which must be a filename.cc or filename.h
           without full path or a library_name) and print out the first path it
           finds in the dependency graph that links target and dependency.
+  -dependency_include: like -dependency execpt that this one list include
+              dependency. i.e. Dependency that make file to be recompiled.
+              -dependency list dependency that make file to be included in 
+              the executable.
   -dist: extract all the sources necessary to compile the target, in a
          directory called <target>.dist, and create there a Makefile that is
          able to compile and link the target.
@@ -143,7 +147,9 @@ instead perform various operations. These special options are:
   -getoptions: print the specific options for the target
   -vcproj: a Visual Studio project file (.vcproj) for the target will be
            created.
-
+  -o filename: the name of the output file
+  -link-target
+  
 The configuration file 'config' for pymake is searched for
 first in the .pymake subdirectory of the current directory, then similarly
 in the .pymake subdirectory of parent directories of the current directory,
@@ -350,7 +356,7 @@ def get_ofiles_to_copy(executables_to_link):
     return files_to_copy
 
 def copy_ofiles_locally(executables_to_link):
-    print '++++ Copying remaining ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link)) 
+    print '++++ Copying remaining ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link))
     files_to_copy= get_ofiles_to_copy(executables_to_link)
     for f in files_to_copy:
         copy_ofile_locally(f)
@@ -1165,15 +1171,20 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
 
     makefile.close()
 
-def find_dependency(args):
+def find_dependency(args,type='link'):
+    '''their is 2 type supported: link and incude
+    link type list dependency at link time, so all .h file 'include'
+        indirectly their .cc file
+    include type is the dependency that make that file need to be recompiled'''
     global sourcedirs
 
     target = args[0]
     configpath = get_config_path(target)
     execfile( configpath, globals() )
+    options = getOptions(options_choices, optionargs)
     sourcedirs = unique(sourcedirs)
 
-    if isccfile(target):
+    if isccfile(target) or type=='include':
         cctarget = target
     else:
         cctarget = get_ccpath_from_noncc_path(target)
@@ -1187,13 +1198,15 @@ def find_dependency(args):
 
     if len(args) == 1: # only the target was specified: generate the full graph
         print 'Generating dependency graph in '+target+'.dot ...'
-        info.save_dependency_graph(target+'.dot')
+        info.save_dependency_graph(target+'.dot', type)
         print 'Generating dependency graph view in '+target+'.ps ...'
         os.system('dot -T ps '+target+'.dot > '+target+'.ps')
+        print 'Generating dependency graph view in '+target+'.png ...'
+        os.system('dot -T png '+target+'.dot > '+target+'.png')
     elif len(args) == 2: # target was specified with a possible source dependency
         dep = args[1]
         print 'First encountered dependency path linking '+target+' to '+dep+ ' :'
-        if not info.print_dependency_path(dep,[]):
+        if not info.print_dependency_path(dep,[], type):
             print 'THERE APPEARS TO BE NO SUCH DEPENDENCY.'
 
 
@@ -2154,7 +2167,7 @@ class FileInfo:
         """returns the filename (without the directory part) of the current node"""
         return self.filebase+self.fileext
 
-    def print_dependency_path(self, dep, visited_files):
+    def print_dependency_path(self, dep, visited_files, type='link'):
         if self in visited_files:
             return False
         visited_files.append(self)
@@ -2168,17 +2181,16 @@ class FileInfo:
             print '  LIBRARY '+dep
             return True
         else:
-            if not self.is_ccfile and self.corresponding_ccfile and self.corresponding_ccfile.print_dependency_path(dep, visited_files):
+            if type=='link' and not self.is_ccfile and self.corresponding_ccfile and self.corresponding_ccfile.print_dependency_path(dep, visited_files, type):
                 print '  '+self.filepath
                 return True
             for hfile in self.includes_from_sourcedirs:
-                if hfile.print_dependency_path(dep, visited_files):
+                if hfile.print_dependency_path(dep, visited_files, type):
                     print '  '+self.filepath
                     return True
             return False
 
-
-    def build_dependency_graph(self, dotfile, visited_files):
+    def build_dependency_graph(self, dotfile, visited_files, type='link'):
         if self not in visited_files:
             visited_files.append(self)
 
@@ -2186,12 +2198,12 @@ class FileInfo:
                 dotfile.write(self.dotid()+'[shape="box",label="'+self.filename()+'",fontsize=10,height=0.2,width=0.4,fontname="Helvetica",color="darkgreen",style="filled",fontcolor="white"];\n')
             else: # it's a .h file
                 dotfile.write(self.dotid()+'[shape="box",label="'+self.filename()+'",fontsize=10,height=0.2,width=0.4,fontname="Helvetica",color="blue4",style="filled",fontcolor="white"];\n')
-                if self.corresponding_ccfile:
-                    self.corresponding_ccfile.build_dependency_graph(dotfile, visited_files)
+                if type=='link' and self.corresponding_ccfile:
+                    self.corresponding_ccfile.build_dependency_graph(dotfile, visited_files, type)
                     dotfile.write(self.dotid()+' -> '+self.corresponding_ccfile.dotid()+' [dir=none,color="darkgreen",fontsize=10,style="dashed",fontname="Helvetica"];\n')
 
             for include in self.includes_from_sourcedirs:
-                include.build_dependency_graph(dotfile, visited_files)
+                include.build_dependency_graph(dotfile, visited_files, type)
                 dotfile.write(self.dotid()+' -> '+include.dotid()+' [dir=forward,color="blue4",fontsize=10,style="solid",fontname="Helvetica"];\n')
 
             for lib in self.triggered_libraries:
@@ -2202,7 +2214,7 @@ class FileInfo:
                 print self.filename(),'->',lib.name
 
 
-    def save_dependency_graph(self, dotfilename):
+    def save_dependency_graph(self, dotfilename, type='link'):
         """Will save the dependency graph originating from this node into the dotfilename file
         This file should end in .dot The dot program can be used to generate a postscript file from it.
         The dependency graph considers include dependencies, as well as linkage dependencies,
@@ -2217,7 +2229,7 @@ digraph G
   node [fontname="Helvetica",fontsize=10,shape=record];
 """)
         visited_files = []
-        self.build_dependency_graph(dotfile, visited_files)
+        self.build_dependency_graph(dotfile, visited_files, type)
         dotfile.write("}\n")
         dotfile.close()
 
@@ -2544,6 +2556,7 @@ def main( args ):
         else:
             otherargs.append(option_to_parse[i])
         i = i + 1
+    del option_to_parse, env_options
     del i # We don't need it anymore and it might be confusing
     
 
@@ -2736,12 +2749,20 @@ def main( args ):
     if 'dependency' in optionargs:
         if 1 <= len(otherargs) <= 2:
             optionargs.remove('dependency')
-            options = getOptions(options_choices,optionargs)
             find_dependency(otherargs)
             sys.exit()
         else:
             print 'BAD ARGUMENTS: with -dependency, usage is'
             print '"pymake -dependency target [dependency]"'
+            sys.exit(100)
+    elif 'dependency_include' in optionargs:
+        if 1 <= len(otherargs) <= 2:
+            optionargs.remove('dependency_include')
+            find_dependency(otherargs,'include')
+            sys.exit()
+        else:
+            print 'BAD ARGUMENTS: with -dependency_include, usage is'
+            print '"pymake -dependency_include target [dependency]"'
             sys.exit(100)
 
     if 'dist' in optionargs:
