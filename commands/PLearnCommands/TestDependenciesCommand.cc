@@ -38,6 +38,7 @@
 
 /*! \file TestDependenciesCommand.cc */
 #include "TestDependenciesCommand.h"
+#include <plearn/math/TMat_maths.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/math/stats_utils.h>
 #include <plearn/vmat/VMat_basic_stats.h>
