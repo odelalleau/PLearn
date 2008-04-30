@@ -41,6 +41,7 @@
 #define JOINVMATRIX_H
 
 #include "RowBufferedVMatrix.h"
+#include <plearn/math/TMat_maths.h>
 #include "VMat.h"
 #include <map>
 

@@ -45,6 +45,7 @@
 #define GeneralizedOneHotVMatrix_INC
 
 #include "SourceVMatrix.h"
+#include <plearn/math/TMat_maths.h>
 #include "VMat.h"
 
 namespace PLearn {

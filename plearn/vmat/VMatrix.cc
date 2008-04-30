@@ -51,6 +51,7 @@
 #include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
 #include <plearn/base/RemoteDeclareMethod.h>
 #include <nspr/prenv.h>
+#include <plearn/math/TMat_maths.h> //!< for dot, powdistance externalProductAcc
 
 namespace PLearn {
 using namespace std;

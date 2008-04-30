@@ -42,6 +42,7 @@
 
 
 #include "FileVMatrixTest.h"
+#include <plearn/math/TMat_maths.h>
 #include <plearn/math/pl_math.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/io/fileutils.h>

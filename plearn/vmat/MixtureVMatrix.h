@@ -41,6 +41,7 @@
 #define MixtureVMatrix_INC
 
 #include <plearn/vmat/RowBufferedVMatrix.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn/vmat/VMat.h>
 
 namespace PLearn {

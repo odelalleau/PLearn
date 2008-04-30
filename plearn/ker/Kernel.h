@@ -44,6 +44,7 @@
 #define Kernel_INC
 
 #include <plearn/base/Object.h>
+#include <plearn/math/TMat_maths.h>
 #include <plearn/vmat/VMat.h>
 
 namespace PLearn {

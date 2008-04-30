@@ -44,6 +44,7 @@
 #define MatrixSumOfVariable_INC
 
 #include "NaryVariable.h"
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

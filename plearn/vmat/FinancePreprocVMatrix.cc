@@ -41,6 +41,7 @@
 #include "FinancePreprocVMatrix.h"
 #include <plearn/base/PDate.h>
 #include <plearn/base/tostring.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;

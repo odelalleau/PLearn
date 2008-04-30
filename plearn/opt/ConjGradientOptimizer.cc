@@ -43,6 +43,7 @@
 #include "ConjGradientOptimizer.h"
 #include <plearn/io/pl_log.h>
 #include <plearn/var/SumOfVariable.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 using namespace std;
