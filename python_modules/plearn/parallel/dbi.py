@@ -15,10 +15,6 @@ import pdb
 from threading import Thread,Lock
 from time import sleep
 import datetime
-from plearn.pymake.pymake import get_list_of_hosts
-#from plearn.pymake.pymake import get_distcc_hosts
-from plearn.pymake.pymake import locateconfigfile
-from plearn.pymake.pymake import get_platform
 
 try:
     from random import shuffle
@@ -1144,15 +1140,41 @@ class SshHost:
     def __repr__(self):
         return str(self)
 
+def get_hostname():
+    from socket import gethostname
+    myhostname = gethostname()
+    pos = string.find(myhostname,'.')
+    if pos>=0:
+        myhostname = myhostname[0:pos]
+    return myhostname
+
+# copied from PLearn/python_modules/plearn/pymake/pymake.py
+def get_platform():
+    #should we use an env variable called PLATFORM???
+    #if not defined, use uname uname -i???
+    pymake_osarch = os.getenv('PYMAKE_OSARCH')
+    if pymake_osarch:
+        return pymake_osarch
+    platform = sys.platform
+    if platform=='linux2':
+        linux_type = os.uname()[4]
+        if linux_type == 'ppc':
+            platform = 'linux-ppc'
+        elif linux_type =='x86_64':
+            platform = 'linux-x86_64'
+        else:
+            platform = 'linux-i386'
+    return platform
+
+# copied from PLearn/python_modules/plearn/pymake/pymake.py
 def find_all_ssh_hosts():
     hostspath_list = [os.path.join(os.getenv("HOME"),".pymake",get_platform()+'.hosts')]
     if os.path.exists(hostspath_list[0])==0:
         print "[DBI] no host file %s for the ssh backend"%(hostspath_list[0])
         sys.exit(1)
     print "[DBI] using file %s for the list of host"%(hostspath_list[0])
-    from plearn.pymake.pymake import process_hostspath_list
-    from plearn.pymake.pymake import get_hostname
-    (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list,19,get_hostname())
+#    from plearn.pymake.pymake import process_hostspath_list
+#    (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list,19,get_hostname())
     shuffle(list_of_hosts)
     print list_of_hosts
     print nice_values
