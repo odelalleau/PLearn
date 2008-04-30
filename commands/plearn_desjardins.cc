@@ -66,6 +66,7 @@
  * PLearner *
  ************/
 #include <plearn_learners/generic/AddCostToLearner.h>
+#include <plearn_learners/regressors/RegressionTree.h>
 
 /************
  * Splitter *
