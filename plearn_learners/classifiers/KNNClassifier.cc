@@ -246,7 +246,7 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
         int nn_class = int(*output_data++);
         if (nn_class < 0 || nn_class >= nclasses)
             PLERROR("KNNClassifier::computeOutput: expected the class to be between 0 "
-                    "and %d but found %f", nclasses-1, nn_class);
+                    "and %d but found %d", nclasses-1, nn_class);
         w *= *output_data++;                     //!< account for training weight
         PLASSERT( w >= 0.0 );
         class_weights[nn_class] += w;
