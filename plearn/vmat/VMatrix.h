@@ -50,7 +50,6 @@
 #include <plearn/math/StatsCollector.h>
 #include "VMField.h"
 #include <plearn/dict/Dictionary.h>
-#include <plearn/math/TMat_maths.h>
 #include <plearn/io/PPath.h>
 
 #include <map>
