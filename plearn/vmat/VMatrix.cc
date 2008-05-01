@@ -284,6 +284,24 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("weightsize", "weightsize"),
          ArgDoc ("extrasize", "extrasize")));
 
+    declareMethod(
+        rmm, "addStringMapping", static_cast<void (VMatrix::*)(int, string, real)>(&VMatrix::addStringMapping),
+        (BodyDoc("Add or replace a string mapping for a column\n"),
+         ArgDoc ("col", "column number"),
+         ArgDoc ("str", "string value"),
+         ArgDoc ("val", "numeric value")));
+
+    declareMethod(
+        rmm, "getStringToRealMapping", &VMatrix::getStringToRealMapping,
+        (BodyDoc("Get the string->real mapping for a given column.\n"),
+         ArgDoc ("col", "column number"),
+         RetDoc ("map of string->real")));
+
+    declareMethod(
+        rmm, "getRealToStringMapping", &VMatrix::getRealToStringMapping,
+        (BodyDoc("Get the real->string mapping for a given column.\n"),
+         ArgDoc ("col", "column number"),
+         RetDoc ("map of real->string")));
 }
 
 
