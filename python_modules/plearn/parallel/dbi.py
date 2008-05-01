@@ -872,7 +872,7 @@ class DBICondor(DBIBase):
                 if source_file:
                     launch_dat.write('source ' + source_file + '\n')
                 launch_dat.write(dedent('''\
-                    echo "Executing on " `hostname` 1>&2
+                    echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
                     echo "PYTHONPATH: $PYTHONPATH" 1>&2
@@ -891,7 +891,7 @@ class DBICondor(DBIBase):
                 if source_file:
                     launch_dat.write('source ' + source_file + '\n')
                 launch_dat.write(dedent('''\
-                    echo "Executing on " `hostname`
+                    echo "Executing on " `/bin/hostname`
                     echo "HOSTNAME: ${HOSTNAME}"
                     echo "PATH: $PATH"
                     echo "PYTHONPATH: $PYTHONPATH"
