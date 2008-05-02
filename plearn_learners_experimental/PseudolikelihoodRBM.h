@@ -239,6 +239,15 @@ protected:
     //! Keeps the index of the class_error cost in train_costs
     int class_cost_index;
 
+    //! CPU time costs indices
+    int training_cpu_time_cost_index;
+    int cumulative_training_time_cost_index;
+    //real cumulative_testing_time_cost_index;
+
+    //! Cumulative CPU time costs
+    real cumulative_training_time;
+    //real cumulative_testing_time;
+    
     //! Normalisation constant (on log scale)
     mutable real log_Z;
 

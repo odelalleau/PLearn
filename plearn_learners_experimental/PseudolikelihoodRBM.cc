@@ -64,6 +64,13 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     n_classes( -1 ),
     compute_input_space_nll( false ),
     pseudolikelihood_context_size ( 0 ),
+    nll_cost_index( -1 ),
+    class_cost_index( -1 ),
+    training_cpu_time_cost_index ( -1 ),
+    cumulative_training_time_cost_index ( -1 ),
+    //cumulative_testing_time_cost_index ( -1 ),
+    cumulative_training_time( 0 ),
+    //cumulative_testing_time( 0 ),
     log_Z( MISSING_VALUE ),
     Z_is_up_to_date( false )
 {
@@ -128,6 +135,18 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The connection weights between the input and hidden layer.\n");
 
+    declareOption(ol, "cumulative_training_time", 
+                  &PseudolikelihoodRBM::cumulative_training_time,
+                  //OptionBase::learntoption | OptionBase::nosave,
+                  OptionBase::learntoption,
+                  "Cumulative training time since age=0, in seconds.\n");
+
+//    declareOption(ol, "cumulative_testing_time", 
+//                  &PseudolikelihoodRBM::cumulative_testing_time,
+//                  //OptionBase::learntoption | OptionBase::nosave,
+//                  OptionBase::learntoption,
+//                  "Cumulative testing time since age=0, in seconds.\n");
+
     declareOption(ol, "log_Z", &PseudolikelihoodRBM::log_Z,
                   OptionBase::learntoption,
                   "Normalisation constant (on log scale).\n");
@@ -174,6 +193,9 @@ void PseudolikelihoodRBM::build_()
 
         build_layers_and_connections();
         build_costs();
+
+        // Activate the profiler
+        Profiler::activate();
     }
 }
 
@@ -198,6 +220,18 @@ void PseudolikelihoodRBM::build_costs()
         class_cost_index = current_index;
         current_index++;
     }
+
+    cost_names.append("cpu_time");
+    cost_names.append("cumulative_train_time");
+    cost_names.append("cumulative_test_time");
+
+    training_cpu_time_cost_index = current_index;
+    current_index++;
+    cumulative_training_time_cost_index = current_index;
+    current_index++;
+    //cumulative_testing_time_cost_index = current_index;
+    //current_index++;
+
 
     PLASSERT( current_index == cost_names.length() );
 }
@@ -330,6 +364,9 @@ void PseudolikelihoodRBM::forget()
     input_layer->forget();
     hidden_layer->forget();
     connection->forget();
+
+    cumulative_training_time = 0;
+    //cumulative_testing_time = 0;
     Z_is_up_to_date = false;
 }
 
@@ -372,6 +409,10 @@ void PseudolikelihoodRBM::train()
         pb = new ProgressBar( "Training "
                               + classname(),
                               nstages - stage );
+
+    // Start the actual time counting
+    Profiler::reset("training");
+    Profiler::start("training");
 
     for( ; stage<nstages ; stage++ )
     {
@@ -811,6 +852,18 @@ void PseudolikelihoodRBM::train()
         
     }
     
+    Profiler::end("training");
+    const Profiler::Stats& stats = Profiler::getStats("training");
+    real ticksPerSec = Profiler::ticksPerSecond();
+    real cpu_time = (stats.user_duration+stats.system_duration)/ticksPerSec;
+    cumulative_training_time += cpu_time;
+
+    train_costs.fill(MISSING_VALUE);
+    train_costs[training_cpu_time_cost_index] = cpu_time;
+    train_costs[cumulative_training_time_cost_index] = cumulative_training_time;
+    train_stats->update( train_costs );
+
+
     train_stats->finalize();
 }
 
@@ -856,12 +909,14 @@ void PseudolikelihoodRBM::computeCostsFromOutputs(const Vec& input,
     }
     else
     {        
-        compute_Z();
-        connection->setAsDownInput( input );
-        hidden_layer->getAllActivations( (RBMMatrixConnection *) connection );
-        costs[nll_cost_index] = hidden_layer->freeEnergyContribution(
-            hidden_layer->activation) + log_Z;
-
+        if( compute_input_space_nll )
+        {
+            compute_Z();
+            connection->setAsDownInput( input );
+            hidden_layer->getAllActivations( (RBMMatrixConnection *) connection );
+            costs[nll_cost_index] = hidden_layer->freeEnergyContribution(
+                hidden_layer->activation) + log_Z;
+        }
     }
 }
 
