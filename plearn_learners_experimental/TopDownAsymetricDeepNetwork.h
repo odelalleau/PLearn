@@ -117,6 +117,10 @@ public:
     //! Output weights l2_penalty_factor
     real output_weights_l2_penalty_factor;
 
+    //! Fraction of the autoassociators' random input components that are
+    //! masked, i.e. unsused to reconstruct the input.
+    real fraction_of_masked_inputs;
+
     //#####  Public Learnt Options  ###########################################
 
     //! Number of layers
@@ -214,6 +218,12 @@ protected:
 
     //! Example representation
     mutable Vec input_representation;
+
+    //! Perturbed input for current layer
+    mutable Vec masked_autoassociator_input;
+
+    //! Indices of input components for current layer
+    mutable TVec<int> autoassociator_input_indices;
 
     //! Positive down statistic
     Vec pos_down_val;

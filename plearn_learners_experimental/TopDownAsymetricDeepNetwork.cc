@@ -66,6 +66,7 @@ TopDownAsymetricDeepNetwork::TopDownAsymetricDeepNetwork() :
     n_classes( -1 ),
     output_weights_l1_penalty_factor(0),
     output_weights_l2_penalty_factor(0),
+    fraction_of_masked_inputs( 0 ),
     n_layers( 0 ),
     currently_trained_layer( 0 )
 {
@@ -154,6 +155,23 @@ void TopDownAsymetricDeepNetwork::declareOptions(OptionList& ol)
                   &TopDownAsymetricDeepNetwork::n_classes,
                   OptionBase::buildoption,
                   "Number of classes.");
+
+    declareOption(ol, "output_weights_l1_penalty_factor", 
+                  &TopDownAsymetricDeepNetwork::output_weights_l1_penalty_factor,
+                  OptionBase::buildoption,
+                  "Output weights l1_penalty_factor.\n");
+
+    declareOption(ol, "output_weights_l2_penalty_factor", 
+                  &TopDownAsymetricDeepNetwork::output_weights_l2_penalty_factor,
+                  OptionBase::buildoption,
+                  "Output weights l2_penalty_factor.\n");
+
+    declareOption(ol, "fraction_of_masked_inputs", 
+                  &TopDownAsymetricDeepNetwork::fraction_of_masked_inputs,
+                  OptionBase::buildoption,
+                  "Fraction of the autoassociators' random input components "
+                  "that are\n"
+                  "masked, i.e. unsused to reconstruct the input.\n");
 
     declareOption(ol, "greedy_stages", 
                   &TopDownAsymetricDeepNetwork::greedy_stages,
@@ -326,6 +344,10 @@ void TopDownAsymetricDeepNetwork::build_layers_and_connections()
                 "top_down_layers[0] should have a size of %d.\n",
                 inputsize_);
     
+    if( fraction_of_masked_inputs < 0 )
+        PLERROR("TopDownAsymetricDeepNetwork::build_()"
+                " - \n"
+                "fraction_of_masked_inputs should be > or equal to 0.\n");
 
     activations.resize( n_layers );
     expectations.resize( n_layers );
@@ -452,6 +474,8 @@ void TopDownAsymetricDeepNetwork::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(reconstruction_activation_gradients, copies);
     deepCopyField(reconstruction_expectation_gradients, copies);
     deepCopyField(input_representation, copies);
+    deepCopyField(masked_autoassociator_input, copies);
+    deepCopyField(autoassociator_input_indices, copies);
     deepCopyField(pos_down_val, copies);
     deepCopyField(pos_up_val, copies);
     deepCopyField(neg_down_val, copies);
@@ -547,6 +571,13 @@ void TopDownAsymetricDeepNetwork::train()
         pos_up_val.resize(layers[i+1]->size);
         neg_down_val.resize(layers[i]->size);
         neg_up_val.resize(layers[i+1]->size);
+        if( fraction_of_masked_inputs > 0 )
+        {
+            masked_autoassociator_input.resize(layers[i]->size);
+            autoassociator_input_indices.resize(layers[i]->size);
+            for( int j=0 ; j < autoassociator_input_indices.length() ; j++ )
+                autoassociator_input_indices[j] = j;
+        }
 
         for( ; *this_stage<end_stage ; (*this_stage)++ )
         {
@@ -636,13 +667,24 @@ void TopDownAsymetricDeepNetwork::greedyStep(
         else
             lr = greedy_learning_rate;
 
+        if( fraction_of_masked_inputs > 0 )
+            random_gen->shuffleElements(autoassociator_input_indices);
+
         top_down_layers[index]->setLearningRate( lr );
         connections[index]->setLearningRate( lr );
         reconstruction_connections[index]->setLearningRate( lr );
         layers[index+1]->setLearningRate( lr );
 
-        connections[index]->fprop(input_representation,
-                              activations[index+1]);
+        if( fraction_of_masked_inputs > 0 )
+        {
+            masked_autoassociator_input << input_representation;
+            for( int j=0 ; j < round(fraction_of_masked_inputs*layers[index]->size) ; j++)
+                masked_autoassociator_input[ autoassociator_input_indices[j] ] = 0; 
+            connections[index]->fprop( masked_autoassociator_input, activations[index+1]);
+        }
+        else
+            connections[index]->fprop(input_representation,
+                                      activations[index+1]);
         layers[index+1]->fprop(activations[index+1], expectations[index+1]);
 
         reconstruction_connections[ index ]->fprop( expectations[index+1],
@@ -711,11 +753,18 @@ void TopDownAsymetricDeepNetwork::greedyStep(
             reconstruction_activation_gradients,
             reconstruction_expectation_gradients);
         
-        connections[ index ]->bpropUpdate( 
-            input_representation,
-            activations[index+1],
-            reconstruction_expectation_gradients, //reused
-            reconstruction_activation_gradients);
+        if( fraction_of_masked_inputs > 0 )
+            connections[ index ]->bpropUpdate( 
+                masked_autoassociator_input,
+                activations[index+1],
+                reconstruction_expectation_gradients, //reused
+                reconstruction_activation_gradients);
+        else
+            connections[ index ]->bpropUpdate( 
+                input_representation,
+                activations[index+1],
+                reconstruction_expectation_gradients, //reused
+                reconstruction_activation_gradients);
     }
      
 
