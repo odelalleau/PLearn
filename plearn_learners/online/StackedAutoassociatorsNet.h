@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Hugo Larochelle
 
 /*! \file StackedAutoassociatorsNet.h */
 
@@ -56,10 +56,6 @@ namespace PLearn {
  * Neural net, trained layer-wise in a greedy fashion using autoassociators.
  * It is highly inspired by the DeepBeliefNet class, and can use use the
  * same RBMLayer and RBMConnection components.
- *
- * TODO: - code globally online version (can't use hyperlearner, 
- *         because of copies in earlystopping oracle and testing after change...)
- *       - make sure fpropNLL only uses the expectation field in RBMLayer objects
  */
 class StackedAutoassociatorsNet : public PLearner
 {
@@ -159,6 +155,10 @@ public:
     //! The decrease constant of the learning rate used during 
     //! unsupervised fine tuning gradient descent
     real unsupervised_fine_tuning_decrease_ct;
+
+    //! Indication that only the input layer should be masked 
+    //! during unsupervised fine-tuning
+    bool mask_input_layer_only_in_unsupervised_fine_tuning;
 
     //#####  Public Learnt Options  ###########################################
 

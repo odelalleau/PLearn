@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Hugo Larochelle
 
 /*! \file StackedAutoassociatorsNet.cc */
 
@@ -66,6 +66,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     unsupervised_nstages( 0 ),
     unsupervised_fine_tuning_learning_rate( 0. ),
     unsupervised_fine_tuning_decrease_ct( 0. ),
+    mask_input_layer_only_in_unsupervised_fine_tuning( false ),
     n_layers( 0 ),
     unsupervised_stage( 0 ),
     currently_trained_layer( 0 )
@@ -230,6 +231,12 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The decrease constant of the learning rate used during\n"
                   "unsupervised fine tuning gradient descent.\n");
+
+    declareOption(ol, "mask_input_layer_only_in_unsupervised_fine_tuning", 
+                  &StackedAutoassociatorsNet::mask_input_layer_only_in_unsupervised_fine_tuning,
+                  OptionBase::buildoption,
+                  "Indication that only the input layer should be masked\n"
+                  "during unsupervised fine-tuning.\n");
 
     declareOption(ol, "greedy_stages", 
                   &StackedAutoassociatorsNet::greedy_stages,
@@ -597,7 +604,7 @@ void StackedAutoassociatorsNet::build_costs()
                         "partial_costs[%i] should have an input_size of %d.\n", 
                         i,layers[i+1]->size);
             if(i==0)
-                partial_costs_positions[i] = n_layers;
+                partial_costs_positions[i] = n_layers-1;
             else
                 partial_costs_positions[i] = partial_costs_positions[i-1]
                     + partial_costs[i-1]->name().length();
@@ -1086,7 +1093,7 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
                                              expectation_gradients[ index + 1 ]
                                              );
 
-        train_costs.subVec(partial_costs_positions[index],
+        train_costs.subVec(partial_costs_positions[index]+1,
                            partial_cost_value.length()) << partial_cost_value;
 
         if( !fast_exact_is_equal( partial_costs_weights.length(), 0 ) )
@@ -1311,8 +1318,9 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep( const Vec& input,
         for( int i=0 ; i<n_layers-1; i++ )
         {
             masked_autoassociator_expectations[i] << expectations[i];
-            for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
-                masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0; 
+            if( !(mask_input_layer_only_in_unsupervised_fine_tuning && i > 0) )
+                for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
+                    masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0; 
             
             connections[i]->fprop( masked_autoassociator_expectations[i], 
                                    activations[i+1] );
@@ -1524,7 +1532,7 @@ void StackedAutoassociatorsNet::onlineStep( const Vec& input,
                     expectation_gradients[ i + 1 ]
                     );
                 
-                train_costs.subVec(partial_costs_positions[i],
+                train_costs.subVec(partial_costs_positions[i]+1,
                                    partial_cost_value.length()) 
                     << partial_cost_value;
                 
