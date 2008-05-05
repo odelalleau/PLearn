@@ -426,7 +426,7 @@ Vec HyperOptimize::optimize()
 
         auto_save_timer->stopTimer("auto_save");
         if (auto_save > 0 &&
-                (trialnum % auto_save == 0) || option_vals.isEmpty())
+                (trialnum % auto_save == 0 || option_vals.isEmpty()))
         {
             int s = int(auto_save_timer->getTimer("auto_save"));
             if(s > auto_save_diff_time || option_vals.isEmpty()) {
