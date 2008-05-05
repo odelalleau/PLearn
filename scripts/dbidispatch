@@ -62,7 +62,7 @@ condor only options:
 
   dbidispatch \"--req=Machine==\\\"computer.example.com\\\"\"
      or
-  dbidispatch '--req=Machine=="computer.example.com"' 
+  dbidispatch '--req=Machine=="computer.example.com"'
 
   The '--server'(--no_server) option add the requirement that the executing host must be a server dedicated to computing. This is equivalent to: dbidispatch '--req=SERVER==True'(SERVER==False)
   The '--prefserver' option will tell that you prefer to execute on server first. This is equivalent to 'rank=SERVER=?=True' in the submit file.
@@ -70,7 +70,7 @@ condor only options:
   The '--machine=full_host_name' option add the requirement that the executing host is full_host_name
      dbidispatch --machine=computer.example.com
         witch is equivalent to
-     dbidispatch '--req=Machine=="computer.example.com"' 
+     dbidispatch '--req=Machine=="computer.example.com"'
   The '--machines=regexp' option add the requirement that the executing host name must be match the regexp
      dbidispatch '--machines=computer00*'
         witch is equivalent to
@@ -203,8 +203,8 @@ for argv in to_parse:
         else:
             dbi_param[param]+='&&(SERVER=?=False || SERVER =?= UNDEFINED )'
     elif argv[0:1] == '-':
-	print "Unknow option (%s)"%argv
-	print ShortHelp
+        print "Unknow option (%s)"%argv
+        print ShortHelp
         sys.exit(1)
     else:
         break
@@ -284,13 +284,13 @@ if FILE != "":
     commands=[]
     for line in FD.readlines():
         line = line.rstrip()
-	sp = line.split(" ")
+        sp = line.split(" ")
         commands+=generate_commands(sp)
     FD.close
 else:
     commands=generate_commands(command_argv)
 
-if FILE == "":    
+if FILE == "":
     t = [x for x in sys.argv[1:] if not x[:2]=="--"]
     t[0]=os.path.split(t[0])[1]
     tmp="_".join(t)
@@ -337,7 +337,7 @@ jobs.wait()
     if "test" in dbi_param:
         print "[DBI dispatch] In test mode, we do not make dbi errase temp file"
     else:
-        SCRIPT.write("jobs.clean()") 
+        SCRIPT.write("jobs.clean()")
     SCRIPT.close()
     os.system("chmod +x %s"%(ScriptName));
 
