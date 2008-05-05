@@ -101,7 +101,7 @@ class SVMHyperParamOracle__kernel(object):
         so that we can assume new best parameters are
         close to previous ones.
     """
-    def forget(self):
+    def semiforget(self):
         self.trials_param_list  = []
         self.trials_cost_list = []
         self.stats_are_uptodate = False
@@ -110,6 +110,9 @@ class SVMHyperParamOracle__kernel(object):
         #       a new search (when data changed a bit) to
         #       a good candidate
 
+    def forget(self):
+        self.semiforget()
+        self.best_param = None
 
     def set_input_stats( self, inputsize, input_avgstd ):
         self.stats_are_uptodate = True
@@ -804,9 +807,9 @@ class SVM(object):
 
         self.outputs_type = 'votes'
 
-    def forget(self):
+    def semiforget(self):
         for expert in self.all_experts:
-             expert.forget()
+             expert.semiforget()
         self.valid_stats     = None
         self.test_stats      = None
         self.train_stats     = None
@@ -819,6 +822,12 @@ class SVM(object):
         #       'self.best_param'. This allow to initialize
         #       a new search (when data changed a bit) to
         #       a good candidate
+
+    def forget(self):
+        self.semiforget()
+        for expert in self.all_experts:
+             expert.forget()
+        self.best_param = None
 
     def train_inputspec(self, dataspec):
         assert type(dataspec) == dict
