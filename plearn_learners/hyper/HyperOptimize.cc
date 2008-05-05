@@ -577,14 +577,20 @@ Vec HyperOptimize::parOptimize()
 }
 */
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void HyperOptimize::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(resultsmat, copies);
-    deepCopyField(oracle, copies);
+    deepCopyField(resultsmat,   copies);
+    deepCopyField(best_results, copies);
+    deepCopyField(best_learner, copies);
+    deepCopyField(option_vals,  copies);
+    deepCopyField(oracle,       copies);
     deepCopyField(sub_strategy, copies);
-    deepCopyField(splitter, copies);
+    deepCopyField(splitter,     copies);
 }
 
 } // end of namespace PLearn

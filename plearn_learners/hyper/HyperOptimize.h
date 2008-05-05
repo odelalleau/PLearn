@@ -105,6 +105,8 @@ class Profiler;
  */
 class HyperOptimize: public HyperCommand
 {
+    typedef HyperCommand inherited;
+
 protected:
     //! Store the results computed for each trial
     VMat resultsmat;
@@ -117,9 +119,7 @@ protected:
 
 public:
 
-    typedef HyperCommand inherited;
     PLEARN_DECLARE_OBJECT(HyperOptimize);
-
 
     // ************************
     // * public build options *
@@ -154,12 +154,10 @@ public:
 
 private:
     //! This does the actual building.
-    // (Please implement in .cc)
     void build_();
 
 protected:
     //! Declares this class' options
-    // (Please implement in .cc)
     static void declareOptions(OptionList& ol);
 
     void getResultsMat();
