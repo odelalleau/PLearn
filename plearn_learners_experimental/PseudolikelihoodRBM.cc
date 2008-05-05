@@ -106,6 +106,7 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
     declareOption(ol, "n_classes", &PseudolikelihoodRBM::n_classes,
                   OptionBase::buildoption,
                   "Number of classes in the training set (for supervised learning).\n"
+                  "If < 2, unsupervised learning will be performed.\n"
                   );
 
     declareOption(ol, "compute_input_space_nll", 
@@ -223,7 +224,7 @@ void PseudolikelihoodRBM::build_costs()
 
     cost_names.append("cpu_time");
     cost_names.append("cumulative_train_time");
-    cost_names.append("cumulative_test_time");
+    //cost_names.append("cumulative_test_time");
 
     training_cpu_time_cost_index = current_index;
     current_index++;
@@ -261,6 +262,7 @@ void PseudolikelihoodRBM::build_layers_and_connections()
                 connection->up_size, connection->down_size,
                 hidden_layer->size, input_layer->size);
 
+    input_gradient.resize( input_layer->size );
     hidden_activation_pos_i.resize( hidden_layer->size );
     hidden_activation_neg_i.resize( hidden_layer->size );
     hidden_activation_gradient.resize( hidden_layer->size );
@@ -422,7 +424,7 @@ void PseudolikelihoodRBM::train()
         if( pb )
             pb->update( stage - init_stage + 1 );
 
-        if( targetsize() == 1 )
+        if( n_classes > 1 )
         {
             target_one_hot.clear();
             if( !is_missing(target[0]) )
@@ -510,7 +512,7 @@ void PseudolikelihoodRBM::train()
                         else
                             pseudolikelihood += softplus( 
                                 num_pos_act - num_neg_act ) 
-                                - input_i * (num_pos_act - num_neg_act);;
+                                - input_i * (num_pos_act - num_neg_act);
                         input_gradient[i] = input_probs_i - input_i;
 
                         hidden_layer->freeEnergyContributionGradient(
@@ -551,6 +553,10 @@ void PseudolikelihoodRBM::train()
                     // N.B.: train costs contains pseudolikelihood
                     //       or pseudoNLL, not NLL
                     train_costs[nll_cost_index] = pseudolikelihood;
+
+//                    cout << "input_gradient: " << input_gradient << endl;
+//                    cout << "hidden_activation_gradient" << hidden_activation_gradient << endl;
+
                 }
                 else
                 {
@@ -593,28 +599,29 @@ void PseudolikelihoodRBM::train()
                     real* gnums_data;
                     real* cp_data;
                     real* a = hidden_layer->activation.data();
-                    real* w, *gw, *gi, *ac, *gac;
+                    real* w, *gw, *gi, *ac, *bi, *gac;
                     int* context_i;
-                    int m = connection->weights.mod();
+                    int m;
                     int conf_index;
-                    real input_i, input_j, bi, Zi, log_Zi;
+                    real input_i, input_j,  log_Zi;
                     real pseudolikelihood = 0;
 
                     input_gradient.clear();
                     hidden_activation_gradient.clear();
                     connection_gradient.clear();
                     gi = input_gradient.data();
+                    bi = input_layer->bias.data();
                     for( int i=0; i<input_layer->size ; i++ )
                     {
                         nums_data = nums_act.data();
                         cp_data = context_probs.data();
                         input_i = input[i];
-                        bi = input_layer->bias[i];
 
+                        m = connection->weights.mod();
                         // input_i = 1
                         for( int k=0; k<n_conf; k++)
                         {
-                            *nums_data = bi;
+                            *nums_data = bi[i];
                             *cp_data = input_i;
                             conf_index = k;
                             ac = hidden_activations_context[k];
@@ -626,21 +633,22 @@ void PseudolikelihoodRBM::train()
                             context_i = context_indices_per_i[i];
                             for( int l=0; l<pseudolikelihood_context_size; l++ )
                             {
-                                w = &(connection->weights(0,*context_i));
                                 input_j = input[*context_i];
-                                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                                w = &(connection->weights(0,*context_i));
+                                if( conf_index & 1)
                                 {
-                                    if( conf_index & 1)
-                                    {
+                                    *cp_data *= input_j;
+                                    *nums_data += bi[*context_i];
+                                    for( int j=0; j<hidden_layer->size; j++,w+=m )
                                         ac[j] -=  *w * ( input_j - 1 );
-                                        *cp_data *= input_j;
-                                    }
-                                    else
-                                    {
-                                        ac[j] -=  *w * input_j;
-                                        *cp_data *= (1-input_j);
-                                    }
                                 }
+                                else
+                                {
+                                    *cp_data *= (1-input_j);
+                                    for( int j=0; j<hidden_layer->size; j++,w+=m )
+                                        ac[j] -=  *w * input_j;
+                                }
+
                                 conf_index >>= 1;
                                 context_i++;
                             }
@@ -667,19 +675,20 @@ void PseudolikelihoodRBM::train()
                             {
                                 w = &(connection->weights(0,*context_i));
                                 input_j = input[*context_i];
-                                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                                if( conf_index & 1)
                                 {
-                                    if( conf_index & 1)
-                                    {
+                                    *cp_data *= input_j;
+                                    *nums_data += bi[*context_i];
+                                    for( int j=0; j<hidden_layer->size; j++,w+=m )
                                         ac[j] -=  *w * ( input_j - 1 );
-                                        *cp_data *= input_j;
-                                    }
-                                    else
-                                    {
-                                        ac[j] -=  *w * input_j;
-                                        *cp_data *= (1-input_j);
-                                    }
                                 }
+                                else
+                                {
+                                    *cp_data *= (1-input_j);
+                                    for( int j=0; j<hidden_layer->size; j++,w+=m )
+                                        ac[j] -=  *w * input_j;
+                                }
+
                                 conf_index >>= 1;
                                 context_i++;
                             }
@@ -691,9 +700,10 @@ void PseudolikelihoodRBM::train()
                     
 
                         // Gradient computation
-                        exp( nums_act, nums);
-                        Zi = sum(nums);
-                        log_Zi = pl_log(Zi);
+                        //exp( nums_act, nums);
+                        //Zi = sum(nums);
+                        //log_Zi = pl_log(Zi);
+                        log_Zi = logadd(nums_act);
 
                         nums_data = nums_act.data();
                         gnums_data = gnums_act.data();
@@ -701,12 +711,13 @@ void PseudolikelihoodRBM::train()
 
                         // Compute input_prob gradient
 
+                        m = connection_gradient.mod();
                         // input_i = 1                    
                         for( int k=0; k<n_conf; k++)
                         {
                             pseudolikelihood -= *cp_data * (*nums_data - log_Zi);
-                            *gnums_data = *nums_data/Zi - *cp_data;
-                            *gi += *gnums_data;
+                            *gnums_data = (safeexp(*nums_data - log_Zi) - *cp_data);
+                            gi[i] += *gnums_data;
                         
                             hidden_layer->freeEnergyContributionGradient(
                                 hidden_activations_context(k),
@@ -718,7 +729,7 @@ void PseudolikelihoodRBM::train()
                         
                             gac = hidden_activations_context_k_gradient.data();
                             gw = &(connection_gradient(0,i));
-                            for( int j=0; j<hidden_layer->size; j++,w+=m )
+                            for( int j=0; j<hidden_layer->size; j++,gw+=m )
                                 *gw -= gac[j] * ( input_i - 1 );
 
                             context_i = context_indices_per_i[i];
@@ -726,11 +737,15 @@ void PseudolikelihoodRBM::train()
                             {
                                 gw = &(connection_gradient(0,*context_i));
                                 input_j = input[*context_i];
-                                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                                if( conf_index & 1)
                                 {
-                                    if( conf_index & 1)
+                                    gi[*context_i] += *gnums_data;
+                                    for( int j=0; j<hidden_layer->size; j++,gw+=m )
                                         *gw -= gac[j] * ( input_j - 1 );
-                                    else
+                                }
+                                else
+                                {
+                                    for( int j=0; j<hidden_layer->size; j++,gw+=m )
                                         *gw -= gac[j] * input_j;
                                 }
                                 conf_index >>= 1;
@@ -746,8 +761,7 @@ void PseudolikelihoodRBM::train()
                         for( int k=0; k<n_conf; k++)
                         {
                             pseudolikelihood -= *cp_data * (*nums_data - log_Zi);
-                            *gnums_data = *nums_data/Zi - *cp_data;
-                            *gi += *gnums_data;
+                            *gnums_data = (safeexp(*nums_data - log_Zi) - *cp_data);
                         
                             hidden_layer->freeEnergyContributionGradient(
                                 hidden_activations_context(n_conf + k),
@@ -759,7 +773,7 @@ void PseudolikelihoodRBM::train()
                         
                             gac = hidden_activations_context_k_gradient.data();
                             gw = &(connection_gradient(0,i));
-                            for( int j=0; j<hidden_layer->size; j++,w+=m )
+                            for( int j=0; j<hidden_layer->size; j++,gw+=m )
                                 *gw -= gac[j] *input_i;
 
                             context_i = context_indices_per_i[i];
@@ -767,13 +781,18 @@ void PseudolikelihoodRBM::train()
                             {
                                 gw = &(connection_gradient(0,*context_i));
                                 input_j = input[*context_i];
-                                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                                if( conf_index & 1)
                                 {
-                                    if( conf_index & 1)
+                                    gi[*context_i] += *gnums_data;
+                                    for( int j=0; j<hidden_layer->size; j++,gw+=m )
                                         *gw -= gac[j] * ( input_j - 1 );
-                                    else
+                                }
+                                else
+                                {
+                                    for( int j=0; j<hidden_layer->size; j++,gw+=m )
                                         *gw -= gac[j] * input_j;
                                 }
+
                                 conf_index >>= 1;
                                 context_i++;
                             }
@@ -782,8 +801,10 @@ void PseudolikelihoodRBM::train()
                             gnums_data++;
                             cp_data++;
                         }
-                        gi++;
                     }
+
+//                    cout << "input_gradient: " << input_gradient << endl;
+//                    cout << "hidden_activation_gradient" << hidden_activation_gradient << endl;
 
                     externalProductAcc( connection_gradient, hidden_activation_gradient,
                                         input );
@@ -863,7 +884,28 @@ void PseudolikelihoodRBM::train()
     train_costs[cumulative_training_time_cost_index] = cumulative_training_time;
     train_stats->update( train_costs );
 
-
+//    // Sums to 1 test
+//    compute_Z();
+//    conf.resize( input_layer->size );
+//    Vec output,costs;
+//    output.resize(outputsize());
+//    costs.resize(getTestCostNames().length());
+//    target.resize( targetsize() );
+//    real sums = 0;
+//    int input_n_conf = input_layer->getConfigurationCount();
+//    for(int i=0; i<input_n_conf; i++)
+//    {
+//        input_layer->getConfiguration(i,conf);
+//        computeOutput(conf,output);
+//        computeCostsFromOutputs( conf, output, target, costs );
+//        //if( i==0 )
+//        //    sums = -costs[nll_cost_index];
+//        //else
+//        //    sums = logadd( sums, -costs[nll_cost_index] );
+//        sums += safeexp( -costs[nll_cost_index] );
+//    }        
+//    cout << "sums: " << //safeexp(sums) << endl;
+//        sums << endl;
     train_stats->finalize();
 }
 
@@ -874,7 +916,6 @@ void PseudolikelihoodRBM::train()
 void PseudolikelihoodRBM::computeOutput(const Vec& input, Vec& output) const
 {
     // Compute the output from the input.
-    output.resize(0);
     if( n_classes > 1 )
     {
         // Get output probabilities
@@ -915,7 +956,7 @@ void PseudolikelihoodRBM::computeCostsFromOutputs(const Vec& input,
             connection->setAsDownInput( input );
             hidden_layer->getAllActivations( (RBMMatrixConnection *) connection );
             costs[nll_cost_index] = hidden_layer->freeEnergyContribution(
-                hidden_layer->activation) + log_Z;
+                hidden_layer->activation) - dot(input,input_layer->bias) + log_Z;
         }
     }
 }
@@ -969,10 +1010,11 @@ void PseudolikelihoodRBM::compute_Z() const
             hidden_layer->getAllActivations( (RBMMatrixConnection *) connection );
             if( i == 0 )
                 log_Z = -hidden_layer->freeEnergyContribution(
-                    hidden_layer->activation);
+                    hidden_layer->activation) + dot(conf,input_layer->bias);
             else
                 log_Z = logadd(-hidden_layer->freeEnergyContribution(
-                                   hidden_layer->activation),
+                                   hidden_layer->activation) 
+                               + dot(conf,input_layer->bias),
                                log_Z);
         }
     }
@@ -986,10 +1028,11 @@ void PseudolikelihoodRBM::compute_Z() const
             input_layer->getAllActivations( (RBMMatrixConnection *) connection );
             if( i == 0 )
                 log_Z = -input_layer->freeEnergyContribution(
-                    input_layer->activation);
+                    input_layer->activation) + dot(conf,hidden_layer->bias);
             else
                 log_Z = logadd(-input_layer->freeEnergyContribution(
-                                   hidden_layer->activation),
+                                   input_layer->activation)
+                               + dot(conf,hidden_layer->bias),
                                log_Z);
         }        
     }
