@@ -301,16 +301,15 @@ void ModuleLearner::train()
         else PLERROR("ModuleLearner::reset_seed_upon_train should be >=-1");
     }
     OnlineLearningModule::during_training=true;
-    if (stage == 0) {
-        // Perform training set-dependent initialization here.
-        if (batch_size == 0)
-            mbatch_size = train_set->length();
-        else
-            mbatch_size = batch_size;
-        if (train_set->weightsize() >= 1 && !store_weights)
-            PLWARNING("In ModuleLearner::train - The training set contains "
-                    "weights, but the network is not using them");
-    }
+
+    // Perform training set-dependent initialization here.
+    if (batch_size == 0)
+        mbatch_size = train_set->length();
+    else
+        mbatch_size = batch_size;
+    if (train_set->weightsize() >= 1 && !store_weights)
+        PLWARNING("In ModuleLearner::train - The training set contains "
+                  "weights, but the network is not using them");
 
     Mat inputs, targets;
     Vec weights;
