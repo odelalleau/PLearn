@@ -45,12 +45,12 @@
 #define HyperOptimize_INC
 
 #include "HyperCommand.h"
-#include <plearn/vmat/Splitter.h>
 #include "OptionsOracle.h"
+#include <plearn/misc/PTimer.h>
+#include <plearn/vmat/Splitter.h>
 
 namespace PLearn {
 using namespace std;
-class Profiler;
 /**
  *  Carry out an hyper-parameter optimization according to an Oracle
  *
@@ -115,7 +115,7 @@ protected:
     PP<PLearner> best_learner;
     int trialnum;
     TVec<string> option_vals;
-    Profiler auto_save_timer;
+    PP<PTimer> auto_save_timer;
 
 public:
 

@@ -110,6 +110,7 @@ PLEARN_IMPLEMENT_OBJECT(
 HyperOptimize::HyperOptimize()
     : best_objective(REAL_MAX),
       trialnum(0),
+      auto_save_timer(new PTimer()),
       which_cost_pos(-1),
       which_cost(),
       min_n_trials(0),
@@ -122,7 +123,9 @@ HyperOptimize::HyperOptimize()
       auto_save_diff_time(3*60*60)
 { }
 
-
+////////////////////
+// declareOptions //
+////////////////////
 void HyperOptimize::declareOptions(OptionList& ol)
 {
     declareOption(
@@ -177,8 +180,9 @@ void HyperOptimize::declareOptions(OptionList& ol)
     declareOption(
         ol, "auto_save_diff_time", &HyperOptimize::auto_save_diff_time,
         OptionBase::buildoption,
-        "HyperOptimize::auto_save_diff_time is the mininum amount of time before the\n"
-        " first save point and between two save point in second. Default 3h.");
+        "HyperOptimize::auto_save_diff_time is the mininum amount of time\n"
+        "(in seconds) before the first save point, then between two\n"
+        "consecutive save points.");
 
     declareOption(
         ol, "auto_save_test", &HyperOptimize::auto_save_test, OptionBase::buildoption,
@@ -212,28 +216,19 @@ void HyperOptimize::declareOptions(OptionList& ol)
     declareOption(ol, "option_vals", &HyperOptimize::option_vals,
                   OptionBase::learntoption,"The option value to try." );
 
-//     declareOption(ol, "auto_save_timer", &HyperOptimize::auto_save_timer,
-//                   OptionBase::learntoption|OptionBase::nosave,
-//                   "The last time a save was done." );
-
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void HyperOptimize::build_()
-{
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning" options have been modified.
-    // ### You should assume that the parent class' build_() has already been called.
+{}
 
-    auto_save_timer.activate();
-}
-
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void HyperOptimize::build()
 {
     inherited::build();
@@ -371,7 +366,7 @@ Vec HyperOptimize::optimize()
     Vec results;
     while(option_vals)
     {
-        auto_save_timer.start("auto_save");
+        auto_save_timer->startTimer("auto_save");
 
         if(verbosity>0)
             perr << "In HyperOptimize::optimize() - We optimize with "
@@ -429,15 +424,14 @@ Vec HyperOptimize::optimize()
         }
         ++trialnum;
 
-        auto_save_timer.end("auto_save");
-        if(auto_save>0){
-            if(trialnum%auto_save!=0 && option_vals)
-                continue;
-            int s=auto_save_timer.getStats("auto_save").wall_duration;
-            s/=auto_save_timer.ticksPerSecond();
-            if(s>auto_save_diff_time|| ! option_vals){
+        auto_save_timer->stopTimer("auto_save");
+        if (auto_save > 0 &&
+                (trialnum % auto_save == 0) || option_vals.isEmpty())
+        {
+            int s = int(auto_save_timer->getTimer("auto_save"));
+            if(s > auto_save_diff_time || option_vals.isEmpty()) {
                 hlearner->auto_save();
-                auto_save_timer.reset("auto_save");
+                auto_save_timer->resetTimer("auto_save");
                 if(auto_save_test>0 && trialnum%auto_save_test==0)
                     PLERROR("In HyperOptimize::optimize() - auto_save_test is true,"
                             " exiting");
@@ -584,13 +578,14 @@ void HyperOptimize::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(resultsmat,   copies);
-    deepCopyField(best_results, copies);
-    deepCopyField(best_learner, copies);
-    deepCopyField(option_vals,  copies);
-    deepCopyField(oracle,       copies);
-    deepCopyField(sub_strategy, copies);
-    deepCopyField(splitter,     copies);
+    deepCopyField(resultsmat,       copies);
+    deepCopyField(best_results,     copies);
+    deepCopyField(best_learner,     copies);
+    deepCopyField(option_vals,      copies);
+    deepCopyField(auto_save_timer,  copies);
+    deepCopyField(oracle,           copies);
+    deepCopyField(sub_strategy,     copies);
+    deepCopyField(splitter,         copies);
 }
 
 } // end of namespace PLearn
