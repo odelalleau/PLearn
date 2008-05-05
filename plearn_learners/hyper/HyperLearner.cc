@@ -323,6 +323,9 @@ void HyperLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 
+///////////////
+// auto_save //
+///////////////
 void HyperLearner::auto_save()
 {
     if(expdir.isEmpty())
@@ -338,8 +341,15 @@ void HyperLearner::auto_save()
     mvforce(tmp,f);
 }
 
+///////////////
+// auto_load //
+///////////////
 void HyperLearner::auto_load()
 {
+    // Reload the saved HyperLearner. Note that becase the boolean 'reloading'
+    // is static, it means we can currently reload only one single
+    // HyperLearner at a time. It may be interesting in the future to change
+    // this reload mechanism to let us reload multiple (chained) HyperLearners.
     if(expdir.isEmpty()){
         if(verbosity>1)
             PLWARNING("In HyperLearner::auto_load() - no expdir. Can't reload.");
@@ -355,9 +365,8 @@ void HyperLearner::auto_load()
         reloading = false;
         reloaded = true;
     }
-    else if(isf && verbosity>1)
+    else if(!isf && verbosity>1)
         PLWARNING("In HyperLearner::auto_load() - no file to reload.");
-
 }
 
 } // end of namespace PLearn
