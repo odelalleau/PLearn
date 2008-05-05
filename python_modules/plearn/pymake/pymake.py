@@ -182,9 +182,9 @@ a corresponding .<target>.override_compile_options file:
   'opt_boundcheck': '-Wall -g -DBOUNDCHECK'  }
 
 
-The environnement variable PYMAKE_OPTION is prepended to the command line 
-option. So you can define your default option their is they won't conflict
-with the one you add on the command line.
+The environment variable PYMAKE_OPTIONS is prepended to the command line 
+options. You can define your default options there if they do not conflict
+with the ones from the command line.
 """
 
 
@@ -2536,7 +2536,7 @@ def main( args ):
     linkname = ''
     link_target_override = None
 
-    env_options=os.getenv('PYMAKE_OPTION')
+    env_options=os.getenv('PYMAKE_OPTIONS')
     option_to_parse=[]
     if env_options:
         option_to_parse=env_options.split()
