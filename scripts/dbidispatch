@@ -198,10 +198,10 @@ for argv in to_parse:
         else:
             param='req'
         dbi_param.setdefault(param,'True')
-        if argv.find('no_')!=-1:
-            dbi_param[param]+='&&(SERVER==True)'
+        if argv.find('no_')==-1:
+            dbi_param[param]+='&&(SERVER=?=True)'
         else:
-            dbi_param[param]+='&&(SERVER==False)'
+            dbi_param[param]+='&&(SERVER=?=False || SERVER =?= UNDEFINED )'
     elif argv[0:1] == '-':
 	print "Unknow option (%s)"%argv
 	print ShortHelp
