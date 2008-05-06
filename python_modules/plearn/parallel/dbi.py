@@ -1,12 +1,13 @@
 #! /usr/bin/env python
-import sys
 import os
 import getopt
 import re
+import shutil
 import string
+import subprocess
+import sys
 import time
 import traceback
-import shutil
 from subprocess import Popen,PIPE,STDOUT
 from utils import *
 from configobj import ConfigObj
@@ -691,21 +692,32 @@ class DBICondor(DBIBase):
         # create the information about the tasks
         id=len(self.tasks)+1
         for command in commands:
-            pos = string.find(command,' ')
-            if pos>=0:
-                c = command[0:pos]
-                c2 = command[pos:]
-            else:
-                c=command
-                c2=""
+	    c_split = command.split()
+            # c = program name, c2 = arguments
+	    c = c_split[0]
+	    if len(c_split) > 1:
+	    	c2 = ' ' + ' '.join(c_split[1:])
+	    else:
+		c2 = ''
 
             # We use the absolute path so that we don't have corner case as with ./
             shellcommand=False
-            autorized_shell_command=[ "touch", "echo"]
-            if c in autorized_shell_command:
+            authorized_shell_commands=[ "touch", "echo"]
+            if c in authorized_shell_commands:
                 shellcommand=True
             elif not self.files:
-                c = os.path.normpath(os.path.join(os.getcwd(), c))
+		# Transform path to get an absolute path.
+                c_abs = os.path.abspath(c)
+		if os.path.isfile(c_abs):
+		    # The file is in the current directory (easy case).
+		    c = c_abs
+		elif not os.path.isabs(c):
+		    # We need to find where the file could be... easiest way to
+                    # do it is ask the 'which' shell command.
+	 	    which_out = subprocess.Popen('which %s' % c, shell = True, stdout = PIPE).stdout.readlines()
+		    if len(which_out) == 1:
+			c = which_out[0].strip()
+
             command = "".join([c,c2])
 
                 # We will execute the command on the specified architecture
@@ -756,7 +768,7 @@ class DBICondor(DBIBase):
             if shellcommand:
                 pass
             elif not os.path.exists(c):
-                raise Exception("The command '"+c+"' does not exist! You must provide the full path to the executable")
+                raise Exception("The command '"+c+"' does not exist!")
             elif not os.access(c, os.X_OK):
                 raise Exception("The command '"+c+"' does not have execution permission!")
 
