@@ -8,7 +8,7 @@ from plearn.pyext import *
 from numpy.numarray import *
 from math import *
 import random
-
+import fpconst
 
 class SVMHyperParamOracle__kernel(object):
     """ An oracle that gives values of hyperparameters      
@@ -1354,7 +1354,7 @@ class SVM(object):
             print "SVM::test() called on ",len(targets)," samples"
             print "class priors: ", class_priors
 
-        cm_weights = [ (class_priors.get(t,0.)!=0. and 1./class_priors.get(t,0.)) or float('nan') for t in range(nclasses) ]
+        cm_weights = [ (class_priors.get(t,0.)!=0. and 1./class_priors.get(t,0.)) or fpconst.NaN for t in range(nclasses) ]
         if 'norm_ce' in self.costnames:
             if self.errorcosts == None:        
                 errorcosts = zeros((nclasses,nclasses))
@@ -1364,7 +1364,7 @@ class SVM(object):
                         if cp != 0.:
                             errorcosts[classe,prediction] = 1./ ( nclasses * cp )
                         else:
-                            errorcosts[classe,prediction] = float('nan')
+                            errorcosts[classe,prediction] = fpconst.NaN
                             
             else:
                 errorcosts = self.errorcosts
@@ -1383,6 +1383,8 @@ class SVM(object):
                     c2 = int(cn[4])
                     if c1 == truth and c2 == prediction:
                         statVec.append(cm_weights[truth])
+                    elif fpconst.isNaN(cm_weights[c1]):
+                        statVec.append(fpconst.NaN)
                     else:
                         statVec.append(0.)
                 elif cn == 'norm_ce':
@@ -1392,7 +1394,7 @@ class SVM(object):
                 else:
                     raise ValueError, "computation of cost %s not implemented in SVM::test()" % cn
             teststats.update(statVec,1.)
-        
+
         return teststats #, outputs, costs
 
 
