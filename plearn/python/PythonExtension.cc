@@ -38,6 +38,7 @@
 #include <plearn/base/TypeFactory.h>
 #include <plearn/base/PMemPool.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/vmat/VMatrix.h>
 
 namespace PLearn {
 
@@ -248,6 +249,13 @@ void injectPLearnClasses(PyObject* module)
         if(!tit->second.constructor)
             continue; //skip abstract classes
 
+        string actual_wrapper_name= wrapper_name;
+        Object* temp_obj= tit->second.constructor();
+        // use different wrapper for VMats (w/ len, getitem, etc.)
+        if(dynamic_cast<VMatrix*>(temp_obj))
+            actual_wrapper_name= "WrappedPLearnVMat";
+        delete temp_obj;
+
         // create new python type deriving from WrappedPLearnObject
         string classname= tit->first;
         string pyclassname= classname;
@@ -255,7 +263,7 @@ void injectPLearnClasses(PyObject* module)
         search_replace(pyclassname, "<", "_");
         search_replace(pyclassname, ">", "_");
         string derivcode= string("\nclass ")
-            + pyclassname + "(" + wrapper_name + "):\n"
+            + pyclassname + "(" + actual_wrapper_name + "):\n"
             "  \"\"\" ... \"\"\"\n"
             "  def __new__(cls,*args,**kwargs):\n"
             "    #print '** "+pyclassname+".__new__',kwargs\n"
@@ -267,6 +275,7 @@ void injectPLearnClasses(PyObject* module)
         PyObject* res= PyRun_String(derivcode.c_str(), 
                                     Py_file_input, 
                                     PyModule_GetDict(module), PyModule_GetDict(module));
+
         Py_XDECREF(res);
         env= PythonObjectWrapper(
             PyModule_GetDict(module), 
@@ -276,7 +285,7 @@ void injectPLearnClasses(PyObject* module)
             PLERROR("in injectPLearnClasses : "
                     "Cannot create new python class deriving from "
                     "%s (%s).", 
-                    wrapper_name.c_str(),
+                    actual_wrapper_name.c_str(),
                     classname.c_str());
 
         //set option names

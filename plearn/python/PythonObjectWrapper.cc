@@ -306,6 +306,41 @@ VarArray ConvertFromPyObject<VarArray>::convert(PyObject* pyobj,
     return static_cast<VarArray>(ConvertFromPyObject<TVec<Var> >::convert(pyobj, print_traceback));
 }
 
+template<> int numpyType<bool>()               { return NPY_BOOL; }
+template<> int numpyType<signed char>()        { return NPY_BYTE; }
+template<> int numpyType<unsigned char>()      { return NPY_UBYTE; }
+template<> int numpyType<signed short>()       { return NPY_SHORT; }
+template<> int numpyType<unsigned short>()     { return NPY_USHORT; }
+template<> int numpyType<signed int>()         { return NPY_INT; }
+template<> int numpyType<unsigned int>()       { return NPY_UINT; }
+template<> int numpyType<signed long>()        { return NPY_LONG; }
+template<> int numpyType<unsigned long>()      { return NPY_ULONG; }
+template<> int numpyType<signed long long>()   { return NPY_LONGLONG; }
+template<> int numpyType<unsigned long long>() { return NPY_ULONGLONG; }
+template<> int numpyType<float>()              { return NPY_FLOAT; }
+template<> int numpyType<double>()             { return NPY_DOUBLE; }
+template<> int numpyType<long double>()        { return NPY_LONGDOUBLE; }
+
+PyObject* convertArrayCheck(PyObject* pyobj, int numpy_type, int ndim, bool print_traceback)
+{
+    PythonGlobalInterpreterLock gil;         // For thread-safety
+    static PythonEmbedder embedder;
+    PythonObjectWrapper::initializePython();
+
+    if(!PyArray_Check(pyobj)) return 0; //not an array
+
+    PyObject* pyarr0= PyArray_CheckFromAny(pyobj, NULL,
+                                           ndim, ndim, NPY_CARRAY_RO, Py_None);
+    PyObject* pyarr= 
+        PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
+                           PyArray_DescrFromType(numpy_type), 0);
+    Py_XDECREF(pyarr0);
+    if(!pyarr)
+        PLPythonConversionError("convertArrayCheck", pyobj,
+                                print_traceback);
+    return pyarr;
+}
+
 //#####  Constructors+Destructors  ############################################
 
 PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,

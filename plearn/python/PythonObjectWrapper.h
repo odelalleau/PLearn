@@ -452,6 +452,32 @@ struct ConvertFromPyObject<VarArray>
 };
 
 
+/*****
+ * Equivalence of types C++ -> numpy
+ */
+template <typename T>
+int numpyType()
+{
+    PLERROR("in numpyType: no numpy equivalent to C++ type ",
+            TypeTraits<T*>::name().c_str());
+    return -1; //shut up compiler
+}
+
+template<> int numpyType<bool>();
+template<> int numpyType<signed char>();
+template<> int numpyType<unsigned char>();
+template<> int numpyType<signed short>();
+template<> int numpyType<unsigned short>();
+template<> int numpyType<signed int>();
+template<> int numpyType<unsigned int>();
+template<> int numpyType<signed long>();
+template<> int numpyType<unsigned long>();
+template<> int numpyType<signed long long>();
+template<> int numpyType<unsigned long long>();
+template<> int numpyType<float>();
+template<> int numpyType<double>();
+template<> int numpyType<long double>();
+
 
 //! Used to convert integer values to python, using PyInt if possible
 template <class I>
@@ -971,6 +997,13 @@ PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj,
     return p;
 }
 
+/*****
+ * convert numpy array to the right array type; return 0 if pyobj is not an array
+ * pyobj is the python object to check/convert, numpy_type is an int representing a
+ * numpy type, ndim is the number of dimensions that the array should have (1=vec, 2=mat, 0=any)
+ */
+PyObject* convertArrayCheck(PyObject* pyobj, int numpy_type, int ndim, bool print_traceback);
+
 template <class T>
 TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj,
                                                 bool print_traceback)
@@ -996,6 +1029,14 @@ TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj,
             PyObject* elem_i = PyList_GET_ITEM(pyobj, i);
             v[i] = ConvertFromPyObject<T>::convert(elem_i, print_traceback);
         }
+        return v;
+    }
+    else if (PyObject* pyarr= convertArrayCheck(pyobj, numpyType<T>(), 1, print_traceback))
+    {
+        int sz= PyArray_DIM(pyarr,0);
+        TVec<T> v(sz);
+        v.copyFrom(static_cast<T*>(PyArray_DATA(pyarr)), sz);
+        Py_XDECREF(pyarr);
         return v;
     }
     else
@@ -1041,6 +1082,15 @@ TMat<T> ConvertFromPyObject<TMat<T> >::convert(PyObject* pyobj,
             v.appendRow(r);
         }
         return v;
+    }
+    else if (PyObject* pyarr= convertArrayCheck(pyobj, numpyType<T>(), 2, print_traceback))
+    {
+        TMat<T> m;
+        m.resize(PyArray_DIM(pyarr,0), PyArray_DIM(pyarr,1));
+        m.toVec().copyFrom(static_cast<T*>(PyArray_DATA(pyarr)),
+                           PyArray_DIM(pyarr,0) * PyArray_DIM(pyarr,1));
+        Py_XDECREF(pyarr);
+        return m;
     }
     else
         PLPythonConversionError("ConvertFromPyObject< TMat<T> >", pyobj,
