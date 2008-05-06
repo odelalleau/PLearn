@@ -245,7 +245,7 @@ print "With options: ",dbi_param
 for i in dbi_param:
     if i not in valid_dbi_param:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end"
-print "With the command to be expended:"," ".join(command_argv),"\n\n"
+print "With the command to be expanded:"," ".join(command_argv),"\n\n"
 
 def generate_combination(repl):
     if repl == []:
