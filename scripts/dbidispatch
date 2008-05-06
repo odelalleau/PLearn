@@ -77,6 +77,8 @@ condor only options:
      dbidispatch '--req=regexp("computer0*", target.Machine)'
   The '--nice'('--no_nice') option set the nice_user option to condor. If nice, the job(s) will have the lowest possible priority.
   The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
+  If the CONDOR_HOME environment variable is set, then the HOME variable will
+     be set to this value for jobs submitted to condor.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.

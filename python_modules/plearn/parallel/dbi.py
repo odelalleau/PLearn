@@ -802,6 +802,7 @@ class DBICondor(DBIBase):
             req = req+'&&('+self.req+')'
 
         source_file=os.getenv("CONDOR_LOCAL_SOURCE")
+        condor_home = os.getenv('CONDOR_HOME')
         if source_file and source_file.endswith(".cshrc"):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
         else:
@@ -864,11 +865,12 @@ class DBICondor(DBIBase):
             self.temp_files.append(launch_file)
             launch_dat = open(launch_file,'w')
             if source_file and not source_file.endswith(".cshrc"):
-
                 launch_dat.write(dedent('''\
                 #!/bin/sh
                 PROGRAM=$1
                 shift\n'''))
+                if condor_home:
+                    launch_dat.write('export HOME=%s\n' % condor_home)
                 if source_file:
                     launch_dat.write('source ' + source_file + '\n')
                 launch_dat.write(dedent('''\
@@ -886,8 +888,10 @@ class DBICondor(DBIBase):
                     ${PROGRAM} "$@"'''))
             else:
                 launch_dat.write(dedent('''\
-                    #!/bin/csh
+                    #! /bin/tcsh
                     \n'''))
+                if condor_home:
+                    launch_dat.write('setenv HOME %s\n' % condor_home)
                 if source_file:
                     launch_dat.write('source ' + source_file + '\n')
                 launch_dat.write(dedent('''\
@@ -903,7 +907,9 @@ class DBICondor(DBIBase):
                     #/usr/bin/python -V
                     #echo ${PROGRAM} $@
                     #${PROGRAM} "$@"
-                    $argv'''))
+                    echo "Running command: $argv"
+                    $argv
+                    '''))
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
