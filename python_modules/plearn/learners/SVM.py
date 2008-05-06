@@ -1539,7 +1539,7 @@ class SVM(object):
         The train set is mandatory, but valid and/or test sets can be missing.
         cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
-    def run(self, dataspec):
+    def run(self, dataspec, param = None, L0 = None):
         assert self.testlevel >= 0
         assert self.max_ntrials > 0
         trainset = self.train_inputspec(dataspec)
@@ -1552,15 +1552,20 @@ class SVM(object):
         expert = self.get_expert( self.kernel_type )
         expert.verbosity = self.verbosity
         
-        L0=len(expert.trials_param_list)
+        if L0 == None:
+            L0=len(expert.trials_param_list)
+        local_retrain_until_local_optimum_is_found = True
 
         # HyperParamOracle__kernel.best_param is None just at the __init__
-        if expert.best_param  == None:
-            param_to_try = expert.choose_first_param()
+        if param == None or len(param) == 0:
+            if expert.best_param  == None:
+                param_to_try = expert.choose_first_param()
+            else:
+                param_to_try = expert.choose_new_param()
         else:
-            param_to_try = expert.choose_new_param()
+            param_to_try = [param]
+            local_retrain_until_local_optimum_is_found = False
         
-        local_retrain_until_local_optimum_is_found = True
         for param in param_to_try:
 
             if self.max_ntrials == 1: # No hyper-optimization (debug)
@@ -1597,7 +1602,7 @@ class SVM(object):
         and local_retrain_until_local_optimum_is_found
         and expert.should_be_tuned_again()
         and ( self.max_cost == None or expert.best_cost <= self.max_cost ) ):
-           return self.run( dataspec )
+           return self.run( dataspec, None, L0 )
 
         if self.testlevel == 0:
              return self.retrain_and_writeresults(dataspec)
