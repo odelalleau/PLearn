@@ -102,9 +102,12 @@ class SVMHyperParamOracle__kernel(object):
         close to previous ones.
     """
     def semiforget(self):
+        if self.verbosity > 3:
+            print "  (forget called)"
         self.trials_param_list  = []
         self.trials_cost_list = []
         self.stats_are_uptodate = False
+        self.best_cost = None
         # Note: when we forget, we keep the value of
         #       'self.best_param'. This allow to initialize
         #       a new search (when data changed a bit) to
