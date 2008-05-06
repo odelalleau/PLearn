@@ -1351,13 +1351,18 @@ class SVM(object):
             print "SVM::test() called on ",len(targets)," samples"
             print "class priors: ", class_priors
 
-        cm_weights = [ 1./class_priors[t] for t in range(nclasses) ]
+        cm_weights = [ (class_priors.get(t,0.)!=0. and 1./class_priors.get(t,0.)) or float('nan') for t in range(nclasses) ]
         if 'norm_ce' in self.costnames:
             if self.errorcosts == None:        
                 errorcosts = zeros((nclasses,nclasses))
                 for classe in range(nclasses):
                     for prediction in range(classe)+range(classe+1,nclasses):
-                        errorcosts[classe,prediction] = 1./ ( nclasses * class_priors[classe] )
+                        cp= class_priors.get(classe,0.)
+                        if cp != 0.:
+                            errorcosts[classe,prediction] = 1./ ( nclasses * cp )
+                        else:
+                            errorcosts[classe,prediction] = float('nan')
+                            
             else:
                 errorcosts = self.errorcosts
 
