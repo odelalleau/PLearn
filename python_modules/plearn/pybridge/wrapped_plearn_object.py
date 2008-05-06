@@ -144,8 +144,6 @@ class WrappedPLearnObject(object):
 from numpy.numarray import *
 
 class WrappedPLearnVMat(WrappedPLearnObject):
-    def __init__(self, cptr):
-        WrappedPLearnObject.__init__(self, cptr)
 
     def __len__(self):
         return self.length
