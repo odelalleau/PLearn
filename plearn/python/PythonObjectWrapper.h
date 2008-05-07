@@ -83,6 +83,7 @@ class PythonObjectWrapper;                   // Forward-declare
 class Object;
 class VMatrix;
 class VarArray;
+class RealRange;
 
 //! Used for error reporting.  If 'print_traceback' is true, a full
 //! Python traceback is printed to stderr.  Otherwise, raise PLERROR.
@@ -451,6 +452,11 @@ struct ConvertFromPyObject<VarArray>
     static VarArray convert(PyObject*, bool print_traceback);
 };
 
+template <>
+struct ConvertFromPyObject<RealRange>
+{
+    static RealRange convert(PyObject*, bool print_traceback);
+};
 
 /*****
  * Equivalence of types C++ -> numpy
@@ -690,6 +696,9 @@ template<> struct ConvertToPyObject<CopiesMap>
 
 template <> struct ConvertToPyObject<VarArray>
 { static PyObject* newPyObject(const VarArray&); };
+
+template <> struct ConvertToPyObject<RealRange>
+{ static PyObject* newPyObject(const RealRange&); };
 
 struct PLPyClass
 {

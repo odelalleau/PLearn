@@ -167,3 +167,12 @@ class WrappedPLearnVMat(WrappedPLearnObject):
             raise NotImplementedError, 'slice step != 1'
         raise TypeError, "key should be an int or a slice"
     
+class RealRange:
+    """
+    To support PLearn<->Python conversion of RealRange (which is not a PLearn Object)
+    """
+    def __init__(self, leftbracket, low, high, rightbracket):
+        self.leftbracket = leftbracket
+        self.low = low
+        self.high = high
+        self.rightbracket = rightbracket

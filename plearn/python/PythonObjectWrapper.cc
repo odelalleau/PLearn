@@ -56,6 +56,7 @@
 #include <plearn/base/RemoteTrampoline.h>
 #include <plearn/base/HelpSystem.h>
 #include <plearn/var/VarArray.h>
+#include <plearn/base/RealMapping.h> // for RealRange
 
 namespace PLearn {
 using namespace std;
@@ -304,6 +305,40 @@ VarArray ConvertFromPyObject<VarArray>::convert(PyObject* pyobj,
                                                 bool print_traceback)
 {
     return static_cast<VarArray>(ConvertFromPyObject<TVec<Var> >::convert(pyobj, print_traceback));
+}
+
+RealRange ConvertFromPyObject<RealRange>::convert(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT(pyobj);
+    PyObject* py_leftbracket= PyObject_GetAttrString(pyobj, "leftbracket");
+    if(!py_leftbracket)
+        PLPythonConversionError("ConvertFromPyObject<RealRange>: "
+                                "not a RealRange (no 'leftbracket' attr.)",
+                                pyobj, print_traceback);
+    string leftbracket= ConvertFromPyObject<string>::convert(py_leftbracket, print_traceback);
+    Py_DECREF(py_leftbracket);
+    PyObject* py_low= PyObject_GetAttrString(pyobj, "low");
+    if(!py_low) 
+        PLPythonConversionError("ConvertFromPyObject<RealRange>: "
+                                "not a RealRange (no 'low' attr.)",
+                                pyobj, print_traceback);
+    real low= ConvertFromPyObject<real>::convert(py_low, print_traceback);
+    Py_DECREF(py_low);
+    PyObject* py_high= PyObject_GetAttrString(pyobj, "high");
+    if(!py_high) 
+        PLPythonConversionError("ConvertFromPyObject<RealRange>: "
+                                "not a RealRange (no 'high' attr.)",
+                                pyobj, print_traceback);
+    real high= ConvertFromPyObject<real>::convert(py_high, print_traceback);
+    Py_DECREF(py_high);
+    PyObject* py_rightbracket= PyObject_GetAttrString(pyobj, "rightbracket");
+    if(!py_rightbracket) 
+        PLPythonConversionError("ConvertFromPyObject<RealRange>: "
+                                "not a RealRange (no 'rightbracket' attr.)",
+                                pyobj, print_traceback);
+    string rightbracket= ConvertFromPyObject<string>::convert(py_rightbracket, print_traceback);
+    Py_DECREF(py_rightbracket);
+    return RealRange(leftbracket[0], low, high, rightbracket[0]);
 }
 
 template<> int numpyType<bool>()               { return NPY_BOOL; }
@@ -768,6 +803,31 @@ PyObject* ConvertToPyObject<CopiesMap>::newPyObject(const CopiesMap& copies)
 PyObject* ConvertToPyObject<VarArray>::newPyObject(const VarArray& var)
 {
     return ConvertToPyObject<TVec<Var> >::newPyObject(var);
+}
+
+PyObject* ConvertToPyObject<RealRange>::newPyObject(const RealRange& rr)
+{
+    string pycode= "\nfrom plearn.pybridge.wrapped_plearn_object import RealRange\n";
+    pycode+= string("\nresult= RealRange(leftbracket='") + rr.leftbracket + "', "
+        + "low= " + tostring(rr.low) + ", high= " + tostring(rr.high) + ", "
+        + "rightbracket= '" + rr.rightbracket + "')\n";
+    PyObject* env= PyDict_New();
+    if(0 != PyDict_SetItemString(env, "__builtins__", PyEval_GetBuiltins()))
+        PLERROR("in ConvertToPyObject<RealRange>::newPyObject : "
+                "cannot insert builtins in env.");
+    PyObject* res= PyRun_String(pycode.c_str(), Py_file_input, env, env);
+    if(!res)
+    {
+        Py_DECREF(env);
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in ConvertToPyObject<RealRange>::newPyObject : "
+                "cannot convert to a RealRange.");
+    }
+    Py_DECREF(res);
+    PyObject* py_rr= PythonObjectWrapper(env).as<std::map<string, PyObject*> >()["result"];
+    Py_INCREF(py_rr);
+    Py_DECREF(env);
+    return py_rr;
 }
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v)
