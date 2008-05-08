@@ -100,6 +100,10 @@ public: // to set these values instead of getting them by training
     Var wdirect; // bias and weights for direct in-to-out connection
     Var wrec; // input reconstruction weights (optional), from hidden layer to predicted input
 
+    //! Matrices used for the quadratic term in the 'ratio' transfer function.
+    //! There is one matrix for each hidden neuron.
+    VarArray v1, v2;
+
     // first hidden layer
     Var hidden_layer;
 
@@ -185,6 +189,7 @@ public:
     // 0 means the whole training set (default: 1)
 
     string initialization_method;
+    int ratio_rank;
 
 
 private:
@@ -239,7 +244,8 @@ protected:
     //! Return a variable that is the hidden layer corresponding to given
     //! input and weights. If the 'default' transfer_func is used, we use the
     //! hidden_transfer_func option.
-    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func = "default");
+    Var hiddenLayer(const Var& input, const Var& weights, string transfer_func = "default",
+                    VarArray* ratio_quad_weights = NULL);
 
     //! Build the output of the neural network, from the given input.
     //! The hidden layer is also made available in the 'hidden_layer' parameter.

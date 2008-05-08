@@ -45,6 +45,7 @@
 #include <plearn/var/ClassificationLossVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
 #include <plearn/var/CrossEntropyVariable.h>
+#include <plearn/var/DivVariable.h>
 #include <plearn/var/ExpVariable.h>
 #include <plearn/var/LiftOutputVariable.h>
 #include <plearn/var/LogSoftmaxVariable.h>
@@ -56,11 +57,15 @@
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
 #include <plearn/var/NegLogPoissonVariable.h>
 #include <plearn/var/OneHotSquaredLoss.h>
+#include <plearn/var/PlusConstantVariable.h>
+#include <plearn/var/PlusVariable.h>
 #include <plearn/var/ProductVariable.h>
-// #include "RBFLayerVariable.h" //TODO Put it back when the file exists.
+#include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/SoftmaxVariable.h>
 #include <plearn/var/SoftplusVariable.h>
+#include <plearn/var/SquareVariable.h>
+#include <plearn/var/SquareRootVariable.h>
 #include <plearn/var/SumVariable.h>
 #include <plearn/var/SumAbsVariable.h>
 #include <plearn/var/SumOfVariable.h>
@@ -124,7 +129,8 @@ first_hidden_layer_is_output(false),
 transpose_first_hidden_layer(false),
 n_non_params_in_first_hidden_layer(0),
 batch_size(1),
-initialization_method("uniform_linear")
+initialization_method("uniform_linear"),
+ratio_rank(0)
 {
     // Use the generic PLearner random number generator.
     random_gen = new PRandom();
@@ -262,7 +268,9 @@ void NNet::declareOptions(OptionList& ol)
         "  - \"softmax\" \n"
         "  - \"log_softmax\" \n"
         "  - \"hard_slope\" \n"
-        "  - \"symm_hard_slope\" \n");
+        "  - \"symm_hard_slope\" \n"
+        "  - \"ratio\": e/(1+e) with e=sqrt(x'V'Vx + softplus(a)^2)\n"
+        "               with a=b+W'x and V a matrix of rank 'ratio_rank'");
 
     declareOption(
         ol, "cost_funcs", &NNet::cost_funcs, OptionBase::buildoption, 
@@ -373,6 +381,13 @@ void NNet::declareOptions(OptionList& ol)
         ol, "max_bag_size", &NNet::max_bag_size, OptionBase::buildoption,
         "Maximum number of samples in a bag (used with 'operate_on_bags').",
         OptionBase::advanced_level);
+    
+    declareOption(
+        ol, "ratio_rank", &NNet::ratio_rank, OptionBase::buildoption,
+        "Rank of matrix V when using the 'ratio' hidden transfer function.\n"
+        "Use -1 for full rank, and 0 to have no quadratic term.",
+        OptionBase::advanced_level);
+
 
     // Learnt options.
     
@@ -758,7 +773,15 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
     {
         w1 = Var(1 + the_input->width(), nhidden, "w1");      
         params.append(w1);
-        hidden_layer = hiddenLayer(output, w1);
+        if (hidden_transfer_func == "ratio") {
+            v1.resize(ratio_rank != 0 ? nhidden : 0);
+            for (int i = 0; i < v1.length(); i++) {
+                int rank = ratio_rank < 0 ? the_input->width() : ratio_rank;
+                v1[i] = Var(the_input->width(), rank, "v1[" + tostring(i) + "]");
+                params.append(v1[i]);
+            }
+        }
+        hidden_layer = hiddenLayer(output, w1, "default", &v1);
         output = hidden_layer;
         // TODO BEWARE! This is not the same 'hidden_layer' as before.
     }
@@ -769,7 +792,15 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
         PLASSERT( !first_hidden_layer_is_output );
         w2 = Var(1 + output.width(), nhidden2, "w2");
         params.append(w2);
-        output = hiddenLayer(output, w2);
+        if (hidden_transfer_func == "ratio") {
+            v2.resize(ratio_rank != 0 ? nhidden2 : 0);
+            for (int i = 0; i < v2.length(); i++) {
+                int rank = ratio_rank < 0 ? output->width() : ratio_rank;
+                v2[i] = Var(output->width(), rank, "v2[" + tostring(i) + "]");
+                params.append(v2[i]);
+            }
+        }
+        output = hiddenLayer(output, w2, "default", &v2);
     }
 
     if (nhidden2>0 && nhidden==0 && !first_hidden_layer)
@@ -1039,7 +1070,8 @@ TVec<string> NNet::getTestCostNames() const
 /////////////////
 // hiddenLayer //
 /////////////////
-Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func) {
+Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func,
+                      VarArray* ratio_quad_weights) {
     Var hidden = affine_transform(input, weights, true);
     hidden->setName("hidden_layer_activations");
     Var result;
@@ -1063,6 +1095,28 @@ Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func
         result = unary_hard_slope(hidden,0,1);
     else if(transfer_func=="symm_hard_slope")
         result = unary_hard_slope(hidden,-1,1);
+    else if (transfer_func == "ratio") {
+        PLASSERT( ratio_quad_weights );
+        Var softp = new SoftplusVariable(hidden);
+        Var before_ratio = softp;
+        if (ratio_rank != 0) {
+            // Compute quadratic term for each hidden neuron.
+            VarArray quad_terms(ratio_quad_weights->length());
+            for (int i = 0; i < ratio_quad_weights->length(); i++) {
+                Var X_V = product(input, (*ratio_quad_weights)[i]);
+                quad_terms[i] = new RowSumSquareVariable(X_V);
+            }
+            // Concatenate quadratic terms into a single Var.
+            Var quad = new ConcatColumnsVariable(quad_terms);
+            // Add the softplus term.
+            Var softp_square = new SquareVariable(softp);
+            Var total = new PlusVariable(quad, softp_square);
+            // Take the square root and perform the ratio.
+            before_ratio = new SquareRootVariable(total);
+        }
+        result = new DivVariable(before_ratio,
+                                 new PlusConstantVariable(before_ratio, 1.0));
+    }
     else
         PLERROR("In NNet::hiddenLayer - Unknown value for transfer_func: %s",transfer_func.c_str());
     return result;
@@ -1077,14 +1131,19 @@ void NNet::initializeParams(bool set_seed)
         random_gen->manual_seed(seed_);
 
     if (nhidden>0) {
-        if (!first_hidden_layer)
+        if (!first_hidden_layer) {
             fillWeights(w1, true);
+            for (int i = 0; i < v1.length(); i++)
+                fillWeights(v1[i], true);
+        }
         if (direct_in_to_out)
             fillWeights(wdirect, false);
     }
 
     if(nhidden2>0) {
         fillWeights(w2, true);
+        for (int i = 0; i < v2.length(); i++)
+            fillWeights(v2[i], true);
     }
 
     if (fixed_output_weights) {
@@ -1147,6 +1206,8 @@ void NNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     varDeepCopyField(sampleweight, copies);
     varDeepCopyField(w1, copies);
     varDeepCopyField(w2, copies);
+    deepCopyField(v1, copies);
+    deepCopyField(v2, copies);
     varDeepCopyField(wout, copies);
     varDeepCopyField(outbias, copies);
     varDeepCopyField(wdirect, copies);
