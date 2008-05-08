@@ -42,6 +42,7 @@
 #include <plearn/base/ProgressBar.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/io/load_and_save.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -56,7 +57,8 @@ TextFilesVMatrix::TextFilesVMatrix():
     auto_build_map(false),
     auto_extend_map(true),
     build_vmatrix_stringmap(false),
-    reorder_fieldspec_from_headers(false)
+    reorder_fieldspec_from_headers(false),
+    partial_match(false)
 {}
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -192,37 +194,77 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 {
     width_ = 0;
     TVec<string> fnames;
-    if(reorder_fieldspec_from_headers)
+    TVec<string> fnames_header;//field names take in the header of source file
+    if(reorder_fieldspec_from_headers || partial_match)
     {
         //read the fieldnames from the files.
-        TVec<string> fn;
         for(int i=0; i<txtfiles.size(); i++)
         {
             FILE* f = txtfiles[i];
             fseek(f,0,SEEK_SET);
             if(!fgets(buf, sizeof(buf), f))
                 PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
-                        "Couldn't read the fiedls names from file '%s'",
+                        "Couldn't read the fields names from file '%s'",
                         txtfilenames[i].c_str());
             fseek(f,0,SEEK_SET);
 
             TVec<string> fields = splitIntoFields(buf);
             fields.append(removeblanks(fields.pop()));
 
-            fn.append(fields);
+            fnames_header.append(fields);
         }
-        if(fn.size()!=fieldspec.size())
+    }
+    if(partial_match)
+    {
+        TVec< pair<string, string> > new_fieldspec;
+        PLCHECK_MSG(reorder_fieldspec_from_headers,
+                    "In TextFilesVMatrix::setColumnNamesAndWidth - "
+                    "when partial_match is true, reorder_fieldspec_from_headers"
+                    " must be true.");
+        for(int i=0;i<fieldspec.size();i++)
+        {
+            bool expended = false;
+            string fname=fieldspec[i].first;
+            if(fname[fname.size()-1]!='*')
+            {
+                new_fieldspec.append(fieldspec[i]);
+                continue;
+            }
+            fname.resize(fname.size()-1);//remove the last caracter (*)
+            for(int j=0;j<fnames_header.size();j++)
+            {
+                if(string_begins_with(fnames_header[j],fname))
+                {
+                    pair<string,string> n=make_pair(fnames_header[j],
+                                                    fieldspec[i].second);
+//                    perr<<"expanding "<<fieldspec[i] << " to " << n <<endl;
+                    
+                    new_fieldspec.append(n);
+                    expended = true;
+                }
+            }
+            if(!expended)
+                PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth - "
+                        "Don't have find any partial match to %s",
+                        fieldspec[i].first.c_str());
+        }
+        fieldspec = new_fieldspec;
+    }
+
+    if(reorder_fieldspec_from_headers)
+    {
+        if(fnames_header.size()!=fieldspec.size())
         {
             PLWARNING("In TextFilesVMatrix::setColumnNamesAndWidth() - "
                     "We read %d field names from the header but have %d"
-                    "fieldspec",fn.size(),fieldspec.size());
+                    "fieldspec",fnames_header.size(),fieldspec.size());
         }
 
         //check that all field names from the header have a spec
         TVec<string> not_used_fn;
-        for(int i=0;i<fn.size();i++)
+        for(int i=0;i<fnames_header.size();i++)
         {
-            string name=fn[i];
+            string name=fnames_header[i];
             int j=0;
             for(;j<fieldspec.size();j++)
                 if(fieldspec[j].first==name)
@@ -236,10 +278,10 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
         {
             string name=fieldspec[i].first;
             int j=0;
-            for(;j<fn.size();j++)
-                if(fn[j]==name)
+            for(;j<fnames_header.size();j++)
+                if(fnames_header[j]==name)
                     break;
-            if(j>=fn.size())
+            if(j>=fnames_header.size())
                 not_used_fs.append(name);
         }
         if(not_used_fs.size()!=0)
@@ -255,10 +297,10 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
     
 
         //the new order for fieldspecs
-        TVec< pair<string, string> > fs(fn.size());
-        for(int i=0;i<fn.size();i++)
+        TVec< pair<string, string> > fs(fnames_header.size());
+        for(int i=0;i<fnames_header.size();i++)
         {
-            string name=fn[i];
+            string name=fnames_header[i];
             int j=0;
             for(;j<fieldspec.size();j++)
                 if(fieldspec[j].first==name)
@@ -328,11 +370,13 @@ void TextFilesVMatrix::build_()
     setColumnNamesAndWidth();
 
     // open the index file
-    if(!isUpToDate(idxfname))
+    if(!isUpToDate(idxfname) || isemptyFile(idxfname))
         buildIdx(); // (re)build it first!
     idxfile = fopen(idxfname.c_str(),"rb");
     if(fgetc(idxfile) != byte_order())
-        PLERROR("In TextFilesVMatrix::build_ - Wrong endianness. Remove the index file for it to be automatically rebuilt");
+        PLERROR("In TextFilesVMatrix::build_ - Wrong endianness."
+                " Remove the index file %s for it to be automatically rebuilt",
+                idxfname.c_str());
     fread(&length_, 4, 1, idxfile);
 
     // Initialize some sizes
@@ -841,6 +885,14 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "If true, will reorder the fieldspec in the order given "
                   "by the field names taken from txtfilenames.");
 
+    declareOption(ol, "partial_match", 
+                  &TextFilesVMatrix::partial_match,
+                  OptionBase::buildoption,
+                  "If true, will repeatedly expand all fieldspec name ending "
+                  "with * to the full name from header."
+                  "The expansion is equivalent to the regex 'field_spec_name*'."
+                  "The option reorder_fieldspec_from_headers must be true");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -886,7 +938,7 @@ void TextFilesVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     idxfile=0;
     txtfiles.resize(0);
-    //should be already build.
+    //the map should be already build.
     auto_build_map=false;
     build();
 }

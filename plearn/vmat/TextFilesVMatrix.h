@@ -127,6 +127,7 @@ public:
     bool build_vmatrix_stringmap;
 
     bool reorder_fieldspec_from_headers;
+    bool partial_match;
 
     // ****************
     // * Constructors *
@@ -149,7 +150,7 @@ private:
     void getFileAndPos(int i, unsigned char& fileno, int& pos) const;
     void buildIdx();
     static void readAndCheckOptionName(PStream& in, const string& optionname);
-
+    void closeCurrentFile();
 
 protected:
     //! Declares this class' options
