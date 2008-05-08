@@ -1,3 +1,3 @@
- WARNING: In SelectColumnsVMatrix::build_() - We are extending the source matrix with the columns '2' with missing value
- WARNING: In SelectColumnsVMatrix::build_() - We are extending the source matrix with the columns '2' with missing value
- WARNING: In SelectColumnsVMatrix::build_() - We are extending the source matrix with the columns '2' with missing value
+ WARNING: In SelectColumnsVMatrix::build_() - We are added 1 columns to the source matrix with missing value columns names: 2 
+ WARNING: In SelectColumnsVMatrix::build_() - We are added 1 columns to the source matrix with missing value columns names: 2 
+ WARNING: In SelectColumnsVMatrix::build_() - We are added 1 columns to the source matrix with missing value columns names: 2 
