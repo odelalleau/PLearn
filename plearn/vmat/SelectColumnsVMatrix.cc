@@ -199,6 +199,7 @@ void SelectColumnsVMatrix::build_()
             // Find out the indices from the fields.
             indices.resize(0);
             if (!fields_partial_match) {
+                TVec<string> missing_field;
                 for (int i = 0; i < fields.length(); i++) {
                     string the_field = fields[i];
                     int the_index = source->fieldIndex(the_field);  // string only
@@ -232,11 +233,13 @@ void SelectColumnsVMatrix::build_()
                     } else
                         indices.append(the_index);
                     if(extend_with_missing && the_index == -1)
-                        PLWARNING("In SelectColumnsVMatrix::build_() - We are"
-                                  " extending the source matrix with the"
-                                  " columns '%s' with missing value",
-                                  the_field.c_str());
-                    
+                        missing_field.append(the_field);
+                }
+                if(missing_field.size()>0){
+                    PLWARNING("In SelectColumnsVMatrix::build_() - We are"
+                              " added %d columns to the source matrix with missing value"
+                              " columns names: %s",missing_field.size(),
+                              tostring(missing_field).c_str());
                 }
             } else {
                 // We need to check whether or not we should add each field.
