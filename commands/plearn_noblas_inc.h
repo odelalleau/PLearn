@@ -336,6 +336,7 @@
 #include <plearn/vmat/ProcessDatasetVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/ProcessSymbolicSequenceVMatrix.h>
+#include <plearn/vmat/PutSubVMatrix.h>
 #include <plearn/vmat/RandomSamplesVMatrix.h>
 #include <plearn/vmat/RandomSamplesFromVMatrix.h>
 #include <plearn/vmat/RankedVMatrix.h>
