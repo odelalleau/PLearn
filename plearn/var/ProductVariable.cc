@@ -53,9 +53,10 @@ using namespace std;
 
 // Matrix product
 
-PLEARN_IMPLEMENT_OBJECT(ProductVariable,
-                        "Matrix product",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        ProductVariable,
+       "Matrix product.",
+       "");
 
 ProductVariable::ProductVariable(Variable* m1, Variable* m2)
     : inherited(m1, m2, m1->length(), m2->width())
