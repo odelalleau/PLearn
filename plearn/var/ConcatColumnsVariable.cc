@@ -49,25 +49,37 @@ using namespace std;
 
 /** ConcatColumnsVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(ConcatColumnsVariable,
-                        "Concatenation of the columns of several variables",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        ConcatColumnsVariable,
+        "Concatenation of the columns of several variables",
+        ""
+);
 
-ConcatColumnsVariable::ConcatColumnsVariable(const VarArray& vararray)
-    : inherited(vararray.nonNull(), vararray.maxLength(), vararray.sumOfWidths())
+///////////////////////////
+// ConcatColumnsVariable //
+///////////////////////////
+ConcatColumnsVariable::ConcatColumnsVariable(const VarArray& vararray,
+                                             bool call_build_):
+    inherited(vararray.nonNull(), vararray.maxLength(), vararray.sumOfWidths(),
+              call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-void
-ConcatColumnsVariable::build()
+///////////
+// build //
+///////////
+void ConcatColumnsVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-ConcatColumnsVariable::build_()
+////////////
+// build_ //
+////////////
+void ConcatColumnsVariable::build_()
 {
     if (varray->length()) {
         int l = varray[0]->length();

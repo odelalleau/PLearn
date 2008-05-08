@@ -50,17 +50,25 @@ using namespace std;
 
 /** DivVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(DivVariable,
-                        "Divide 2 matrix vars of same size elementwise",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        DivVariable,
+        "Divide 2 matrices of same size elementwise",
+        ""
+);
 
-DivVariable::DivVariable(Variable* input1, Variable* input2)
-    : BinaryVariable(input1, input2, input1->length(), input1->width())
+/////////////////
+// DivVariable //
+/////////////////
+DivVariable::DivVariable(Variable* input1, Variable* input2, bool call_build_):
+    inherited(input1, input2, input1->length(), input1->width(), call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
-
+///////////////////
+// recomputeSize //
+///////////////////
 void DivVariable::recomputeSize(int& l, int& w) const
 {
     if (input1) {
@@ -70,15 +78,19 @@ void DivVariable::recomputeSize(int& l, int& w) const
         l = w = 0;
 }
 
-void
-DivVariable::build()
+///////////
+// build //
+///////////
+void DivVariable::build()
 {
     inherited::build();
     build_();
 }
 
-void
-DivVariable::build_()
+////////////
+// build_ //
+////////////
+void DivVariable::build_()
 {
     if (input1 && input2)
         if(input1->length() != input2->length() || input1->width() != input2->width())

@@ -51,14 +51,40 @@ using namespace std;
 
 /** SoftplusVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SoftplusVariable,
-                        "This is the primitive of a sigmoid: log(1+exp(x))",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        SoftplusVariable,
+       "This is the primitive of a sigmoid: log(1+exp(x)).",
+       ""
+);
 
-SoftplusVariable::SoftplusVariable(Variable* input) 
-    : inherited(input, input->length(), input->width())
-{}
+//////////////////////
+// SoftplusVariable //
+//////////////////////
+SoftplusVariable::SoftplusVariable(Variable* input, bool call_build_):
+    inherited(input, input->length(), input->width(), call_build_)
+{
+    if (call_build_)
+        build_();
+}
 
+///////////
+// build //
+///////////
+void SoftplusVariable::build() {
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void SoftplusVariable::build_() {
+    // Nothing to do here.
+}
+
+///////////////////
+// recomputeSize //
+///////////////////
 void SoftplusVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {

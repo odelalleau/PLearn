@@ -59,16 +59,19 @@ class PlusConstantVariable: public UnaryVariable
     typedef UnaryVariable inherited;
 
 public:
-//protected:
-    real cst; //!<  The constant
+
+    real cst;
 
 public:
-    //!  Default constructor for persistence
-    PlusConstantVariable() : cst() {}
-    PlusConstantVariable(Variable* input, real c);
+    //! Default constructor.
+    PlusConstantVariable();
+
+    //! Convenience constructor.
+    PlusConstantVariable(Variable* input, real c, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(PlusConstantVariable);
-    static void declareOptions(OptionList &ol);
+
+    virtual void build();
 
     virtual string info() const
     { return string("PlusConstant (+ ")+tostring(cst)+")"; }
@@ -78,6 +81,14 @@ public:
     virtual void bprop();
     virtual void symbolicBprop();
     virtual void rfprop();
+
+protected:
+
+    static void declareOptions(OptionList &ol);
+
+private:
+
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(PlusConstantVariable);

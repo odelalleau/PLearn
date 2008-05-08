@@ -48,23 +48,30 @@
 namespace PLearn {
 using namespace std;
 
-
-//!  This is the primitive of a sigmoid: log(1+exp(x))
 class SoftplusVariable: public UnaryVariable
 {
     typedef UnaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    //! Default constructor.
     SoftplusVariable() {}
-    SoftplusVariable(Variable* input);
+
+    //! Convenience constructor.
+    SoftplusVariable(Variable* input, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(SoftplusVariable);
+
+    virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
     virtual void symbolicBprop();
+
+private:
+
+    void build_();
 };
 
 DECLARE_OBJECT_PTR(SoftplusVariable);

@@ -55,10 +55,12 @@ class ConcatColumnsVariable: public NaryVariable
     typedef NaryVariable inherited;
 
 public:
-    //!  default constructor for persistence
+
+    //! Default constructor.
     ConcatColumnsVariable() {}
-    //!  all the variables must have the same number of rows
-    ConcatColumnsVariable(const VarArray& vararray);
+
+    //! Convenience constructor.
+    ConcatColumnsVariable(const VarArray& vararray, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(ConcatColumnsVariable);
 
@@ -69,7 +71,8 @@ public:
     virtual void bprop();
     virtual void symbolicBprop();
 
-protected:
+private:
+
     void build_();
 };
 

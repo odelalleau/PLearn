@@ -48,20 +48,52 @@ using namespace std;
 
 /** PlusConstantVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(PlusConstantVariable,
-                        "Adds a scalar constant to a matrix var",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        PlusConstantVariable,
+        "Adds a scalar constant to a matrix Variable.",
+        ""
+);
 
-PlusConstantVariable::PlusConstantVariable(Variable* input, real c)
-    : inherited(input, input->length(), input->width()), cst(c) 
+//////////////////////////
+// PlusConstantVariable //
+//////////////////////////
+PlusConstantVariable::PlusConstantVariable():
+    cst(0)
 {}
 
-
-void
-PlusConstantVariable::declareOptions(OptionList &ol)
+PlusConstantVariable::PlusConstantVariable(Variable* input, real c,
+                                           bool call_build_):
+    inherited(input, input->length(), input->width(), call_build_),
+    cst(c)
 {
-    declareOption(ol, "cst", &PlusConstantVariable::cst, OptionBase::buildoption, "");
+    if (call_build_)
+        build_();
+}
+
+///////////
+// build //
+///////////
+void PlusConstantVariable::build() {
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void PlusConstantVariable::build_() {
+    // Nothing to do here.
+}
+
+////////////////////
+// declareOptions //
+////////////////////
+void PlusConstantVariable::declareOptions(OptionList &ol)
+{
     inherited::declareOptions(ol);
+    declareOption(ol, "cst", &PlusConstantVariable::cst,
+                  OptionBase::buildoption,
+        "The constant to be added.");
 }
 
 void PlusConstantVariable::recomputeSize(int& l, int& w) const

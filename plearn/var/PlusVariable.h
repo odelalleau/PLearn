@@ -70,7 +70,8 @@ public:
     virtual void bbprop();
     virtual void symbolicBprop();
 
-protected:
+private:
+
     void build_();
 };
 

@@ -50,14 +50,40 @@ using namespace std;
 
 /** SquareVariable **/
 
-PLEARN_IMPLEMENT_OBJECT(SquareVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(
+        SquareVariable,
+        "Element-wise square of the input matrix."
+        ""
+);
 
-SquareVariable::SquareVariable(Variable* input)
-    : inherited(input, input->length(), input->width())
-{}
+////////////////////
+// SquareVariable //
+////////////////////
+SquareVariable::SquareVariable(Variable* input, bool call_build_):
+    inherited(input, input->length(), input->width(), call_build_)
+{
+    if (call_build_)
+        build_();
+}
 
+///////////
+// build //
+///////////
+void SquareVariable::build() {
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void SquareVariable::build_() {
+    // Nothing to do here.
+}
+
+///////////////////
+// recomputeSize //
+///////////////////
 void SquareVariable::recomputeSize(int& l, int& w) const
 {
     if (input) {

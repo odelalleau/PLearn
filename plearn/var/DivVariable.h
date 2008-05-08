@@ -49,17 +49,17 @@ namespace PLearn {
 using namespace std;
 
 
-/*! * Div... * */
-
-//!  divides 2 matrix vars of same size elementwise
 class DivVariable: public BinaryVariable
 {
     typedef BinaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+
+    //! Default constructor.
     DivVariable() {}
-    DivVariable(Variable* input1, Variable* input2);
+
+    //! Convenience constructor.
+    DivVariable(Variable* input1, Variable* input2, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(DivVariable);
 
@@ -71,7 +71,8 @@ public:
     virtual void symbolicBprop();
     virtual void rfprop();
 
-protected:
+private:
+
     void build_();
 };
 

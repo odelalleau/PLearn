@@ -52,10 +52,34 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
 );
 
-RowSumSquareVariable::RowSumSquareVariable(Variable* input)
-    : inherited(input, input->length(), 1)
-{}
+//////////////////////////
+// RowSumSquareVariable //
+//////////////////////////
+RowSumSquareVariable::RowSumSquareVariable(Variable* input, bool call_build_):
+    inherited(input, input->length(), 1, call_build_)
+{
+    if (call_build_)
+        build_();
+}
 
+///////////
+// build //
+///////////
+void RowSumSquareVariable::build() {
+    inherited::build();
+    build_();
+}
+
+////////////
+// build_ //
+////////////
+void RowSumSquareVariable::build_() {
+    // Nothing to do here.
+}
+
+///////////////////
+// recomputeSize //
+///////////////////
 void RowSumSquareVariable::recomputeSize(int& l, int& w) const
 {
     if (input)

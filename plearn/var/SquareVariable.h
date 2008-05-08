@@ -54,11 +54,14 @@ class SquareVariable: public UnaryVariable
     typedef UnaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+    //! Default constructor.
     SquareVariable() {}
-    SquareVariable(Variable* input);
+
+    SquareVariable(Variable* input, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(SquareVariable);
+
+    virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
@@ -67,6 +70,11 @@ public:
     virtual void bbprop();
     virtual void symbolicBprop();
     virtual void rfprop();
+
+private:
+
+    void build_();
+
 };
 
 DECLARE_OBJECT_PTR(SquareVariable);

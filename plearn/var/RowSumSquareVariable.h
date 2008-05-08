@@ -52,15 +52,23 @@ class RowSumSquareVariable: public UnaryVariable
     typedef UnaryVariable inherited;
 
 public:
-    //!  Default constructor for persistence
+    //! Default constructor.
     RowSumSquareVariable() {}
-    RowSumSquareVariable(Variable* input);
+
+    //! Convenience constructor.
+    RowSumSquareVariable(Variable* input, bool call_build_ = true);
 
     PLEARN_DECLARE_OBJECT(RowSumSquareVariable);
+
+    virtual void build();
 
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
+
+private:
+
+    void build_();
 
 };
 
