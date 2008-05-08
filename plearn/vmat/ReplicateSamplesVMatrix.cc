@@ -150,9 +150,14 @@ void ReplicateSamplesVMatrix::build_()
             bag_sizes[bag_start_idx]++;
     }
     int max_n = -1;
-    for (int c = 0; c < class_indices.length(); c++)
+    for (int c = 0; c < class_indices.length(); c++) {
         if (class_indices[c].length() > max_n)
             max_n = class_indices[c].length();
+        if (class_indices[c].isEmpty())
+            PLERROR("In ReplicateSamplesVMatrix::build_ - Cannot replicate "
+                    "samples for class %d since there are zero samples from "
+                    "this class", c);
+    }
     for (int c = 0; c < class_indices.length(); c++) {
         int n_replicated = max_n - class_indices[c].length();
         for (int i = 0; i < n_replicated; i++) {
