@@ -52,7 +52,7 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
         SquareVariable,
-        "Element-wise square of the input matrix."
+        "Element-wise square of the input matrix.",
         ""
 );
 
