@@ -147,6 +147,19 @@ bool isfile(const PPath& path)
         return fi.type == PR_FILE_FILE;
 }
 
+////////////
+// isfile //
+////////////
+bool isemptyFile(const PPath& path)
+{
+    PRFileInfo64 fi;
+
+    if (PR_GetFileInfo64(path.absolute().c_str(), &fi) != PR_SUCCESS)
+        return false;
+    else
+        return (fi.type == PR_FILE_FILE) && (fi.size == 0);
+}
+
 ///////////
 // mtime //
 ///////////

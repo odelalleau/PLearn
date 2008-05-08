@@ -75,6 +75,9 @@ bool isdir(const PPath& path);
 //! Returns true if the given path is an existing regular file (or a symbolic link pointing to a file).
 bool isfile(const PPath& path);
 
+//! Returns true if the given path is an existing regular file (or a symbolic link pointing to a file) and the size of the file is 0.
+bool isemptyFile(const PPath& path);
+
 //! Returns the time of last modification of file (or 0 if file does not exist).
 time_t mtime(const PPath& path);
 
