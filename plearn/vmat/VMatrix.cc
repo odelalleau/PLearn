@@ -152,11 +152,11 @@ void VMatrix::declareOptions(OptionList & ol)
         "And if it is the source inside another VMatrix that sets its \n"
         "metadatadir, it will often be set from that surrounding vmat's metadata.\n");
 
-    declareOption(
-        ol, "mtime", &VMatrix::mtime_, 
-        OptionBase::buildoption|OptionBase::nosave,
-        "DO NOT play with this if you don't know the implementation!\n"
-        "The modification time of this VMatrix. Defaults to 0(unknow)");
+//     declareOption(
+//         ol, "mtime", &VMatrix::mtime_, 
+//         OptionBase::buildoption|OptionBase::nosave,
+//         "DO NOT play with this if you don't know the implementation!\n"
+//         "The modification time of this VMatrix. Defaults to 0(unknow)");
 
     inherited::declareOptions(ol);
 }
