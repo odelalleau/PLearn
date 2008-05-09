@@ -106,6 +106,7 @@
  * Kernel *
  **********/
 #include <plearn/ker/AdditiveNormalizationKernel.h>
+#include <plearn/ker/BetaKernel.h>
 #include <plearn/ker/DistanceKernel.h>
 #include <plearn/ker/DotProductKernel.h>
 #include <plearn/ker/EpanechnikovKernel.h>
@@ -190,6 +191,7 @@
 #include <plearn_learners/distributions/MixtureDistribution.h>
 #include <plearn_learners/distributions/SpiralDistribution.h>
 #include <plearn_learners/distributions/UniformDistribution.h>
+#include <plearn_learners/distributions/KernelDensityEstimator.h>
 
 // Nearest-Neighbors
 #include <plearn_learners/nearest_neighbors/BallTreeNearestNeighbors.h>
