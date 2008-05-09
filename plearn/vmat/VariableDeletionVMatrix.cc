@@ -189,7 +189,7 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
 ///////////
 void VariableDeletionVMatrix::build()
 {
-    inherited::build();
+//    inherited::build();
     build_();
 }
 
@@ -249,7 +249,14 @@ void VariableDeletionVMatrix::build_()
                                           the_train_source->width());
     TVec<StatsCollector> stats;
     if(min_non_missing_threshold > 0 || max_constant_threshold > 0){
-        stats = PLearn::computeStats(the_train_source, -1, false);
+        int maxnvalues = -1;
+        if(is_equal(max_constant_threshold,1))
+//We don't need all the value, if (min==max && non_missing_value>0) it is constant value.
+            maxnvalues = 0;
+        stats = the_train_source->
+            getPrecomputedStatsFromFile("stats_variableDeletionVMatrix_"+
+                                        tostring(maxnvalues)+".psave",
+                                        maxnvalues, true);
         PLASSERT( stats.length() == source->width() );
     }
 
@@ -267,7 +274,16 @@ void VariableDeletionVMatrix::build_()
             indices.append(i);
     // Then remove columns that are too constant.
     TVec<int> final_indices;
-    if (max_constant_threshold > 0){
+    if (is_equal(max_constant_threshold,1)){
+        for (int k = 0; k < indices.length(); k++) {
+            int i = indices[k];
+            StatsCollector stat = stats[i];
+            if(!(stat.min()==stat.max() && stat.nnonmissing()>0))
+                final_indices.append(i);
+        }
+        indices.resize(final_indices.length());
+        indices << final_indices; 
+    }else if (max_constant_threshold > 0){
         for (int k = 0; k < indices.length(); k++) {
             int i = indices[k];
             int max_constant_absolute =
