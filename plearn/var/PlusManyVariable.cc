@@ -119,18 +119,6 @@ void PlusManyVariable::build()
 void PlusManyVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### If you want to deepCopy a Var field:
-    // varDeepCopyField(somevariable, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("PlusManyVariable::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
 }
 
 ////////////////////

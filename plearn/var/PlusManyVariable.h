@@ -69,28 +69,19 @@ public:
     // Your other public member functions go here
 
     //#####  PLearn::Variable methods #########################################
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
 
-    // ### These ones are not always implemented
-    // virtual void bbprop();
-    // virtual void symbolicBprop();
-    // virtual void rfprop();
-
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
     PLEARN_DECLARE_OBJECT(PlusManyVariable);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
@@ -103,14 +94,12 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
 private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:
