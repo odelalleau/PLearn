@@ -420,6 +420,7 @@ void TextFilesVMatrix::loadMappings()
     {
         string fname = getMapFilePath(k);
         if (isfile(fname)) {
+            updateMtime(fname);
             vector<string> all_lines = getNonBlankLines(loadFileAsString(fname));
             for (size_t i = 0; i < all_lines.size(); i++) {
                 string map_line = all_lines[i];
