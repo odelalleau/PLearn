@@ -111,7 +111,9 @@ void MissingInstructionVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "missing_instructions", &MissingInstructionVMatrix::missing_instructions,
                   OptionBase::buildoption,
                   "The variable missing regeneration instructions in the form of pairs field : instruction.\n"
-                  "Supported instructions are skip, as_is, zero_is_missing, 2436935_is_missing(01JAN1960 in julian day), present.");
+                  "Supported instructions are skip, as_is, zero_is_missing, 2436935_is_missing(01JAN1960 in julian day), present.\n"
+                  "If the instruction fieldname end with '*' we will extend it to all the source matrix fieldname that match the regex.\n"
+                  "No other regex are supported");
     declareOption(ol, "default_instruction",
                   &MissingInstructionVMatrix::default_instruction,
                   OptionBase::buildoption,
@@ -156,11 +158,23 @@ void MissingInstructionVMatrix::build_()
     for (int ins_col = 0; ins_col < missing_instructions.size(); ins_col++)
     {
         int source_col = 0;
+        pair<string, string> mis_ins=missing_instructions[ins_col];
         for (source_col = 0; source_col < source->width(); source_col++)
         {
-            if (missing_instructions[ins_col].first == source_names[source_col]) break;
+            if (mis_ins.first == source_names[source_col]) break;
         }
-        if (source_col >= source->width()) 
+        if (source_col >= source->width() && 
+            mis_ins.first[mis_ins.first.size()-1]=='*') {
+            string sub_name=mis_ins.first.substr(0,mis_ins.first.size()-1);
+            for (source_col = 0; source_col < source->width(); source_col++)
+            {
+                if (string_begins_with(source_names[source_col],sub_name)){
+                    missing_instructions.append(
+                        make_pair(source_names[source_col],mis_ins.second));
+                } 
+            }
+            continue;
+        } else if (source_col >= source->width()) 
         {
             PLWARNING("In MissingInstructionVMatrix::build_() - missing_instructions '%d': no field with this name: '%s'" 
                     ,ins_col,(missing_instructions[ins_col].first).c_str());
