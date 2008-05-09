@@ -175,6 +175,14 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
                   " that is not selected.");
 
     inherited::declareOptions(ol);
+
+    redeclareOption(ol, "length", &SelectColumnsVMatrix::length_,
+                    OptionBase::nosave,
+                    "Taked from source");
+
+    redeclareOption(ol, "width", &SelectColumnsVMatrix::width_,
+                    OptionBase::nosave,
+                    "Computed from parameter");
 }
 
 /////////////////////////////////
