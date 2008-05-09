@@ -72,7 +72,7 @@ public:
     TVec<string> fields;
     bool fields_partial_match;
     bool inverse_fields_selection;
-
+    bool warn_non_selected_field;
 public:
 
     //! Default constructor.

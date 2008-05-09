@@ -59,7 +59,8 @@ PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
 SelectColumnsVMatrix::SelectColumnsVMatrix()
     : extend_with_missing(false),
       fields_partial_match(false),
-      inverse_fields_selection(false)
+      inverse_fields_selection(false),
+      warn_non_selected_field(false)
 {}
 
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
@@ -70,7 +71,8 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
     extend_with_missing(the_extend_with_missing),
     fields(the_fields),
     fields_partial_match(false),
-    inverse_fields_selection(false)
+    inverse_fields_selection(false),
+    warn_non_selected_field(false)
 {
     if (call_build_)
         build_();
@@ -83,7 +85,8 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
     extend_with_missing(false),
     indices(the_indices),
     fields_partial_match(false),
-    inverse_fields_selection(false)
+    inverse_fields_selection(false),
+    warn_non_selected_field(false)
 {
     if (call_build_)
         build_();
@@ -92,7 +95,8 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
     : extend_with_missing(false),
       fields_partial_match(false),
-      inverse_fields_selection(false)
+      inverse_fields_selection(false),
+      warn_non_selected_field(false)
 {
     source = the_source;
     indices.resize(the_indices.length());
@@ -163,6 +167,12 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
                   OptionBase::buildoption,
         "If set to true, the selection is reversed. This provides an easy\n"
         "way to specify columns we do not want.");
+
+    declareOption(ol, "warn_non_selected_field",
+                  &SelectColumnsVMatrix::warn_non_selected_field,
+                  OptionBase::buildoption,
+                  "If set to true, we generate a PLWARNING with all the field"
+                  " that is not selected.");
 
     inherited::declareOptions(ol);
 }
@@ -237,8 +247,8 @@ void SelectColumnsVMatrix::build_()
                 }
                 if(missing_field.size()>0){
                     PLWARNING("In SelectColumnsVMatrix::build_() - We are"
-                              " added %d columns to the source matrix with missing value"
-                              " columns names: %s",missing_field.size(),
+                              " adding %d columns to the source matrix with missing values."
+                              " The columns names are: %s",missing_field.size(),
                               tostring(missing_field).c_str());
                 }
             } else {
@@ -270,6 +280,25 @@ void SelectColumnsVMatrix::build_()
             sel_indices = newindices;
         } else
             sel_indices = indices;
+
+        if(warn_non_selected_field){
+            TVec<string> v;
+            for(int i=0;i<source.width();i++)
+            {
+                bool found=false;
+                for(int j=0;j<indices.size();j++)
+                    if(indices[j]==i){
+                        found=true;
+                        break;
+                    }
+                if(!found)
+                    v.append(source.fieldName(i));
+            }
+            if(v.size()>0)
+                PLWARNING("In SelectColumnsVMatrix::build_() - Their is %d "
+                          " columns in the source matrix that we don't "
+                          "select: %s",v.size(),tostring(v).c_str());
+        }
 
         // Copy matrix dimensions
         width_ = sel_indices.length();
