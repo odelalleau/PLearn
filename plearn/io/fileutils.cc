@@ -610,7 +610,7 @@ void touch(const PPath& file)
 /////////////////////////////
 // addFileAndDateVariables //
 /////////////////////////////
-void addFileAndDateVariables(const PPath& filepath, map<string, string>& variables)
+void addFileAndDateVariables(const PPath& filepath, map<string, string>& variables, const time_t& latest)
 {
     // Define new local variables
     variables["HOME"]        = PPath::getenv("HOME");
@@ -635,6 +635,7 @@ void addFileAndDateVariables(const PPath& filepath, map<string, string>& variabl
     variables["DATE"] = time_buffer;
     strftime(time_buffer,SIZE,"%H%M%S",broken_down_time);
     variables["TIME"] = time_buffer;
+    variables["MTIME"] = tostring(latest);
 }
 
 /////////////////////////////
@@ -674,7 +675,7 @@ string readFileAndMacroProcess(const PPath& filepath, map<string, string>& varia
     latest=max(latest,mtime(file.absolute()));
 
     // Add the new file and date variables
-    addFileAndDateVariables(file, variables);
+    addFileAndDateVariables(file, variables, latest);
 
     // Perform actual parsing and macro processing...
     PStream in = openFile(file, PStream::plearn_ascii, "r");
@@ -969,8 +970,12 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables,
                         raw_includefilepath = removeblanks(raw_includefilepath);
                         PPath p = PPath(raw_includefilepath);
                         // Read file with appropriate variable definitions.
+                        time_t new_latest = 0;
                         text += readFileAndMacroProcess
-                            (p, variables, latest);
+                            (p, variables, new_latest);
+                        latest=max(latest,new_latest);
+                        string s=tostring(latest);
+                        variables["MTIME"]=s;
                     }
                     break;
 

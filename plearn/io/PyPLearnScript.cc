@@ -118,7 +118,7 @@ process( const string& scriptfile,
         // list of variables used when runing the PLearn preprocessor on the
         // output of the .pyplearn file to handle $DATE, etc.
         // in PLearn strings.
-        addFileAndDateVariables(scriptfile, vars);
+        addFileAndDateVariables(scriptfile, vars, 0);
 
         // Also add these variables (DATE, etc.) to the pyplearn driver
         // script so they show up as pyplearn arguments too.

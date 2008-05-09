@@ -215,7 +215,9 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables,
   DIRPATH, FILENAME, FILEBASE, FILEEXT, DATE, TIME and DATETIME and
   adds them to the map of variables passed as an argument.
 */
-void addFileAndDateVariables(const PPath& filepath, map<string, string>& variables);
+void addFileAndDateVariables(const PPath& filepath,
+                             map<string, string>& variables,
+                             const time_t& latest);
     
 /*! Same as readAndMacroProcess, but takes a filename instead of a string.
   The following variables are automatically set from the filepath: FILEPATH DIRPATH FILENAME FILEBASE FILEEXT 
