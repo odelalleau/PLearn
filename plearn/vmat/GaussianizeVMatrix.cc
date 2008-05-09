@@ -39,7 +39,6 @@
 
 #include "GaussianizeVMatrix.h"
 #include <plearn/math/pl_erf.h>
-#include <plearn/vmat/VMat_computeStats.h>
 
 namespace PLearn {
 using namespace std;
