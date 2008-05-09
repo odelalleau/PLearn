@@ -59,6 +59,7 @@
 #include <plearn/var/OneHotSquaredLoss.h>
 #include <plearn/var/PlusConstantVariable.h>
 #include <plearn/var/PlusVariable.h>
+#include <plearn/var/PlusManyVariable.h>
 #include <plearn/var/ProductVariable.h>
 #include <plearn/var/RowSumSquareVariable.h>
 #include <plearn/var/SigmoidVariable.h>
@@ -774,10 +775,11 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
         w1 = Var(1 + the_input->width(), nhidden, "w1");      
         params.append(w1);
         if (hidden_transfer_func == "ratio") {
-            v1.resize(ratio_rank != 0 ? nhidden : 0);
+            v1.resize(ratio_rank > 0 ? ratio_rank
+                                     : ratio_rank == -1 ? the_input->width()
+                                                        : 0);
             for (int i = 0; i < v1.length(); i++) {
-                int rank = ratio_rank < 0 ? the_input->width() : ratio_rank;
-                v1[i] = Var(the_input->width(), rank, "v1[" + tostring(i) + "]");
+                v1[i] = Var(the_input->width(), nhidden, "v1[" + tostring(i) + "]");
                 params.append(v1[i]);
             }
         }
@@ -793,10 +795,11 @@ void NNet::buildOutputFromInput(const Var& the_input, Var& hidden_layer, Var& be
         w2 = Var(1 + output.width(), nhidden2, "w2");
         params.append(w2);
         if (hidden_transfer_func == "ratio") {
-            v2.resize(ratio_rank != 0 ? nhidden2 : 0);
+            v2.resize(ratio_rank > 0 ? ratio_rank
+                                     : ratio_rank == -1 ? output->width()
+                                                        : 0);
             for (int i = 0; i < v2.length(); i++) {
-                int rank = ratio_rank < 0 ? output->width() : ratio_rank;
-                v2[i] = Var(output->width(), rank, "v2[" + tostring(i) + "]");
+                v2[i] = Var(output->width(), nhidden2, "v2[" + tostring(i) + "]");
                 params.append(v2[i]);
             }
         }
@@ -1100,20 +1103,20 @@ Var NNet::hiddenLayer(const Var& input, const Var& weights, string transfer_func
         Var softp = new SoftplusVariable(hidden);
         Var before_ratio = softp;
         if (ratio_rank != 0) {
-            // Compute quadratic term for each hidden neuron.
+            // Compute quadratic term.
             VarArray quad_terms(ratio_quad_weights->length());
             for (int i = 0; i < ratio_quad_weights->length(); i++) {
-                Var X_V = product(input, (*ratio_quad_weights)[i]);
-                quad_terms[i] = new RowSumSquareVariable(X_V);
+                quad_terms[i] = new SquareVariable(
+                        new ProductVariable(input, (*ratio_quad_weights)[i]));
             }
-            // Concatenate quadratic terms into a single Var.
-            Var quad = new ConcatColumnsVariable(quad_terms);
+            Var sum_quad_terms = new PlusManyVariable(quad_terms);
             // Add the softplus term.
             Var softp_square = new SquareVariable(softp);
-            Var total = new PlusVariable(quad, softp_square);
-            // Take the square root and perform the ratio.
+            Var total = new PlusVariable(sum_quad_terms, softp_square);
+            // Take the square root.
             before_ratio = new SquareRootVariable(total);
         }
+        // Perform ratio.
         result = new DivVariable(before_ratio,
                                  new PlusConstantVariable(before_ratio, 1.0));
     }
