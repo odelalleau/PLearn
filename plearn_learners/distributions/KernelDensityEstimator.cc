@@ -138,7 +138,7 @@ real KernelDensityEstimator::log_density(const Vec& y) const
         logprob = logadd(logprob,kernel->evaluate(input,y)); 
     }
     
-    logprob -= pl_log(numTrain);
+    logprob -= pl_log(real(numTrain));
 
     return logprob;
 
