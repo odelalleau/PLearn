@@ -171,14 +171,14 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "warn_non_selected_field",
                   &SelectColumnsVMatrix::warn_non_selected_field,
                   OptionBase::buildoption,
-                  "If set to true, we generate a PLWARNING with all the field"
-                  " that is not selected.");
+                  "If set to true, we generate a PLWARNING with all fields "
+                  "that are not selected.");
 
     inherited::declareOptions(ol);
 
     redeclareOption(ol, "length", &SelectColumnsVMatrix::length_,
                     OptionBase::nosave,
-                    "Taked from source");
+                    "Taken from source");
 
     redeclareOption(ol, "width", &SelectColumnsVMatrix::width_,
                     OptionBase::nosave,
@@ -303,8 +303,8 @@ void SelectColumnsVMatrix::build_()
                     v.append(source.fieldName(i));
             }
             if(v.size()>0)
-                PLWARNING("In SelectColumnsVMatrix::build_() - Their is %d "
-                          " columns in the source matrix that we don't "
+                PLWARNING("In SelectColumnsVMatrix::build_() - There are %d"
+                          " columns in the source matrix that we do not "
                           "select: %s",v.size(),tostring(v).c_str());
         }
 
