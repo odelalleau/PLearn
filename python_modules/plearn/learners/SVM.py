@@ -4,9 +4,9 @@ from libsvm import *
 
 from plearn.pyext import *
 
-
 from numpy.numarray import *
 from math import *
+import numpy
 import random
 import fpconst
 
@@ -1320,11 +1320,14 @@ class SVM(object):
         return outputs, targets
 
     """ Return the costs obtained by a libSVM model
-        on a given dataset
+        on a given dataset.
+        If 'return_outputs' is set to True, also returns a numpy array
+        containing outputs.
     """
     def test( self,
               testset,
-              teststats = None
+              teststats = None,
+              return_outputs = False
              ):
         nclasses = self.nclasses
         costnames = self.costnames
@@ -1395,7 +1398,13 @@ class SVM(object):
                     raise ValueError, "computation of cost %s not implemented in SVM::test()" % cn
             teststats.update(statVec,1.)
 
-        return teststats #, outputs, costs
+        if return_outputs:
+            numpy_out = numpy.zeros((len(outputs), len(outputs[0])))
+            for i, out_i in enumerate(outputs):
+                numpy_out[i,:] = out_i
+            return teststats, numpy_out
+        else:
+            return teststats #, outputs, costs
 
 
     def valid( self,
