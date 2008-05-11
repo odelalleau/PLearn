@@ -839,7 +839,6 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
     }
 
     rbm_bias_gradient << input_gradient;
-    addBiasDecay(rbm_bias_gradient);
 }
 
 real RBMWoodsLayer::fpropNLL(const Vec& target)
@@ -936,7 +935,6 @@ void RBMWoodsLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 
     // bias_gradient = expectation - target
     substract(expectation, target, bias_gradient);
-    addBiasDecay(bias_gradient);
 }
 
 void RBMWoodsLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
@@ -954,7 +952,6 @@ void RBMWoodsLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
     // bias_gradients = expectations - targets
     substract(expectations, targets, bias_gradients);
 
-    addBiasDecay(bias_gradients);
 }
 
 void RBMWoodsLayer::declareOptions(OptionList& ol)
