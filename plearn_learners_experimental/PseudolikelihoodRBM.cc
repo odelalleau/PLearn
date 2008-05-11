@@ -61,6 +61,10 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     cd_learning_rate( 0. ),
     cd_decrease_ct( 0. ),
     cd_n_gibbs( 1 ),
+    persistent_cd_weight( 0. ),
+    use_mean_field_cd( false ),
+    denoising_learning_rate( 0. ),
+    denoising_decrease_ct( 0. ),
     n_classes( -1 ),
     compute_input_space_nll( false ),
     pseudolikelihood_context_size ( 0 ),
@@ -72,7 +76,8 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     cumulative_training_time( 0 ),
     //cumulative_testing_time( 0 ),
     log_Z( MISSING_VALUE ),
-    Z_is_up_to_date( false )
+    Z_is_up_to_date( false ),
+    persistent_gibbs_chain_is_started( false )
 {
     random_gen = new PRandom();
 }
@@ -102,6 +107,34 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
     declareOption(ol, "cd_n_gibbs", &PseudolikelihoodRBM::cd_n_gibbs,
                   OptionBase::buildoption,
                   "Number of negative phase gibbs sampling steps.\n");
+
+    declareOption(ol, "persistent_cd_weight", 
+                  &PseudolikelihoodRBM::persistent_cd_weight,
+                  OptionBase::buildoption,
+                  "Weight of Persistent Contrastive Divergence, i.e. "
+                  "weight of the prolonged gibbs chain.\n");
+
+    declareOption(ol, "use_mean_field_cd", &PseudolikelihoodRBM::use_mean_field_cd,
+                  OptionBase::buildoption,
+                  "Indication that a mean-field version of Contrastive "
+                  "Divergence (MF-CD) should be used.\n");
+
+    declareOption(ol, "denoising_learning_rate", 
+                  &PseudolikelihoodRBM::denoising_learning_rate,
+                  OptionBase::buildoption,
+                  "The learning rate used for denoising autoencoder learning.\n");
+
+    declareOption(ol, "denoising_decrease_ct", 
+                  &PseudolikelihoodRBM::denoising_decrease_ct,
+                  OptionBase::buildoption,
+                  "The decrease constant of the denoising autoencoder "
+                  "learning rate.\n");
+
+    declareOption(ol, "fraction_of_masked_inputs", 
+                  &PseudolikelihoodRBM::fraction_of_masked_inputs,
+                  OptionBase::buildoption,
+                  "Fraction of input components set to 0 for denoising "
+                  "autoencoder learning.\n");
 
     declareOption(ol, "n_classes", &PseudolikelihoodRBM::n_classes,
                   OptionBase::buildoption,
@@ -155,6 +188,12 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
     declareOption(ol, "Z_is_up_to_date", &PseudolikelihoodRBM::Z_is_up_to_date,
                   OptionBase::learntoption,
                   "Indication that the normalisation constant Z is up to date.\n");
+
+    declareOption(ol, "persistent_gibbs_chain_is_started", 
+                  &PseudolikelihoodRBM::persistent_gibbs_chain_is_started,
+                  OptionBase::learntoption,
+                  "Indication that the prolonged gibbs chain for "
+                  "Persistent Consistent Divergence is started.\n");
 
 //    declareOption(ol, "target_weights_L1_penalty_factor", 
 //                  &PseudolikelihoodRBM::target_weights_L1_penalty_factor,
@@ -270,6 +309,38 @@ void PseudolikelihoodRBM::build_layers_and_connections()
     hidden_activation_neg_i_gradient.resize( hidden_layer->size );
     connection_gradient.resize( connection->up_size, connection->down_size );
 
+    // Generalized pseudolikelihood option
+    context_indices.resize( input_layer->size - 1);
+    if( pseudolikelihood_context_size > 0 )
+    {
+        context_indices_per_i.resize( input_layer->size, 
+                                      pseudolikelihood_context_size );
+
+        int n_conf = ipow(2, pseudolikelihood_context_size);
+        nums_act.resize( 2 * n_conf );
+        gnums_act.resize( 2 * n_conf );
+        context_probs.resize( 2 * n_conf );
+        hidden_activations_context.resize( 2*n_conf, hidden_layer->size );
+        hidden_activations_context_k_gradient.resize( hidden_layer->size );
+    }
+
+    // CD option
+    pos_hidden.resize( hidden_layer->size );
+    pers_cd_input.resize( input_layer->size );
+    pers_cd_hidden.resize( hidden_layer->size );
+
+    // Denoising autoencoder options
+    transpose_connection = new RBMMatrixTransposeConnection;
+    transpose_connection->rbm_matrix_connection = connection;
+    transpose_connection->build();
+    reconstruction_activation_gradient.resize(input_layer->size);
+    hidden_layer_expectation_gradient.resize(hidden_layer->size);
+    hidden_layer_activation_gradient.resize(hidden_layer->size);
+    masked_autoencoder_input.resize(input_layer->size);
+    autoencoder_input_indices.resize(input_layer->size);
+    for(int i=0; i<input_layer->size; i++)
+        autoencoder_input_indices[i] = i;
+
     if( inputsize_ >= 0 )
         PLASSERT( input_layer->size == inputsize() );
 
@@ -320,6 +391,7 @@ void PseudolikelihoodRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(hidden_layer, copies);
     deepCopyField(connection, copies);
     deepCopyField(cost_names, copies);
+    deepCopyField(transpose_connection, copies);
 
     deepCopyField(target_one_hot, copies);
     deepCopyField(input_gradient, copies);
@@ -345,6 +417,13 @@ void PseudolikelihoodRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(pos_hidden, copies);
     deepCopyField(neg_input, copies);
     deepCopyField(neg_hidden, copies);
+    deepCopyField(reconstruction_activation_gradient, copies);
+    deepCopyField(hidden_layer_expectation_gradient, copies);
+    deepCopyField(hidden_layer_activation_gradient, copies);
+    deepCopyField(masked_autoencoder_input, copies);
+    deepCopyField(autoencoder_input_indices, copies);
+    deepCopyField(pers_cd_input, copies);
+    deepCopyField(pers_cd_hidden, copies);
 }
 
 
@@ -370,6 +449,8 @@ void PseudolikelihoodRBM::forget()
     cumulative_training_time = 0;
     //cumulative_testing_time = 0;
     Z_is_up_to_date = false;
+
+    persistent_gibbs_chain_is_started = false;
 }
 
 ///////////
@@ -561,9 +642,6 @@ void PseudolikelihoodRBM::train()
                 else
                 {
                     // Generate contexts
-                    context_indices.resize( input_layer->size - 1);
-                    context_indices_per_i.resize( input_layer->size, 
-                                                  pseudolikelihood_context_size );
                     for( int i=0; i<context_indices.length(); i++)
                         context_indices[i] = i;
                     int tmp,k;
@@ -590,11 +668,11 @@ void PseudolikelihoodRBM::train()
                         (RBMMatrixConnection *) connection );
 
                     int n_conf = ipow(2, pseudolikelihood_context_size);
-                    nums_act.resize( 2 * n_conf );
-                    gnums_act.resize( 2 * n_conf );
-                    context_probs.resize( 2 * n_conf );
-                    hidden_activations_context.resize( 2*n_conf, hidden_layer->size );
-                    hidden_activations_context_k_gradient.resize( hidden_layer->size );
+                    //nums_act.resize( 2 * n_conf );
+                    //gnums_act.resize( 2 * n_conf );
+                    //context_probs.resize( 2 * n_conf );
+                    //hidden_activations_context.resize( 2*n_conf, hidden_layer->size );
+                    //hidden_activations_context_k_gradient.resize( hidden_layer->size );
                     real* nums_data;
                     real* gnums_data;
                     real* cp_data;
@@ -828,46 +906,187 @@ void PseudolikelihoodRBM::train()
             // CD learning
             if( !fast_is_equal(cd_learning_rate, 0.) )
             {
-                if( cd_decrease_ct != 0 )
-                    lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
-                else
-                    lr = cd_learning_rate;
 
-                setLearningRate(lr);
-
-                // Positive phase
-                pos_input = input;
-                connection->setAsDownInput( input );
-                hidden_layer->getAllActivations( 
-                    (RBMMatrixConnection*) connection );
-                hidden_layer->computeExpectation();
-                pos_hidden.resize( hidden_layer->size );
-                pos_hidden << hidden_layer->expectation;
-
-                // Negative phase
-                for(int i=0; i<cd_n_gibbs; i++)
+                if( !fast_is_equal(persistent_cd_weight, 1.) )
                 {
-                    hidden_layer->generateSample();
-                    connection->setAsUpInput( hidden_layer->sample );
-                    input_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                    input_layer->computeExpectation();
-                    input_layer->generateSample();
-                    connection->setAsDownInput( input_layer->sample );
+                    if( cd_decrease_ct != 0 )
+                        lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
+                    else
+                        lr = cd_learning_rate;
+                    
+                    lr *= (1-persistent_cd_weight);
+
+                    setLearningRate(lr);
+
+                    // Positive phase
+                    pos_input = input;
+                    connection->setAsDownInput( input );
                     hidden_layer->getAllActivations( 
                         (RBMMatrixConnection*) connection );
                     hidden_layer->computeExpectation();
+                    //pos_hidden.resize( hidden_layer->size );
+                    pos_hidden << hidden_layer->expectation;
+                    
+                    // Negative phase
+                    for(int i=0; i<cd_n_gibbs; i++)
+                    {
+                        if( use_mean_field_cd )
+                        {
+                            connection->setAsUpInput( hidden_layer->expectation );
+                        }
+                        else
+                        {
+                            hidden_layer->generateSample();
+                            connection->setAsUpInput( hidden_layer->sample );
+                        }
+                        input_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        input_layer->computeExpectation();
+                        if( use_mean_field_cd )
+                        {
+                            connection->setAsDownInput( input_layer->expectation );
+                        }
+                        else
+                        {
+                            input_layer->generateSample();
+                            connection->setAsDownInput( input_layer->sample );
+                        }
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        hidden_layer->computeExpectation();
+                    }
+                    
+                    if( use_mean_field_cd )
+                        neg_input = input_layer->expectation;
+                    else
+                        neg_input = input_layer->sample;
+                    neg_hidden = hidden_layer->expectation;
+                    
+                    input_layer->update(pos_input,neg_input);
+                    hidden_layer->update(pos_hidden,neg_hidden);
+                    connection->update(pos_input,pos_hidden,
+                                       neg_input,neg_hidden);
                 }
-                
-                neg_input = input_layer->sample;
-                neg_hidden = hidden_layer->expectation;
 
-                input_layer->update(pos_input,neg_input);
-                hidden_layer->update(pos_hidden,neg_hidden);
-                connection->update(pos_input,pos_hidden,
-                                   neg_input,neg_hidden);
+                if( !fast_is_equal(persistent_cd_weight, 0.) )
+                {
+                    if( use_mean_field_cd )
+                        PLERROR("In PseudolikelihoodRBM::train(): Persistent "
+                            "Contrastive Divergence was not implemented for "
+                            "MF-CD");
+
+                    if( cd_decrease_ct != 0 )
+                        lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
+                    else
+                        lr = cd_learning_rate;
+                    
+                    lr *= persistent_cd_weight;
+
+                    if( !persistent_gibbs_chain_is_started )
+                    {  
+                        // Start gibbs chain
+                        connection->setAsDownInput( input );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        hidden_layer->computeExpectation();
+                        hidden_layer->generateSample();
+                        pers_cd_hidden << hidden_layer->sample;
+                        persistent_gibbs_chain_is_started = true;
+                    }
+
+                    if( fast_is_equal(persistent_cd_weight, 1.) )
+                    {
+                        // Hidden positive sample was not computed previously
+                        connection->setAsDownInput( input );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        hidden_layer->computeExpectation();
+                        pos_hidden << hidden_layer->expectation;
+                    }
+
+                    // Prolonged Gibbs chain
+                    for(int i=0; i<cd_n_gibbs; i++)
+                    {
+                        connection->setAsUpInput( pers_cd_hidden );
+                        input_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        input_layer->computeExpectation();
+                        input_layer->generateSample();
+                        connection->setAsDownInput( input_layer->sample );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        hidden_layer->computeExpectation();
+                        hidden_layer->generateSample();
+                    }
+
+                    pers_cd_input << input_layer->sample;
+                    pers_cd_hidden << hidden_layer->sample;
+
+                    input_layer->update(input, pers_cd_input);
+                    hidden_layer->update(pos_hidden,hidden_layer->expectation);
+                    connection->update(input,pos_hidden,
+                                       pers_cd_input,hidden_layer->expectation);
+                }
             }
-            
+        
+            if( !fast_is_equal(denoising_learning_rate, 0.) )
+            {
+                if( denoising_decrease_ct != 0 )
+                    lr = denoising_learning_rate / 
+                        (1.0 + stage * denoising_decrease_ct );
+                else
+                    lr = denoising_learning_rate;
+
+                setLearningRate(lr);
+                // I'm here
+                if( fraction_of_masked_inputs > 0 )
+                    random_gen->shuffleElements(autoencoder_input_indices);
+                
+                masked_autoencoder_input << input;
+                if( fraction_of_masked_inputs > 0 )
+                {
+                    for( int j=0 ; 
+                         j < round(fraction_of_masked_inputs*input_layer->size) ; 
+                         j++)
+                        masked_autoencoder_input[ autoencoder_input_indices[j] ] = 0; 
+                }
+
+                // Somehow, doesn't compile without the fancy casts...
+                ((RBMMatrixConnection *)connection)->RBMConnection::fprop( masked_autoencoder_input, 
+                                   hidden_layer->activation );
+
+                hidden_layer->fprop( hidden_layer->activation,
+                                     hidden_layer->expectation );
+                
+                transpose_connection->fprop( hidden_layer->expectation,
+                                             input_layer->activation );
+                input_layer->fprop( input_layer->activation,
+                                    input_layer->expectation );
+                input_layer->setExpectation( input_layer->expectation );
+
+                real cost = input_layer->fpropNLL(input);
+                
+                input_layer->bpropNLL(input, cost, 
+                                      reconstruction_activation_gradient);
+                input_layer->update( reconstruction_activation_gradient );
+
+                transpose_connection->bpropUpdate( 
+                    hidden_layer->expectation,
+                    input_layer->activation,
+                    hidden_layer_expectation_gradient,
+                    reconstruction_activation_gradient );
+
+                hidden_layer->bpropUpdate( hidden_layer->activation,
+                                           hidden_layer->expectation,
+                                           hidden_layer_activation_gradient,
+                                           hidden_layer_expectation_gradient );
+                
+                connection->bpropUpdate( masked_autoencoder_input, 
+                                         hidden_layer->activation,
+                                         reconstruction_activation_gradient, // is not used afterwards...
+                                         hidden_layer_activation_gradient );
+            }
+
         }
         train_stats->update( train_costs );
         
@@ -884,28 +1103,28 @@ void PseudolikelihoodRBM::train()
     train_costs[cumulative_training_time_cost_index] = cumulative_training_time;
     train_stats->update( train_costs );
 
-//    // Sums to 1 test
-//    compute_Z();
-//    conf.resize( input_layer->size );
-//    Vec output,costs;
-//    output.resize(outputsize());
-//    costs.resize(getTestCostNames().length());
-//    target.resize( targetsize() );
-//    real sums = 0;
-//    int input_n_conf = input_layer->getConfigurationCount();
-//    for(int i=0; i<input_n_conf; i++)
-//    {
-//        input_layer->getConfiguration(i,conf);
-//        computeOutput(conf,output);
-//        computeCostsFromOutputs( conf, output, target, costs );
-//        //if( i==0 )
-//        //    sums = -costs[nll_cost_index];
-//        //else
-//        //    sums = logadd( sums, -costs[nll_cost_index] );
-//        sums += safeexp( -costs[nll_cost_index] );
-//    }        
-//    cout << "sums: " << //safeexp(sums) << endl;
-//        sums << endl;
+    // Sums to 1 test
+    //compute_Z();
+    //conf.resize( input_layer->size );
+    //Vec output,costs;
+    //output.resize(outputsize());
+    //costs.resize(getTestCostNames().length());
+    //target.resize( targetsize() );
+    //real sums = 0;
+    //int input_n_conf = input_layer->getConfigurationCount();
+    //for(int i=0; i<input_n_conf; i++)
+    //{
+    //    input_layer->getConfiguration(i,conf);
+    //    computeOutput(conf,output);
+    //    computeCostsFromOutputs( conf, output, target, costs );
+    //    //if( i==0 )
+    //    //    sums = -costs[nll_cost_index];
+    //    //else
+    //    //    sums = logadd( sums, -costs[nll_cost_index] );
+    //    sums += safeexp( -costs[nll_cost_index] );
+    //}        
+    //cout << "sums: " << //safeexp(sums) << endl;
+    //    sums << endl;
     train_stats->finalize();
 }
 

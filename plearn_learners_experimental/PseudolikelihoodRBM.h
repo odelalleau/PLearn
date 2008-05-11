@@ -45,6 +45,7 @@
 #include <plearn_learners/online/CrossEntropyCostModule.h>
 #include <plearn_learners/online/NLLCostModule.h>
 #include <plearn_learners/online/RBMClassificationModule.h>
+#include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 #include <plearn_learners/online/RBMMultitaskClassificationModule.h>
 #include <plearn_learners/online/RBMLayer.h>
 #include <plearn_learners/online/RBMMixedLayer.h>
@@ -80,6 +81,23 @@ public:
     //! Number of negative phase gibbs sampling steps
     int cd_n_gibbs;
 
+    //! Weight of Persistent Contrastive Divergence, i.e. weight of the
+    //! prolonged gibbs chain
+    real persistent_cd_weight;
+
+    //! Indication that a mean-field version of Contrastive Divergence
+    //! (MF-CD) should be used.
+    bool use_mean_field_cd;
+
+    //! The learning rate used for denoising autoencoder learning
+    real denoising_learning_rate;
+
+    //! The decrease constant of the denoising autoencoder learning rate
+    real denoising_decrease_ct;
+
+    //! Fraction of input components set to 0 for denoising autoencoder learning
+    real fraction_of_masked_inputs;
+
     //! Number of classes in the training set (for supervised learning)
     int n_classes;
 
@@ -110,6 +128,8 @@ public:
     //#####  Public Learnt Options  ###########################################
     //! The computed cost names
     TVec<string> cost_names;
+
+    PP<RBMMatrixTransposeConnection> transpose_connection;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -232,6 +252,13 @@ protected:
     mutable Vec pos_hidden;
     mutable Vec neg_input;
     mutable Vec neg_hidden;
+    mutable Vec reconstruction_activation_gradient;
+    mutable Vec hidden_layer_expectation_gradient;
+    mutable Vec hidden_layer_activation_gradient;
+    mutable Vec masked_autoencoder_input;
+    mutable TVec<int> autoencoder_input_indices;
+    mutable Vec pers_cd_input;
+    mutable Vec pers_cd_hidden;
 
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;
@@ -251,8 +278,12 @@ protected:
     //! Normalisation constant (on log scale)
     mutable real log_Z;
 
-    // Indication that the normalisation constant Z is up to date
+    //! Indication that the normalisation constant Z is up to date
     mutable bool Z_is_up_to_date;
+
+    //! Indication that the prolonged gibbs chain for 
+    //! Persistent Consistent Divergence is started
+    mutable bool persistent_gibbs_chain_is_started;
 
 protected:
     //#####  Protected Member Functions  ######################################
