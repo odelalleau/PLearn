@@ -110,7 +110,8 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   " L1 penalty weight on the hidden layers, to encourage "
                   "sparsity during\n"
-                  "the greedy unsupervised phases.\n");
+                  "the greedy unsupervised phases.\n"
+                  );
 
     declareOption(ol, "l1_neuron_decay_center", 
                   &StackedAutoassociatorsNet::l1_neuron_decay_center,
@@ -312,10 +313,10 @@ void StackedAutoassociatorsNet::build_()
                     " - \n"
                     "cannot use online setting with reconstruct_hidden=true.\n");
 
-        if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
-            PLERROR("StackedAutoassociatorsNet::build_()"
-                    " - \n"
-                    "cannot use unsupervised fine-tuning with correlation connections.\n");
+//        if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
+//            PLERROR("StackedAutoassociatorsNet::build_()"
+//                    " - \n"
+//                    "cannot use unsupervised fine-tuning with correlation connections.\n");
 
         if( fraction_of_masked_inputs < 0 )
             PLERROR("StackedAutoassociatorsNet::build_()"
@@ -868,10 +869,10 @@ void StackedAutoassociatorsNet::train()
         /***** unsupervised fine-tuning by gradient descent *****/
         if( unsupervised_stage < unsupervised_nstages )
         {
-            if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
-                PLERROR("StackedAutoassociatorsNet::train()"
-                        " - \n"
-                        "cannot use unsupervised fine-tuning with correlation connections.\n");
+//            if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
+//                PLERROR("StackedAutoassociatorsNet::train()"
+//                        " - \n"
+//                        "cannot use unsupervised fine-tuning with correlation connections.\n");
             
             MODULE_LOG << "Unsupervised fine-tuning all parameters, ";
             MODULE_LOG << "by gradient descent" << endl;
@@ -1226,18 +1227,19 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
 
     }
 
+    
     if(!fast_exact_is_equal(l1_neuron_decay,0))
     {
         // Compute L1 penalty gradient on neurons
         real* hid = expectations[ index + 1 ].data();
         real* grad = reconstruction_expectation_gradients.data();
         int len = expectations[ index + 1 ].length();
-        for(int i=0; i<len; i++)
+        for(int l=0; l<len; l++)
         {
             if(*hid > l1_neuron_decay_center)
-                *grad -= l1_neuron_decay;
-            else if(*hid < l1_neuron_decay_center)
                 *grad += l1_neuron_decay;
+            else if(*hid < l1_neuron_decay_center)
+                *grad -= l1_neuron_decay;
             hid++;
             grad++;
         }
@@ -1310,32 +1312,72 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep( const Vec& input,
     // fprop
     expectations[0] << input;
 
-    if( fraction_of_masked_inputs > 0 )
+    if(correlation_connections.length() != 0)
     {
-        for( int i=0; i<autoassociator_expectation_indices.length(); i++ )
-            random_gen->shuffleElements(autoassociator_expectation_indices[i]);
-        
-        for( int i=0 ; i<n_layers-1; i++ )
+        if( fraction_of_masked_inputs > 0 )
         {
-            masked_autoassociator_expectations[i] << expectations[i];
-            if( !(mask_input_layer_only_in_unsupervised_fine_tuning && i > 0) )
-                for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
-                    masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0; 
+            for( int i=0; i<autoassociator_expectation_indices.length(); i++ )
+                random_gen->shuffleElements(autoassociator_expectation_indices[i]);
             
-            connections[i]->fprop( masked_autoassociator_expectations[i], 
-                                   activations[i+1] );
-            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+            for( int i=0 ; i<n_layers-1; i++ )
+            {
+                masked_autoassociator_expectations[i] << expectations[i];
+                if( !(mask_input_layer_only_in_unsupervised_fine_tuning && i > 0) )
+                    for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
+                        masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0; 
+                
+                connections[i]->fprop( masked_autoassociator_expectations[i], 
+                                       correlation_activations[i] );
+                layers[i+1]->fprop( correlation_activations[i],
+                                    correlation_expectations[i] );
+                correlation_connections[i]->fprop( correlation_expectations[i], 
+                                                   activations[i+1] );
+                correlation_layers[i]->fprop( activations[i+1], 
+                                              expectations[i+1] );
+            }
+        }
+        else
+        {
+            for( int i=0 ; i<n_layers-1; i++ )
+            {
+                connections[i]->fprop( expectations[i], correlation_activations[i]);
+                layers[i+1]->fprop( correlation_activations[i],
+                                    correlation_expectations[i] );
+                correlation_connections[i]->fprop( correlation_expectations[i], 
+                                                   activations[i+1] );
+                correlation_layers[i]->fprop( activations[i+1], 
+                                              expectations[i+1] );
+            }
         }
     }
     else
     {
-        for( int i=0 ; i<n_layers-1; i++ )
+        if( fraction_of_masked_inputs > 0 )
         {
-            connections[i]->fprop( expectations[i], activations[i+1] );
-            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+            for( int i=0; i<autoassociator_expectation_indices.length(); i++ )
+                random_gen->shuffleElements(autoassociator_expectation_indices[i]);
+            
+            for( int i=0 ; i<n_layers-1; i++ )
+            {
+                masked_autoassociator_expectations[i] << expectations[i];
+                if( !(mask_input_layer_only_in_unsupervised_fine_tuning && i > 0) )
+                    for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
+                        masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0; 
+                
+                connections[i]->fprop( masked_autoassociator_expectations[i], 
+                                       activations[i+1] );
+                layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+            }
+        }
+        else
+        {
+            for( int i=0 ; i<n_layers-1; i++ )
+            {
+                connections[i]->fprop( expectations[i], activations[i+1] );
+                layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+            }
         }
     }
-
     fine_tuning_reconstruction_expectations[ n_layers-1 ] << 
         expectations[ n_layers-1 ];
 
@@ -1377,18 +1419,73 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep( const Vec& input,
     
     for( int i=n_layers-2 ; i>=0; i-- )
     {
-        layers[i+1]->bpropUpdate(
-            activations[i+1],expectations[i+1],
-            activation_gradients[i+1],expectation_gradients[i+1]);
-        if( fraction_of_masked_inputs > 0 )
-            connections[i]->bpropUpdate( 
-                masked_autoassociator_expectations[i], activations[i+1],
-                expectation_gradients[i], activation_gradients[i+1] );
-        else
-            connections[i]->bpropUpdate( 
-                expectations[i], activations[i+1],
-                expectation_gradients[i], activation_gradients[i+1] );
 
+        if(!fast_exact_is_equal(l1_neuron_decay,0))
+        {
+            // Compute L1 penalty gradient on neurons
+            real* hid = expectations[ i + 1 ].data();
+            real* grad = expectation_gradients[ i + 1 ].data();
+            int len = expectations[ i + 1 ].length();
+            for(int l=0; l<len; l++)
+            {
+                if(*hid > l1_neuron_decay_center)
+                    *grad += l1_neuron_decay;
+                else if(*hid < l1_neuron_decay_center)
+                    *grad -= l1_neuron_decay;
+                hid++;
+                grad++;
+            }
+        }
+
+        if(correlation_connections.length() != 0)
+        {
+            correlation_layers[ i ]->bpropUpdate(
+                activations[ i + 1 ],
+                expectations[ i + 1 ],
+                activation_gradients[ i + 1 ],
+                expectation_gradients[ i + 1 ]
+                );
+            
+            correlation_connections[ i ]->bpropUpdate( 
+                correlation_expectations[ i ],
+                activations[ i + 1 ],
+                correlation_expectation_gradients[ i ], 
+                activation_gradients[ i + 1 ] );
+            
+            layers[ i + 1 ]->bpropUpdate( 
+                correlation_activations[ i ],
+                correlation_expectations[ i ],
+                correlation_activation_gradients [ i ],
+                correlation_expectation_gradients [ i ]);    
+            
+            if( fraction_of_masked_inputs > 0 )
+                connections[ i ]->bpropUpdate( 
+                    masked_autoassociator_expectations[ i ],
+                    correlation_activations[ i ],
+                    expectation_gradients[i], 
+                    correlation_activation_gradients [ i ]);
+            else
+                connections[ i ]->bpropUpdate( 
+                    expectations[ i ],
+                    correlation_activations[ i ],
+                    expectation_gradients[i],
+                    correlation_activation_gradients [ i ]);
+        }
+        else
+        {
+
+            layers[i+1]->bpropUpdate(
+                activations[i+1],expectations[i+1],
+                activation_gradients[i+1],expectation_gradients[i+1]);
+            if( fraction_of_masked_inputs > 0 )
+                connections[i]->bpropUpdate( 
+                    masked_autoassociator_expectations[i], activations[i+1],
+                    expectation_gradients[i], activation_gradients[i+1] );
+            else
+                connections[i]->bpropUpdate( 
+                    expectations[i], activations[i+1],
+                    expectation_gradients[i], activation_gradients[i+1] );
+        }
     }
 }
 
@@ -1635,9 +1732,9 @@ void StackedAutoassociatorsNet::onlineStep( const Vec& input,
             for(int j=0; j<len; j++)
             {
                 if(*hid > l1_neuron_decay_center)
-                    *grad -= l1_neuron_decay;
-                else if(*hid < l1_neuron_decay_center)
                     *grad += l1_neuron_decay;
+                else if(*hid < l1_neuron_decay_center)
+                    *grad -= l1_neuron_decay;
                 hid++;
                 grad++;
             }
