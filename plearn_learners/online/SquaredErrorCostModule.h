@@ -94,7 +94,7 @@ public:
     }
 
     //! Indicates the name of the computed costs
-    virtual TVec<string> name();
+    virtual TVec<string> costNames();
 
     //#####  PLearn::Object Protocol  #########################################
 

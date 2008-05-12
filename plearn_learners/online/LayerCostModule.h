@@ -162,7 +162,7 @@ public:
     virtual void setLearningRate(real dynamic_learning_rate) {}
 
     //! Indicates the name of the computed costs
-    virtual TVec<string> name();
+    virtual TVec<string> costNames();
 
     //#####  PLearn::Object Protocol  #########################################
 

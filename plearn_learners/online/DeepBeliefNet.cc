@@ -430,7 +430,7 @@ void DeepBeliefNet::build_costs()
     {
         build_final_cost();
 
-        TVec<string> final_names = final_cost->name();
+        TVec<string> final_names = final_cost->costNames();
         int n_final_costs = final_names.length();
 
         for( int i=0; i<n_final_costs; i++ )
@@ -452,7 +452,7 @@ void DeepBeliefNet::build_costs()
         for( int i=0; i<n_partial_costs; i++ )
             if( partial_costs[i] )
             {
-                TVec<string> names = partial_costs[i]->name();
+                TVec<string> names = partial_costs[i]->costNames();
                 int n_partial_costs_i = names.length();
                 for( int j=0; j<n_partial_costs_i; j++ )
                     cost_names.append("partial"+tostring(i)+"."+names[j]);

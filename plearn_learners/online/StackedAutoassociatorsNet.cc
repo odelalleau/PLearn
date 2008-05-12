@@ -608,7 +608,7 @@ void StackedAutoassociatorsNet::build_costs()
                 partial_costs_positions[i] = n_layers-1;
             else
                 partial_costs_positions[i] = partial_costs_positions[i-1]
-                    + partial_costs[i-1]->name().length();
+                    + partial_costs[i-1]->costNames().length();
 
             if( !(partial_costs[i]->random_gen) )
             {
@@ -2027,13 +2027,13 @@ TVec<string> StackedAutoassociatorsNet::getTestCostNames() const
     
     for( int i=0 ; i<partial_costs.size() ; i++ )
     {
-        TVec<string> names = partial_costs[i]->name();
+        TVec<string> names = partial_costs[i]->costNames();
         for(int j=0; j<names.length(); j++)
             cost_names.push_back("partial" + tostring(i) + "." + 
                 names[j]);
     }
 
-    cost_names.append( final_cost->name() );
+    cost_names.append( final_cost->costNames() );
 
     return cost_names;
 }
@@ -2049,13 +2049,13 @@ TVec<string> StackedAutoassociatorsNet::getTrainCostNames() const
     
     for( int i=0 ; i<partial_costs.size() ; i++ )
     {
-        TVec<string> names = partial_costs[i]->name();
+        TVec<string> names = partial_costs[i]->costNames();
         for(int j=0; j<names.length(); j++)
             cost_names.push_back("partial" + tostring(i) + "." + 
                 names[j]);
     }
 
-    cost_names.append( final_cost->name() );
+    cost_names.append( final_cost->costNames() );
 
     return cost_names;
 }

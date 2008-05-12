@@ -166,9 +166,12 @@ void ClassErrorCostModule::forget()
 //////////
 // name //
 //////////
-TVec<string> ClassErrorCostModule::name()
+TVec<string> ClassErrorCostModule::costNames()
 {
-    return TVec<string>(1, "class_error");
+    if (name == "" || name == classname())
+        return TVec<string>(1, "class_error");
+    else
+        return TVec<string>(1, name + ".class_error");
 }
 
 //////////////////////

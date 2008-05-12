@@ -295,14 +295,14 @@ void ModulesLearner::computeCostsFromOutputs(const Vec& input,
 TVec<string> ModulesLearner::getTestCostNames() const
 {
     // Return the names of the costs computed by computeCostsFromOutputs
-    return cost->name();
+    return cost->costNames();
 }
 
 TVec<string> ModulesLearner::getTrainCostNames() const
 {
     // Return the names of the objective costs that the train method computes
     // and for which it updates the VecStatsCollector train_stats
-    return cost->name();
+    return cost->costNames();
 }
 
 

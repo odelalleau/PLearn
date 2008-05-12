@@ -392,7 +392,7 @@ void CostModule::forget()
 //////////
 // name //
 //////////
-TVec<string> CostModule::name()
+TVec<string> CostModule::costNames()
 {
     return TVec<string>();
 }

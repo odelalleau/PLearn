@@ -95,10 +95,9 @@ void CombiningCostsModule::declareOptions(OptionList& ol)
 ////////////
 void CombiningCostsModule::build_()
 {
-    
     n_sub_costs = sub_costs.length();
     if( n_sub_costs == 0 )
-    {   
+    {
         //PLWARNING("In CombiningCostsModule::build_ - sub_costs is empty (length 0)");
         return;
     }
@@ -118,7 +117,7 @@ void CombiningCostsModule::build_()
 
     if(sub_costs.length() == 0)
         PLERROR( "CombiningCostsModule::build_(): sub_costs.length()\n"
-                 "should be > 0.\n");                 
+                 "should be > 0.\n");
 
     input_size = sub_costs[0]->input_size;
     target_size = sub_costs[0]->target_size;
@@ -138,11 +137,13 @@ void CombiningCostsModule::build_()
     }
 
     sub_costs_values.resize( n_sub_costs );
-    output_size = n_sub_costs+1;
+    output_size = 1;
+    for (int i=0; i<n_sub_costs; i++)
+        output_size += sub_costs[i]->output_size;
 
     // If we have a random_gen and some sub_costs do not, share it with them
     if( random_gen )
-        for( int i=0; i<sub_costs.length(); i++ )
+        for( int i=0; i<n_sub_costs; i++ )
         {
             if( !(sub_costs[i]->random_gen) )
             {
@@ -189,11 +190,17 @@ void CombiningCostsModule::fprop(const Vec& input, const Vec& target,
     PLASSERT( target.size() == target_size );
     cost.resize( output_size );
 
+    int cost_index = 1;
     for( int i=0 ; i<n_sub_costs ; i++ )
-        sub_costs[i]->fprop( input, target, sub_costs_values[i] );
+    {
+        Vec sub_costs_val_i_all = cost.subVec(cost_index,
+                                              sub_costs[i]->output_size);
+        sub_costs[i]->fprop(input, target, sub_costs_val_i_all);
+        sub_costs_values[i] = cost[cost_index];
+        cost_index += sub_costs[i]->output_size;
+    }
 
     cost[0] = dot( cost_weights, sub_costs_values );
-    cost.subVec( 1, n_sub_costs ) << sub_costs_values;
 }
 
 void CombiningCostsModule::fprop(const Mat& inputs, const Mat& targets,
@@ -202,22 +209,22 @@ void CombiningCostsModule::fprop(const Mat& inputs, const Mat& targets,
     PLASSERT( inputs.width() == input_size );
     PLASSERT( targets.width() == target_size );
     costs.resize(inputs.length(), output_size);
-
-    Mat final_cost = costs.column(0);
-    final_cost.fill(0);
-    Mat other_costs = costs.subMatColumns(1, n_sub_costs);
     sub_costs_mbatch_values.resize(n_sub_costs, inputs.length());
-    for( int i=0 ; i<n_sub_costs ; i++ ) {
-        Vec sub_costs_i = sub_costs_mbatch_values(i);
-        sub_costs[i]->fprop(inputs, targets, sub_costs_i);
-        Mat first_sub_cost = sub_costs_i.toMat(sub_costs_i.length(), 1);
 
-        // final_cost += weight_i * cost_i
-        multiplyAcc(final_cost, first_sub_cost, cost_weights[i]);
-
-        // Fill the rest of the costs matrix.
-        other_costs.column(i) << first_sub_cost;
+    int cost_index = 1;
+    for (int i=0; i<n_sub_costs; i++)
+    {
+        Mat sub_costs_val_i_all =
+            costs.subMatColumns(cost_index, sub_costs[i]->output_size);
+        sub_costs[i]->fprop(inputs, targets, sub_costs_val_i_all);
+        sub_costs_mbatch_values(i) << costs.column(cost_index);
+        cost_index += sub_costs[i]->output_size;
     }
+
+    // final_cost = \sum weight_i * cost_i
+    Mat final_cost = costs.column(0);
+    Mat m_cost_weights = cost_weights.toMat(n_sub_costs, 1);
+    transposeProduct(final_cost, sub_costs_mbatch_values, m_cost_weights);
 }
 
 ////////////////////
@@ -480,11 +487,15 @@ bool CombiningCostsModule::bpropDoesNothing()
 }
 
 //! Indicates the name of the computed costs
-TVec<string> CombiningCostsModule::name()
+TVec<string> CombiningCostsModule::costNames()
 {
     TVec<string> names(1, "combined_cost");
     for( int i=0 ; i<n_sub_costs ; i++ )
-        names.append( sub_costs[i]->name() );
+        names.append( sub_costs[i]->costNames() );
+
+    if (name != "" && name != classname())
+        for (int j=0; j<names.length(); j++)
+            names[j] = name + "." + names[j];
 
     return names;
 }

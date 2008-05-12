@@ -1583,9 +1583,9 @@ real LayerCostModule::dq(real q) const
 //////////
 // name //
 //////////
-TVec<string> LayerCostModule::name()
+TVec<string> LayerCostModule::costNames()
 {
-    return TVec<string>(1, OnlineLearningModule::name);
+    return TVec<string>(1, name);
 }
 
 /////////////////

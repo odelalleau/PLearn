@@ -138,7 +138,7 @@ public:
     virtual void forget();
 
     //! Indicates the name of the computed costs
-    virtual TVec<string> name();
+    virtual TVec<string> costNames();
 
     //! Overridden so that the default ports being returned are "prediction",
     //! "target" and "cost".

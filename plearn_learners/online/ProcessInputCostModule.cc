@@ -302,10 +302,19 @@ void ProcessInputCostModule::forget()
 //////////
 // name //
 //////////
-TVec<string> ProcessInputCostModule::name()
+TVec<string> ProcessInputCostModule::costNames()
 {
-    // ### Usually, the name of the class without the trailing "CostModule"
-    return cost_module->name();
+    if (name == "" || name == classname())
+        return cost_module->costNames();
+    else
+    {
+        int n_costs = cost_module->costNames().length();
+        TVec<string> cost_names(n_costs);
+        for (int i=0; i<n_costs; i++)
+            cost_names[i] = name + "." + cost_module->costNames()[i];
+
+        return cost_names;
+    }
 }
 
 //////////////

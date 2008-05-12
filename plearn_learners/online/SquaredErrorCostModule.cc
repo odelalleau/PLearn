@@ -202,9 +202,12 @@ void SquaredErrorCostModule::bbpropUpdate(const Vec& input, const Vec& target,
     bpropUpdate( input, target, cost, input_gradient, accumulate );
 }
 
-TVec<string> SquaredErrorCostModule::name()
+TVec<string> SquaredErrorCostModule::costNames()
 {
-    return TVec<string>(1, "mse");
+    if (name == "" || name == classname())
+        return TVec<string>(1, "mse");
+    else
+        return TVec<string>(1, name + ".mse");
 }
 
 } // end of namespace PLearn

@@ -378,6 +378,13 @@ void OnlineLearningModule::declareMethods(RemoteMethodMap& rmm)
                  "by their port name), including those in the gradients argument\n"
                  "and those named in the additional_input_gradiaents argument.\n")));
 
+    declareMethod(
+        rmm, "setLearningRate", &OnlineLearningModule::setLearningRate,
+        (BodyDoc("Allows to change the learning rate or equivalent parameter"),
+         ArgDoc ("dynamic_learning_rate",
+                 "The value we want for the learning rate")
+        ));
+
 }
 
 map<string,Mat> OnlineLearningModule::namedFprop(map<string,Mat>& inputs, TVec<string> wanted_outputs)

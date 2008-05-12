@@ -320,9 +320,12 @@ void NLLCostModule::bbpropUpdate(const Vec& input, const Vec& target,
     bpropUpdate( input, target, cost, input_gradient, accumulate );
 }
 
-TVec<string> NLLCostModule::name()
+TVec<string> NLLCostModule::costNames()
 {
-    return TVec<string>(1, "NLL");
+    if (name == "" || name == classname())
+        return TVec<string>(1, "NLL");
+    else
+        return TVec<string>(1, name + ".NLL");
 }
 
 } // end of namespace PLearn

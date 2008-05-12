@@ -187,9 +187,12 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 "not implemented for class '%s'", classname().c_str());
 }
 
-TVec<string> CrossEntropyCostModule::name()
+TVec<string> CrossEntropyCostModule::costNames()
 {
-    return TVec<string>(1, "CrossEntropy");
+    if (name == "" || name == classname())
+        return TVec<string>(1, "CrossEntropy");
+    else
+        return TVec<string>(1, name + ".CrossEntropy");
 }
 
 } // end of namespace PLearn
