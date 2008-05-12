@@ -230,6 +230,30 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    declareOption(ol, "length", &FilteredVMatrix::length_,
+                  OptionBase::nosave,
+                  "The number of example. Computed each time from source.");
+
+    redeclareOption(ol, "inputsize", &FilteredVMatrix::inputsize_,
+                    OptionBase::nosave,
+                    "Taken from source in  FilteredVMatrix.");
+    
+    redeclareOption(ol, "targetsize", &FilteredVMatrix::targetsize_,
+                    OptionBase::nosave,
+                    "Taken from source in FilteredVMatrix.");
+    
+    redeclareOption(ol, "weightsize", &FilteredVMatrix::weightsize_,
+                    OptionBase::nosave,
+                    "Taken from source in FilteredVMatrix.");
+    
+    redeclareOption(ol, "extrasize", &FilteredVMatrix::extrasize_,
+                    OptionBase::nosave,
+                    "Taken from source in FilteredVMatrix.");
+
+    redeclareOption(ol, "width", &FilteredVMatrix::width_,
+                    OptionBase::nosave,
+                    "Taken from source in FilteredVMatrix.");
 }
 
 ////////////
