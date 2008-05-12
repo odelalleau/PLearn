@@ -92,6 +92,32 @@ void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
                 "The vector of coded instruction for each variables.");
 
   inherited::declareOptions(ol);
+
+  declareOption(ol, "length", &MeanMedianModeImputationVMatrix::length_,
+		OptionBase::nosave,
+		"The number of example. Computed each time from source.");
+  
+  redeclareOption(ol, "inputsize", &MeanMedianModeImputationVMatrix::inputsize_,
+		  OptionBase::nosave,
+		  "Taken from source in  MeanMedianModeImputationVMatrix.");
+  
+  redeclareOption(ol, "targetsize",
+		  &MeanMedianModeImputationVMatrix::targetsize_,
+		  OptionBase::nosave,
+		  "Taken from source in MeanMedianModeImputationVMatrix.");
+  
+  redeclareOption(ol, "weightsize",
+		  &MeanMedianModeImputationVMatrix::weightsize_,
+		  OptionBase::nosave,
+		  "Taken from source in MeanMedianModeImputationVMatrix.");
+  
+  redeclareOption(ol, "extrasize", &MeanMedianModeImputationVMatrix::extrasize_,
+		  OptionBase::nosave,
+		  "Taken from source in MeanMedianModeImputationVMatrix.");
+  
+  redeclareOption(ol, "width", &MeanMedianModeImputationVMatrix::width_,
+		  OptionBase::nosave,
+		  "Taken from source in MeanMedianModeImputationVMatrix.");
 }
 
 void MeanMedianModeImputationVMatrix::build()
