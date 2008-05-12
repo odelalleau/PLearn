@@ -62,6 +62,7 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     cd_decrease_ct( 0. ),
     cd_n_gibbs( 1 ),
     persistent_cd_weight( 0. ),
+    n_gibbs_chains( 1 ),
     use_mean_field_cd( false ),
     denoising_learning_rate( 0. ),
     denoising_decrease_ct( 0. ),
@@ -76,8 +77,7 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     cumulative_training_time( 0 ),
     //cumulative_testing_time( 0 ),
     log_Z( MISSING_VALUE ),
-    Z_is_up_to_date( false ),
-    persistent_gibbs_chain_is_started( false )
+    Z_is_up_to_date( false )
 {
     random_gen = new PRandom();
 }
@@ -113,6 +113,12 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Weight of Persistent Contrastive Divergence, i.e. "
                   "weight of the prolonged gibbs chain.\n");
+
+    declareOption(ol, "n_gibbs_chains", 
+                  &PseudolikelihoodRBM::n_gibbs_chains,
+                  OptionBase::buildoption,
+                  "Number of gibbs chains maintained in parallel for "
+                  "Persistent Contrastive Divergence.\n");
 
     declareOption(ol, "use_mean_field_cd", &PseudolikelihoodRBM::use_mean_field_cd,
                   OptionBase::buildoption,
@@ -193,7 +199,7 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   &PseudolikelihoodRBM::persistent_gibbs_chain_is_started,
                   OptionBase::learntoption,
                   "Indication that the prolonged gibbs chain for "
-                  "Persistent Consistent Divergence is started.\n");
+                  "Persistent Consistent Divergence is started, for each chain.\n");
 
 //    declareOption(ol, "target_weights_L1_penalty_factor", 
 //                  &PseudolikelihoodRBM::target_weights_L1_penalty_factor,
@@ -326,8 +332,18 @@ void PseudolikelihoodRBM::build_layers_and_connections()
 
     // CD option
     pos_hidden.resize( hidden_layer->size );
-    pers_cd_input.resize( input_layer->size );
-    pers_cd_hidden.resize( hidden_layer->size );
+    pers_cd_input.resize( n_gibbs_chains );
+    pers_cd_hidden.resize( n_gibbs_chains );
+    for( int i=0; i<n_gibbs_chains; i++ )
+    {
+        pers_cd_input[i].resize( input_layer->size );
+        pers_cd_hidden[i].resize( hidden_layer->size );
+    }
+    if( persistent_gibbs_chain_is_started.length() != n_gibbs_chains )
+    {
+        persistent_gibbs_chain_is_started.resize( n_gibbs_chains );
+        persistent_gibbs_chain_is_started.fill( false );
+    }
 
     // Denoising autoencoder options
     transpose_connection = new RBMMatrixTransposeConnection;
@@ -424,6 +440,7 @@ void PseudolikelihoodRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(autoencoder_input_indices, copies);
     deepCopyField(pers_cd_input, copies);
     deepCopyField(pers_cd_hidden, copies);
+    deepCopyField(persistent_gibbs_chain_is_started, copies);
 }
 
 
@@ -450,7 +467,7 @@ void PseudolikelihoodRBM::forget()
     //cumulative_testing_time = 0;
     Z_is_up_to_date = false;
 
-    persistent_gibbs_chain_is_started = false;
+    persistent_gibbs_chain_is_started.fill( false );
 }
 
 ///////////
@@ -982,7 +999,11 @@ void PseudolikelihoodRBM::train()
                     
                     lr *= persistent_cd_weight;
 
-                    if( !persistent_gibbs_chain_is_started )
+                    setLearningRate(lr);
+
+                    int chain_i = stage % n_gibbs_chains;
+
+                    if( !persistent_gibbs_chain_is_started[chain_i] )
                     {  
                         // Start gibbs chain
                         connection->setAsDownInput( input );
@@ -990,8 +1011,8 @@ void PseudolikelihoodRBM::train()
                             (RBMMatrixConnection*) connection );
                         hidden_layer->computeExpectation();
                         hidden_layer->generateSample();
-                        pers_cd_hidden << hidden_layer->sample;
-                        persistent_gibbs_chain_is_started = true;
+                        pers_cd_hidden[chain_i] << hidden_layer->sample;
+                        persistent_gibbs_chain_is_started[chain_i] = true;
                     }
 
                     if( fast_is_equal(persistent_cd_weight, 1.) )
@@ -1004,10 +1025,11 @@ void PseudolikelihoodRBM::train()
                         pos_hidden << hidden_layer->expectation;
                     }
 
+                    hidden_layer->sample << pers_cd_hidden[chain_i];
                     // Prolonged Gibbs chain
                     for(int i=0; i<cd_n_gibbs; i++)
                     {
-                        connection->setAsUpInput( pers_cd_hidden );
+                        connection->setAsUpInput( hidden_layer->sample );
                         input_layer->getAllActivations( 
                             (RBMMatrixConnection*) connection );
                         input_layer->computeExpectation();
@@ -1019,13 +1041,14 @@ void PseudolikelihoodRBM::train()
                         hidden_layer->generateSample();
                     }
 
-                    pers_cd_input << input_layer->sample;
-                    pers_cd_hidden << hidden_layer->sample;
+                    pers_cd_input[chain_i] << input_layer->sample;
+                    pers_cd_hidden[chain_i] << hidden_layer->sample;
 
-                    input_layer->update(input, pers_cd_input);
+                    input_layer->update(input, pers_cd_input[chain_i]);
                     hidden_layer->update(pos_hidden,hidden_layer->expectation);
                     connection->update(input,pos_hidden,
-                                       pers_cd_input,hidden_layer->expectation);
+                                       pers_cd_input[chain_i],
+                                       hidden_layer->expectation);
                 }
             }
         

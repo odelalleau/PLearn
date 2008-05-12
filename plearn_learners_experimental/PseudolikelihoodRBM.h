@@ -85,6 +85,10 @@ public:
     //! prolonged gibbs chain
     real persistent_cd_weight;
 
+    //! Number of gibbs chains maintained in parallel for 
+    //! Persistent Contrastive Divergence
+    int n_gibbs_chains;
+
     //! Indication that a mean-field version of Contrastive Divergence
     //! (MF-CD) should be used.
     bool use_mean_field_cd;
@@ -257,8 +261,8 @@ protected:
     mutable Vec hidden_layer_activation_gradient;
     mutable Vec masked_autoencoder_input;
     mutable TVec<int> autoencoder_input_indices;
-    mutable Vec pers_cd_input;
-    mutable Vec pers_cd_hidden;
+    mutable TVec<Vec> pers_cd_input;
+    mutable TVec<Vec> pers_cd_hidden;
 
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;
@@ -282,8 +286,8 @@ protected:
     mutable bool Z_is_up_to_date;
 
     //! Indication that the prolonged gibbs chain for 
-    //! Persistent Consistent Divergence is started
-    mutable bool persistent_gibbs_chain_is_started;
+    //! Persistent Consistent Divergence is started, for each chain
+    mutable TVec<bool> persistent_gibbs_chain_is_started;
 
 protected:
     //#####  Protected Member Functions  ######################################
