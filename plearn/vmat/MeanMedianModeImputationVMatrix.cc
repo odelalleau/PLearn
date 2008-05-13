@@ -249,17 +249,46 @@ void MeanMedianModeImputationVMatrix::build_()
     variable_imputation_instruction.resize(train_width);
     variable_imputation_instruction.clear();
     TVec<string> nofields;
+    
+    //We sho
+    TVec<pair<string,string> > save_imputation_spec = imputation_spec;
+    imputation_spec = save_imputation_spec.copy();
+
     for (int spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
     {
         int train_col;
+	string fname = imputation_spec[spec_col].first;
         for (train_col = 0; train_col < train_width; train_col++)
         {
-            if (imputation_spec[spec_col].first == train_field_names[train_col]) break;
+	  if (fname == train_field_names[train_col]) break;
         }
-        if (train_col >= train_width){
-	  nofields.append((imputation_spec[spec_col].first).c_str());
+        if (train_col >= train_width && fname[fname.size()-1]!='*'){
+	  nofields.append(fname.c_str());
 	  continue;
 	}
+	else
+	{
+	  bool expended = false;
+	  fname.resize(fname.size()-1);//remove the last caracter (*)
+	  for(train_col = 0; train_col < train_width; train_col++)
+          {
+	    if(string_begins_with(train_field_names[train_col],fname))
+	    {
+	      pair<string,string> n=make_pair(train_field_names[train_col],
+					      imputation_spec[spec_col].second);
+//                    perr<<"expanding "<<fieldspec[i] << " to " << n <<endl;
+	      
+	      imputation_spec.append(n);
+	      expended = true;
+	    }
+	  }
+	  if(!expended)
+	    PLERROR("In MeanMedianModeImputationVMatrix::build_() - "
+		    "Don't have find any partial match to %s",
+		    imputation_spec[spec_col].first.c_str());
+	  continue;
+	}
+	
         if (imputation_spec[spec_col].second == "mean") variable_imputation_instruction[train_col] = 1;
         else if (imputation_spec[spec_col].second == "median") variable_imputation_instruction[train_col] = 2;
         else if (imputation_spec[spec_col].second == "mode") variable_imputation_instruction[train_col] = 3;
@@ -268,6 +297,8 @@ void MeanMedianModeImputationVMatrix::build_()
 	  PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s",
 		     (imputation_spec[spec_col].first).c_str(), (imputation_spec[spec_col].second).c_str());
     }
+    imputation_spec = save_imputation_spec;
+
     if(nofields.length()>0)
       PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
 	      tostring(nofields).c_str());
