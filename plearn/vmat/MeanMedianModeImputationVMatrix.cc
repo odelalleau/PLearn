@@ -262,11 +262,12 @@ void MeanMedianModeImputationVMatrix::build_()
         {
 	  if (fname == train_field_names[train_col]) break;
         }
-        if (train_col >= train_width && fname[fname.size()-1]!='*'){
+	char last_char = fname[fname.size()-1];
+        if (train_col >= train_width && last_char!='*'){
 	  nofields.append(fname.c_str());
 	  continue;
 	}
-	else
+	else if(train_col >= train_width && last_char=='*')
 	{
 	  bool expended = false;
 	  fname.resize(fname.size()-1);//remove the last caracter (*)
@@ -276,7 +277,7 @@ void MeanMedianModeImputationVMatrix::build_()
 	    {
 	      pair<string,string> n=make_pair(train_field_names[train_col],
 					      imputation_spec[spec_col].second);
-//                    perr<<"expanding "<<fieldspec[i] << " to " << n <<endl;
+//                    perr<<"expanding "<<train_field_names[train_col] << " to " << n <<endl;
 	      
 	      imputation_spec.append(n);
 	      expended = true;
