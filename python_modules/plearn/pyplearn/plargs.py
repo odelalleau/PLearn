@@ -502,7 +502,7 @@ class plopt(object):
     buildClassContext = staticmethod(buildClassContext)
 
     def closeClassContext(context):
-        exceptions = [ 'FILEBASE', 'FILEPATH', 'TIME', 'DATETIME',
+        exceptions = [ 'FILEBASE', 'FILEPATH', 'TIME', 'DATETIME', 'MTIME',
                        'FILEEXT', 'DIRPATH', 'DATE', 'HOME', 'FILENAME' ]
 
         del context.plopt_binders
