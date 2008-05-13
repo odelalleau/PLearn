@@ -111,6 +111,7 @@
 #include <plearn/ker/DotProductKernel.h>
 #include <plearn/ker/EpanechnikovKernel.h>
 #include <plearn/ker/GaussianKernel.h>
+#include <plearn/ker/GaussianDensityKernel.h>
 #include <plearn/ker/GeodesicDistanceKernel.h>
 #include <plearn/ker/IIDNoiseKernel.h>
 #include <plearn/ker/LinearARDKernel.h>
