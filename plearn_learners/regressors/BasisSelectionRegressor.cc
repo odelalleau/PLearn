@@ -45,7 +45,6 @@
 #include <plearn/math/RealFunctionProduct.h>
 #include <plearn/math/RealValueIndicatorFunction.h>
 #include <plearn/math/RealRangeIndicatorFunction.h>
-// #include <plearn/math/TruncatedRealFunction.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn/math/random.h>
 #include <plearn/vmat/RealFunctionsProcessedVMatrix.h>
@@ -80,6 +79,7 @@ BasisSelectionRegressor::BasisSelectionRegressor()
       normalize_features(false),
       precompute_features(true),
       n_threads(0),
+      thread_subtrain_length(0),
       residue_sum(0),
       residue_sum_sq(0),
       weights_sum(0)
@@ -88,21 +88,6 @@ BasisSelectionRegressor::BasisSelectionRegressor()
 
 void BasisSelectionRegressor::declareOptions(OptionList& ol)
 {
-    // ### Declare all of this object's options here.
-    // ### For the "flags" of each option, you should typically specify
-    // ### one of OptionBase::buildoption, OptionBase::learntoption or
-    // ### OptionBase::tuningoption. If you don't provide one of these three,
-    // ### this option will be ignored when loading values from a script.
-    // ### You can also combine flags, for example with OptionBase::nosave:
-    // ### (OptionBase::buildoption | OptionBase::nosave)
-
-    // ### ex:
-    // declareOption(ol, "myoption", &BasisSelectionRegressor::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
-
-
     //#####  Public Build Options  ############################################
 
     declareOption(ol, "consider_constant_function", &BasisSelectionRegressor::consider_constant_function,
@@ -211,6 +196,10 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
                   "The number of threads to use when computing residue scores.\n"
                   "NOTE: MOST OF PLEARN IS NOT THREAD-SAFE; THIS CODE ASSUMES THAT SOME PARTS ARE, BUT THESE MAY CHANGE.");
 
+    declareOption(ol, "thread_subtrain_length", &BasisSelectionRegressor::thread_subtrain_length,
+                  OptionBase::buildoption,
+                  "Preload thread_subtrain_length data when using multi-threading.");
+
     //#####  Public Learnt Options  ############################################
 
     declareOption(ol, "selected_functions", &BasisSelectionRegressor::selected_functions,
@@ -239,19 +228,7 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
 
 void BasisSelectionRegressor::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
 }
-
-
 
 
 void BasisSelectionRegressor::setExperimentDirectory(const PPath& the_expdir)
@@ -271,15 +248,6 @@ void BasisSelectionRegressor::build()
 
 void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    //PLERROR("BasisSelectionRegressor::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
-
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(explicit_functions, copies);
@@ -302,7 +270,6 @@ void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input, copies);
     deepCopyField(targ, copies);
     deepCopyField(featurevec, copies);
-
 }
 
 
@@ -521,12 +488,14 @@ void BasisSelectionRegressor::buildAllCandidateFunctions()
     {
         int nselected = selected_functions.length();
         for(int k=0; k<nselected; k++)
+        {
             for(int j=candidate_start; j<ncandidates; j++)
             {
                 RealFunc f = new RealFunctionProduct(selected_functions[k],simple_candidate_functions[j]);
                 f->setInfo("("+selected_functions[k]->getInfo()+"*"+simple_candidate_functions[j]->getInfo()+")");
                 interaction_candidate_functions.append(f);
             }
+        }
     }
 
     // explicit interaction variables / functions
@@ -536,12 +505,14 @@ void BasisSelectionRegressor::buildAllCandidateFunctions()
                                               explicit_interaction_functions);
 
     for(int k= 0; k < explicit_interaction_functions.length(); ++k)
+    {
         for(int j= candidate_start; j < ncandidates; ++j)
         {
             RealFunc f = new RealFunctionProduct(explicit_interaction_functions[k],simple_candidate_functions[j]);
             f->setInfo("("+explicit_interaction_functions[k]->getInfo()+"*"+simple_candidate_functions[j]->getInfo()+")");
             interaction_candidate_functions.append(f);
         }
+    }
 
     
     if(max_interaction_terms < 0)
@@ -568,8 +539,7 @@ void BasisSelectionRegressor::findBestCandidateFunction(int& best_candidate_inde
     real E_y = 0;
     real E_yy = 0;
 
-    computeWeightedAveragesWithResidue(candidate_functions,   
-                                       wsum, E_x, E_xx, E_y, E_yy, E_xy);
+    computeWeightedAveragesWithResidue(candidate_functions, wsum, E_x, E_xx, E_y, E_yy, E_xy);
     
     Vec scores = (E_xy-E_y*E_x)/sqrt(E_xx-square(E_x));
 
@@ -601,34 +571,13 @@ void BasisSelectionRegressor::findBestCandidateFunction(int& best_candidate_inde
 
     if(verbosity>=10)
         perr << endl;
-
-    /*
-    computeWeightedCorrelationsWithY(candidate_functions, residue,  
-                                     wsum,
-                                     E_x, V_x,
-                                     E_y, V_y,
-                                     E_xy, V_xy,
-                                     covar, correl);
-
-    for(int j=0; j<n_candidates; j++)
-    {
-        real abs_correl = fabs(correl[j]);
-        if(abs_correl>best_score)
-        {
-            best_candidate_index = j;
-            best_score = abs_correl;
-        }
-    }
-    */
 }
-
-
 
 
 //function-object for a thread
 struct BasisSelectionRegressor::thread_wawr
 {
-    int tid, nt;
+    int thread_id, n_threads;
     const TVec<RealFunc>& functions;
     real& wsum;
     Vec& E_x;
@@ -641,8 +590,9 @@ struct BasisSelectionRegressor::thread_wawr
     const VMat& train_set;  
     boost::mutex& pb_mx;
     PP<ProgressBar> pb;
+    int thread_subtrain_length;
 
-    thread_wawr(int tid_, int nt_,
+    thread_wawr(int thread_id_, int n_threads_,
                 const TVec<RealFunc>& functions_,  
                 real& wsum_,
                 Vec& E_x_, Vec& E_xx_,
@@ -650,9 +600,10 @@ struct BasisSelectionRegressor::thread_wawr
                 Vec& E_xy_, const Vec& Y_, boost::mutex& ts_mx_,
                 const VMat& train_set_,
                 boost::mutex& pb_mx_,
-                PP<ProgressBar> pb_)
-        : tid(tid_), 
-          nt(nt_),
+                PP<ProgressBar> pb_,
+                int thread_subtrain_length_)
+        : thread_id(thread_id_), 
+          n_threads(n_threads_),
           functions(functions_),
           wsum(wsum_),
           E_x(E_x_),
@@ -664,7 +615,8 @@ struct BasisSelectionRegressor::thread_wawr
           ts_mx(ts_mx_),
           train_set(train_set_),
           pb_mx(pb_mx_),
-          pb(pb_)
+          pb(pb_),
+          thread_subtrain_length(thread_subtrain_length_)
     {}
 
     void operator()()
@@ -673,7 +625,7 @@ struct BasisSelectionRegressor::thread_wawr
         real w;
         Vec candidate_features;
         int n_candidates = functions.length();
-        int l= train_set->length();
+        int train_len = train_set->length();
      
         E_x.resize(n_candidates);
         E_x.fill(0.);
@@ -684,16 +636,49 @@ struct BasisSelectionRegressor::thread_wawr
         E_xy.resize(n_candidates);
         E_xy.fill(0.);
         wsum = 0.;
-   
-        for(int i=tid; i<l; i+= nt)
+
+        // Used when thread_subtrain_length > 1
+        Mat all_inputs;
+        Vec all_w;
+        int input_size = train_set->inputsize();
+        if (thread_subtrain_length > 1)
         {
-            real y = Y[i];
+            // pre-allocate memory
+            all_inputs.resize(thread_subtrain_length, input_size);
+            all_w.resize(thread_subtrain_length);
+        }
+   
+        for(int i=thread_id; i<train_len; i+= n_threads)
+        {
+            if (thread_subtrain_length > 1)
+            {
+                int j = (i-thread_id)/n_threads;
+                int j_mod = j % thread_subtrain_length;
+                if (j_mod == 0)  // on doit faire le plein de donnees
+                {
+                    all_inputs.resize(0, input_size);
+                    all_w.resize(0);
+
+                    boost::mutex::scoped_lock lock(ts_mx);
+                    int max_train = min(train_len, i + thread_subtrain_length*n_threads);
+                    for (int ii=i; ii<max_train; ii+= n_threads)
+                    {
+                        train_set->getExample(ii, input, targ, w);
+                        all_inputs.appendRow(input);
+                        all_w.append(w);
+                    }
+                }
+                input = all_inputs(j_mod);
+                w = all_w[j_mod];
+            }
+            else
             {
                 boost::mutex::scoped_lock lock(ts_mx);
                 train_set->getExample(i, input, targ, w);
             }
             evaluate_functions(functions, input, candidate_features);
             wsum += w;
+            real y = Y[i];
             real wy = w*y;
             E_y  += wy;
             E_yy  += wy*y;
@@ -716,14 +701,12 @@ struct BasisSelectionRegressor::thread_wawr
 };
 
 
-
 void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<RealFunc>& functions,  
                                                                  real& wsum,
                                                                  Vec& E_x, Vec& E_xx,
                                                                  real& E_y, real& E_yy,
                                                                  Vec& E_xy) const
 {
-
     const Vec& Y = residue;
     int n_candidates = functions.length();
     E_x.resize(n_candidates);
@@ -763,7 +746,7 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
                                     E_xs[i], E_xxs[i],
                                     E_ys[i], E_yys[i],
                                     E_xys[i], Y, ts_mx, train_set,
-                                    pb_mx, pb);
+                                    pb_mx, pb, thread_subtrain_length);
             threads[i]= new boost::thread(*tws[i]);
         }
         for(int i= 0; i < n_threads; ++i)
@@ -783,6 +766,7 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
         }
     }
     else // single-thread version
+    {
         for(int i=0; i<l; i++)
         {
             real y = Y[i];
@@ -803,6 +787,7 @@ void BasisSelectionRegressor::computeWeightedAveragesWithResidue(const TVec<Real
             if(pb)
                 pb->update(i);
         }
+    }
 
     // Finalize computation
     real inv_wsum = 1.0/wsum;
@@ -972,11 +957,13 @@ void BasisSelectionRegressor::retrainLearner()
     {
         features.resize(l,nf+(weighted?2:1), max(1,int(0.25*l*nf)), true); // enlarge width while preserving content
         if(weighted)
+        {
             for(int i=0; i<l; i++) // append target and weight columns to features matrix
             {
                 features(i,nf) = targets[i];
                 features(i,nf+1) = weights[i];
             }
+        }
         else // no weights
             features.lastColumn() << targets; // append target column to features matrix
     
@@ -1057,12 +1044,6 @@ void BasisSelectionRegressor::train()
             if(verbosity>=2)
                 perr << "\n\n*** Stage " << stage << " : no more candidate functions. *****" << endl;
         }
-        // clear statistics of previous epoch
-        // train_stats->forget();
-        // Vec train_costs(1);
-        // train_costs[0] = residue_sum_sq/weights_sum;
-        // train_stats->update(train_costs, weights_sum);
-        // train_stats->finalize(); // finalize statistics for this epoch
         ++stage;
     }
 }
@@ -1089,22 +1070,6 @@ void BasisSelectionRegressor::initTargetsResidueWeight()
         weights[i] = w;
         weights_sum += w;
     }
-
-    /*
-    bias = residue_sum/weights_sum;
-
-    // Now sutract the bias
-    residue_sum = 0.;
-    residue_sum_sq = 0.;    
-    for(int i=0; i<l; i++)
-    {
-        real w = weights[i];
-        real resval = residue[i]-bias;
-        residue[i] = resval;
-        residue_sum += w*resval;
-        residue_sum_sq += w*square(resval);        
-    }
-    */
 }
 
 void BasisSelectionRegressor::recomputeFeatures()
@@ -1133,7 +1098,6 @@ void BasisSelectionRegressor::recomputeResidue()
     // perr << "recomp_residue: { ";
     for(int i=0; i<l; i++)
     {
-        // train_set->getExample(i, input, targ, w);
         real t = targets[i];
         real w = weights[i];
         if(precompute_features)
@@ -1193,7 +1157,6 @@ void BasisSelectionRegressor::computeCostsFromOutputs(const Vec& input, const Ve
 
 TVec<string> BasisSelectionRegressor::getTestCostNames() const
 {
-    //return getTrainCostNames();
     return TVec<string>(1,string("mse"));
 }
 
@@ -1206,9 +1169,6 @@ void BasisSelectionRegressor::setTrainStatsCollector(PP<VecStatsCollector> stats
 
 TVec<string> BasisSelectionRegressor::getTrainCostNames() const
 {
-//     TVec<string> costnames(1);
-//     costnames[0] = "mse";
-//     return costnames;
     return learner->getTrainCostNames();
 }
 

@@ -84,6 +84,7 @@ public:
     PP<PLearner> learner;
     bool precompute_features;
     int n_threads;
+    int thread_subtrain_length;
 
     //#####  Public Learnt Options  ############################################
     TVec<RealFunc> selected_functions;
@@ -106,13 +107,11 @@ public:
 
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual int outputsize() const;
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
 
     //! The role of the train method is to bring the learner up to
@@ -121,17 +120,14 @@ public:
     virtual void train();
 
     //! Computes the output from the input.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the costs from already computed output.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTestCostNames() const;
 
 
@@ -140,7 +136,6 @@ public:
 
     //! Returns the names of the objective costs that the train method computes
     //! and  for which it updates the VecStatsCollector train_stats.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
 
 
@@ -171,16 +166,9 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void setExperimentDirectory(const PPath& the_expdir);
-
-protected:
-    //#####  Protected Options  ###############################################
-
-    // ### Declare protected option fields (such as learned parameters) here
-    // ...
 
 protected:
     //#####  Protected Member Functions  ######################################
