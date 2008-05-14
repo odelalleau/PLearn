@@ -49,7 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "Useful for performing Parzen Windows-style density estimation. Need to specify the type of the kernel\n"
      "- simple: the basic Beta kernel \n"
      "- alternative: the alternative, faster converging version \n"
-     "output_type should be set to either log_density or density"  );
+     "output_type should be set to either log_value or normal"  );
 
 //////////////////
 // BetaKernel //
@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
 BetaKernel::BetaKernel()
     : width(1.),
      kernel_type("simple"),
-     output_type("log_density")
+     output_type("normal")
 {
 }
 
@@ -77,7 +77,7 @@ void BetaKernel::declareOptions(OptionList& ol)
     
     declareOption(ol, "output_type", &BetaKernel::output_type,
                   OptionBase::buildoption,
-                  "A string specifying whether we want log densities as outputs (\"log_density\"; default) or just densities (\"density\")");
+                  "A string specifying whether we want log densities as outputs (\"log_value\" ) or just densities (\"normal\"; default)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -158,14 +158,14 @@ real BetaKernel::evaluate(const Vec& x1, const Vec& x2) const {
     else
         PLERROR("In BetaKernel::evaluate kernel_type must be either \"simple\" or \"alternative\"");
    
-    real retval;
+    real retval = 0.0;
  
-    if (output_type=="log_density")
+    if (output_type=="log_value")
         retval = kvalue;
-    else if (output_type=="density")
+    else if (output_type=="normal")
         retval = exp(kvalue);
     else
-        PLERROR("In BetaKernel::evaluate output_type must be either \"log_density\" or \"density\"");
+        PLERROR("In BetaKernel::evaluate output_type must be either \"log_value\" or \"normal\"");
 
     return retval;
 }
