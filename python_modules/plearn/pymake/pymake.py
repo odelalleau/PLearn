@@ -1045,6 +1045,28 @@ def parallel_compile(files_to_compile, list_of_hosts, nice_values={},
             if verbose >= 2:
                 print '[ %d FILES TO RETRY, BUT NO MORE TRIES AVAILABLE ]' % len(ccfiles_to_retry)
 
+
+def dbi_parallel_compile(files_to_compile, dbi_mode):
+
+    #FIXME: Prepare something?
+    commands = []
+
+    for ccfile in files_to_compile:
+        ccfile.make_objs_dir() # make sure the OBJS dir exists, otherwise the command will fail
+        # Remove .o file if it exists
+        try:
+            os.remove(ccfile.corresponding_ofile)
+        except OSError:
+            pass
+
+        #Command to execute: "'cd " + ccfile.filedir + "; " + self.compile_command(nice_value) + "; echo $?'"
+        commands.append("'cd " + ccfile.filedir + "; " + self.compile_command(nice_value) + "; echo $?'")
+
+    from plearn.parallel.dbi import DBI
+    jobs = DBI(commands, dbi_mode)
+    jobs.run()
+    jobs.wait()
+
 def win32_parallel_compile(files_to_compile):
     """files_to_compile is a list of FileInfo of .cc files"""
 
@@ -1981,7 +2003,7 @@ class FileInfo:
 
         return compileroptions
 
-    def compile_command(self, nice_value):
+    def compile_command(self, nice_value=0):
         """returns the command line necessary to compile this .cc file"""
 
         compiler = default_compiler
@@ -2633,6 +2655,20 @@ def main( args ):
         sys.exit(100)
 
     ##  Options that will not affect the final compiled file
+    # Use the DBI interface instead of compiling locally or directly using SSH
+    dbi_mode = None
+    for option in optionargs:
+        if option.startswith('dbi'):
+            optionargs.remove(option)
+            #FIXME: is default behaviour if no dbi mode is specified?
+            if len(option) > 3 and option[3]=='=':
+                dbi_mode = option[4:]
+            else:
+                print dedent('''\
+                        Syntax of \'dbi\' option is \'-dbi=<dbi_mode>\',
+                        where <dbi_mode> is one of (...)''')
+                #FIXME: is there a way to get a list of supported modes?
+
     # force recompilation of everything?
     if 'force' in optionargs:
         force_recompilation = 1
@@ -2873,6 +2909,9 @@ def main( args ):
 
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
+            else if dbi_mode is not None:
+                #TODO: use ofiles here?
+                dbi_parallel_compile(ccfiles_to_compile.keys(), dbi_mode)
             else:
                 ofiles_to_copy = get_ofiles_to_copy(executables_to_link.keys())
                 ofiles_to_copy = [x for x in ofiles_to_copy if x not in [y.corresponding_ofile for y in ccfiles_to_compile.keys()]]
