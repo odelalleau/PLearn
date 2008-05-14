@@ -75,9 +75,6 @@ public:
     ////! Number of epochs for rbm phase
     //int rbm_nstages;
 
-    //! The target layers of the RBMs
-    TVec< PP<RBMLayer> > target_layers;
-
     //! The training weights of each target layers
     Vec target_layers_weights;
     
@@ -91,13 +88,16 @@ public:
     //! The weight of an additional input reconstruction error
     real input_reconstruction_weight;
 
-    //! The visible layer of the RBMs
+    //! The input layer of the model
     TVec<RBMLayer> input_layer;
 
-    //! The hidden layer of the RBMs
+    //! The target layers of the model
+    TVec< PP<RBMLayer> > target_layers;
+
+    //! The hidden layer of the model
     PP<RBMLayer> hidden_layer;
 
-    //! The second hidden layer of the RBMs (optional) 
+    //! The second hidden layer of the model (optional) 
     PP<RBMLayer> hidden_layer2;
 
     //! The RBMConnection between the first hidden layers, through time
@@ -106,10 +106,10 @@ public:
     //! The RBMConnection between the first and second hidden layers (optional)
     PP<RBMConnection> hidden_connections;
 
-    //! Connection from input_layer to hidden_layer
+    //! The RBMConnection from input_layer to hidden_layer
     PP<RBMConnection> input_connections;
 
-    //! Connection from input_layer to hidden_layer
+    //! The RBMConnection from input_layer to hidden_layer
     TVec< PP<RBMConnection> > target_connections;
 
     //#####  Public Learnt Options  ###########################################

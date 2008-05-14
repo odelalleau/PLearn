@@ -59,6 +59,12 @@
 // - have a proper normalization of costs
 // - output one cost per target + weighted sum of all costs
 // - make sure gradient descent is proper (change some vectors into matrices, etc.)
+// - make sure end_of_sequence_symbol is used appropriately
+// - make sure declareOption includes everything, including saved variable
+// - implement deepcopy appropriately
+// - recurrent_nstages doesn't exist anymore
+// - verify use of mask is proper
+// - verify code works with and without hidden_layer2
 
 namespace PLearn {
 using namespace std;
@@ -70,114 +76,99 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 DynamicallyLinkedRBMsModel::DynamicallyLinkedRBMsModel() :
-    rbm_learning_rate( 0.01 ),
-    dynamic_learning_rate( 0.01 ),
-    visible_dynamic_learning_rate( 0.01 ),
-    fine_tuning_learning_rate( 0.01 ),
+    //rbm_learning_rate( 0.01 ),
     recurrent_net_learning_rate( 0.01),
-    untie_weights( false ),
-    taillePart( 0 ),
-    isRegression( 0 ),
-    rbm_nstages( 0 ),
-    dynamic_nstages( 0 ),
-    fine_tuning_nstages( 0 ),
-    recurrent_nstages(0),
-    visible_connections_option(0),
-    visible_size( -1 )
+    use_target_layers_masks( false ),
+    end_of_sequence_symbol( -1000 ),
+    input_reconstruction_weight( 0. ),
+    input_layer_size( -1 )    
+    //rbm_nstages( 0 ),
 {
     random_gen = new PRandom();
 }
 
 void DynamicallyLinkedRBMsModel::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "rbm_learning_rate", &DynamicallyLinkedRBMsModel::rbm_learning_rate,
-                  OptionBase::buildoption,
-                  "The learning rate used during RBM contrastive "
-                  "divergence learning phase");
+//    declareOption(ol, "rbm_learning_rate", &DynamicallyLinkedRBMsModel::rbm_learning_rate,
+//                  OptionBase::buildoption,
+//                  "The learning rate used during RBM contrastive "
+//                  "divergence learning phase.\n");
 
-    declareOption(ol, "dynamic_learning_rate", &DynamicallyLinkedRBMsModel::dynamic_learning_rate,
+    declareOption(ol, "recurrent_net_learning_rate", 
+                  &DynamicallyLinkedRBMsModel::recurrent_net_learning_rate,
                   OptionBase::buildoption,
-                  "The learning rate used during the dynamic links "
-                  "learning phase");
+                  "The learning rate used during the recurrent phase.\n");
 
-    declareOption(ol, "visible_dynamic_learning_rate", &DynamicallyLinkedRBMsModel::visible_dynamic_learning_rate,
-                  OptionBase::buildoption,
-                  "The learning rate used during the visible dynamic links "
-                  "learning phase");
+//    declareOption(ol, "rbm_nstages", &DynamicallyLinkedRBMsModel::rbm_nstages,
+//                  OptionBase::buildoption,
+//                  "Number of epochs for rbm phase.\n");
 
-    declareOption(ol, "fine_tuning_learning_rate", &DynamicallyLinkedRBMsModel::fine_tuning_learning_rate,
-                  OptionBase::buildoption,
-                  "The learning rate used during the fine tuning "
-                  "phase");
-
-    declareOption(ol, "recurrent_net_learning_rate", &DynamicallyLinkedRBMsModel::recurrent_net_learning_rate,
-                  OptionBase::buildoption,
-                  "The learning rate used during the recurrent phase");
-
-    declareOption(ol, "untie_weights", &DynamicallyLinkedRBMsModel::untie_weights,
-                  OptionBase::buildoption,
-                  "Indication to untie weights in recurrent net");
-
-    declareOption(ol, "taillePart", &DynamicallyLinkedRBMsModel::taillePart,
-                  OptionBase::buildoption,
-                  "Indication the size of the partition");
-
-    declareOption(ol, "isRegression", &DynamicallyLinkedRBMsModel::isRegression,
-                  OptionBase::buildoption,
-                  "Indication if the model is used for regression");
-
-    declareOption(ol, "rbm_nstages", &DynamicallyLinkedRBMsModel::rbm_nstages,
-                  OptionBase::buildoption,
-                  "Number of epochs for rbm phase");
-
-    declareOption(ol, "dynamic_nstages", &DynamicallyLinkedRBMsModel::dynamic_nstages,
-                  OptionBase::buildoption,
-                  "Number of epochs for dynamic phase");
-
-    declareOption(ol, "fine_tuning_nstages", &DynamicallyLinkedRBMsModel::fine_tuning_nstages,
-                  OptionBase::buildoption,
-                  "Number of epochs for fine tuning phase");
-
-    declareOption(ol, "recurrent_nstages", &DynamicallyLinkedRBMsModel::recurrent_nstages,
-                  OptionBase::buildoption,
-                  "Number of epochs for the recurrent phase");
 
     declareOption(ol, "input_layer", &DynamicallyLinkedRBMsModel::input_layer,
                   OptionBase::buildoption,
-                  "The input layer of the model");
+                  "The input layer of the model.\n");
 
-    declareOption(ol, "target_layer", &DynamicallyLinkedRBMsModel::target_layer,
+    declareOption(ol, "target_layers", &DynamicallyLinkedRBMsModel::target_layers,
                   OptionBase::buildoption,
-                  "The target layer of the model");
+                  "The target layers of the model.\n");
 
     declareOption(ol, "hidden_layer", &DynamicallyLinkedRBMsModel::hidden_layer,
                   OptionBase::buildoption,
-                  "The hidden layer of the RBMs. Its size must be set, and will\n"
-                  "correspond to the RBMs hidden layer size.");
+                  "The hidden layer of the model.\n");
 
-    declareOption(ol, "connections", &DynamicallyLinkedRBMsModel::connections,
+    declareOption(ol, "hidden_layer2", &DynamicallyLinkedRBMsModel::hidden_layer2,
                   OptionBase::buildoption,
-                  "The weights of the connections between the RBM "
-                  "visible and hidden layers");
+                  "The second hidden layer of the model (optional).\n");
 
-    declareOption(ol, "dynamic_connections", &DynamicallyLinkedRBMsModel::dynamic_connections,
+    declareOption(ol, "dynamic_connections", 
+                  &DynamicallyLinkedRBMsModel::dynamic_connections,
                   OptionBase::buildoption,
-                  "OnlineLearningModule corresponding to dynamic links "
-                  "between RBMs' hidden layers");
+                  "The RBMConnection between the first hidden layers, "
+                  "through time.\n");
 
-    declareOption(ol, "visible_connections", &DynamicallyLinkedRBMsModel::visible_connections,
+    declareOption(ol, "hidden_connections", 
+                  &DynamicallyLinkedRBMsModel::hidden_connections,
                   OptionBase::buildoption,
-                  "OnlineLearningModule corresponding to dynamic links "
-                  "between RBMs' visible layers");
+                  "The RBMConnection between the first and second "
+                  "hidden layers (optional).\n");
 
-    declareOption(ol, "visible_connections_option", &DynamicallyLinkedRBMsModel::visible_connections_option,
+    declareOption(ol, "input_connections", 
+                  &DynamicallyLinkedRBMsModel::input_connections,
                   OptionBase::buildoption,
-                  "Option for the onlineLearningModule corresponding to dynamic links "
-                  "between RBMs' visible layers");
+                  "The RBMConnection from input_layer to hidden_layer.\n");
 
-    declareOption(ol, "dynamic_connections_copy", &DynamicallyLinkedRBMsModel::dynamic_connections_copy,
+    declareOption(ol, "target_connections", 
+                  &DynamicallyLinkedRBMsModel::target_connections,
+                  OptionBase::buildoption,
+                  "The RBMConnection from input_layer to hidden_layer.\n");
+
+    /*
+    declareOption(ol, "", 
+                  &DynamicallyLinkedRBMsModel::,
+                  OptionBase::buildoption,
+                  "");
+    */
+
+
+    declareOption(ol, "input_layer_size", 
+                  &DynamicallyLinkedRBMsModel::input_layer_size,
                   OptionBase::learntoption,
-                  "Independent copy of dynamic connections");
+                  "Size of the input layer.\n");
+
+    declareOption(ol, "target_layers_size", 
+                  &DynamicallyLinkedRBMsModel::target_layers_size,
+                  OptionBase::learntoption,
+                  "Size of each target layers.\n");
+
+    declareOption(ol, "input_symbol_sizes", 
+                  &DynamicallyLinkedRBMsModel::input_symbol_sizes,
+                  OptionBase::learntoption,
+                  "Number of symbols for each symbolic field of train_set.\n");
+
+    declareOption(ol, "target_symbol_sizes", 
+                  &DynamicallyLinkedRBMsModel::target_symbol_sizes,
+                  OptionBase::learntoption,
+                  "Number of symbols for each symbolic field of train_set.\n");
 
     /*
     declareOption(ol, "", &DynamicallyLinkedRBMsModel::,
@@ -206,15 +197,14 @@ void DynamicallyLinkedRBMsModel::build_()
 
     if(train_set)
     {
-
         PLASSERT( target_layers_weights.length() == target_layers.length() );
-
 
         // Parsing symbols in input
         input_layer_size = 0;
         input_symbol_sizes.resize(0);
         PP<Dictionary> dict;
-        int inputsize_without_masks = inputsize() - ( use_target_layers_masks ? targetsize() : 0 );
+        int inputsize_without_masks = inputsize() 
+            - ( use_target_layers_masks ? targetsize() : 0 );
         for(int i=0; i<inputsize_without_masks; i++)
         {
             dict = train_set->getDictionary(i);
@@ -277,6 +267,8 @@ void DynamicallyLinkedRBMsModel::build_()
             PLERROR("DynamicallyLinkedRBMsModel::build_(): target layers "
                     "does not cover all targets.");
 
+
+        // Building weights and layers
         if( !input_layer->random_gen )
         {
             input_layer->random_gen = random_gen;
@@ -297,6 +289,16 @@ void DynamicallyLinkedRBMsModel::build_()
             input_connections->forget();
         }
         input_connections->build();
+
+
+        dynamic_connections->down_size = hidden_layer->size;
+        dynamic_connections->up_size = hidden_layer->size;
+        if( !dynamic_connections->random_gen )
+        {
+            dynamic_connections->random_gen = random_gen;
+            dynamic_connections->forget();
+        }
+        dynamic_connections->build();
 
         if( hidden_layer2 )
         {
@@ -398,14 +400,16 @@ void DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     // deepCopyField(, copies);
 
-    //PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
-    //"not implemented yet");
+    PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
+    "not implemented yet");
 }
 
 
 int DynamicallyLinkedRBMsModel::outputsize() const
 {
-    int out_size = 1; // Not really...
+    int out_size = 0;
+    for( int i=0; i<target_layers.length(); i++ )
+        out_size += target_layers[i]->size;
     return out_size;
 }
 
@@ -422,12 +426,22 @@ void DynamicallyLinkedRBMsModel::forget()
       - stage = 0
     */
     inherited::forget();
-    
-    visible_layer->forget();
+
+    input_layer->forget();
     hidden_layer->forget();
-    connections->forget();
-    dynamic_connections->forget();
-    visible_connections->forget();
+    input_connections->forget();
+    dynamic_connections-forget();
+    if( hidden_layer2 )
+    {
+        hidden_layer2->forget();
+        hidden_connections->forget();
+    }
+
+    for( int i=0; i<target_layers.length(); i++ )
+    {
+        target_layers[i]->forget();
+        target_connections[i]->forget();
+    }
 
     stage = 0;
 }
