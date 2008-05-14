@@ -46,8 +46,10 @@
 #include <plearn_learners/online/OnlineLearningModule.h>
 #include <plearn_learners/online/RBMClassificationModule.h>
 #include <plearn_learners/online/RBMLayer.h>
+#include <plearn_learners/online/RBMMixedLayer.h>
 #include <plearn_learners/online/RBMConnection.h>
 #include <plearn_learners/online/RBMMatrixConnection.h>
+#include <plearn/vmat/AutoVMatrix.h>
 #include <plearn_learners/online/RBMMatrixTransposeConnection.h>
 
 #include <plearn_learners/online/GradNNetLayerModule.h>
@@ -81,6 +83,12 @@ public:
 
     //! Indication to untie weights in recurrent net
     bool untie_weights;
+    
+    //! Indicate the size of the partition
+    int taillePart;
+
+    //! Indicate if the model is used for regression
+    int isRegression;
 
     // TODO The weight decay used during the gradient descent 
     //real grad_weight_decay;
@@ -100,8 +108,14 @@ public:
     //! Option for the visible dynamic connection 
     int visible_connections_option;
 
+    //! The target layer of the RBMs
+    PP<RBMLayer> target_layer;
+
     //! The visible layer of the RBMs
-    PP<RBMLayer> visible_layer;
+    TVec<RBMLayer> input_layer;
+
+     //! The visible layer of the RBMs
+    PP<RBMLayer> test_layer;
 
     //! The hidden layer of the RBMs
     PP<RBMLayer> hidden_layer;
@@ -130,12 +144,21 @@ public:
 
     //#####  Public Learnt Options  ###########################################
 
-    //! Size of the visible layer
-    int visible_size;
+    //! Size of the input layer
+    int input_size;
+
+    //! Size of the target layer
+    int target_size;
+
+    //! Size of each target layers
+    TVec<int> target_layers_size;
 
     //! Number of symbols for each symbolic field of train_set
-    TVec<int> symbol_sizes;
-
+    TVec<int> input_symbol_sizes;
+    
+    //! Number of symbols for each symbolic field of train_set
+    Mat target_symbol_sizes;
+    
     //#####  Not Options  #####################################################
 
 
@@ -177,10 +200,16 @@ public:
     //! Generate music in a folder
     void generate(int nbNotes);
 
+    //! Generate a part of the data in a folder
+    void gen();
+
     //! Returns the names of the objective costs that the train method computes
     //! and  for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
+    //! Use the partition
+    void partition(TVec<double> part, TVec<double> periode, TVec<double> vel ) const;
+    
     //! Clamps the visible units based on an input vector
     void clamp_visible_units(const Vec& input) const;
 
@@ -243,6 +272,10 @@ public:
 protected:
     //#####  Not Options  #####################################################
 
+
+    //! Store external data;
+    AutoVMatrix*  data;
+   
     //! Stores conditional bias
     mutable Vec cond_bias;
 
@@ -271,8 +304,11 @@ protected:
     //! Stores hidden gradient of dynamic connections coming from time t+1
     mutable Vec hidden_temporal_gradient;
     
-    //! Stores previous hidden layer value
+    //! Stores previous input layer value
     mutable Vec previous_input;
+
+    //! Stores previous target layer value
+    mutable Vec previous_target;
     
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
@@ -314,6 +350,9 @@ protected:
 
     //! List of inputs values
     Mat input_list;
+
+    //! List of inputs values
+    Mat target_list;
 
     //! List of the nll of the input samples in a sequence
     Vec nll_list;
