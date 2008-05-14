@@ -1059,8 +1059,8 @@ def dbi_parallel_compile(files_to_compile, dbi_mode):
         except OSError:
             pass
 
-        #Command to execute: "'cd " + ccfile.filedir + "; " + self.compile_command(nice_value) + "; echo $?'"
-        commands.append("'cd " + ccfile.filedir + "; " + self.compile_command(nice_value) + "; echo $?'")
+        #Command to execute: "'cd " + ccfile.filedir + "; " + ccfile.compile_command() + "; echo $?'"
+        commands.append("'cd " + ccfile.filedir + "; " + ccfile.compile_command() + "; echo $?'")
 
     from plearn.parallel.dbi import DBI
     jobs = DBI(commands, dbi_mode)
@@ -2909,7 +2909,7 @@ def main( args ):
 
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
-            else if dbi_mode is not None:
+            elif dbi_mode is not None:
                 #TODO: use ofiles here?
                 dbi_parallel_compile(ccfiles_to_compile.keys(), dbi_mode)
             else:
