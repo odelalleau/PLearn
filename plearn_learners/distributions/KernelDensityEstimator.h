@@ -77,6 +77,9 @@ public:
     //! Kernel type
     PP<Kernel> kernel;
 
+    //! Kernel output type
+    string kernel_output_type;
+
     //#####  UnconditionalDistribution Member Functions  ######################
 
     //! Return log of probability density log(p(y)).
