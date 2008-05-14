@@ -33,7 +33,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Stanislas Lauly
 
 /*! \file DynamicallyLinkedRBMsModel.h */
 
@@ -66,89 +66,56 @@ class DynamicallyLinkedRBMsModel : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
-    //! The learning rate used during RBM contrastive divergence learning phase
-    real rbm_learning_rate;
-
-    //! The learning rate used during the dynamic links learning phase
-    real dynamic_learning_rate;
-
-    //! The learning rate used during the dynamic links learning phase for the visible_layer
-    real visible_dynamic_learning_rate;
-
-    //! The learning rate used during the fine tuning phase
-    real fine_tuning_learning_rate;
+    ////! The learning rate used during RBM contrastive divergence learning phase
+    //real rbm_learning_rate;
 
     //! The learning rate used during the recurrent phase
     real recurrent_net_learning_rate;
 
-    //! Indication to untie weights in recurrent net
-    bool untie_weights;
+    ////! Number of epochs for rbm phase
+    //int rbm_nstages;
+
+    //! The target layers of the RBMs
+    TVec< PP<RBMLayer> > target_layers;
+
+    //! The training weights of each target layers
+    Vec target_layers_weights;
     
-    //! Indicate the size of the partition
-    int taillePart;
+    //! Indication that a mask indicating which target to predict
+    //! is present in the input part of the VMatrix dataset.
+    bool use_target_layers_masks;
 
-    //! Indicate if the model is used for regression
-    int isRegression;
+    //! Value of the first input component for end-of-sequence delimiter
+    real end_of_sequence_symbol;
 
-    // TODO The weight decay used during the gradient descent 
-    //real grad_weight_decay;
-
-    //! Number of epochs for rbm phase
-    int rbm_nstages;
-
-    //! Number of epochs for dynamic phase
-    int dynamic_nstages;
-
-    //! Number of epochs for fine tuning phase
-    int fine_tuning_nstages;
-
-    //! Number of epochs for the recurrent phase
-    int recurrent_nstages;
-
-    //! Option for the visible dynamic connection 
-    int visible_connections_option;
-
-    //! The target layer of the RBMs
-    PP<RBMLayer> target_layer;
+    //! The weight of an additional input reconstruction error
+    real input_reconstruction_weight;
 
     //! The visible layer of the RBMs
     TVec<RBMLayer> input_layer;
 
-     //! The visible layer of the RBMs
-    PP<RBMLayer> test_layer;
-
     //! The hidden layer of the RBMs
     PP<RBMLayer> hidden_layer;
 
-    //! OnlineLearningModule corresponding to dynamic links
-    //! between RBMs' hidden layers
-    PP<GradNNetLayerModule> dynamic_connections;
+    //! The second hidden layer of the RBMs (optional) 
+    PP<RBMLayer> hidden_layer2;
 
-    //! Copy OnlineLearningModule corresponding to dynamic links
-    //! between RBMs' hidden layers
-    PP<GradNNetLayerModule> dynamic_connections_copy;
+    //! The RBMConnection between the first hidden layers, through time
+    PP<RBMConnection> dynamic_connections;
 
-    //! OnlineLearningModule corresponding to dynamic links
-    //! between RBMs' visible layers
-    PP<GradNNetLayerModule> visible_connections;
+    //! The RBMConnection between the first and second hidden layers (optional)
+    PP<RBMConnection> hidden_connections;
 
-    //! The weights of the connections between the RBM visible and hidden layers
-    PP<RBMMatrixConnection> connections;
-    PP<RBMConnection> connections_idem;
-    PP<RBMConnection> connections_idem_t;
+    //! Connection from input_layer to hidden_layer
+    PP<RBMConnection> input_connections;
 
-    //! The weights of the connections between the RBM hidden and input layers.
-    //! It is the transpose "connections".
-    PP<RBMMatrixTransposeConnection> connections_transpose;
-    PP<RBMMatrixTransposeConnection> connections_transpose_copy;
+    //! Connection from input_layer to hidden_layer
+    TVec< PP<RBMConnection> > target_connections;
 
     //#####  Public Learnt Options  ###########################################
 
     //! Size of the input layer
-    int input_size;
-
-    //! Size of the target layer
-    int target_size;
+    int input_layer_size;
 
     //! Size of each target layers
     TVec<int> target_layers_size;
@@ -157,7 +124,7 @@ public:
     TVec<int> input_symbol_sizes;
     
     //! Number of symbols for each symbolic field of train_set
-    Mat target_symbol_sizes;
+    TVec< TVec<int> > target_symbol_sizes;
     
     //#####  Not Options  #####################################################
 
@@ -212,25 +179,6 @@ public:
     
     //! Clamps the visible units based on an input vector
     void clamp_visible_units(const Vec& input) const;
-
-    //! Updates the RBM parameters in the rbm training phase,
-    //! after the visible units have been clamped.
-    //! Outputs the negative log-likelihood of the visible training example
-    //! given the down phase expectation of the visible unit.
-    real rbm_update();
-
-    //! Updates the dynamic connections in the dynamic training
-    //! phase, after the visible units have been clamped
-    //! Outputs the negative log-likelihood of the hidden representation
-    //! of training example t given a sample from the hidden representation
-    //! of training example t-1.
-    real dynamic_connections_update();
-
-    //! Updates both the RBM parameters and the 
-    //! dynamic connections in the fine tuning phase,
-    //! after the visible units have been clamped
-    real fine_tuning_update();
-
 
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,

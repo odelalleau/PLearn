@@ -32,7 +32,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Pascal Lamblin
+// Authors: Stanislas Lauly
 
 /*! \file DynamicallyLinkedRBMsModel.cc */
 
@@ -206,10 +206,16 @@ void DynamicallyLinkedRBMsModel::build_()
 
     if(train_set)
     {
-        input_size = 0;
+
+        PLASSERT( target_layers_weights.length() == target_layers.length() );
+
+
+        // Parsing symbols in input
+        input_layer_size = 0;
         input_symbol_sizes.resize(0);
-        PP<Dictionary> dict;        
-        for(int i=0; i<input_layer->size; i++)
+        PP<Dictionary> dict;
+        int inputsize_without_masks = inputsize() - ( use_target_layers_masks ? targetsize() : 0 );
+        for(int i=0; i<inputsize_without_masks; i++)
         {
             dict = train_set->getDictionary(i);
             if(dict)
@@ -219,95 +225,120 @@ void DynamicallyLinkedRBMsModel::build_()
                         "of field %d is empty", i);
                 input_symbol_sizes.push_back(dict->size());
                 // Adjust size to include one-hot vector
-                input_size += dict->size();
+                input_layer_size += dict->size();
             }
             else
             {
                 input_symbol_sizes.push_back(-1);
-                input_size++;
+                input_layer_size++;
             }
         }
 
-        //target_size.fill(-1);
-        //target_symbol_sizes.resize(0);
-        target_size = 0;
-        for( int tar=0; tar<target_layers.length(); tar++){
-            target_layers_size[tar] = 0;
-            target_symbol_sizes.resize(0,0);
-            for(int i=0; i<target_layer[tar]->size; i++)
+        if( input_layer->size != input_layer_size )
+            PLERROR("DynamicallyLinkedRBMsModel::build_(): input_layer->size %d "
+                    "should be %d", input_layer->size, input_layer_size);
+
+        // Parsing symbols in target
+        int tar_layer = 0;
+        target_symbol_sizes.resize(target_layers.length());
+        target_layers_size.clear();
+        for( int tar=0; tar<targetsize(); tar++)
+        {
+            if( tar_layer > target_layers.length() )
+                PLERROR("DynamicallyLinkedRBMsModel::build_(): target layers "
+                        "does not cover all targets.");            
+
+            target_symbol_sizes[tar_layer].resize(0);
+            dict = train_set->getDictionary(tar+inputsize());
+            if(dict)
             {
-                dict = train_set->getDictionary(i);
-                if(dict)
-                {
-                    if( dict->size() == 0 )
-                        PLERROR("DynamicallyLinkedRBMsModel::build_(): dictionary "
-                                "of field %d is empty", i);
-                    target_symbol_sizes.resize(tar+1,i+1);
-                    target_symbol_sizes(tar,i) = dict->size();
-                    // Adjust size to include one-hot vector
-                    target_layers_size[tar] += dict->size();
-                    target_size += dict->size();
-                }
-                else
-                {
+                if( use_target_layers_masks )
+                    PLERROR("DynamicallyLinkedRBMsModel::build_(): masks for "
+                            "symbolic targets is not implemented.");
+                if( dict->size() == 0 )
+                    PLERROR("DynamicallyLinkedRBMsModel::build_(): dictionary "
+                            "of field %d is empty", i);
 
-                    target_symbol_sizes.resize(tar+1,i+1);
-                    target_symbol_sizes(tar,i) = -1;
-                    target_layers_size[tar]++;
-                    target_size++;
-                }
+                target_symbol_sizes[tar_layer].push_back(dict->size());
+                // Adjust size to include one-hot vector
+                target_layers_size[tar_layer] += dict->size();
             }
+            else
+            {
+                target_symbol_sizes[tar_layer].push_back(-1);
+                target_layers_size[tar_layer] ++
+            }
+
+            if( target_layers[tar_layer]->size == target_layers_size[tar_layer] )
+                tar_layer++;
         }
-        // Set and verify sizes
-        if(hidden_layer->size <= 0)
-            PLERROR("DynamicallyLinkedRBMsModel::build_(): hidden_layer->size "
-                "must be > 0");
 
-        
-        previous_visible_layer.resize(visible_size);
+        if( tar_layer != target_layers.length() )
+            PLERROR("DynamicallyLinkedRBMsModel::build_(): target layers "
+                    "does not cover all targets.");
 
-        visi_bias_gradient.resize(visible_size);
+        if( !input_layer->random_gen )
+        {
+            input_layer->random_gen = random_gen;
+            input_layer->forget();
+        }
 
-        visible_layer->size = visible_size;
+        if( !hidden_layer->random_gen )
+        {
+            hidden_layer->random_gen = random_gen;
+            hidden_layer->forget();
+        }
 
-        connections->down_size = visible_size;
-        connections->up_size = hidden_layer->size;
+        input_connections->down_size = input_layer->size;
+        input_connections->up_size = hidden_layer->size;
+        if( !input_connections->random_gen )
+        {
+            input_connections->random_gen = random_gen;
+            input_connections->forget();
+        }
+        input_connections->build();
 
-        dynamic_connections->input_size = hidden_layer->size;
-        dynamic_connections->output_size = hidden_layer->size;
+        if( hidden_layer2 )
+        {
+            if( !hidden_layer2->random_gen )
+            {
+                hidden_layer2->random_gen = random_gen;
+                hidden_layer2->forget();
+            }
 
-        visible_connections->input_size = visible_size;
-        visible_connections->output_size = visible_size;
+            hidden_connections->down_size = hidden_layer->size;
+            hidden_connections->up_size = hidden_layer2->size;
+            if( !hidden_connections->random_gen )
+            {
+                hidden_connections->random_gen = random_gen;
+                hidden_connections->forget();
+            }
+            hidden_connections->build();
+        }
 
-        // Set random generators
-        visible_layer->random_gen = random_gen;
-        hidden_layer->random_gen = random_gen;
-        connections->random_gen = random_gen;
-        dynamic_connections->random_gen = random_gen;
-        visible_connections->random_gen = random_gen;
+        for( int tar_layer = 0; tar_layer < target_layers.length(); tar_layer++ )
+        {
+            if( !target_layers[tar_layer]->random_gen )
+            {
+                target_layers[tar_layer]->random_gen = random_gen;
+                target_layers[tar_layer]->forget();
+            }
 
-        // Build components
-        visible_layer->build();
-        hidden_layer->build();
-        connections->build();
-        dynamic_connections->build();
-        visible_connections->build();
-        connections_transpose = new RBMMatrixTransposeConnection(connections);
-        connections_idem_t = connections_transpose;
+            if( hidden_layer2 )
+                target_connections[tar_layer]->down_size = hidden_layer2->size;
+            else
+                target_connections[tar_layer]->down_size = hidden_layer->size;
+
+            target_connections[tar_layer]->up_size = target_layers[tar_layer]->size;
+            if( !target_connections[tar_layer]->random_gen )
+            {
+                target_connections[tar_layer]->random_gen = random_gen;
+                target_connections[tar_layer]->forget();
+            }
+            target_connections[tar_layer]->build();
+        }
+
     }
-    if(hidden_layer->size>0){
-        previous_hidden_layer.resize(hidden_layer->size);
-
-        pos_up_values.resize(hidden_layer->size);
-        hidden_layer_target.resize(hidden_layer->size);
-        hidden_layer_sample.resize(hidden_layer->size);
-        previous_hidden_layer.resize(hidden_layer->size);
-        previous_hidden_layer_activation.resize(hidden_layer->size);
-        hidden_temporal_gradient.resize(hidden_layer->size);
-    }
-    if(connections)
-        connections_idem = connections;
-
 }
 
 // ### Nothing to add here, simply calls build_
