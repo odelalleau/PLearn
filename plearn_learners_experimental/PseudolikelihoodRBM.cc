@@ -598,9 +598,18 @@ void PseudolikelihoodRBM::train()
                             hidden_activation_pos_i);
                         num_neg_act -= hidden_layer->freeEnergyContribution(
                             hidden_activation_neg_i);
-                        num_pos = safeexp(num_pos_act);
-                        num_neg = safeexp(num_neg_act);
-                        input_probs_i = num_pos / (num_pos + num_neg);
+                        //num_pos = safeexp(num_pos_act);
+                        //num_neg = safeexp(num_neg_act);
+                        //input_probs_i = num_pos / (num_pos + num_neg);
+                        if( input_layer->use_fast_approximations )
+                            input_probs_i = fastsigmoid(
+                                num_pos_act - num_neg_act);
+                        else
+                        {
+                            num_pos = safeexp(num_pos_act);
+                            num_neg = safeexp(num_neg_act);
+                            input_probs_i = num_pos / (num_pos + num_neg);
+                        }
 
                         // Compute input_prob gradient
                         if( input_layer->use_fast_approximations )
@@ -1140,14 +1149,14 @@ void PseudolikelihoodRBM::train()
     //    input_layer->getConfiguration(i,conf);
     //    computeOutput(conf,output);
     //    computeCostsFromOutputs( conf, output, target, costs );
-    //    //if( i==0 )
-    //    //    sums = -costs[nll_cost_index];
-    //    //else
-    //    //    sums = logadd( sums, -costs[nll_cost_index] );
-    //    sums += safeexp( -costs[nll_cost_index] );
+    //    if( i==0 )
+    //        sums = -costs[nll_cost_index];
+    //    else
+    //        sums = logadd( sums, -costs[nll_cost_index] );
+    //    //sums += safeexp( -costs[nll_cost_index] );
     //}        
-    //cout << "sums: " << //safeexp(sums) << endl;
-    //    sums << endl;
+    //cout << "sums: " << safeexp(sums) << endl;
+    //    //sums << endl;
     train_stats->finalize();
 }
 
