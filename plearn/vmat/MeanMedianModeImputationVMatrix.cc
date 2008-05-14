@@ -77,7 +77,13 @@ void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
                 "If greater or equal to 1, the integer portion is interpreted as the number of samples to use.");
       
   declareOption(ol, "imputation_spec", &MeanMedianModeImputationVMatrix::imputation_spec, OptionBase::buildoption, 
-                "Pairs of instruction of the form field_name : mean | median | mode.");
+                "Pairs of instruction of the form field_name : mean | median | mode | none | err.\n"
+		" -mean  : put the mean of the field if one value is missing\n"
+       		" -median: put the median of the field if one value is missing\n"
+		" -mode  : put the mode(most frequent value) of the field if one value is missing\n"
+		" -none  : let the missing value in this field\n"
+		" -err   : make it an error to have a missing value in this field"
+		);
 
   declareOption(ol, "variable_mean", &MeanMedianModeImputationVMatrix::variable_mean, OptionBase::learntoption, 
                 "The vector of variable means observed from the train set.");
@@ -146,6 +152,9 @@ real MeanMedianModeImputationVMatrix::get(int i, int j) const
   else if (variable_imputation_instruction[j] == 2) return variable_median[j];
   else if (variable_imputation_instruction[j] == 3) return variable_mode[j];
   else if (variable_imputation_instruction[j] == 4) return variable_value;
+  else if (variable_imputation_instruction[j] == 5)
+    return MISSING_VALUE;//PLERROR("");//PLERROR("In MeanMedianModeImputationVMatrix::get(%d,%d) - the value is"
+      //	   " missing and have a instruction err!",i,j);
   else
     PLERROR("In MeanMedianModeImputationVMatrix::get(%d,%d) - "
 	    "unknow variable_imputation_instruction value of %d",i,j,
@@ -167,6 +176,9 @@ void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
 	v[source_col] = variable_mode[source_col + j];
       else if (variable_imputation_instruction[source_col + j] == 4)
 	;//do nothing
+      else if (variable_imputation_instruction[source_col + j] == 5)
+	return PLERROR("In MeanMedianModeImputationVMatrix::getSubRow(%d,%d) - the value is"
+		       " missing and have a instruction err!",i,j);
       else
 	PLERROR("In MeanMedianModeImputationVMatrix::getSubRow(%d,%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,j,
@@ -187,6 +199,9 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
 	v[source_col] = variable_mode[source_col]; 
       else if (variable_imputation_instruction[source_col] == 4)
 	;//do nothing
+      else if (variable_imputation_instruction[source_col] == 5)
+	return PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d) - the value is"
+		       " missing and have a instruction err!",i);
       else
 	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,
@@ -204,6 +219,9 @@ void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
       else if (variable_imputation_instruction[i] == 3) v[source_row] = variable_mode[i];
       else if (variable_imputation_instruction[i] == 4)
 	;//do nothing
+      else if (variable_imputation_instruction[i] == 5)
+	return PLERROR("In MeanMedianModeImputationVMatrix::getColumn(%d) - the value is"
+		       " missing and have a instruction err!",i);
       else
 	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,
@@ -294,6 +312,7 @@ void MeanMedianModeImputationVMatrix::build_()
         else if (imputation_spec[spec_col].second == "median") variable_imputation_instruction[train_col] = 2;
         else if (imputation_spec[spec_col].second == "mode") variable_imputation_instruction[train_col] = 3;
         else if (imputation_spec[spec_col].second == "none") variable_imputation_instruction[train_col] = 4;
+        else if (imputation_spec[spec_col].second == "err") variable_imputation_instruction[train_col] = 5;
         else
 	  PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s",
 		     (imputation_spec[spec_col].first).c_str(), (imputation_spec[spec_col].second).c_str());
