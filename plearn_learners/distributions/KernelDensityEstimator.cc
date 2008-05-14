@@ -51,7 +51,8 @@ PLEARN_IMPLEMENT_OBJECT(
 //////////////////
 // KernelDensityEstimator //
 //////////////////
-KernelDensityEstimator::KernelDensityEstimator()
+KernelDensityEstimator::KernelDensityEstimator() 
+    : kernel_output_type("normal")
 {
 }
 
@@ -64,6 +65,10 @@ void KernelDensityEstimator::declareOptions(OptionList& ol)
                    OptionBase::buildoption,
                    "The kernel used at each point in the training set");
 
+    declareOption(ol, "kernel_output_type", &KernelDensityEstimator::kernel_output_type,
+                    OptionBase::buildoption,
+                   "Specifies whether the output of our kernel is logarithmic in the distance (\"log\") or normal (anything else)");
+    
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
 }
@@ -131,16 +136,33 @@ real KernelDensityEstimator::log_density(const Vec& y) const
     int numTrain = train_set.length();
     Vec input, target;
     real weight;
-    real logprob = -INFINITY;
+    real result = 0.0;
 
-    for(int i=0; i<numTrain; i++) {
-        train_set->getExample(i,input,target,weight);
-        logprob = logadd(logprob,kernel->evaluate(input,y)); 
+    // It can happen that for efficiency/numerical reasons, your kernel outputs
+    // the logarithm of the actual value of the kernel at (input_i,y).
+    if (kernel_output_type=="log") {
+        real logprob = -INFINITY;
+        for(int i=0; i<numTrain; i++) {
+            train_set->getExample(i,input,target,weight);
+            logprob = logadd(logprob,kernel->evaluate(input,y));
+        }
+        logprob -= pl_log(real(numTrain));
+        result = logprob;
     }
-    
-    logprob -= pl_log(real(numTrain));
+    // Otherwise, it's just a log(\sum_i{k(input_i,y)} / numTrain)
+    else if (kernel_output_type=="normal") {
+        real sprob = 0.0;
+        for(int i=0; i<numTrain; i++) {
+            train_set->getExample(i,input,target,weight);
+            sprob += kernel->evaluate(input,y);
+        }
+        sprob /= real(numTrain);
+        result = pl_log(sprob);
+    }
+    else
+        PLERROR("In KernelDensityEstimator::log_density kernel_output_type must be either \"log\" or \"normal\"");
 
-    return logprob;
+    return result;
 
 }
 
