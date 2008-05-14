@@ -157,10 +157,6 @@ private:
     //! Stores the output values of the sub_costs
     mutable Vec sub_costs_values;
 
-    //! Stores all the costs of one sub_cost
-    mutable Vec sub_cost_all;
-    mutable Mat sub_cost_all_m;
-
     //! Stores mini-batch outputs values of sub costs.
     mutable Mat sub_costs_mbatch_values;
 
