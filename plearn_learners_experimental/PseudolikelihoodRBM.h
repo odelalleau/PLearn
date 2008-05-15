@@ -126,7 +126,7 @@ public:
     string pseudolikelihood_context_type;
 
     //! Number of most correlated input elements over which to sample
-    real k_most_correlated;
+    int k_most_correlated;
 
     //! The binomial input layer of the RBM
     PP<RBMBinomialLayer> input_layer;
