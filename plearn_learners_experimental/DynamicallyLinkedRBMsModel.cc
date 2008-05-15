@@ -817,6 +817,81 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
 
 void DynamicallyLinkedRBMsModel::recurrent_update()
 {
+   
+        hidden_temporal_gradient.clear();
+        for(int i=hidden_list.length()-2; i>=0; i--){   
+
+            hidden_gradient.clear();
+            if(use_target_layers_masks)
+            {
+                for( int tar=0; tar<target_layers.length(); tar++)
+                {
+                    target_layer[tar]->setExpectation(targets_prediction_list[tar](i));
+                    target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
+                    target_bias_gradient[tar] *= target_layers_weights[tar];
+                    target_bias_gradient[tar] *= mask_list[tar](i);
+                    target_layers[tar]->update(target_bias_gradient[tar]);
+                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
+                                                         hidden_gradient, target_bias_gradient[tar],true);
+                }
+            }
+            else
+            {
+                for( int tar=0; tar<target_layers.length(); tar++)
+                {
+                    target_layer[tar]->setExpectation(targets_prediction_list[tar](i));
+                    target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
+                    target_bias_gradient[tar] *= target_layers_weights[tar];
+                    target_layers[tar]->update(target_bias_gradient[tar]);
+                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
+                                                         hidden_gradient, target_bias_gradient[tar],true); 
+                }
+            }
+
+            if (hidden_layer2)
+            {
+                hidden_layer2->bpropUpdate(
+                    hidden2_activations_list(i), hidden2_list(i),
+                    bias_gradient, hidden_gradient);
+                
+                hidden_connections->bpropUpdate(
+                    hidden_list(i),
+                    hidden2_activations_list(i), 
+                    hidden_gradient, bias_gradient);
+            }
+            
+            if(i!=0)
+            {   
+                hidden_gradient += hidden_temporal_gradient;
+                
+                hidden_layer->bpropUpdate(
+                    hidden_activations_list(i), hidden_list(i),
+                    hidden_temporal_gradient, hidden_gradient);
+                
+                dynamic_connections->bpropUpdate(
+                    hidden_list(i-1),
+                    hidden_activations_list(i), // Here, it should be cond_bias, but doesn't matter
+                    hidden_gradient, hidden_temporal_gradient);
+                
+                hidden_temporal_gradient << hidden_gradient;
+                
+                connections->bpropUpdate(
+                    input_list(i),
+                    hidden_activations_list(i), 
+                    visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
+                
+            }
+            else
+            {
+                // Could learn initial value for h_{-1}
+            }
+        }
+    
+}
+
+
+void DynamicallyLinkedRBMsModel::recurrent_update()
+{
     // Notes: 
     //    - not all lists are useful (some *_activations_* are not)
     //int segment = hidden_list.length()/2;
@@ -828,42 +903,43 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
         //cout << "segment: " << seg << endl;
         hidden_temporal_gradient.clear();
         for(int i=hidden_list.length()-2; i>=0; i--){  
-        // for(int i=hidden_list.length()-2; i>=seg; i--){     
+            // for(int i=hidden_list.length()-2; i>=seg; i--){     
             
             //visible_layer->expectation << input_prediction_list(i);
             //visible_layer->activation << ?????;
-            visible_layer->setExpectation(input_prediction_list(i));
             
-            //visible_layer->bpropNLL(input_list(i+1),nll_list[i],visi_bias_gradient, (taillePart*3)+14);
+            
+            
+            
+            
 
-            //      hidden_gradient.clear();
-            //HUGO: for( int tar=0; tar<target_layers.length(); tar++)
-            //      {
-            //           target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
-            //           target_bias_gradient[tar] *= target_layers_weights[tar];
-            //           target_layers[tar]->update(target_bias_gradient[tar]);
-            //           target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
-            //                                                hidden_gradient, target_bias_gradient[tar],true);
-            //      }
-
-            visible_layer->bpropNLL(input_list(i+1),nll_list[i],visi_bias_gradient);
-            
-            visible_layer->update(visi_bias_gradient);
-            
-            //visible_layer->bpropNLL(input_list(i+1),nll_list[i],visi_bias_gradient, (taillePart*3)+14);
-            
-            connections_transpose->bpropUpdate(hidden2_list(i),input_prediction_activations_list(i),hidden_gradient, visi_bias_gradient);
+            hidden_gradient.clear();
+            for( int tar=0; tar<target_layers.length(); tar++)
+            {
+                target_layer[tar]->setExpectation(input_prediction_list[tar](i));
+                target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
+                target_bias_gradient[tar] *= target_layers_weights[tar];
+                target_layers[tar]->update(target_bias_gradient[tar]);
+                target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
+                                                     hidden_gradient, target_bias_gradient[tar],true);
+            }
+            //visible_layer->setExpectation(input_prediction_list(i));
+            //visible_layer->bpropNLL(input_list(i+1),nll_list[i],visi_bias_gradient);
+            //visible_layer->update(visi_bias_gradient);
+            //connections_transpose->bpropUpdate(hidden2_list(i),input_prediction_activations_list(i),hidden_gradient, visi_bias_gradient);
             
             
             //hidden_layer->setExpectation(hidden_list(i+1));//////////////////////////////
             //hidden_layer->bpropNLL(hidden2_list(i),nll_list[i], hidden_gradient2);////////////////////////////////
             
-            
-            
-            hidden_layer->bpropUpdate(
+           
+            hidden_layer2->bpropUpdate(
                 hidden2_activations_list(i), hidden2_list(i),
                 bias_gradient, hidden_gradient);
             
+
+
+
             //hidden_layer->update(hidden_gradient2);/////////////////////////////////////
             
             
@@ -911,9 +987,6 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
         }
     
 }
-
-
-
 
 
 void DynamicallyLinkedRBMsModel::computeOutput(const Vec& input, Vec& output) const
