@@ -99,7 +99,8 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
                   &VariableDeletionVMatrix::min_non_missing_threshold,
                   OptionBase::buildoption,
         "Minimum proportion of non-missing values for a variable to be kept\n"
-        "(a 1 means only variables with no missing values are kept).");
+        "(a 1 means only variables with no missing values are kept).\n"
+        "if >0, we will always remove columns with all missing value.");
 
     declareOption(ol, "max_constant_threshold",
                   &VariableDeletionVMatrix::max_constant_threshold,
@@ -267,7 +268,8 @@ void VariableDeletionVMatrix::build_()
         int min_non_missing =
             int(round(min_non_missing_threshold * the_train_source->length()));
         for (int i = 0; i < is; i++)
-            if (stats[i].nnonmissing() >= min_non_missing)
+            if (stats[i].nnonmissing() >= min_non_missing 
+                && stats[i].nnonmissing() > 0)
                 indices.append(i);
     } else
         for (int i = 0; i < is; i++)
