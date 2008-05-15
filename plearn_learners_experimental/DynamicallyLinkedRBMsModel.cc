@@ -61,11 +61,14 @@
 // - make sure gradient descent is proper (change some vectors into matrices, etc.)
 // - make sure end_of_sequence_symbol is used appropriately
 // - make sure declareOption includes everything, including saved variable
-// - implement deepcopy appropriately
-// - recurrent_nstages doesn't exist anymore
 // - verify use of mask is proper
-// - verify code works with and without hidden_layer2
 // - do proper resize of recurrent internal variables
+// - implement deepcopy appropriately
+// - corriger bug avec activation (faut additionner les biais!!!)
+
+// - commiter mse
+// - add dynamic_activations_list and use it in recurrent_update
+// - verify code works with and without hidden_layer2
 
 namespace PLearn {
 using namespace std;
@@ -372,53 +375,39 @@ void DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(visible_layer, copies);
-    deepCopyField( hidden_layer , copies);
+    deepCopyField( input_layer, copies);
+    deepCopyField( target_layers , copies);
+    deepCopyField( hidden_layer, copies);
+    deepCopyField( hidden_layer2 , copies);
     deepCopyField( dynamic_connections , copies);
-    deepCopyField( dynamic_connections_copy , copies);
-    deepCopyField( visible_connections , copies);
-    deepCopyField( connections , copies);
-    deepCopyField( connections_idem , copies);
-    deepCopyField( connections_idem_t , copies);
-    deepCopyField( connections_transpose, copies);
-    deepCopyField( connections_transpose_copy, copies);
-    deepCopyField( symbol_sizes , copies);
-    deepCopyField( cond_bias , copies);
-    deepCopyField( visi_cond_bias , copies);
+    deepCopyField( hidden_connections , copies);
+    deepCopyField( input_connections , copies);
+    deepCopyField( target_connections , copies);
+    deepCopyField( target_layers_n_of_target_elements, copies);
+    deepCopyField( input_symbol_sizes, copies);
+    deepCopyField( target_symbol_sizes, copies);
+    
+
     deepCopyField( bias_gradient , copies);
-    deepCopyField( visi_bias_gradient , copies);
-    deepCopyField( hidden_layer_target , copies);
-    deepCopyField( input_gradient , copies);
     deepCopyField( hidden_gradient , copies);
-    deepCopyField( hidden_gradient2 , copies);
     deepCopyField( hidden_temporal_gradient , copies);
-    deepCopyField( previous_input , copies);
-    deepCopyField( previous_target , copies);
-    deepCopyField( previous_hidden_layer , copies);
-    deepCopyField( previous_hidden_layer_activation , copies);
-    deepCopyField( previous_visible_layer , copies);
-    deepCopyField( hidden_layer_sample , copies);
-    deepCopyField( hidden_layer_expectation , copies);
-    deepCopyField( visible_layer_sample , copies);
-    deepCopyField( visible_layer_input , copies);
-    deepCopyField( pos_down_values , copies);
-    deepCopyField( pos_up_values , copies);
-    deepCopyField( alpha , copies);
     deepCopyField( hidden_list , copies);
-    deepCopyField( hidden_activations_list , copies);
+    deepCopyField( hidden_act_no_bias_list , copies);
     deepCopyField( hidden2_list , copies);
-    deepCopyField( hidden2_activations_list , copies);
-    deepCopyField( input_prediction_list , copies);
-    deepCopyField( input_prediction_activations_list , copies);
+    deepCopyField( hidden2_act_no_bias_list , copies);
+    deepCopyField( target_prediction_list , copies);
+    deepCopyField( target_prediction_act_no_bias_list , copies);
     deepCopyField( input_list , copies);
-    deepCopyField( target_list , copies);
+    deepCopyField( targets_list , copies);
     deepCopyField( nll_list , copies);
-    deepCopyField( input_expectation , copies);
+    deepCopyField( masks_list , copies);
+    deepCopyField( dynamic_activation_contribution, copies);
+
 
     // deepCopyField(, copies);
 
-    PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
-    "not implemented yet");
+    //PLERROR("DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(): "
+    //"not implemented yet");
 }
 
 
@@ -536,11 +525,11 @@ void DynamicallyLinkedRBMsModel::train()
                     
                     ith_sample_in_sequence = 0;
                     hidden_list.clear();
-                    hidden_activations_list.clear();
+                    hidden_act_no_bias_list.clear();
                     hidden2_list.clear();
-                    hidden2_activations_list.clear();
+                    hidden2_act_no_bias_list.clear();
                     target_prediction_list.clear();
-                    target_prediction_activations_list.clear();
+                    target_prediction_act_no_bias_list.clear();
                     input_list.clear();
                     targets_list.clear();
                     nll_list.clear();
@@ -550,13 +539,13 @@ void DynamicallyLinkedRBMsModel::train()
 
                 // Resize internal variables
                 hidden_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
-                hidden_activations_list.resize(ith_sample_in_sequence+1,
+                hidden_act_no_bias_list.resize(ith_sample_in_sequence+1,
                                                hidden_layer->size);
                 if( hidden_layer2 )
                 {
                     hidden2_list.resize(ith_sample_in_sequence+1,
                                         hidden_layer2->size);
-                    hidden2_activations_list.resize(ith_sample_in_sequence+1,
+                    hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1,
                                                     hidden_layer2->size);
                 }
                  
@@ -564,14 +553,14 @@ void DynamicallyLinkedRBMsModel::train()
 
                 targets_list.resize( target_layers.length() );
                 target_prediction_list.resize( target_layers.length() );
-                target_prediction_activations_list.resize( target_layers.length() );
+                target_prediction_act_no_bias_list.resize( target_layers.length() );
                 for( int tar=0; tar < target_layers.length(); tar++ )
                 {
                     targets_list[tar].resize( ith_sample_in_sequence+1,
                                               target_layers[tar]->size );
                     target_prediction_list[tar].resize(
                         ith_sample_in_sequence+1, target_layers[tar]->size);
-                    target_prediction_activations_list[tar].resize(
+                    target_prediction_act_no_bias_list[tar].resize(
                         ith_sample_in_sequence+1, target_layers[tar]->size);
 
                 }
@@ -615,46 +604,46 @@ void DynamicallyLinkedRBMsModel::train()
                                     target_layers[tar],
                                     target_symbol_sizes[tar]);
                     sum_target_elements += target_layers_n_of_target_elements[tar];
-                    target_list[tar](ith_sample_in_sequence) << 
+                    targets_list[tar](ith_sample_in_sequence) << 
                         target_layers[tar]->expectation;
                 }
                 
                 input_connections->fprop( input_list(ith_sample_in_sequence), 
-                                          hidden_activations_list(ith_sample_in_sequence));
+                                          hidden_act_no_bias_list(ith_sample_in_sequence));
                 
                 if( ith_sample_in_sequence > 0 )
                 {
                     dynamic_connections->fprop( 
                         hidden_list(ith_sample_in_sequence-1),
-                        dynamic_activation_contribution );
+                        dynamic_act_no_bias_contribution );
 
-                    hidden_activations_list(ith_sample_in_sequence) += 
+                    hidden_act_no_bias_list(ith_sample_in_sequence) += 
                         dynamic_actvation_contribution;
                 }
                  
-                hidden_layer->fprop( hidden_activations_list(ith_sample_in_sequence) 
+                hidden_layer->fprop( hidden_act_no_bias_list(ith_sample_in_sequence) 
                                      hidden_list(ith_sample_in_sequence) );
                  
                 if( hidden_layer2 )
                 {
                     hidden_connections->fprop( 
                         hidden_list(ith_sample_in_sequence),
-                        hidden2_activations_list(ith_sample_in_sequence));
+                        hidden2_act_no_bias_list(ith_sample_in_sequence));
 
                     hidden_layer2->fprop( 
-                        hidden2_activations_list(ith_sample_in_sequence) 
+                        hidden2_act_no_bias_list(ith_sample_in_sequence) 
                         hidden2_list(ith_sample_in_sequence) 
                         );
 
                     for( int tar=0; tar < target_layers.length(); tar++ )
                     {
-                        targets_connections[tar]->fprop(
+                        target_connections[tar]->fprop(
                             hidden2_list(ith_sample_in_sequence),
-                            target_prediction_activations_list[tar](
+                            target_prediction_act_no_bias_list[tar](
                                 ith_sample_in_sequence)
                             );
                         target_layers[tar]->fprop(
-                            target_prediction_activations_list[tar](
+                            target_prediction_act_no_bias_list[tar](
                                 ith_sample_in_sequence),
                             target_prediction_list[tar](
                                 ith_sample_in_sequence) );
@@ -667,13 +656,13 @@ void DynamicallyLinkedRBMsModel::train()
                 {
                     for( int tar=0; tar < target_layers.length(); tar++ )
                     {
-                        targets_connections[tar]->fprop(
+                        target_connections[tar]->fprop(
                             hidden_list(ith_sample_in_sequence),
-                            target_prediction_activations_list[tar](
+                            target_prediction_act_no_bias_list[tar](
                                 ith_sample_in_sequence)
                             );
                         target_layers[tar]->fprop(
-                            target_prediction_activations_list[tar](
+                            target_prediction_act_no_bias_list[tar](
                                 ith_sample_in_sequence),
                             target_prediction_list[tar](
                                 ith_sample_in_sequence) );
@@ -687,8 +676,9 @@ void DynamicallyLinkedRBMsModel::train()
                 for( int tar=0; tar < target_layers.length(); tar++ )
                 {
                     target_layers[tar]->activation << 
-                        target_prediction_activations_list[tar](
+                        target_prediction_act_no_bias_list[tar](
                             ith_sample_in_sequence);
+                    target_layers[tar]->activation += target_layers[tar]->bias;
                     target_layers[tar]->setExpectation(
                         target_prediction_list[tar](
                             ith_sample_in_sequence));
@@ -817,46 +807,50 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
 
 void DynamicallyLinkedRBMsModel::recurrent_update()
 {
-   
+    
         hidden_temporal_gradient.clear();
-        for(int i=hidden_list.length()-2; i>=0; i--){   
+        for(int i=hidden_list.length()-1; i>=0; i--){   
 
             hidden_gradient.clear();
             if(use_target_layers_masks)
             {
                 for( int tar=0; tar<target_layers.length(); tar++)
                 {
+                    target_layer[tar]->activation << targets_prediction_act_no_bias_list[tar](i);
+                    target_layer[tar]->activation += target_layer[tar]->bias;
                     target_layer[tar]->setExpectation(targets_prediction_list[tar](i));
-                    target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
-                    target_bias_gradient[tar] *= target_layers_weights[tar];
-                    target_bias_gradient[tar] *= mask_list[tar](i);
-                    target_layers[tar]->update(target_bias_gradient[tar]);
-                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
-                                                         hidden_gradient, target_bias_gradient[tar],true);
+                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
+                    bias_gradient *= target_layers_weights[tar];
+                    bias_gradient *= mask_list[tar](i);
+                    target_layers[tar]->update(bias_gradient);
+                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
+                                                         hidden_gradient, bias_gradient,true);
                 }
             }
             else
             {
                 for( int tar=0; tar<target_layers.length(); tar++)
                 {
+                    target_layer[tar]->activation << targets_prediction_act_no_bias_list[tar](i);
+                    target_layer[tar]->activation += target_layer[tar]->bias;
                     target_layer[tar]->setExpectation(targets_prediction_list[tar](i));
-                    target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
-                    target_bias_gradient[tar] *= target_layers_weights[tar];
-                    target_layers[tar]->update(target_bias_gradient[tar]);
-                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
-                                                         hidden_gradient, target_bias_gradient[tar],true); 
+                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
+                    bias_gradient *= target_layers_weights[tar];
+                    target_layers[tar]->update(bias_gradient);
+                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
+                                                         hidden_gradient, bias_gradient,true); 
                 }
             }
 
             if (hidden_layer2)
             {
                 hidden_layer2->bpropUpdate(
-                    hidden2_activations_list(i), hidden2_list(i),
+                    hidden2_act_no_bias_list(i), hidden2_list(i),
                     bias_gradient, hidden_gradient);
                 
                 hidden_connections->bpropUpdate(
                     hidden_list(i),
-                    hidden2_activations_list(i), 
+                    hidden2_act_no_bias_list(i), 
                     hidden_gradient, bias_gradient);
             }
             
@@ -865,129 +859,37 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
                 hidden_gradient += hidden_temporal_gradient;
                 
                 hidden_layer->bpropUpdate(
-                    hidden_activations_list(i), hidden_list(i),
+                    hidden_act_no_bias_list(i), hidden_list(i),
                     hidden_temporal_gradient, hidden_gradient);
                 
                 dynamic_connections->bpropUpdate(
                     hidden_list(i-1),
-                    hidden_activations_list(i), // Here, it should be cond_bias, but doesn't matter
+                    hidden_act_no_bias_list(i), // Here, it should be cond_bias, but doesn't matter
                     hidden_gradient, hidden_temporal_gradient);
                 
                 hidden_temporal_gradient << hidden_gradient;
                 
                 connections->bpropUpdate(
                     input_list(i),
-                    hidden_activations_list(i), 
+                    hidden_act_no_bias_list(i), 
                     visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
                 
             }
             else
             {
-                // Could learn initial value for h_{-1}
-            }
-        }
-    
-}
-
-
-void DynamicallyLinkedRBMsModel::recurrent_update()
-{
-    // Notes: 
-    //    - not all lists are useful (some *_activations_* are not)
-    //int segment = hidden_list.length()/2;
-    //int seg =0;
-    //for(int k=hidden_list.length()-3; k>=-segment; k-=segment){ 
-    //  seg = k;
-    //  if(seg < 0)
-    //      seg = 0;
-        //cout << "segment: " << seg << endl;
-        hidden_temporal_gradient.clear();
-        for(int i=hidden_list.length()-2; i>=0; i--){  
-            // for(int i=hidden_list.length()-2; i>=seg; i--){     
-            
-            //visible_layer->expectation << input_prediction_list(i);
-            //visible_layer->activation << ?????;
-            
-            
-            
-            
-            
-
-            hidden_gradient.clear();
-            for( int tar=0; tar<target_layers.length(); tar++)
-            {
-                target_layer[tar]->setExpectation(input_prediction_list[tar](i));
-                target_layers[tar]->bpropNLL(targets_list[tar](i+1),nll_list(i,tar),target_bias_gradient[tar]);
-                target_bias_gradient[tar] *= target_layers_weights[tar];
-                target_layers[tar]->update(target_bias_gradient[tar]);
-                target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_activations_list[tar](i),
-                                                     hidden_gradient, target_bias_gradient[tar],true);
-            }
-            //visible_layer->setExpectation(input_prediction_list(i));
-            //visible_layer->bpropNLL(input_list(i+1),nll_list[i],visi_bias_gradient);
-            //visible_layer->update(visi_bias_gradient);
-            //connections_transpose->bpropUpdate(hidden2_list(i),input_prediction_activations_list(i),hidden_gradient, visi_bias_gradient);
-            
-            
-            //hidden_layer->setExpectation(hidden_list(i+1));//////////////////////////////
-            //hidden_layer->bpropNLL(hidden2_list(i),nll_list[i], hidden_gradient2);////////////////////////////////
-            
-           
-            hidden_layer2->bpropUpdate(
-                hidden2_activations_list(i), hidden2_list(i),
-                bias_gradient, hidden_gradient);
-            
-
-
-
-            //hidden_layer->update(hidden_gradient2);/////////////////////////////////////
-            
-            
-            //bias_gradient += hidden_gradient2;///////////////////////////////////
-            
-            
-            
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->bpropUpdate(
-                    hidden_list(i),
-                    hidden2_activations_list(i), 
-                    hidden_gradient, bias_gradient);        
-            else
-                dynamic_connections->bpropUpdate(
-                    hidden_list(i),
-                    hidden2_activations_list(i), 
-                    hidden_gradient, bias_gradient);
-            
-            if(i!=0)
-            {
-                
-                hidden_gradient += hidden_temporal_gradient;
-                
                 hidden_layer->bpropUpdate(
-                    hidden_activations_list(i), hidden_list(i),
-                    hidden_temporal_gradient, hidden_gradient);
-                
-                dynamic_connections->bpropUpdate(
-                    hidden_list(i-1),
-                    hidden_activations_list(i), // Here, it should be cond_bias, but doesn't matter
-                    hidden_gradient, hidden_temporal_gradient);
-                
-                hidden_temporal_gradient << hidden_gradient;
-                
+                    hidden_act_no_bias_list(i), hidden_list(i),
+                    hidden_temporal_gradient, hidden_gradient); // Not really temporal gradient, but this is the final iteration...
                 connections->bpropUpdate(
                     input_list(i),
-                    hidden_activations_list(i), 
+                    hidden_act_no_bias_list(i), 
                     visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
-                
-            }
-            else
-            {
+
                 // Could learn initial value for h_{-1}
             }
         }
     
 }
-
 
 void DynamicallyLinkedRBMsModel::computeOutput(const Vec& input, Vec& output) const
 {
@@ -1037,11 +939,11 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         {                    
             ith_sample_in_sequence = 0;
             hidden_list.clear();
-            hidden_activations_list.clear();
+            hidden_act_no_bias_list.clear();
             hidden2_list.clear();
-            hidden2_activations_list.clear();
+            hidden2_act_no_bias_list.clear();
             target_prediction_list.clear();
-            target_prediction_activations_list.clear();
+            target_prediction_act_no_bias_list.clear();
             input_list.clear();
             targets_list.clear();
             nll_list.clear();
@@ -1051,13 +953,13 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
 
         // Resize internal variables
         hidden_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
-        hidden_activations_list.resize(ith_sample_in_sequence+1,
+        hidden_act_no_bias_list.resize(ith_sample_in_sequence+1,
                                        hidden_layer->size);
         if( hidden_layer2 )
         {
             hidden2_list.resize(ith_sample_in_sequence+1,
                                 hidden_layer2->size);
-            hidden2_activations_list.resize(ith_sample_in_sequence+1,
+            hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1,
                                             hidden_layer2->size);
         }
         
@@ -1065,14 +967,14 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         
         targets_list.resize( target_layers.length() );
         target_prediction_list.resize( target_layers.length() );
-        target_prediction_activations_list.resize( target_layers.length() );
+        target_prediction_act_no_bias_list.resize( target_layers.length() );
         for( int tar=0; tar < target_layers.length(); tar++ )
         {
             targets_list[tar].resize( ith_sample_in_sequence+1,
                                       target_layers[tar]->size );
             target_prediction_list[tar].resize(
                 ith_sample_in_sequence+1, target_layers[tar]->size);
-            target_prediction_activations_list[tar].resize(
+            target_prediction_act_no_bias_list[tar].resize(
                 ith_sample_in_sequence+1, target_layers[tar]->size);
             
         }
@@ -1116,46 +1018,46 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
                             target_layers[tar],
                             target_symbol_sizes[tar]);
             sum_target_elements += target_layers_n_of_target_elements[tar];
-            target_list[tar](ith_sample_in_sequence) << 
+            targets_list[tar](ith_sample_in_sequence) << 
                 target_layers[tar]->expectation;
         }
         
         input_connections->fprop( input_list(ith_sample_in_sequence), 
-                                  hidden_activations_list(ith_sample_in_sequence));
+                                  hidden_act_no_bias_list(ith_sample_in_sequence));
         
         if( ith_sample_in_sequence > 0 )
         {
             dynamic_connections->fprop( 
                 hidden_list(ith_sample_in_sequence-1),
-                dynamic_activation_contribution );
+                dynamic_act_no_bias_contribution );
             
-            hidden_activations_list(ith_sample_in_sequence) += 
+            hidden_act_no_bias_list(ith_sample_in_sequence) += 
                 dynamic_actvation_contribution;
         }
         
-        hidden_layer->fprop( hidden_activations_list(ith_sample_in_sequence) 
+        hidden_layer->fprop( hidden_act_no_bias_list(ith_sample_in_sequence) 
                              hidden_list(ith_sample_in_sequence) );
         
         if( hidden_layer2 )
         {
             hidden_connections->fprop( 
                 hidden_list(ith_sample_in_sequence),
-                hidden2_activations_list(ith_sample_in_sequence));
+                hidden2_act_no_bias_list(ith_sample_in_sequence));
             
             hidden_layer2->fprop( 
-                hidden2_activations_list(ith_sample_in_sequence) 
+                hidden2_act_no_bias_list(ith_sample_in_sequence) 
                 hidden2_list(ith_sample_in_sequence) 
                 );
             
             for( int tar=0; tar < target_layers.length(); tar++ )
             {
-                targets_connections[tar]->fprop(
+                target_connections[tar]->fprop(
                     hidden2_list(ith_sample_in_sequence),
-                    target_prediction_activations_list[tar](
+                    target_prediction_act_no_bias_list[tar](
                         ith_sample_in_sequence)
                     );
                 target_layers[tar]->fprop(
-                    target_prediction_activations_list[tar](
+                    target_prediction_act_no_bias_list[tar](
                         ith_sample_in_sequence),
                     target_prediction_list[tar](
                         ith_sample_in_sequence) );
@@ -1168,13 +1070,13 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         {
             for( int tar=0; tar < target_layers.length(); tar++ )
             {
-                targets_connections[tar]->fprop(
+                target_connections[tar]->fprop(
                     hidden_list(ith_sample_in_sequence),
-                    target_prediction_activations_list[tar](
+                    target_prediction_act_no_bias_list[tar](
                         ith_sample_in_sequence)
                     );
                 target_layers[tar]->fprop(
-                    target_prediction_activations_list[tar](
+                    target_prediction_act_no_bias_list[tar](
                         ith_sample_in_sequence),
                     target_prediction_list[tar](
                         ith_sample_in_sequence) );
@@ -1200,8 +1102,9 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         for( int tar=0; tar < target_layers.length(); tar++ )
         {
             target_layers[tar]->activation << 
-                target_prediction_activations_list[tar](
+                target_prediction_act_no_bias_list[tar](
                     ith_sample_in_sequence);
+            target_layers[tar]->activation += target_layers[tar]->bias;
             target_layers[tar]->setExpectation(
                 target_prediction_list[tar](
                     ith_sample_in_sequence));
@@ -1240,11 +1143,11 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
     
     ith_sample_in_sequence = 0;
     hidden_list.clear();
-    hidden_activations_list.clear();
+    hidden_act_no_bias_list.clear();
     hidden2_list.clear();
-    hidden2_activations_list.clear();
+    hidden2_act_no_bias_list.clear();
     target_prediction_list.clear();
-    target_prediction_activations_list.clear();
+    target_prediction_act_no_bias_list.clear();
     input_list.clear();
     targets_list.clear();
     nll_list.clear();
@@ -1266,256 +1169,256 @@ TVec<string> DynamicallyLinkedRBMsModel::getTrainCostNames() const
     return getTestCostNames();
 }
 
-void DynamicallyLinkedRBMsModel::gen()
-{
-    //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
-    data = new AutoVMatrix();
-    data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
-    data->defineSizes(21,0,0);
-    //data->inputsize = 21;
-    //data->targetsize = 0;
-    //data->weightsize = 0;
-    data->build();
-
-    
-    int len = data->length();
-    Vec score;
-    Vec target;
-    real weight;
-    Vec bias_tempo;
-    Vec visi_bias_tempo;
-   
-   
-    
-    previous_hidden_layer.resize(hidden_layer->size);
-    connections_idem = connections;
-
-    for (int ith_sample = 0; ith_sample < len ; ith_sample++ ){
-        
-        data->getExample(ith_sample, score, target, weight);
-        //score << data(ith_sample);
-        input_prediction_list.resize(
-            ith_sample+1,visible_layer->size);
-        if(ith_sample > 0)
-        {
-            
-            //input_list(ith_sample_in_sequence) << previous_input;
-            //h*_{t-1}
-            //////////////////////////////////
-            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
-            hidden_layer->setAllBias(cond_bias); //**************************
-            
-            
-            
-            //up phase
-            connections->setAsDownInput( input_prediction_list(ith_sample-1) );
-            hidden_layer->getAllActivations( connections_idem );
-            hidden_layer->computeExpectation();
-            //////////////////////////////////
-            
-            //previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
-            //previous_hidden_layer_activation << hidden_layer->activation;
-            
-            
-            //h*_{t}
-            ////////////
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            else
-                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            hidden_layer->expectation_is_not_up_to_date();
-            hidden_layer->computeExpectation();//h_{t}
-            ///////////
-            
-            //previous_input << visible_layer->expectation;//v_{t-1}
-            
-        }
-        else
-        {
-            
-            previous_hidden_layer.clear();//h_{t-1}
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->fprop( previous_hidden_layer ,
-                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            else
-                dynamic_connections->fprop(previous_hidden_layer,
-                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            
-            hidden_layer->expectation_is_not_up_to_date();
-            hidden_layer->computeExpectation();//h_{t}
-            //previous_input.resize(data->inputsize);
-            //previous_input << data(ith_sample);
-            
-        }
-        
-        //connections_transpose->setAsDownInput( hidden_layer->expectation );
-        //visible_layer->getAllActivations( connections_idem_t );
-        
-        connections->setAsUpInput( hidden_layer->expectation );
-        visible_layer->getAllActivations( connections_idem );
-        
-        visible_layer->computeExpectation();
-        //visible_layer->generateSample();
-        partition(score.subVec(14,taillePart), visible_layer->activation.subVec(14+taillePart,taillePart), visible_layer->activation.subVec(14+(taillePart*2),taillePart));
-        partition(score.subVec(14,taillePart), visible_layer->expectation.subVec(14+taillePart,taillePart), visible_layer->expectation.subVec(14+(taillePart*2),taillePart));
-
-
-        visible_layer->activation.subVec(0,14+taillePart) << score;
-        visible_layer->expectation.subVec(0,14+taillePart) << score;
-
-        input_prediction_list(ith_sample) << visible_layer->expectation;
-        
-    }
-    
-    //Vec tempo;
-    TVec<real> tempo;
-    tempo.resize(visible_layer->size);
-    ofstream myfile;
-    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/test.txt");
-    
-    for (int i = 0; i < len ; i++ ){
-        tempo << input_prediction_list(i);
-        
-        //cout << tempo[2] << endl;
-       
-        for (int j = 0; j < tempo.length() ; j++ ){
-            
-            
-                
-                
-               myfile << tempo[j] << " ";
-               
-
-               
-           
-        }
-        myfile << "\n";
-    }
-     
-
-     myfile.close();
-
-}
-void DynamicallyLinkedRBMsModel::generate(int nbNotes)
-{
-    
-    previous_hidden_layer.resize(hidden_layer->size);
-    connections_idem = connections;
-
-    for (int ith_sample = 0; ith_sample < nbNotes ; ith_sample++ ){
-        
-        input_prediction_list.resize(
-            ith_sample+1,visible_layer->size);
-        if(ith_sample > 0)
-        {
-            
-            //input_list(ith_sample_in_sequence) << previous_input;
-            //h*_{t-1}
-            //////////////////////////////////
-            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
-            hidden_layer->setAllBias(cond_bias); //**************************
-            
-            
-            
-            //up phase
-            connections->setAsDownInput( input_prediction_list(ith_sample-1) );
-            hidden_layer->getAllActivations( connections_idem );
-            hidden_layer->computeExpectation();
-            //////////////////////////////////
-            
-            //previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
-            //previous_hidden_layer_activation << hidden_layer->activation;
-            
-            
-            //h*_{t}
-            ////////////
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            else
-                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            hidden_layer->expectation_is_not_up_to_date();
-            hidden_layer->computeExpectation();//h_{t}
-            ///////////
-            
-            //previous_input << visible_layer->expectation;//v_{t-1}
-            
-        }
-        else
-        {
-            
-            previous_hidden_layer.clear();//h_{t-1}
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->fprop( previous_hidden_layer ,
-                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            else
-                dynamic_connections->fprop(previous_hidden_layer,
-                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            
-            hidden_layer->expectation_is_not_up_to_date();
-            hidden_layer->computeExpectation();//h_{t}
-            
-            
-        }
-        
-        //connections_transpose->setAsDownInput( hidden_layer->expectation );
-        //visible_layer->getAllActivations( connections_idem_t );
-        
-        connections->setAsUpInput( hidden_layer->expectation );
-        visible_layer->getAllActivations( connections_idem );
-        
-        visible_layer->computeExpectation();
-        visible_layer->generateSample();
-        
-        input_prediction_list(ith_sample) << visible_layer->sample;
-        
-    }
-    
-    //Vec tempo;
-    TVec<int> tempo;
-    tempo.resize(visible_layer->size);
-    int theNote;
-    //int nbNoteVisiLayer = input_prediction_list(1).length()/13;
-    ofstream myfile;
-    int theLayer;
-    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_musicGeneration/data/generate/test.txt");
-    
-    for (int i = 0; i < nbNotes ; i++ ){
-        tempo << input_prediction_list(i);
-        
-        //cout << tempo[2] << endl;
-       
-        for (int j = 0; j < tempo.length() ; j++ ){
-            
-            if (tempo[j] == 1){
-                theLayer = (j/13);
-                
-                theNote = j - (13*theLayer);
-               
-
-                if (theNote<=11){
-                    //print theNote
-                    //cout << theNote+50 << " ";
-                    myfile << theNote << " ";
-                }
-                else{
-                    //print #
-                    //cout << "# ";
-                    myfile << "# ";
-                    
-                }
-     
-            }
-           
-        }
-        myfile << "\n";
-    }
-     myfile << "<oov> <oov> \n";
-
-     myfile.close();
-
-}
+//void DynamicallyLinkedRBMsModel::gen()
+//{
+//    //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
+//    data = new AutoVMatrix();
+//    data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
+//    data->defineSizes(21,0,0);
+//    //data->inputsize = 21;
+//    //data->targetsize = 0;
+//    //data->weightsize = 0;
+//    data->build();
+//
+//    
+//    int len = data->length();
+//    Vec score;
+//    Vec target;
+//    real weight;
+//    Vec bias_tempo;
+//    Vec visi_bias_tempo;
+//   
+//   
+//    
+//    previous_hidden_layer.resize(hidden_layer->size);
+//    connections_idem = connections;
+//
+//    for (int ith_sample = 0; ith_sample < len ; ith_sample++ ){
+//        
+//        data->getExample(ith_sample, score, target, weight);
+//        //score << data(ith_sample);
+//        input_prediction_list.resize(
+//            ith_sample+1,visible_layer->size);
+//        if(ith_sample > 0)
+//        {
+//            
+//            //input_list(ith_sample_in_sequence) << previous_input;
+//            //h*_{t-1}
+//            //////////////////////////////////
+//            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
+//            hidden_layer->setAllBias(cond_bias); //**************************
+//            
+//            
+//            
+//            //up phase
+//            connections->setAsDownInput( input_prediction_list(ith_sample-1) );
+//            hidden_layer->getAllActivations( connections_idem );
+//            hidden_layer->computeExpectation();
+//            //////////////////////////////////
+//            
+//            //previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
+//            //previous_hidden_layer_act_no_bias << hidden_layer->activation;
+//            
+//            
+//            //h*_{t}
+//            ////////////
+//            if(dynamic_connections_copy)
+//                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            else
+//                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            hidden_layer->expectation_is_not_up_to_date();
+//            hidden_layer->computeExpectation();//h_{t}
+//            ///////////
+//            
+//            //previous_input << visible_layer->expectation;//v_{t-1}
+//            
+//        }
+//        else
+//        {
+//            
+//            previous_hidden_layer.clear();//h_{t-1}
+//            if(dynamic_connections_copy)
+//                dynamic_connections_copy->fprop( previous_hidden_layer ,
+//                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            else
+//                dynamic_connections->fprop(previous_hidden_layer,
+//                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            
+//            hidden_layer->expectation_is_not_up_to_date();
+//            hidden_layer->computeExpectation();//h_{t}
+//            //previous_input.resize(data->inputsize);
+//            //previous_input << data(ith_sample);
+//            
+//        }
+//        
+//        //connections_transpose->setAsDownInput( hidden_layer->expectation );
+//        //visible_layer->getAllActivations( connections_idem_t );
+//        
+//        connections->setAsUpInput( hidden_layer->expectation );
+//        visible_layer->getAllActivations( connections_idem );
+//        
+//        visible_layer->computeExpectation();
+//        //visible_layer->generateSample();
+//        partition(score.subVec(14,taillePart), visible_layer->activation.subVec(14+taillePart,taillePart), visible_layer->activation.subVec(14+(taillePart*2),taillePart));
+//        partition(score.subVec(14,taillePart), visible_layer->expectation.subVec(14+taillePart,taillePart), visible_layer->expectation.subVec(14+(taillePart*2),taillePart));
+//
+//
+//        visible_layer->activation.subVec(0,14+taillePart) << score;
+//        visible_layer->expectation.subVec(0,14+taillePart) << score;
+//
+//        input_prediction_list(ith_sample) << visible_layer->expectation;
+//        
+//    }
+//    
+//    //Vec tempo;
+//    TVec<real> tempo;
+//    tempo.resize(visible_layer->size);
+//    ofstream myfile;
+//    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/test.txt");
+//    
+//    for (int i = 0; i < len ; i++ ){
+//        tempo << input_prediction_list(i);
+//        
+//        //cout << tempo[2] << endl;
+//       
+//        for (int j = 0; j < tempo.length() ; j++ ){
+//            
+//            
+//                
+//                
+//               myfile << tempo[j] << " ";
+//               
+//
+//               
+//           
+//        }
+//        myfile << "\n";
+//    }
+//     
+//
+//     myfile.close();
+//
+//}
+//void DynamicallyLinkedRBMsModel::generate(int nbNotes)
+//{
+//    
+//    previous_hidden_layer.resize(hidden_layer->size);
+//    connections_idem = connections;
+//
+//    for (int ith_sample = 0; ith_sample < nbNotes ; ith_sample++ ){
+//        
+//        input_prediction_list.resize(
+//            ith_sample+1,visible_layer->size);
+//        if(ith_sample > 0)
+//        {
+//            
+//            //input_list(ith_sample_in_sequence) << previous_input;
+//            //h*_{t-1}
+//            //////////////////////////////////
+//            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
+//            hidden_layer->setAllBias(cond_bias); //**************************
+//            
+//            
+//            
+//            //up phase
+//            connections->setAsDownInput( input_prediction_list(ith_sample-1) );
+//            hidden_layer->getAllActivations( connections_idem );
+//            hidden_layer->computeExpectation();
+//            //////////////////////////////////
+//            
+//            //previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
+//            //previous_hidden_layer_act_no_bias << hidden_layer->activation;
+//            
+//            
+//            //h*_{t}
+//            ////////////
+//            if(dynamic_connections_copy)
+//                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            else
+//                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            hidden_layer->expectation_is_not_up_to_date();
+//            hidden_layer->computeExpectation();//h_{t}
+//            ///////////
+//            
+//            //previous_input << visible_layer->expectation;//v_{t-1}
+//            
+//        }
+//        else
+//        {
+//            
+//            previous_hidden_layer.clear();//h_{t-1}
+//            if(dynamic_connections_copy)
+//                dynamic_connections_copy->fprop( previous_hidden_layer ,
+//                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            else
+//                dynamic_connections->fprop(previous_hidden_layer,
+//                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+//            
+//            hidden_layer->expectation_is_not_up_to_date();
+//            hidden_layer->computeExpectation();//h_{t}
+//            
+//            
+//        }
+//        
+//        //connections_transpose->setAsDownInput( hidden_layer->expectation );
+//        //visible_layer->getAllActivations( connections_idem_t );
+//        
+//        connections->setAsUpInput( hidden_layer->expectation );
+//        visible_layer->getAllActivations( connections_idem );
+//        
+//        visible_layer->computeExpectation();
+//        visible_layer->generateSample();
+//        
+//        input_prediction_list(ith_sample) << visible_layer->sample;
+//        
+//    }
+//    
+//    //Vec tempo;
+//    TVec<int> tempo;
+//    tempo.resize(visible_layer->size);
+//    int theNote;
+//    //int nbNoteVisiLayer = input_prediction_list(1).length()/13;
+//    ofstream myfile;
+//    int theLayer;
+//    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_musicGeneration/data/generate/test.txt");
+//    
+//    for (int i = 0; i < nbNotes ; i++ ){
+//        tempo << input_prediction_list(i);
+//        
+//        //cout << tempo[2] << endl;
+//       
+//        for (int j = 0; j < tempo.length() ; j++ ){
+//            
+//            if (tempo[j] == 1){
+//                theLayer = (j/13);
+//                
+//                theNote = j - (13*theLayer);
+//               
+//
+//                if (theNote<=11){
+//                    //print theNote
+//                    //cout << theNote+50 << " ";
+//                    myfile << theNote << " ";
+//                }
+//                else{
+//                    //print #
+//                    //cout << "# ";
+//                    myfile << "# ";
+//                    
+//                }
+//     
+//            }
+//           
+//        }
+//        myfile << "\n";
+//    }
+//     myfile << "<oov> <oov> \n";
+//
+//     myfile.close();
+//
+//}
 
 } // end of namespace PLearn
 

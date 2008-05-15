@@ -164,11 +164,11 @@ public:
     virtual TVec<std::string> getTestCostNames() const;
 
 
-    //! Generate music in a folder
-    void generate(int nbNotes);
-
-    //! Generate a part of the data in a folder
-    void gen();
+//    //! Generate music in a folder
+//    void generate(int nbNotes);
+//
+//    //! Generate a part of the data in a folder
+//    void gen();
 
     //! Returns the names of the objective costs that the train method computes
     //! and  for which it updates the VecStatsCollector train_stats.
@@ -232,69 +232,27 @@ protected:
    
     //! Stores bias gradient
     mutable Vec bias_gradient;
-
+    
      //! Stores bias gradient
     mutable Vec visi_bias_gradient;
 
-    //! Stores hidden layer target in dynamic learning phase
-    mutable Vec hidden_layer_target;
-
-    //! Stores input gradient of dynamic connections
-    mutable Vec input_gradient;
-    
     //! Stores hidden gradient of dynamic connections
     mutable Vec hidden_gradient;
     
-    //! Stores hidden gradient of dynamic connections
-    mutable Vec hidden_gradient2;
-
-    
     //! Stores hidden gradient of dynamic connections coming from time t+1
     mutable Vec hidden_temporal_gradient;
-    
-    //! Stores previous input layer value
-    mutable Vec previous_input;
-
-    //! Stores previous target layer value
-    mutable TVec< Vec > previous_targets;
-    
-    //! Stores previous hidden layer value
-    mutable Vec previous_hidden_layer;
-    mutable Vec previous_hidden_layer_activation;
-
-    //! Stores previous visible layer value
-    mutable Vec previous_visible_layer;
-
-    //! Stores a sample from the hidden layer
-    mutable Vec hidden_layer_sample;
-
-     //! Stores a expectation from the hidden layer
-    mutable Vec hidden_layer_expectation;
-
-    //! Stores a sample from the visible layer
-    mutable Vec visible_layer_sample;
-
-    //! Stores a input from the visible layer
-    mutable Vec visible_layer_input;
-
-    //! Store a copy of the positive phase values
-    mutable Vec pos_down_values;
-    mutable Vec pos_up_values;
-
-    //! Parameter of the dynamic connection
-    mutable Vec alpha;
-
+        
     //! List of hidden layers values
     mutable Mat hidden_list;
-    mutable Mat hidden_activations_list;
+    mutable Mat hidden_act_no_bias_list;
 
     //! List of second hidden layers values
     mutable Mat hidden2_list;
-    mutable Mat hidden2_activations_list;
+    mutable Mat hidden2_act_no_bias_list;
 
     //! List of target prediction values
     mutable TVec< Mat > target_prediction_list;
-    mutable TVec< Mat > target_prediction_activations_list;
+    mutable TVec< Mat > target_prediction_act_no_bias_list;
 
     //! List of inputs values
     mutable Mat input_list;
