@@ -138,7 +138,7 @@ void FilteredVMatrix::openIndex()
         rm(idxfname);       // force remove it
         indexes.open(idxfname.absolute(), true);
         for (int i = 0; i < mem_indices.length(); i++)
-            indexes.append(i);
+            indexes.append(mem_indices[i]);
         indexes.close();
         indexes.open(idxfname.absolute());
         mem_indices = TVec<int>();  // Free memory.
