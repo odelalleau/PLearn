@@ -232,7 +232,7 @@ elif launch_cmd=="Local":
 from socket import gethostname
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     p = os.path.abspath(os.path.curdir)
-    if p.startswith("/home/fringant2/") or p.startswith("/cluster") or dbi_param.get('files'):
+    if any([p.startswith(x) for x in ["/home/fringant1/","/home/fringant2/","/cluster/"]]) or dbi_param.get('files'):
         pass
     else:
         raise Exception("You must be in a subfolder of /home/fringant2/")
