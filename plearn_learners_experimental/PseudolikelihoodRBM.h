@@ -104,7 +104,7 @@ public:
 
     //! Number of classes in the training set (for supervised learning)
     int n_classes;
-
+    
     //! Indication that the input space NLL should be computed
     //! during test
     bool compute_input_space_nll;
@@ -113,6 +113,20 @@ public:
     //! condition likelihoods in generalized pseudolikelihood
     //! (default = 0, which corresponds to standard pseudolikelihood)
     int pseudolikelihood_context_size;
+
+    //! Type of context for generalized pseudolikelihood:
+    //! - "uniform_random": context elements are picked uniformly randomly
+    //! 
+    //! - "most_correlated": the most correlated (positively or negatively
+    //!                      elemenst with the current input element are picked
+    //!
+    //! - "most_correlated_uniform_random": context elements are picked uniformly
+    //!                                     among the k_most_correlated other input
+    //!                                     elements, for each current input
+    string pseudolikelihood_context_type;
+
+    //! Number of most correlated input elements over which to sample
+    real k_most_correlated;
 
     //! The binomial input layer of the RBM
     PP<RBMBinomialLayer> input_layer;
@@ -245,6 +259,8 @@ protected:
     mutable Mat connection_gradient;
     mutable TVec<int> context_indices;
     mutable TMat<int> context_indices_per_i;
+    mutable Mat correlations_per_i;
+    mutable TVec< TVec< int > > context_most_correlated;
     mutable Mat hidden_activations_context;
     mutable Vec hidden_activations_context_k_gradient;
     mutable Vec nums;
