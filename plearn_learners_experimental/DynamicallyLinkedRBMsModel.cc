@@ -57,7 +57,7 @@
 // Problems to have in mind:
 // 
 // - have a proper normalization of costs
-// - output one cost per target + weighted sum of all costs
+// - output one cost per target 
 // - make sure gradient descent is proper (change some vectors into matrices, etc.)
 // - make sure end_of_sequence_symbol is used appropriately
 // - make sure declareOption includes everything, including saved variable
@@ -65,6 +65,7 @@
 // - recurrent_nstages doesn't exist anymore
 // - verify use of mask is proper
 // - verify code works with and without hidden_layer2
+// - do proper resize of recurrent internal variables
 
 namespace PLearn {
 using namespace std;
@@ -79,9 +80,7 @@ DynamicallyLinkedRBMsModel::DynamicallyLinkedRBMsModel() :
     //rbm_learning_rate( 0.01 ),
     recurrent_net_learning_rate( 0.01),
     use_target_layers_masks( false ),
-    end_of_sequence_symbol( -1000 ),
-    input_reconstruction_weight( 0. ),
-    input_layer_size( -1 )    
+    end_of_sequence_symbol( -1000 )
     //rbm_nstages( 0 ),
 {
     random_gen = new PRandom();
@@ -103,6 +102,23 @@ void DynamicallyLinkedRBMsModel::declareOptions(OptionList& ol)
 //                  OptionBase::buildoption,
 //                  "Number of epochs for rbm phase.\n");
 
+
+    declareOption(ol, "target_layers_weights", 
+                  &DynamicallyLinkedRBMsModel::target_layers_weights,
+                  OptionBase::buildoption,
+                  "The training weights of each target layers.\n");
+
+    declareOption(ol, "use_target_layers_masks", 
+                  &DynamicallyLinkedRBMsModel::use_target_layers_masks,
+                  OptionBase::buildoption,
+                  "Indication that a mask indicating which target to predict\n"
+                  "is present in the input part of the VMatrix dataset.\n");
+
+    declareOption(ol, "end_of_sequence_symbol", 
+                  &DynamicallyLinkedRBMsModel::end_of_sequence_symbol,
+                  OptionBase::buildoption,
+                  "Value of the first input component for end-of-sequence "
+                  "delimiter.\n");
 
     declareOption(ol, "input_layer", &DynamicallyLinkedRBMsModel::input_layer,
                   OptionBase::buildoption,
@@ -150,15 +166,11 @@ void DynamicallyLinkedRBMsModel::declareOptions(OptionList& ol)
     */
 
 
-    declareOption(ol, "input_layer_size", 
-                  &DynamicallyLinkedRBMsModel::input_layer_size,
+    declareOption(ol, "target_layers_n_of_target_elements", 
+                  &DynamicallyLinkedRBMsModel::target_layers_n_of_target_elements,
                   OptionBase::learntoption,
-                  "Size of the input layer.\n");
-
-    declareOption(ol, "target_layers_size", 
-                  &DynamicallyLinkedRBMsModel::target_layers_size,
-                  OptionBase::learntoption,
-                  "Size of each target layers.\n");
+                  "Number of elements in the target part of a VMatrix associated\n"
+                  "to each target layer.\n");
 
     declareOption(ol, "input_symbol_sizes", 
                   &DynamicallyLinkedRBMsModel::input_symbol_sizes,
@@ -200,7 +212,7 @@ void DynamicallyLinkedRBMsModel::build_()
         PLASSERT( target_layers_weights.length() == target_layers.length() );
 
         // Parsing symbols in input
-        input_layer_size = 0;
+        int input_layer_size = 0;
         input_symbol_sizes.resize(0);
         PP<Dictionary> dict;
         int inputsize_without_masks = inputsize() 
@@ -230,8 +242,9 @@ void DynamicallyLinkedRBMsModel::build_()
 
         // Parsing symbols in target
         int tar_layer = 0;
+        int tar_layer_size = 0;
         target_symbol_sizes.resize(target_layers.length());
-        target_layers_size.clear();
+        target_layers_n_of_target_elements.clear();
         for( int tar=0; tar<targetsize(); tar++)
         {
             if( tar_layer > target_layers.length() )
@@ -250,17 +263,21 @@ void DynamicallyLinkedRBMsModel::build_()
                             "of field %d is empty", i);
 
                 target_symbol_sizes[tar_layer].push_back(dict->size());
-                // Adjust size to include one-hot vector
-                target_layers_size[tar_layer] += dict->size();
+                target_layers_n_of_target_elements[tar_layer]++;
+                tar_layer_size += dict->size();
             }
             else
             {
                 target_symbol_sizes[tar_layer].push_back(-1);
-                target_layers_size[tar_layer] ++
+                target_layers_n_of_target_elements[tar_layer]++;
+                tar_layer_size++;
             }
 
-            if( target_layers[tar_layer]->size == target_layers_size[tar_layer] )
+            if( target_layers[tar_layer]->size == tar_layer_size )
+            {
                 tar_layer++;
+                tar_layer_size = 0;
+            }
         }
 
         if( tar_layer != target_layers.length() )
@@ -415,16 +432,6 @@ int DynamicallyLinkedRBMsModel::outputsize() const
 
 void DynamicallyLinkedRBMsModel::forget()
 {
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
-    //! a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
     inherited::forget();
 
     input_layer->forget();
@@ -450,53 +457,12 @@ void DynamicallyLinkedRBMsModel::train()
 {
     MODULE_LOG << "train() called " << endl;
 
-    // The role of the train method is to bring the learner up to
-    // stage==nstages, updating train_stats with training costs measured
-    // on-line in the process.
-
-    /* TYPICAL CODE:
-
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-    real weight;
-
-    // This generic PLearner method does a number of standard stuff useful for
-    // (almost) any learner, and return 'false' if no training should take
-    // place. See PLearner.h for more details.
-    if (!initTrain())
-        return;
-
-    while(stage<nstages)
-    {
-        // clear statistics of previous epoch
-        train_stats->forget();
-
-        //... train for 1 stage, and update train_stats,
-        // using train_set->getExample(input, target, weight)
-        // and train_stats->update(train_costs)
-
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
-    }
-    */
-
-    if(fine_tuning_nstages >= 0){   
-        nstages = rbm_nstages + dynamic_nstages + fine_tuning_nstages;
-    }
-    if(recurrent_nstages >= 0){   
-        nstages = rbm_nstages + dynamic_nstages + fine_tuning_nstages + recurrent_nstages;
-    }
-
-    if(visible_size < 0)
-        PLERROR("DynamicallyLinkedRBMsModel::train(): \n"
-                "build() must be called before train()");                
-
     Vec input( inputsize() );
-    Vec target( targetsize() );// Unused
+    Vec target( targetsize() );
     real weight = 0; // Unused
     Vec train_costs( getTrainCostNames().length() );
+    train_costs.clear();
+    TVec<int> train_n_items( getTrainCostNames().length() );
 
     if( !initTrain() )
     {
@@ -511,32 +477,16 @@ void DynamicallyLinkedRBMsModel::train()
 
 
     /***** RBM training phase *****/
-    if(stage < rbm_nstages)
-    {
-    }
-
-
-    /***** dynamic phase training  *****/
-
-    if(stage < rbm_nstages +  dynamic_nstages)
-    {
-    }  
-
-
-    /***** fine-tuning *****/
-    if( stage >= nstages )
-        return;
-
-    if(stage < rbm_nstages +  dynamic_nstages + fine_tuning_nstages )
-    {
-    }
+//    if(rbm_stage < rbm_nstages)
+//    {
+//    }
 
 
     /***** Recurrent phase *****/
     if( stage >= nstages )
         return;
 
-    if(stage >= rbm_nstages +  dynamic_nstages + fine_tuning_nstages)
+    if( stage < nstages )
     {        
 
         MODULE_LOG << "Training the whole model" << endl;
@@ -553,36 +503,14 @@ void DynamicallyLinkedRBMsModel::train()
             pb = new ProgressBar( "Recurrent training phase of "+classname(),
                                   end_stage - init_stage );
 
-        previous_hidden_layer.resize(hidden_layer->size);
-        dynamic_connections->setLearningRate( recurrent_net_learning_rate );
-        visible_layer->setLearningRate( recurrent_net_learning_rate );
-        connections->setLearningRate( recurrent_net_learning_rate );
-        connections_transpose->setLearningRate( recurrent_net_learning_rate );
-        if(dynamic_connections_copy)
-            dynamic_connections_copy->setLearningRate( recurrent_net_learning_rate );
-        if(connections_transpose_copy)
-            connections_transpose_copy->setLearningRate( recurrent_net_learning_rate );
+        setLearningRate( recurrent_net_learning_rate );
 
-        real mean_cost = 0;
         int ith_sample_in_sequence = 0;
-        int nb_oov = 0;
-        
-        RBMMixedLayer* p_visible_layer = dynamic_cast<RBMMixedLayer*>((RBMLayer*)visible_layer);
-        target_layer = p_visible_layer->sub_layers[3];
-        //target_layer = (PLearn::PP<PLearn::RBMMixedLayer>)visible_layer;
-        //test_layer = target_layer.sub_layers(1);
+        int inputsize_without_masks = inputsize() 
+            - ( use_target_layers_masks ? targetsize() : 0 );
+        int sum_target_elements = 0;
         while(stage < end_stage)
         {
-            if(untie_weights && 
-               stage == rbm_nstages + dynamic_nstages + fine_tuning_nstages)
-            {
-                
-                CopiesMap map;
-                dynamic_connections_copy = dynamic_connections->deepCopy(map);
-
-                //CopiesMap map2;
-                //connections_transpose_copy = connections_transpose->deepCopy(map2);
-                //connections_transpose = connections_transpose_copy;  
 /*
                 TMat<real> U,V;//////////crap James
                 TVec<real> S;
@@ -595,174 +523,193 @@ void DynamicallyLinkedRBMsModel::train()
                 S.fill(-0.5);
                 productScaleAcc(dynamic_connections->bias,dynamic_connections->weights,S,1,0);
 */
-            }
-            
+            train_costs.clear();
+            train_n_items.clear();
             for(int sample=0 ; sample<train_set->length() ; sample++ )
             {
-
                 train_set->getExample(sample, input, target, weight);
-                
 
-                hidden_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
-                hidden_activations_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
-                hidden2_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
-                hidden2_activations_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
-                input_prediction_list.resize(
-                    ith_sample_in_sequence+1,visible_layer->size);
-                input_prediction_activations_list.resize(
-                    ith_sample_in_sequence+1,visible_layer->size);
-                input_list.resize(ith_sample_in_sequence+1,visible_layer->size);
-                target_list.resize(ith_sample_in_sequence+1,target_layer->size);
-                nll_list.resize(ith_sample_in_sequence+1);
-                
-               
-
-                //if(train_set->getString(sample,0) == "<oov>")
-                if(train_set->get(sample,0) == 8)
+                if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
                 {
-
-                    input_list(ith_sample_in_sequence) << previous_input;
-                    target_list(ith_sample_in_sequence) << previous_target;
-                    connections->setAsDownInput( previous_input );
-                    hidden_layer->getAllActivations( connections_idem );
-                    hidden_layer->computeExpectation();
-                    previous_hidden_layer << hidden_layer->expectation;
-                    previous_hidden_layer_activation << hidden_layer->activation;
-                    hidden_list(ith_sample_in_sequence) << previous_hidden_layer;
-                    hidden_activations_list(ith_sample_in_sequence) 
-                        << previous_hidden_layer_activation;
-                    hidden2_list(ith_sample_in_sequence) << hidden_layer->expectation;
-                    hidden2_activations_list(ith_sample_in_sequence) << 
-                        hidden_layer->activation;
-                    input_prediction_list(ith_sample_in_sequence) << 
-                        visible_layer->expectation;
-                    input_prediction_activations_list(ith_sample_in_sequence) << 
-                        visible_layer->activation;
-                    //cout << "hidden_expectation crap james :" <<  hidden_list << endl;
                     //update
-                    nb_oov++;
                     recurrent_update();
                     
                     ith_sample_in_sequence = 0;
                     hidden_list.clear();
+                    hidden_activations_list.clear();
                     hidden2_list.clear();
-                    input_prediction_list.clear();
+                    hidden2_activations_list.clear();
+                    target_prediction_list.clear();
+                    target_prediction_activations_list.clear();
                     input_list.clear();
-                    target_list.clear();
+                    targets_list.clear();
                     nll_list.clear();
+                    masks_list.clear();
                     continue;
                 }
 
-         
-
-
-                if(isRegression)
-                    visible_layer->setExpectation(input);
-                else
-                    clamp_visible_units(input);
-                
-
-                if(ith_sample_in_sequence > 0)
+                // Resize internal variables
+                hidden_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
+                hidden_activations_list.resize(ith_sample_in_sequence+1,
+                                               hidden_layer->size);
+                if( hidden_layer2 )
                 {
-                   
-                    input_list(ith_sample_in_sequence) << previous_input;
-                    target_list(ith_sample_in_sequence) << previous_target;
-                    //h*_{t-1}
-                    //////////////////////////////////
-                    dynamic_connections->fprop(previous_hidden_layer, cond_bias);
-                    hidden_layer->setAllBias(cond_bias); //**************************
+                    hidden2_list.resize(ith_sample_in_sequence+1,
+                                        hidden_layer2->size);
+                    hidden2_activations_list.resize(ith_sample_in_sequence+1,
+                                                    hidden_layer2->size);
+                }
+                 
+                input_list.resize(ith_sample_in_sequence+1,input_layer->size);
 
+                targets_list.resize( target_layers.length() );
+                target_prediction_list.resize( target_layers.length() );
+                target_prediction_activations_list.resize( target_layers.length() );
+                for( int tar=0; tar < target_layers.length(); tar++ )
+                {
+                    targets_list[tar].resize( ith_sample_in_sequence+1,
+                                              target_layers[tar]->size );
+                    target_prediction_list[tar].resize(
+                        ith_sample_in_sequence+1, target_layers[tar]->size);
+                    target_prediction_activations_list[tar].resize(
+                        ith_sample_in_sequence+1, target_layers[tar]->size);
 
-                    //up phase
-                    connections->setAsDownInput( previous_input );
-                    hidden_layer->getAllActivations( connections_idem );
-                    hidden_layer->computeExpectation();
-                    //////////////////////////////////
+                }
+                nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
+                if( use_target_layers_masks )
+                {
+                    masks_list.resize( target_layers.length() );
+                    for( int tar=0; tar < target_layers.length(); tar++ )
+                        masks_list[tar].resize( ith_sample_in_sequence+1,
+                                                target_layers[tar]->size );
+                }
 
-                    previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
-                    previous_hidden_layer_activation << hidden_layer->activation;
-            
-                    
-                    //h*_{t}
-                    ////////////
-                    if(dynamic_connections_copy)
-                        dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+                // Forward propagation
+
+                // Fetch right representation for input
+                clamp_units(input.subVec(0,inputsize_without_masks),
+                            input_layer,
+                            input_symbol_sizes);                
+                input_list(ith_sample_in_sequence) << input_layer->expectation;
+
+                // Fetch right representation for target
+                sum_target_elements = 0;
+                for( int tar=0; tar < target_layers.length(); tar++ )
+                {
+                    if( use_target_layers_masks )
+                        clamp_units(target.subVec(
+                                        sum_target_elements,
+                                        target_layers_n_of_target_elements[tar]),
+                                    target_layers[tar],
+                                    target_symbol_sizes[tar],
+                                    input.subVec(
+                                        inputsize_without_masks 
+                                        + sum_target_elements, 
+                                        target_layers_n_of_target_elements[tar]),
+                                    masks_list[tar](ith_sample_in_sequence)
+                            );
                     else
-                        dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-                    
-                    hidden_layer->expectation_is_not_up_to_date();
-                    hidden_layer->computeExpectation();//h_{t}
-                    
+                        clamp_units(target.subVec(
+                                        sum_target_elements,
+                                        target_layers_n_of_target_elements[tar]),
+                                    target_layers[tar],
+                                    target_symbol_sizes[tar]);
+                    sum_target_elements += target_layers_n_of_target_elements[tar];
+                    target_list[tar](ith_sample_in_sequence) << 
+                        target_layers[tar]->expectation;
+                }
+                
+                input_connections->fprop( input_list(ith_sample_in_sequence), 
+                                          hidden_activations_list(ith_sample_in_sequence));
+                
+                if( ith_sample_in_sequence > 0 )
+                {
+                    dynamic_connections->fprop( 
+                        hidden_list(ith_sample_in_sequence-1),
+                        dynamic_activation_contribution );
 
-                    
-             
+                    hidden_activations_list(ith_sample_in_sequence) += 
+                        dynamic_actvation_contribution;
+                }
+                 
+                hidden_layer->fprop( hidden_activations_list(ith_sample_in_sequence) 
+                                     hidden_list(ith_sample_in_sequence) );
+                 
+                if( hidden_layer2 )
+                {
+                    hidden_connections->fprop( 
+                        hidden_list(ith_sample_in_sequence),
+                        hidden2_activations_list(ith_sample_in_sequence));
+
+                    hidden_layer2->fprop( 
+                        hidden2_activations_list(ith_sample_in_sequence) 
+                        hidden2_list(ith_sample_in_sequence) 
+                        );
+
+                    for( int tar=0; tar < target_layers.length(); tar++ )
+                    {
+                        targets_connections[tar]->fprop(
+                            hidden2_list(ith_sample_in_sequence),
+                            target_prediction_activations_list[tar](
+                                ith_sample_in_sequence)
+                            );
+                        target_layers[tar]->fprop(
+                            target_prediction_activations_list[tar](
+                                ith_sample_in_sequence),
+                            target_prediction_list[tar](
+                                ith_sample_in_sequence) );
+                        if( use_target_layers_masks )
+                            target_prediction_list[tar]( ith_sample_in_sequence) *= 
+                                masks_list[tar](ith_sample_in_sequence);
+                    }
                 }
                 else
                 {
-                    
-                    input_list(ith_sample_in_sequence).fill(-1);
-                    target_list(ith_sample_in_sequence).fill(-1);
- 
-                    previous_hidden_layer.clear();//h_{t-1}
-                    //previous_hidden_layer.fill(0.5);//**************************crap James
-                    previous_hidden_layer_activation.clear();//h_{t-1}
+                    for( int tar=0; tar < target_layers.length(); tar++ )
+                    {
+                        targets_connections[tar]->fprop(
+                            hidden_list(ith_sample_in_sequence),
+                            target_prediction_activations_list[tar](
+                                ith_sample_in_sequence)
+                            );
+                        target_layers[tar]->fprop(
+                            target_prediction_activations_list[tar](
+                                ith_sample_in_sequence),
+                            target_prediction_list[tar](
+                                ith_sample_in_sequence) );
+                        if( use_target_layers_masks )
+                            target_prediction_list[tar]( ith_sample_in_sequence) *= 
+                                masks_list[tar](ith_sample_in_sequence);
+                    }
+                }
 
-                    if(dynamic_connections_copy)
-                        dynamic_connections_copy->fprop( previous_hidden_layer ,
-                                                         hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+                sum_target_elements = 0;
+                for( int tar=0; tar < target_layers.length(); tar++ )
+                {
+                    target_layers[tar]->activation << 
+                        target_prediction_activations_list[tar](
+                            ith_sample_in_sequence);
+                    target_layers[tar]->setExpectation(
+                        target_prediction_list[tar](
+                            ith_sample_in_sequence));
+                    nll_list(ith_sample_in_sequence,tar) = 
+                        target_layer->fpropNLL( 
+                            targets_list[tar](ith_sample_in_sequence) ); 
+                    train_costs[tar] += nll_list(ith_sample_in_sequence,tar);
+
+                    // Normalize by the number of things to predict
+                    if( use_target_layers_masks )
+                    {
+                        train_n_items[tar] += sum(
+                            input.subVec( inputsize_without_masks 
+                                          + sum_target_elements, 
+                                          target_layers_n_of_target_elements[tar]) );
+                        sum_target_elements += 
+                            target_layers_n_of_target_elements[tar];
+                    }
                     else
-                        dynamic_connections->fprop(
-                            previous_hidden_layer,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-
-                    
-                    hidden_layer->expectation_is_not_up_to_date();
-                    hidden_layer->computeExpectation();//h_{t}
-
-                    previous_input.resize(visible_layer->size);
-                    previous_target.resize(target_layer->size);
- 
-
-            
+                        train_n_itmes[tar]++;
                 }
-
-               
-                previous_input << visible_layer->expectation;//v_{t-1}
-                previous_target << target_layer->expectation;
-                
-               
-
-                //connections_transpose->setAsDownInput( hidden_layer->expectation );
-                //visible_layer->getAllActivations( connections_idem_t );
-
-                connections->setAsUpInput( hidden_layer->expectation );
-                visible_layer->getAllActivations( connections_idem );
-                visible_layer->computeExpectation();
-
-                if(isRegression){
-                    partition(previous_input.subVec(14,taillePart), visible_layer->activation.subVec(14+taillePart,taillePart), visible_layer->activation.subVec(14+(taillePart*2),taillePart));
-                    partition(previous_input.subVec(14,taillePart), visible_layer->expectation.subVec(14+taillePart,taillePart), visible_layer->expectation.subVec(14+(taillePart*2),taillePart));
-                }
-
-                // Copies for backprop
-                hidden_list(ith_sample_in_sequence) << previous_hidden_layer;
-                hidden_activations_list(ith_sample_in_sequence) 
-                    << previous_hidden_layer_activation;
-                hidden2_list(ith_sample_in_sequence) << hidden_layer->expectation;
-                hidden2_activations_list(ith_sample_in_sequence) << 
-                    hidden_layer->activation;
-                input_prediction_list(ith_sample_in_sequence) << 
-                    visible_layer->expectation;
-                input_prediction_activations_list(ith_sample_in_sequence) << 
-                    visible_layer->activation;
-
-                
- 
-                //nll_list[ith_sample_in_sequence] = visible_layer->fpropNLL(previous_input); // / inputsize() ;
-                // real sum_mask = sums(mask);
-                nll_list[ith_sample_in_sequence] = target_layer->fpropNLL(previous_target); // / sum_mask;
-                
-
-                mean_cost += nll_list[ith_sample_in_sequence];
                 ith_sample_in_sequence++;
                
                
@@ -770,11 +717,14 @@ void DynamicallyLinkedRBMsModel::train()
             if( pb )
                 pb->update( stage + 1 - init_stage);
             
+            for(int i=0; i<train_costs.length(); i++)
+                train_costs[i] /= train_n_items[i];
+
             if(verbosity>0)
-                cout << "mean cost at stage " << stage << 
-                    " = " << mean_cost/train_set->length() << endl;
-            mean_cost = 0;
+                cout << "mean costs at stage " << stage << 
+                    " = " << train_costs << endl;
             stage++;
+            train_stats->update(train_costs);
         }    
         if( pb )
         {
@@ -788,43 +738,82 @@ void DynamicallyLinkedRBMsModel::train()
     train_stats->finalize();
 }
 
-void DynamicallyLinkedRBMsModel::partition(TVec<double> part, TVec<double> periode, TVec<double> vel ) const
-{
-    for(int i = 0; i<part->size();i++){
-        periode[i] = part[i]*periode[i];
-        vel[i] = part[i]*vel[i];
-
-    }
-
-
-
 }
 
-void DynamicallyLinkedRBMsModel::clamp_visible_units(const Vec& input) const
+void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
+                                             PP<RBMLayer> layer,
+                                             TVec<int> symbol_sizes) const
 {
     int it = 0;
     int ss = -1;
-    input_expectation.resize(visible_layer->size);
-    for(int i=0; i<inputsize_; i++)
+    for(int i=0; i<layer_vector.length(); i++)
     {
         ss = symbol_sizes[i];
         // If input is a real ...
         if(ss < 0) 
         {
-            input_expectation[it++] = input[i];
+            layer->expectation[it++] = layer_vector[i];
         }
         else // ... or a symbol
         {
             // Convert to one-hot vector
-            input_expectation.subVec(it,ss).clear();
-            input_expectation[it+(int)input[i]] = 1;
+            layer->expectation.subVec(it,ss).clear();
+            layer->expectation[it+round(input[i])] = 1;
             it += ss;
         }
     }
-    visible_layer->setExpectation(input_expectation);
+    layer->setExpectation( layer->expectation );
 }
 
+void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
+                                             PP<RBMLayer> layer,
+                                             TVec<int> symbol_sizes,
+                                             const Vec& original_mask,
+                                             Vec& formated_mask) const
+{
+    int it = 0;
+    int ss = -1;
+    formated_mask.resize( layer->size );
+    PLASSER( original_mask.length() == layer_vector.length() );
+    for(int i=0; i<layer_vector.length(); i++)
+    {
+        ss = symbol_sizes[i];
+        // If input is a real ...
+        if(ss < 0) 
+        {
+            formated_mask[it] = original_mask[i];
+            layer->expectation[it++] = layer_vector[i];
+        }
+        else // ... or a symbol
+        {
+            // Convert to one-hot vector
+            layer->expectation.subVec(it,ss).clear();
+            formated_mask.subVec(it,ss).fill(original_mask[i]);
+            layer->expectation[it+round(input[i])] = 1;
+            it += ss;
+        }
+    }
+    layer->setExpectation( layer->expectation );
+}
 
+void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
+{
+    input_layer->setLearningRate( the_learning_rate );
+    hidden_layer->setLearningRate( the_learning_rate );
+    input_connections->setLearningRate( the_learning_rate );
+    dynamic_connections-forget();
+    if( hidden_layer2 )
+    {
+        hidden_layer2->setLearningRate( the_learning_rate );
+        hidden_connections->setLearningRate( the_learning_rate );
+    }
+
+    for( int i=0; i<target_layers.length(); i++ )
+    {
+        target_layers[i]->setLearningRate( the_learning_rate );
+        target_connections[i]->setLearningRate( the_learning_rate );
+    }
+}
 
 void DynamicallyLinkedRBMsModel::recurrent_update()
 {
@@ -944,18 +933,18 @@ void DynamicallyLinkedRBMsModel::computeCostsFromOutputs(const Vec& input, const
 
 void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_stats,
                   VMat testoutputs, VMat testcosts)const
-{
-   
+{ 
 
     int len = testset.length();
     Vec input;
     Vec target;
-    Vec bias_tempo;
-    Vec visi_bias_tempo;
     real weight;
 
     Vec output(outputsize());
     Vec costs(nTestCosts());
+    costs.clear();
+    TVec<int> n_items(nTestCosts());
+    n_items.clear();
 
     PP<ProgressBar> pb;
     if (report_progress) 
@@ -967,165 +956,235 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         test_stats->update(costs);
     }
 
-
-    int begin = 0;
-    int nb_oov = 0;
     for (int i = 0; i < len; i++)
     {
         testset.getExample(i, input, target, weight);
-      
-       
 
-
-        //if(testset->getString(i,0) == "<oov>")
-        if(testset->get(i,0) == 8)
-        {
-            begin = 0;
-            nb_oov++;
+        if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
+        {                    
+            ith_sample_in_sequence = 0;
+            hidden_list.clear();
+            hidden_activations_list.clear();
+            hidden2_list.clear();
+            hidden2_activations_list.clear();
+            target_prediction_list.clear();
+            target_prediction_activations_list.clear();
+            input_list.clear();
+            targets_list.clear();
+            nll_list.clear();
+            masks_list.clear();
             continue;
         }
-        
 
-
-
-
-        //clamp_visible_units(input);
-        visible_layer->setExpectation(input);
-
-
-
-        if(begin > 0)
+        // Resize internal variables
+        hidden_list.resize(ith_sample_in_sequence+1,hidden_layer->size);
+        hidden_activations_list.resize(ith_sample_in_sequence+1,
+                                       hidden_layer->size);
+        if( hidden_layer2 )
         {
-
-            //h*_{t-1}
-            //////////////////////////////////
-            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
-            hidden_layer->setAllBias(cond_bias); //**************************
-
-            /* if (visible_connections_option){
-                //v*_{t-1} VISIBLE DYNAMIC CONNECTION
-                //////////////////////////////////
-                visible_connections->fprop(previous_input, visi_cond_bias);
-                visible_layer->setAllBias(visi_cond_bias); 
-                }*/
-
-            //up phase
-            connections->setAsDownInput( previous_input );
-            hidden_layer->getAllActivations( connections_idem );
-            hidden_layer->computeExpectation();
-            //////////////////////////////////
-
-            previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
+            hidden2_list.resize(ith_sample_in_sequence+1,
+                                hidden_layer2->size);
+            hidden2_activations_list.resize(ith_sample_in_sequence+1,
+                                            hidden_layer2->size);
+        }
+        
+        input_list.resize(ith_sample_in_sequence+1,input_layer->size);
+        
+        targets_list.resize( target_layers.length() );
+        target_prediction_list.resize( target_layers.length() );
+        target_prediction_activations_list.resize( target_layers.length() );
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            targets_list[tar].resize( ith_sample_in_sequence+1,
+                                      target_layers[tar]->size );
+            target_prediction_list[tar].resize(
+                ith_sample_in_sequence+1, target_layers[tar]->size);
+            target_prediction_activations_list[tar].resize(
+                ith_sample_in_sequence+1, target_layers[tar]->size);
             
-
-            //h*_{t}
-            ////////////
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            else                
-                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            hidden_layer->expectation_is_not_up_to_date();
-            hidden_layer->computeExpectation();//h_{t}
-            ///////////
-
-            previous_input << visible_layer->expectation;//v_{t-1}
+        }
+        nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
+        if( use_target_layers_masks )
+        {
+            masks_list.resize( target_layers.length() );
+            for( int tar=0; tar < target_layers.length(); tar++ )
+                masks_list[tar].resize( ith_sample_in_sequence+1,
+                                        target_layers[tar]->size );
+        }
+        
+        // Forward propagation
+        
+        // Fetch right representation for input
+        clamp_units(input.subVec(0,inputsize_without_masks),
+                    input_layer,
+                    input_symbol_sizes);                
+        input_list(ith_sample_in_sequence) << input_layer->expectation;
+        
+        // Fetch right representation for target
+        sum_target_elements = 0;
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( use_target_layers_masks )
+                clamp_units(target.subVec(
+                                sum_target_elements,
+                                target_layers_n_of_target_elements[tar]),
+                            target_layers[tar],
+                            target_symbol_sizes[tar],
+                            input.subVec(
+                                inputsize_without_masks 
+                                + sum_target_elements, 
+                                target_layers_n_of_target_elements[tar]),
+                            masks_list[tar](ith_sample_in_sequence)
+                    );
+            else
+                clamp_units(target.subVec(
+                                sum_target_elements,
+                                target_layers_n_of_target_elements[tar]),
+                            target_layers[tar],
+                            target_symbol_sizes[tar]);
+            sum_target_elements += target_layers_n_of_target_elements[tar];
+            target_list[tar](ith_sample_in_sequence) << 
+                target_layers[tar]->expectation;
+        }
+        
+        input_connections->fprop( input_list(ith_sample_in_sequence), 
+                                  hidden_activations_list(ith_sample_in_sequence));
+        
+        if( ith_sample_in_sequence > 0 )
+        {
+            dynamic_connections->fprop( 
+                hidden_list(ith_sample_in_sequence-1),
+                dynamic_activation_contribution );
             
+            hidden_activations_list(ith_sample_in_sequence) += 
+                dynamic_actvation_contribution;
+        }
+        
+        hidden_layer->fprop( hidden_activations_list(ith_sample_in_sequence) 
+                             hidden_list(ith_sample_in_sequence) );
+        
+        if( hidden_layer2 )
+        {
+            hidden_connections->fprop( 
+                hidden_list(ith_sample_in_sequence),
+                hidden2_activations_list(ith_sample_in_sequence));
+            
+            hidden_layer2->fprop( 
+                hidden2_activations_list(ith_sample_in_sequence) 
+                hidden2_list(ith_sample_in_sequence) 
+                );
+            
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                targets_connections[tar]->fprop(
+                    hidden2_list(ith_sample_in_sequence),
+                    target_prediction_activations_list[tar](
+                        ith_sample_in_sequence)
+                    );
+                target_layers[tar]->fprop(
+                    target_prediction_activations_list[tar](
+                        ith_sample_in_sequence),
+                    target_prediction_list[tar](
+                        ith_sample_in_sequence) );
+                if( use_target_layers_masks )
+                    target_prediction_list[tar]( ith_sample_in_sequence) *= 
+                        masks_list[tar](ith_sample_in_sequence);
+            }
         }
         else
         {
-            previous_hidden_layer.clear();//h_{t-1}
-            if(dynamic_connections_copy)
-                dynamic_connections_copy->fprop( previous_hidden_layer ,
-                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            else
-                dynamic_connections->fprop(previous_hidden_layer,
-                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-
-            //dynamic_connections_copy->fprop(previous_hidden_layer,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-            hidden_layer->expectation_is_not_up_to_date();
-            hidden_layer->computeExpectation();//h_{t}
-
-            previous_input.resize(visible_layer->size);
-            previous_input << visible_layer->expectation;
-
-            bias_tempo.resize(hidden_layer->bias.length());
-            bias_tempo << hidden_layer->bias;
-
-
-            /*  if (visible_connections_option){
-
-                /////////VISIBLE DYNAMIC CONNECTION
-                previous_visible_layer.clear();//v_{t-1}
-                visible_connections->fprop(previous_visible_layer,visible_layer->activation);//conection entre v_{t-1} et v_{t}
-                
-                visible_layer->expectation_is_not_up_to_date();
-                visible_layer->computeExpectation();//v_{t}
-                
-                visi_bias_tempo.resize(visible_layer->bias.length());
-                visi_bias_tempo << visible_layer->bias;
-                }*/
-            
-            begin++;
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                targets_connections[tar]->fprop(
+                    hidden_list(ith_sample_in_sequence),
+                    target_prediction_activations_list[tar](
+                        ith_sample_in_sequence)
+                    );
+                target_layers[tar]->fprop(
+                    target_prediction_activations_list[tar](
+                        ith_sample_in_sequence),
+                    target_prediction_list[tar](
+                        ith_sample_in_sequence) );
+                if( use_target_layers_masks )
+                    target_prediction_list[tar]( ith_sample_in_sequence) *= 
+                        masks_list[tar](ith_sample_in_sequence);
+            }
         }
-
-
-       
-
-
-
-
-
-
-     
-        //connections_transpose->setAsDownInput( hidden_layer->expectation );
-        //visible_layer->getAllActivations( connections_idem_t );
-
-        connections->setAsUpInput( hidden_layer->expectation );
-        visible_layer->getAllActivations( connections_idem );
-        visible_layer->computeExpectation();
-
-
-        partition(previous_input.subVec(14,taillePart), visible_layer->activation.subVec(14+taillePart,taillePart), visible_layer->activation.subVec(14+(taillePart*2),taillePart));
-        partition(previous_input.subVec(14,taillePart), visible_layer->expectation.subVec(14+taillePart,taillePart), visible_layer->expectation.subVec(14+(taillePart*2),taillePart));
-
-
-        //costs[0] = visible_layer->fpropNLL(previous_input,(taillePart*3)+14) ;
-        costs[0] = visible_layer->fpropNLL(previous_input) ;
-       
-        hidden_layer->setAllBias(bias_tempo); 
-
-        /////////VISIBLE DYNAMIC CONNECTION
-        /* if (visible_connections_option){
-            visible_layer->setAllBias(visi_bias_tempo); 
-            }*/
-
-        // costs[0] = 0; //nll/nb_de_temps_par_mesure
-
+   
         if (testoutputs)
+        {
+            int sum_target_layers_size = 0;
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                output.subVec(sum_target_layers_size,target_layers[tar]->size)
+                    << target_prediction_list[tar]( ith_sample_in_sequence);
+                sum_target_layers_size += target_layers[tar]->size;
+            }
             testoutputs->putOrAppendRow(i, output);
-
-        if (testcosts)
-            testcosts->putOrAppendRow(i, costs);
-
-        if (test_stats)
-            test_stats->update(costs, weight);
+        }
+     
+        sum_target_elements = 0;
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            target_layers[tar]->activation << 
+                target_prediction_activations_list[tar](
+                    ith_sample_in_sequence);
+            target_layers[tar]->setExpectation(
+                target_prediction_list[tar](
+                    ith_sample_in_sequence));
+            nll_list(ith_sample_in_sequence,tar) = 
+                target_layer->fpropNLL( 
+                    targets_list[tar](ith_sample_in_sequence) ); 
+            costs[tar] += nll_list(ith_sample_in_sequence,tar);
+            
+            // Normalize by the number of things to predict
+            if( use_target_layers_masks )
+            {
+                n_items[tar] += sum(
+                    input.subVec( inputsize_without_masks 
+                                  + sum_target_elements, 
+                                  target_layers_n_of_target_elements[tar]) );
+                sum_target_elements += 
+                    target_layers_n_of_target_elements[tar];
+            }
+            else
+                n_itmes[tar]++;
+        }
+        ith_sample_in_sequence++;
 
         if (report_progress)
             pb->update(i);
+
+        for(int i=0; i<costs.length(); i++)
+            costs[i] /= n_items[i];
     }
 
-    //costs[0] = costs[0]/(len - nb_oov) ;
-
-    //cout << "Probabilite moyenne : " << costs[0] << endl;
-
+    if (testcosts)
+        testcosts->putOrAppendRow(i, costs);
+    
+    if (test_stats)
+        test_stats->update(costs, weight);
+    
+    ith_sample_in_sequence = 0;
+    hidden_list.clear();
+    hidden_activations_list.clear();
+    hidden2_list.clear();
+    hidden2_activations_list.clear();
+    target_prediction_list.clear();
+    target_prediction_activations_list.clear();
+    input_list.clear();
+    targets_list.clear();
+    nll_list.clear();
+    masks_list.clear();
+   
 }
 
 
 TVec<string> DynamicallyLinkedRBMsModel::getTestCostNames() const
 {
-    TVec<string> cost_names;
-    cost_names.append( "NLL" );
+    TVec<string> cost_names(0);
+    for( int i=0; i<target_layers.length(); i++ )
+        cost_names.append("target" + tostring(i) + ".NLL");
     return cost_names;
 }
 

@@ -85,9 +85,6 @@ public:
     //! Value of the first input component for end-of-sequence delimiter
     real end_of_sequence_symbol;
 
-    //! The weight of an additional input reconstruction error
-    real input_reconstruction_weight;
-
     //! The input layer of the model
     TVec<RBMLayer> input_layer;
 
@@ -114,17 +111,17 @@ public:
 
     //#####  Public Learnt Options  ###########################################
 
-    //! Size of the input layer
-    int input_layer_size;
-
-    //! Size of each target layers
-    TVec<int> target_layers_size;
+    //! Number of elements in the target part of a VMatrix associated
+    //! to each target layer
+    TVec<int> target_layers_n_of_target_elements;
 
     //! Number of symbols for each symbolic field of train_set
     TVec<int> input_symbol_sizes;
     
     //! Number of symbols for each symbolic field of train_set
     TVec< TVec<int> > target_symbol_sizes;
+
+    
     
     //#####  Not Options  #####################################################
 
@@ -152,6 +149,9 @@ public:
     //! measured on-line in the process.
     virtual void train();
 
+    //! Sets the learning of all layers and connections
+    void setLearningRate( real the_learning_rate );
+
     //! Computes the output from the input.
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
@@ -177,14 +177,20 @@ public:
     //! Use the partition
     void partition(TVec<double> part, TVec<double> periode, TVec<double> vel ) const;
     
-    //! Clamps the visible units based on an input vector
-    void clamp_visible_units(const Vec& input) const;
+    //! Clamps the layer units based on a layer vector
+    void clamp_units(const Vec& layer_vector, PP<RBMLayer> layer,
+                     TVec<int> symbol_sizes) const;
 
+    //! Clamps the layer units based on a layer vector
+    //! and provides the associated mask in the correct format.
+    void clamp_units(const Vec& layer_vector, PP<RBMLayer> layer,
+                     TVec<int> symbol_sizes, const Vec& original_mask,
+                     Vec& formated_mask) const;
+    
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,
     //! after the visible units have been clamped
     void recurrent_update();
-
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
@@ -224,12 +230,6 @@ protected:
     //! Store external data;
     AutoVMatrix*  data;
    
-    //! Stores conditional bias
-    mutable Vec cond_bias;
-
-    //! Stores visible conditional bias
-    mutable Vec visi_cond_bias;
-
     //! Stores bias gradient
     mutable Vec bias_gradient;
 
@@ -256,7 +256,7 @@ protected:
     mutable Vec previous_input;
 
     //! Stores previous target layer value
-    mutable Vec previous_target;
+    mutable TVec< Vec > previous_targets;
     
     //! Stores previous hidden layer value
     mutable Vec previous_hidden_layer;
@@ -285,29 +285,31 @@ protected:
     mutable Vec alpha;
 
     //! List of hidden layers values
-    Mat hidden_list;
-    Mat hidden_activations_list;
+    mutable Mat hidden_list;
+    mutable Mat hidden_activations_list;
 
     //! List of second hidden layers values
-    Mat hidden2_list;
-    Mat hidden2_activations_list;
+    mutable Mat hidden2_list;
+    mutable Mat hidden2_activations_list;
 
-    //! List of input prediction values
-    Mat input_prediction_list;
-    Mat input_prediction_activations_list;
-
-    //! List of inputs values
-    Mat input_list;
+    //! List of target prediction values
+    mutable TVec< Mat > target_prediction_list;
+    mutable TVec< Mat > target_prediction_activations_list;
 
     //! List of inputs values
-    Mat target_list;
+    mutable Mat input_list;
+
+    //! List of inputs values
+    mutable TVec< Mat > targets_list;
 
     //! List of the nll of the input samples in a sequence
-    Vec nll_list;
+    mutable Mat nll_list;
 
-    //! Temporary variable to clamp visible units (i.e. set the expectation
-    //! field of visible_layer)
-    mutable Vec input_expectation;
+    //! List of all targets' masks
+    mutable TVec< Mat > masks_list;
+
+    //! Contribution of dynamic weights to hidden layer activation
+    mutable Vec dynamic_activation_contribution;
 
 protected:
     //#####  Protected Member Functions  ######################################
