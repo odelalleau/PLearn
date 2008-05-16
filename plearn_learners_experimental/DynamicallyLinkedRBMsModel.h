@@ -262,13 +262,13 @@ protected:
     mutable TVec< TVec< Vec > > targets_list;
 
     //! List of the nll of the input samples in a sequence
-    mutable TVec< Vec > nll_list;
+    mutable Mat nll_list;
 
     //! List of all targets' masks
     mutable TVec< TVec< Vec > > masks_list;
 
     //! Contribution of dynamic weights to hidden layer activation
-    mutable Vec dynamic_activation_contribution;
+    mutable Vec dynamic_act_no_bias_contribution;
 
 protected:
     //#####  Protected Member Functions  ######################################
