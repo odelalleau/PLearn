@@ -676,6 +676,7 @@ class DBICondor(DBIBase):
         self.file_redirect_stderr = False
         self.redirect_stderr_to_stdout = False
         self.env = ''
+        self.os = ''
 
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
@@ -805,14 +806,14 @@ class DBICondor(DBIBase):
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
 
-        req=""
+        if self.req:
+            req = req+'&&('+self.req+')'
         if self.targetcondorplatform == 'BOTH':
             req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         else :
             req="(Arch == \"%s\")"%(self.targetcondorplatform)
-
-        if self.req != "":
-            req = req+'&&('+self.req+')'
+        if self.os:
+            req+='&&(OpSyS == "'+self.os+'")'
 
         source_file=os.getenv("CONDOR_LOCAL_SOURCE")
         condor_home = os.getenv('CONDOR_HOME')
