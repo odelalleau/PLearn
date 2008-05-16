@@ -67,6 +67,8 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     use_mean_field_cd( false ),
     denoising_learning_rate( 0. ),
     denoising_decrease_ct( 0. ),
+    fraction_of_masked_inputs( 0. ),
+    only_reconstruct_masked_inputs( false ),
     n_classes( -1 ),
     compute_input_space_nll( false ),
     pseudolikelihood_context_size ( 0 ),
@@ -144,6 +146,11 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Fraction of input components set to 0 for denoising "
                   "autoencoder learning.\n");
+
+    declareOption(ol, "only_reconstruct_masked_inputs", 
+                  &PseudolikelihoodRBM::only_reconstruct_masked_inputs,
+                  OptionBase::buildoption,
+                  "Indication that only the masked inputs should be reconstructed.\n");
 
     declareOption(ol, "n_classes", &PseudolikelihoodRBM::n_classes,
                   OptionBase::buildoption,
@@ -268,7 +275,7 @@ void PseudolikelihoodRBM::build_()
 
         if( pseudolikelihood_context_type == "most_correlated"
             && pseudolikelihood_context_size <= 0 )
-            PLERROR("In PseudolikelihoodRBM::train(): "
+            PLERROR("In PseudolikelihoodRBM::build_(): "
                     "pseudolikelihood_context_size should be > 0 "
                     "for \"most_correlated\" context type");        
 
@@ -1321,6 +1328,15 @@ void PseudolikelihoodRBM::train()
                 
                 input_layer->bpropNLL(input, cost, 
                                       reconstruction_activation_gradient);
+                if( only_reconstruct_masked_inputs && 
+                    fraction_of_masked_inputs > 0 )
+                {
+                    for( int j=round(fraction_of_masked_inputs*input_layer->size) ; 
+                         j < input_layer->size ; 
+                         j++)
+                        reconstruction_activation_gradient[ 
+                            autoencoder_input_indices[j] ] = 0; 
+                }
                 input_layer->update( reconstruction_activation_gradient );
 
                 transpose_connection->bpropUpdate( 

@@ -102,6 +102,9 @@ public:
     //! Fraction of input components set to 0 for denoising autoencoder learning
     real fraction_of_masked_inputs;
 
+    //! Indication that only the masked inputs should be reconstructed
+    bool only_reconstruct_masked_inputs;
+
     //! Number of classes in the training set (for supervised learning)
     int n_classes;
     
