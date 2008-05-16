@@ -734,7 +734,7 @@ void DynamicallyLinkedRBMsModel::train()
 
 
 
-void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
+void DynamicallyLinkedRBMsModel::clamp_units(const Vec layer_vector,
                                              PP<RBMLayer> layer,
                                              TVec<int> symbol_sizes) const
 {
@@ -752,7 +752,7 @@ void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
         {
             // Convert to one-hot vector
             layer->expectation.subVec(it,ss).clear();
-            layer->expectation[it+round(layer_vector[i])] = 1;
+            layer->expectation[it+(int)layer_vector[i]] = 1;
             it += ss;
         }
     }
@@ -763,12 +763,12 @@ void DynamicallyLinkedRBMsModel::clamp_units(const Vec layer_vector,
                                              PP<RBMLayer> layer,
                                              TVec<int> symbol_sizes,
                                              const Vec original_mask,
-                                             Vec formated_mask) const
+                                             Vec& formated_mask) const
 {
     int it = 0;
     int ss = -1;
     PLASSERT( original_mask.length() == layer_vector.length() );
-    PLASSERT( layer->size == formated_mask.length() );
+    formated_mask.resize(layer->size);
     for(int i=0; i<layer_vector.length(); i++)
     {
         ss = symbol_sizes[i];
@@ -783,7 +783,7 @@ void DynamicallyLinkedRBMsModel::clamp_units(const Vec layer_vector,
             // Convert to one-hot vector
             layer->expectation.subVec(it,ss).clear();
             formated_mask.subVec(it,ss).fill(original_mask[i]);
-            layer->expectation[it+round(input[i])] = 1;
+            layer->expectation[it+(int)layer_vector[i]] = 1;
             it += ss;
         }
     }
@@ -795,7 +795,7 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
     input_layer->setLearningRate( the_learning_rate );
     hidden_layer->setLearningRate( the_learning_rate );
     input_connections->setLearningRate( the_learning_rate );
-    dynamic_connections-forget();
+    dynamic_connections->forget();
     if( hidden_layer2 )
     {
         hidden_layer2->setLearningRate( the_learning_rate );
@@ -820,14 +820,14 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
             {
                 for( int tar=0; tar<target_layers.length(); tar++)
                 {
-                    target_layer[tar]->activation << targets_prediction_act_no_bias_list[tar](i);
-                    target_layer[tar]->activation += target_layer[tar]->bias;
-                    target_layer[tar]->setExpectation(targets_prediction_list[tar](i));
-                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
+                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
+                    target_layers[tar]->activation += target_layers[tar]->bias;
+                    target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
+                    target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
                     bias_gradient *= target_layers_weights[tar];
-                    bias_gradient *= mask_list[tar](i);
+                    bias_gradient *= masks_list[tar][i];
                     target_layers[tar]->update(bias_gradient);
-                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
+                    target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
                                                          hidden_gradient, bias_gradient,true);
                 }
             }
@@ -835,13 +835,13 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
             {
                 for( int tar=0; tar<target_layers.length(); tar++)
                 {
-                    target_layer[tar]->activation << targets_prediction_act_no_bias_list[tar](i);
-                    target_layer[tar]->activation += target_layer[tar]->bias;
-                    target_layer[tar]->setExpectation(targets_prediction_list[tar](i));
-                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
+                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
+                    target_layers[tar]->activation += target_layers[tar]->bias;
+                    target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
+                    target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
                     bias_gradient *= target_layers_weights[tar];
                     target_layers[tar]->update(bias_gradient);
-                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
+                    target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
                                                          hidden_gradient, bias_gradient,true); 
                 }
             }
@@ -849,12 +849,12 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
             if (hidden_layer2)
             {
                 hidden_layer2->bpropUpdate(
-                    hidden2_act_no_bias_list(i), hidden2_list(i),
+                    hidden2_act_no_bias_list[i], hidden2_list[i],
                     bias_gradient, hidden_gradient);
                 
                 hidden_connections->bpropUpdate(
-                    hidden_list(i),
-                    hidden2_act_no_bias_list(i), 
+                    hidden_list[i],
+                    hidden2_act_no_bias_list[i], 
                     hidden_gradient, bias_gradient);
             }
             
@@ -863,30 +863,30 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
                 hidden_gradient += hidden_temporal_gradient;
                 
                 hidden_layer->bpropUpdate(
-                    hidden_act_no_bias_list(i), hidden_list(i),
+                    hidden_act_no_bias_list[i], hidden_list[i],
                     hidden_temporal_gradient, hidden_gradient);
                 
                 dynamic_connections->bpropUpdate(
-                    hidden_list(i-1),
-                    hidden_act_no_bias_list(i), // Here, it should be cond_bias, but doesn't matter
+                    hidden_list[i-1],
+                    hidden_act_no_bias_list[i], // Here, it should be cond_bias, but doesn't matter
                     hidden_gradient, hidden_temporal_gradient);
                 
                 hidden_temporal_gradient << hidden_gradient;
                 
-                connections->bpropUpdate(
-                    input_list(i),
-                    hidden_act_no_bias_list(i), 
+                input_connections->bpropUpdate(
+                    input_list[i],
+                    hidden_act_no_bias_list[i], 
                     visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
                 
             }
             else
             {
                 hidden_layer->bpropUpdate(
-                    hidden_act_no_bias_list(i), hidden_list(i),
+                    hidden_act_no_bias_list[i], hidden_list[i],
                     hidden_temporal_gradient, hidden_gradient); // Not really temporal gradient, but this is the final iteration...
-                connections->bpropUpdate(
-                    input_list(i),
-                    hidden_act_no_bias_list(i), 
+                input_connections->bpropUpdate(
+                    input_list[i],
+                    hidden_act_no_bias_list[i], 
                     visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
 
                 // Could learn initial value for h_{-1}
@@ -936,6 +936,9 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
     }
     
     int ith_sample_in_sequence = 0;
+    int inputsize_without_masks = inputsize() 
+        - ( use_target_layers_masks ? targetsize() : 0 );
+    int sum_target_elements = 0;
     for (int i = 0; i < len; i++)
     {
         testset.getExample(i, input, target, weight);
@@ -1145,7 +1148,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         costs[i] /= n_items[i];
 
     if (testcosts)
-        testcosts->putOrAppendRow(i, costs);
+        testcosts->putOrAppendRow(0, costs);
     
     if (test_stats)
         test_stats->update(costs, weight);

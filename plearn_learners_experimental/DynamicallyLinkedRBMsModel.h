@@ -179,14 +179,14 @@ public:
     void partition(TVec<double> part, TVec<double> periode, TVec<double> vel ) const;
     
     //! Clamps the layer units based on a layer vector
-    void clamp_units(const Vec& layer_vector, PP<RBMLayer> layer,
+    void clamp_units(const Vec layer_vector, PP<RBMLayer> layer,
                      TVec<int> symbol_sizes) const;
 
     //! Clamps the layer units based on a layer vector
     //! and provides the associated mask in the correct format.
-    void clamp_units(const Vec layer_vector, PP<RBMLayer>& layer,
-                     TVec<int>& symbol_sizes, const Vec original_mask,
-                     Vec formated_mask) const;
+    void clamp_units(const Vec layer_vector, PP<RBMLayer> layer,
+                     TVec<int> symbol_sizes, const Vec original_mask,
+                     Vec &formated_mask) const;
     
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,
