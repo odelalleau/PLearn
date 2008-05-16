@@ -89,6 +89,7 @@ class VMatrix: public Object
     mutable Vec dotrow_1;
     mutable Vec dotrow_2;
     time_t mtime_;          ///< Time of "last modification" of data files.
+    time_t mtime_update;    
 
 protected:
 

@@ -76,6 +76,7 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 VMatrix::VMatrix(bool call_build_):
     inherited   (call_build_),
     mtime_      (0),
+    mtime_update(0),
     length_     (-1),
     width_      (-1),
     inputsize_  (-1),
@@ -92,6 +93,7 @@ VMatrix::VMatrix(bool call_build_):
 VMatrix::VMatrix(int the_length, int the_width, bool call_build_):
     inherited                       (call_build_),
     mtime_                          (0),
+    mtime_update                    (0),
     length_                         (the_length),
     width_                          (the_width),
     inputsize_                      (-1),
@@ -152,11 +154,11 @@ void VMatrix::declareOptions(OptionList & ol)
         "And if it is the source inside another VMatrix that sets its \n"
         "metadatadir, it will often be set from that surrounding vmat's metadata.\n");
 
-//     declareOption(
-//         ol, "mtime", &VMatrix::mtime_, 
-//         OptionBase::buildoption|OptionBase::nosave,
-//         "DO NOT play with this if you don't know the implementation!\n"
-//         "The modification time of this VMatrix. Defaults to 0(unknow)");
+    declareOption(
+        ol, "mtime", &VMatrix::mtime_update, 
+        OptionBase::buildoption|OptionBase::nosave,
+        "DO NOT play with this if you don't know the implementation!\n"
+        "This add a dependency mtime to the gived value.");
 
     inherited::declareOptions(ol);
 }
@@ -476,6 +478,8 @@ void VMatrix::build_()
 {
     if(!metadatadir.isEmpty())
         setMetaDataDir(metadatadir); // make sure we perform all necessary operations
+    if(mtime_update!=0)
+        updateMtime(mtime_update);
 }
 
 ///////////
