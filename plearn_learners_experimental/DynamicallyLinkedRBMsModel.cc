@@ -732,6 +732,8 @@ void DynamicallyLinkedRBMsModel::train()
     train_stats->finalize();
 }
 
+
+
 void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
                                              PP<RBMLayer> layer,
                                              TVec<int> symbol_sizes) const
@@ -750,7 +752,7 @@ void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
         {
             // Convert to one-hot vector
             layer->expectation.subVec(it,ss).clear();
-            layer->expectation[it+round(input[i])] = 1;
+            layer->expectation[it+round(layer_vector[i])] = 1;
             it += ss;
         }
     }
