@@ -525,16 +525,16 @@ void DynamicallyLinkedRBMsModel::train()
                     recurrent_update();
                     
                     ith_sample_in_sequence = 0;
-                    hidden_list.clear();
-                    hidden_act_no_bias_list.clear();
-                    hidden2_list.clear();
-                    hidden2_act_no_bias_list.clear();
-                    target_prediction_list.clear();
-                    target_prediction_act_no_bias_list.clear();
-                    input_list.clear();
-                    targets_list.clear();
-                    nll_list.clear();
-                    masks_list.clear();
+                    hidden_list.resize(0);
+                    hidden_act_no_bias_list.resize(0);
+                    hidden2_list.resize(0);
+                    hidden2_act_no_bias_list.resize(0);
+                    target_prediction_list.resize(0);
+                    target_prediction_act_no_bias_list.resize(0);
+                    input_list.resize(0);
+                    targets_list.resize(0);
+                    nll_list.resize(0);
+                    masks_list.resize(0);
                     continue;
                 }
 
@@ -599,6 +599,7 @@ void DynamicallyLinkedRBMsModel::train()
                                         target_layers_n_of_target_elements[tar]),
                                     masks_list[tar](ith_sample_in_sequence)
                             );
+
                     }
                     else
                     {
@@ -607,10 +608,10 @@ void DynamicallyLinkedRBMsModel::train()
                                         target_layers_n_of_target_elements[tar]),
                                     target_layers[tar],
                                     target_symbol_sizes[tar]);
-                        sum_target_elements += target_layers_n_of_target_elements[tar];
-                        targets_list[tar](ith_sample_in_sequence) << 
-                            target_layers[tar]->expectation;
                     }
+                    sum_target_elements += target_layers_n_of_target_elements[tar];
+                    targets_list[tar](ith_sample_in_sequence) << 
+                        target_layers[tar]->expectation;
                 }
                 
                 input_connections->fprop( input_list(ith_sample_in_sequence), 
@@ -768,8 +769,8 @@ void DynamicallyLinkedRBMsModel::clamp_units(const Vec layer_vector,
 {
     int it = 0;
     int ss = -1;
-    formated_mask.resize( layer->size );
-    PLASSER( original_mask.length() == layer_vector.length() );
+    PLASSERT( original_mask.length() == layer_vector.length() );
+    PLASSERT( layer->size == formated_mask.length() );
     for(int i=0; i<layer_vector.length(); i++)
     {
         ss = symbol_sizes[i];

@@ -244,28 +244,28 @@ protected:
     mutable Vec hidden_temporal_gradient;
         
     //! List of hidden layers values
-    mutable Mat hidden_list;
-    mutable Mat hidden_act_no_bias_list;
+    mutable TVec< Vec > hidden_list;
+    mutable TVec< Vec > hidden_act_no_bias_list;
 
     //! List of second hidden layers values
-    mutable Mat hidden2_list;
-    mutable Mat hidden2_act_no_bias_list;
+    mutable TVec< Vec > hidden2_list;
+    mutable TVec< Vec > hidden2_act_no_bias_list;
 
     //! List of target prediction values
-    mutable TVec< Mat > target_prediction_list;
-    mutable TVec< Mat > target_prediction_act_no_bias_list;
+    mutable TVec< TVec< Vec > > target_prediction_list;
+    mutable TVec< TVec< Vec > > target_prediction_act_no_bias_list;
 
     //! List of inputs values
-    mutable Mat input_list;
+    mutable TVec< Vec > input_list;
 
     //! List of inputs values
-    mutable TVec< Mat > targets_list;
+    mutable TVec< TVec< Vec > > targets_list;
 
     //! List of the nll of the input samples in a sequence
-    mutable Mat nll_list;
+    mutable TVec< Vec > nll_list;
 
     //! List of all targets' masks
-    mutable TVec< Mat > masks_list;
+    mutable TVec< TVec< Vec > > masks_list;
 
     //! Contribution of dynamic weights to hidden layer activation
     mutable Vec dynamic_activation_contribution;
