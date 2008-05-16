@@ -667,6 +667,9 @@ class DBICondor(DBIBase):
     def __init__( self, commands, **args ):
         self.getenv = False
         self.nice = False
+        # in Meg for initialization for consistency with cluster
+        # then in kilo as that is what is needed by condor
+        self.mem = 0
         self.req = ''
         self.raw = ''
         self.rank = ''
@@ -679,6 +682,7 @@ class DBICondor(DBIBase):
         self.os = ''
 
         DBIBase.__init__(self, commands, **args)
+        self.mem=int(self.mem)*1024
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
 
@@ -821,7 +825,12 @@ class DBICondor(DBIBase):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
-            
+
+        if self.mem<=0:
+            try:
+                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size
+            except:
+                pass
         condor_dat.write( dedent('''\
                 executable     = %s
                 universe       = vanilla
@@ -835,6 +844,10 @@ class DBICondor(DBIBase):
                        self.log_dir,
                        self.log_dir,
                        self.log_dir,str(self.getenv),str(self.nice))))
+        if self.mem>0:
+            #condor need value in Kb
+            condor_dat.write('ImageSize      = %d\n'%(self.mem))
+
         if self.files: #ON_EXIT_OR_EVICT
             condor_dat.write( dedent('''\
                 when_to_transfer_output = ON_EXIT

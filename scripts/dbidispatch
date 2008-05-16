@@ -9,9 +9,9 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor|--bqtools
     bqtools, cluster option  :[--duree=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
     all except condor options:[--[*no_]nb_proc=N]
-    cluster, condor options  : [--32|--64|--3264] [--os=X]
+    cluster, condor options  : [--32|--64|--3264] [--os=X] [--mem=N]
     condor option            : [--req="CONDOR_REQUIREMENT"] [--[*no_]nice] [--[*no_]getenv] [*--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--env=VAR=VALUE[;VAR2=VALUE2]][--raw=CONDOR_EXPRESSION]
-    cluster option           : [--mem=X] [*--[no_]cwait]  [--[*no_]force] [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
+    cluster option           : [*--[no_]cwait]  [--[*no_]force] [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
 An * after '[' signals the default value.
 '''
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
@@ -55,11 +55,11 @@ bqtools only options:
 
 cluster and condor options:
   The '--3264', '--32' or '--64' specify which type of cpu the node must have to execute the commands.
+  The '--mem=X' speficify the number of meg the program need to execute.
+  The '--os=X' speficify the os of the server: fc4 or fc7. Default: fc4
 
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. This must be enabled if there is not nb_proc available nodes. Otherwise when there are no nodes available, the launch of that command fails.
-  The '--mem=X' speficify the number of meg the program need to execute.
-  The '--os=X' speficify the os of the server: fc4 or fc7. Default: fc4
   The '--force' option is passed to cluster
   The '--interruptible' option is passed to cluster
   The '--cpu=nb_cpu_per_node' option is passed to cluster
