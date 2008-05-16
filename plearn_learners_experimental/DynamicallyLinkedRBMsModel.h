@@ -86,7 +86,7 @@ public:
     real end_of_sequence_symbol;
 
     //! The input layer of the model
-    TVec<RBMLayer> input_layer;
+    PP<RBMLayer> input_layer;
 
     //! The target layers of the model
     TVec< PP<RBMLayer> > target_layers;
@@ -163,6 +163,7 @@ public:
     //! thus the test method).
     virtual TVec<std::string> getTestCostNames() const;
 
+    
 
 //    //! Generate music in a folder
 //    void generate(int nbNotes);
@@ -183,9 +184,9 @@ public:
 
     //! Clamps the layer units based on a layer vector
     //! and provides the associated mask in the correct format.
-    void clamp_units(const Vec& layer_vector, PP<RBMLayer> layer,
-                     TVec<int> symbol_sizes, const Vec& original_mask,
-                     Vec& formated_mask) const;
+    void clamp_units(const Vec layer_vector, PP<RBMLayer>& layer,
+                     TVec<int>& symbol_sizes, const Vec original_mask,
+                     Vec formated_mask) const;
     
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,

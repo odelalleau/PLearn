@@ -79,6 +79,7 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
     );
 
+
 DynamicallyLinkedRBMsModel::DynamicallyLinkedRBMsModel() :
     //rbm_learning_rate( 0.01 ),
     recurrent_net_learning_rate( 0.01),
@@ -263,7 +264,7 @@ void DynamicallyLinkedRBMsModel::build_()
                             "symbolic targets is not implemented.");
                 if( dict->size() == 0 )
                     PLERROR("DynamicallyLinkedRBMsModel::build_(): dictionary "
-                            "of field %d is empty", i);
+                            "of field %d is empty", tar);
 
                 target_symbol_sizes[tar_layer].push_back(dict->size());
                 target_layers_n_of_target_elements[tar_layer]++;
@@ -426,7 +427,7 @@ void DynamicallyLinkedRBMsModel::forget()
     input_layer->forget();
     hidden_layer->forget();
     input_connections->forget();
-    dynamic_connections-forget();
+    dynamic_connections->forget();
     if( hidden_layer2 )
     {
         hidden_layer2->forget();
@@ -586,6 +587,7 @@ void DynamicallyLinkedRBMsModel::train()
                 for( int tar=0; tar < target_layers.length(); tar++ )
                 {
                     if( use_target_layers_masks )
+                    {
                         clamp_units(target.subVec(
                                         sum_target_elements,
                                         target_layers_n_of_target_elements[tar]),
@@ -597,15 +599,18 @@ void DynamicallyLinkedRBMsModel::train()
                                         target_layers_n_of_target_elements[tar]),
                                     masks_list[tar](ith_sample_in_sequence)
                             );
+                    }
                     else
+                    {
                         clamp_units(target.subVec(
                                         sum_target_elements,
                                         target_layers_n_of_target_elements[tar]),
                                     target_layers[tar],
                                     target_symbol_sizes[tar]);
-                    sum_target_elements += target_layers_n_of_target_elements[tar];
-                    targets_list[tar](ith_sample_in_sequence) << 
-                        target_layers[tar]->expectation;
+                        sum_target_elements += target_layers_n_of_target_elements[tar];
+                        targets_list[tar](ith_sample_in_sequence) << 
+                            target_layers[tar]->expectation;
+                    }
                 }
                 
                 input_connections->fprop( input_list(ith_sample_in_sequence), 
@@ -621,7 +626,7 @@ void DynamicallyLinkedRBMsModel::train()
                         dynamic_actvation_contribution;
                 }
                  
-                hidden_layer->fprop( hidden_act_no_bias_list(ith_sample_in_sequence) 
+                hidden_layer->fprop( hidden_act_no_bias_list(ith_sample_in_sequence), 
                                      hidden_list(ith_sample_in_sequence) );
                  
                 if( hidden_layer2 )
@@ -755,11 +760,11 @@ void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
     layer->setExpectation( layer->expectation );
 }
 
-void DynamicallyLinkedRBMsModel::clamp_units(const Vec& layer_vector,
+void DynamicallyLinkedRBMsModel::clamp_units(const Vec layer_vector,
                                              PP<RBMLayer> layer,
                                              TVec<int> symbol_sizes,
-                                             const Vec& original_mask,
-                                             Vec& formated_mask) const
+                                             const Vec original_mask,
+                                             Vec formated_mask) const
 {
     int it = 0;
     int ss = -1;
