@@ -53,7 +53,9 @@ RBMMatrixTransposeConnection::RBMMatrixTransposeConnection(
     real the_learning_rate ) :
     inherited(the_learning_rate), 
     rbm_matrix_connection(the_rbm_matrix_connection)
-{}
+{
+    build();
+}
 
 void RBMMatrixTransposeConnection::declareOptions(OptionList& ol)
 {
