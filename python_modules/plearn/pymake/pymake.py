@@ -74,7 +74,6 @@ def printusage():
     print
     print 'Options from pymake:'
     print """
-    
 Options specifying the type of compiled file to produce:
   -dll: create a dll instead of an executable file.
         It probably works ONLY on Windows with MinGW installed.
@@ -94,6 +93,9 @@ Options specifying the type of compiled file to produce:
   -static: produce a statically linked executable.
 
 Options that will not affect the final compiled file:
+  -dbi=<dbi_mode>: use the DBI interface instead of launching compilation
+                   directly on remote hosts.
+                   <dbi_mode> can be one of Bqtools, Condor, or Cluster.
   -force: force recompilation of all necessary files,
           even if they are up to date.
   -link: force relinking of the target, even if it is up to date.
@@ -1047,7 +1049,6 @@ def parallel_compile(files_to_compile, list_of_hosts, nice_values={},
 
 
 def dbi_parallel_compile(files_to_compile, dbi_mode):
-
     #FIXME: Prepare something?
     commands = []
 
@@ -1064,8 +1065,8 @@ def dbi_parallel_compile(files_to_compile, dbi_mode):
 
     from plearn.parallel.dbi import DBI
     jobs = DBI(commands, dbi_mode)
+    jobs.micro = 10 # Compile 10 files on each node
     jobs.run()
-    jobs.wait()
 
 def win32_parallel_compile(files_to_compile):
     """files_to_compile is a list of FileInfo of .cc files"""
