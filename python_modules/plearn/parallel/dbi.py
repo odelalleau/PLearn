@@ -675,6 +675,7 @@ class DBICondor(DBIBase):
         self.file_redirect_stdout = False
         self.file_redirect_stderr = False
         self.redirect_stderr_to_stdout = False
+        self.env = ''
 
         DBIBase.__init__(self, commands, **args)
         if not os.path.exists(self.log_dir):
@@ -836,9 +837,11 @@ class DBICondor(DBIBase):
         if self.files: #ON_EXIT_OR_EVICT
             condor_dat.write( dedent('''\
                 when_to_transfer_output = ON_EXIT
-                should_transfer_files = Yes
-                transfer_input_files = %s
+                should_transfer_files   = Yes
+                transfer_input_files    = %s
                 '''%(self.files+','+launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
+        if self.env:
+            condor_dat.write('environment    = '+self.env+'\n')
         if self.raw:
             condor_dat.write( self.raw+'\n')
         if self.rank:

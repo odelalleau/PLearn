@@ -3,7 +3,7 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|**--nodbilog] [--condor|--bqtools[=nb_proc]|--cluster[=nb_proc]|--local[=nb_proc]|--ssh[=nb_proc]] [--nb_proc=nb_proc] [--mem=X] [--os=X] [--test|*--no_test] [--testdbi] [--long|**--no_long] [--micro[=nb_batch]] [--duree=X] [**--cwait|--no_cwait] [--req="CONDOR_REQUIREMENT"] [--force|**--no_force] [--nice|**--no_nice] [--interruptible|**--no_interruptible] [--cpu=nb_cpu_per_node] [**--getenv|--no_getenv] [--32|--64|--3264] [--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--raw=CONDOR_EXPRESSION] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value in dbidispatch. An ** before -- signal a default option value in dbi'
+ShortHelp='Usage: dbidispatch [--help|-h] [--dbilog|**--nodbilog] [--condor|--bqtools[=nb_proc]|--cluster[=nb_proc]|--local[=nb_proc]|--ssh[=nb_proc]] [--nb_proc=nb_proc] [--mem=X] [--os=X] [--test|*--no_test] [--testdbi] [--long|**--no_long] [--micro[=nb_batch]] [--duree=X] [**--cwait|--no_cwait] [--req="CONDOR_REQUIREMENT"] [--force|**--no_force] [--nice|**--no_nice] [--interruptible|**--no_interruptible] [--cpu=nb_cpu_per_node] [**--getenv|--no_getenv] [--32|--64|--3264] [--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--env=VAR=VALUE][--raw=CONDOR_EXPRESSION] {--file=FILEPATH | <command-template>} \n An * before -- signals the default option value in dbidispatch. An ** before -- signal a default option value in dbi'
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
 %(ShortHelp)s
@@ -76,6 +76,7 @@ condor only options:
         witch is equivalent to
      dbidispatch '--req=regexp("computer0*", target.Machine)'
   The '--nice'('--no_nice') option set the nice_user option to condor. If nice, the job(s) will have the lowest possible priority.
+  The '--env=VAR=VALUE' option will set in the environment of the executing jobs the variable VAR with value VALUE. To pass many variable you can 1) use one --env option and separ the value by ';'(don't forget to quote) or 2) you can pass many time the --env parameter.
   The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
   If the CONDOR_HOME environment variable is set, then the HOME variable will
      be set to this value for jobs submitted to condor.
@@ -174,7 +175,7 @@ for argv in to_parse:
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice"]:
         dbi_param[argv[5:]]=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
-                                "--req", "--files", "--raw", "--rank"]:
+                                "--req", "--files", "--raw", "--rank", "--env"]:
         param=argv.split('=')[0][2:]
         if param in ["req", "files", "rank"]:
             #param that we happend to if defined more then one time
@@ -183,6 +184,9 @@ for argv in to_parse:
         elif param == "raw":
             dbi_param.setdefault(param,'')
             dbi_param[param]+='\n'+argv.split('=',1)[1]
+        elif param=="env":
+            dbi_param.setdefault(param,"")
+            dbi_param[param]+=";"+argv.split('=',1)[1]
         else:
             #otherwise we erase the old value
             dbi_param[param]=argv.split('=',1)[1]
