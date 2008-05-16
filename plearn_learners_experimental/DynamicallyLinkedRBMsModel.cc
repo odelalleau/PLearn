@@ -248,14 +248,18 @@ void DynamicallyLinkedRBMsModel::build_()
         int tar_layer = 0;
         int tar_layer_size = 0;
         target_symbol_sizes.resize(target_layers.length());
+        for( int tar_layer=0; tar_layer<target_layers.length(); 
+             tar_layer++ )
+            target_symbol_sizes[tar_layer].resize(0);
+        target_layers_n_of_target_elements.resize( targetsize() );
         target_layers_n_of_target_elements.clear();
+
         for( int tar=0; tar<targetsize(); tar++)
         {
             if( tar_layer > target_layers.length() )
                 PLERROR("DynamicallyLinkedRBMsModel::build_(): target layers "
                         "does not cover all targets.");            
 
-            target_symbol_sizes[tar_layer].resize(0);
             dict = train_set->getDictionary(tar+inputsize());
             if(dict)
             {
@@ -452,7 +456,7 @@ void DynamicallyLinkedRBMsModel::train()
     real weight = 0; // Unused
     Vec train_costs( getTrainCostNames().length() );
     train_costs.clear();
-    TVec<int> train_n_items( getTrainCostNames().length() );
+    Vec train_n_items( getTrainCostNames().length() );
 
     if( !initTrain() )
     {
@@ -811,10 +815,14 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
 
 void DynamicallyLinkedRBMsModel::recurrent_update()
 {
-    
+        hidden_temporal_gradient.resize(hidden_layer->size);
         hidden_temporal_gradient.clear();
         for(int i=hidden_list.length()-1; i>=0; i--){   
 
+            if( hidden_layer2 )
+                hidden_gradient.resize(hidden_layer2->size);
+            else
+                hidden_gradient.resize(hidden_layer->size);
             hidden_gradient.clear();
             if(use_target_layers_masks)
             {
@@ -827,8 +835,12 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
                     bias_gradient *= target_layers_weights[tar];
                     bias_gradient *= masks_list[tar][i];
                     target_layers[tar]->update(bias_gradient);
-                    target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                         hidden_gradient, bias_gradient,true);
+                    if( hidden_layer2 )
+                        target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                             hidden_gradient, bias_gradient,true);
+                    else
+                        target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                             hidden_gradient, bias_gradient,true);
                 }
             }
             else
@@ -841,8 +853,13 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
                     target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
                     bias_gradient *= target_layers_weights[tar];
                     target_layers[tar]->update(bias_gradient);
-                    target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                         hidden_gradient, bias_gradient,true); 
+                    if( hidden_layer2 )
+                        target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                             hidden_gradient, bias_gradient,true); 
+                    else
+                        target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                             hidden_gradient, bias_gradient,true); 
+
                 }
             }
 
@@ -922,7 +939,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
     Vec output(outputsize());
     Vec costs(nTestCosts());
     costs.clear();
-    TVec<int> n_items(nTestCosts());
+    Vec n_items(nTestCosts());
     n_items.clear();
 
     PP<ProgressBar> pb;
