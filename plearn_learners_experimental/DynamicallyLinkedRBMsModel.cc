@@ -799,7 +799,7 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
     input_layer->setLearningRate( the_learning_rate );
     hidden_layer->setLearningRate( the_learning_rate );
     input_connections->setLearningRate( the_learning_rate );
-    dynamic_connections->forget();
+    dynamic_connections->setLearningRate( the_learning_rate );
     if( hidden_layer2 )
     {
         hidden_layer2->setLearningRate( the_learning_rate );
@@ -906,7 +906,6 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
                     hidden_act_no_bias_list[i], 
                     visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
 
-                // Could learn initial value for h_{-1}
             }
         }
     
@@ -973,6 +972,13 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             targets_list.resize(0);
             nll_list.resize(0,0);
             masks_list.resize(0);
+
+            if (testoutputs)
+            {
+                output.fill(end_of_sequence_symbol);
+                testoutputs->putOrAppendRow(i, output);
+            }
+
             continue;
         }
 
