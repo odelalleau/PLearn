@@ -55,6 +55,8 @@ class AdaBoostMultiClasses:
         t2=time.time()
         self.train_time+=t2-t1
         self.train_stats=VecStatsCollector()
+        print self.learner1.getTrainStatsCollector().length()
+        print self.learner2.getTrainStatsCollector().length()
         self.train_stats.append(self.learner1.getTrainStatsCollector(),
                                 "sublearner1.",[])
         self.train_stats.append(self.learner2.getTrainStatsCollector(),
@@ -224,7 +226,7 @@ class AdaBoostMultiClasses:
         self.learner2.save(file2,encoding)
     
     def load_old_learner(self,filepath=None,trainSet1=None,trainSet2=None,stage1=-1,stage2=-1):
-        assert(trainSet1 and trainSet2)
+        # if their is no trainSet1 and trainSet2, we suppose that their is one saved in the learner
         if not filepath:
             assert(not self.learner1.expdir.endswith("/learner1") or not self.learner2.expdir.endswith("/learner2"))
             path=self.learner1.expdir[:-9]
@@ -271,6 +273,7 @@ class AdaBoostMultiClasses:
             self.learner1.setTrainingSet(trainSet1,False)
         if trainSet2:
             self.learner2.setTrainingSet(trainSet2,False)
+
         self.learner1.setTrainStatsCollector(VecStatsCollector())
         self.learner2.setTrainStatsCollector(VecStatsCollector())
 

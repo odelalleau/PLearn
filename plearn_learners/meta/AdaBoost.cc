@@ -217,6 +217,12 @@ void AdaBoost::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
+
+    declareOption(ol, "train_set",
+                  &AdaBoost::train_set,
+                  OptionBase::learntoption||OptionBase::nosave,
+                  "The training set, so we can reload it.\n");
+
 }
 
 void AdaBoost::build_()
