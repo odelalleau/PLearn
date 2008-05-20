@@ -811,11 +811,13 @@ class DBICondor(DBIBase):
         condor_dat = open( condor_file, 'w' )
 
         if self.req:
-            req = req+'&&('+self.req+')'
+            req = self.req
+        else:
+            req = "True"
         if self.targetcondorplatform == 'BOTH':
-            req="((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
+            req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         else :
-            req="(Arch == \"%s\")"%(self.targetcondorplatform)
+            req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
         if self.os:
             req+='&&(OpSyS == "'+self.os+'")'
 
