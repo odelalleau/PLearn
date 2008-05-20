@@ -312,11 +312,6 @@ real SecondIterationWrapper::deGaussianize(real prediction)
     return (search_table(min, 1) + search_table(max, 1)) / 2.0;
 }
 
-void SecondIterationWrapper::forget()
-{
-    base_regressor->forget();
-}
-
 int SecondIterationWrapper::outputsize() const
 {
     return base_regressor?base_regressor->outputsize():-1;
