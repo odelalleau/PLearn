@@ -314,6 +314,7 @@ real SecondIterationWrapper::deGaussianize(real prediction)
 
 void SecondIterationWrapper::forget()
 {
+    base_regressor->forget();
 }
 
 int SecondIterationWrapper::outputsize() const
