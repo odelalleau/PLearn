@@ -56,7 +56,8 @@ class RBMBinomialLayer: public RBMLayer
 public:
     //#####  Public Build Options  ############################################
 
-
+    // Indication that samples should be in {-1,1}, not {0,1}
+    bool use_signed_samples;
 
 public:
     //#####  Public Member Functions  #########################################
