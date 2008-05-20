@@ -1331,7 +1331,7 @@ void PseudolikelihoodRBM::train()
                 if( only_reconstruct_masked_inputs && 
                     fraction_of_masked_inputs > 0 )
                 {
-                    for( int j=round(fraction_of_masked_inputs*input_layer->size) ; 
+                    for( int j=(int)round(fraction_of_masked_inputs*input_layer->size) ; 
                          j < input_layer->size ; 
                          j++)
                         reconstruction_activation_gradient[ 
@@ -1447,6 +1447,7 @@ void PseudolikelihoodRBM::computeCostsFromOutputs(const Vec& input,
                 hidden_layer->activation) - dot(input,input_layer->bias) + log_Z;
         }
     }
+    costs[cumulative_training_time_cost_index] = cumulative_training_time;
 }
 
 TVec<string> PseudolikelihoodRBM::getTestCostNames() const
