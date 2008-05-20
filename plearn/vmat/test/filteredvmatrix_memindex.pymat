@@ -1,0 +1,11 @@
+# FilteredVMatrix using memory to store filtered indices.
+
+from plearn.pyplearn import pl
+
+def main():
+    return pl.ForwardVMatrix(
+            vm = pl.FilteredVMatrix(
+                source = pl.AutoVMatrix(
+                    filename = 'PLEARNDIR:examples/data/test_suite/toy_multi_class_bags.amat'),
+                prg = '@bag_info 2 >='))
+
