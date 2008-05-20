@@ -1205,6 +1205,7 @@ def find_dependency(args,type='link'):
     configpath = get_config_path(target)
     execfile( configpath, globals() )
     options = getOptions(options_choices, optionargs)
+
     sourcedirs = unique(sourcedirs)
 
     if isccfile(target) or type=='include':
@@ -2691,7 +2692,7 @@ def main( args ):
 
     if 'local_ofiles' in optionargs:
         local_ofiles = 1
-        optionargs.remove('local_ofiles')
+        while 'local_ofiles' in optionargs: optionargs.remove('local_ofiles')
     else:
         local_ofiles = 0
     for option in optionargs:
