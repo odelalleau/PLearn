@@ -55,8 +55,6 @@ class AdaBoostMultiClasses:
         t2=time.time()
         self.train_time+=t2-t1
         self.train_stats=VecStatsCollector()
-        print self.learner1.getTrainStatsCollector().length()
-        print self.learner2.getTrainStatsCollector().length()
         self.train_stats.append(self.learner1.getTrainStatsCollector(),
                                 "sublearner1.",[])
         self.train_stats.append(self.learner2.getTrainStatsCollector(),
