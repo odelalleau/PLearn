@@ -1052,7 +1052,9 @@ void StatsCollector::newwrite(PStream& out) const
             out << "value: " << it->first 
                 << "  #equal:" << it->second.n
                 << "  #less:" << it->second.nbelow
-                << "  avg_of_less:" << it->second.sum/it->second.nbelow << endl;
+                << "  avg_of_less:" << it->second.sum/it->second.nbelow
+                << "  % of non missing:"<< (real(it->second.n)/nnonmissing())
+                << endl;
         }
         out << "\n# samples: " << n() << "\n";
         out << "# missing: " << nmissing() << "\n";
