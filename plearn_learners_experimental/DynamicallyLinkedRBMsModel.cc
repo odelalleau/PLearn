@@ -43,32 +43,23 @@
 #include "DynamicallyLinkedRBMsModel.h"
 #include "plearn/math/plapack.h"
 
-// Options to have:
-//
-// - input_layer
-// - input_connection
-// - target_layers
-// - target_connections
-// - target_layers_weights
-// - mask_size
-// - end_of_sequence_symbol
-// - input reconstruction weight
-//
-// Problems to have in mind:
-// 
-// - have a proper normalization of costs
-// - output one cost per target 
-// - make sure gradient descent is proper (change some vectors into matrices, etc.)
-// - make sure end_of_sequence_symbol is used appropriately
-// - make sure declareOption includes everything, including saved variable
-// - verify use of mask is proper
-// - do proper resize of recurrent internal variables
-// - implement deepcopy appropriately
-// - corriger bug avec activation (faut additionner les biais!!!)
-
 // - commiter mse
+// - ajouter denoising recurrent net. Deux possibilités:
+//   1) on ajoute du bruit à l'input, et on reconstruit les targets avec des poids
+//      possiblement différents
+//     * option denoising_target_layers_weights (c'est là qu'on met l'input)
+//     * version de clamp_units qui ajoute le bruit
+//   2) on reconstruit l'input directement (sans 2e couche cachée)
+//     * toujours clamp_units qui ajoute le bruit
+//     * une option qui dit quelle partie de l'input reconstruire et du code 
+//       pour bloquer le gradient qui ne doit pas passer (pas très propre, 
+//       mais bon...)
+//     * une option donnant les connections de reconstruction
+//     * du code pour entraîner séparément les hidden_connections (si présentes)
+// - pourrait avoir le gradient du denoising recurrent net en même temps que
+//   celui du "fine-tuning"
 // - add dynamic_activations_list and use it in recurrent_update
-// - verify code works with and without hidden_layer2
+
 
 namespace PLearn {
 using namespace std;
@@ -144,7 +135,7 @@ void DynamicallyLinkedRBMsModel::declareOptions(OptionList& ol)
                   &DynamicallyLinkedRBMsModel::dynamic_connections,
                   OptionBase::buildoption,
                   "The RBMConnection between the first hidden layers, "
-                  "through time.\n");
+                  "through time (optional).\n");
 
     declareOption(ol, "hidden_connections", 
                   &DynamicallyLinkedRBMsModel::hidden_connections,
@@ -214,6 +205,11 @@ void DynamicallyLinkedRBMsModel::build_()
     if(train_set)
     {
         PLASSERT( target_layers_weights.length() == target_layers.length() );
+        PLASSERT( target_connections.length() == target_layers.length() );
+        PLASSERT( target_layers.length() > 0 );
+        PLASSERT( input_layer );
+        PLASSERT( hidden_layer );
+        PLASSERT( input_connections );
 
         // Parsing symbols in input
         int input_layer_size = 0;
@@ -316,14 +312,17 @@ void DynamicallyLinkedRBMsModel::build_()
         input_connections->build();
 
 
-        dynamic_connections->down_size = hidden_layer->size;
-        dynamic_connections->up_size = hidden_layer->size;
-        if( !dynamic_connections->random_gen )
+        if( dynamic_connections )
         {
-            dynamic_connections->random_gen = random_gen;
-            dynamic_connections->forget();
+            dynamic_connections->down_size = hidden_layer->size;
+            dynamic_connections->up_size = hidden_layer->size;
+            if( !dynamic_connections->random_gen )
+            {
+                dynamic_connections->random_gen = random_gen;
+                dynamic_connections->forget();
+            }
+            dynamic_connections->build();
         }
-        dynamic_connections->build();
 
         if( hidden_layer2 )
         {
@@ -332,6 +331,8 @@ void DynamicallyLinkedRBMsModel::build_()
                 hidden_layer2->random_gen = random_gen;
                 hidden_layer2->forget();
             }
+
+            PLASSERT( hidden_connections );
 
             hidden_connections->down_size = hidden_layer->size;
             hidden_connections->up_size = hidden_layer2->size;
@@ -345,6 +346,9 @@ void DynamicallyLinkedRBMsModel::build_()
 
         for( int tar_layer = 0; tar_layer < target_layers.length(); tar_layer++ )
         {
+            PLASSERT( target_layers[tar_layer] );
+            PLASSERT( target_connections[tar_layer] );
+
             if( !target_layers[tar_layer]->random_gen )
             {
                 target_layers[tar_layer]->random_gen = random_gen;
@@ -431,7 +435,8 @@ void DynamicallyLinkedRBMsModel::forget()
     input_layer->forget();
     hidden_layer->forget();
     input_connections->forget();
-    dynamic_connections->forget();
+    if( dynamic_connections )
+        dynamic_connections->forget();
     if( hidden_layer2 )
     {
         hidden_layer2->forget();
@@ -559,21 +564,24 @@ void DynamicallyLinkedRBMsModel::train()
                 target_prediction_act_no_bias_list.resize( target_layers.length() );
                 for( int tar=0; tar < target_layers.length(); tar++ )
                 {
-                    targets_list[tar].resize( ith_sample_in_sequence+1);
-                    targets_list[tar][ith_sample_in_sequence].resize( 
-                        target_layers[tar]->size);
-                    target_prediction_list[tar].resize(
-                        ith_sample_in_sequence+1);
-                    target_prediction_act_no_bias_list[tar].resize(
-                        ith_sample_in_sequence+1);
-
+                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                    {                        
+                        targets_list[tar].resize( ith_sample_in_sequence+1);
+                        targets_list[tar][ith_sample_in_sequence].resize( 
+                            target_layers[tar]->size);
+                        target_prediction_list[tar].resize(
+                            ith_sample_in_sequence+1);
+                        target_prediction_act_no_bias_list[tar].resize(
+                            ith_sample_in_sequence+1);
+                    }
                 }
                 nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
                 if( use_target_layers_masks )
                 {
                     masks_list.resize( target_layers.length() );
                     for( int tar=0; tar < target_layers.length(); tar++ )
-                        masks_list[tar].resize( ith_sample_in_sequence+1 );
+                        if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                            masks_list[tar].resize( ith_sample_in_sequence+1 );
                 }
 
                 // Forward propagation
@@ -588,38 +596,41 @@ void DynamicallyLinkedRBMsModel::train()
                 sum_target_elements = 0;
                 for( int tar=0; tar < target_layers.length(); tar++ )
                 {
-                    if( use_target_layers_masks )
+                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
                     {
-                        clamp_units(target.subVec(
-                                        sum_target_elements,
-                                        target_layers_n_of_target_elements[tar]),
-                                    target_layers[tar],
-                                    target_symbol_sizes[tar],
-                                    input.subVec(
-                                        inputsize_without_masks 
-                                        + sum_target_elements, 
-                                        target_layers_n_of_target_elements[tar]),
-                                    masks_list[tar][ith_sample_in_sequence]
-                            );
-
-                    }
-                    else
-                    {
-                        clamp_units(target.subVec(
-                                        sum_target_elements,
-                                        target_layers_n_of_target_elements[tar]),
-                                    target_layers[tar],
-                                    target_symbol_sizes[tar]);
+                        if( use_target_layers_masks )
+                        {
+                            clamp_units(target.subVec(
+                                            sum_target_elements,
+                                            target_layers_n_of_target_elements[tar]),
+                                        target_layers[tar],
+                                        target_symbol_sizes[tar],
+                                        input.subVec(
+                                            inputsize_without_masks 
+                                            + sum_target_elements, 
+                                            target_layers_n_of_target_elements[tar]),
+                                        masks_list[tar][ith_sample_in_sequence]
+                                );
+                            
+                        }
+                        else
+                        {
+                            clamp_units(target.subVec(
+                                            sum_target_elements,
+                                            target_layers_n_of_target_elements[tar]),
+                                        target_layers[tar],
+                                        target_symbol_sizes[tar]);
+                        }
+                        targets_list[tar][ith_sample_in_sequence] << 
+                            target_layers[tar]->expectation;
                     }
                     sum_target_elements += target_layers_n_of_target_elements[tar];
-                    targets_list[tar][ith_sample_in_sequence] << 
-                        target_layers[tar]->expectation;
                 }
                 
                 input_connections->fprop( input_list[ith_sample_in_sequence], 
                                           hidden_act_no_bias_list[ith_sample_in_sequence]);
                 
-                if( ith_sample_in_sequence > 0 )
+                if( ith_sample_in_sequence > 0 && dynamic_connections )
                 {
                     dynamic_connections->fprop( 
                         hidden_list[ith_sample_in_sequence-1],
@@ -645,78 +656,92 @@ void DynamicallyLinkedRBMsModel::train()
 
                     for( int tar=0; tar < target_layers.length(); tar++ )
                     {
-                        target_connections[tar]->fprop(
-                            hidden2_list[ith_sample_in_sequence],
-                            target_prediction_act_no_bias_list[tar][
-                                ith_sample_in_sequence]
-                            );
-                        target_layers[tar]->fprop(
-                            target_prediction_act_no_bias_list[tar][
-                                ith_sample_in_sequence],
-                            target_prediction_list[tar][
-                                ith_sample_in_sequence] );
-                        if( use_target_layers_masks )
-                            target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                                masks_list[tar][ith_sample_in_sequence];
+                        if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                        {
+                            target_connections[tar]->fprop(
+                                hidden2_list[ith_sample_in_sequence],
+                                target_prediction_act_no_bias_list[tar][
+                                    ith_sample_in_sequence]
+                                );
+                            target_layers[tar]->fprop(
+                                target_prediction_act_no_bias_list[tar][
+                                    ith_sample_in_sequence],
+                                target_prediction_list[tar][
+                                    ith_sample_in_sequence] );
+                            if( use_target_layers_masks )
+                                target_prediction_list[tar][ ith_sample_in_sequence] *= 
+                                    masks_list[tar][ith_sample_in_sequence];
+                        }
                     }
                 }
                 else
                 {
                     for( int tar=0; tar < target_layers.length(); tar++ )
                     {
-                        target_connections[tar]->fprop(
-                            hidden_list[ith_sample_in_sequence],
-                            target_prediction_act_no_bias_list[tar][
-                                ith_sample_in_sequence]
-                            );
-                        target_layers[tar]->fprop(
-                            target_prediction_act_no_bias_list[tar][
-                                ith_sample_in_sequence],
-                            target_prediction_list[tar][
-                                ith_sample_in_sequence] );
-                        if( use_target_layers_masks )
-                            target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                                masks_list[tar][ith_sample_in_sequence];
+                        if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                        {
+                            target_connections[tar]->fprop(
+                                hidden_list[ith_sample_in_sequence],
+                                target_prediction_act_no_bias_list[tar][
+                                    ith_sample_in_sequence]
+                                );
+                            target_layers[tar]->fprop(
+                                target_prediction_act_no_bias_list[tar][
+                                    ith_sample_in_sequence],
+                                target_prediction_list[tar][
+                                    ith_sample_in_sequence] );
+                            if( use_target_layers_masks )
+                                target_prediction_list[tar][ ith_sample_in_sequence] *= 
+                                    masks_list[tar][ith_sample_in_sequence];
+                        }
                     }
                 }
 
                 sum_target_elements = 0;
                 for( int tar=0; tar < target_layers.length(); tar++ )
                 {
-                    target_layers[tar]->activation << 
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence];
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(
-                        target_prediction_list[tar][
-                            ith_sample_in_sequence]);
-                    nll_list(ith_sample_in_sequence,tar) = 
-                        target_layers[tar]->fpropNLL( 
-                            targets_list[tar][ith_sample_in_sequence] ); 
-                    train_costs[tar] += nll_list(ith_sample_in_sequence,tar);
-
-                    // Normalize by the number of things to predict
-                    if( use_target_layers_masks )
+                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
                     {
-                        train_n_items[tar] += sum(
-                            input.subVec( inputsize_without_masks 
-                                          + sum_target_elements, 
-                                          target_layers_n_of_target_elements[tar]) );
+                        target_layers[tar]->activation << 
+                            target_prediction_act_no_bias_list[tar][
+                                ith_sample_in_sequence];
+                        target_layers[tar]->activation += target_layers[tar]->bias;
+                        target_layers[tar]->setExpectation(
+                            target_prediction_list[tar][
+                                ith_sample_in_sequence]);
+                        nll_list(ith_sample_in_sequence,tar) = 
+                            target_layers[tar]->fpropNLL( 
+                                targets_list[tar][ith_sample_in_sequence] ); 
+                        train_costs[tar] += nll_list(ith_sample_in_sequence,tar);
+                        
+                        // Normalize by the number of things to predict
+                        if( use_target_layers_masks )
+                        {
+                            train_n_items[tar] += sum(
+                                input.subVec( inputsize_without_masks 
+                                              + sum_target_elements, 
+                                              target_layers_n_of_target_elements[tar]) );
+                        }
+                        else
+                            train_n_items[tar]++;
+                    }
+                    if( use_target_layers_masks )
                         sum_target_elements += 
                             target_layers_n_of_target_elements[tar];
-                    }
-                    else
-                        train_n_items[tar]++;
+                    
                 }
                 ith_sample_in_sequence++;
-               
-               
             }
             if( pb )
                 pb->update( stage + 1 - init_stage);
             
             for(int i=0; i<train_costs.length(); i++)
-                train_costs[i] /= train_n_items[i];
+            {
+                if( !fast_exact_is_equal(target_layers_weights[i],0) )
+                    train_costs[i] /= train_n_items[i];
+                else
+                    train_costs[i] = MISSING_VALUE;
+            }
 
             if(verbosity>0)
                 cout << "mean costs at stage " << stage << 
@@ -799,7 +824,8 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
     input_layer->setLearningRate( the_learning_rate );
     hidden_layer->setLearningRate( the_learning_rate );
     input_connections->setLearningRate( the_learning_rate );
-    dynamic_connections->setLearningRate( the_learning_rate );
+    if( dynamic_connections )
+        dynamic_connections->setLearningRate( the_learning_rate );
     if( hidden_layer2 )
     {
         hidden_layer2->setLearningRate( the_learning_rate );
@@ -828,38 +854,44 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
             {
                 for( int tar=0; tar<target_layers.length(); tar++)
                 {
-                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
-                    target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
-                    bias_gradient *= target_layers_weights[tar];
-                    bias_gradient *= masks_list[tar][i];
-                    target_layers[tar]->update(bias_gradient);
-                    if( hidden_layer2 )
-                        target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true);
-                    else
-                        target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true);
+                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                    {
+                        target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
+                        target_layers[tar]->activation += target_layers[tar]->bias;
+                        target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
+                        target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
+                        bias_gradient *= target_layers_weights[tar];
+                        bias_gradient *= masks_list[tar][i];
+                        target_layers[tar]->update(bias_gradient);
+                        if( hidden_layer2 )
+                            target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                                 hidden_gradient, bias_gradient,true);
+                        else
+                            target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                                 hidden_gradient, bias_gradient,true);
+                    }
                 }
             }
             else
             {
                 for( int tar=0; tar<target_layers.length(); tar++)
                 {
-                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
-                    target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
-                    bias_gradient *= target_layers_weights[tar];
-                    target_layers[tar]->update(bias_gradient);
-                    if( hidden_layer2 )
-                        target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true); 
-                    else
-                        target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true); 
-
+                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                    {
+                        target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
+                        target_layers[tar]->activation += target_layers[tar]->bias;
+                        target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
+                        target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
+                        bias_gradient *= target_layers_weights[tar];
+                        target_layers[tar]->update(bias_gradient);
+                        if( hidden_layer2 )
+                            target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                                 hidden_gradient, bias_gradient,true); 
+                        else
+                            target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
+                                                                 hidden_gradient, bias_gradient,true); 
+                        
+                    }
                 }
             }
 
@@ -875,7 +907,7 @@ void DynamicallyLinkedRBMsModel::recurrent_update()
                     hidden_gradient, bias_gradient);
             }
             
-            if(i!=0)
+            if(i!=0 && dynamic_connections )
             {   
                 hidden_gradient += hidden_temporal_gradient;
                 
@@ -936,6 +968,7 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
     real weight;
 
     Vec output(outputsize());
+    output.clear();
     Vec costs(nTestCosts());
     costs.clear();
     Vec n_items(nTestCosts());
@@ -999,21 +1032,24 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         target_prediction_act_no_bias_list.resize( target_layers.length() );
         for( int tar=0; tar < target_layers.length(); tar++ )
         {
-            targets_list[tar].resize( ith_sample_in_sequence+1);
-            targets_list[tar][ith_sample_in_sequence].resize( 
-                target_layers[tar]->size);
-            target_prediction_list[tar].resize(
-                ith_sample_in_sequence+1);
-            target_prediction_act_no_bias_list[tar].resize(
-                ith_sample_in_sequence+1);
-
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                targets_list[tar].resize( ith_sample_in_sequence+1);
+                targets_list[tar][ith_sample_in_sequence].resize( 
+                    target_layers[tar]->size);
+                target_prediction_list[tar].resize(
+                    ith_sample_in_sequence+1);
+                target_prediction_act_no_bias_list[tar].resize(
+                    ith_sample_in_sequence+1);
+            }
         }
         nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
         if( use_target_layers_masks )
         {
             masks_list.resize( target_layers.length() );
             for( int tar=0; tar < target_layers.length(); tar++ )
-                masks_list[tar].resize( ith_sample_in_sequence+1 );
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                    masks_list[tar].resize( ith_sample_in_sequence+1 );
         }
 
         // Forward propagation
@@ -1028,38 +1064,41 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         sum_target_elements = 0;
         for( int tar=0; tar < target_layers.length(); tar++ )
         {
-            if( use_target_layers_masks )
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
-                clamp_units(target.subVec(
-                                sum_target_elements,
-                                target_layers_n_of_target_elements[tar]),
-                            target_layers[tar],
-                            target_symbol_sizes[tar],
-                            input.subVec(
-                                inputsize_without_masks 
-                                + sum_target_elements, 
-                                target_layers_n_of_target_elements[tar]),
-                            masks_list[tar][ith_sample_in_sequence]
-                    );
-
-            }
-            else
-            {
-                clamp_units(target.subVec(
-                                sum_target_elements,
-                                target_layers_n_of_target_elements[tar]),
-                            target_layers[tar],
-                            target_symbol_sizes[tar]);
+                if( use_target_layers_masks )
+                {
+                    clamp_units(target.subVec(
+                                    sum_target_elements,
+                                    target_layers_n_of_target_elements[tar]),
+                                target_layers[tar],
+                                target_symbol_sizes[tar],
+                                input.subVec(
+                                    inputsize_without_masks 
+                                    + sum_target_elements, 
+                                    target_layers_n_of_target_elements[tar]),
+                                masks_list[tar][ith_sample_in_sequence]
+                        );
+                    
+                }
+                else
+                {
+                    clamp_units(target.subVec(
+                                    sum_target_elements,
+                                    target_layers_n_of_target_elements[tar]),
+                                target_layers[tar],
+                                target_symbol_sizes[tar]);
+                }
+                targets_list[tar][ith_sample_in_sequence] << 
+                    target_layers[tar]->expectation;
             }
             sum_target_elements += target_layers_n_of_target_elements[tar];
-            targets_list[tar][ith_sample_in_sequence] << 
-                target_layers[tar]->expectation;
         }
                 
         input_connections->fprop( input_list[ith_sample_in_sequence], 
                                   hidden_act_no_bias_list[ith_sample_in_sequence]);
                 
-        if( ith_sample_in_sequence > 0 )
+        if( ith_sample_in_sequence > 0 && dynamic_connections )
         {
             dynamic_connections->fprop( 
                 hidden_list[ith_sample_in_sequence-1],
@@ -1085,38 +1124,44 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
 
             for( int tar=0; tar < target_layers.length(); tar++ )
             {
-                target_connections[tar]->fprop(
-                    hidden2_list[ith_sample_in_sequence],
-                    target_prediction_act_no_bias_list[tar][
-                        ith_sample_in_sequence]
-                    );
-                target_layers[tar]->fprop(
-                    target_prediction_act_no_bias_list[tar][
-                        ith_sample_in_sequence],
-                    target_prediction_list[tar][
-                        ith_sample_in_sequence] );
-                if( use_target_layers_masks )
-                    target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                        masks_list[tar][ith_sample_in_sequence];
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    target_connections[tar]->fprop(
+                        hidden2_list[ith_sample_in_sequence],
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence]
+                        );
+                    target_layers[tar]->fprop(
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence],
+                        target_prediction_list[tar][
+                            ith_sample_in_sequence] );
+                    if( use_target_layers_masks )
+                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
+                            masks_list[tar][ith_sample_in_sequence];
+                }
             }
         }
         else
         {
             for( int tar=0; tar < target_layers.length(); tar++ )
             {
-                target_connections[tar]->fprop(
-                    hidden_list[ith_sample_in_sequence],
-                    target_prediction_act_no_bias_list[tar][
-                        ith_sample_in_sequence]
-                    );
-                target_layers[tar]->fprop(
-                    target_prediction_act_no_bias_list[tar][
-                        ith_sample_in_sequence],
-                    target_prediction_list[tar][
-                        ith_sample_in_sequence] );
-                if( use_target_layers_masks )
-                    target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                        masks_list[tar][ith_sample_in_sequence];
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    target_connections[tar]->fprop(
+                        hidden_list[ith_sample_in_sequence],
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence]
+                        );
+                    target_layers[tar]->fprop(
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence],
+                        target_prediction_list[tar][
+                            ith_sample_in_sequence] );
+                    if( use_target_layers_masks )
+                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
+                            masks_list[tar][ith_sample_in_sequence];
+                }
             }
         }
 
@@ -1125,8 +1170,11 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
             int sum_target_layers_size = 0;
             for( int tar=0; tar < target_layers.length(); tar++ )
             {
-                output.subVec(sum_target_layers_size,target_layers[tar]->size)
-                    << target_prediction_list[tar][ ith_sample_in_sequence ];
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    output.subVec(sum_target_layers_size,target_layers[tar]->size)
+                        << target_prediction_list[tar][ ith_sample_in_sequence ];
+                }
                 sum_target_layers_size += target_layers[tar]->size;
             }
             testoutputs->putOrAppendRow(i, output);
@@ -1135,30 +1183,34 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
         sum_target_elements = 0;
         for( int tar=0; tar < target_layers.length(); tar++ )
         {
-            target_layers[tar]->activation << 
-                target_prediction_act_no_bias_list[tar][
-                    ith_sample_in_sequence];
-            target_layers[tar]->activation += target_layers[tar]->bias;
-            target_layers[tar]->setExpectation(
-                target_prediction_list[tar][
-                    ith_sample_in_sequence]);
-            nll_list(ith_sample_in_sequence,tar) = 
-                target_layers[tar]->fpropNLL( 
-                    targets_list[tar][ith_sample_in_sequence] ); 
-            costs[tar] += nll_list(ith_sample_in_sequence,tar);
-
-            // Normalize by the number of things to predict
-            if( use_target_layers_masks )
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
-                n_items[tar] += sum(
-                    input.subVec( inputsize_without_masks 
-                                  + sum_target_elements, 
-                                  target_layers_n_of_target_elements[tar]) );
+                target_layers[tar]->activation << 
+                    target_prediction_act_no_bias_list[tar][
+                        ith_sample_in_sequence];
+                target_layers[tar]->activation += target_layers[tar]->bias;
+                target_layers[tar]->setExpectation(
+                    target_prediction_list[tar][
+                        ith_sample_in_sequence]);
+                nll_list(ith_sample_in_sequence,tar) = 
+                    target_layers[tar]->fpropNLL( 
+                        targets_list[tar][ith_sample_in_sequence] ); 
+                costs[tar] += nll_list(ith_sample_in_sequence,tar);
+                
+                // Normalize by the number of things to predict
+                if( use_target_layers_masks )
+                {
+                    n_items[tar] += sum(
+                        input.subVec( inputsize_without_masks 
+                                      + sum_target_elements, 
+                                      target_layers_n_of_target_elements[tar]) );
+                }
+                else
+                    n_items[tar]++;
+            }
+            if( use_target_layers_masks )
                 sum_target_elements += 
                     target_layers_n_of_target_elements[tar];
-            }
-            else
-                n_items[tar]++;
         }
         ith_sample_in_sequence++;
 
@@ -1168,8 +1220,12 @@ void DynamicallyLinkedRBMsModel::test(VMat testset, PP<VecStatsCollector> test_s
     }
 
     for(int i=0; i<costs.length(); i++)
-        costs[i] /= n_items[i];
-
+    {
+        if( !fast_exact_is_equal(target_layers_weights[i],0) )
+            costs[i] /= n_items[i];
+        else
+            costs[i] = MISSING_VALUE;
+    }
     if (testcosts)
         testcosts->putOrAppendRow(0, costs);
     

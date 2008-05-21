@@ -1,6 +1,5 @@
 // -*- C++ -*-
 
-
 // DynamicallyLinkedRBMsModel.h
 //
 // Copyright (C) 2006 Stanislas Lauly
