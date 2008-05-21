@@ -679,7 +679,16 @@ string readFileAndMacroProcess(const PPath& filepath, map<string, string>& varia
 
     // Perform actual parsing and macro processing...
     PStream in = openFile(file, PStream::plearn_ascii, "r");
-    string text = readAndMacroProcess(in, variables, latest);
+    string text;
+    try
+    { 
+        text = readAndMacroProcess(in, variables, latest);
+    }
+    catch(const PLearnError& e)
+    {
+        PLERROR("while parsing file %s we got an error: \n%s",
+                filepath.c_str(),e.message().c_str());
+    }
 
     // Restore previous variables
     if (added)
