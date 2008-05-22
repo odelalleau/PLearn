@@ -1523,6 +1523,56 @@ template <class T> inline PStream &
 operator<<(PStream &out, const set<T> &v)
 { writeSet(out, v); return out; }
 
+
+
+// Serialization of priority_queue types
+
+template<class PriorityQueueT>
+void writePriorityQueue(PStream& out, const PriorityQueueT& pq)
+{
+    PriorityQueueT pq2(pq);
+    out.put('[');
+    while(!pq2.empty())
+    {
+        typename PriorityQueueT::value_type val;
+        val = pq2.top();
+        out << val;
+        pq2.pop();
+        if (!pq2.empty())
+            out.write(", ");
+    }
+    out.put(']');
+}
+
+template<class PriorityQueueT>
+void readPriorityQueue(PStream& in, PriorityQueueT& pq)
+{
+    PLCHECK(pq.empty());
+    in.skipBlanksAndCommentsAndSeparators();
+    int c = in.get();
+    if(c!='[')
+        PLERROR("In readPriorityQueue(Pstream& in, PriorityQueueT& pq) expected '[' but read %c",c);
+    in.skipBlanksAndCommentsAndSeparators();
+    c = in.peek(); // do we have a ']' ?
+    while(c!=']')
+    {
+        typename PriorityQueueT::value_type val;
+        in >> val;
+        pq.push(val);
+        in.skipBlanksAndCommentsAndSeparators();
+        c = in.peek(); // do we have a ']' ?
+    }
+    in.get(); // eat the ']'
+}
+
+template <class T> inline PStream &
+operator>>(PStream &in, priority_queue<T> &v)
+{ readPriorityQueue(in, v); return in; }
+
+template <class T> inline PStream &
+operator<<(PStream &out, const priority_queue<T> &v)
+{ writePriorityQueue(out, v); return out; }
+
 /// @deprecated Use openFile instead.
 class PIFStream: public PStream
 {

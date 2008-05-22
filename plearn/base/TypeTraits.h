@@ -49,6 +49,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <queue>
 #include <set>
 #include <nspr/prlong.h>
 #include <plearn/base/pl_stdint.h>
@@ -335,6 +336,20 @@ class TypeTraits< std::set<T> >
 public:
     static inline string name()
     { return string("set< ") + TypeTraits<T>::name() + " >"; }
+
+    static inline unsigned char little_endian_typecode()
+    { return 0xFF; }
+
+    static inline unsigned char big_endian_typecode()
+    { return 0xFF; }
+};
+
+template<class T>
+class TypeTraits< std::priority_queue<T> >
+{
+public:
+    static inline string name()
+    { return string("priority_queue< ") + TypeTraits<T>::name() + " >"; }
 
     static inline unsigned char little_endian_typecode()
     { return 0xFF; }
