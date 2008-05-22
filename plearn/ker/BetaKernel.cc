@@ -125,7 +125,7 @@ real BetaKernel::evaluate(const Vec& x1, const Vec& x2) const {
             real b = (1.0 - px1[i]) / width + 1.0;
             real val = log_beta_density(px2[i],a,b);
             kvalue += val;
-        } 
+        }
     else if (kernel_type=="alternative")
         for(int i=0; i<l; i++)
         {
@@ -134,32 +134,32 @@ real BetaKernel::evaluate(const Vec& x1, const Vec& x2) const {
 
             if (x<0 || x >1 || px2[i] < 0 || px2[i] > 1)
                  PLERROR("In BetaKernel::evaluate x1 and x2 must contain values in the (closed) interval [0;1]");
-            
-            real p_xb = 2*pow(width,2.) + 2.5 - sqrt(4*pow(width,4.) + 6*pow(width,2.) + 2.25 - x*x - x / width);
+
+            real p_xb = 2*pow(width,real(2)) + 2.5 - sqrt(4*pow(width,real(4)) + 6*pow(width,real(2)) + 2.25 - x*x - x / width);
             real y = 1-x;
-            real p_1xb = 2*pow(width,2.) + 2.5 - sqrt(4*pow(width,4.)+ 6*pow(width,2.) + 2.25 - y*y - y / width);
+            real p_1xb = 2*pow(width,real(2)) + 2.5 - sqrt(4*pow(width,real(4))+ 6*pow(width,real(2)) + 2.25 - y*y - y / width);
 
             if ((x >= 2*width) && (x <= 1 - 2*width)) {
-                a = x / width; 
+                a = x / width;
                 b = (1 - x) / width;
             }
             else if ((x >= 0) & (x <= 2*width)) {
                 a = p_xb;
-                b = (1 - x) / width;   
+                b = (1 - x) / width;
             }
             else {
                 a = x / width;
                 b = p_1xb;
             }
-                
+
             real val = log_beta_density(px2[i],a,b);
             kvalue += val;
-        } 
+        }
     else
         PLERROR("In BetaKernel::evaluate kernel_type must be either \"simple\" or \"alternative\"");
-   
+
     real retval = 0.0;
- 
+
     if (output_type=="log_value")
         retval = kvalue;
     else if (output_type=="normal")
