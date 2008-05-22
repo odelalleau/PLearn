@@ -32,6 +32,7 @@ STATUS_RUNNING = 1
 STATUS_WAITING = 2
 STATUS_INIT = 3
 
+
 #original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
 class LockedIterator:
     def __init__( self, iterator ):
@@ -662,6 +663,14 @@ class DBIBqtools(DBIBase):
     def wait(self):
         print "[DBI] WARNING cannot wait until all jobs are done for bqtools, use bqwatch or bqstatus"
 
+
+# Transfor a string so that it is treated by Condor as a single argument
+def condor_escape_argument(argstring):
+    # Double every single quote and double quote character,
+    # surround the result by a pair of single quotes,
+    # then surrount everything by a pair of double quotes
+    return "\"'" + argstring.replace("'", "''").replace('"','""') + "'\""
+
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
@@ -698,31 +707,38 @@ class DBICondor(DBIBase):
         # create the information about the tasks
         id=len(self.tasks)+1
         for command in commands:
-	    c_split = command.split()
+            c_split = command.split()
             # c = program name, c2 = arguments
-	    c = c_split[0]
-	    if len(c_split) > 1:
-	    	c2 = ' ' + ' '.join(c_split[1:])
-	    else:
-		c2 = ''
+            c = c_split[0]
+            if len(c_split) > 1:
+                c2 = ' ' + ' '.join(c_split[1:])
+            else:
+                c2 = ''
 
             # We use the absolute path so that we don't have corner case as with ./
             shellcommand=False
-            authorized_shell_commands=[ "touch", "echo"]
-            if c in authorized_shell_commands:
+            # Maybe the command is not in the form: executable_name args,
+            # but starts with a character that is interpreted by the shell
+            # in a special way. I.e., a sequence of commands, like:
+            # 'prog1; prog2 arg1 arg2' (with the quotes).
+            # The command might also be a shell built-in command.
+            # Feel free to complete this list
+            shell_special_chars = ["'", '"', ' ', '$', '`', '(', ';']
+            authorized_shell_commands=[ "touch", "echo", "cd" ]
+            if c[0] in shell_special_chars or c in authorized_shell_commands:
                 shellcommand=True
             elif not self.files:
-		# Transform path to get an absolute path.
+                # Transform path to get an absolute path.
                 c_abs = os.path.abspath(c)
-		if os.path.isfile(c_abs):
-		    # The file is in the current directory (easy case).
-		    c = c_abs
-		elif not os.path.isabs(c):
-		    # We need to find where the file could be... easiest way to
+                if os.path.isfile(c_abs):
+                    # The file is in the current directory (easy case).
+                    c = c_abs
+                elif not os.path.isabs(c):
+                    # We need to find where the file could be... easiest way to
                     # do it is ask the 'which' shell command.
-	 	    which_out = subprocess.Popen('which %s' % c, shell = True, stdout = PIPE).stdout.readlines()
-		    if len(which_out) == 1:
-			c = which_out[0].strip()
+                    which_out = subprocess.Popen('which %s' % c, shell = True, stdout = PIPE).stdout.readlines()
+                    if len(which_out) == 1:
+                        c = which_out[0].strip()
 
             command = "".join([c,c2])
 
@@ -869,7 +885,8 @@ class DBICondor(DBIBase):
                 condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
         else:
             for task in self.tasks:
-                condor_dat.write("arguments      = %s \nqueue\n" %(' ; '.join(task.commands)))
+                argstring = condor_escape_argument(' ; '.join(task.commands))
+                condor_dat.write("arguments      = %s \nqueue\n" % argstring)
         condor_dat.close()
 
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
@@ -883,13 +900,13 @@ class DBICondor(DBIBase):
                 if mtimed>mtimel:
                     print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your needs!'
                     overwrite_launch_file=True
-        
+
         if self.copy_local_source_file:
             source_file_dest = os.path.join(self.log_dir,
                                             os.path.basename(source_file))
             shutil.copy( source_file, source_file_dest)
             self.temp_files.append(source_file_dest)
-            os.chmod(source_file_dest, 0755)   
+            os.chmod(source_file_dest, 0755)
             source_file=source_file_dest
 
         if not os.path.exists(launch_file) or overwrite_launch_file:
@@ -897,9 +914,8 @@ class DBICondor(DBIBase):
             launch_dat = open(launch_file,'w')
             if source_file and not source_file.endswith(".cshrc"):
                 launch_dat.write(dedent('''\
-                #!/bin/sh
-                PROGRAM=$1
-                shift\n'''))
+                    #!/bin/sh
+                    '''))
                 if condor_home:
                     launch_dat.write('export HOME=%s\n' % condor_home)
                 if source_file:
@@ -915,8 +931,9 @@ class DBICondor(DBIBase):
                     #python -V 1>&2
                     #echo -n /usr/bin/python version: 1>&2
                     #/usr/bin/python -V 1>&2
-                    echo ${PROGRAM} $@ 1>&2
-                    ${PROGRAM} "$@"'''))
+                    echo "Running command: sh -c \\"$@\\"" 1>&2
+                    sh -c "$@"
+                    '''))
             else:
                 launch_dat.write(dedent('''\
                     #! /bin/tcsh

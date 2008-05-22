@@ -1060,8 +1060,8 @@ def dbi_parallel_compile(files_to_compile, dbi_mode):
         except OSError:
             pass
 
-        #Command to execute: "'cd " + ccfile.filedir + "; " + ccfile.compile_command() + "; echo $?'"
-        commands.append("'cd " + ccfile.filedir + "; " + ccfile.compile_command() + "; echo $?'")
+        # Maybe the "echo $?" part isn't useful
+        commands.append("cd " + ccfile.filedir + "; " + ccfile.compile_command() + "; echo $?")
 
     from plearn.parallel.dbi import DBI
     jobs = DBI(commands, dbi_mode)
