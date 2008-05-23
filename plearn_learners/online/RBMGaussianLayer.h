@@ -69,6 +69,11 @@ public:
     //! If < 0, then this option is ignored.
     real fixed_std_deviation;
 
+    //! Indication that fpropNLL should compute the MSE instead of the NLL.
+    //! bpropNLL will also give the appropriate gradient. Might want to
+    //! set fixed_std_deviation to 1 in this case.
+    bool compute_mse_instead_of_nll;
+
 public:
     //#####  Public Member Functions  #########################################
 

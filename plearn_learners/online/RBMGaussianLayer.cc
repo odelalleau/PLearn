@@ -56,6 +56,7 @@ RBMGaussianLayer::RBMGaussianLayer( real the_learning_rate ) :
     share_quad_coeff( false ),
     size_quad_coeff( 0 ),
     fixed_std_deviation( -1 ),
+    compute_mse_instead_of_nll( false ),
     sigma_is_up_to_date( false )
 {
 }
@@ -66,6 +67,7 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate ) :
     share_quad_coeff( false ),
     size_quad_coeff( 0 ),
     fixed_std_deviation( -1 ),
+    compute_mse_instead_of_nll( false ),
     quad_coeff( the_size, 1. ), // or 1./M_SQRT2 ?
     quad_coeff_pos_stats( the_size ),
     quad_coeff_neg_stats( the_size ),
@@ -86,6 +88,7 @@ RBMGaussianLayer::RBMGaussianLayer( int the_size, real the_learning_rate,
     inherited( the_learning_rate ),
     min_quad_coeff( 0. ),
     fixed_std_deviation( -1 ),
+    compute_mse_instead_of_nll( false ),
     quad_coeff_pos_stats( the_size ),
     quad_coeff_neg_stats( the_size ),
     sigma_is_up_to_date( false )
@@ -347,6 +350,10 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Quadratic coefficients of the units.");
 
+    declareOption(ol, "sigma", &RBMGaussianLayer::sigma,
+                  OptionBase::learntoption,
+                  "comments...");
+
     declareOption(ol, "share_quad_coeff", &RBMGaussianLayer::share_quad_coeff,
                   OptionBase::buildoption,
                   "Should all the units share the same quadratic coefficients?\n"
@@ -360,6 +367,12 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
                   "This will fix the value of the quad coeffs to the "
                   "appropriate value.\n"
                   "If < 0, then this option is ignored.\n");
+
+    declareOption(ol, "compute_mse_instead_of_nll", &RBMGaussianLayer::compute_mse_instead_of_nll,
+                  OptionBase::buildoption,
+                  "Indication that fpropNLL should compute the MSE instead of the NLL..\n"
+                  "bpropNLL will also give the appropriate gradient. Might want to\n"
+                  "set fixed_std_deviation to 1 in this case.\n");
 
 
     // Now call the parent class' declareOptions
@@ -710,24 +723,36 @@ real RBMGaussianLayer::fpropNLL(const Vec& target)
     computeStdDeviation();
 
     real ret = 0;
-    if(share_quad_coeff)
+    if( compute_mse_instead_of_nll )
+    {
+        real r;
         for( int i=0 ; i<size ; i++ )
         {
-            real r = (target[i] - expectation[i]) * quad_coeff[0];
-            ret += r * r + pl_log(sigma[0]);
+            r = (target[i] - expectation[i]);
+            ret += r * r;
         }
+    } 
     else
-        for( int i=0 ; i<size ; i++ )
-        {
-            // ret += (target[i]-expectation[i])^2/(2 sigma[i]^2)
-            //      + log(sqrt(2*Pi) * sigma[i])
-            real r = (target[i] - expectation[i]) * quad_coeff[i];
-            ret += r * r + pl_log(sigma[i]);
-        }
-    ret += 0.5*size*Log2Pi;
+    {
+        if(share_quad_coeff)
+            for( int i=0 ; i<size ; i++ )
+            {
+                real r = (target[i] - expectation[i]) * quad_coeff[0];
+                ret += r * r + pl_log(sigma[0]);
+            }
+        else
+            for( int i=0 ; i<size ; i++ )
+            {
+                // ret += (target[i]-expectation[i])^2/(2 sigma[i]^2)
+                //      + log(sqrt(2*Pi) * sigma[i])
+                real r = (target[i] - expectation[i]) * quad_coeff[i];
+                ret += r * r + pl_log(sigma[i]);
+                
+            }
+        ret += 0.5*size*Log2Pi;
+    }
     return ret;
 }
-
 
 void RBMGaussianLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
@@ -743,38 +768,57 @@ void RBMGaussianLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
     real nll;
     real *expectation, *target;
 
-    if(share_quad_coeff)
+    if( compute_mse_instead_of_nll )
+    {
         for (int k=0;k<batch_size;k++) // loop over minibatch
         {
             nll = 0;
             expectation = expectations[k];
             target = targets[k];
+            real r;
             for( register int i=0 ; i<size ; i++ ) // loop over outputs
             {
-                real r = (target[i] - expectation[i]) * quad_coeff[0];
-                nll += r * r + pl_log(sigma[0]);
+                r = (target[i] - expectation[i]);
+                nll += r * r;
             }
-            nll += 0.5*size*Log2Pi;
             costs_column(k,0) = nll;
         }
+    }
     else
-        for (int k=0;k<batch_size;k++) // loop over minibatch
-        {
-            nll = 0;
-            expectation = expectations[k];
-            target = targets[k];
-            for( register int i=0 ; i<size ; i++ ) // loop over outputs
+    {
+        if(share_quad_coeff)
+            for (int k=0;k<batch_size;k++) // loop over minibatch
             {
-                // nll += (target[i]-expectation[i])^2/(2 sigma[i]^2)
-                //      + log(sqrt(2*Pi) * sigma[i])
-                real r = (target[i] - expectation[i]) * quad_coeff[i];
-                nll += r * r + pl_log(sigma[i]);
+                nll = 0;
+                expectation = expectations[k];
+                target = targets[k];
+                for( register int i=0 ; i<size ; i++ ) // loop over outputs
+                {
+                    real r = (target[i] - expectation[i]) * quad_coeff[0];
+                    nll += r * r + pl_log(sigma[0]);
+                }
+                nll += 0.5*size*Log2Pi;
+                costs_column(k,0) = nll;
             }
-            nll += 0.5*size*Log2Pi;
-            costs_column(k,0) = nll;
-        }
+        else
+            for (int k=0;k<batch_size;k++) // loop over minibatch
+            {
+                nll = 0;
+                expectation = expectations[k];
+                target = targets[k];
+                for( register int i=0 ; i<size ; i++ ) // loop over outputs
+                {
+                    // nll += (target[i]-expectation[i])^2/(2 sigma[i]^2)
+                    //      + log(sqrt(2*Pi) * sigma[i])
+                    real r = (target[i] - expectation[i]) * quad_coeff[i];
+                    nll += r * r + pl_log(sigma[i]);
+                }
+                nll += 0.5*size*Log2Pi;
+                costs_column(k,0) = nll;
+            }
+    }
 }
-
+    
 void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     computeExpectation();
@@ -784,6 +828,11 @@ void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 
     // bias_gradient = expectation - target
     substract(expectation, target, bias_gradient);
+
+    if( compute_mse_instead_of_nll )
+        bias_gradient *= 2;
+    addBiasDecay(bias_gradient);
+
 }
 
 void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
@@ -799,6 +848,11 @@ void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
 
     // bias_gradients = expectations - targets
     substract(expectations, targets, bias_gradients);
+
+    if( compute_mse_instead_of_nll )
+        bias_gradients *= 2;
+    addBiasDecay(bias_gradients);
+
 }
 
 
