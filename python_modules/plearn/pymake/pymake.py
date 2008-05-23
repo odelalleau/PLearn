@@ -2328,6 +2328,7 @@ digraph G
         new_corresponding_output = self.corresponding_output+".new"
         if local_ofiles:
             self.corresponding_output = local_filepath(new_corresponding_output)
+            mkdirs_public(os.path.dirname(self.corresponding_output))
         else:
             self.corresponding_output = new_corresponding_output
         try:
