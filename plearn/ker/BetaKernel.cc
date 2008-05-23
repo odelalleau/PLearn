@@ -132,24 +132,20 @@ real BetaKernel::evaluate(const Vec& x1, const Vec& x2) const {
             real x = px1[i];
             real a, b;
 
-            if (x<0 || x >1 || px2[i] < 0 || px2[i] > 1)
-                 PLERROR("In BetaKernel::evaluate x1 and x2 must contain values in the (closed) interval [0;1]");
-
-            real p_xb = 2*pow(width,real(2)) + 2.5 - sqrt(4*pow(width,real(4)) + 6*pow(width,real(2)) + 2.25 - x*x - x / width);
-            real y = 1-x;
-            real p_1xb = 2*pow(width,real(2)) + 2.5 - sqrt(4*pow(width,real(4))+ 6*pow(width,real(2)) + 2.25 - y*y - y / width);
+            PLASSERT_MSG(x<0 || x >1 || px2[i] < 0 || px2[i] > 1, "In BetaKernel::evaluate x1 and x2 must contain values in the (closed) interval [0;1]");
 
             if ((x >= 2*width) && (x <= 1 - 2*width)) {
                 a = x / width;
                 b = (1 - x) / width;
             }
             else if ((x >= 0) & (x <= 2*width)) {
-                a = p_xb;
+                a = 2*pow(width,real(2)) + 2.5 - sqrt(4*pow(width,real(4)) + 6*pow(width,real(2)) + 2.25 - x*x - x / width);
                 b = (1 - x) / width;
             }
             else {
                 a = x / width;
-                b = p_1xb;
+                real y = 1-x;
+                b = 2*pow(width,real(2)) + 2.5 - sqrt(4*pow(width,real(4))+ 6*pow(width,real(2)) + 2.25 - y*y - y / width);
             }
 
             real val = log_beta_density(px2[i],a,b);
