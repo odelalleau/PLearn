@@ -179,6 +179,115 @@ public:
     }
 };
 
+//! Template class for static option definitions
+//! This is not thread safe while loading or saving!
+//! If you have some data in memory then load some other,
+//!   the static value will be overwrited!
+//! This will be saved and loaded for each instance,
+//!   but will override the station version each time
+template<class OptionType>
+class StaticOption : public OptionBase
+{
+    typedef OptionBase inherited;
+  
+protected:
+    OptionType* ptr;
+
+public:
+
+    //! Most of these parameters only serve to provide the user 
+    //! with an informative help text.
+    StaticOption(const string& optionname, OptionType* member_ptr, 
+           flag_t flags, const string& optiontype, const string& defaultval,
+           const string& description, const OptionLevel& level)
+        : inherited(optionname, flags, optiontype, defaultval, description, level),
+          ptr(member_ptr)
+    { }
+
+    virtual void read(Object* o, PStream& in) const
+    { in >> *ptr; }
+
+    virtual void write(const Object* o, PStream& out) const
+    { out << *ptr; }
+
+    virtual Object* getAsObject(Object* o) const
+    { return toObjectPtr(*ptr); }
+
+    virtual const Object* getAsObject(const Object* o) const
+    { return toObjectPtr(*ptr); }
+
+    virtual Object *getIndexedObject(Object *o, int i) const
+    { return toIndexedObjectPtr(*ptr, i); };
+
+    virtual const Object* getIndexedObject(const Object *o, int i) const
+    { return toIndexedObjectPtr(*ptr, i); };
+
+    virtual void* getAsVoidPtr(Object* o) const
+    { return ptr; }
+    
+    virtual const void* getAsVoidPtr(const Object* o) const
+    { return ptr; }
+
+
+    //!@todo check that this is correct
+#ifdef PL_PYTHON_VERSION 
+    virtual PythonObjectWrapper getAsPythonObject(Object* o) const 
+    { 
+        return PythonObjectWrapper(*(OptionType*)getAsVoidPtr(o)); 
+    }
+
+    virtual PythonObjectWrapper getAsPythonObject(const Object* o) const 
+    { 
+        return PythonObjectWrapper(*(OptionType*)getAsVoidPtr(o)); 
+    }
+
+    virtual void setFromPythonObject(Object* o, const PythonObjectWrapper& v) const
+    {
+        *ptr=
+            ConvertFromPyObject<OptionType>::convert(v.getPyObject(), true);
+    }
+
+#endif //def PL_PYTHON_VERSION 
+
+    virtual string optionHolderClassName(const Object* o) const
+    { return "static"; }
+
+    virtual int diff(const string& refer, const string& other,
+                     PLearnDiff* diffs) const
+    {
+        /*
+        pout << "Calling Option<" << TypeTraits<ObjectType>::name()
+            << "," << TypeTraits<OptionType>::name() << ">::diff" << endl;
+        */
+        // return PLearn::diff(refer, other, this, diffs);       
+        //return DiffTemplate<ObjectType, OptionType>::diff(refer, other,
+        //                                                  this, diffs);
+        // @todo: quick hack, fix this (maybe? Xavier?)
+        return 0;
+    }
+
+    //! Implementation of isAccessibleAsObject() relies on caching since
+    //! the first call may need to default-construct an object; relatively slow.
+    virtual bool isAccessibleAsObject() const
+    {
+        static bool accessible = isConvertibleToObjectPtr(OptionType());
+        return accessible;
+    }
+
+    virtual int indexableSize(const Object* o) const
+    {
+        return indexableObjectSize(*ptr);
+    }
+
+//!@todo check that this is correct that we don't have it
+    //! Accessor to the member pointer wrapped by the option
+    /*
+    OptionType ObjectType::* getPtr() const
+    {
+        return ptr;
+    }
+    */
+};
 
 //#####  TVec-Specific Option  ################################################
 
@@ -242,6 +351,7 @@ inline void declareOption(OptionList& ol,                      //!< list to whic
                                                     defaultval, description, level));
 }
 
+
 // Overload for simple pointers
 template <class ObjectType, class OptionType>
 inline void declareOption(OptionList& ol,
@@ -256,6 +366,24 @@ inline void declareOption(OptionList& ol,
                                                       TypeTraits<OptionType *>::name(), 
                                                       defaultval, description, level));
 }
+
+// Overload for pointer to static member
+template <class OptionType>
+inline void declareStaticOption(OptionList& ol,                      //!< list to which this option should be appended 
+                          const string& optionname,            //!< the name of this option
+                          OptionType* ptr,                     //!< &YourClass::your_static_field
+                          OptionBase::flag_t flags,            //!< see the flags in OptionBase
+                          const string& description,           //!< a description of the option
+                          const OptionBase::OptionLevel level= OptionBase::default_level, //!< Option level (see OptionBase)
+                          const string& defaultval="")         //!< default value for this option, as set by the default constructor
+{
+    perr<<"declareStaticOption() is not considered debuged, use at you own risk"<<endl;
+    ol.push_back(new StaticOption<OptionType>(optionname, ptr, flags, 
+                                                    TypeTraits<OptionType>::name(), 
+                                                    defaultval, description, level));
+}
+
+
 
 // Overload for TVec<T>
 template <class ObjectType, class VecElementType>

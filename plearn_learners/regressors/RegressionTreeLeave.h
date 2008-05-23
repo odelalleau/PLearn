@@ -65,7 +65,7 @@ protected:
     int  id;
     bool  missing_leave;
     real loss_function_weight;
-    int  verbosity;
+    static int  verbosity;
     PP<RegressionTreeRegisters> train_set;
  
 /*

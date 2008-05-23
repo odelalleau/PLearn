@@ -51,11 +51,12 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeLeave,
                         "of the samples in the leave.\n"
     );
 
+int RegressionTreeLeave::verbosity = 0;
+
 RegressionTreeLeave::RegressionTreeLeave():
     id(-1),
     missing_leave(false),
     loss_function_weight(0),
-    verbosity(0),
     length(0),
     weights_sum(0),
     targets_sum(0),
@@ -78,7 +79,7 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
                   "The indicator that it is a leave with missing values for the split feature\n");
     declareOption(ol, "loss_function_weight", &RegressionTreeLeave::loss_function_weight, OptionBase::buildoption,
                   "The hyper parameter to balance the error and the confidence factor\n");
-    declareOption(ol, "verbosity", &RegressionTreeLeave::verbosity, OptionBase::buildoption,
+    declareStaticOption(ol, "verbosity", &RegressionTreeLeave::verbosity, OptionBase::buildoption,
                   "The desired level of verbosity\n");
     declareOption(ol, "train_set", &RegressionTreeLeave::train_set, OptionBase::buildoption,
                   "The train set with the sorted row index matrix and the leave id vector\n");
