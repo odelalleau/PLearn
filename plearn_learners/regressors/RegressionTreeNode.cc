@@ -42,7 +42,6 @@
 #include "RegressionTreeNode.h"
 #include "RegressionTreeRegisters.h"
 #include "RegressionTreeLeave.h"
-#include "RegressionTreeRegisters.h"
 
 namespace PLearn {
 using namespace std;
@@ -213,7 +212,8 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
 
     leave->getOutputAndError(leave_output,leave_error);
 }
-
+#define BY_ROW
+//#define RCMP
 void RegressionTreeNode::lookForBestSplit()
 {
     if(leave->length<=1)
@@ -226,6 +226,14 @@ void RegressionTreeNode::lookForBestSplit()
     Vec missing_error(3);
     missing_error.clear();
     int inputsize = train_set->inputsize();
+#ifdef RCMP
+    Vec row_split_err(inputsize);
+    Vec row_split_value(inputsize);
+    Vec row_split_balance(inputsize);
+    row_split_err.clear();
+    row_split_value.clear();
+    row_split_balance.clear();
+#endif
     int leave_id = leave->id;
     for (int col = 0; col < inputsize; col++)
     {
@@ -235,6 +243,7 @@ void RegressionTreeNode::lookForBestSplit()
         registered_row.resize(0);
         train_set->getAllRegisteredRow(leave_id,col,registered_row);
         PLASSERT(registered_row.size()>0);
+        PLASSERT(candidate.size()==0);
         for(int row_idx = 0;row_idx<registered_row.size();row_idx++)
         {
             int row=registered_row[row_idx];
@@ -247,6 +256,7 @@ void RegressionTreeNode::lookForBestSplit()
         }
         missing_leave->getOutputAndError(tmp_vec, missing_error);
 
+#ifndef BY_ROW
         //in case of missing value
         if(candidate.size()==0)
             continue;
@@ -261,7 +271,87 @@ void RegressionTreeNode::lookForBestSplit()
                          right_error, missing_error);
             row = next_row;
         }
+#else
+        tuple<real,real,int> ret=bestSplitInRow(col, candidate, left_error,
+                                                right_error, missing_error,
+                                                right_leave, left_leave,
+                                                train_set);
+#ifdef RCMP
+        row_split_err[col] = get<0>(ret);
+        row_split_value[col] = get<1>(ret);
+        row_split_balance[col] = get<2>(ret);
+#endif
+        if (fast_is_more(get<0>(ret), after_split_error)) continue;
+        else if (fast_is_equal(get<0>(ret), after_split_error) &&
+                 fast_is_more(get<2>(ret), split_balance)) continue;
+
+        split_col = col;
+        after_split_error = get<0>(ret);
+        split_feature_value = get<1>(ret);
+        split_balance = get<2>(ret);
+#endif
     }
+#ifdef RCMP
+    pout<<"error after split: "<<after_split_error<<endl;
+    pout<<"split value: "<<split_feature_value<<endl;
+    pout<<"split_col: "<<split_col<<" "<<train_set->fieldName(split_col)<<endl;
+    pout<<"col 27 ("<<train_set->fieldName(27)<<") split error "
+        <<row_split_err[27]<<endl;
+    pout<<"col 27 ("<<train_set->fieldName(27)<<") split value "
+        <<row_split_value[27]<<endl;
+#endif
+}
+tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
+    int col,
+    TVec<RTR_type>& candidates,
+    Vec left_error,
+    Vec right_error,
+    const Vec missing_error,
+    PP<RegressionTreeLeave> right_leave,
+    PP<RegressionTreeLeave> left_leave,
+    PP<RegressionTreeRegisters> train_set
+    )
+{
+    int best_balance=INT_MAX;
+    real best_feature_value = REAL_MAX;
+    real best_split_error = REAL_MAX;
+    //in case of only missing value
+    if(candidates.size()==0)
+        return make_tuple(best_feature_value, best_split_error, best_balance);
+    int row = candidates.pop();
+//    real row_value = train_set->get(row, col);
+    Vec tmp(3);
+
+    while (candidates.size()>0)
+    {
+        int next_row = candidates.pop();
+        left_leave->removeRow(row, tmp, left_error);
+        right_leave->addRow(row, tmp, right_error);
+
+        {//compare split
+        real next_feature=train_set->get(next_row, col);
+        real row_feature=train_set->get(row, col);
+        PLASSERT(next_feature<=row_feature);
+//        PLASSERT(row_value == row_feature);
+        row = next_row;
+//        row_value = next_feature;
+
+        if (next_feature >= row_feature) continue;
+        real work_error = missing_error[0] + missing_error[1] + left_error[0]
+            + left_error[1] + right_error[0] + right_error[1];
+        int work_balance = abs(left_leave->getLength() -
+                               right_leave->getLength());
+        if (fast_is_more(work_error,best_split_error)) continue;
+        else if (fast_is_equal(work_error,best_split_error) &&
+                 fast_is_more(work_balance,best_balance)) continue;
+
+        best_feature_value = 0.5 * (row_feature + next_feature);
+        best_split_error = work_error;
+        best_balance = work_balance;
+        }
+
+    }
+    return make_tuple(best_split_error, best_feature_value, best_balance);
 }
 
 void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature,
