@@ -46,6 +46,7 @@
 #include <plearn/base/PP.h>
 #include <plearn/math/TVec.h>
 #include <boost/tuple/tuple.hpp>
+#include "RegressionTreeRegisters.h"
 
 namespace PLearn {
 using namespace std;
