@@ -540,7 +540,7 @@ class DBIBqtools(DBIBase):
         self.micro = 1
         self.queue = "qwork@ms"
         self.long = False
-        self.duree = "12:00:00"
+        self.duree = "120:00:00"
         self.mem = None
         DBIBase.__init__(self, commands, **args)
 
