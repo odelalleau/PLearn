@@ -62,9 +62,6 @@ protected:
     // * protected options *
     // *********************
 
-    // ### declare protected option fields (such as learnt parameters) here
-    // ...
-
     // Fields below are not options.
 
     //! Used to store the list of all bags, with the indices of the corresponding
@@ -78,6 +75,7 @@ public:
     // ************************
 
     int expected_size_of_bag;
+    bool provide_target;
     bool remove_bag;
     PP<Splitter> sub_splitter;
 

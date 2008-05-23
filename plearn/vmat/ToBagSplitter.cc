@@ -54,6 +54,7 @@ using namespace std;
 ///////////////////
 ToBagSplitter::ToBagSplitter():
     expected_size_of_bag(10),
+    provide_target(false),
     remove_bag(false)
 {}
 
@@ -80,6 +81,12 @@ void ToBagSplitter::declareOptions(OptionList& ol)
     declareOption(ol, "remove_bag",
                   &ToBagSplitter::remove_bag, OptionBase::buildoption,
         "If true, then the bag column will be removed from the data splits.");
+
+    declareOption(ol, "provide_target",
+                  &ToBagSplitter::provide_target, OptionBase::buildoption,
+        "If true, then the target (without the bag info) of a bag will be\n"
+        "provided to the underlying splitter. This target is obtained from\n"
+        "the first sample in each bag.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -132,7 +139,31 @@ void ToBagSplitter::build_()
         }
         // Resize to the minimum size needed.
         bags_store.resize(num_bag, max_ninstances + 1, 0, true);
+        int bags_store_is = max_ninstances + 1;
+        int bags_store_ts = 0;
+        if (provide_target) {
+            if (dataset->targetsize() <= 1)
+                PLWARNING("In ToBagSplitter::build_ - 'provide_target' is true,"
+                        " but the dataset does not seem to have any target "
+                        "besides the bag information: no target provided to "
+                        "the underlying splitter");
+            else {
+                bags_store_ts = dataset->targetsize() - 1;
+                bags_store.resize(bags_store.length(),
+                                  bags_store.width() + bags_store_ts,
+                                  0, true);
+                Vec input, target;
+                real weight;
+                for (int i = 0; i < bags_store.length(); i++) {
+                    dataset->getExample(int(round(bags_store(i, 1))),
+                                        input, target, weight);
+                    bags_store(i).subVec(bags_store_is, bags_store_ts) <<
+                        target.subVec(0, bags_store_ts);
+                }
+            }
+        }
         bags_index = VMat(bags_store);
+        bags_index->defineSizes(bags_store_is, bags_store_ts, 0);
         //bags_index->savePMAT("HOME:tmp/bid.pmat");
         // Provide this index to the sub_splitter.
         sub_splitter->setDataSet(bags_index);
