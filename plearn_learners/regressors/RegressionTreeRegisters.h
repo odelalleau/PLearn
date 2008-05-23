@@ -47,6 +47,11 @@
 #include <plearn/math/TMat.h>
 #include <plearn/vmat/VMat.h>
 
+//!used to limit the memory used by limiting the length of the dataset.
+//!work with unsigned int, uint16_t, but fail with uint8_t???
+//!always use unsigned type! Otherwise you need to modif RegressionTreeRegisters.cc too
+#define RTR_type uint32_t 
+
 namespace PLearn {
 using namespace std;
 
@@ -70,8 +75,9 @@ private:
 
     int       next_id;
     //TMat<int> sorted_row;
-    TMat<int> tsorted_row;
-    TVec<int> leave_register;
+
+    TMat<RTR_type> tsorted_row;
+    TVec<RTR_type> leave_register;
     VMat tsource;
  
 public:
@@ -91,8 +97,8 @@ public:
     real         getTarget(int row);
     real         getWeight(int row);
     void         setWeight(int row,real val);
-    int          getNextId();
-    void         getAllRegisteredRow(int leave_id, int col, TVec<int> &reg);
+    RTR_type     getNextId();
+    void         getAllRegisteredRow(int leave_id, int col, TVec<RTR_type> &reg);
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);

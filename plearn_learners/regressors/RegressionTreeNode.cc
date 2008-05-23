@@ -42,6 +42,7 @@
 #include "RegressionTreeNode.h"
 #include "RegressionTreeRegisters.h"
 #include "RegressionTreeLeave.h"
+#include "RegressionTreeRegisters.h"
 
 namespace PLearn {
 using namespace std;
@@ -217,16 +218,16 @@ void RegressionTreeNode::lookForBestSplit()
 {
     if(leave->length<=1)
         return;
-    TVec<int> candidate(0,train_set->length());//list of candidate row to split
-    TVec<int> registered_row;
+    TVec<RTR_type> candidate(0, leave->length);//list of candidate row to split
+    TVec<RTR_type> registered_row(0, leave->length);
     tmp_vec.resize(2);
     Vec left_error(3);
     Vec right_error(3);
     Vec missing_error(3);
     missing_error.clear();
-
+    int inputsize = train_set->inputsize();
     int leave_id = leave->id;
-    for (int col = 0; col < train_set->inputsize(); col++)
+    for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
         left_leave->initStats();
@@ -255,7 +256,9 @@ void RegressionTreeNode::lookForBestSplit()
             int next_row = candidate.pop();
             left_leave->removeRow(row, tmp_vec, left_error);
             right_leave->addRow(row, tmp_vec, right_error);
-            compareSplit(col, train_set->get(next_row, col), train_set->get(row, col), left_error, right_error, missing_error);
+            compareSplit(col, train_set->get(next_row, col),
+                         train_set->get(row, col), left_error,
+                         right_error, missing_error);
             row = next_row;
         }
     }
@@ -288,7 +291,7 @@ int RegressionTreeNode::expandNode()
     missing_leave->initStats();
     left_leave->initStats();
     right_leave->initStats();
-    TVec<int>registered_row;
+    TVec<RTR_type>registered_row;
     train_set->getAllRegisteredRow(leave->id,split_col,registered_row);
 
     for (int row_index = 0;row_index<registered_row.size();row_index++)

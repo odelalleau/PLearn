@@ -121,6 +121,10 @@ void RegressionTreeRegisters::build_()
 
 void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {   
+    //check that we can put all the examples of the train_set
+    //with respect to the size of RTR_type who limit the capacity
+    PLCHECK(the_train_set.length()<pow((real)2,(real)(sizeof(RTR_type)*8)));
+
     if(the_train_set==source && tsource)
         //we set the existing source file
         return;
@@ -178,13 +182,13 @@ void RegressionTreeRegisters::put(int i, int j, real value)
     setWeight(i,value);
 }
 
-int RegressionTreeRegisters::getNextId()
+RTR_type RegressionTreeRegisters::getNextId()
 {
     next_id += 1;
     return next_id;
 }
 
-void RegressionTreeRegisters::getAllRegisteredRow(int leave_id, int col, TVec<int> &reg)
+void RegressionTreeRegisters::getAllRegisteredRow(int leave_id, int col, TVec<RTR_type> &reg)
 {
     for(int i=0;i<length();i++)
     {
