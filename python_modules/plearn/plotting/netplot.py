@@ -52,7 +52,7 @@ def formatFloat(float):
     return "%.2e" % float
 
 
-def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=.02, apply_to_rows = None, index_to_plot = [], names = [], same_scale = False):
+def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=.02, apply_to_rows = None, index_to_plot = [], names = [], same_scale = False, colormap = defaultColorMap):
 
     
     #some calculations for plotting
@@ -67,8 +67,6 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     #plotHeight = mHeight/mWidth*plotWidth
     plotHeight = mWidth/width/width*plotWidth
     cbw = .01 # color bar width
-
-    colorMap = defaultColorMap
 
     if same_scale:
         mi,ma = findMinMax(M)
@@ -100,9 +98,9 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
         
         axes((x, y, plotWidth, plotHeight))
         if same_scale:
-            imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colorMap, vmin = mi, vmax = ma)
+            imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colormap, vmin = mi, vmax = ma)
         else:
-            imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colorMap)#, vmin = mi, vmax = ma)
+            imshow(rowToMatrix(row, width), interpolation="nearest", cmap = colormap)#, vmin = mi, vmax = ma)
             
         if names == []:
             setPlotParams('row_' + str(i), 1-same_scale, True)
@@ -124,6 +122,59 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
    # customColorBar(mi,ma,(1.-cbw-sbi, sbi, sbi, 1.-2.*cbw))
     return toReturn
 
+
+def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None, show_colorbar=False, disable_ticks=False, colormap = cm.gray, luminance_scale_mode = 0, vmin=None, vmax=None):
+    """
+    If provided, vmin and vmax will be used for luminance scale (see imshow)
+    If not povided, they will be set depending on luminance_scale_mode:
+       0: vmin and vmax are left None, i.e. luminance
+          will be scaled independently for each image
+       1: vmin and vmax will be set to min,max of X
+       2: vmin and vmax will be set to +-min of X
+          or +-max of X (whichever is bigger).
+    """
+    #some calculations for plotting
+
+    img_size = len(X[0])
+    if img_width is None:
+        img_width = math.sqrt(img_size)
+    img_height = img_size/img_width
+
+    if vmin is None and luminance_scale_mode!=0:
+        print 'luminanca_scale_mode = ',luminance_scale_mode
+        vmin = X.min()
+        vmax = X.max()
+        print 'filter value range: ',vmin,',',vmax
+        if luminance_scale_mode==2:
+            vmax = max(abs(vmin),abs(vmax))
+            vmin = -vmax
+        print 'used luminance scale: ',vmin,',',vmax            
+
+    #THE plotting
+
+    subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9,
+                    wspace=0.01, hspace=0.01)
+    
+    for i in range(min(len(X),nrows*ncols)):
+        row = X[i]
+        subplot(nrows,ncols,i+1)
+        img = reshape(row,(img_height,img_width))
+        imshow(img, interpolation="nearest", cmap = colormap, vmin = vmin, vmax = vmax)
+            
+        # if show_colorbar and vmin is None:
+        #    colorbar()
+        if disable_ticks:
+            xticks([],[])
+            yticks([],[])
+
+    if figtitle!="":
+        figtext(0.5, 0.95, figtitle,
+                horizontalalignment='center',
+                verticalalignment='bottom')
+
+    if show_colorbar and vmin is not None:
+        cbw = .01 # color bar width
+        customColorBar(vmin,vmax,color_map=colormap)
 
 
 
@@ -372,5 +423,117 @@ def truncateMatrix(mat, n=10.):
     return truncMat
 
       
+class showRowsAsImages:
+
+    def __init__(self, X, figtitle="",
+                 nrows = 10, ncols = 20,
+                 startidx = 0,
+                 img_width=None,
+                 luminance_scale_mode=0,
+                 colormaps = [cm.gray, cm.jet],
+                 vmin = None, vmax = None):
+
+        self.X = X
+        self.figtitle = figtitle
+        self.nrows = nrows
+        self.ncols = ncols
+        self.startidx = startidx
+        self.img_width = img_width
+
+        # appearance control
+        self.luminance_scale_mode = luminance_scale_mode
+        self.interpolation = 'nearest'
+        self.colormaps = colormaps
+        self.cmapchoice = 0
+        self.show_colorbar = True
+        self.disable_ticks = True
+        self.vmin = vmin
+        self.vmax = vmax
+
+        # plot it
+        self.draw()      
+        connect('key_press_event', self.keyPressed)
+        # connect('button_press_event', self.__clicked)
+
+        # start interactive loop
+        show()
+
+    def draw(self):
+        print "Start plotting..."
+        clf()
+        endidx = min(self.startidx+self.nrows*self.ncols, len(self.X))
+        title = self.figtitle+" ("+str(self.startidx)+" ... "+str(endidx-1)+")"
+        plotRowsAsImages(self.X[self.startidx : endidx],
+                         figtitle = title,
+                         nrows = self.nrows,
+                         ncols = self.ncols,
+                         img_width=self.img_width,
+                         luminance_scale_mode = self.luminance_scale_mode,
+                         show_colorbar = self.show_colorbar,
+                         disable_ticks = self.disable_ticks,
+                         colormap = self.colormaps[self.cmapchoice],
+                         vmin = self.vmin,
+                         vmax = self.vmax
+                         )
         
-    
+        print "Plotted,"
+        draw()
+        print "Drawn."
+                   
+
+    def plotNext(self):
+        self.startidx += self.nrows*self.ncols
+        if self.startidx >= len(self.X):
+            self.startidx = 0
+        self.draw()
+
+    def plotPrev(self):
+        if self.startidx>0:
+            self.startidx -= self.nrows*self.ncols
+        else:
+            self.startidx = len(self.X)-self.nrows*self.ncols
+        if self.startidx<0:
+            self.startidx = 0            
+        self.draw()
+
+    def keyPressed(self, event):
+        char = event.key
+        print 'Pressed',char
+        if char == 'c':
+            self.changeColorMap()
+        elif char == 'right':
+            self.plotNext()
+        elif char == 'left':
+            self.plotPrev()
+        elif char == 'b':
+            self.show_colorbar = not self.show_colorbar
+            self.draw()
+        elif char == 't':
+            self.disable_ticks = not self.disable_ticks
+            self.draw()
+        elif char == 's':
+            self.luminance_scale_mode = (self.luminance_scale_mode+1)%3
+            self.draw()
+        elif char == '':
+            pass
+        else:
+            print """
+            *******************************************************
+            * KEYS
+            *  right : show next filters
+            *  left  : show previous filters
+            *  c     : change colormap
+            *  s     : cycle through luminance scale mode
+            *          0 independent luminance scaling for each
+            *          1 min-max luminance scaling across display
+            *          2 +-min or +- max (largest range)
+            *  b     : toggle showing colorbar 
+            *  t     : toggle showing ticks
+            *
+            * Close window to stop.
+            *******************************************************
+            """
+
+    def changeColorMap(self):
+        self.cmapchoice = (self.cmapchoice+1)%len(self.colormaps)
+        self.draw()
