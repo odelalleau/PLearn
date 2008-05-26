@@ -1978,6 +1978,7 @@ void VMatrix::saveDMAT(const PPath& dmatdir) const
         pb(i);
     }
     vm.saveFieldInfos();
+    vm.saveAllStringMappings();
 }
 
 //////////////
