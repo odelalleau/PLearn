@@ -50,11 +50,13 @@ PLEARN_IMPLEMENT_OBJECT(
 
 RBMMatrixTransposeConnection::RBMMatrixTransposeConnection( 
     PP<RBMMatrixConnection> the_rbm_matrix_connection,
-    real the_learning_rate ) :
-    inherited(the_learning_rate), 
+    real the_learning_rate,
+    bool call_build_) :
+    inherited(the_learning_rate, call_build_),
     rbm_matrix_connection(the_rbm_matrix_connection)
 {
-    build();
+    if (call_build_)
+        build_();
 }
 
 void RBMMatrixTransposeConnection::declareOptions(OptionList& ol)

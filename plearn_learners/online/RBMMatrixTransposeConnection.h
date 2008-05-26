@@ -79,10 +79,11 @@ public:
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor
+    //! Default constructor.
     RBMMatrixTransposeConnection( 
         PP<RBMMatrixConnection> the_rbm_matrix_connection = 0,
-        real the_learning_rate=0 );
+        real the_learning_rate = 0,
+        bool call_build_ = false);
 
     // Your other public member functions go here
 
