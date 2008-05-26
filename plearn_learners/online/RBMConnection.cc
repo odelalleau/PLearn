@@ -54,7 +54,8 @@ PLEARN_IMPLEMENT_ABSTRACT_OBJECT(
 ///////////////////
 // RBMConnection //
 ///////////////////
-RBMConnection::RBMConnection( real the_learning_rate ) :
+RBMConnection::RBMConnection(real the_learning_rate, bool call_build_):
+    inherited("", call_build_),
     learning_rate(the_learning_rate),
     momentum(0.),
     down_size(-1),
@@ -63,6 +64,8 @@ RBMConnection::RBMConnection( real the_learning_rate ) :
     pos_count(0),
     neg_count(0)
 {
+    if (call_build_)
+        build_();
 }
 
 ////////////////////

@@ -85,7 +85,7 @@ public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
-    RBMConnection( real the_learning_rate=0. );
+    RBMConnection(real the_learning_rate = 0, bool call_build_ = false);
 
     // Your other public member functions go here
 
