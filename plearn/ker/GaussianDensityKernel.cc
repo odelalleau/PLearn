@@ -51,7 +51,7 @@ PLEARN_IMPLEMENT_OBJECT(GaussianDensityKernel,
                         "");
 
 real GaussianDensityKernel::evaluate(const Vec& x1, const Vec& x2) const
-{ return exp(-real(0.5)*powdistance(x1, x2, real(2.0))/(sigma*sigma) - x1.length()*(0.5*Log2Pi + log(exp(1.0),sigma))); }
+{ return exp(-real(0.5)*powdistance(x1, x2, real(2.0))/(sigma*sigma) - x1.length()*(0.5*Log2Pi + pl_log(sigma))); }
 
 void GaussianDensityKernel::declareOptions(OptionList& ol)
 {
