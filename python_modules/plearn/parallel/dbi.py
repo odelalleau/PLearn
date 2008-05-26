@@ -846,7 +846,7 @@ class DBICondor(DBIBase):
 
         if self.mem<=0:
             try:
-                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size
+                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
             except:
                 pass
         condor_dat.write( dedent('''\
@@ -1385,7 +1385,7 @@ def DBI(commands, launch_system, **args):
     try:
         jobs = eval('DBI'+launch_system+'(commands,**args)')
     except NameError:
-        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, Ssh, bqtools and Condor'
+        print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, Ssh, Bqtools and Condor'
         traceback.print_exc()
         sys.exit(1)
     return jobs
