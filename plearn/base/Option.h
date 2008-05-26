@@ -367,7 +367,10 @@ inline void declareOption(OptionList& ol,
                                                       defaultval, description, level));
 }
 
-// Overload for pointer to static member
+//! Overload for pointer to static member.
+//! Note that the code to declare static options has not been thoroughly tested
+//! and thus may contain some bugs (especially with the Python interface). Use
+//! at your own risk!
 template <class OptionType>
 inline void declareStaticOption(OptionList& ol,                      //!< list to which this option should be appended 
                           const string& optionname,            //!< the name of this option
@@ -377,7 +380,6 @@ inline void declareStaticOption(OptionList& ol,                      //!< list t
                           const OptionBase::OptionLevel level= OptionBase::default_level, //!< Option level (see OptionBase)
                           const string& defaultval="")         //!< default value for this option, as set by the default constructor
 {
-    perr<<"declareStaticOption() is not considered debuged, use at you own risk"<<endl;
     ol.push_back(new StaticOption<OptionType>(optionname, ptr, flags, 
                                                     TypeTraits<OptionType>::name(), 
                                                     defaultval, description, level));
