@@ -5,6 +5,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999,2000 Pascal Vincent, Yoshua Bengio and University of Montreal
 // Copyright (C) 2002 Frederic Morin
+// Copyright (C) 2008 Jerome Louradour
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -44,6 +45,7 @@
 #include "VMat_basic_stats.h"
 #include <plearn/vmat/ConcatRowsVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
+#include <plearn/vmat/ClassSubsetVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -52,6 +54,7 @@ KFoldSplitter::KFoldSplitter(int k)
     : append_non_constant_test(false),
       append_train(false),
       include_test_in_train(false),
+      balance_classes(false),
       K(k)
 {
     // Default cross-validation range is the whole dataset.
@@ -86,6 +89,11 @@ void KFoldSplitter::declareOptions(OptionList& ol)
 
     declareOption(ol, "cross_range", &KFoldSplitter::cross_range, OptionBase::buildoption,
                   "The range on which cross-validation is applied (similar to the FractionSplitter ranges).");
+
+    declareOption(ol, "balance_classes", &KFoldSplitter::balance_classes, OptionBase::buildoption,
+                  "Should we balance classes inside the splits to obtain the same class frequencies."
+                  "Note: For this option to work, you have to label your classes from 0 to (n_classes-1),"
+                  "and all classes must be present in the source VMat.");
 
     inherited::declareOptions(ol);
 }
@@ -149,6 +157,8 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     TVec<VMat> split_(2);
     VMat non_constant_test;
     if (do_partial_cross) {
+        if (balance_classes)
+            PLERROR("balance_classes not implemented with partial_cross");
         VMat sub_data = new SubVMatrix(dataset, i_start, 0, n_cross_data, dataset->width());
         split(sub_data, test_fraction, split_[0], split_[1], k, true);
         non_constant_test = split_[1];
@@ -160,8 +170,33 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
             VMat constant_test = new SubVMatrix(dataset, i_end, 0, n_data - i_end, dataset->width());
             split_[1] = new ConcatRowsVMatrix(split_[1], constant_test);
         }
-    } else {
-        split(dataset, test_fraction, split_[0], split_[1], k, true);
+    }
+    else {
+        if (balance_classes)
+        {
+            PLASSERT( dataset->targetsize() > 0 );
+            TVec<VMat> tmp_split_(2);
+            int i_class=0;
+            if ( test_fraction > 1.0)
+                test_fraction /= n_cross_data;
+            while (true) { // break point below
+                VMat dataset_class = new ClassSubsetVMatrix(dataset,  i_class );
+                dataset_class->build();
+                int length = dataset_class->length();
+                if (length == 0 ) break;
+                split(dataset_class, test_fraction, tmp_split_[0], tmp_split_[1], k, true);
+                if (i_class == 0) {
+                    CopiesMap copies;
+                    split_ = tmp_split_.deepCopy(copies); //PLearn::deepCopy(visible_layer);
+                } else {
+                    split_[0] = new ConcatRowsVMatrix(split_[0], tmp_split_[0]);
+                    split_[1] = new ConcatRowsVMatrix(split_[1], tmp_split_[1]);
+                }
+                i_class++;
+            }
+        }
+        else
+            split(dataset, test_fraction, split_[0], split_[1], k, true);
         non_constant_test = split_[1];
     }
     if (include_test_in_train)

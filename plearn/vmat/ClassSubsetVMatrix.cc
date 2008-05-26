@@ -3,6 +3,7 @@
 // ClassSubsetVMatrix.cc
 //
 // Copyright (C) 2004 Olivier Delalleau
+// Copyright (C) 2008 Jerome Louradour
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -56,6 +57,22 @@ ClassSubsetVMatrix::ClassSubsetVMatrix()
   // ### You may or may not want to call build_() to finish building the object
   // build_();
 }
+
+ClassSubsetVMatrix::ClassSubsetVMatrix(VMat the_source, TVec<int> the_classes)
+  : redistribute_classes(0), one_vs_minus_one_classification(0)
+{
+  source = the_source;
+  CopiesMap copies;
+  classes = the_classes.deepCopy(copies);
+}
+
+ClassSubsetVMatrix::ClassSubsetVMatrix(VMat the_source, int the_class)
+  : redistribute_classes(0), one_vs_minus_one_classification(0)
+{
+  source = the_source;
+  classes = TVec<int>(1, the_class);
+}
+
 
 PLEARN_IMPLEMENT_OBJECT(ClassSubsetVMatrix,
     "A VMatrix that keeps examples for a subset of the classes (target).",
@@ -114,9 +131,8 @@ void ClassSubsetVMatrix::build_()
       if(classes.find((int)target[0]) != -1)
         indices.push_back(i);
     }
-
-    if(indices.length() == 0)
-      PLERROR("In ClassSubsetVMatrix::build_(): no examples kept");
+    //if(indices.length() == 0)
+    //  PLERROR("In ClassSubsetVMatrix::build_(): no examples kept");
     inherited::build();
     if(one_vs_minus_one_classification && classes.length()!=2)
       PLERROR("In ClassSubsetVMatrix::build_(): no examples kept");

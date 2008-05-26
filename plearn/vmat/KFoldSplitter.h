@@ -68,6 +68,7 @@ public:
     bool append_train;
     pair<real, real> cross_range;
     bool include_test_in_train;
+    bool balance_classes;
     int K;
 
     // ****************

@@ -88,6 +88,8 @@ public:
 
   //! Default constructor.
   ClassSubsetVMatrix();
+  ClassSubsetVMatrix(VMat the_source, TVec<int> the_classes);
+  ClassSubsetVMatrix(VMat the_source, int the_class);
 
   // ******************
   // * Object methods *
