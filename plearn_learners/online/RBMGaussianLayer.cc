@@ -340,6 +340,9 @@ void RBMGaussianLayer::forget()
     inherited::forget();
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void RBMGaussianLayer::declareOptions(OptionList& ol)
 {
     declareOption(ol, "min_quad_coeff", &RBMGaussianLayer::min_quad_coeff,
@@ -352,7 +355,7 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
 
     declareOption(ol, "sigma", &RBMGaussianLayer::sigma,
                   OptionBase::learntoption,
-                  "comments...");
+                  "Standard deviations.");
 
     declareOption(ol, "share_quad_coeff", &RBMGaussianLayer::share_quad_coeff,
                   OptionBase::buildoption,
@@ -366,7 +369,7 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
                   "if it should not be learned.\n"
                   "This will fix the value of the quad coeffs to the "
                   "appropriate value.\n"
-                  "If < 0, then this option is ignored.\n");
+                  "If <= 0, then this option is ignored.\n");
 
     declareOption(ol, "compute_mse_instead_of_nll", &RBMGaussianLayer::compute_mse_instead_of_nll,
                   OptionBase::buildoption,
@@ -379,6 +382,9 @@ void RBMGaussianLayer::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void RBMGaussianLayer::build_()
 {
     bool needs_forget = false;
@@ -414,6 +420,9 @@ void RBMGaussianLayer::build_()
     clearStats();
 }
 
+///////////
+// build //
+///////////
 void RBMGaussianLayer::build()
 {
     inherited::build();
