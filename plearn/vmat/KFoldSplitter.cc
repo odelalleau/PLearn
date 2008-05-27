@@ -50,6 +50,9 @@
 namespace PLearn {
 using namespace std;
 
+///////////////////
+// KFoldSplitter //
+///////////////////
 KFoldSplitter::KFoldSplitter(int k)
     : append_non_constant_test(false),
       append_train(false),
@@ -73,6 +76,9 @@ PLEARN_IMPLEMENT_OBJECT(KFoldSplitter,
                         "after this range will be added to the test set.\n"
     );
 
+////////////////////
+// declareOptions //
+////////////////////
 void KFoldSplitter::declareOptions(OptionList& ol)
 {
     declareOption(ol, "K", &KFoldSplitter::K, OptionBase::buildoption,
@@ -81,34 +87,58 @@ void KFoldSplitter::declareOptions(OptionList& ol)
     declareOption(ol, "append_train", &KFoldSplitter::append_train, OptionBase::buildoption,
                   "If set to 1, the trainset will be appended after in the returned sets.");
 
-    declareOption(ol, "append_non_constant_test", &KFoldSplitter::append_non_constant_test, OptionBase::buildoption,
-                  "If set to 1, the non-constant part of the test set will be appended in the returned sets.");
+    declareOption(ol, "append_non_constant_test",
+                  &KFoldSplitter::append_non_constant_test,
+                  OptionBase::buildoption,
+        "If true, the non-constant part of the test set will be appended\n"
+        "in the returned sets. This mostly makes sense when 'cross_range'\n"
+        "is not (0:1).",
+        OptionBase::advanced_level);
 
     declareOption(ol, "include_test_in_train", &KFoldSplitter::include_test_in_train, OptionBase::buildoption,
                   "If set to 1, the test set will be included in the train set.");
 
-    declareOption(ol, "cross_range", &KFoldSplitter::cross_range, OptionBase::buildoption,
-                  "The range on which cross-validation is applied (similar to the FractionSplitter ranges).");
+    declareOption(ol, "cross_range", &KFoldSplitter::cross_range,
+                  OptionBase::buildoption,
+        "The range on which cross-validation is applied (similar to the\n"
+        "FractionSplitter ranges).",
+        OptionBase::advanced_level);
 
-    declareOption(ol, "balance_classes", &KFoldSplitter::balance_classes, OptionBase::buildoption,
-                  "Should we balance classes inside the splits to obtain the same class frequencies."
-                  "Note: For this option to work, you have to label your classes from 0 to (n_classes-1),"
-                  "and all classes must be present in the source VMat.");
+    declareOption(ol, "balance_classes", &KFoldSplitter::balance_classes,
+                  OptionBase::buildoption,
+        "Should we balance classes inside the splits to obtain the same\n"
+        "class frequencies. This corresponds to concatenating the results\n"
+        "of a K-Fold performed on the subsets of examples from each class.\n"
+        "Note that it currently does not support leave-one-out, and that\n"
+        "you might obtain strange results if K > number of samples in one\n"
+        "class.\n"
+        "Note also that for this option to work, you have to label your\n"
+        "classes from 0 to (n_classes-1), and all classes must be present\n"
+        "in the source VMat.");
 
     inherited::declareOptions(ol);
 }
 
+////////////
+// build_ //
+////////////
 void KFoldSplitter::build_()
 {
     PLASSERT( K > 0 || K == -1 );
 }
 
+///////////
+// build //
+///////////
 void KFoldSplitter::build()
 {
     inherited::build();
     build_();
 }
 
+/////////////
+// nsplits //
+/////////////
 int KFoldSplitter::nsplits() const
 {
     return K > 0 ? K
@@ -116,6 +146,9 @@ int KFoldSplitter::nsplits() const
                            : -1;
 }
 
+///////////////////
+// nSetsPerSplit //
+///////////////////
 int KFoldSplitter::nSetsPerSplit() const
 {
     int nsets = 2;
@@ -126,6 +159,9 @@ int KFoldSplitter::nSetsPerSplit() const
     return nsets;
 }
 
+//////////////
+// getSplit //
+//////////////
 TVec<VMat> KFoldSplitter::getSplit(int k)
 {
     if (k >= nsplits())
@@ -176,17 +212,23 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
         {
             PLASSERT( dataset->targetsize() > 0 );
             TVec<VMat> tmp_split_(2);
-            int i_class=0;
-            if ( test_fraction > 1.0)
+            int i_class = 0;
+            if (test_fraction > 1.0)
                 test_fraction /= n_cross_data;
+            else
+                PLERROR("In KFoldSplitter::getSplit - Leave-one-out not implemented");
             while (true) { // break point below
                 VMat dataset_class = new ClassSubsetVMatrix(dataset, i_class);
                 int length = dataset_class->length();
                 if (length == 0 ) break;
+                if (length < K)
+                    PLWARNING("In KFoldSplitter::getSplit - There are less "
+                            "samples from class %d (N = %d) than splits "
+                            "(K = %d): you may get weird results",
+                            i_class, length, K);
                 split(dataset_class, test_fraction, tmp_split_[0], tmp_split_[1], k, true);
                 if (i_class == 0) {
-                    CopiesMap copies;
-                    split_ = tmp_split_.deepCopy(copies); //PLearn::deepCopy(visible_layer);
+                    split_ = tmp_split_.copy();
                 } else {
                     split_[0] = new ConcatRowsVMatrix(split_[0], tmp_split_[0]);
                     split_[1] = new ConcatRowsVMatrix(split_[1], tmp_split_[1]);
@@ -202,8 +244,10 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
         split_[0] = new ConcatRowsVMatrix(split_[0], split_[1]);
     if (append_train)
         split_.append(split_[0]);
-    if (append_non_constant_test)
+    if (append_non_constant_test) {
+        PLCHECK_MSG(!balance_classes, "Not implemented");
         split_.append(non_constant_test);
+    }
     return split_;
 }
 
