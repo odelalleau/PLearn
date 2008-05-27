@@ -57,6 +57,7 @@
 #include <plearn/base/HelpSystem.h>
 #include <plearn/var/VarArray.h>
 #include <plearn/base/RealMapping.h> // for RealRange
+#include <plearn/vmat/VMField.h>
 
 namespace PLearn {
 using namespace std;
@@ -339,6 +340,26 @@ RealRange ConvertFromPyObject<RealRange>::convert(PyObject* pyobj, bool print_tr
     string rightbracket= ConvertFromPyObject<string>::convert(py_rightbracket, print_traceback);
     Py_DECREF(py_rightbracket);
     return RealRange(leftbracket[0], low, high, rightbracket[0]);
+}
+
+VMField ConvertFromPyObject<VMField>::convert(PyObject* pyobj, bool print_traceback)
+{
+    PLASSERT(pyobj);
+    PyObject* py_name = PyObject_GetAttrString(pyobj, "name");
+    if (!py_name)
+        PLPythonConversionError("ConvertFromPyObject<VMField>: not a VMField (no 'name' attr.)",
+                                pyobj, print_traceback);
+    string name = ConvertFromPyObject<string>::convert(py_name, print_traceback);
+    Py_DECREF(py_name);
+
+    PyObject* py_fieldtype = PyObject_GetAttrString(pyobj, "fieldtype");
+    if(!py_fieldtype) 
+        PLPythonConversionError("ConvertFromPyObject<VMField>: not a VMField (no 'fieldtype' attr.)",
+                                pyobj, print_traceback);
+    VMField::FieldType fieldtype = (VMField::FieldType)ConvertFromPyObject<int>::convert(py_fieldtype, print_traceback);
+    Py_DECREF(py_fieldtype);
+
+    return VMField(name, fieldtype);
 }
 
 template<> int numpyType<bool>()               { return NPY_BOOL; }
@@ -828,6 +849,28 @@ PyObject* ConvertToPyObject<RealRange>::newPyObject(const RealRange& rr)
     Py_INCREF(py_rr);
     Py_DECREF(env);
     return py_rr;
+}
+
+PyObject* ConvertToPyObject<VMField>::newPyObject(const VMField& vmf)
+{
+    string pycode = "\nfrom plearn.pybridge.wrapped_plearn_object import VMField\n";
+    pycode += string("\nresult = VMField(name='") + vmf.name + "', " + "fieldtype=" + tostring(vmf.fieldtype) + ")\n";
+
+    PyObject* env = PyDict_New();
+    if (0 != PyDict_SetItemString(env, "__builtins__", PyEval_GetBuiltins()))
+        PLERROR("In ConvertToPyObject<VMField>::newPyObject : cannot insert builtins in env.");
+    PyObject* res = PyRun_String(pycode.c_str(), Py_file_input, env, env);
+    if (!res)
+    {
+        Py_DECREF(env);
+        if (PyErr_Occurred()) PyErr_Print();
+        PLERROR("In ConvertToPyObject<VMField>::newPyObject : cannot convert to a VMField.");
+    }
+    Py_DECREF(res);
+    PyObject* py_vmf = PythonObjectWrapper(env).as<std::map<string, PyObject*> >()["result"];
+    Py_INCREF(py_vmf);
+    Py_DECREF(env);
+    return py_vmf;
 }
 
 PStream& operator>>(PStream& in, PythonObjectWrapper& v)

@@ -84,6 +84,7 @@ class Object;
 class VMatrix;
 class VarArray;
 class RealRange;
+class VMField;
 
 //! Used for error reporting.  If 'print_traceback' is true, a full
 //! Python traceback is printed to stderr.  Otherwise, raise PLERROR.
@@ -458,6 +459,12 @@ struct ConvertFromPyObject<RealRange>
     static RealRange convert(PyObject*, bool print_traceback);
 };
 
+template <>
+struct ConvertFromPyObject<VMField>
+{
+    static VMField convert(PyObject*, bool print_traceback);
+};
+
 /*****
  * Equivalence of types C++ -> numpy
  */
@@ -699,6 +706,9 @@ template <> struct ConvertToPyObject<VarArray>
 
 template <> struct ConvertToPyObject<RealRange>
 { static PyObject* newPyObject(const RealRange&); };
+
+template <> struct ConvertToPyObject<VMField>
+{ static PyObject* newPyObject(const VMField&); };
 
 struct PLPyClass
 {
