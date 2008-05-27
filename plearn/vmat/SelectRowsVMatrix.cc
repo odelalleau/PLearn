@@ -47,9 +47,9 @@ using namespace std;
 /** SelectRowsVMatrix **/
 
 PLEARN_IMPLEMENT_OBJECT(SelectRowsVMatrix,
-                        "VMat class that selects samples from a source matrix according to given vector of indices.",
-                        ""
-    );
+    "Selects samples from its source according to given vector of indices.",
+    ""
+);
 
 SelectRowsVMatrix::SelectRowsVMatrix()
     : obtained_inputsize_from_source(false),
