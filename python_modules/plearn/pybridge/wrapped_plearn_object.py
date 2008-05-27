@@ -176,3 +176,24 @@ class RealRange:
         self.low = low
         self.high = high
         self.rightbracket = rightbracket
+
+class VMField:
+    """
+    To support PLearn<->Python conversion of VMField (which is not a PLearn Object)
+    """
+    def __init__(self, name, fieldtype):
+        self.name = name
+        self.fieldtype = fieldtype
+
+class FieldType:
+    """
+    C-type enum implementation for PLearn::VMField::FieldType
+    """
+    UnknownType    = 0
+    Continuous     = 1
+    DiscrGeneral   = 2
+    DiscrMonotonic = 3
+    DiscrFloat     = 4
+    Date           = 5
+
+# vim: filetype=python:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
