@@ -180,8 +180,7 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
             if ( test_fraction > 1.0)
                 test_fraction /= n_cross_data;
             while (true) { // break point below
-                VMat dataset_class = new ClassSubsetVMatrix(dataset,  i_class );
-                dataset_class->build();
+                VMat dataset_class = new ClassSubsetVMatrix(dataset, i_class);
                 int length = dataset_class->length();
                 if (length == 0 ) break;
                 split(dataset_class, test_fraction, tmp_split_[0], tmp_split_[1], k, true);
