@@ -201,6 +201,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("The content of this VMatrix as a Mat")));
 
     declareMethod(
+        rmm, "declareField", &VMatrix::declareField,
+        (BodyDoc("Declares the field infos for a given column (index).\n"),
+         ArgDoc ("fieldindex", "The column index.\n"),
+         ArgDoc ("fieldname", "The field name of this column.\n"),
+         ArgDoc ("fieldtype", "The field type of this column.\n")));
+
+    declareMethod(
         rmm, "declareFieldNames", &VMatrix::declareFieldNames,
         (BodyDoc("Declares the field names.\n"),
          ArgDoc ("fnames", "TVec of field names.\n")));
