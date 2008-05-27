@@ -47,37 +47,45 @@
 namespace PLearn {
 using namespace std;
 
-////////////////////////////
-// ClassSubsetVMatrix //
-////////////////////////////
-ClassSubsetVMatrix::ClassSubsetVMatrix()
-  : redistribute_classes(0), one_vs_minus_one_classification(0)
-{
-  // ...
-  // ### You may or may not want to call build_() to finish building the object
-  // build_();
-}
-
-ClassSubsetVMatrix::ClassSubsetVMatrix(VMat the_source, TVec<int> the_classes)
-  : redistribute_classes(0), one_vs_minus_one_classification(0)
-{
-  source = the_source;
-  CopiesMap copies;
-  classes = the_classes.deepCopy(copies);
-}
-
-ClassSubsetVMatrix::ClassSubsetVMatrix(VMat the_source, int the_class)
-  : redistribute_classes(0), one_vs_minus_one_classification(0)
-{
-  source = the_source;
-  classes = TVec<int>(1, the_class);
-}
-
-
 PLEARN_IMPLEMENT_OBJECT(ClassSubsetVMatrix,
     "A VMatrix that keeps examples for a subset of the classes (target).",
     ""
 );
+
+////////////////////////
+// ClassSubsetVMatrix //
+////////////////////////
+ClassSubsetVMatrix::ClassSubsetVMatrix():
+    redistribute_classes(false),
+    one_vs_minus_one_classification(false)
+{}
+
+ClassSubsetVMatrix::ClassSubsetVMatrix(VMat the_source,
+                                       const TVec<int>& the_classes,
+                                       bool call_build_):
+    // There is no need to explicitely call the parent's constructor since
+    // the whole build process will be done in build_() if necessary.
+    classes(the_classes.copy()),
+    redistribute_classes(false),
+    one_vs_minus_one_classification(false)
+{
+  source = the_source;
+  if (call_build_)
+      build_();
+}
+
+ClassSubsetVMatrix::ClassSubsetVMatrix(VMat the_source, int the_class,
+                                       bool call_build_):
+    // There is no need to explicitely call the parent's constructor since
+    // the whole build process will be done in build_() if necessary.
+    classes(TVec<int>(1, the_class)),
+    redistribute_classes(false),
+    one_vs_minus_one_classification(false)
+{
+    source = the_source;
+    if (call_build_)
+        build_();
+}
 
 ////////////////////
 // declareOptions //
@@ -110,7 +118,6 @@ void ClassSubsetVMatrix::declareOptions(OptionList& ol)
 ///////////
 void ClassSubsetVMatrix::build()
 {
-  // ### Nothing to add here, simply calls build_
   inherited::build();
   build_();
 }

@@ -88,8 +88,15 @@ public:
 
   //! Default constructor.
   ClassSubsetVMatrix();
-  ClassSubsetVMatrix(VMat the_source, TVec<int> the_classes);
-  ClassSubsetVMatrix(VMat the_source, int the_class);
+
+  //! Convenience constructor.
+  //! Note that the vector 'the_classes' is copied and thus may be modified
+  //! afterwards.
+  ClassSubsetVMatrix(VMat the_source, const TVec<int>& the_classes,
+                     bool call_build_ = true);
+
+  //! Convenience constructor.
+  ClassSubsetVMatrix(VMat the_source, int the_class, bool call_build_ = true);
 
   // ******************
   // * Object methods *
