@@ -176,7 +176,6 @@ for argv in to_parse:
     elif argv in  ["--force", "--interruptible", "--long", 
                    "--getenv", "--cwait", "--clean_up" ,"--nice"]:
         dbi_param[argv[2:]]=True
-        testmode=True
     elif argv=="--testdbi":
         dbi_param["test"]=True
     elif argv=="--no_testdbi":
