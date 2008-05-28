@@ -136,7 +136,7 @@ PATH=os.getenv('PATH')
 if search_file('condor_submit',PATH):
     launch_cmd = 'Condor'
 elif search_file('bqsubmit',PATH):
-    launch_cmd = 'bqtools'
+    launch_cmd = 'Bqtools'
 elif search_file('cluster',PATH):
     launch_cmd = 'Cluster'
 else:
