@@ -233,6 +233,7 @@ class PMat( VMat ):
         self.inputsize = inputsize
         self.targetsize = targetsize
         self.weightsize = weightsize
+        self.openmode = openmode
         if openmode=='r':
             self.f = open(fname,'rb')
             self.read_and_parse_header()
@@ -405,7 +406,8 @@ class PMat( VMat ):
         self.write_header() # update length in header
 
     def flush(self):
-        self.f.flush()
+        if self.openmode!='r':
+            self.f.flush()
 
     def close(self):
         if hasattr(self, 'f'):
