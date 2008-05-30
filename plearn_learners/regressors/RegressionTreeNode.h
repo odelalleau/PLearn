@@ -88,7 +88,7 @@ private:
     PP<RegressionTreeNode> right_node;
     PP<RegressionTreeLeave> right_leave;
     
-    int dummy_int;
+    static int dummy_int;
     Vec tmp_vec;
 public:  
     RegressionTreeNode();

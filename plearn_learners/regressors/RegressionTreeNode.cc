@@ -53,7 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeNode,
                         "It may be an expanded node pointing to 3 children nodes: a leave for missing values on the splitting attribute,\n"
                         "a left leave for samples with values below the value of the splitting attribute, and a right leave for the others,\n"
     );
-
+int RegressionTreeNode::dummy_int = 0;
 RegressionTreeNode::RegressionTreeNode():
     missing_is_valid(0),
     loss_function_weight(1),
@@ -61,8 +61,7 @@ RegressionTreeNode::RegressionTreeNode():
     split_col(-1),
     split_balance(INT_MAX),
     split_feature_value(REAL_MAX),
-    after_split_error(REAL_MAX),
-    dummy_int(0)
+    after_split_error(REAL_MAX)
 {
     build();
 }
@@ -130,22 +129,22 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The mising leave output vector\n");
 
-    declareOption(ol, "right_leave_id", &RegressionTreeNode::dummy_int,
+    declareStaticOption(ol, "right_leave_id", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The id of the right leave\n");     
-    declareOption(ol, "left_leave_id", &RegressionTreeNode::dummy_int,
+    declareStaticOption(ol, "left_leave_id", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The id of the left leave\n");
-    declareOption(ol, "missing_leave_id", &RegressionTreeNode::dummy_int,
+    declareStaticOption(ol, "missing_leave_id", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The id of the missing leave\n");
-    declareOption(ol, "leave_id", &RegressionTreeNode::dummy_int,
+    declareStaticOption(ol, "leave_id", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The id of the leave\n");
-    declareOption(ol, "length", &RegressionTreeNode::dummy_int,
+    declareStaticOption(ol, "length", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The length of the train set\n");
-    declareOption(ol, "inputsize", &RegressionTreeNode::dummy_int,
+    declareStaticOption(ol, "inputsize", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The inputsize of the train set\n");
 
