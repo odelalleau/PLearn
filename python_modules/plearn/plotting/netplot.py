@@ -123,7 +123,9 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     return toReturn
 
 
-def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None, show_colorbar=False, disable_ticks=False, colormap = cm.gray, luminance_scale_mode = 0, vmin=None, vmax=None):
+def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None,
+                     show_colorbar=False, disable_ticks=True, colormap = cm.gray,
+                     luminance_scale_mode = 0, vmin=None, vmax=None):
     """
     If provided, vmin and vmax will be used for luminance scale (see imshow)
     If not povided, they will be set depending on luminance_scale_mode:
@@ -134,7 +136,6 @@ def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None, show_co
           or +-max of X (whichever is bigger).
     """
     #some calculations for plotting
-
     img_size = len(X[0])
     if img_width is None:
         img_width = math.sqrt(img_size)
@@ -158,6 +159,7 @@ def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None, show_co
     for i in range(min(len(X),nrows*ncols)):
         row = X[i]
         subplot(nrows,ncols,i+1)
+        # print "Reshaping: ",row.shape,"->",img_height,'x',img_width
         img = reshape(row,(img_height,img_width))
         imshow(img, interpolation="nearest", cmap = colormap, vmin = vmin, vmax = vmax)
             
@@ -176,6 +178,7 @@ def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None, show_co
         cbw = .01 # color bar width
         customColorBar(vmin,vmax,color_map=colormap)
 
+                   
 
 
 def plotMatrices(matrices, names = None, ticks = False, same_color_bar = False, space_between_matrices = 5, horizontal=True):
@@ -461,7 +464,7 @@ class showRowsAsImages:
     def draw(self):
         print "Start plotting..."
         clf()
-        endidx = min(self.startidx+self.nrows*self.ncols, len(self.X))
+        endidx = min(self.startidx+self.nrows*self.ncols, len(self.X))        
         title = self.figtitle+" ("+str(self.startidx)+" ... "+str(endidx-1)+")"
         plotRowsAsImages(self.X[self.startidx : endidx],
                          figtitle = title,
@@ -475,11 +478,10 @@ class showRowsAsImages:
                          vmin = self.vmin,
                          vmax = self.vmax
                          )
-        
         print "Plotted,"
         draw()
         print "Drawn."
-                   
+        
 
     def plotNext(self):
         self.startidx += self.nrows*self.ncols
