@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from plearn.vmat.PMat import load_pmat_as_array
+from plearn.vmat.PMat import PMat
 from plearn.plotting.netplot import showRowsAsImages
 
 ####################
@@ -22,12 +22,12 @@ if __name__ == "__main__":
         These will be interactively displayed in a nrows x ncols grid of imagettes.
         """
         print "Ex: "+sys.argv[0]+" /home/fringant2/lisa/data/faces/olivetti/faces.pmat 64 64  5 7"
+        print "Ex: "+sys.argv[0]+" /home/fringant2/lisa/data/icml07data/mnist_basic/plearn/mnist_basic2_train.pmat 28 28 5 7"
         raise
     # sys.exit()
 
-    data = load_pmat_as_array(datapmatfile)
-    inputs = data[:,0:imgheight*imgwidth]
-    showRowsAsImages(inputs, figtitle=datapmatfile, nrows=nrows, ncols=ncols, img_width=imgwidth)
+    data = PMat(datapmatfile)
+    showRowsAsImages(data, img_height=imgheight, img_width=imgwidth, nrows=nrows, ncols=ncols, figtitle=datapmatfile)
 
 
 

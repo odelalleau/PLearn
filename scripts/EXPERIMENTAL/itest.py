@@ -6,10 +6,7 @@ from numpy.numarray import *
 # from numarray import *
 # from numarray.linear_algebra import *
 
-from plearn.io.server import *
-from plearn.pyplearn import *
-from plearn.plotting import *
-from copy import *
+from plearn.plotting.matplotlib_utils import *
 
 from iTraining import *
 from generators import *
@@ -24,14 +21,11 @@ serv = launch_plearn_server(command = server_command)
 #iTraining2.py
 #to control interactively the training process
 
-import os, sys, time, matplotlib, math, numpy ,copy
-
 from matplotlib.pylab import plot,show,draw,close,text,scatter,colorbar
 from matplotlib.colors import *
 
 from plearn.io.server import *
 from plearn.pyplearn import *
-from plearn.plotting import *
 from numpy import *
 from pickle import *
 from copy import *

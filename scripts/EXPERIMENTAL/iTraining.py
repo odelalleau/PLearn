@@ -8,7 +8,7 @@ from matplotlib.colors import *
 
 from plearn.io.server import *
 from plearn.pyplearn import *
-from plearn.plotting import *
+from plearn.plotting.matplotlib_utils import *
 from numpy import *
 from pickle import *
 from copy import *

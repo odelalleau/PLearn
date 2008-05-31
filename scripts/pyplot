@@ -48,7 +48,8 @@ except ImportError:
     pass
 
 from plearn.io.server import *
-from plearn.plotting import *
+from plearn.plotting.matplotlib_utils import *
+from plearn.plotting.mayavi_utils import surfplot_xymagnitude
 
 server_command = 'plearn server'
 serv = launch_plearn_server(command = server_command)

@@ -8,7 +8,7 @@ from numpy.numarray import *
 
 from plearn.io.server import *
 from plearn.pyplearn import *
-from plearn.plotting import *
+from plearn.plotting.matplotlib_utils import *
 from copy import *
 
 from iTraining import *
