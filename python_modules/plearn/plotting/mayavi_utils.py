@@ -1,6 +1,6 @@
 ## Automatically adapted for numpy.numarray Jun 13, 2007 by python_numarray_to_numpy (-xsm)
 
-# plotting.py
+# mayavi_utils.py
 # Copyright (C) 2005 Pascal Vincent
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -33,4 +33,24 @@
 
 
 # Author: Pascal Vincent
+
+from plearn.plotting.numpy_utils import xymagnitude_to_x_y_grid
+
+try:
+    import mayavi.tools.imv
+    surf = mayavi.tools.imv.surf
+except:
+    print "Failed to properly import mayavi.tools.imv.surf"
+    print "Defining a surf that does nothing"
+    def surf(*args, **kargs):
+        pass
+    
+def surfplot_xymagnitude(regular_xymagnitude):
+    x,y,gridvalues = xymagnitude_to_x_y_grid(regular_xymagnitude)
+    surf(x, y, gridvalues)
+
+
+if __name__ == "__main__":
+    pass
+
 

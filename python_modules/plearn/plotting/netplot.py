@@ -1,5 +1,7 @@
 from pylab import *
-from numpy.numarray import *
+from math import *
+from numpy import *
+#from numpy.numarray import *
 
 
 #################
@@ -123,10 +125,17 @@ def plotLayer1(M, width, plotWidth=.1, start=0, length=-1, space_between_images=
     return toReturn
 
 
-def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None,
+def plotRowsAsImages(X, 
+                     img_height, img_width,
+                     nrows=10, ncols=20,
+                     figtitle="",
                      show_colorbar=False, disable_ticks=True, colormap = cm.gray,
-                     luminance_scale_mode = 0, vmin=None, vmax=None):
+                     luminance_scale_mode = 0, vmin=None, vmax=None,
+                     transpose_img=False):
     """
+    Will plot rows of X in a nrows x ncols grid.
+    The first img_height x img_width elements of each roe are interpreted as
+    greyscale values of a img_height x img_width image.
     If provided, vmin and vmax will be used for luminance scale (see imshow)
     If not povided, they will be set depending on luminance_scale_mode:
        0: vmin and vmax are left None, i.e. luminance
@@ -135,16 +144,15 @@ def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None,
        2: vmin and vmax will be set to +-min of X
           or +-max of X (whichever is bigger).
     """
-    #some calculations for plotting
-    img_size = len(X[0])
-    if img_width is None:
-        img_width = math.sqrt(img_size)
-    img_height = img_size/img_width
 
+    inputs = array(X[0:min(len(X),nrows*ncols)])
+    if len(inputs[0])>img_height*img_width:
+        inputs = inputs[:,0:(img_height*img_width)]
+        
     if vmin is None and luminance_scale_mode!=0:
         print 'luminanca_scale_mode = ',luminance_scale_mode
-        vmin = X.min()
-        vmax = X.max()
+        vmin = inputs.min()
+        vmax = inputs.max()
         print 'filter value range: ',vmin,',',vmax
         if luminance_scale_mode==2:
             vmax = max(abs(vmin),abs(vmax))
@@ -156,11 +164,13 @@ def plotRowsAsImages(X, figtitle="", nrows=10, ncols=20, img_width=None,
     subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9,
                     wspace=0.01, hspace=0.01)
     
-    for i in range(min(len(X),nrows*ncols)):
-        row = X[i]
+    for i in range(min(len(inputs),nrows*ncols)):
+        row = inputs[i]
         subplot(nrows,ncols,i+1)
         # print "Reshaping: ",row.shape,"->",img_height,'x',img_width
         img = reshape(row,(img_height,img_width))
+        if transpose_img:
+            img = transpose(img)        
         imshow(img, interpolation="nearest", cmap = colormap, vmin = vmin, vmax = vmax)
             
         # if show_colorbar and vmin is None:
@@ -428,20 +438,24 @@ def truncateMatrix(mat, n=10.):
       
 class showRowsAsImages:
 
-    def __init__(self, X, figtitle="",
+    def __init__(self, X, 
+                 img_height,
+                 img_width,
                  nrows = 10, ncols = 20,
                  startidx = 0,
-                 img_width=None,
+                 figtitle="",
                  luminance_scale_mode=0,
                  colormaps = [cm.gray, cm.jet],
-                 vmin = None, vmax = None):
+                 vmin = None, vmax = None,
+                 transpose_img=False):
 
         self.X = X
-        self.figtitle = figtitle
+        self.img_height = img_height
+        self.img_width = img_width
         self.nrows = nrows
         self.ncols = ncols
+        self.figtitle = figtitle
         self.startidx = startidx
-        self.img_width = img_width
 
         # appearance control
         self.luminance_scale_mode = luminance_scale_mode
@@ -452,6 +466,7 @@ class showRowsAsImages:
         self.disable_ticks = True
         self.vmin = vmin
         self.vmax = vmax
+        self.transpose_img = transpose_img
 
         # plot it
         self.draw()      
@@ -467,16 +482,18 @@ class showRowsAsImages:
         endidx = min(self.startidx+self.nrows*self.ncols, len(self.X))        
         title = self.figtitle+" ("+str(self.startidx)+" ... "+str(endidx-1)+")"
         plotRowsAsImages(self.X[self.startidx : endidx],
-                         figtitle = title,
+                         img_height = self.img_height,
+                         img_width = self.img_width,
                          nrows = self.nrows,
                          ncols = self.ncols,
-                         img_width=self.img_width,
+                         figtitle = title,
                          luminance_scale_mode = self.luminance_scale_mode,
                          show_colorbar = self.show_colorbar,
                          disable_ticks = self.disable_ticks,
                          colormap = self.colormaps[self.cmapchoice],
                          vmin = self.vmin,
-                         vmax = self.vmax
+                         vmax = self.vmax,
+                         transpose_img = self.transpose_img
                          )
         print "Plotted,"
         draw()
@@ -511,6 +528,9 @@ class showRowsAsImages:
             self.show_colorbar = not self.show_colorbar
             self.draw()
         elif char == 't':
+            self.transpose_img = not self.transpose_img
+            self.draw()
+        elif char == 'i':
             self.disable_ticks = not self.disable_ticks
             self.draw()
         elif char == 's':
@@ -524,13 +544,14 @@ class showRowsAsImages:
             * KEYS
             *  right : show next filters
             *  left  : show previous filters
+            *  t     : tranpose images
             *  c     : change colormap
             *  s     : cycle through luminance scale mode
             *          0 independent luminance scaling for each
             *          1 min-max luminance scaling across display
             *          2 +-min or +- max (largest range)
             *  b     : toggle showing colorbar 
-            *  t     : toggle showing ticks
+            *  i     : toggle showing ticks
             *
             * Close window to stop.
             *******************************************************
