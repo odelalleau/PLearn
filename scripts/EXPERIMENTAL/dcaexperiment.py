@@ -42,7 +42,8 @@ class DCAExperiment:
                  offdiag_nonlinearity="square", 
                  offdiag_premul = 1.0,
                  lr=0.01, nsteps=1, optimizer_nsteps=1,
-                 epsilon=1e-4, nu=0,
+                 force_zero_mean = False,
+                 epsilon=1e-6, nu=0,
                  img_height=None,
                  img_width=None):
 
@@ -51,8 +52,12 @@ class DCAExperiment:
         #some calculations for plotting
         if img_height is None:
             img_size = len(X[0])
-            img_width = math.sqrt(img_size)
-            img_height = img_size/img_width
+            if img_size==28*20: # hack for frey faces to automatically "guess" correct dimentsions
+                img_height = 28
+                img_width = 20
+            else:
+                img_width = math.sqrt(img_size)
+                img_height = img_size/img_width
         self.img_height = img_height
         self.img_width = img_width
 
@@ -83,6 +88,7 @@ class DCAExperiment:
             optimizer = pl.GradientOptimizer(start_learning_rate = lr,
                                              decrease_constant = 0,
                                              nstages = optimizer_nsteps),
+            force_zero_mean = force_zero_mean,
             epsilon = epsilon,
             nu = nu
             )
@@ -378,7 +384,7 @@ def getDataSet(dataset):
 if __name__ == "__main__":
 
     try:
-        dataset, learner_seed, ncomponents, constrain_norm_type, cov_transformation_type, diag_weight, diag_nonlinearity, diag_premul, offdiag_weight, offdiag_nonlinearity, offdiag_premul = sys.argv[1:]        
+        dataset, learner_seed, ncomponents, constrain_norm_type, cov_transformation_type, diag_weight, diag_nonlinearity, diag_premul, offdiag_weight, offdiag_nonlinearity, offdiag_premul, force_zero_mean = sys.argv[1:]        
 
         learner_seed = int(learner_seed)
         ncomponents = int(ncomponents)
@@ -387,23 +393,27 @@ if __name__ == "__main__":
         diag_premul = float(diag_premul)
         offdiag_weight = float(offdiag_weight)
         offdiag_premul = float(offdiag_premul)
-        
+        force_zero_mean = int(force_zero_mean)
 
 
 
     except:
-        print "Usage: "+sys.argv[0]+" dataset learner_seed ncomponents constrain_norm_type cov_transformation_type diag_weight diag_nonlinearity diag_premul offdiag_weight offdiag_nonlinearity offdiag_premul"
+        print "Usage: "+sys.argv[0]+" dataset learner_seed ncomponents constrain_norm_type cov_transformation_type diag_weight diag_nonlinearity diag_premul offdiag_weight offdiag_nonlinearity offdiag_premul force_zero_mean"
         print "  dataset can be either a .pmat or data_seed:ngaussians"
         print """  constrain_norm_type controls how to constrain the norms of rows of W:
-        -1:constrained source;
-        -2:explicit normalization;
+        -1: L1 constrained source;
+        -2: L2 constrained source;
+        -3:explicit normalization;
         >0:ordinary weight decay"""
         print """  cov_transformation_type controls the kind of transformation to apply to covariance matrix
         cov: no transformation (keep covariance)
         corr: transform into correlations, but keeping variances on the diagonal.
-        squaredist: do a 'squared distance kernel' kind of transformation."""
-        print "Ex: "+sys.argv[0]+" 123:1    123 2    -1 cov     -1 square 1       1 square 1"
-        print "Ex: "+sys.argv[0]+" 121:-2    123 4    -1 squaredist     0 exp 1       1 exp -1.6"
+        squaredist: do a 'squared distance kernel' kind of transformation.
+        sincov: uses sin of gangle instead of cos of angle
+        """
+        print "Ex: "+sys.argv[0]+" 123:1    123 2    -2 cov     -1 square 1       1 square 1   0"
+        print "Ex: "+sys.argv[0]+" 121:-2    123 4    -2 squaredist     0 exp 1       1 exp -1.6   0"
+        print "Ex: "+sys.argv[0]+" /data/icml07data/mnist_basic/plearn/mnist_basic2_train.pmat    125 400    -2 squaredist     0 exp -1       1 exp -1   0"
         raise
     # sys.exit()
 
@@ -422,6 +432,7 @@ if __name__ == "__main__":
                   offdiag_weight = offdiag_weight,
                   offdiag_nonlinearity = offdiag_nonlinearity, 
                   offdiag_premul = offdiag_premul,
+                  force_zero_mean = force_zero_mean,
                   lr=0.01, nsteps=1, optimizer_nsteps=10)
     
 

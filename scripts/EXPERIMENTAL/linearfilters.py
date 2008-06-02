@@ -9,7 +9,12 @@ from plearn.plotting.netplot import showRowsAsImages
 #server_command = 'plearn_exp server'
 #serv = launch_plearn_server(command = server_command)
 
-def computeAndShowFilters(datapmatfile, img_height, img_width, filtertype, lambd, nu):
+def computeAndShowFilters(datapmatfile, img_height, img_width, filtertype='PCA', lambd=1e-6, nu=0):
+    """
+    Input is considered to be the first img_height x img_width columns of datapmatfile.
+    Filtertype can be 'PCA' or 'denoising'        
+    Covariance matrix will get lambd*I added to its diagonal, and its off-diagonal terms multiplied by (1-nu).
+    """
     data = load_pmat_as_array(datapmatfile)
     inputs = data[:,0:img_height*img_width]
     C = cov(inputs, rowvar=0, bias=1)
@@ -54,23 +59,6 @@ def computeDenoisingFilters(C, lambd=1e-6, nu=0.10):
 ### main program ###
 
 if __name__ == "__main__":
-
-    try:
-        datapmatfile, img_height, img_width, filtertype, lambd, nu = sys.argv[1:]
-        img_height = int(img_height)
-        img_width = int(img_width)
-        lambd = float(lambd)
-        nu = float(nu)
-    except:
-        print "Usage: "+sys.argv[0]+" <datafile.pmat> <img_height> <img_width> <filtertype> <lambda> <nu>"
-        print """
-        Input is considered to be the first img_height x img_width columns.
-        Covariance matrix will get lambda*I added to its diagonal, and its off-diagonal terms multiplied by (1-nu).
-        Filtertype can be 'PCA' or 'denoising'        
-        """
-        raise
-    # sys.exit()
-
-    computeAndShowFilters(datapmatfile, img_height, img_width, filtertype, lambd, nu)
-
-
+    from plearn.utilities.autoscript import autoscript
+    autoscript(computeAndShowFilters, True)
+    
