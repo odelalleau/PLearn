@@ -100,7 +100,7 @@ def check_args(args, kwargs, all_argnames, default_values):
     pos_of_first_default = len(all_argnames)-len(default_values)
     for argname in all_argnames[len(args):pos_of_first_default]:
         if argname not in kwargs:
-            raise AutoscriptError("Missing mandatory argument: "+argname+". You must specify it.")
+            raise AutoscriptError("Missing mandatory argument: "+argname)
 
     # check if all specified kwargs are valid argnames
     invalid_names = [ argname for argname in kwargs.keys() if argname not in all_argnames ]
