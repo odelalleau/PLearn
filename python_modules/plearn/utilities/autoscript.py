@@ -127,9 +127,9 @@ def print_call_arguments(kwargs, all_argnames, default_values):
 
     for argname in all_argnames:
         if argname in kwargs:
-            print "# "+argname+" = "+repr(kwargs[argname])
+            print "# "+argname+"="+repr(kwargs[argname])
         else:
-            print "# "+argname+" = "+repr(defaults[argname])+ "   (default value)"            
+            print "# "+argname+"="+repr(defaults[argname])+ "   (default value)"            
 
 def eval_str_argument_values(kwargs, all_argnames, default_values):
     n = len(default_values)
