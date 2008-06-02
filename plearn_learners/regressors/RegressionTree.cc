@@ -227,6 +227,9 @@ void RegressionTree::train()
         }
         if (report_progress) pb->update(stage);
     }
+    pb = NULL;
+    verbose("split_cols: "+tostring(split_cols),2);
+    verbose("split_values: "+tostring(split_values),2);
     if (compute_train_stats < 1) return;
     if (report_progress)
     {
@@ -250,8 +253,6 @@ void RegressionTree::train()
         if (report_progress) pb->update(train_sample_index);
     }
     train_stats->finalize();
-    verbose("split_cols: "+tostring(split_cols),2);
-    verbose("split_values: "+tostring(split_values),2);
 }
 
 void RegressionTree::verbose(string the_msg, int the_level)
