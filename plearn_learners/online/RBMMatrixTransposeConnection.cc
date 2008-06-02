@@ -53,7 +53,9 @@ RBMMatrixTransposeConnection::RBMMatrixTransposeConnection(
     real the_learning_rate,
     bool call_build_) :
     inherited(the_learning_rate, call_build_),
-    rbm_matrix_connection(the_rbm_matrix_connection)
+    rbm_matrix_connection(the_rbm_matrix_connection),
+    learn_scale( false ),
+    scale( 1.0 )
 {
     if (call_build_)
         build_();
@@ -65,6 +67,17 @@ void RBMMatrixTransposeConnection::declareOptions(OptionList& ol)
                   &RBMMatrixTransposeConnection::rbm_matrix_connection,
                   OptionBase::buildoption,
                   "RBMMatrixConnection from which the weights are taken");
+
+    declareOption(ol, "learn_scale", 
+                  &RBMMatrixTransposeConnection::learn_scale,
+                  OptionBase::buildoption,
+                  "Indication that the scale of the weight matrix should be "
+                  "learned.\n");
+
+    declareOption(ol, "scale", 
+                  &RBMMatrixTransposeConnection::scale,
+                  OptionBase::learntoption,
+                  "Learned scale for weight matrix.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -144,6 +157,9 @@ void RBMMatrixTransposeConnection::accumulateNegStats( const Vec& down_values,
 
 void RBMMatrixTransposeConnection::update()
 {
+    if( learn_scale )
+        PLERROR("In RBMMatrixTransposeConnection::update(): not implemented "
+                "for learned scale");
     // updates parameters
     //weights -= learning_rate * (weights_pos_stats/pos_count
     //                              - weights_neg_stats/neg_count)
@@ -199,6 +215,10 @@ void RBMMatrixTransposeConnection::update( const Vec& pos_down_values, // v_0
                                            const Vec& neg_down_values, // v_1
                                            const Vec& neg_up_values )  // h_1
 {
+    if( learn_scale )
+        PLERROR("In RBMMatrixTransposeConnection::update(): not implemented "
+                "for learned scale");
+
     PLASSERT_MSG( rbm_matrix_connection, "RBMMatrixTransposeConnection must be given an rbm_matrix_connection.\n");
     // weights -= learning_rate * ( h_0 v_0' - h_1 v_1' );
     // or:
@@ -290,6 +310,8 @@ void RBMMatrixTransposeConnection::computeProduct( int start, int length,
                      weights.subMatRows(start,length),
                      input_vec );
     }
+    if( learn_scale)
+        activations *= scale;
 }
 
 void RBMMatrixTransposeConnection::computeProducts(int start, int length,
@@ -325,6 +347,9 @@ void RBMMatrixTransposeConnection::computeProducts(int start, int length,
                     inputs_mat,
                     weights.subMatRows(start,length) );
     }
+
+    if( learn_scale)
+        activations *= scale;
 }
 
 //! this version allows to obtain the input gradient as well
@@ -357,6 +382,19 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input,
     
     // weights -= learning_rate * output_gradient * input'
     externalProductScaleAcc( weights, input, output_gradient, -learning_rate );
+    if( learn_scale )
+    {
+        real* in = input.data();
+        real* out_g;
+        real* wj;
+        for( int j=0; j<weights.width(); j++)
+        {
+            out_g = output_gradient.data();
+            wj = weights[j];
+            for( int i=0; i<weights.length(); i++ )
+                scale -= learning_rate * out_g[i] * wj[i] * in[j];
+        }
+    }
 }
 
 void RBMMatrixTransposeConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
@@ -388,6 +426,23 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Mat& inputs, const Mat& out
     // weights -= learning_rate/n * output_gradients' * inputs
     transposeProductScaleAcc(weights, inputs, output_gradients,
                              -learning_rate / inputs.length(), real(1));
+
+    if( learn_scale )
+    {
+        for( int t=0; t<inputs.length(); t++)
+        {
+            real* in = inputs[t];
+            real* out_g;
+            real* wj;
+            for( int j=0; j<weights.width(); j++)
+            {
+                out_g = output_gradients[t];
+                wj = weights[j];
+                for( int i=0; i<weights.length(); i++ )
+                    scale -= learning_rate * out_g[i] * wj[i] * in[j];
+            }
+        }
+    }
 }
 
 
@@ -406,6 +461,8 @@ void RBMMatrixTransposeConnection::forget()
     if( !(rbm_matrix_connection->random_gen) )
         rbm_matrix_connection->random_gen = random_gen;
     rbm_matrix_connection->forget();
+    if( learn_scale )
+        scale = 1;
 }
 
 

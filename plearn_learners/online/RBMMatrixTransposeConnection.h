@@ -65,7 +65,13 @@ public:
     //! RBMMatrixConnection from which the weights are taken
     PP<RBMMatrixConnection> rbm_matrix_connection;
 
+    //! Indication that the scale of the weight matrix should be learned
+    bool learn_scale;
+
     //#####  Not Options  #####################################################
+
+    //! Learned scale for weight matrix
+    real scale;
 
     //! Accumulates positive contribution to the weights' gradient
     Mat weights_pos_stats;
