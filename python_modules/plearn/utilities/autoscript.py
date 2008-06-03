@@ -72,7 +72,7 @@ def autocomplete(args, all_argnames):
         prefix = args
         matches = [ arg for arg in all_argnames if arg.startswith(prefix) ]
         if len(matches)==0:
-            raise AutoscriptError("No matching argument name completion for "+prefix+"... in"+str(all_argnames))  
+            raise AutoscriptError("No matching argument name completion for "+prefix+"... in "+str(all_argnames))  
         elif len(matches)>1:
             raise AutoscriptError("Ambiguity in completion of "+prefix+"... Possible names are: "+str(matches))
         return matches[0]
@@ -181,16 +181,28 @@ def autoscript(callme, autocomplete_names=False, helptext="", argv=sys.argv):
     if not callable(callme):
         raise ValueError("First argument to autoscript must be callable: either a function or a class with an __init__ method or a callable instance""")
 
+    doctext=""
+
     if type(callme) is types.FunctionType:
         all_argnames, varargs, varkw, default_values = inspect.getargspec(callme)
-
+        if callme.__doc__ is not None:
+            doctext = callme.__doc__
+        
     elif type(callme) is types.ClassType:
         all_argnames, varargs, varkw, default_values = inspect.getargspec(callme.__init__)
         all_argnames = all_argnames[1:] # skip self
-
+        if callme.__doc__ is not None:
+            doctext = callme.__doc__
+        if callme.__init__.__doc__ is not None:
+            doctext = doctext+"\n"+callme.__init__.__doc__
+            
     elif type(callme) is types.InstanceType:
         all_argnames, varargs, varkw, default_values = inspect.getargspec(callme.__call__)
         all_argnames = all_argnames[1:] # skip self
+        #if callme.__doc__ is not None:
+        #    doctext = callme.__doc__
+        if callme.__call__.__doc__ is not None:
+            doctext = doctext+"\n"+callme.__call__.__doc__
 
     if default_values is None:
         default_values = []
@@ -202,8 +214,7 @@ def autoscript(callme, autocomplete_names=False, helptext="", argv=sys.argv):
         print "# Help on "+scriptname
         print prefix_lines("# ",helptext)
         print "# "+usage_text(scriptname, all_argnames, default_values)
-        if callme.__doc__ is not None:
-            print prefix_lines("# ",callme.__doc__)
+        print prefix_lines("# ",doctext)
         print "#"*80
         print
         sys.exit()
@@ -235,4 +246,4 @@ def autoscript(callme, autocomplete_names=False, helptext="", argv=sys.argv):
         sys.exit()
 
     # Call the callable
-    callme(**kwargs)
+    return callme(**kwargs)
