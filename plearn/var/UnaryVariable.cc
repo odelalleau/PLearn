@@ -80,6 +80,24 @@ void UnaryVariable::build_()
     // Nothing to do here.
 }
 
+
+////////////////
+// setParents //
+////////////////
+void UnaryVariable::setParents(const VarArray& parents)
+{
+    if(parents.length() != 1)
+        PLERROR("In UnaryVariable::setParents  VarArray length must be 1;"
+                " you are trying to set %d parents for this BinaryVariable...", parents.length());
+
+    input= parents[0];
+  
+    // int dummy_l, dummy_w;
+    //recomputeSize(dummy_l, dummy_w);
+    sizeprop();
+}
+
+
 void UnaryVariable::declareOptions(OptionList& ol)
 {
     declareOption(ol, "input", &UnaryVariable::input, OptionBase::buildoption, 

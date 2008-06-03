@@ -73,6 +73,8 @@ public:
     //! Set this Variable's input (simply call build after setting the new
     //! input).
     void setInput(Var the_input);
+
+    virtual void setParents(const VarArray& parents);
   
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
     virtual bool markPath();
