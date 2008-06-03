@@ -64,20 +64,20 @@ public:
     //!  Default constructor for persistence
     ConstrainedSourceVariable()
         :SourceVariable(), 
-         constraint_mode(0)
+         constraint_mode(2)
     {}
 
-    ConstrainedSourceVariable(int thelength, int thewidth, int the_constraint_mode=0, bool call_build_ = true)
+    ConstrainedSourceVariable(int thelength, int thewidth, int the_constraint_mode=2, bool call_build_ = true)
         :SourceVariable(thelength, thewidth, call_build_), 
          constraint_mode(the_constraint_mode)
     {}
 
-    ConstrainedSourceVariable(const Vec& v, bool vertical=true, int the_constraint_mode=0, bool call_build_ = true)
+    ConstrainedSourceVariable(const Vec& v, bool vertical=true, int the_constraint_mode=2, bool call_build_ = true)
         :SourceVariable(v, vertical, call_build_), 
          constraint_mode(the_constraint_mode)
     {}
 
-    ConstrainedSourceVariable(const Mat& m, int the_constraint_mode=0, bool call_build_ = true)
+    ConstrainedSourceVariable(const Mat& m, int the_constraint_mode=2, bool call_build_ = true)
         :SourceVariable(m, call_build_), 
          constraint_mode(the_constraint_mode)
     {}

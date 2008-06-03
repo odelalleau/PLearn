@@ -49,16 +49,20 @@ PLEARN_IMPLEMENT_OBJECT(
     ConstrainedSourceVariable,
     "SourceVariable that after each update, modifies values as needed to satisfy simple constraints",
     "The currently supported constraint is rows having norm 1.\n"
-    "i.e. after each update rows are divided by their norm.\n");
+    "i.e. after each update rows are divided by their norm (L2 or L1).\n");
 
 
 void ConstrainedSourceVariable::satisfyConstraints()
 {
     switch(constraint_mode)
     {
-    case 0:
+    case 2:
         for(int i=0; i<matValue.length(); i++)
             normalize(matValue(i), 2);
+        break;
+    case 1:
+        for(int i=0; i<matValue.length(); i++)
+            normalize(matValue(i), 1);
         break;
     default:
         PLERROR("Invalid constraint_mode %d",constraint_mode);
@@ -71,7 +75,8 @@ void ConstrainedSourceVariable::declareOptions(OptionList& ol)
     declareOption(
         ol, "constraint_mode", &ConstrainedSourceVariable::constraint_mode, OptionBase::buildoption,
         "The constraint_mode: \n"
-        "0: divide each row by its L2 norm after each update");
+        "2: divide each row by its L2 norm after each update\n"
+        "1: divide each row by its L1 norm after each update");
     inherited::declareOptions(ol);
 }
 
