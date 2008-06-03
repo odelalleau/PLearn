@@ -4765,7 +4765,26 @@ void addToDiagonal(const TMat<T>& mat, const TVec<T>& lambda)
     for (int i=0;i<le;i++,d+=mat.mod()+1,l++) *d += *l;
 }
 
+//! Fill diagonal with the specified value
+template<class T>
+void fillDiagonal(const TMat<T>& mat, T val)
+{
+    int l=mat.length();
+    for (int i=0;i<l;i++)
+        mat(i,i) = val;
+}
 
+//! Fill diagonal with the specified vector
+template<class T>
+void fillDiagonal(const TMat<T>& mat, const TVec<T>& v)
+{
+    int l=mat.length();
+    for (int i=0;i<l;i++)
+        mat(i,i) = v[i];
+}
+
+
+//! Copy diagonal of mat in d (which must have correct size)
 template<class T>
 void diag(const TMat<T>& mat, const TVec<T>& d)
 {
