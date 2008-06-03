@@ -583,18 +583,18 @@ void Function::verifyHessian(const Vec& input, real step)
 ////////////////////
 // verifyGradient //
 ////////////////////
-void Function::verifyGradient(const Vec& input, real step)
+void Function::verifyGradient(const Vec& input, real step, int which_component)
 {
     if(outputsize!=1)
         PLWARNING("In Function::verifyGradient(...) Will verify gradient only for the first output");
     Vec output(outputsize);
     Vec output_gradient(outputsize);
-    output_gradient[0]=1.0;
+    output_gradient[which_component]=1.0;
     Vec gradient(inputsize);
     fbprop(input, output, gradient,output_gradient);
     perr << "** Verifying gradient computation **" << endl;
     perr << "Input:                " << input << endl;
-    perr << "Output:               " << output[0] << endl;
+    perr << "Output["<<which_component<<"]:            " << output[which_component] << endl;
     perr << "Computed  gradient:   " << gradient << endl;
     //displayFunction(this,true);
     // Now computing the gradient by finite difference
@@ -606,10 +606,10 @@ void Function::verifyGradient(const Vec& input, real step)
         real in = input[i];
         newinput[i] = in+step;
         fprop(newinput,output);
-        real out1 = output[0];
+        real out1 = output[which_component];
         newinput[i] = in-step;
         fprop(newinput,output);
-        real out2 = output[0];
+        real out2 = output[which_component];
         finitediffgradient[i] = (out1-out2)/doublestep;
         newinput[i] = input[i] = in;
     }
@@ -655,18 +655,18 @@ void Function::verifyGradient(const Vec& input, real step)
                                                 : acos(cos_angle) ) << endl;
 }
 
-void Function::verifyGradient(real minval, real maxval, real step)
+void Function::verifyGradient(real minval, real maxval, real step, int which_component)
 {
     Vec input(inputsize);
     fill_random_uniform(input,minval, maxval);
-    verifyGradient(input, step);
+    verifyGradient(input, step, which_component);
 }
 
-void Function::verifyGradient(real step)
+void Function::verifyGradient(real step, int which_component)
 {
     Vec input(inputsize);
     inputs >> input;
-    verifyGradient(input, step);
+    verifyGradient(input, step, which_component);
 }
 
 ////////////////////////////

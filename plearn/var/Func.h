@@ -184,15 +184,15 @@ public:
     VarArray operator()(const VarArray& new_inputs) const;
 
     //!  take the values given in the in Vec
-    void verifyGradient(const Vec& in, real step=0.01);
+    void verifyGradient(const Vec& in, real step=0.01, int which_component=0);
 
     void verifyHessian(const Vec& in, real step=0.01);
 
     //!  take the values randomly between minval and maxval
-    void verifyGradient(real minval, real maxval, real step=0.01);
+    void verifyGradient(real minval, real maxval, real step=0.01,  int which_component=0);
 
     //!  take the current values of the inputs variables
-    void verifyGradient(real step=0.01);  
+    void verifyGradient(real step=0.01, int which_component=0);  
 
 /*!     Checks that the gradient computed by a bprop on the function 
   and the gradient computed by a fprop on the symbolic derivative
