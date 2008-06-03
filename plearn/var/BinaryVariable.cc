@@ -108,9 +108,9 @@ void BinaryVariable::setParents(const VarArray& parents)
 
     input1= parents[0];
     input2= parents[1];
-  
-    int dummy_l, dummy_w;
-    recomputeSize(dummy_l, dummy_w);
+    // int dummy_l, dummy_w;
+    //recomputeSize(dummy_l, dummy_w);
+    sizeprop();
 }
 
 #ifdef __INTEL_COMPILER
