@@ -30,9 +30,10 @@ serv = launch_plearn_server(command = server_command)
 class DCAExperiment:
 
     def __init__(self,
-                 X,
+                 data_set="123:1",
                  seed=1827,
                  ncomponents=2,
+                 nonlinearity="none",
                  constrain_norm_type=-1,
                  cov_transformation_type="cov",
                  diag_weight = -1.0,
@@ -46,6 +47,25 @@ class DCAExperiment:
                  epsilon=1e-6, nu=0,
                  img_height=None,
                  img_width=None):
+        """
+        dataset can be either a .pmat or data_seed:ngaussians
+
+        nonlinearity can be: none square abs sqrt sqrtabs exp tanh sigmoid
+        
+        constrain_norm_type controls how to constrain the norms of rows of W:
+          -1: L1 constrained source;
+          -2: L2 constrained source;
+          -3:explicit normalization;
+          >=0:ordinary weight decay
+          
+        cov_transformation_type controls the kind of transformation to apply to covariance matrix
+          cov: no transformation (keep covariance)
+          corr: transform into correlations, but keeping variances on the diagonal.
+          squaredist: do a 'squared distance kernel' kind of transformation.
+          sincov: uses sin of gangle instead of cos of angle
+        """
+        
+        X = getDataSet(data_set)
 
         self.nsteps = nsteps
 
@@ -77,6 +97,7 @@ class DCAExperiment:
         dcaspec = pl.DiverseComponentAnalysis(
             seed = seed,
             ncomponents = ncomponents,
+            nonlinearity=nonlinearity,
             constrain_norm_type=constrain_norm_type,
             cov_transformation_type=cov_transformation_type,
             diag_weight = diag_weight,
@@ -113,8 +134,9 @@ class DCAExperiment:
         self.filterfig = 3
         self.Wfig = 4
         self.Cytfig = 5
-        self.Cxfig = 6
+        self.Cxfig = 8
         self.Cythist = 7
+        self.trdatafig = 6
 
         self.draw()
         
@@ -130,10 +152,12 @@ class DCAExperiment:
         connect('key_press_event', self.keyPressed)
         #figure(self.Wfig)
         figure(self.Cytfig)
+        figure(self.trdatafig)
         #figure(self.Cxfig)
         #figure(self.Cythist)
 
         # start interactive loop
+        print "Starting interactive loop"
         show()
 
 
@@ -205,6 +229,21 @@ class DCAExperiment:
         self.dca.changeOptions({"optimizer.learning_rate":lr})
         self.draw()
 
+    def showRepresentation(self):
+        print "Plotting representation"
+        figure(self.trdatafig)
+        clf()
+        trdata = self.dca.getVarValue('trdata')
+        print "Dimensions of trdata: ",trdata.shape
+        trdata = trdata[0:50,:]
+        print "Looking only at first ",trdata.shape
+        # print trdata[3]
+        # ctrdata = self.dca.getVarValue('ctrdata')        
+        imshow(trdata, interpolation="nearest", cmap = cm.gray)
+        colorbar()
+        title("Representation")
+        draw()
+        
     def showFilters(self):
         W = self.dca.getVarValue('W')
 
@@ -228,7 +267,7 @@ class DCAExperiment:
         clf()
         subplot(1,3,1)
         title('Cyt')
-        imshow(Cyt, interpolation="nearest", cmap = cm.jet)
+        imshow(Cyt, interpolation="nearest", cmap = cm.gray)
         colorbar()
 
         subplot(1,3,2)
@@ -296,6 +335,8 @@ class DCAExperiment:
             self.changeSteps()
         elif char == 'w':
             self.showFilters()
+        elif char == 'r':
+            self.showRepresentation()            
         elif char == 's':
             self.save()
         elif char == '':
@@ -310,7 +351,8 @@ class DCAExperiment:
             *   ....           ...
             *   '9'     : does 90*nsteps training steps
             *   'o'     : to change optimizaiton nsteps and lr
-            *   'f'     : interactive show filters
+            *   'w'     : show weights (filters)
+            *   'r'     : show representation (transformed data) 
             *   's'     : save learner to file
             * Close window to stop.
             *******************************************************
@@ -339,13 +381,6 @@ def generate2dNormal(npoints=200):
     #X = dot(X,W)+b.T
     return X
 
-def loadInputs(datapmatfile, inputsize=None):
-    data = load_pmat_as_array(datapmatfile)
-    if inputsize is None:
-        inputsize = len(data[0])-1
-    X = data[:,0:inputsize]
-    return X
-
 def getDataSet(dataset):
     """dataset is a string that specifies either a .pmat or is of the form data_seed:ngaussians"""
     data_seed = None
@@ -358,10 +393,6 @@ def getDataSet(dataset):
 
     if data_seed is None:
         X = PMat(dataset)
-        print "** flushing"
-        X.flush()
-        print "** flushing DONE"
-        # X = loadInputs(dataset)
     else:
         random.seed(data_seed)
         if ngaussians==0:
@@ -381,73 +412,72 @@ def getDataSet(dataset):
 ####################
 ### main program ###
 
-if __name__ == "__main__":
-
-    try:
-        dataset, learner_seed, ncomponents, constrain_norm_type, cov_transformation_type, diag_weight, diag_nonlinearity, diag_premul, offdiag_weight, offdiag_nonlinearity, offdiag_premul, force_zero_mean = sys.argv[1:]        
-
-        learner_seed = int(learner_seed)
-        ncomponents = int(ncomponents)
-        constrain_norm_type = float(constrain_norm_type)
-        diag_weight = float(diag_weight)
-        diag_premul = float(diag_premul)
-        offdiag_weight = float(offdiag_weight)
-        offdiag_premul = float(offdiag_premul)
-        force_zero_mean = int(force_zero_mean)
-
-
-
-    except:
-        print "Usage: "+sys.argv[0]+" dataset learner_seed ncomponents constrain_norm_type cov_transformation_type diag_weight diag_nonlinearity diag_premul offdiag_weight offdiag_nonlinearity offdiag_premul force_zero_mean"
-        print "  dataset can be either a .pmat or data_seed:ngaussians"
-        print """  constrain_norm_type controls how to constrain the norms of rows of W:
-        -1: L1 constrained source;
-        -2: L2 constrained source;
-        -3:explicit normalization;
-        >0:ordinary weight decay"""
-        print """  cov_transformation_type controls the kind of transformation to apply to covariance matrix
-        cov: no transformation (keep covariance)
-        corr: transform into correlations, but keeping variances on the diagonal.
-        squaredist: do a 'squared distance kernel' kind of transformation.
-        sincov: uses sin of gangle instead of cos of angle
-        """
-        print "Ex: "+sys.argv[0]+" 123:1    123 2    -2 cov     -1 square 1       1 square 1   0"
-        print "Ex: "+sys.argv[0]+" 121:-2    123 4    -2 squaredist     0 exp 1       1 exp -1.6   0"
-        print "Ex: "+sys.argv[0]+" /data/icml07data/mnist_basic/plearn/mnist_basic2_train.pmat    125 400    -2 squaredist     0 exp -1       1 exp -1   0"
-        raise
-    # sys.exit()
-
-    print "Getting data"
-    X = getDataSet(dataset)
-    print "Data OK."
-
-    DCAExperiment(X,
-                  seed=learner_seed, 
-                  ncomponents=ncomponents,
-                  constrain_norm_type=constrain_norm_type,
-                  cov_transformation_type=cov_transformation_type,
-                  diag_weight = diag_weight,
-                  diag_nonlinearity = diag_nonlinearity, 
-                  diag_premul = diag_premul,
-                  offdiag_weight = offdiag_weight,
-                  offdiag_nonlinearity = offdiag_nonlinearity, 
-                  offdiag_premul = offdiag_premul,
-                  force_zero_mean = force_zero_mean,
-                  lr=0.01, nsteps=1, optimizer_nsteps=10)
-    
+# if __name__ == "__main__":
 
 #     try:
-#         datapmatfile, inputsize, filtertype, param = sys.argv[1:]
-#         inputsize = int(inputsize)
-#         param = float(param)
+#         dataset, learner_seed, ncomponents, constrain_norm_type, cov_transformation_type, diag_weight, diag_nonlinearity, diag_premul, offdiag_weight, offdiag_nonlinearity, offdiag_premul, force_zero_mean = sys.argv[1:]        
+
+#         learner_seed = int(learner_seed)
+#         ncomponents = int(ncomponents)
+#         constrain_norm_type = float(constrain_norm_type)
+#         diag_weight = float(diag_weight)
+#         diag_premul = float(diag_premul)
+#         offdiag_weight = float(offdiag_weight)
+#         offdiag_premul = float(offdiag_premul)
+#         force_zero_mean = int(force_zero_mean)
+
+
+
 #     except:
-#         print "Usage: "+sys.argv[0]+" <datafile.pmat> <inputsize> <filtertype> <param>"
-#         print """
-#         For filtertype 'PCA', param is the noise added to the diagonal of the covariance matrix
-#         For filtertype 'denoising', param is the destruction proportion.
+#         print "Usage: "+sys.argv[0]+" dataset learner_seed ncomponents constrain_norm_type cov_transformation_type diag_weight diag_nonlinearity diag_premul offdiag_weight offdiag_nonlinearity offdiag_premul force_zero_mean"
+#         print "  dataset can be either a .pmat or data_seed:ngaussians"
+#         print """  constrain_norm_type controls how to constrain the norms of rows of W:
+#         -1: L1 constrained source;
+#         -2: L2 constrained source;
+#         -3:explicit normalization;
+#         >0:ordinary weight decay"""
+#         print """  cov_transformation_type controls the kind of transformation to apply to covariance matrix
+#         cov: no transformation (keep covariance)
+#         corr: transform into correlations, but keeping variances on the diagonal.
+#         squaredist: do a 'squared distance kernel' kind of transformation.
+#         sincov: uses sin of gangle instead of cos of angle
 #         """
+#         print "Ex: "+sys.argv[0]+" 123:1    123 2    -2 cov     -1 square 1       1 square 1   0"
+#         print "Ex: "+sys.argv[0]+" 121:-2    123 4    -2 squaredist     0 exp 1       1 exp -1.6   0"
+#         print "Ex: "+sys.argv[0]+" /data/icml07data/mnist_basic/plearn/mnist_basic2_train.pmat    125 400    -2 squaredist     0 exp -1       1 exp -1   0"
 #         raise
 #     # sys.exit()
+
+#     print "Getting data"
+#     X = getDataSet(dataset)
+#     print "Data OK."
+
+#     DCAExperiment(X,
+#                   seed=learner_seed, 
+#                   ncomponents=ncomponents,
+#                   constrain_norm_type=constrain_norm_type,
+#                   cov_transformation_type=cov_transformation_type,
+#                   diag_weight = diag_weight,
+#                   diag_nonlinearity = diag_nonlinearity, 
+#                   diag_premul = diag_premul,
+#                   offdiag_weight = offdiag_weight,
+#                   offdiag_nonlinearity = offdiag_nonlinearity, 
+#                   offdiag_premul = offdiag_premul,
+#                   force_zero_mean = force_zero_mean,
+#                   lr=0.01, nsteps=1, optimizer_nsteps=10)
+    
+
+if __name__ == "__main__":
+
+    from plearn.utilities.autoscript import autoscript
+
+    helptext = """
+    OLDEXAMPLE: dcaexperiment.py  123:1    123 2    -2 cov     -1 square 1       1 square 1   0"
+    OLDEXAMPLE: dcaexperiment.py 121:-2    123 4    -2 squaredist     0 exp 1       1 exp -1.6   0"
+    OLDEXAMPLE: dcaexperiment.py /data/icml07data/mnist_basic/plearn/mnist_basic2_train.pmat    125 400    -2 squaredist     0 exp -1       1 exp -1   0
+    """
+    autoscript(DCAExperiment,True,helptext=helptext)
+
 
 
 

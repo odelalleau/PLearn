@@ -51,5 +51,5 @@ def showPMatRowsAsImages(pmatfile, imgheight, imgwidth, nrows=5, ncols=7, figtit
 
 if __name__ == '__main__':
     from plearn.utilities.autoscript import autoscript
-    autoscript(showPMatRowsAsImages)
+    autoscript(showPMatRowsAsImages, True)
 
