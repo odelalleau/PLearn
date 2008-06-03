@@ -69,6 +69,8 @@ public:
     static void test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file);
     static void compute_outputs(const string& trained_learner_file, const string& test_inputs_spec, const string& outputs_file);
 
+    static void process_dataset(const string& trained_learner_file, const string& dataset_spec, const string& processed_dataset_pmat);
+
     static void compute_outputs_on_1D_grid(const string& trained_learner_file, const string& grid_outputs_file, 
                                            real xmin, real xmax, int nx);
 

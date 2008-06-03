@@ -74,6 +74,11 @@ LearnerCommand::LearnerCommand():
                   "\n"
                   "learner compute_outputs <trained_learner.psave> <test_inputs.vmat> <outputs.pmat> (or 'learner co' as a shortcut)\n"
                   "\n"
+                  "learner process_dataset <trained_learner.psave> <dataset.vmat> <processed_dataset.pmat>\n"
+                  "  - process a full dataset (possibly containing input,target,weight,extra,parts). \n"
+                  "    writes processed dataset as a pmat. This calls method processDataset whose default version \n"
+                  "    uses computeOutput to process the input part, and simply passes on the other parts unchanged.\n"
+                  "    Typical usage: preprocessing data with PCA for ex. \n\n"
                   // "learner compute_costs <trained_learner.psave> <testset.vmat> <outputs.pmat> <costs.pmat>\n" 
                   "learner compute_outputs_on_1D_grid <trained_learner.psave> <gridoutputs.pmat> <xmin> <xmax> <nx> (shortcut: learner cg1)\n"
                   "  -  Computes output of learner on nx equally spaced points in range [xmin, xmax] and writes the list of (x,output)\n"
@@ -156,6 +161,18 @@ void LearnerCommand::compute_outputs(const string& trained_learner_file, const s
     int l = testinputs.length();
     VMat testoutputs = new FileVMatrix(outputs_file,l,learner->getOutputNames());
     learner->use(testinputs,testoutputs);
+}
+
+/////////////////////
+// process_dataset //
+/////////////////////
+void LearnerCommand::process_dataset(const string& trained_learner_file, const string& dataset_spec, const string& processed_dataset_pmat)
+{
+    PP<PLearner> learner =
+        (PLearner*) smartLoadObject(trained_learner_file);
+    VMat dataset = getDataSet(dataset_spec);
+    VMat processed = learner->processDataSet(dataset);
+    processed->savePMAT(processed_dataset_pmat);
 }
 
 ////////////////////////////////
@@ -361,6 +378,13 @@ void LearnerCommand::run(const vector<string>& args)
             compute_outputs(args[1],args[2],args[3]);
         else
             PLERROR("LearnerCommand::run you must provide 'plearn learner compute_outputs learner_spec_file trainset_spec save_learner_file'");
+    }
+    else if (command=="process_dataset")
+    {
+        if (args.size()==4)
+            process_dataset(args[1],args[2],args[3]);
+        else
+            PLERROR("LearnerCommand::run you must provide: plearn learner process_dataset <trained_learner.psave> <dataset.vmat> <processed_dataset.pmat>");
     }
     else if (command=="compute_outputs_on_1D_grid" || command=="cg1")
     {
