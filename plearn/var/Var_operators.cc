@@ -55,7 +55,6 @@
 #include "MinusColumnVariable.h"
 #include "MinusVariable.h"
 
-#include "TimesConstantVariable.h"
 #include "TimesScalarVariable.h"
 #include "TimesColumnVariable.h"
 #include "TimesRowVariable.h"
@@ -125,9 +124,6 @@ Var operator-(Var v1, Var v2)
         return new MinusVariable(v1,v2);
 }
 
-Var operator-(Var v)
-{ return new NegateElementsVariable(v); }
-
 void operator-=(Var& v1, const Var& v2)
 {
     if (!v2.isNull())
@@ -141,14 +137,6 @@ void operator-=(Var& v1, const Var& v2)
 
 Var operator-(real cte, Var v)
 { return new PlusConstantVariable(new NegateElementsVariable(v),cte); }
-
-
-
-Var operator*(Var v, real cte)
-{ return new TimesConstantVariable(v,cte); }
-
-Var operator*(real cte, Var v)
-{ return new TimesConstantVariable(v,cte); }
 
 
 //!  element-wise multiplications
@@ -169,9 +157,6 @@ Var operator*(Var v1, Var v2)
     else //!<  v1 and v2 must have the same dimensions (it is checked by the constructor of TimesVariable)
         return new TimesVariable(v1,v2); 
 }
-
-Var operator/(Var v, real cte)
-{ return new TimesConstantVariable(v, 1.0/cte); }
 
 Var operator/(real cte, Var v)
 {

@@ -45,6 +45,8 @@
 #define Var_operators_INC
 
 #include "Var.h"
+#include "NegateElementsVariable.h"
+#include "TimesConstantVariable.h"
 
 namespace PLearn {
 using namespace std;
@@ -54,22 +56,28 @@ Var operator+(real cte, Var v);
 Var operator+(Var v1, Var v2);
 void operator+=(Var& v1, const Var& v2);
 
+// Unary operator- is obtained through 
+// inclusion of NegateElementsVariable.h
 
-Var operator-(Var v);
+// Binary operator-
 Var operator-(Var v, real cte);
 Var operator-(real cte, Var v);
 Var operator-(Var v1, Var v2);
 void operator-=(Var& v1, const Var& v2);
 
-// elementwise multiplications
-Var operator*(Var v, real cte);
-Var operator*(real cte, Var v);
+// Elementwise multiplications with real constant 
+// are obtained from including TimesConstantVariable.h
+  
+// Var * Var elementwise multiplication:
 Var operator*(Var v1, Var v2);
 
 // elementwise divisions
-Var operator/(Var v, real cte);
+// elementwise division by a real constant 
+// is obtained from including TimesConstantVariable.h  
+// Other elementwise divisions:
 Var operator/(real cte, Var v);
 Var operator/(Var v1, Var v2);
+
 
 Var operator==(Var v1, Var v2);
 Var operator!=(Var v1, Var v2);

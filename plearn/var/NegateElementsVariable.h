@@ -85,6 +85,10 @@ inline Var negateElements(Var v) {
     return new NegateElementsVariable(v);
 }
 
+inline Var operator-(Var v)
+{ return new NegateElementsVariable(v); }
+
+
 } // end of namespace PLearn
 
 #endif 

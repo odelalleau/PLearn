@@ -86,6 +86,21 @@ protected:
 
 DECLARE_OBJECT_PTR(TimesConstantVariable);
 
+inline Var operator*(Var v, real cte)
+{ 
+    if(cte==1)
+        return v;
+    else
+        return new TimesConstantVariable(v,cte); 
+}
+
+inline Var operator*(real cte, Var v)
+{ return v*cte; }
+
+inline Var operator/(Var v, real cte)
+{ return v*(1.0/cte); }
+
+
 } // end of namespace PLearn
 
 #endif 
