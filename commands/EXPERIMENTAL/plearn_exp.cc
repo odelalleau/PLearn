@@ -65,7 +65,7 @@
 #include <commands/PLearnCommands/HelpCommand.h>
 // #include <commands/PLearnCommands/JulianDateCommand.h>
 // #include <commands/PLearnCommands/KolmogorovSmirnovCommand.h>
-// #include <commands/PLearnCommands/LearnerCommand.h>
+#include <commands/PLearnCommands/LearnerCommand.h>
 // #include <commands/PLearnCommands/PairwiseDiffsCommand.h>
 #include <commands/PLearnCommands/ReadAndWriteCommand.h>
 #include <commands/PLearnCommands/RunCommand.h>
@@ -77,7 +77,8 @@
 // #include <commands/PLearnCommands/HTMLHelpCommand.h>
 
 // //#include <commands/PLearnCommands/TxtmatCommand.h>
-
+#include <commands/PLearnCommands/VerifyGradientCommand.h>
+#include <commands/PLearnCommands/ExtractOptionCommand.h>
 
 // /**************
 //  * Dictionary *
@@ -325,7 +326,7 @@
 // #include <plearn_learners/unsupervised/Isomap.h>
 // #include <plearn_learners/unsupervised/KernelPCA.h>
 // #include <plearn_learners/unsupervised/LLE.h>
-// #include <plearn_learners/unsupervised/PCA.h>
+#include <plearn_learners/unsupervised/PCA.h>
 // #include <plearn_learners/unsupervised/SpectralClustering.h>
 
 // Kernels
@@ -393,6 +394,10 @@
 // Stuff used for local Gaussian classifier
 #include <plearn_learners/classifiers/KNNClassifier.h>
 #include <plearn_learners/classifiers/EXPERIMENTAL/LocalGaussianClassifier.h>
+
+// Stuff used for DiverseComponentAnalysis
+#include <plearn_learners/unsupervised/EXPERIMENTAL/DiverseComponentAnalysis.h>
+
 
 using namespace PLearn;
 
