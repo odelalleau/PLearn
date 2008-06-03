@@ -78,6 +78,21 @@ SourceVariable::SourceVariable(int thelength, int thewidth, bool call_build_):
         build_();
 }
 
+SourceVariable::SourceVariable(int thelength, int thewidth, string random_type_, 
+                               real random_a_, real random_b_, bool clear_first_row_,
+                               bool call_build_): 
+    inherited(thelength, thewidth, call_build_),
+    build_length(thelength),
+    build_width(thewidth),
+    random_type(random_type_),
+    random_a(random_a_),
+    random_b(random_b_),
+    random_clear_first_row(clear_first_row_)
+{
+    if (call_build_)
+        build_();
+}
+
 SourceVariable::SourceVariable(const Vec& v, bool vertical, bool call_build_):
     inherited(vertical ?v.toMat(v.length(),1) :v.toMat(1,v.length()),
               call_build_),

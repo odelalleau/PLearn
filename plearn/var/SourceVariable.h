@@ -79,6 +79,9 @@ public:
     SourceVariable(int thelength, int thewidth, bool call_build_ = true);
     SourceVariable(const Vec& v, bool vertical=true, bool call_build_ = true);
     SourceVariable(const Mat& m, bool call_build_ = true);
+    SourceVariable(int thelength, int thewidth, string random_type_, 
+                   real random_a_=0, real random_b_=1, bool clear_first_row_=false,
+                   bool call_build_ = true);
 
     virtual void setParents(const VarArray& parents)
     { PLERROR("In Variable::setParents  trying to set parents of a SourceVariable..."); }
