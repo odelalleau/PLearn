@@ -423,6 +423,7 @@ Mat Variable::defineGradientLocation(const Mat& m)
     return oldm;
 }
 
+/*
 void Variable::newwrite(PStream& out) const
 { 
     switch(out.outmode)
@@ -444,6 +445,7 @@ void Variable::newwrite(PStream& out) const
         inherited::newwrite(out);
     }
 }
+*/
 
 PLEARN_IMPLEMENT_ABSTRACT_OBJECT(Variable,
                                  "The base Variable class",

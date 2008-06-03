@@ -234,7 +234,7 @@ public:
     virtual void copyValueInto(Vec v) { v << value; }
     virtual void copyGradientInto(Vec g) { g << gradient; }
 
-    virtual void newwrite(PStream& out) const;
+    // virtual void newwrite(PStream& out) const;
 
     //!  returns the name of this variable. If its name has not been set, 
     //!  it will be assigned a name of V_varnum
