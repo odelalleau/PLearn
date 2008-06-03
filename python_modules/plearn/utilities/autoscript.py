@@ -123,20 +123,20 @@ def check_args(args, kwargs, all_argnames, default_values):
 
 def print_call_arguments(kwargs, all_argnames, default_values):
     n = len(default_values)
-    defaults = dict(zip(all_argnames[-n:], default_values))
+    defaults_dict = dict(zip(all_argnames[-n:], default_values))
 
     for argname in all_argnames:
         if argname in kwargs:
             print "# "+argname+"="+repr(kwargs[argname])
         else:
-            print "# "+argname+"="+repr(defaults[argname])+ "   (default value)"            
+            print "# "+argname+"="+repr(defaults_dict[argname])+ "   (default value)"            
 
 def eval_str_argument_values(kwargs, all_argnames, default_values):
     n = len(default_values)
-    defaults = dict(zip(all_argnames[-n:], default_values))
+    defaults_dict = dict(zip(all_argnames[-n:], default_values))
     for key, val in kwargs.items():        
         if type(val) is str and val!='':
-            if ((key not in defaults) or (type(defaults[key]) is not str) or val[0] in ("'",'"')):
+            if ((key not in defaults_dict) or (type(defaults_dict[key]) is not str) or val[0] in ("'",'"')):
                 try:
                     kwargs[key] = eval(val)
                 except:
