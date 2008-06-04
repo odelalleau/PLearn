@@ -1277,7 +1277,7 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
             lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
         else
             lr = grad_learning_rate;
-        
+
         layers[n_layers-1]->setLearningRate( lr );
         connections[n_layers-2]->setLearningRate( lr );
 
@@ -1362,16 +1362,16 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                 lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
             else
                 lr = grad_learning_rate;
-            
+
             connections[ i ]->setLearningRate( lr );
             layers[ i+1 ]->setLearningRate( lr );
-            
+
 
             layers[i+1]->bpropUpdate( layers[i+1]->activation,
                                       layers[i+1]->expectation,
                                       activation_gradients[i+1],
                                       expectation_gradients[i+1] );
-            
+
             connections[i]->bpropUpdate( layers[i]->expectation,
                                          layers[i+1]->activation,
                                          expectation_gradients[i],
@@ -1389,11 +1389,11 @@ void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
                 lr = cd_learning_rate / (1. + cd_decrease_ct * stage );
             else
                 lr = cd_learning_rate;
-            
+
             layers[i]->setLearningRate( lr );
             layers[i+1]->setLearningRate( lr );
             connections[i]->setLearningRate( lr );
-            
+
             if( i > 0 )
             {
                 save_layer_activation.resize(layers[i]->size);
