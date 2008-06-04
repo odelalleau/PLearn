@@ -267,6 +267,21 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+void StackedAutoassociatorsNet::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this is different from
+    // declareOptions().
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "computeOutputWithoutCorrelationConnections", 
+        &StackedAutoassociatorsNet::remote_computeOutputWithoutCorrelationConnections,
+        (BodyDoc("On a trained learner, this computes the output from the input without using the correlation_connections"),
+         ArgDoc ("input", "Input vector (should have width inputsize)"),
+         RetDoc ("Computed output (will have width outputsize)")));
+
+}
+
 void StackedAutoassociatorsNet::build_()
 {
     // ### This method should do the real building of the object,
@@ -1915,6 +1930,32 @@ void StackedAutoassociatorsNet::computeOutput(const Vec& input, Vec& output) con
                              output );
 }
 
+void StackedAutoassociatorsNet::computeOutputWithoutCorrelationConnections(const Vec& input, Vec& output) const
+{
+    // fprop
+
+    expectations[0] << input;
+
+    for(int i=0 ; i<currently_trained_layer-1 ; i++ )
+    {
+        connections[i]->fprop( expectations[i], activations[i+1] );
+        layers[i+1]->fprop(activations[i+1],expectations[i+1]);
+    }
+
+    if( currently_trained_layer<n_layers )
+    {
+        connections[currently_trained_layer-1]->fprop( 
+            expectations[currently_trained_layer-1], 
+            activations[currently_trained_layer] );
+        layers[currently_trained_layer]->fprop(
+            activations[currently_trained_layer],
+            output);
+    }
+    else        
+        final_module->fprop( expectations[ currently_trained_layer - 1],
+                             output );
+}
+
 void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
@@ -2090,6 +2131,13 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
     final_module->setLearningRate( the_learning_rate );
 }
 
+//! Version of computeOutput that returns a result by value
+Vec StackedAutoassociatorsNet::remote_computeOutputWithoutCorrelationConnections(const Vec& input) const
+{
+    tmp_output.resize(outputsize());
+    computeOutput(input, tmp_output);
+    return tmp_output;
+}
 
 } // end of namespace PLearn
 

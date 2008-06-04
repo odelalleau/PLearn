@@ -192,6 +192,10 @@ public:
     virtual void train();
 
     //! Computes the output from the input.
+    virtual void computeOutputWithoutCorrelationConnections(const Vec& input, 
+                                                        Vec& output) const;
+
+    //! Computes the output from the input.
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the costs from already computed output.
@@ -352,6 +356,9 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
+
 private:
     //#####  Private Member Functions  ########################################
 
@@ -365,6 +372,14 @@ private:
     void build_costs();
 
     void setLearningRate( real the_learning_rate );
+
+    // List of remote methods
+    
+    Vec remote_computeOutputWithoutCorrelationConnections(const Vec& input) const;
+
+    //! Global storage to save memory allocations.
+    mutable Vec tmp_output;
+
 
 private:
     //#####  Private Data Members  ############################################
