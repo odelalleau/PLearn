@@ -280,6 +280,14 @@ void StackedAutoassociatorsNet::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("input", "Input vector (should have width inputsize)"),
          RetDoc ("Computed output (will have width outputsize)")));
 
+    declareMethod(
+        rmm, "computeOutputsWithoutCorrelationConnections", 
+        &StackedAutoassociatorsNet::remote_computeOutputsWithoutCorrelationConnections,
+        (BodyDoc("On a trained learner, this computes the outputs from the inputs without using the correlation_connections"),
+         ArgDoc ("input", "Input matrix (should have width inputsize)"),
+         RetDoc ("Computed outputs (will have width outputsize)")));
+
+
 }
 
 void StackedAutoassociatorsNet::build_()
@@ -1956,6 +1964,21 @@ void StackedAutoassociatorsNet::computeOutputWithoutCorrelationConnections(const
                              output );
 }
 
+void StackedAutoassociatorsNet::computeOutputsWithoutCorrelationConnections(const Mat& inputs, Mat& outputs) const
+{
+
+    int n=inputs.length();
+    PLASSERT(outputs.length()==n);
+    for (int i=0;i<n;i++)
+    {
+        Vec in_i = inputs(i);
+        Vec out_i = outputs(i);
+        computeOutputWithoutCorrelationConnections(in_i,out_i);
+    }
+
+}
+
+
 void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
@@ -2131,13 +2154,22 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
     final_module->setLearningRate( the_learning_rate );
 }
 
-//! Version of computeOutput that returns a result by value
+//! Version of computeOutputWithoutCorrelationConnections(Vec,Vec) that returns a result by value
 Vec StackedAutoassociatorsNet::remote_computeOutputWithoutCorrelationConnections(const Vec& input) const
 {
     tmp_output.resize(outputsize());
-    computeOutput(input, tmp_output);
+    computeOutputWithoutCorrelationConnections(input, tmp_output);
     return tmp_output;
 }
+
+//! Version of computeOutputsWithoutCorrelationConnections(Mat,Mat) that returns a result by value
+Mat StackedAutoassociatorsNet::remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const
+{
+    tmp_output_mat.resize(inputs.length(),outputsize());
+    computeOutputsWithoutCorrelationConnections(inputs, tmp_output_mat);
+    return tmp_output_mat;
+}
+
 
 } // end of namespace PLearn
 

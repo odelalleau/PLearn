@@ -194,6 +194,9 @@ public:
     //! Computes the output from the input.
     virtual void computeOutputWithoutCorrelationConnections(const Vec& input, 
                                                         Vec& output) const;
+    //! Computes the output from the input
+    virtual void computeOutputsWithoutCorrelationConnections(const Mat& input, 
+                                                        Mat& output) const;
 
     //! Computes the output from the input.
     virtual void computeOutput(const Vec& input, Vec& output) const;
@@ -373,13 +376,14 @@ private:
 
     void setLearningRate( real the_learning_rate );
 
-    // List of remote methods
-    
+    // List of remote methods    
     Vec remote_computeOutputWithoutCorrelationConnections(const Vec& input) const;
+    
+    Mat remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const;
 
     //! Global storage to save memory allocations.
     mutable Vec tmp_output;
-
+    mutable Mat tmp_output_mat;
 
 private:
     //#####  Private Data Members  ############################################
