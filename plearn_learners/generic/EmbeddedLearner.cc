@@ -96,6 +96,20 @@ void EmbeddedLearner::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
+////////////////////
+// declareMethods //
+////////////////////
+void EmbeddedLearner::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this is different from
+    // declareOptions().
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+    declareMethod(
+        rmm, "getLearner", &EmbeddedLearner::getLearner,
+        (BodyDoc("Returns the learnt embedded learner.\n"),
+         RetDoc ("the learner")));
+}
+
 void EmbeddedLearner::build_()
 {
     if (!learner_)

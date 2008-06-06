@@ -57,6 +57,9 @@ public:
     //! Inner learner which is embedded into the current learner
     PP<PLearner> learner_;
 
+    inline PP<PLearner> getLearner() const
+    { return learner_; }
+
     //! A string which should be appended to the expdir for the inner learner
     string expdir_append;
 
@@ -84,6 +87,9 @@ protected:
 
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
     //! Set training set of the inner learner.
     void setInnerLearnerTrainingSet(VMat training_set, bool call_forget);

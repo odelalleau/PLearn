@@ -82,9 +82,6 @@ public:
 
     HyperLearner();
 
-    inline PP<PLearner> getLearner() const
-    { return learner_; }
-
     inline void setLearner(PP<PLearner> learner)
     { tester->learner = learner; learner_ = learner; }
 
