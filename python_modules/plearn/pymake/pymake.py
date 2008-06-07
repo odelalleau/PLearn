@@ -905,22 +905,24 @@ def isccfile(filepath):
     (base,ext) = os.path.splitext(filepath)
     return ext in cpp_exts
 
-def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link,linkname):
+def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link, executables_to_link,linkname):
     """A target can be a .cc file, a binary target, or a directory.
     The function updates (by appending to them) ccfiles_to_compile and ofiles_to_link
     ccfiles_to_compile is a dictionary containing FileInfo of all .cc files to compile
+    ccfiles_to_link is a dictionary containing FileInfo of all .cc files on
+    which target depends
     executables_to_link is a dictionary containing FileInfo of all .cc files containing a
     main whose corresponding executable should be made."""
     target = abspath(target) # get absolute path
     if os.path.basename(target)[0] == '.': # ignore files and directories starting with a dot
-        return 
+        return
     if os.path.isdir(target):
         if os.path.basename(target) not in ['OBJS','CVS']: # skip OBJS and CVS directories
             print "Entering " + target
             for direntry in os.listdir(target):
                 newtarget = join(target,direntry)
                 if os.path.isdir(newtarget) or isccfile(newtarget):
-                    get_ccfiles_to_compile_and_link(newtarget,ccfiles_to_compile,executables_to_link, linkname)
+                    get_ccfiles_to_compile_and_link(newtarget, ccfiles_to_compile, ccfiles_to_link, executables_to_link, linkname)
 
     else:
         if isccfile(target):
@@ -932,6 +934,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
             print "Warning: bad target", target
         else:
             info = file_info(cctarget)
+            ccfiles_to_link[info] = 1
             if info.hasmain or create_dll or create_so or create_pyso:
                 if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll:
                     # Refresh symbolic link.
@@ -940,6 +943,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_l
                 else:
                     executables_to_link[info] = 1
                     for ccfile in info.get_ccfiles_to_link():
+                        ccfiles_to_link[ccfile] = 1
                         if force_recompilation or not ccfile.corresponding_ofile_is_up_to_date():
                             #print ccfile.filebase
                             ccfiles_to_compile[ccfile] = 1
@@ -2861,6 +2865,7 @@ def main( args ):
         sourcedirs = unique(sourcedirs)
 
         ccfiles_to_compile = {}
+        ccfiles_to_link = {}
         executables_to_link = {}
 
         options = getOptions(options_choices,optionargs)
@@ -2884,7 +2889,7 @@ def main( args ):
         print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
         print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
         print '++++ Computing dependencies of '+target
-        get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, executables_to_link, linkname)
+        get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link, executables_to_link, linkname)
         print '++++ Dependencies computed'
 
         if distribute:
@@ -2896,19 +2901,18 @@ def main( args ):
             generate_vcproj_files(target, ccfiles_to_compile, executables_to_link, linkname)
 
         else:
-            l=reduce(lambda x,y:x+y.get_ccfiles_to_link(),
-                     executables_to_link,[])
             if verbose >=4:
                 print "Link files:"
-                for i in l:
+                for i in ccfiles_to_link:
                     print i.filebase
-                print 
+                print
                 print
                 print "Files to compile: "
                 for i in ccfiles_to_compile:
                     print i.filebase
             print '++++ Compiling',
-            print str(len(ccfiles_to_compile))+'/'+str(len(l)),'files...'
+            print str(len(ccfiles_to_compile))+'/'+str(len(ccfiles_to_link))
+            print 'files...'
 
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
