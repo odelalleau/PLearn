@@ -42,6 +42,8 @@
 #include "StackedAutoassociatorsNet.h"
 #include <plearn/io/pl_log.h>
 
+#define minibatch_hack 0 // Do we force the minibatch setting? (debug hack)
+
 namespace PLearn {
 using namespace std;
 
@@ -59,6 +61,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     fine_tuning_decrease_ct( 0. ),
     l1_neuron_decay( 0. ),
     l1_neuron_decay_center( 0 ),
+    batch_size( 1 ),
     online( false ),
     compute_all_test_costs( false ),
     reconstruct_hidden( false ),
@@ -67,8 +70,10 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     unsupervised_fine_tuning_learning_rate( 0. ),
     unsupervised_fine_tuning_decrease_ct( 0. ),
     mask_input_layer_only_in_unsupervised_fine_tuning( false ),
+    train_stats_window( -1 ),
     n_layers( 0 ),
     unsupervised_stage( 0 ),
+    minibatch_size( 0 ),
     currently_trained_layer( 0 )
 {
     // random_gen will be initialized in PLearner::build_()
@@ -183,6 +188,11 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "previous layers.\n"
         );
 
+    declareOption(ol, "batch_size", &StackedAutoassociatorsNet::batch_size,
+                  OptionBase::buildoption,
+                  "Training batch size (1=stochastic learning, 0=full batch"
+                  " learning)");
+
     declareOption(ol, "online", &StackedAutoassociatorsNet::online,
                   OptionBase::buildoption,
                   "If true then all unsupervised training stages (as well as\n"
@@ -239,6 +249,12 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "Indication that only the input layer should be masked\n"
                   "during unsupervised fine-tuning.\n");
 
+    declareOption(ol, "train_stats_window",
+                  &StackedAutoassociatorsNet::train_stats_window,
+                  OptionBase::buildoption,
+                  "The number of samples to use to compute training stats.\n"
+                  "-1 (default) means the number of training samples.\n");
+
     declareOption(ol, "greedy_stages",
                   &StackedAutoassociatorsNet::greedy_stages,
                   OptionBase::learntoption,
@@ -274,14 +290,14 @@ void StackedAutoassociatorsNet::declareMethods(RemoteMethodMap& rmm)
     rmm.inherited(inherited::_getRemoteMethodMap_());
 
     declareMethod(
-        rmm, "computeOutputWithoutCorrelationConnections", 
+        rmm, "computeOutputWithoutCorrelationConnections",
         &StackedAutoassociatorsNet::remote_computeOutputWithoutCorrelationConnections,
         (BodyDoc("On a trained learner, this computes the output from the input without using the correlation_connections"),
          ArgDoc ("input", "Input vector (should have width inputsize)"),
          RetDoc ("Computed output (will have width outputsize)")));
 
     declareMethod(
-        rmm, "computeOutputsWithoutCorrelationConnections", 
+        rmm, "computeOutputsWithoutCorrelationConnections",
         &StackedAutoassociatorsNet::remote_computeOutputsWithoutCorrelationConnections,
         (BodyDoc("On a trained learner, this computes the outputs from the inputs without using the correlation_connections"),
          ArgDoc ("input", "Input matrix (should have width inputsize)"),
@@ -292,17 +308,6 @@ void StackedAutoassociatorsNet::declareMethods(RemoteMethodMap& rmm)
 
 void StackedAutoassociatorsNet::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
-
     MODULE_LOG << "build_() called" << endl;
 
     if(inputsize_ > 0 && targetsize_ > 0)
@@ -428,9 +433,13 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
             }
         }
         correlation_activations.resize( n_layers-1 );
+        correlation_activations_m.resize( n_layers-1 );
         correlation_expectations.resize( n_layers-1 );
+        correlation_expectations_m.resize( n_layers-1 );
         correlation_activation_gradients.resize( n_layers-1 );
+        correlation_activation_gradients_m.resize( n_layers-1 );
         correlation_expectation_gradients.resize( n_layers-1 );
+        correlation_expectation_gradients_m.resize( n_layers-1 );
     }
 
     if(layers[0]->size != inputsize_)
@@ -439,9 +448,13 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
                 inputsize_);
 
     activations.resize( n_layers );
+    activations_m.resize( n_layers );
     expectations.resize( n_layers );
+    expectations_m.resize( n_layers );
     activation_gradients.resize( n_layers );
+    activation_gradients_m.resize( n_layers );
     expectation_gradients.resize( n_layers );
+    expectation_gradients_m.resize( n_layers );
 
 
     for( int i=0 ; i<n_layers-1 ; i++ )
@@ -642,7 +655,6 @@ void StackedAutoassociatorsNet::build_costs()
     }
 }
 
-// ### Nothing to add here, simply calls build_
 void StackedAutoassociatorsNet::build()
 {
     inherited::build();
@@ -670,12 +682,19 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     // Protected options
     deepCopyField(activations, copies);
+    deepCopyField(activations_m, copies);
     deepCopyField(expectations, copies);
+    deepCopyField(expectations_m, copies);
     deepCopyField(activation_gradients, copies);
+    deepCopyField(activation_gradients_m, copies);
     deepCopyField(expectation_gradients, copies);
+    deepCopyField(expectation_gradients_m, copies);
     deepCopyField(reconstruction_activations, copies);
+    deepCopyField(reconstruction_activations_m, copies);
     deepCopyField(reconstruction_activation_gradients, copies);
+    deepCopyField(reconstruction_activation_gradients_m, copies);
     deepCopyField(reconstruction_expectation_gradients, copies);
+    deepCopyField(reconstruction_expectation_gradients_m, copies);
     deepCopyField(fine_tuning_reconstruction_activations, copies);
     deepCopyField(fine_tuning_reconstruction_expectations, copies);
     deepCopyField(fine_tuning_reconstruction_activation_gradients, copies);
@@ -685,18 +704,28 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(hidden_reconstruction_activations, copies);
     deepCopyField(hidden_reconstruction_activation_gradients, copies);
     deepCopyField(correlation_activations, copies);
+    deepCopyField(correlation_activations_m, copies);
     deepCopyField(correlation_expectations, copies);
+    deepCopyField(correlation_expectations_m, copies);
     deepCopyField(correlation_activation_gradients, copies);
+    deepCopyField(correlation_activation_gradients_m, copies);
     deepCopyField(correlation_expectation_gradients, copies);
+    deepCopyField(correlation_expectation_gradients_m, copies);
     deepCopyField(correlation_layers, copies);
     deepCopyField(direct_activations, copies);
     deepCopyField(direct_and_reconstruction_activations, copies);
     deepCopyField(direct_and_reconstruction_activation_gradients, copies);
     deepCopyField(partial_costs_positions, copies);
     deepCopyField(partial_cost_value, copies);
+    deepCopyField(partial_cost_values, copies);
+    deepCopyField(partial_cost_values_0, copies);
     deepCopyField(final_cost_input, copies);
+    deepCopyField(final_cost_inputs, copies);
     deepCopyField(final_cost_value, copies);
+    deepCopyField(final_cost_values, copies);
+    deepCopyField(final_cost_values_0, copies);
     deepCopyField(final_cost_gradient, copies);
+    deepCopyField(final_cost_gradients, copies);
     deepCopyField(masked_autoassociator_input, copies);
     deepCopyField(masked_autoassociator_expectations, copies);
     deepCopyField(autoassociator_input_indices, copies);
@@ -767,13 +796,22 @@ void StackedAutoassociatorsNet::train()
     MODULE_LOG << "train() called " << endl;
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
 
-    Vec input( inputsize() );
-    Vec target( targetsize() );
-    real weight; // unused
+    minibatch_size = batch_size > 0 ? batch_size : train_set->length();
+    int n_train_stats_samples = (train_stats_window >= 0)
+        ? train_stats_window
+        : train_set->length();
 
-    TVec<string> train_cost_names = getTrainCostNames() ;
-    Vec train_costs( train_cost_names.length() );
-    train_costs.fill(MISSING_VALUE) ;
+    Vec input(inputsize());
+    Mat inputs(minibatch_size, inputsize());
+    Vec target(targetsize());
+    Mat targets(minibatch_size, inputsize());
+    real weight; // unused
+    Vec weights(minibatch_size);
+
+    TVec<string> train_cost_names = getTrainCostNames();
+    Vec train_costs(train_cost_names.length(), MISSING_VALUE);
+    Mat train_costs_m(minibatch_size, train_cost_names.length(),
+                      MISSING_VALUE);
 
     int nsamples = train_set->length();
     int sample;
@@ -834,8 +872,14 @@ void StackedAutoassociatorsNet::train()
 
             // Make sure that storage not null, will be resized anyways by bprop calls
             reconstruction_activations.resize(layers[i]->size);
+            reconstruction_activations_m.resize(minibatch_size,
+                                                layers[i]->size);
             reconstruction_activation_gradients.resize(layers[i]->size);
+            reconstruction_activation_gradients_m.resize(minibatch_size,
+                                                         layers[i]->size);
             reconstruction_expectation_gradients.resize(layers[i]->size);
+            reconstruction_expectation_gradients_m.resize(minibatch_size,
+                                                          layers[i]->size);
             masked_autoassociator_input.resize(layers[i]->size);
             autoassociator_input_indices.resize(layers[i]->size);
             for( int j=0 ; j < autoassociator_input_indices.length() ; j++ )
@@ -1009,9 +1053,8 @@ void StackedAutoassociatorsNet::train()
                 currently_trained_layer--;
         }
     }
-    else
+    else // online==true
     {
-
         if( unsupervised_nstages > 0 )
             PLERROR("StackedAutoassociatorsNet::train()"
                     " - \n"
@@ -1042,24 +1085,46 @@ void StackedAutoassociatorsNet::train()
             train_costs.fill(MISSING_VALUE);
             for( ; stage<nstages ; stage++ )
             {
-                sample = stage % nsamples;
-                if( !fast_exact_is_equal( fine_tuning_decrease_ct, 0. ) )
-                    setLearningRate( fine_tuning_learning_rate
-                                     / (1. + fine_tuning_decrease_ct * stage ) );
+                // Do a step every 'minibatch_size' examples
+                if (stage % minibatch_size == 0)
+                {
+                    sample = stage % nsamples;
+                    if( !fast_exact_is_equal(fine_tuning_decrease_ct, 0.) )
+                        setLearningRate(fine_tuning_learning_rate
+                                        /(1. + fine_tuning_decrease_ct*stage));
 
-                train_set->getExample( sample, input, target, weight );
-                onlineStep( input, target, train_costs );
-                train_stats->update( train_costs );
+                    if (minibatch_size > 1 || minibatch_hack)
+                    {
+                        train_set->getExamples(sample, minibatch_size,
+                                               inputs, targets, weights,
+                                               NULL, true );
+                        onlineStep(inputs, targets, train_costs_m);
+                    }
+                    else
+                    {
+                        train_set->getExample(sample, input, target, weight);
+                        onlineStep(input, target, train_costs);
+                    }
 
-                if( pb )
-                    pb->update( stage - init_stage + 1 );
+                    // Update stats if we are in the last n_train_stats_samples
+                    if (stage >= nstages - n_train_stats_samples)
+                        if (minibatch_size > 1 || minibatch_hack)
+                            for (int k = 0; k < minibatch_size; k++)
+                                train_stats->update(train_costs_m(k));
+                        else
+                            train_stats->update(train_costs);
+                }
+
+                if (pb)
+                    pb->update(stage - init_stage + 1);
             }
         }
 
     }
 }
 
-void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target, int index, Vec train_costs )
+void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
+                                           int index, Vec train_costs)
 {
     PLASSERT( index < n_layers );
 
@@ -1328,9 +1393,16 @@ void StackedAutoassociatorsNet::greedyStep( const Vec& input, const Vec& target,
 
 }
 
-void StackedAutoassociatorsNet::unsupervisedFineTuningStep( const Vec& input,
-                                                            const Vec& target,
-                                                            Vec& train_costs )
+void StackedAutoassociatorsNet::greedyStep(const Mat& inputs,
+                                           const Mat& targets,
+                                           int index, Mat& train_costs)
+{
+    PLCHECK_MSG(false, "Mini-batch not implemented yet.");
+}
+
+void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
+                                                           const Vec& target,
+                                                           Vec& train_costs)
 {
     // fprop
     expectations[0] << input;
@@ -1512,8 +1584,16 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep( const Vec& input,
     }
 }
 
-void StackedAutoassociatorsNet::fineTuningStep( const Vec& input, const Vec& target,
-                                                Vec& train_costs )
+void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Mat& inputs,
+                                                           const Mat& targets,
+                                                           Mat& train_costs)
+{
+    PLCHECK_MSG(false, "Mini-batch not implemented yet.");
+}
+
+void StackedAutoassociatorsNet::fineTuningStep(const Vec& input,
+                                               const Vec& target,
+                                               Vec& train_costs)
 {
     // fprop
     expectations[0] << input;
@@ -1600,9 +1680,18 @@ void StackedAutoassociatorsNet::fineTuningStep( const Vec& input, const Vec& tar
     }
 }
 
-void StackedAutoassociatorsNet::onlineStep( const Vec& input,
-                                            const Vec& target,
-                                            Vec& train_costs )
+void StackedAutoassociatorsNet::fineTuningStep(const Mat& inputs,
+                                               const Mat& targets,
+                                               Mat& train_costs)
+{
+    PLCHECK_MSG(false, "Mini-batch not implemented yet.");
+}
+
+
+
+void StackedAutoassociatorsNet::onlineStep(const Vec& input,
+                                           const Vec& target,
+                                           Vec& train_costs)
 {
     real lr;
     // fprop
@@ -1731,7 +1820,7 @@ void StackedAutoassociatorsNet::onlineStep( const Vec& input,
             reconstruction_activations);
 
         layers[ i-1 ]->fprop( reconstruction_activations,
-                                layers[ i-1 ]->expectation);
+                              layers[ i-1 ]->expectation);
 
         layers[ i-1 ]->activation << reconstruction_activations;
         //layers[ i-1 ]->expectation_is_up_to_date = true;
@@ -1875,6 +1964,283 @@ void StackedAutoassociatorsNet::onlineStep( const Vec& input,
     }
 }
 
+void StackedAutoassociatorsNet::onlineStep(const Mat& inputs,
+                                           const Mat& targets,
+                                           Mat& train_costs)
+{
+    real lr;
+    int mbatch_size = inputs.length();
+    PLASSERT( targets.length() == mbatch_size );
+    train_costs.resize(mbatch_size, train_costs.width());
+
+    // fprop
+    expectations_m[0].resize(mbatch_size, inputsize());
+    expectations_m[0] << inputs;
+
+    if(correlation_connections.length() != 0)
+    {
+        for( int i=0 ; i<n_layers-1; i++ )
+        {
+            connections[i]->fprop(expectations_m[i],
+                                  correlation_activations_m[i]);
+            layers[i+1]->fprop(correlation_activations_m[i],
+                               correlation_expectations_m[i]);
+            correlation_connections[i]->fprop(correlation_expectations_m[i],
+                                              activations_m[i+1] );
+            correlation_layers[i]->fprop(activations_m[i+1],
+                                         expectations_m[i+1]);
+        }
+    }
+    else
+    {
+        for( int i=0 ; i<n_layers-1; i++ )
+        {
+            connections[i]->fprop( expectations_m[i], activations_m[i+1] );
+            layers[i+1]->fprop(activations_m[i+1], expectations_m[i+1]);
+
+            if( partial_costs.length() != 0 && partial_costs[ i ] )
+            {
+                // Set learning rates
+                if( !fast_exact_is_equal(fine_tuning_decrease_ct, 0 ) )
+                    lr = fine_tuning_learning_rate /
+                        (1 + fine_tuning_decrease_ct * stage);
+                else
+                    lr = fine_tuning_learning_rate;
+
+                partial_costs[ i ]->setLearningRate( lr );
+                partial_costs[ i ]->fprop( expectations_m[i + 1],
+                                           targets, partial_cost_values );
+                // Update partial cost (might contain some weights for example)
+                partial_cost_values_0.resize(mbatch_size);
+                partial_cost_values_0 << partial_cost_values.column(0);
+                partial_costs[ i ]->bpropUpdate(
+                    expectations_m[ i + 1 ],
+                    targets,
+                    partial_cost_values_0,
+                    expectation_gradients_m[ i + 1 ]
+                    );
+
+                train_costs.subMatColumns(partial_costs_positions[i]+1,
+                                          partial_cost_values.width())
+                    << partial_cost_values;
+
+                if( partial_costs_weights.length() != 0 )
+                    expectation_gradients_m[i + 1] *= partial_costs_weights[i];
+
+                // Update hidden layer bias and weights
+                layers[ i+1 ]->bpropUpdate( activations_m[ i + 1 ],
+                                            expectations_m[ i + 1 ],
+                                            activation_gradients_m[ i + 1 ],
+                                            expectation_gradients_m[ i + 1 ] );
+
+                connections[ i ]->bpropUpdate( expectations_m[ i ],
+                                               activations_m[ i + 1 ],
+                                               expectation_gradients_m[ i ],
+                                               activation_gradients_m[ i + 1 ]
+                                             );
+            }
+        }
+    }
+
+    final_module->fprop( expectations_m[ n_layers-1 ],
+                         final_cost_inputs );
+
+    final_cost->fprop( final_cost_inputs, targets, final_cost_values );
+
+    train_costs.subMatColumns(train_costs.width() - final_cost_values.width(),
+                              final_cost_values.width())
+        << final_cost_values;
+
+    final_cost_values_0.resize(mbatch_size);
+    final_cost_values_0 << final_cost_values.column(0);
+    final_cost->bpropUpdate( final_cost_inputs, targets,
+                             final_cost_values_0,
+                             final_cost_gradients );
+    final_module->bpropUpdate( expectations_m[ n_layers-1 ],
+                               final_cost_inputs,
+                               expectation_gradients_m[ n_layers-1 ],
+                               final_cost_gradients );
+
+    // Unsupervised greedy layer-wise cost
+
+    // Set learning rates
+    if( !fast_exact_is_equal( greedy_decrease_ct, 0 ) )
+        lr = greedy_learning_rate / (1 + greedy_decrease_ct * stage) ;
+    else
+        lr = greedy_learning_rate;
+
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        layers[i]->setLearningRate( lr );
+        connections[i]->setLearningRate( lr );
+        reconstruction_connections[i]->setLearningRate( lr );
+        if(correlation_layers.length() != 0)
+        {
+            correlation_layers[i]->setLearningRate( lr );
+            correlation_connections[i]->setLearningRate( lr );
+        }
+    }
+    layers[n_layers-1]->setLearningRate( lr );
+
+    // Backpropagate unsupervised gradient, layer-wise
+    for( int i=n_layers-1 ; i>0 ; i-- )
+    {
+        reconstruction_connections[ i-1 ]->fprop(
+            expectations_m[ i ],
+            reconstruction_activations_m);
+
+        layers[ i-1 ]->activations.resize(mbatch_size, layers[i-1]->size);
+        layers[ i-1 ]->activations << reconstruction_activations_m;
+
+        Mat layer_exp = layers[i-1]->getExpectations();
+        layers[ i-1 ]->fprop(reconstruction_activations_m,
+                             layer_exp);
+        layers[ i-1 ]->setExpectationsByRef(layer_exp);
+
+        layers[ i-1 ]->fpropNLL(expectations_m[i-1],
+                                train_costs.column(i-1));
+
+        layers[ i-1 ]->bpropNLL(expectations_m[i-1], train_costs.column(i-1),
+                                reconstruction_activation_gradients_m);
+
+        layers[ i-1 ]->update(reconstruction_activation_gradients_m);
+
+        reconstruction_connections[ i-1 ]->bpropUpdate(
+            expectations_m[ i ],
+            reconstruction_activations_m,
+            reconstruction_expectation_gradients_m,
+            reconstruction_activation_gradients_m);
+
+        if(!fast_exact_is_equal(l1_neuron_decay,0))
+        {
+            // Compute L1 penalty gradient on neurons
+            for (int k = 0; k < mbatch_size; k++)
+            {
+                real* hid = expectations_m[i](k).data();
+                real* grad = reconstruction_expectation_gradients_m(k).data();
+                int width = expectations_m[i].width();
+                for(int j = 0; j < width; j++)
+                {
+                    if(*hid > l1_neuron_decay_center)
+                        *grad += l1_neuron_decay;
+                    else if(*hid < l1_neuron_decay_center)
+                        *grad -= l1_neuron_decay;
+                    hid++;
+                    grad++;
+                }
+            }
+        }
+
+        if( correlation_connections.length() != 0 )
+        {
+            correlation_layers[i-1]->bpropUpdate(
+                activations_m[i],
+                expectations_m[i],
+                reconstruction_activation_gradients_m,
+                reconstruction_expectation_gradients_m);
+
+            correlation_connections[i-1]->bpropUpdate(
+                correlation_expectations_m[i-1],
+                activations_m[i],
+                correlation_expectation_gradients_m[i-1],
+                reconstruction_activation_gradients_m);
+
+            layers[i]->bpropUpdate(
+                correlation_activations_m[i-1],
+                correlation_expectations_m[i-1],
+                correlation_activation_gradients_m[i-1],
+                correlation_expectation_gradients_m[i-1]);
+
+            connections[i-1]->bpropUpdate(
+                expectations_m[i-1],
+                correlation_activations_m[i-1],
+                reconstruction_expectation_gradients_m,
+                correlation_activation_gradients_m[i-1]);
+        }
+        else
+        {
+            layers[i]->bpropUpdate(
+                activations_m[i],
+                expectations_m[i],
+                reconstruction_activation_gradients_m,
+                reconstruction_expectation_gradients_m);
+
+            connections[i-1]->bpropUpdate(
+                expectations_m[i-1],
+                activations_m[i],
+                reconstruction_expectation_gradients_m,
+                reconstruction_activation_gradients_m);
+        }
+    }
+
+    // Put back fine-tuning learning rate
+    // Set learning rates
+    if( !fast_exact_is_equal(fine_tuning_decrease_ct, 0) )
+        lr = fine_tuning_learning_rate
+            / (1 + fine_tuning_decrease_ct * stage) ;
+    else
+        lr = fine_tuning_learning_rate ;
+
+    // Set learning rate back for fine-tuning
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        layers[i]->setLearningRate( lr );
+        connections[i]->setLearningRate( lr );
+        //reconstruction_connections[i]->setLearningRate( lr );
+        if(correlation_layers.length() != 0)
+        {
+            correlation_layers[i]->setLearningRate( lr );
+            correlation_connections[i]->setLearningRate( lr );
+        }
+    }
+    layers[n_layers-1]->setLearningRate( lr );
+
+    // Fine-tuning backpropagation
+    if( correlation_connections.length() != 0 )
+    {
+        for( int i=n_layers-1 ; i>0 ; i-- )
+        {
+            correlation_layers[i-1]->bpropUpdate(
+                activations_m[i],
+                expectations_m[i],
+                activation_gradients_m[i],
+                expectation_gradients_m[i] );
+
+            correlation_connections[i-1]->bpropUpdate(
+                correlation_expectations_m[i-1],
+                activations_m[i],
+                correlation_expectation_gradients_m[i-1],
+                activation_gradients_m[i] );
+
+            layers[i]->bpropUpdate( correlation_activations_m[i-1],
+                                    correlation_expectations_m[i-1],
+                                    correlation_activation_gradients_m[i-1],
+                                    correlation_expectation_gradients_m[i-1] );
+
+            connections[i-1]->bpropUpdate(
+                expectations_m[i-1],
+                correlation_activations_m[i-1],
+                expectation_gradients_m[i-1],
+                correlation_activation_gradients_m[i-1] );
+        }
+    }
+    else
+    {
+        for( int i=n_layers-1 ; i>0 ; i-- )
+        {
+            layers[i]->bpropUpdate( activations_m[i],
+                                    expectations_m[i],
+                                    activation_gradients_m[i],
+                                    expectation_gradients_m[i] );
+
+            connections[i-1]->bpropUpdate( expectations_m[i-1],
+                                           activations_m[i],
+                                           expectation_gradients_m[i-1],
+                                           activation_gradients_m[i] );
+        }
+    }
+}
+
 void StackedAutoassociatorsNet::computeOutput(const Vec& input, Vec& output) const
 {
     // fprop
@@ -1952,14 +2318,14 @@ void StackedAutoassociatorsNet::computeOutputWithoutCorrelationConnections(const
 
     if( currently_trained_layer<n_layers )
     {
-        connections[currently_trained_layer-1]->fprop( 
-            expectations[currently_trained_layer-1], 
+        connections[currently_trained_layer-1]->fprop(
+            expectations[currently_trained_layer-1],
             activations[currently_trained_layer] );
         layers[currently_trained_layer]->fprop(
             activations[currently_trained_layer],
             output);
     }
-    else        
+    else
         final_module->fprop( expectations[ currently_trained_layer - 1],
                              output );
 }

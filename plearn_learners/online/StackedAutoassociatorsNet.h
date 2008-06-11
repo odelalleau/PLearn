@@ -64,12 +64,14 @@ class StackedAutoassociatorsNet : public PLearner
 public:
     //#####  Public Build Options  ############################################
 
-    //! The learning rate used during the autoassociator gradient descent training
+    //! The learning rate used during the autoassociator gradient descent
+    //! training
     real greedy_learning_rate;
 
-    //! The decrease constant of the learning rate used during the autoassociator
-    //! gradient descent training. When a hidden layer has finished its training,
-    //! the learning rate is reset to it's initial value.
+    //! The decrease constant of the learning rate used during the
+    //! autoassociator gradient descent training. When a hidden layer has
+    //! finished its training, the learning rate is reset to it's initial
+    //! value.
     real greedy_decrease_ct;
 
     //! The learning rate used during the fine tuning gradient descent
@@ -87,6 +89,9 @@ public:
     //!    L1(h) = | h - l1_neuron_decay_center |
     //! where h is the value of the neurons.
     real l1_neuron_decay_center;
+
+    //! Training batch size (1=stochastic learning, 0=full batch learning)
+    int batch_size;
 
     //! Number of examples to use during each phase of greedy pre-training.
     //! The number of fine-tunig steps is defined by nstages.
@@ -120,13 +125,13 @@ public:
     PP<OnlineLearningModule> final_module;
 
     //! The cost function to be applied on top of the neural network
-    //! (i.e. at the output of final_module). Its gradients will be 
+    //! (i.e. at the output of final_module). Its gradients will be
     //! backpropagated to final_module and then backpropagated to
     //! the layers.
     PP<CostModule> final_cost;
 
-    //! Corresponding additional supervised cost function to be applied on 
-    //! top of each hidden layer during the autoassociator training stages. 
+    //! Corresponding additional supervised cost function to be applied on
+    //! top of each hidden layer during the autoassociator training stages.
     //! The gradient for these costs are not backpropagated to previous layers.
     TVec< PP<CostModule> > partial_costs;
 
@@ -149,16 +154,22 @@ public:
     //! Number of samples to use for unsupervised fine-tuning
     int unsupervised_nstages;
 
-    //! The learning rate used during the unsupervised fine tuning gradient descent
+    //! The learning rate used during the unsupervised fine tuning gradient
+    //! descent
     real unsupervised_fine_tuning_learning_rate;
 
-    //! The decrease constant of the learning rate used during 
+    //! The decrease constant of the learning rate used during
     //! unsupervised fine tuning gradient descent
     real unsupervised_fine_tuning_decrease_ct;
 
-    //! Indication that only the input layer should be masked 
+    //! Indication that only the input layer should be masked
     //! during unsupervised fine-tuning
     bool mask_input_layer_only_in_unsupervised_fine_tuning;
+
+    //! The number of samples to use to compute training stats.
+    //! -1 (default) means the number of training samples.
+    int train_stats_window;
+
 
     //#####  Public Learnt Options  ###########################################
 
@@ -214,17 +225,25 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
-    void greedyStep( const Vec& input, const Vec& target, int index, 
-                     Vec train_costs );
+    void greedyStep(const Vec& input, const Vec& target, int index,
+                    Vec train_costs);
+    void greedyStep(const Mat& inputs, const Mat& targets, int index,
+                    Mat& train_costs);
 
-    void unsupervisedFineTuningStep( const Vec& input, const Vec& target,
-                                     Vec& train_costs );
+    void unsupervisedFineTuningStep(const Vec& input, const Vec& target,
+                                    Vec& train_costs);
+    void unsupervisedFineTuningStep(const Mat& inputs, const Mat& targets,
+                                    Mat& train_costs);
 
-    void fineTuningStep( const Vec& input, const Vec& target,
-                         Vec& train_costs );
+    void fineTuningStep(const Vec& input, const Vec& target,
+                        Vec& train_costs);
+    void fineTuningStep(const Mat& inputs, const Mat& targets,
+                        Mat& train_costs);
 
-    void onlineStep( const Vec& input, const Vec& target,
-                         Vec& train_costs );
+    void onlineStep(const Vec& input, const Vec& target,
+                    Vec& train_costs);
+    void onlineStep(const Mat& inputs, const Mat& targets,
+                    Mat& train_costs);
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -237,74 +256,88 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
+
+    //! Actual size of a mini-batch (size of the training set if batch_size==1)
+    int minibatch_size;
+
     //#####  Not Options  #####################################################
 
     //! Stores the activations of the input and hidden layers
     //! (at the input of the layers)
     mutable TVec<Vec> activations;
+    mutable TVec<Mat> activations_m;
 
     //! Stores the expectations of the input and hidden layers
     //! (at the output of the layers)
     mutable TVec<Vec> expectations;
+    mutable TVec<Mat> expectations_m;
 
-    //! Stores the gradient of the cost wrt the activations of 
+    //! Stores the gradient of the cost wrt the activations of
     //! the input and hidden layers
     //! (at the input of the layers)
     mutable TVec<Vec> activation_gradients;
+    mutable TVec<Mat> activation_gradients_m;
 
-    //! Stores the gradient of the cost wrt the expectations of 
+    //! Stores the gradient of the cost wrt the expectations of
     //! the input and hidden layers
     //! (at the output of the layers)
     mutable TVec<Vec> expectation_gradients;
+    mutable TVec<Mat> expectation_gradients_m;
 
     //! Reconstruction activations
     mutable Vec reconstruction_activations;
-    
+    mutable Mat reconstruction_activations_m;
+
     //! Reconstruction activation gradients
     mutable Vec reconstruction_activation_gradients;
+    mutable Mat reconstruction_activation_gradients_m;
 
     //! Reconstruction expectation gradients
     mutable Vec reconstruction_expectation_gradients;
+    mutable Mat reconstruction_expectation_gradients_m;
 
     //! Unsupervised fine-tuning reconstruction activations
     TVec< Vec > fine_tuning_reconstruction_activations;
-    
+
     //! Unsupervised fine-tuning reconstruction expectations
     TVec< Vec > fine_tuning_reconstruction_expectations;
 
     //! Unsupervised fine-tuning reconstruction activations gradients
     TVec< Vec > fine_tuning_reconstruction_activation_gradients;
-    
+
     //! Unsupervised fine-tuning reconstruction expectations gradients
     TVec< Vec > fine_tuning_reconstruction_expectation_gradients;
 
     //! Reconstruction activation gradients coming from hidden reconstruction
     mutable Vec reconstruction_activation_gradients_from_hid_rec;
-    
+
     //! Reconstruction expectation gradients coming from hidden reconstruction
     mutable Vec reconstruction_expectation_gradients_from_hid_rec;
 
     //! Hidden reconstruction activations
     mutable Vec hidden_reconstruction_activations;
-    
+
     //! Hidden reconstruction activation gradients
     mutable Vec hidden_reconstruction_activation_gradients;
-    
+
     //! Activations before the correlation layer
     mutable TVec<Vec> correlation_activations;
-    
+    mutable TVec<Mat> correlation_activations_m;
+
     //! Expectations before the correlation layer
     mutable TVec<Vec> correlation_expectations;
-    
+    mutable TVec<Mat> correlation_expectations_m;
+
     //! Gradients of activations before the correlation layer
     mutable TVec<Vec> correlation_activation_gradients;
-    
+    mutable TVec<Mat> correlation_activation_gradients_m;
+
     //! Gradients of expectations before the correlation layer
     mutable TVec<Vec> correlation_expectation_gradients;
+    mutable TVec<Mat> correlation_expectation_gradients_m;
 
     //! Hidden layers for the correlation connections
     mutable TVec< PP<RBMLayer> > correlation_layers;
@@ -315,23 +348,30 @@ protected:
     //! Sum of activations from the direct and reconstruction connections
     mutable Vec direct_and_reconstruction_activations;
 
-    //! Gradient of sum of activations from the direct and reconstruction connections
+    //! Gradient of sum of activations from the direct and reconstruction
+    //! connections
     mutable Vec direct_and_reconstruction_activation_gradients;
 
     //! Position in the total cost vector of the different partial costs
     mutable TVec<int> partial_costs_positions;
-    
+
     //! Cost value of partial_costs
     mutable Vec partial_cost_value;
+    mutable Mat partial_cost_values;
+    mutable Vec partial_cost_values_0;
 
     //! Input of the final_cost
     mutable Vec final_cost_input;
+    mutable Mat final_cost_inputs;
 
     //! Cost value of final_cost
     mutable Vec final_cost_value;
+    mutable Mat final_cost_values;
+    mutable Vec final_cost_values_0;
 
     //! Stores the gradient of the cost at the input of final_cost
     mutable Vec final_cost_gradient;
+    mutable Mat final_cost_gradients;
 
     //! Input of autoassociator where some of the components
     //! have been masked (set to 0) randomly.
@@ -388,7 +428,7 @@ private:
 private:
     //#####  Private Data Members  ############################################
 
-    // The rest of the private stuff goes here    
+    // The rest of the private stuff goes here
 };
 
 // Declares a few other classes and functions related to this class
