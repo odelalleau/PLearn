@@ -62,9 +62,9 @@ DeepBeliefNet::DeepBeliefNet() :
     up_down_learning_rate( 0. ),
     up_down_decrease_ct( 0. ),
     grad_learning_rate( 0. ),
-    batch_size( 1 ),
     grad_decrease_ct( 0. ),
     // grad_weight_decay( 0. ),
+    batch_size( 1 ),
     n_classes( -1 ),
     up_down_nstages( 0 ),
     use_classification_cost( true ),
@@ -78,8 +78,6 @@ DeepBeliefNet::DeepBeliefNet() :
     train_stats_window( -1 ),
     minibatch_size( 0 ),
     initialize_gibbs_chain( false ),
-    final_module_has_learning_rate( false ),
-    final_cost_has_learning_rate( false ),
     nll_cost_index( -1 ),
     class_cost_index( -1 ),
     final_cost_index( -1 ),
@@ -110,7 +108,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "The decrease constant of the learning rate used during"
                   " contrastive divergence");
 
-    declareOption(ol, "up_down_learning_rate", 
+    declareOption(ol, "up_down_learning_rate",
                   &DeepBeliefNet::up_down_learning_rate,
                   OptionBase::buildoption,
                   "The learning rate used in the up-down algorithm during the\n"
@@ -305,17 +303,21 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "minibatch_size", &DeepBeliefNet::minibatch_size,
                   OptionBase::learntoption,
-                  "Size of a mini-batch.");
+                  "Actual size of a mini-batch (size of the training set if"
+                  " batch_size==1).");
 
     declareOption(ol, "gibbs_down_state", &DeepBeliefNet::gibbs_down_state,
                   OptionBase::learntoption,
-                  "State of visible units of RBMs at each layer in background Gibbs chain.");
+                  "State of visible units of RBMs at each layer in background"
+                  " Gibbs chain.");
 
-    declareOption(ol, "cumulative_training_time", &DeepBeliefNet::cumulative_training_time,
+    declareOption(ol, "cumulative_training_time",
+                  &DeepBeliefNet::cumulative_training_time,
                   OptionBase::learntoption | OptionBase::nosave,
                   "Cumulative training time since age=0, in seconds.\n");
 
-    declareOption(ol, "cumulative_testing_time", &DeepBeliefNet::cumulative_testing_time,
+    declareOption(ol, "cumulative_testing_time",
+                  &DeepBeliefNet::cumulative_testing_time,
                   OptionBase::learntoption | OptionBase::nosave,
                   "Cumulative testing time since age=0, in seconds.\n");
 
@@ -324,7 +326,7 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "Number of samples visited so far during unsupervised\n"
                   "fine-tuning.\n");
 
-    declareOption(ol, "generative_connections", 
+    declareOption(ol, "generative_connections",
                   &DeepBeliefNet::generative_connections,
                   OptionBase::learntoption,
                   "The untied generative weights of the connections"
@@ -791,7 +793,7 @@ int DeepBeliefNet::outputsize() const
 
     if( final_module )
         out_size += final_module->output_size;
-    
+
     if( !use_classification_cost && !final_module )
         out_size += layers[i_output_layer]->size;
 
@@ -907,9 +909,10 @@ void DeepBeliefNet::train()
     if (online)
     {
         // Train all layers simultaneously AND fine-tuning as well!
+        int init_stage = stage;
         if( report_progress && stage < nstages )
             pb = new ProgressBar( "Training "+classname(),
-                                  nstages - stage );
+                                  nstages - init_stage );
 
         setLearningRate( grad_learning_rate );
         train_stats->forget();
@@ -926,7 +929,7 @@ void DeepBeliefNet::train()
                     setLearningRate( grad_learning_rate
                                      / (1. + grad_decrease_ct * stage ));
 
-                if (batch_size > 1 || minibatch_hack)
+                if (minibatch_size > 1 || minibatch_hack)
                 {
                     train_set->getExamples(sample_start, minibatch_size,
                                            inputs, targets, weights, NULL, true);
@@ -953,7 +956,7 @@ void DeepBeliefNet::train()
             }
 
             if( pb )
-                pb->update( stage + 1 );
+                pb->update( stage - init_stage + 1 );
         }
     }
     else // Greedy learning, one layer at a time.
@@ -1000,7 +1003,7 @@ void DeepBeliefNet::train()
                 // Do a step every 'minibatch_size' examples.
                 if (stage % minibatch_size == 0) {
                     int sample_start = stage % nsamples;
-                    if (batch_size > 1 || minibatch_hack) {
+                    if (minibatch_size > 1 || minibatch_hack) {
                         train_set->getExamples(sample_start, minibatch_size,
                                 inputs, targets, weights, NULL, true);
                         train_costs_m.fill(MISSING_VALUE);
@@ -1194,8 +1197,8 @@ void DeepBeliefNet::train()
 ////////////////
 // onlineStep //
 ////////////////
-void DeepBeliefNet::onlineStep( const Vec& input, const Vec& target,
-                                Vec& train_costs)
+void DeepBeliefNet::onlineStep(const Vec& input, const Vec& target,
+                               Vec& train_costs)
 {
     real lr;
     PLASSERT(batch_size == 1);
@@ -1600,7 +1603,7 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
                 lr = grad_learning_rate / (1. + grad_decrease_ct * stage );
             else
                 lr = grad_learning_rate;
-            
+
             connections[ i ]->setLearningRate( lr );
             layers[ i+1 ]->setLearningRate( lr );
 
@@ -1672,7 +1675,7 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
 ////////////////
 // greedyStep //
 ////////////////
-void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
+void DeepBeliefNet::greedyStep(const Vec& input, const Vec& target, int index)
 {
     real lr;
     PLASSERT( index < n_layers );
@@ -1689,8 +1692,8 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
     {
         // put appropriate learning rate
         if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-            lr = grad_learning_rate / 
-                (1. + grad_decrease_ct * 
+            lr = grad_learning_rate /
+                (1. + grad_decrease_ct *
                  (stage - cumulative_schedule[index]));
         else
             lr = grad_learning_rate;
@@ -1721,7 +1724,7 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 
         // put back old learning rate
         if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
-            lr = cd_learning_rate / (1. + cd_decrease_ct * 
+            lr = cd_learning_rate / (1. + cd_decrease_ct *
                                      (stage - cumulative_schedule[index]));
         else
             lr = cd_learning_rate;
@@ -1739,7 +1742,8 @@ void DeepBeliefNet::greedyStep( const Vec& input, const Vec& target, int index )
 /////////////////
 // greedySteps //
 /////////////////
-void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index, Mat& train_costs_m )
+void DeepBeliefNet::greedyStep(const Mat& inputs, const Mat& targets,
+                               int index, Mat& train_costs_m)
 {
     real lr;
     PLASSERT( index < n_layers );
@@ -1756,8 +1760,8 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
     {
         // put appropriate learning rate
         if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-            lr = grad_learning_rate / 
-                (1. + grad_decrease_ct * 
+            lr = grad_learning_rate /
+                (1. + grad_decrease_ct *
                  (stage - cumulative_schedule[index]));
         else
             lr = grad_learning_rate;
@@ -1788,7 +1792,7 @@ void DeepBeliefNet::greedyStep( const Mat& inputs, const Mat& targets, int index
 
         // put back old learning rate
         if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
-            lr = cd_learning_rate / (1. + cd_decrease_ct * 
+            lr = cd_learning_rate / (1. + cd_decrease_ct *
                                      (stage - cumulative_schedule[index]));
         else
             lr = cd_learning_rate;
@@ -1842,16 +1846,16 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 
         // put appropriate learning rate
         if( !fast_exact_is_equal( grad_decrease_ct, 0. ) )
-            lr = grad_learning_rate 
-                / (1. + grad_decrease_ct * 
+            lr = grad_learning_rate
+                / (1. + grad_decrease_ct *
                    (stage - cumulative_schedule[n_layers-2]));
         else
             lr = grad_learning_rate;
-        
+
         partial_costs[ n_layers-2 ]->setLearningRate( lr );
         connections[ n_layers-2 ]->setLearningRate( lr );
         layers[ n_layers-1 ]->setLearningRate( lr );
-        
+
 
         // Backward pass
         real cost;
@@ -1876,8 +1880,8 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
 
         // put back old learning rate
         if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
-            lr = cd_learning_rate 
-                / (1. + cd_decrease_ct * 
+            lr = cd_learning_rate
+                / (1. + cd_decrease_ct *
                    (stage - cumulative_schedule[n_layers-2]));
         else
             lr = cd_learning_rate;
@@ -1894,6 +1898,12 @@ void DeepBeliefNet::jointGreedyStep( const Vec& input, const Vec& target )
         get_pointer( classification_module->joint_connection ),
         layers[ n_layers-1 ], n_layers-2);
 }
+
+void DeepBeliefNet::jointGreedyStep(const Mat& inputs, const Mat& targets)
+{
+    PLCHECK_MSG(false, "Not implemented for mini-batches");
+}
+
 
 ////////////////
 // upDownStep //
@@ -1968,6 +1978,12 @@ void DeepBeliefNet::upDownStep( const Vec& input, const Vec& target,
                                              activation_gradients[i+1],
                                              activation_gradients[i]);
     }
+}
+
+void DeepBeliefNet::upDownStep(const Mat& inputs, const Mat& targets,
+                               Mat& train_costs)
+{
+    PLCHECK_MSG(false, "Not implemented for mini-batches");
 }
 
 ////////////////////
@@ -2079,7 +2095,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 }
 
 void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
-                                   Mat& train_costs )
+                                   Mat& train_costs)
 {
     final_cost_values.resize(0, 0);
     // fprop
@@ -2239,7 +2255,8 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         }
     }
 
-    if (mbatch) {
+    if (mbatch)
+    {
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_vals.resize(minibatch_size, down_layer->size);
@@ -2366,7 +2383,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
     } else {
         if( !use_mean_field_contrastive_divergence )
             up_layer->generateSample();
-        
+
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_val.resize( down_layer->size );
@@ -2572,7 +2589,7 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
 //! This function is usefull when the NLL CostModule AND/OR the final_cost Module
 //! are more efficient with batch computation (or need to be computed on a bunch of examples, as LayerCostModule)
-void DeepBeliefNet::computeOutputsAndCosts(const Mat& inputs, const Mat& targets, 
+void DeepBeliefNet::computeOutputsAndCosts(const Mat& inputs, const Mat& targets,
                                       Mat& outputs, Mat& costs) const
 {
     int nsamples = inputs.length();
@@ -2583,7 +2600,7 @@ void DeepBeliefNet::computeOutputsAndCosts(const Mat& inputs, const Mat& targets
     for (int isample = 0; isample < nsamples; isample++ )
     {
         Vec in_i = inputs(isample);
-        Vec out_i = outputs(isample); 
+        Vec out_i = outputs(isample);
         computeOutput(in_i, out_i);
         if( !partial_costs.isEmpty() )
         {
@@ -2627,7 +2644,7 @@ void DeepBeliefNet::computeClassifAndFinalCostsFromOutputs(const Mat& inputs, co
         costs.subMat( 0, nll_cost_index, nsamples, 1) << pcosts;
 
         for (int isample = 0; isample < nsamples; isample++ )
-	    costs(isample,class_cost_index) =
+            costs(isample,class_cost_index) =
                 (argmax(outputs(isample).subVec(0, n_classes)) == (int) round(targets(isample,0))) ? 0 : 1;
     }
 
@@ -2643,7 +2660,7 @@ void DeepBeliefNet::computeClassifAndFinalCostsFromOutputs(const Mat& inputs, co
 
     if( !partial_costs.isEmpty() )
         PLERROR("cannot compute partial costs in DeepBeliefNet::computeCostsFromOutputs(Mat&, Mat&, Mat&, Mat&)"
-	        "(expectations are not up to date in the batch version)");
+                "(expectations are not up to date in the batch version)");
 }
 
 void DeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
@@ -2660,7 +2677,7 @@ void DeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, VMat te
     //  E[testN-1.E[cumulative_test_time] will basically be the cumulative test
     //  time until (and including) the N-1th split! So it's a pretty
     //  meaningless number (more or less).
-      
+
     Profiler::reset("testing");
     Profiler::start("testing");
 

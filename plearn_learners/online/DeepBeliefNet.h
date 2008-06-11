@@ -68,11 +68,11 @@ public:
     //! The learning rate used during contrastive divergence learning
     real cd_learning_rate;
 
-    //! The decrease constant of the learning rate used during 
+    //! The decrease constant of the learning rate used during
     //! contrastive divergence learning
     real cd_decrease_ct;
 
-    //! The learning rate used in the up-down algorithm during the 
+    //! The learning rate used in the up-down algorithm during the
     //! unsupervised fine tuning gradient descent
     real up_down_learning_rate;
 
@@ -83,8 +83,6 @@ public:
     //! The learning rate used during the gradient descent
     real grad_learning_rate;
 
-    int batch_size;
-
     //! The decrease constant of the learning rate used during gradient descent
     real grad_decrease_ct;
 
@@ -92,6 +90,9 @@ public:
     //! The weight decay used during the gradient descent
     real grad_weight_decay;
     */
+
+    //! Training batch size (1=stochastic learning, 0=full batch learning)
+    int batch_size;
 
     //! Number of classes in the training set
     //!   - 0 means we are doing regression,
@@ -230,13 +231,11 @@ public:
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!).
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void forget();
 
     //! The role of the train method is to bring the learner up to
     //! stage==nstages, updating the train_stats collector with training costs
     //! measured on-line in the process.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
 
     //! Re-implementation of the PLearner test() for profiling purposes
@@ -244,18 +243,17 @@ public:
                       VMat testoutputs=0, VMat testcosts=0) const;
 
     //! Computes the output from the input.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
-    virtual void computeOutputsAndCosts(const Mat& inputs, const Mat& targets, 
+    virtual void computeOutputsAndCosts(const Mat& inputs, const Mat& targets,
                                         Mat& outputs, Mat& costs) const;
 
     //! Computes the costs from already computed output.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
-    virtual void computeClassifAndFinalCostsFromOutputs(const Mat& inputs, const Mat& outputs,
-                                                        const Mat& targets, Mat& costs) const;
+    virtual void computeClassifAndFinalCostsFromOutputs(
+            const Mat& inputs, const Mat& outputs,
+            const Mat& targets, Mat& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
@@ -268,26 +266,23 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
-    void onlineStep( const Vec& input, const Vec& target, Vec& train_costs );
+    void onlineStep(const Vec& input, const Vec& target, Vec& train_costs);
+    void onlineStep(const Mat& inputs, const Mat& targets, Mat& train_costs);
 
-    void onlineStep( const Mat& inputs, const Mat& targets, Mat& train_costs );
+    void greedyStep(const Vec& input, const Vec& target, int index);
+    void greedyStep(const Mat& inputs, const Mat& targets, int index,
+                    Mat& train_costs_m);
 
-    void greedyStep( const Vec& input, const Vec& target, int index );
 
-    //! Greedy step with mini-batches.
-    void greedyStep(const Mat& inputs, const Mat& targets, int index, Mat& train_costs_m);
+    void jointGreedyStep(const Vec& input, const Vec& target);
+    void jointGreedyStep(const Mat& inputs, const Mat& targets);
 
-    void jointGreedyStep( const Vec& input, const Vec& target );
+    void upDownStep(const Vec& input, const Vec& target, Vec& train_costs);
+    void upDownStep(const Mat& inputs, const Mat& targets, Mat& train_costs);
 
-    void upDownStep( const Vec& input, const Vec& target,
-                     Vec& train_costs );
-
-    void fineTuningStep( const Vec& input, const Vec& target,
-                         Vec& train_costs );
-
-    //! Fine tuning step with mini-batches.
-    void fineTuningStep( const Mat& inputs, const Mat& targets,
-                         Mat& train_costs );
+    void fineTuningStep(const Vec& input, const Vec& target, Vec& train_costs);
+    void fineTuningStep(const Mat& inputs, const Mat& targets,
+                        Mat& train_costs);
 
     //! Perform a step of contrastive divergence, assuming that
     //! down_layer->expectation(s) is set.
@@ -317,19 +312,16 @@ public:
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
-    // ### If your class is not instantiatable (it has pure virtual methods)
-    // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT_METHODS
     PLEARN_DECLARE_OBJECT(DeepBeliefNet);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 protected:
-
+    //! Actual size of a mini-batch (size of the training set if batch_size==1)
     int minibatch_size;
 
     //#####  Not Options  #####################################################
@@ -363,21 +355,13 @@ protected:
     mutable Vec final_cost_gradient;
     mutable Mat final_cost_gradients; //!< For mini-batch.
 
-    //! buffers bottom layer activation during onlineStep 
+    //! buffers bottom layer activation during onlineStep
     mutable Vec save_layer_activation;
-
     Mat save_layer_activations; //!< For mini-batches.
 
-    //! buffers bottom layer expectation during onlineStep 
+    //! buffers bottom layer expectation during onlineStep
     mutable Vec save_layer_expectation;
-
     Mat save_layer_expectations; //!< For mini-batches.
-
-    //! Does final_module exist and have a "learning_rate" option
-    bool final_module_has_learning_rate;
-
-    //! Does final_cost exist and have a "learning_rate" option
-    bool final_cost_has_learning_rate;
 
     //! Store a copy of the positive phase values
     mutable Vec pos_down_val;
@@ -414,7 +398,7 @@ protected:
     //! Index of the cpu time cost (per each call of train())
     int training_cpu_time_cost_index;
 
-    //! The index of the cumulative training time cost 
+    //! The index of the cumulative training time cost
     int cumulative_training_time_cost_index;
 
     //! The index of the cumulative testing time cost
@@ -423,7 +407,7 @@ protected:
     //! Holds the total training (cpu)time
     real cumulative_training_time;
 
-    //! Holds the total testing (cpu)time 
+    //! Holds the total testing (cpu)time
     mutable real cumulative_testing_time;
 
     //! Cumulative training schedule
