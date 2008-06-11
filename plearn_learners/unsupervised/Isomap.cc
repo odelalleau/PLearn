@@ -52,7 +52,7 @@ using namespace std;
 ////////////
 Isomap::Isomap() 
     : geodesic_file(""),
-      geodesic_method("djikstra"),
+      geodesic_method("dijkstra"),
       knn(10)
 {
     kernel_is_distance = true;
