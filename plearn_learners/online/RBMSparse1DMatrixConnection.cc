@@ -288,10 +288,10 @@ void RBMSparse1DMatrixConnection::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* up_grad = ports_gradient[1];
 
     PLASSERT( down && !down->isEmpty() );
-    PLASSERT( up && !up->isEmpty() );
+    //PLASSERT( up && !up->isEmpty() );
 
     int batch_size = down->length();
-    PLASSERT( up->length() == batch_size );
+    //PLASSERT( up->length() == batch_size );
 
     // If we have up_grad
     if( up_grad && !up_grad->isEmpty() )
