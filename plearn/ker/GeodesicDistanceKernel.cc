@@ -336,7 +336,9 @@ void GeodesicDistanceKernel::setDataForKernelMatrix(VMat the_data) {
                 pb->update(k+1);
         }
     } else {
-        PLERROR("In GeodesicDistanceKernel::setDataForKernelMatrix - Unknown value for 'shortest_algo'");
+        PLERROR("In GeodesicDistanceKernel::setDataForKernelMatrix - Unknown "
+                "value for 'shortest_algo': %s",
+                shortest_algo.c_str());
     }
     // Save the result in geo_distances.
     if (geodesic_file.isEmpty()) {
