@@ -95,15 +95,15 @@ void LayerCostModule::declareOptions(OptionList& ol)
     declareOption(ol, "nstages_max", &LayerCostModule::nstages_max,
                   OptionBase::buildoption,
         "Maximal number of updates for which the gradient of the cost function will be propagated.\n"
-	"-1 means: always train without limit.\n"
+        "-1 means: always train without limit.\n"
         );
 
     declareOption(ol, "optimization_strategy", &LayerCostModule::optimization_strategy,
                   OptionBase::buildoption,
         "Strategy to compute the gradient:\n"
-	"- \"standard\": standard computation\n"
-	"- \"half\": we will propagate the gradient only on units tagged as i < j.\n"
-	"- \"random_half\": idem than 'half' with the order of the indices that changes randomly during training.\n"
+        "- \"standard\": standard computation\n"
+        "- \"half\": we will propagate the gradient only on units tagged as i < j.\n"
+        "- \"random_half\": idem than 'half' with the order of the indices that changes randomly during training.\n"
         );
 
     declareOption(ol, "momentum", &LayerCostModule::momentum,
@@ -202,22 +202,22 @@ void LayerCostModule::build_()
             inputs_histo.resize(input_size,histo_size);
         HISTO_STEP = 1.0/(real)histo_size;
 
-	if( cost_function == "kl_div" )
-	{
-	    cache_differ_count_i.resize(input_size);
-	    cache_differ_count_j.resize(input_size);
-	    cache_n_differ.resize(input_size);
-	    for( int i = 0; i < input_size; i ++)
-	    {
-	        cache_differ_count_i[i].resize(i);
-	        cache_differ_count_j[i].resize(i);
-	        cache_n_differ[i].resize(i);
-  	        for( int j = 0; j < i; j ++)
-	        {
-	            cache_differ_count_i[i][j].resize(histo_size);
-		    cache_differ_count_j[i][j].resize(histo_size);
-		    cache_n_differ[i][j].resize(histo_size);
-	        }
+        if( cost_function == "kl_div" )
+        {
+            cache_differ_count_i.resize(input_size);
+            cache_differ_count_j.resize(input_size);
+            cache_n_differ.resize(input_size);
+            for( int i = 0; i < input_size; i ++)
+            {
+                cache_differ_count_i[i].resize(i);
+                cache_differ_count_j[i].resize(i);
+                cache_n_differ[i].resize(i);
+                for( int j = 0; j < i; j ++)
+                {
+                    cache_differ_count_i[i][j].resize(histo_size);
+                    cache_differ_count_j[i][j].resize(histo_size);
+                    cache_n_differ[i][j].resize(histo_size);
+                }
             }
         }
     }
@@ -279,7 +279,7 @@ void LayerCostModule::forget()
 
     inputs_expectation.clear();
     inputs_stds.clear();
-    
+
     inputs_correlations.clear();
     inputs_cross_quadratic_mean.clear();
     if( momentum > 0.0)
@@ -310,7 +310,7 @@ void LayerCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(cache_differ_count_i, copies);
     deepCopyField(cache_differ_count_j, copies);
     deepCopyField(cache_n_differ, copies);
-    
+
     deepCopyField(ports, copies);
 }
 
@@ -355,7 +355,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
     }
     else
         costs.clear();
-    
+
     if( !is_cost_function_stochastic )
     {
         PLASSERT( inputs.width() == input_size );
@@ -388,8 +388,8 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
         //! ************************************************************
 
 
-	    Mat histo;
-	    computeHisto( inputs, histo );
+            Mat histo;
+            computeHisto( inputs, histo );
             costs(0,0) = computeKLdiv( histo );
         }
         else if( cost_function == "kl_div_simple" )
@@ -404,7 +404,7 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
         //! ************************************************************
 
             Mat histo;
-	    computeSafeHisto( inputs, histo );
+            computeSafeHisto( inputs, histo );
 
             // Computing the KL divergence
             for (int i = 0; i < input_size; i++)
@@ -430,8 +430,8 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
         //! ************************************************************
 
             Vec expectation;
-	    Mat cross_quadratic_mean;
-	    computePascalStatistics( inputs, expectation, cross_quadratic_mean );
+            Mat cross_quadratic_mean;
+            computePascalStatistics( inputs, expectation, cross_quadratic_mean );
 
             // Computing the cost
             for (int i = 0; i < input_size; i++)
@@ -461,9 +461,9 @@ void LayerCostModule::fprop(const Mat& inputs, Mat& costs) const
         //! ************************************************************
 
             Vec expectation;
-	    Mat cross_quadratic_mean;
+            Mat cross_quadratic_mean;
             Vec stds;
-	    Mat correlations;
+            Mat correlations;
             computeCorrelationStatistics( inputs, expectation, cross_quadratic_mean, stds, correlations );
 
             // Computing the cost
@@ -605,18 +605,18 @@ void LayerCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if( p_inputs_grad && p_inputs_grad->isEmpty()
         && p_cost_grad && !p_cost_grad->isEmpty() )
     {
-	PLASSERT( p_inputs && !p_inputs->isEmpty());
+        PLASSERT( p_inputs && !p_inputs->isEmpty());
         int n_samples = p_inputs->length();
-	PLASSERT( p_cost_grad->length() == n_samples );
-	PLASSERT( p_cost_grad->width() == 1 );
+        PLASSERT( p_cost_grad->length() == n_samples );
+        PLASSERT( p_cost_grad->width() == 1 );
 
         bpropUpdate( *p_inputs, *p_inputs_grad);
 
         for( int isample = 0; isample < n_samples; isample++ )
-	    for( int i = 0; i < input_size; i++ )
-	        (*p_inputs_grad)(isample, i) *= (*p_cost_grad)(isample,0);
+            for( int i = 0; i < input_size; i++ )
+                (*p_inputs_grad)(isample, i) *= (*p_cost_grad)(isample,0);
 
-	checkProp(ports_gradient);
+        checkProp(ports_gradient);
     }
     else if( !p_inputs_grad && !p_cost_grad )
         return;
@@ -653,8 +653,8 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
         for (int isample = 0; isample < n_samples; isample++)
         {
             real qi, qj, comp_qi, comp_qj;
-	    Vec comp_q(input_size), log_term(input_size);
-	    for (int i = 0 ; i < input_size ; i++ )
+            Vec comp_q(input_size), log_term(input_size);
+            for (int i = 0 ; i < input_size ; i++ )
             {
                 qi = inputs(isample,i);
                 comp_qi = 1.0 - qi;
@@ -673,7 +673,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     inputs(isample,i) += log_term[j] + qj/qi - comp_qi/comp_qj;
                     // The symetric part (loop  j=i+1...input_size)
                     if( bprop_all_terms )
-		        inputs(isample,j) += log_term[i] + qi/qj - comp_qj/comp_qi;
+                        inputs(isample,j) += log_term[i] + qi/qj - comp_qj/comp_qi;
                 }
             }
                 for (int i = 0; i < input_size; i++ )
@@ -686,7 +686,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
         for (int isample = 0; isample < n_samples; isample++)
         {
             real qi, qj, comp_qi, comp_qj;
-	    Vec comp_q(input_size), log_term(input_size);
+            Vec comp_q(input_size), log_term(input_size);
             for (int i = 0; i < input_size; i++ )
             {
                 qi = inputs(isample,i);
@@ -710,7 +710,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     inputs_grad(isample,i) += (qj - qi)*comp_qi - log_term[i] + log_term[j];
                     // The symetric part (loop  j=i+1...input_size)
                     if( bprop_all_terms )
-		        inputs_grad(isample,j) += (qi - qj)*comp_qj - log_term[j] + log_term[i];
+                        inputs_grad(isample,j) += (qi - qj)*comp_qj - log_term[j] + log_term[i];
                 }
             }
             for (int i = 0; i < input_size; i++ )
@@ -724,8 +724,8 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
         real cost_before = computeKLdiv( true );
 
         if( !bprop_all_terms )
-	    PLERROR("kl_div with bprop_all_terms=false not implemented yet");
-    
+            PLERROR("kl_div with bprop_all_terms=false not implemented yet");
+
         for (int isample = 0; isample < n_samples; isample++)
         {
             real qi, qj;
@@ -735,11 +735,11 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
             {
                 qi=inputs(isample,i);
                 if( histo_index(qi) < histo_size-1 )
-                { 
+                {
                     inputs(isample,i) += dq(qi);
                     computeHisto(inputs);
                     real cost_after = computeKLdiv( false );
-                    inputs(isample,i) -= dq(qi); 
+                    inputs(isample,i) -= dq(qi);
                     inputs_grad(isample, i) = (cost_after - cost_before)*1./dq(qi);
                 }
                 //else inputs_grad(isample, i) = 0.;
@@ -747,7 +747,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                 continue;
 
                 inputs_grad(isample, i) = 0.;
-                    
+
                 qi = inputs(isample,i);
                 int index_i = histo_index(qi);
                 if( ( index_i == histo_size-1 ) ) // we do not care about this...
@@ -755,7 +755,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                 real over_dqi=1.0/dq(qi);
                 // qi + dq(qi) ==> | p_inputs_histo(i,index_i)   - one_count
                 //                 \ p_inputs_histo(i,index_i+shift_i) + one_count
-                    		    
+
                 for (int j = 0; j < i; j++)
                 {
                     inputs_grad(isample, i) += delta_KLdivTerm(i, j, index_i, over_dqi);
@@ -767,17 +767,17 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     real over_dqj=1.0/dq(qj);
                     // qj + dq(qj) ==> | p_inputs_histo(j,index_j)   - one_count
                     //                 \ p_inputs_histo(j,index_j+shift_j) + one_count
-                        
+
                     inputs_grad(isample, j) += delta_KLdivTerm(j, i, index_j, over_dqj);
                 }
             }
-        }            
+        }
     } // END cost_function == "kl_div"
 
     else if( cost_function == "kl_div_simple" )
     {
         computeSafeHisto(inputs);
-            
+
         for (int isample = 0; isample < n_samples; isample++)
         {
             // Computing the difference of KL divergence
@@ -800,7 +800,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     inputs_grad(isample, i) += delta_SafeKLdivTerm(i, j, index_i, over_dqi);
 
                     if( bprop_all_terms )
-		    {
+                    {
                         qj = inputs(isample,j);
                         int index_j = histo_index(qj);
                         if( ( index_j == histo_size-1 ) || ( index_j == 0 ) )
@@ -808,9 +808,9 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                         real over_dqj=1.0/dq(qj);
                         // qj + dq(qj) ==> | p_inputs_histo(j,index_j)   - one_count
                         //                 \ p_inputs_histo(j,index_j+shift_j) + one_count
-                        
-		        inputs_grad(isample, j) += delta_SafeKLdivTerm(j, i, index_j, over_dqj);
-		    }
+
+                        inputs_grad(isample, j) += delta_SafeKLdivTerm(j, i, index_j, over_dqj);
+                    }
                 }
             }
 
@@ -838,7 +838,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     real d_temp = deriv_func_(inputs_cross_quadratic_mean(i,j));
                     qj = inputs(isample,j);
                     inputs_grad(isample, i) += d_temp *qj;
-	            if( bprop_all_terms )
+                    if( bprop_all_terms )
                         inputs_grad(isample, j) += d_temp *qi;
                 }
             }
@@ -885,7 +885,7 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                     continue;
                 }
                 //!  dCROSSij_dqj[i] = d[ E(QiQj)-E(Qi)E(Qj) ]/d[qj(t)]
-                //!                  = ( qi(t) - E(Qi) ) / n_samples 
+                //!                  = ( qi(t) - E(Qi) ) / n_samples
                 //!
                 //!  dSTDi_dqi[i] = d[ STD(Qi) ]/d[qi(t)]
                 //!               = d[ sqrt( E(Qi^2) -E(Qi)^2 ]/d[qi(t)]
@@ -901,14 +901,14 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                 for (int j = 0; j < i; j++)
                 {
                     if( fast_exact_is_equal( inputs_correlations(i,j), 0.) )
-		    {
-			if (isample == 0)
-			    PLWARNING("correlation(i,j)=0 for i=%d, j=%d", i, j);
+                    {
+                        if (isample == 0)
+                            PLWARNING("correlation(i,j)=0 for i=%d, j=%d", i, j);
                         continue;
                     }
                     qj = inputs(isample,j);
                     real correlation_denum = inputs_stds[i]*inputs_stds[j];
-		    real squared_correlation_denum = correlation_denum * correlation_denum;
+                    real squared_correlation_denum = correlation_denum * correlation_denum;
                     if( fast_exact_is_equal( squared_correlation_denum, 0. ) )
                         continue;
                     real dfunc_dCorr = deriv_func_( inputs_correlations(i,j) );
@@ -916,16 +916,16 @@ void LayerCostModule::bpropUpdate(const Mat& inputs,
                                              - inputs_expectation[i]*inputs_expectation[j] );
 
                     if( correlation_num/correlation_denum - inputs_correlations(i,j) > 0.0000001 )
-			PLERROR( "num/denum (%f) <> correlation (%f) for (i,j)=(%d,%d)",
-				 correlation_num/correlation_denum, inputs_correlations(i,j),i,j);
+                        PLERROR( "num/denum (%f) <> correlation (%f) for (i,j)=(%d,%d)",
+                                 correlation_num/correlation_denum, inputs_correlations(i,j),i,j);
 
-                    inputs_grad(isample, i) += dfunc_dCorr * ( 
+                    inputs_grad(isample, i) += dfunc_dCorr * (
                                                  correlation_denum * dCROSSij_dqj[j]
                                                - correlation_num * dSTDi_dqi[i] * inputs_stds[j]
                                                  ) / squared_correlation_denum;
 
                     if( bprop_all_terms )
-			inputs_grad(isample, j) += dfunc_dCorr * ( 
+                        inputs_grad(isample, j) += dfunc_dCorr * (
                                                      correlation_denum * dCROSSij_dqj[i]
                                                    - correlation_num * dSTDi_dqi[j] * inputs_stds[i]
                                                      ) / squared_correlation_denum;
@@ -962,11 +962,11 @@ void LayerCostModule::computePascalStatistics(const Mat& inputs,
     int n_samples = inputs.length();
     one_count = 1. / (real)n_samples;
     Vec input;
-    
+
     expectation.resize( input_size );
-    expectation.clear(); 
+    expectation.clear();
     cross_quadratic_mean.resize(input_size,input_size);
-    cross_quadratic_mean.clear(); 
+    cross_quadratic_mean.clear();
 
     inputs_expectation.clear();
     inputs_cross_quadratic_mean.clear();
@@ -1065,9 +1065,9 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs,
     Vec input;
 
     expectation.resize( input_size );
-    expectation.clear(); 
+    expectation.clear();
     cross_quadratic_mean.resize(input_size,input_size);
-    cross_quadratic_mean.clear(); 
+    cross_quadratic_mean.clear();
     stds.resize( input_size );
     stds.clear();
     correlations.resize(input_size,input_size);
@@ -1092,27 +1092,27 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs,
         cross_quadratic_mean(i,i) *= one_count;
 
         if( fast_is_equal(momentum, 0.)
-	||  !during_training )
+            ||  !during_training )
         {
- 	    //! Computation of the standard deviations
-	    //! requires temporary variable because of numerical imprecision
-	    real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
-	    if( tmp > 0. )  //  std[i] = 0 by default
-	        stds[i] = sqrt( tmp );
+            //! Computation of the standard deviations
+            //! requires temporary variable because of numerical imprecision
+            real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
+            if( tmp > 0. )  //  std[i] = 0 by default
+                stds[i] = sqrt( tmp );
         }
-	
+
         for (int j = 0; j < i; j++)
         {
             //! Normalization (2/2)
             cross_quadratic_mean(i,j) *= one_count;
 
             if( fast_is_equal(momentum, 0.)
-	    ||  !during_training )
-            {	    
-	        //! Correlations
-	        real tmp = stds[i] * stds[j];
+                ||  !during_training )
+            {
+                //! Correlations
+                real tmp = stds[i] * stds[j];
                 if( !fast_is_equal(tmp, 0.) )  //  correlations(i,j) = 1 by default
-	            correlations(i,j) = ( cross_quadratic_mean(i,j)
+                    correlations(i,j) = ( cross_quadratic_mean(i,j)
                                           - expectation[i]*expectation[j] ) / tmp;
             }
         }
@@ -1131,19 +1131,19 @@ void LayerCostModule::computeCorrelationStatistics(const Mat& inputs,
                                         +(1.0-momentum)*cross_quadratic_mean(i,i);
             inputs_cross_quadratic_mean_trainMemory(i,i) = cross_quadratic_mean(i,i);
 
-	    real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
-	    if( tmp > 0. )  //  std[i] = 0 by default
-	        stds[i] = sqrt( tmp );
-	    
+            real tmp = cross_quadratic_mean(i,i) - expectation[i] * expectation[i];
+            if( tmp > 0. )  //  std[i] = 0 by default
+                stds[i] = sqrt( tmp );
+
             for (int j = 0; j < i; j++)
             {
-                 cross_quadratic_mean(i,j) = momentum*inputs_cross_quadratic_mean_trainMemory(i,j)
-                                             +(1.0-momentum)*cross_quadratic_mean(i,j);
-                 inputs_cross_quadratic_mean_trainMemory(i,j) = cross_quadratic_mean(i,j);
+                cross_quadratic_mean(i,j) = momentum*inputs_cross_quadratic_mean_trainMemory(i,j)
+                    +(1.0-momentum)*cross_quadratic_mean(i,j);
+                inputs_cross_quadratic_mean_trainMemory(i,j) = cross_quadratic_mean(i,j);
 
-	         tmp = stds[i] * stds[j];
+                tmp = stds[i] * stds[j];
                  if( !fast_is_equal(tmp, 0.) )  //  correlations(i,j) = 1 by default
-	             correlations(i,j) = ( cross_quadratic_mean(i,j)
+                     correlations(i,j) = ( cross_quadratic_mean(i,j)
                                          - expectation[i]*expectation[j] ) / tmp;
 
             }
@@ -1162,7 +1162,7 @@ real LayerCostModule::computeKLdiv(const Mat& histo) const
     for (int i = 0; i < input_size; i++)
         for (int j = 0; j < i; j++)
         {
-            // These variables are used in case one bin of 
+            // These variables are used in case one bin of
             // the histogram is empty for one unit
             // and not for another one ( (Nj-Ni).log(Ni/Nj) = nan ).
             // In such case, we ''differ'' the count for the next bin and so on.
@@ -1197,14 +1197,14 @@ real LayerCostModule::computeKLdiv(const Mat& histo) const
                 }
             }
 //                    if( differ_count_i > 0.0 )
-//                    {   
-//                        "cas ou on regroupe avec le dernier";   
+//                    {
+//                        "cas ou on regroupe avec le dernier";
 //                        cost -= KLdivTerm(last_positive_Ni_k,last_positive_Nj_k)
 //                                  *(real)(1+last_n_differ) *HISTO_STEP;
 //                        cost += KLdivTerm(last_positive_Ni_k+differ_count_i,last_positive_Nj_k)
-//                                 *(real)(1+last_n_differ+n_differ) *HISTO_STEP; 
+//                                 *(real)(1+last_n_differ+n_differ) *HISTO_STEP;
 //                    }
-//                     
+//
 //                    else if ( differ_count_j > 0.0 )
 //                    {
 //                        "cas ou on regroupe avec le dernier";
@@ -1212,7 +1212,7 @@ real LayerCostModule::computeKLdiv(const Mat& histo) const
 //                                 *(real)(1+last_n_differ) *HISTO_STEP;
 //                        cost += KLdivTerm(last_positive_Ni_k,last_positive_Nj_k+differ_count_j)
 //                                 *(real)(1+last_n_differ+n_differ) *HISTO_STEP;
-//                    }    
+//                    }
         }
     // Normalization w.r.t. number of units
     return cost *norm_factor;
@@ -1226,12 +1226,12 @@ real LayerCostModule::computeKLdiv(bool store_in_cache)
             for (int i = 0; i < input_size; i++)
                 for (int j = 0; j < i; j++)
                 {
-                    // These variables are used in case one bin of 
+                    // These variables are used in case one bin of
                     // the histogram is empty for one unit
                     // and not for another one ( (Nj-Ni).log(Ni/Nj) = nan ).
                     // In such case, we ''differ'' the count for the next bin and so on.
-		    cache_differ_count_i[ i ][ j ].clear();
-		    cache_differ_count_j[ i ][ j ].clear();
+                    cache_differ_count_i[ i ][ j ].clear();
+                    cache_differ_count_j[ i ][ j ].clear();
                     cache_n_differ[i][j].fill( 0. );
 //                    real last_positive_Ni_k, last_positive_Nj_k;
 //                    real last_n_differ;
@@ -1242,17 +1242,17 @@ real LayerCostModule::computeKLdiv(bool store_in_cache)
 
                         if( fast_exact_is_equal(Ni_k, 0.0) )
                         {
-			    if( k < histo_size - 1 ) // "cas ou on regroupe avec le dernier";
-			    {
-			        cache_differ_count_j[i][j][ k+1 ] = Nj_k;
+                            if( k < histo_size - 1 ) // "cas ou on regroupe avec le dernier";
+                            {
+                                cache_differ_count_j[i][j][ k+1 ] = Nj_k;
                                 cache_n_differ[i][j][ k+1 ] = cache_n_differ[i][j][ k ] + 1;
                             }
-			}
+                        }
                         else if( fast_exact_is_equal(Nj_k, 0.0) )
                         {
-			    if( k < histo_size - 1 ) // "cas ou on regroupe avec le dernier";
-			    {
-			        cache_differ_count_i[i][j][ k+1 ] = Ni_k;
+                            if( k < histo_size - 1 ) // "cas ou on regroupe avec le dernier";
+                            {
+                                cache_differ_count_i[i][j][ k+1 ] = Ni_k;
                                 cache_n_differ[i][j][ k+1 ] = cache_n_differ[i][j][ k ] + 1;
                             }
                         }
@@ -1268,7 +1268,7 @@ real LayerCostModule::computeKLdiv(bool store_in_cache)
 //                    else if ( cache_differ_count_j[i][j][ histo_size - 1 ] > 0.0 )
 //                        "cas ou on regroupe avec le dernier";
                     }
-		}
+                }
             // Normalization w.r.t. number of units
             return cost *norm_factor;
     }
@@ -1288,7 +1288,7 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
     //   => ) the input(isample,i) has been counted
 
     real grad_update = 0.0;
-    
+
     real Ni_ki, Nj_ki, Ni_ki_shift1, Nj_ki_shift1;
     real n_differ_before_ki, n_differ_before_ki_shift1;
 
@@ -1322,42 +1322,42 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
     {
         // removing the term of the sum that will be modified
         grad_update -= KLdivTerm( Ni_ki,
-	                          Nj_ki )
-	               * ( 1 + n_differ_before_ki);
+                                  Nj_ki )
+                       * ( 1 + n_differ_before_ki);
 
         if( fast_exact_is_equal(Ni_ki, one_count) )
         {
             additional_differ_count_j_after = Nj_ki;
-	    n_differ_after_ki_shift1 = n_differ_after_ki + 1;
-	                          // = n_differ_before_ki + 1;
+            n_differ_after_ki_shift1 = n_differ_after_ki + 1;
+                                  // = n_differ_before_ki + 1;
         }
         else
-	{
+        {
             // adding the term of the sum with its modified value
             grad_update += KLdivTerm( Ni_ki - one_count,
-	                              Nj_ki )
-	                   * ( 1 + n_differ_after_ki );
-	}
+                                      Nj_ki )
+                           * ( 1 + n_differ_after_ki );
+        }
 
         if( !fast_exact_is_equal(Nj_ki_shift1,0.0) )
         {
             // adding the term of the sum with its modified value
             grad_update += KLdivTerm( Ni_ki_shift1 + one_count,
-	                                  Nj_ki_shift1 + additional_differ_count_j_after )
-	                       * ( 1 + n_differ_after_ki_shift1 );
+                                          Nj_ki_shift1 + additional_differ_count_j_after )
+                               * ( 1 + n_differ_after_ki_shift1 );
 
             if( !fast_exact_is_equal(Ni_ki_shift1, 0.0) ) // "cas ou on regroupe avec le dernier";
             {
                 // removing the term of the sum that will be modified
                 grad_update -= KLdivTerm( Ni_ki_shift1,
-		                          Nj_ki_shift1 )
-		               * ( 1 + n_differ_before_ki_shift1 );                
+                                          Nj_ki_shift1 )
+                               * ( 1 + n_differ_before_ki_shift1 );
             }
             else // ( Ni_ki_shift1 == 0.0 )
             {
                 // We search   ki' > k(i)+1   such that   n(i,ki') > 0
                 real additional_differ_count_j_before = 0.;
-		real additional_n_differ_before_ki_shift1 = 0.;
+                real additional_n_differ_before_ki_shift1 = 0.;
                 int ki;
                 for (ki = index_i+2; ki < histo_size; ki++)
                 {
@@ -1369,15 +1369,15 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
                 if( ki < histo_size )
                 {
                     grad_update -= KLdivTerm( inputs_histo( i, ki ),
-		                              Nj_ki_shift1 + additional_differ_count_j_before )
-		                   * ( 1 + n_differ_before_ki_shift1 + additional_n_differ_before_ki_shift1 );
+                                              Nj_ki_shift1 + additional_differ_count_j_before )
+                                   * ( 1 + n_differ_before_ki_shift1 + additional_n_differ_before_ki_shift1 );
 
                     if( additional_differ_count_j_before > 0. )
-		    // We have to report the additional count for unit j
+                    // We have to report the additional count for unit j
                     {
                         grad_update += KLdivTerm( inputs_histo( i, ki ),
-			                          additional_differ_count_j_before )
-			               * ( additional_n_differ_before_ki_shift1 );
+                                                  additional_differ_count_j_before )
+                                       * ( additional_n_differ_before_ki_shift1 );
                     }
                 }
             }
@@ -1385,7 +1385,7 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
         else // ( Nj_ki_shift1 == 0.0 )
         {
             real additional_differ_count_i_before = 0.;
-	    // We search kj > ki+1 tq inputs_histo( j, kj ) > 0.
+            // We search kj > ki+1 tq inputs_histo( j, kj ) > 0.
             int kj;
             for( kj = index_i+2; kj < histo_size; kj++)
             {
@@ -1394,64 +1394,64 @@ real LayerCostModule::delta_KLdivTerm(int i, int j, int index_i, real over_dq)
                 if( inputs_histo( j, kj ) > 0. )
                     break;
             }
-	    if ( !fast_exact_is_equal(additional_differ_count_j_after, 0. ) )
-	        n_differ_after_ki_shift1 = n_differ_before_ki_shift1;
+            if ( !fast_exact_is_equal(additional_differ_count_j_after, 0. ) )
+                n_differ_after_ki_shift1 = n_differ_before_ki_shift1;
             if( kj < histo_size )
             {
                 if ( fast_exact_is_equal(n_differ_after_ki_shift1, n_differ_before_ki_shift1) )
-		{
-		    // ( no qj were differed after we changed count at bin ki )
-		    // OR ( some qj were differed to bin ki+1 AND the bin were not empty )
+                {
+                    // ( no qj were differed after we changed count at bin ki )
+                    // OR ( some qj were differed to bin ki+1 AND the bin were not empty )
                     grad_update += KLdivTerm( Ni_ki_shift1 + additional_differ_count_i_before + one_count,
-		                             inputs_histo( j, kj ) + additional_differ_count_j_after )
-		                   * ( 1 + n_differ_after_ki_shift1 );
-                }	   		
-		else
-		{
-		    PLASSERT( n_differ_before_ki_shift1 > n_differ_after_ki_shift1 );
+                                              inputs_histo( j, kj ) + additional_differ_count_j_after )
+                                   * ( 1 + n_differ_after_ki_shift1 );
+                }
+                else
+                {
+                    PLASSERT( n_differ_before_ki_shift1 > n_differ_after_ki_shift1 );
                     grad_update += KLdivTerm( Ni_ki_shift1 + one_count,
-		                              additional_differ_count_j_after )
-		                   * ( 1 + n_differ_after_ki_shift1 );
+                                              additional_differ_count_j_after )
+                                   * ( 1 + n_differ_after_ki_shift1 );
                     grad_update += KLdivTerm( additional_differ_count_i_before,
-		                              inputs_histo( j, kj ) )
-		                   * ( n_differ_before_ki_shift1 - n_differ_after_ki_shift1 );
+                                              inputs_histo( j, kj ) )
+                                   * ( n_differ_before_ki_shift1 - n_differ_after_ki_shift1 );
                 }
 
                 if( !fast_exact_is_equal(Ni_ki_shift1 + additional_differ_count_i_before,0.0) )
-		{
+                {
                     grad_update -= KLdivTerm( Ni_ki_shift1 + additional_differ_count_i_before,
-		                              inputs_histo( j, kj ) )
-		                   * ( 1 + n_differ_before_ki_shift1 );
-	        }
-		else // ( Ni_ki_shift1' == 0 == Nj_ki_shift1 ) && ( pas de q[i] avant q[j']... )
-		{
-		    // We search ki' > kj+1 tq inputs_histo( i, ki' ) > 0.
+                                              inputs_histo( j, kj ) )
+                                   * ( 1 + n_differ_before_ki_shift1 );
+                }
+                else // ( Ni_ki_shift1' == 0 == Nj_ki_shift1 ) && ( pas de q[i] avant q[j']... )
+                {
+                    // We search ki' > kj+1 tq inputs_histo( i, ki' ) > 0.
                     real additional_differ_count_j_before = 0.;
-		    real additional_n_differ_before_ki_shift1 = 0.;
-		    int kj2;
+                    real additional_n_differ_before_ki_shift1 = 0.;
+                    int kj2;
                     for( kj2 = kj+1; kj2 < histo_size; kj2++)
                     {
-			additional_differ_count_j_before += inputs_histo( j, kj2 );
+                        additional_differ_count_j_before += inputs_histo( j, kj2 );
                         additional_n_differ_before_ki_shift1 += 1;
                         if( inputs_histo( i, kj2 ) > 0. )
                             break;
-		    }
-		    if ( fast_exact_is_equal(additional_differ_count_j_before, 0. ) )
-		        n_differ_after_ki_shift1 = n_differ_before_ki_shift1;
+                    }
+                    if ( fast_exact_is_equal(additional_differ_count_j_before, 0. ) )
+                        n_differ_after_ki_shift1 = n_differ_before_ki_shift1;
                     if( kj2 < histo_size )
-		    {
-		        grad_update -= KLdivTerm( inputs_histo( i, kj2 ),
-			                          Nj_ki_shift1 + additional_differ_count_j_before )
-		                       * ( 1 + n_differ_before_ki_shift1 + additional_n_differ_before_ki_shift1 );
+                    {
+                        grad_update -= KLdivTerm( inputs_histo( i, kj2 ),
+                                                  Nj_ki_shift1 + additional_differ_count_j_before )
+                                       * ( 1 + n_differ_before_ki_shift1 + additional_n_differ_before_ki_shift1 );
 
                         if( additional_differ_count_j_before > 0. )
-			{
+                        {
                             grad_update += KLdivTerm( inputs_histo( i, kj2 ),
-			                              additional_differ_count_j_before )
-		                           * ( additional_n_differ_before_ki_shift1 );
+                                                      additional_differ_count_j_before )
+                                           * ( additional_n_differ_before_ki_shift1 );
                         }
                     }
-	        }
+                }
             }
         }
     }
@@ -1505,15 +1505,15 @@ void LayerCostModule::computeHisto(const Mat& inputs,
 {
     int n_samples = inputs.length();
     one_count = 1. / (real)n_samples;
-    
+
     histo.resize(input_size,histo_size);
-    histo.clear(); 
+    histo.clear();
     for (int isample = 0; isample < n_samples; isample++)
     {
         Vec input = inputs(isample);
         for (int i = 0; i < input_size; i++)
-	{
-	    PLASSERT( histo_index(input[i]) < histo_size);
+        {
+            PLASSERT( histo_index(input[i]) < histo_size);
             histo( i, histo_index(input[i]) ) += one_count;
         }
     }

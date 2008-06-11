@@ -47,7 +47,7 @@ namespace PLearn {
 
 /**
  * 2-RBM DBN trained using Hinton's new variational bound of global likelihood:
- * 
+ *
  * log P(x) >= -FE1(x) + E_{P1(h|x)}[ FE1(h) - FE2(h) ] - log Z2
  *
  * where P1 and P2 are RBMs with Pi(x) = exp(-FEi(x))/Zi.

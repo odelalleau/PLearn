@@ -87,7 +87,7 @@ void ForwardModule::declareOptions(OptionList& ol)
         "will be forgotten.");
 
     // 'nosave' options.
-    
+
     // 'current' is an option only so it can be modified in server mode for
     // instance, in order to bypass a call to build (yes, this is a hack!).
     declareOption(ol, "current", &ForwardModule::current,

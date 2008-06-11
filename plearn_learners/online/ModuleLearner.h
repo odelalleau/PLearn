@@ -190,7 +190,7 @@ private:
     //! Matrix that contains only ones (used to fill weights at test time).
     mutable Mat all_ones;
 
-    //! Matrix that stores a copy of the costs 
+    //! Matrix that stores a copy of the costs
     //! (used to update the cost statistics).
     mutable Mat tmp_costs;
 

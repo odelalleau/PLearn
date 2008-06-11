@@ -133,8 +133,8 @@ public:
     virtual void fprop(const TVec<Mat*>& ports_value);
 
     virtual map<string,Mat> namedFprop(map<string,Mat>& inputs, TVec<string> wanted_outputs);
-    virtual map<string,Mat> namedBpropAccUpdate(map<string,Mat>& values, 
-                                                map<string,Mat>& gradients, 
+    virtual map<string,Mat> namedBpropAccUpdate(map<string,Mat>& values,
+                                                map<string,Mat>& gradients,
                                                 TVec<string> additional_input_gradients);
 
     //! SOON TO BE DEPRECATED, USE bpropAccUpdate(const TVec<Mat*>& ports_value,

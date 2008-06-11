@@ -97,7 +97,7 @@ public:
 
     //! The bias
     Vec bias;
-    
+
     bool no_bias;
     bool between_0_and_1;
 
@@ -125,7 +125,7 @@ public:
                              Mat& input_gradients,
                              const Mat& output_gradients,
                              bool accumulate = false);
-    
+
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               const Vec& output_gradient,
                               const Vec& output_diag_hessian);
@@ -158,7 +158,7 @@ protected:
 
     //! A vector filled with all ones.
     Vec ones;
-    
+
     //#####  Protected Options  ###############################################
 
 protected:

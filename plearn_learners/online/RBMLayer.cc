@@ -393,7 +393,7 @@ void RBMLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
             this->classname().c_str());
 }
 
-void RBMLayer::bpropNLL(const Mat& targets,  const Mat& costs_column, 
+void RBMLayer::bpropNLL(const Mat& targets,  const Mat& costs_column,
                         Mat& bias_gradients)
 {
     PLERROR("In RBMLayer::bpropNLL(): not implemented in subclass %s",
@@ -469,7 +469,7 @@ void RBMLayer::update()
     }
 
     applyBiasDecay();
-    
+
     clearStats();
 }
 
@@ -656,7 +656,7 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
     columnSum(gibbs_neg_values,tmp);
     if (neg_count==0)
         multiply(tmp, normalize_factor, bias_neg_stats);
-    else // bias_neg_stats <-- tmp*(1-gibbs_chain_statistics_forgetting_factor)/minibatch_size 
+    else // bias_neg_stats <-- tmp*(1-gibbs_chain_statistics_forgetting_factor)/minibatch_size
         //                    +gibbs_chain_statistics_forgetting_factor*bias_neg_stats
         multiplyScaledAdd(tmp,gibbs_ma_coefficient,
                           normalize_factor*(1-gibbs_ma_coefficient),
@@ -674,7 +674,7 @@ void RBMLayer::updateGibbs( const Mat& pos_values,
         gibbs_ma_coefficient = sigmoid(gibbs_ma_increment + inverse_sigmoid(gibbs_ma_coefficient));
 
 
-    // delta w = lrate * ( meanoverrows(pos_values) - neg_stats ) 
+    // delta w = lrate * ( meanoverrows(pos_values) - neg_stats )
     columnSum(pos_values,tmp);
     multiplyAcc(bias, tmp, learning_rate*normalize_factor);
     multiplyAcc(bias, bias_neg_stats, -learning_rate);
@@ -761,7 +761,7 @@ void RBMLayer::bpropCD(const Vec& pos_values, const Vec& neg_values,
 
     for( int i=0 ; i<size ; i++ )
         bg[i] = -bps[i] + bns[i];
-    
+
     addBiasDecay(bias_gradient);
 
 }
@@ -832,7 +832,7 @@ void RBMLayer::addBiasDecay(Mat& bias_gradients)
         real *bg = bias_gradients[b];
         real *b = bias.data();
         bias_decay_type = lowerstring(bias_decay_type);
-        
+
         if (bias_decay_type=="negative")  // Pushes the biases towards -\infty
             for( int i=0 ; i<size ; i++ )
                 bg[i] += avg_lr * bias_decay_parameter;
@@ -847,7 +847,7 @@ void RBMLayer::addBiasDecay(Mat& bias_gradients)
 
 void RBMLayer::applyBiasDecay()
 {
-    
+
     PLASSERT(bias.size()==size);
 
     real* b = bias.data();
@@ -860,11 +860,11 @@ void RBMLayer::applyBiasDecay()
             b[i] -= learning_rate * bias_decay_parameter;
     else if (bias_decay_type=="l2") // L2 penalty on the biases
         bias *= (1 - learning_rate * bias_decay_parameter);
-    else 
+    else
         PLERROR("RBMLayer::applyBiasDecay(string) bias_decay_type %s is not in"
                 " the list, in subclass %s\n",bias_decay_type.c_str(),classname().c_str());
 
-}   
+}
 
 } // end of namespace PLearn
 

@@ -48,7 +48,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "RBMMatrixConnection's weights",
     "");
 
-RBMMatrixTransposeConnection::RBMMatrixTransposeConnection( 
+RBMMatrixTransposeConnection::RBMMatrixTransposeConnection(
     PP<RBMMatrixConnection> the_rbm_matrix_connection,
     real the_learning_rate,
     bool call_build_) :
@@ -63,18 +63,18 @@ RBMMatrixTransposeConnection::RBMMatrixTransposeConnection(
 
 void RBMMatrixTransposeConnection::declareOptions(OptionList& ol)
 {
-    declareOption(ol, "rbm_matrix_connection", 
+    declareOption(ol, "rbm_matrix_connection",
                   &RBMMatrixTransposeConnection::rbm_matrix_connection,
                   OptionBase::buildoption,
                   "RBMMatrixConnection from which the weights are taken");
 
-    declareOption(ol, "learn_scale", 
+    declareOption(ol, "learn_scale",
                   &RBMMatrixTransposeConnection::learn_scale,
                   OptionBase::buildoption,
                   "Indication that the scale of the weight matrix should be "
                   "learned.\n");
 
-    declareOption(ol, "scale", 
+    declareOption(ol, "scale",
                   &RBMMatrixTransposeConnection::scale,
                   OptionBase::learntoption,
                   "Learned scale for weight matrix.\n");
@@ -353,7 +353,7 @@ void RBMMatrixTransposeConnection::computeProducts(int start, int length,
 }
 
 //! this version allows to obtain the input gradient as well
-void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input, 
+void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input,
                                                const Vec& output,
                                                Vec& input_gradient,
                                                const Vec& output_gradient,
@@ -375,11 +375,11 @@ void RBMMatrixTransposeConnection::bpropUpdate(const Vec& input,
     else
     {
         input_gradient.resize( down_size );
-        
+
         // input_gradient = weights' * output_gradient
         product( input_gradient, weights, output_gradient );
     }
-    
+
     // weights -= learning_rate * output_gradient * input'
     externalProductScaleAcc( weights, input, output_gradient, -learning_rate );
     if( learn_scale )

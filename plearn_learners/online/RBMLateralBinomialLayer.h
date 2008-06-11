@@ -56,15 +56,15 @@ class RBMLateralBinomialLayer: public RBMLayer
 public:
     //#####  Public Build Options  ############################################
 
-    //! Number of passes through the lateral connections 
+    //! Number of passes through the lateral connections
     int n_lateral_connections_passes;
 
-    //! Dampening factor 
+    //! Dampening factor
     //! ( expectation_t = (1-df) * currrent mean field + df * expectation_{t-1})
     real dampening_factor;
 
-    //! Mean-field precision threshold that, once reached, stops the mean-field 
-    //! expectation approximation computation. Used only in computeExpectation(). 
+    //! Mean-field precision threshold that, once reached, stops the mean-field
+    //! expectation approximation computation. Used only in computeExpectation().
     //! Precision is computed as:
     //!   dist(last_mean_field, current_mean_field) / size
     real mean_field_precision_threshold;
@@ -87,7 +87,7 @@ public:
     //! Indication that the topographic_lateral_weights should
     //! be fixed at their initial value.
     bool do_not_learn_topographic_lateral_weights;
-    
+
     //! Lateral connections
     Mat lateral_weights;
 
@@ -100,7 +100,7 @@ public:
     //! Accumulates negative contribution to the gradient of lateral weights
     Mat lateral_weights_neg_stats;
 
-    //! Indication that a parametric predictor of the mean-field 
+    //! Indication that a parametric predictor of the mean-field
     //! approximation of the hidden layer conditional distribution.
     bool use_parametric_mean_field;
 
@@ -186,18 +186,18 @@ public:
     virtual void accumulateNegStats( const Vec& neg_values );
     virtual void accumulateNegStats( const Mat& neg_values );
 
-    //! Update bias and lateral connections parameters 
+    //! Update bias and lateral connections parameters
     //! according to accumulated statistics
     virtual void update();
 
     //! Updates ONLY the bias parameters according to the given gradient
     virtual void update( const Vec& grad );
 
-    //! Update bias and lateral connections 
+    //! Update bias and lateral connections
     //! parameters according to one pair of vectors
     virtual void update( const Vec& pos_values, const Vec& neg_values );
 
-    //! Update bias and lateral connections 
+    //! Update bias and lateral connections
     //! parameters according to one pair of matrices.
     virtual void update( const Mat& pos_values, const Mat& neg_values );
 
@@ -275,13 +275,13 @@ protected:
     static void declareOptions(OptionList& ol);
 
     //! Computes mat[i][j] += 0.5 * (v1[i] * v2[j] +  v1[j] * v2[i])
-    void externalSymetricProductAcc(const Mat& mat, const Vec& v1, 
+    void externalSymetricProductAcc(const Mat& mat, const Vec& v1,
                                     const Vec& v2);
 
     void productTopoLateralWeights( const Vec& result, const Vec& input ) const;
 
     void productTopoLateralWeightsGradients( const Vec& input, const Vec& input_gradient,
-                                             const Vec& result_gradient, 
+                                             const Vec& result_gradient,
                                              const TVec< Vec >& weights_gradient );
 
     void updateTopoLateralWeightsCD( const Vec& pos_values, const Vec& neg_values );

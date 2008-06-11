@@ -87,7 +87,7 @@ public:
 protected:
 
     Vec accumulated_output;
-    
+
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.

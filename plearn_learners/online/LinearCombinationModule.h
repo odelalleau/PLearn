@@ -57,7 +57,7 @@ public:
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
-    
+
     //! the weights of the linear combination: one per input port
     Vec weights;
     //! whether to adapt the weights, and whether to clear them to 0 upon forget()

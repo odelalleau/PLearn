@@ -64,7 +64,7 @@ public:
     OnBagsModule();
 
     //!### Main functions to be coded in subclasses ###
-    
+
     //! update internal statistics needed to compute the output of bag
     virtual void fpropAcc(const Vec& input);
     virtual void fpropInit(const Vec& input);
@@ -74,7 +74,7 @@ public:
     virtual void bprop( const Mat& baginputs,
                           const Vec& bagoutput_gradient,
                           Mat& baginputs_gradients);
-                          
+
    //!#################################################
 
     //! given the input and target, compute the cost
@@ -122,7 +122,7 @@ public:
     virtual void forget();
 
 protected:
-    
+
     bool wait_new_bag;
 
     //! Map from a port name to its index in the 'ports' vector.

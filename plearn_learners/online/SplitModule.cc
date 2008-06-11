@@ -59,7 +59,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "can be seen as performed on each row of these matrices.\n"
     );
 
-SplitModule::SplitModule() 
+SplitModule::SplitModule()
     : down_port_name("down_port")
 /* ### Initialize all fields to their default value here */
 {
@@ -194,7 +194,7 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
             start += width;
         }
         return;
-    } 
+    }
     bool one_of_the_up_ports_wants_a_gradient = false;
     for (int i=0;i<up_port_sizes.length();i++)
         if (ports_gradient[i+1] && ports_gradient[i+1]->isEmpty())
@@ -211,7 +211,7 @@ void SplitModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         for (int i=0;i<up_port_sizes.length();i++)
         {
             int width = up_port_sizes[i];
-            if (ports_gradient[i+1] && ports_gradient[i+1]->isEmpty()) 
+            if (ports_gradient[i+1] && ports_gradient[i+1]->isEmpty())
             {
                 ports_gradient[i+1]->resize(output_gradient.length(),width);
                 (*ports_gradient[i+1]) += output_gradient.subMatColumns(start,width);
@@ -242,7 +242,7 @@ const TVec<string>& SplitModule::getPorts() {
 //////////////////
 const TMat<int>& SplitModule::getPortSizes() {
     if (sizes.isEmpty())
-    { 
+    {
         sizes.resize(nPorts(),2);
         sizes.column(0).fill(-1);
         sizes(0,1) = input_size;

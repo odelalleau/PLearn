@@ -135,7 +135,7 @@ RBMModule::RBMModule():
 void RBMModule::declareOptions(OptionList& ol)
 {
     // Build options.
-    
+
     declareOption(ol, "visible_layer", &RBMModule::visible_layer,
                   OptionBase::buildoption,
         "Visible layer of the RBM.");
@@ -183,12 +183,12 @@ void RBMModule::declareOptions(OptionList& ol)
                   &RBMModule::deterministic_reconstruction_in_cd,
                   OptionBase::buildoption,
         "Whether to use the expectation of the visible (given a hidden sample)\n"
-	"or a sample of the visible in the contrastive divergence learning.\n"
+        "or a sample of the visible in the contrastive divergence learning.\n"
         "In other words, instead of the classical Gibbs sampling\n"
         "   v_0 --> h_0 ~ p(h|v_0) --> v_1 ~ p(v|h_0) -->  p(h|v_1)\n"
         "we will have by setting 'deterministic_reconstruction_in_cd=1'\n"
         "   v_0 --> h_0 ~ p(h|v_0) --> v_1 = E(v|h_0) -->  p(h|E(v|h_0)).");
- 
+
     declareOption(ol, "standard_cd_grad",
                   &RBMModule::standard_cd_grad,
                   OptionBase::buildoption,
@@ -253,7 +253,7 @@ void RBMModule::declareOptions(OptionList& ol)
                   "of w.r.t. the contrastive divergence.\n");
 
     // Learnt options.
-    
+
     declareOption(ol, "Gibbs_step",
                   &RBMModule::Gibbs_step,
                   OptionBase::learntoption,
@@ -352,13 +352,13 @@ void RBMModule::build_()
     addPortName("hidden_bias");
     addPortName("weights");
     addPortName("neg_log_likelihood");
-    // a column matrix with one element -log P(h) for each row h of "hidden", 
+    // a column matrix with one element -log P(h) for each row h of "hidden",
     // used as an input port, with neg_log_pvisible_given_phidden as output
-    addPortName("neg_log_phidden"); 
+    addPortName("neg_log_phidden");
     // compute column matrix with one entry -log P(x) = -log( sum_h P(x|h) P(h) ) for
-    // each row x of "visible", and where {P(h)}_h is provided 
+    // each row x of "visible", and where {P(h)}_h is provided
     // in "neg_log_phidden" for the set of h's in "hidden".
-    addPortName("neg_log_pvisible_given_phidden"); 
+    addPortName("neg_log_pvisible_given_phidden");
     if(reconstruction_connection)
     {
         addPortName("visible_reconstruction.state");
@@ -779,7 +779,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     if (compute_contrastive_divergence)
     {
         contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")];
-/* YB: I don't agree with this error message: the behavior should be adapted to the provided ports. 
+/* YB: I don't agree with this error message: the behavior should be adapted to the provided ports.
       if (!contrastive_divergence || !contrastive_divergence->isEmpty())
             PLERROR("In RBMModule::fprop - When option "
                     "'compute_contrastive_divergence' is 'true', the "
@@ -1117,7 +1117,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 n_samples = hidden_sample->length();
             }
             PLCHECK( n_samples > 0 );
-            
+
             // the visible_layer->expectations contain the "state" from which we
             // start or continue the chain
             if (visible_layer->samples.length() != n_samples)
@@ -1417,7 +1417,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* contrastive_divergence = NULL;
     if (compute_contrastive_divergence)
         contrastive_divergence = ports_value[getPortIndex("contrastive_divergence")];
-    bool computed_contrastive_divergence = compute_contrastive_divergence && 
+    bool computed_contrastive_divergence = compute_contrastive_divergence &&
         contrastive_divergence && !contrastive_divergence->isEmpty();
 
     // Ensure the gradient w.r.t. contrastive divergence is 1 (if provided).
@@ -1550,9 +1550,9 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLASSERT(hidden && !hidden->isEmpty());
         setAllLearningRates(grad_learning_rate);
         visible_layer->bpropUpdate(*visible_activations,
-                                   *visible, visible_act_grad, *visible_grad, 
+                                   *visible, visible_act_grad, *visible_grad,
                                    false);
-        
+
 //        PLASSERT_MSG(!visible_bias_grad,"back-prop into visible bias  not implemented for downward fprop");
 //        PLASSERT_MSG(!weights_grad,"back-prop into weights  not implemented for downward fprop");
 //        hidden_grad->resize(mbs,hidden_layer->size);
@@ -1695,7 +1695,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 vis_expect_ptr = visible_layer->getExpectations();
                 negative_phase_visible_samples = &vis_expect_ptr;
             }
-	    else // classical CD learning
+            else // classical CD learning
                negative_phase_visible_samples = &(visible_layer->samples);
             negative_phase_hidden_activations = &(hidden_layer->activations);
             negative_phase_hidden_expectations = &(hidden_layer->getExpectations());
@@ -1906,7 +1906,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
         // UGLY HACK WHICH BREAKS THE RULE THAT RBMMODULE CAN BE CALLED IN DIFFERENT CONTEXTS AND fprop/bprop ORDERS
         // BUT NECESSARY WHEN hidden WAS AN INPUT
-        if (hidden_is_output) 
+        if (hidden_is_output)
         {
             // Hidden layer bias update
             hidden_layer->bpropUpdate(*hidden_act,
@@ -1960,7 +1960,7 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                  visible_layer->classname()=="RBMGaussianlLayer");
         PLASSERT(connection->classname()=="RBMMatrixConnection");
         PLASSERT(hidden && !hidden->isEmpty());
-        // FE(x) = -b'x - sum_i softplus(hidden_layer->activation[i])        
+        // FE(x) = -b'x - sum_i softplus(hidden_layer->activation[i])
         // dFE(x)/dx = -b - sum_i sigmoid(hidden_layer->activation[i]) W_i
         // dC/dxt = -b dC/dFE - dC/dFE sum_i p_ti W_i
         int mbs=energy_grad->length();

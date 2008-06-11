@@ -113,7 +113,7 @@ public:
     // TODO Had to override to compile, this is weird.
     virtual void bpropUpdate(const Mat& input, const Mat& output,
                              Mat& input_gradient, const Mat& output_gradient,
-                             bool accumulate=false) 
+                             bool accumulate=false)
     {
         inherited::bpropUpdate(input, output, input_gradient, output_gradient,
                 accumulate);

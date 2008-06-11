@@ -125,7 +125,7 @@ void CrossEntropyCostModule::fprop(const Mat& inputs, const Mat& targets, Mat& c
 
     for (int i = 0; i < inputs.length(); i++)
         fprop(inputs(i), targets(i), costs(i,0));
- 
+
 }
 
 void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
@@ -166,8 +166,8 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         prediction_grad->resize(batch_size, getPortSizes()(0,1));
 
         for( int i=0; i < batch_size; i++ )
-            for ( int j=0; j < target->width(); j++ ) 
-                (*prediction_grad)(i, j) += 
+            for ( int j=0; j < target->width(); j++ )
+                (*prediction_grad)(i, j) +=
                 (*cost_grad)(i,0)*((*target)(i,j) - sigmoid(-(*prediction)(i,j) ));
     }
 

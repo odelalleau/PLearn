@@ -156,7 +156,7 @@ protected:
 
     //! Index of the module currently being used in the 'modules' list.
     int current;
-    
+
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.

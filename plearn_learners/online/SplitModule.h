@@ -67,7 +67,7 @@ public:
     string down_port_name;
     TVec<int> up_port_sizes;
     TVec<string> up_port_names;
-     
+
 public:
     //#####  Public Member Functions  #########################################
 

@@ -76,7 +76,7 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
                   "its inverse sigmoid by gibbs_ma_increment). After the last\n"
                   "increase has been made, the moving average coefficient stays constant.\n");
 
-    declareOption(ol, "gibbs_ma_increment", 
+    declareOption(ol, "gibbs_ma_increment",
                   &RBMMatrixConnection::gibbs_ma_increment,
                   OptionBase::buildoption,
                   "The increment in the inverse sigmoid of the moving "
@@ -84,39 +84,39 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
                   "to apply after the number of updates reaches an element "
                   "of the gibbs_ma_schedule.\n");
 
-    declareOption(ol, "gibbs_initial_ma_coefficient", 
+    declareOption(ol, "gibbs_initial_ma_coefficient",
                   &RBMMatrixConnection::gibbs_initial_ma_coefficient,
                   OptionBase::buildoption,
                   "Initial moving average coefficient for the negative phase "
                   "statistics in the Gibbs chain.\n");
 
-    declareOption(ol, "L1_penalty_factor", 
+    declareOption(ol, "L1_penalty_factor",
                   &RBMMatrixConnection::L1_penalty_factor,
                   OptionBase::buildoption,
                   "Optional (default=0) factor of L1 regularization term, i.e.\n"
                   "minimize L1_penalty_factor * sum_{ij} |weights(i,j)| "
                   "during training.\n");
 
-    declareOption(ol, "L2_penalty_factor", 
+    declareOption(ol, "L2_penalty_factor",
                   &RBMMatrixConnection::L2_penalty_factor,
                   OptionBase::buildoption,
                   "Optional (default=0) factor of L2 regularization term, i.e.\n"
                   "minimize 0.5 * L2_penalty_factor * sum_{ij} weights(i,j)^2 "
                   "during training.\n");
 
-    declareOption(ol, "L2_decrease_constant", 
+    declareOption(ol, "L2_decrease_constant",
                   &RBMMatrixConnection::L2_decrease_constant,
                   OptionBase::buildoption,
         "Parameter of the L2 penalty decrease (see L2_decrease_type).",
         OptionBase::advanced_level);
 
-    declareOption(ol, "L2_shift", 
+    declareOption(ol, "L2_shift",
                   &RBMMatrixConnection::L2_shift,
                   OptionBase::buildoption,
         "Parameter of the L2 penalty decrease (see L2_decrease_type).",
         OptionBase::advanced_level);
 
-    declareOption(ol, "L2_decrease_type", 
+    declareOption(ol, "L2_decrease_type",
                   &RBMMatrixConnection::L2_decrease_type,
                   OptionBase::buildoption,
         "The kind of L2 decrease that is being applied. The decrease\n"
@@ -127,7 +127,7 @@ void RBMMatrixConnection::declareOptions(OptionList& ol)
         " - 'sigmoid_like': sigmoid((L2_shift - t) * L2_decrease_constant)",
         OptionBase::advanced_level);
 
-    declareOption(ol, "L2_n_updates", 
+    declareOption(ol, "L2_n_updates",
                   &RBMMatrixConnection::L2_n_updates,
                   OptionBase::learntoption,
         "Number of times that weights have been changed by the L2 penalty\n"
@@ -273,7 +273,7 @@ void RBMMatrixConnection::update()
             }
     }
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 
     clearStats();
@@ -332,7 +332,7 @@ void RBMMatrixConnection::update( const Vec& pos_down_values, // v_0
             }
     }
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -386,7 +386,7 @@ void RBMMatrixConnection::update( const Mat& pos_down_values, // v_0
          */
     }
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -427,7 +427,7 @@ void RBMMatrixConnection::updateCDandGibbs( const Mat& pos_down_values,
         -learning_rate*(1-background_gibbs_update_ratio)*normalize_factor,
         real(1));
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -472,7 +472,7 @@ void RBMMatrixConnection::updateGibbs( const Mat& pos_down_values,
                              learning_rate*normalize_factor, real(1));
     multiplyAcc(weights, weights_neg_stats, -learning_rate);
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -621,7 +621,7 @@ void RBMMatrixConnection::bpropUpdate(const Vec& input, const Vec& output,
     // weights -= learning_rate * output_gradient * input'
     externalProductScaleAcc( weights, output_gradient, input, -learning_rate );
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -654,7 +654,7 @@ void RBMMatrixConnection::bpropUpdate(const Mat& inputs, const Mat& outputs,
     transposeProductScaleAcc(weights, output_gradients, inputs,
                              -learning_rate / inputs.length(), real(1));
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -695,7 +695,7 @@ void RBMMatrixConnection::petiteCulotteOlivierUpdate(
                          input);
     }
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         addWeightPenalty(rbm_weights, rbm_weights_gradient);
 }
 
@@ -766,7 +766,7 @@ void RBMMatrixConnection::bpropAccUpdate(const TVec<Mat*>& ports_value,
         PLCHECK_MSG( false,
                      "Unknown port configuration" );
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         applyWeightPenalty();
 }
 
@@ -800,7 +800,7 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(Mat& weights_gradient,
                 w_i[j] = wns_i[j]/pos_count - wps_i[j]/neg_count;
     }
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         addWeightPenalty(weights, weights_gradient);
 }
 
@@ -841,7 +841,7 @@ void RBMMatrixConnection::petiteCulotteOlivierCD(
                 w_i[j] =  *nuv_i * ndv[j] - *puv_i * pdv[j] ;
     }
 
-    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0)) 
+    if(!fast_exact_is_equal(L1_penalty_factor,0) || !fast_exact_is_equal(L2_penalty_factor,0))
         addWeightPenalty(weights, weights_gradient);
 }
 
@@ -867,7 +867,7 @@ void RBMMatrixConnection::applyWeightPenalty()
         {
             if( delta_L2 != 0. )
                 w_[j] *= (1 - delta_L2);
-        
+
             if( delta_L1 != 0. )
             {
                 if( w_[j] > delta_L1 )
@@ -901,7 +901,7 @@ void RBMMatrixConnection::addWeightPenalty(Mat weights, Mat weight_gradients)
         {
             if( delta_L2 != 0. )
                 gw_[j] += delta_L2*w_[j];
-        
+
             if( delta_L1 != 0. )
             {
                 if( w_[j] > 0 )

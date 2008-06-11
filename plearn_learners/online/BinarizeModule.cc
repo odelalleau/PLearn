@@ -110,7 +110,7 @@ void BinarizeModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     Mat* output = ports_value[1];
     Mat* input_gradient = ports_gradient[0];
     Mat* output_gradient = ports_gradient[1];
-    
+
     int mbs=output->length();
     if (input_gradient)
     {

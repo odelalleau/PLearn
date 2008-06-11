@@ -661,7 +661,7 @@ void RBMMixedLayer::build_()
                                                               layer_size));
 
         bias.subVec(init_pos, layer_size) << layer->bias;
-        layer->bias = bias.subVec(init_pos, layer_size);        
+        layer->bias = bias.subVec(init_pos, layer_size);
 
         // We changed fields of layer, so we need to rebuild it (especially
         // if it is another RBMMixedLayer)
@@ -745,7 +745,7 @@ void RBMMixedLayer::getConfiguration(int conf_index, Vec& output)
         Vec output_i = output.subVec( begin, size_i );
         sub_layers[i]->getConfiguration(conf_i % conf_layer_i, output_i);
         conf_i /= conf_layer_i;
-    }    
+    }
 }
 
 } // end of namespace PLearn

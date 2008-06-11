@@ -79,7 +79,7 @@ public:
     int n_mean_field_iterations;
 
     //! Indication that fprop should output the value of the activation
-    //! before the squashing function and the application of the bias, 
+    //! before the squashing function and the application of the bias,
     //! instead of the mean-field approximation.
     bool fprop_outputs_activation;
 
@@ -194,7 +194,7 @@ private:
     mutable Vec mean_field_approximations_gradient_target;
     mutable Vec mean_field_activations_gradient_hidden;
     mutable Vec mean_field_approximations_gradient_hidden;
-    
+
 };
 
 // Declares a few other classes and functions related to this class

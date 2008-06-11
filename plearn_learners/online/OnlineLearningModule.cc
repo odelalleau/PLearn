@@ -413,8 +413,8 @@ map<string,Mat> OnlineLearningModule::namedFprop(map<string,Mat>& inputs, TVec<s
     return outputs;
 }
 
-map<string,Mat> OnlineLearningModule::namedBpropAccUpdate(map<string,Mat>& values, 
-                                                          map<string,Mat>& gradients, 
+map<string,Mat> OnlineLearningModule::namedBpropAccUpdate(map<string,Mat>& values,
+                                                          map<string,Mat>& gradients,
                                                           TVec<string> additional_input_gradients)
 {
     map<string,Mat> all_gradients;
@@ -439,7 +439,7 @@ map<string,Mat> OnlineLearningModule::namedBpropAccUpdate(map<string,Mat>& value
     for (it=gradients.begin();it!=gradients.end();++it)
         all_gradients[it->first]=it->second;
     for (int i=0;i<additional_input_gradients.length();i++)
-        all_gradients[additional_input_gradients[i]]= 
+        all_gradients[additional_input_gradients[i]]=
             *ports_gradient[getPortIndex(additional_input_gradients[i])];
     return all_gradients;
 }

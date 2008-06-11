@@ -81,7 +81,7 @@ void CombiningCostsModule::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-    
+
     redeclareOption(ol, "input_size", &CombiningCostsModule::input_size,
                     OptionBase::learntoption,
                     "Is set to sub_costs[0]->input_size.");
@@ -127,13 +127,13 @@ void CombiningCostsModule::build_()
             PLERROR( "CombiningCostsModule::build_(): sub_costs[%d]->input_size"
                      " (%d)\n"
                      "should be equal to %d.\n",
-                     i,sub_costs[i]->input_size, input_size);  
+                     i,sub_costs[i]->input_size, input_size);
 
         if(sub_costs[i]->target_size != target_size)
             PLERROR( "CombiningCostsModule::build_(): sub_costs[%d]->target_size"
                      " (%d)\n"
                      "should be equal to %d.\n",
-                     i,sub_costs[i]->target_size, target_size);  
+                     i,sub_costs[i]->target_size, target_size);
     }
 
     sub_costs_values.resize( n_sub_costs );

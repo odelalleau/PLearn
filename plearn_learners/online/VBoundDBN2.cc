@@ -183,7 +183,7 @@ void VBoundDBN2::bpropAccUpdate(const TVec<Mat*>& ports_value,
     substract(delta_h, *sampled_h_, delta_h);
     columnSum(delta_h,delta_hb);
     multiplyAcc(rbm1->hidden_layer->bias,delta_hb,rbm1->cd_learning_rate);
-    
+
     //  dlogbound/dji sampling approx = v[j] - reconstructed_v[j]
     columnSum(reconstructed_v,delta_vb1);
     columnSum(*input,delta_vb2);
@@ -247,7 +247,7 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
     //
 
     // for learning or testing
-    if (input && !input->isEmpty()) 
+    if (input && !input->isEmpty())
     {
         int mbs=input->length();
         FE1v.resize(mbs,1);
@@ -261,8 +261,8 @@ void VBoundDBN2::fprop(const TVec<Mat*>& ports_value)
         global_improvement->resize(mbs,1);
         ph_given_v->resize(mbs,rbm1->hidden_layer->size);
 
-        // compute things needed for everything else 
-    
+        // compute things needed for everything else
+
         rbm1->sampleHiddenGivenVisible(*input);
         *ph_given_v << rbm1->hidden_layer->getExpectations();
         *sampled_h << rbm1->hidden_layer->samples;

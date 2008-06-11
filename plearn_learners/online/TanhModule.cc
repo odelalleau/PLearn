@@ -98,7 +98,7 @@ void TanhModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
                              bool accumulate)
 {
     int mbs=inputs.length();
-    PLASSERT(mbs==outputs.length() && 
+    PLASSERT(mbs==outputs.length() &&
              mbs==output_gradients.length());
     input_gradients.resize(mbs,input_size);
     for (int i=0;i<mbs;i++)

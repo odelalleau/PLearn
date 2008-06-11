@@ -135,7 +135,7 @@ void RBMMatrixConnectionNatGrad::update( const Mat& pos_down_values, // v_0
 }
 
 
-void RBMMatrixConnectionNatGrad::bpropUpdate(const Mat& inputs, 
+void RBMMatrixConnectionNatGrad::bpropUpdate(const Mat& inputs,
                                              const Mat& outputs,
                                              Mat& input_gradients,
                                              const Mat& output_gradients,
@@ -171,7 +171,7 @@ void RBMMatrixConnectionNatGrad::bpropUpdate(const Mat& inputs,
     }
     pos_count++;
 }
- 
+
 
 
 } // end of namespace PLearn

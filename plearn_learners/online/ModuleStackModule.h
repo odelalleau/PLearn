@@ -95,7 +95,7 @@ public:
                              Mat& input_gradients,
                              const Mat& output_gradients,
                              bool accumulate = false);
-    
+
     //! This version does not obtain the input gradient.
     virtual void bpropUpdate(const Vec& input, const Vec& output,
                              const Vec& output_gradient);

@@ -141,7 +141,7 @@ protected:
     //! p1 the index of the port in this NetworkModule, and p2 the index of the
     //! corresponding port in the i-th module during fprop.
     TVec< TMat<int> > fprop_toplug;
-    
+
     //! The i-th element is the list of Mat* pointers being provided to the
     //! i-th module in a bprop step.
     TVec< TVec<Mat*> > bprop_data;

@@ -97,7 +97,7 @@ void LogaddOnBagsModule::fpropAcc(const Vec& input)
 {
     for( int i = 0; i < input_size; i++ )
         accumulated_output[i] = logadd(accumulated_output[i],
-                                       input[i]); 
+                                       input[i]);
 }
 void LogaddOnBagsModule::fpropOutput(Vec& output)
 {

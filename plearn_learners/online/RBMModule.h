@@ -284,7 +284,7 @@ protected:
 public:
     //! Forward the given learning rate to all elements of this module.
     void setAllLearningRates(real lr);
-        
+
     //! Compute activations on the hidden layer based on the provided
     //! visible input.
     //! If 'hidden_bias' is not null nor empty, then it is used as an

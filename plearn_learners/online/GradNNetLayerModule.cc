@@ -95,7 +95,7 @@ void GradNNetLayerModule::fprop(const Mat& inputs, Mat& outputs)
 
     // Add bias.
     resizeOnes(n);
-    externalProductAcc(outputs, ones, bias); // could be more efficient, but not critical 
+    externalProductAcc(outputs, ones, bias); // could be more efficient, but not critical
 }
 
 /////////////////
@@ -282,7 +282,7 @@ void GradNNetLayerModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
     }
     step_number += n;
 }
-    
+
 
 //////////////////
 // bbpropUpdate //

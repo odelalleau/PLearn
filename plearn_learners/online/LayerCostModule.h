@@ -58,7 +58,7 @@ public:
     //! Generic name of the cost function
     string cost_function;
 
-    //! Maximum number of stages we want to propagate the gradient    
+    //! Maximum number of stages we want to propagate the gradient
     int nstages_max;
 
     //! Parameter to compute moving means in non stochastic cost functions
@@ -66,9 +66,9 @@ public:
 
     //! Kind of optimization
     string optimization_strategy;
-    
+
     //! Parameter in pascal's cost function
-    real alpha;    
+    real alpha;
 
     //! For non stochastic KL divergence cost function
     int histo_size;
@@ -91,7 +91,7 @@ public:
 
     //! Variables for (non stochastic) Pascal's/correlation function with momentum
     //! -------------------------------------------------------------
-    //! Statistics on outputs (estimated empiricially on the data)    
+    //! Statistics on outputs (estimated empiricially on the data)
     Vec inputs_expectation_trainMemory;
     Mat inputs_cross_quadratic_mean_trainMemory;
 
@@ -146,7 +146,7 @@ public:
     virtual void computeCorrelationStatistics(const Mat& inputs);
     virtual void computeCorrelationStatistics(const Mat& inputs,
                                               Vec& expectation, Mat& cross_quadratic_mean,
-                                              Vec& stds, Mat& correlations) const;    
+                                              Vec& stds, Mat& correlations) const;
     //! Returns all ports in a RBMModule.
     virtual const TVec<string>& getPorts();
 
@@ -210,7 +210,7 @@ protected:
     real HISTO_STEP;
     //! the weight of a sample within a batch (usually, 1/n_samples)
 
-    mutable real one_count; 
+    mutable real one_count;
     TVec< TVec< Vec > > cache_differ_count_i;
     TVec< TVec< Vec > > cache_differ_count_j;
     TVec< TVec< Vec > > cache_n_differ;

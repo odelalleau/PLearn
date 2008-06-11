@@ -99,7 +99,7 @@ void LinearFilterModule::fprop(const Mat& inputs, Mat& outputs)
 
     // Add bias.
     resizeOnes(n);
-    externalProductAcc(outputs, ones, bias); // could be more efficient, but not critical 
+    externalProductAcc(outputs, ones, bias); // could be more efficient, but not critical
 }
 
 /////////////////
@@ -148,7 +148,7 @@ void LinearFilterModule::bpropUpdate(const Vec& input, const Vec& output,
                 else
                     weights[i] = 0.;
             }
-            
+
             if( between_0_and_1 )
             {
                 if( weights[i] > 1. )
@@ -274,7 +274,7 @@ void LinearFilterModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
         resizeOnes(n);
         transposeProductScaleAcc(bias, output_gradients, ones, -avg_lr, real(1));
     }
-    
+
     // Update weights.
     for(int i_sample = 0; i_sample < outputs.length() ;i_sample++)
         for(int i = 0; i < output_size; i++ )
@@ -304,7 +304,7 @@ void LinearFilterModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
     }
     step_number += n;
 }
-    
+
 
 //////////////////
 // bbpropUpdate //

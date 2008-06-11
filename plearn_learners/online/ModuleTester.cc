@@ -434,7 +434,7 @@ void ModuleTester::build_()
                             PLASSERT( out_val && out_prev && out_grad_ );
                             for (int oi = 0; oi < out_val->length(); oi++)
                                 for (int oj = 0; oj < out_val->width(); oj++) {
-                                    real diff = (*out_val)(oi, oj) - 
+                                    real diff = (*out_val)(oi, oj) -
                                         (*out_prev)(oi, oj);
                                     (*grad)(p, q) +=
                                         diff * (*out_grad_)(oi, oj) / step;

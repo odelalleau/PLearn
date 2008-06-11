@@ -121,7 +121,7 @@ protected:
 
     //! Destination port.
     string dst_port;
-    
+
     //#####  Protected Options  ###############################################
 
 protected:

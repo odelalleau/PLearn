@@ -404,7 +404,7 @@ void RBMGaussianLayer::build_()
 
     if ( fixed_std_deviation > 0 && share_quad_coeff )
     {
-        if( share_quad_coeff ) 
+        if( share_quad_coeff )
             PLERROR("In RBMGaussianLayer::build_(): fixed_std_deviation should not "
                     "be > 0 when share_quad_coeff is true.");
         quad_coeff.fill( 1 / ( M_SQRT2 * fixed_std_deviation ) );
@@ -491,7 +491,7 @@ void RBMGaussianLayer::update()
     {
         real pos_factor = -learning_rate / pos_count;
         real neg_factor = learning_rate / neg_count;
-        
+
         real* a = quad_coeff.data();
         real* aps = quad_coeff_pos_stats.data();
         real* ans = quad_coeff_neg_stats.data();
@@ -549,7 +549,7 @@ void RBMGaussianLayer::update()
         // We will need to recompute sigma
         sigma_is_up_to_date = false;
     }
-    
+
     // will update the bias, and clear the statistics
     inherited::update();
 }
@@ -619,7 +619,7 @@ void RBMGaussianLayer::update( const Vec& pos_values, const Vec& neg_values )
         // We will need to recompute sigma
         sigma_is_up_to_date = false;
     }
-    
+
     // update the bias
     inherited::update( pos_values, neg_values );
 }
@@ -740,7 +740,7 @@ real RBMGaussianLayer::fpropNLL(const Vec& target)
             r = (target[i] - expectation[i]);
             ret += r * r;
         }
-    } 
+    }
     else
     {
         if(share_quad_coeff)
@@ -756,7 +756,7 @@ real RBMGaussianLayer::fpropNLL(const Vec& target)
                 //      + log(sqrt(2*Pi) * sigma[i])
                 real r = (target[i] - expectation[i]) * quad_coeff[i];
                 ret += r * r + pl_log(sigma[i]);
-                
+
             }
         ret += 0.5*size*Log2Pi;
     }

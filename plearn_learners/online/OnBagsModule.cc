@@ -72,7 +72,7 @@ void OnBagsModule::build_()
 {
     PLASSERT( bagtarget_size > 0 );
     PLASSERT( input_size > 0 );
-    
+
     // The port story...
     ports.resize(0);
     portname_to_index.clear();
@@ -156,7 +156,7 @@ void OnBagsModule::fprop(const Vec& input, const Vec& bagtarget, Vec& output)
         wait_new_bag = false;
     }
     else
-    {   
+    {
         PLASSERT( !wait_new_bag );
         fpropAcc( input );
     }
@@ -206,19 +206,19 @@ void OnBagsModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
     if( p_inputs_grad
         && p_output_grad && !p_output_grad->isEmpty() )
     {
-	    PLASSERT( p_inputs && !p_inputs->isEmpty());
-	    PLASSERT( p_bagtargets && !p_bagtargets->isEmpty());
+        PLASSERT( p_inputs && !p_inputs->isEmpty());
+        PLASSERT( p_bagtargets && !p_bagtargets->isEmpty());
         int n_samples = p_inputs->length();
-    	PLASSERT( p_output_grad->length() == n_samples );
-    	PLASSERT( p_output_grad->width() == output_size );
+        PLASSERT( p_output_grad->length() == n_samples );
+        PLASSERT( p_output_grad->width() == output_size );
         if( p_inputs_grad->isEmpty() )
         {
             p_inputs_grad->resize( n_samples, input_size);
             p_inputs_grad->clear();
         }
-        bpropUpdate( *p_inputs, *p_bagtargets, 
+        bpropUpdate( *p_inputs, *p_bagtargets,
                      *p_inputs_grad, *p_output_grad, true );
-    	checkProp(ports_gradient);
+        checkProp(ports_gradient);
     }
     else if( !p_inputs_grad && !p_output_grad )
         return;

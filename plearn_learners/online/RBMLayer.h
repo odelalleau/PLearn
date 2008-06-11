@@ -297,7 +297,7 @@ public:
     virtual void freeEnergyContributionGradient(const Vec& unit_activations,
                                                 Vec& unit_activations_gradient,
                                                 real output_gradient = 1,
-                                                bool accumulate = false ) 
+                                                bool accumulate = false )
         const;
 
     //! Returns a number of different configurations the layer can be in.

@@ -79,7 +79,7 @@ public:
                              Mat& input_gradients,
                              const Mat& output_gradients,
                              bool accumulate = false);
-    
+
     //! this version allows to obtain the input gradient and diag_hessian
     virtual void bbpropUpdate(const Vec& input, const Vec& output,
                               Vec& input_gradient,

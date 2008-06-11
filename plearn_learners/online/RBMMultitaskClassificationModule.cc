@@ -165,7 +165,7 @@ void RBMMultitaskClassificationModule::build_()
         PLERROR("In RBMMultitaskClassificationModule::build_(): "
                 "n_mean_field_iterations should be > 0\n");
 
-    last_to_target_gradient.resize( last_to_target->up_size, 
+    last_to_target_gradient.resize( last_to_target->up_size,
                                     last_to_target->down_size );
 
     // If we have a random_gen, share it with the ones who do not
@@ -233,27 +233,27 @@ void RBMMultitaskClassificationModule::fprop(const Vec& input, Vec& output) cons
     output.resize( output_size );
 
     previous_to_last->fprop( input, mean_field_activations_hidden[0] );
-    last_layer->fprop( mean_field_activations_hidden[0], 
+    last_layer->fprop( mean_field_activations_hidden[0],
                        mean_field_approximations_hidden[0] );
 
     Mat weights = last_to_target->weights;
     for( int t=0; t<n_mean_field_iterations; t++ )
     {
-        transposeProduct( mean_field_activations_target[t], weights, 
+        transposeProduct( mean_field_activations_target[t], weights,
                           mean_field_approximations_hidden[t] );
         target_layer->fprop( mean_field_activations_target[t],
                              mean_field_approximations_target[t] );
-        
+
         if( t != n_mean_field_iterations -1 )
         {
-            product( mean_field_activations_hidden[t+1], weights, 
+            product( mean_field_activations_hidden[t+1], weights,
                      mean_field_approximations_target[t] );
             mean_field_activations_hidden[t+1] += mean_field_activations_hidden[0];
             last_layer->fprop( mean_field_activations_hidden[t+1],
                                mean_field_approximations_hidden[t+1] );
         }
     }
-    
+
     if( fprop_outputs_activation )
     {
         output << mean_field_activations_target.last();
@@ -317,9 +317,9 @@ void RBMMultitaskClassificationModule::bpropUpdate(const Vec& input, const Vec& 
                             mean_field_approximations_hidden[t],
                             mean_field_activations_gradient_target);
 
-        product( mean_field_approximations_gradient_hidden, weights, 
+        product( mean_field_approximations_gradient_hidden, weights,
                           mean_field_activations_gradient_target);
-        
+
         if( t != 0 )
         {
             last_layer->bpropUpdate( mean_field_activations_hidden[t],
@@ -333,7 +333,7 @@ void RBMMultitaskClassificationModule::bpropUpdate(const Vec& input, const Vec& 
                                 mean_field_approximations_target[t-1]
                                 );
 
-            transposeProduct( mean_field_approximations_gradient_target, weights, 
+            transposeProduct( mean_field_approximations_gradient_target, weights,
                               mean_field_activations_gradient_hidden);
         }
     }
@@ -345,11 +345,11 @@ void RBMMultitaskClassificationModule::bpropUpdate(const Vec& input, const Vec& 
         );
 
     previous_to_last->bpropUpdate( input, mean_field_activations_hidden[0],
-                                   input_gradient, 
+                                   input_gradient,
                                    mean_field_activations_gradient_hidden,
                                    accumulate);
 
-    multiplyAcc( weights, last_to_target_gradient, 
+    multiplyAcc( weights, last_to_target_gradient,
                  - (last_to_target->learning_rate) );
 }
 

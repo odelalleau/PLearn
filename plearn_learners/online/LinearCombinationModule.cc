@@ -138,7 +138,7 @@ void LinearCombinationModule::fprop(const TVec<Mat*>& ports_value)
         // has build completed? there should be at least one input port + the output port
         PLERROR("LinearCombinationModule should have at least 2 ports (one input port and one output port)\n");
     PLASSERT( ports_value.length() == n_ports ); // is the input coherent with expected nPorts
-    
+
     const TVec<Mat*>& inputs = ports_value;
     Mat* output = ports_value[n_ports-1];
     if (output) {

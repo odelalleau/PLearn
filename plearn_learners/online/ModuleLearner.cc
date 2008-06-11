@@ -342,17 +342,17 @@ void ModuleLearner::train()
                     bag_info = int(round(target.lastElement()));
                     isample ++;
                 }
-                isample = isample % train_set->length();                 
+                isample = isample % train_set->length();
             }
             if( stage + inputs.length() > nstages )
                 break;
             // Perform a training step.
-            trainingStep(inputs, targets, weights);              
+            trainingStep(inputs, targets, weights);
             // Handle training progress.
             stage += inputs.length();
             if (report_progress)
                 pb->update(stage - stage_init);
-        }    
+        }
     else
         while (stage + mbatch_size <= nstages) {
             // Obtain training samples.

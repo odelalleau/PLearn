@@ -203,10 +203,10 @@ public:
     virtual void train();
 
     //! Computes the output from the input.
-    virtual void computeOutputWithoutCorrelationConnections(const Vec& input, 
+    virtual void computeOutputWithoutCorrelationConnections(const Vec& input,
                                                         Vec& output) const;
     //! Computes the output from the input
-    virtual void computeOutputsWithoutCorrelationConnections(const Mat& input, 
+    virtual void computeOutputsWithoutCorrelationConnections(const Mat& input,
                                                         Mat& output) const;
 
     //! Computes the output from the input.
@@ -416,9 +416,9 @@ private:
 
     void setLearningRate( real the_learning_rate );
 
-    // List of remote methods    
+    // List of remote methods
     Vec remote_computeOutputWithoutCorrelationConnections(const Vec& input) const;
-    
+
     Mat remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const;
 
     //! Global storage to save memory allocations.

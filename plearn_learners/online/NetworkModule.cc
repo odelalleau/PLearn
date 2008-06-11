@@ -328,7 +328,7 @@ void NetworkModule::build_()
                                     tostring(count_null++));
                             all_modules.append(null);
                         /*} else {
-                            PLASSERT( all_modules.length() == 
+                            PLASSERT( all_modules.length() ==
                                         modules.length() + 1 );
                             null = all_modules.lastElement();
                         }*/
@@ -350,7 +350,7 @@ void NetworkModule::build_()
             }
         }
     }
-    
+
     // Construct fprop and bprop paths from the list of modules and
     // connections.
 
@@ -383,7 +383,7 @@ void NetworkModule::build_()
     map<const OnlineLearningModule*, int> module_to_index;
     for (int i = 0; i < all_modules.length(); i++)
         module_to_index[all_modules[i]] = i;
-    
+
     // Analyze the list of ports.
     // The 'port_correspondances' lists, for each module, the correspondances
     // between the modules' ports and the ports of the NetworkModule.
