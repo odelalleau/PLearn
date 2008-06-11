@@ -187,6 +187,7 @@ public:
 
     //! given the input, compute the output (possibly resize it  appropriately)
     virtual void fprop(const Vec& input, Vec& output) const;
+    virtual void fprop(const Mat& inputs, Mat& outputs);
 
     //! provide the internal weight values (not a copy)
     virtual void getAllWeights(Mat& rbm_weights) const;

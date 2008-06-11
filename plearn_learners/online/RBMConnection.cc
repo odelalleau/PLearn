@@ -295,6 +295,15 @@ void RBMConnection::fprop(const Vec& input, Vec& output) const
     computeProduct( 0, output_size, output );
 }
 
+void RBMConnection::fprop(const Mat& inputs, Mat& outputs)
+{
+    int batch_size = inputs.length();
+    // propagates the activations.
+    setAsDownInputs(inputs);
+    outputs.resize(batch_size, output_size);
+    computeProducts(0, output_size, outputs);
+}
+
 void RBMConnection::getAllWeights(Mat& rbm_weights) const
 {
     PLERROR("In RBMConnection::getAllWeights(): not implemented");
