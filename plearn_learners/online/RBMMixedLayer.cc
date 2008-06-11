@@ -717,6 +717,39 @@ real RBMMixedLayer::energy(const Vec& unit_values) const
     return energy;
 }
 
+real RBMMixedLayer::freeEnergyContribution(const Vec& unit_activations)
+    const
+{
+    real freeEnergy = 0;
+
+    Vec act;
+    for ( int i = 0; i < n_layers; ++i ) {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        act = unit_activations.subVec( begin, size_i );
+        freeEnergy += sub_layers[i]->freeEnergyContribution(act);
+    }
+
+    return freeEnergy;
+}
+
+void RBMMixedLayer::freeEnergyContributionGradient(
+    const Vec& unit_activations,
+    Vec& unit_activations_gradient,
+    real output_gradient, bool accumulate) const
+{
+    Vec act;
+    Vec gact;
+    for ( int i = 0; i < n_layers; ++i ) {
+        int begin = init_positions[i];
+        int size_i = sub_layers[i]->size;
+        act = unit_activations.subVec( begin, size_i );
+        gact = unit_activations_gradient.subVec( begin, size_i );
+        sub_layers[i]->freeEnergyContributionGradient(
+            act, gact, output_gradient, accumulate);
+    }
+}
+
 int RBMMixedLayer::getConfigurationCount()
 {
     int count = 1;

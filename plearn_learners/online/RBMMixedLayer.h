@@ -183,6 +183,21 @@ public:
     //! Compute -bias' unit_values
     virtual real energy(const Vec& unit_values) const;
 
+    //! Computes -log(\sum_{possible values of h} exp(h' unit_activations))
+    //! This quantity is used for computing the free energy of a sample x in
+    //! the OTHER layer of an RBM, from which unit_activations was computed.
+    virtual real freeEnergyContribution(const Vec& unit_activations) const;
+
+    //! Computes gradient of the result of freeEnergyContribution
+    //! -log(\sum_{possible values of h} exp(h' unit_activations))
+    //! with respect to unit_activations. Optionally, a gradient
+    //! with respect to freeEnergyContribution can be given
+    virtual void freeEnergyContributionGradient(const Vec& unit_activations,
+                                                Vec& unit_activations_gradient,
+                                                real output_gradient = 1,
+                                                bool accumulate = false) 
+        const;
+
     virtual int getConfigurationCount();
 
     virtual void getConfiguration(int conf_index, Vec& output);

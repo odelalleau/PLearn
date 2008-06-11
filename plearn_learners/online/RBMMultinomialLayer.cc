@@ -426,6 +426,7 @@ void RBMMultinomialLayer::build()
 void RBMMultinomialLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
+    deepCopyField(tmp_softmax, copies);
 }
 
 real RBMMultinomialLayer::energy(const Vec& unit_values) const
@@ -438,6 +439,22 @@ real RBMMultinomialLayer::freeEnergyContribution(const Vec& unit_activations)
 {
     // result = -log(\sum_{i=0}^{size-1} exp(a_i))
     return -logadd(unit_activations);
+}
+
+void RBMMultinomialLayer::freeEnergyContributionGradient(
+    const Vec& unit_activations,
+    Vec& unit_activations_gradient,
+    real output_gradient, bool accumulate) const
+{
+    PLASSERT( unit_activations.size() == size );
+    unit_activations_gradient.resize( size );
+    if( !accumulate ) unit_activations_gradient.clear();
+    tmp_softmax.resize( size );
+    softmax(unit_activations, tmp_softmax);
+    real* ga = unit_activations_gradient.data();
+    real* s = tmp_softmax.data();
+    for (int i=0; i<size; i++)
+        ga[i] -= output_gradient * s[i];
 }
 
 int RBMMultinomialLayer::getConfigurationCount()
