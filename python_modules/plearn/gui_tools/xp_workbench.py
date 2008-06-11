@@ -43,6 +43,7 @@ from   datetime import datetime
 from enthought.traits.api          import *
 from enthought.traits.ui.api       import *
 from enthought.traits.ui.menu      import NoButtons
+from enthought.pyface.api          import confirm, YES
 
 from console_logger    import ConsoleLogger
 from mpl_figure_editor import TraitedFigure
@@ -54,21 +55,21 @@ class ExperimentContext(HasTraits):
     """Contains the context of a single experiment -- either a running one
     or a reloaded one.
     """
-    expdir          = Directory(desc="Complete path to experiment directory")
+    ## Complete path to experiment directory
+    expdir = Directory
+
+    ## The console logger
+    console_logger = ConsoleLogger
+
     
+
+    ## All tabs
     _all_tabs       = List(HasTraits, desc="Set of tabs associated with experiment",
                            editor=ListEditor(use_notebook=True,
                                              deletable=False,
                                              dock_style="tab",
                                              page_name=".title"))
     
-    @property
-    def console_logger(self):
-        """Return a reference to the context's console logger."""
-        logger = self._all_tabs[0]
-        assert isinstance(logger, ConsoleLogger)
-        return logger
-
     @property
     def _display_expdir(self):
         """Shortened version of expdir suitable for display."""
@@ -113,6 +114,7 @@ class _WorkerThread(threading.Thread):
             wkbench.curworker = None
 
         super(_WorkerThread,self).__init__(target=work)
+        self.setDaemon(True)     # Allow quitting Python even if thread still running
         self.context = context
 
     def _get_my_tid(self):
@@ -142,6 +144,27 @@ class _WorkerThread(threading.Thread):
         self.raise_exc(SystemExit)    
 
 
+#####  Custom Handlers  #####################################################
+
+class WorkbenchHandler(Handler):
+    """Some custom UI code for the main window.
+    """
+    def close(self, info, is_ok):
+        """If user is trying to close the main window, look at whether an
+        experiment is currently running.  If so, pop a dialog to ask
+        whether it's really OK to close the thing.
+        """
+        workbench = info.ui.context['object']
+        if workbench.curworker is not None:
+            msg = "An experiment is currently running.\n" \
+                  "Do you really want to interrupt it and\n" \
+                  "close the workbench window?"
+            parent = info.ui.control
+            return confirm(parent, msg) == YES
+        else:
+            return True
+
+
 #####  ExperimentWorkbench  #################################################
 
 class ExperimentWorkbench(HasTraits) :
@@ -164,8 +187,8 @@ class ExperimentWorkbench(HasTraits) :
 
     ## The main view
     traits_view  = View(
-        HSplit(Group(Group(Item("script_params@", show_label=False, springy=True),
-                           springy=True),
+        HSplit(Group(Item("script_params@", show_label=False, springy=True),
+                     spring, spring,
                      Group(Item("launch", springy=True, enabled_when="curworker is None"),
                            Item("cancel", springy=True, enabled_when="curworker is not None"),
                            show_labels=False, orientation="horizontal")),
@@ -173,13 +196,15 @@ class ExperimentWorkbench(HasTraits) :
                      springy=True)),
         resizable=True,
         height=0.75, width=0.75,
-        buttons=NoButtons)
+        buttons=NoButtons,
+        handler=WorkbenchHandler() )
 
     ## Experiment management
     def _launch_fired(self):
         expdir  = self.expdir_name(self.script_params.expdir_root)
         logger  = ConsoleLogger()
-        context = ExperimentContext(expdir    = expdir,
+        context = ExperimentContext(expdir = expdir,
+                                    console_logger = logger,
                                     _all_tabs = [ logger ])
         self.experiments.append(context)
         self.curworker = _WorkerThread(self.expfunc, self.script_params, context, self)

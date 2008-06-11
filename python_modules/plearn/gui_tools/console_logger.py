@@ -137,6 +137,7 @@ class ConsoleLogger(HasTraits):
                     select([],[],[],.1) # Give a little time for buffers to fill
 
         listener = _ListenerThread()
+        listener.setDaemon(True)        # Allow quitting Python even if thread running
         self.is_active = True
         listener.start()
         
