@@ -473,7 +473,7 @@ void RBMWoodsLayer::fprop( const Vec& input, Vec& output ) const
     }
 }
 
-void RBMWoodsLayer::fprop( const Mat& inputs, Mat& outputs ) const
+void RBMWoodsLayer::fprop( const Mat& inputs, Mat& outputs )
 {
     int mbatch_size = inputs.length();
     PLASSERT( inputs.width() == size );

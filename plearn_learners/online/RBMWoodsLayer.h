@@ -89,7 +89,7 @@ public:
     virtual void fprop( const Vec& input, Vec& output ) const;
 
     //! Batch forward propagation
-    virtual void fprop( const Mat& inputs, Mat& outputs ) const;
+    virtual void fprop( const Mat& inputs, Mat& outputs );
 
     //! forward propagation with provided bias
     virtual void fprop( const Vec& input, const Vec& rbm_bias,

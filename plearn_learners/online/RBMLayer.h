@@ -182,7 +182,8 @@ public:
 
     //! Adds the bias to input, consider this as the activation, then compute
     //! the expectation
-    virtual void fprop( const Vec& input, Vec& output ) const;
+    virtual void fprop(const Vec& input, Vec& output) const;
+    virtual void fprop(const Mat& inputs, Mat& outputs);
 
     //! computes the expectation given the conditional input
     //! and the given bias

@@ -258,7 +258,7 @@ void RBMMixedLayer::fprop( const Vec& input, Vec& output ) const
 ///////////
 // fprop //
 ///////////
-void RBMMixedLayer::fprop( const Mat& inputs, Mat& outputs ) const
+void RBMMixedLayer::fprop( const Mat& inputs, Mat& outputs )
 {
     int mbatch_size = inputs.length();
     PLASSERT( inputs.width() == size );

@@ -319,6 +319,23 @@ void RBMLayer::fprop( const Vec& input, Vec& output ) const
     output << This->expectation;
 }
 
+void RBMLayer::fprop(const Mat& inputs, Mat& outputs)
+{
+    // Note: inefficient.
+    PLASSERT( inputs.width() == input_size );
+    int mbatch_size = inputs.length();
+    outputs.resize(mbatch_size, output_size);
+
+    setBatchSize(mbatch_size);
+    activations << inputs;
+    for (int k = 0; k < mbatch_size; k++)
+        activations(k) += bias;
+
+    expectations_are_up_to_date = false;
+    computeExpectations();
+    outputs << expectations;
+}
+
 void RBMLayer::fprop( const Vec& input, const Vec& rbm_bias,
                       Vec& output ) const
 {
@@ -365,7 +382,7 @@ void RBMLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
         selectRows( activations, TVec<int>(1, k), tmp );
         activation << tmp;
         selectRows( targets, TVec<int>(1, k), tmp );
-	target << tmp;
+        target << tmp;
         costs_column(k,0) = fpropNLL( target );
     }
 }

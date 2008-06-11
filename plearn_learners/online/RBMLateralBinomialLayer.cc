@@ -450,7 +450,7 @@ void RBMLateralBinomialLayer::fprop( const Vec& input, Vec& output ) const
     }
 }
 
-void RBMLateralBinomialLayer::fprop( const Mat& inputs, Mat& outputs ) const
+void RBMLateralBinomialLayer::fprop( const Mat& inputs, Mat& outputs )
 {
     int mbatch_size = inputs.length();
     PLASSERT( inputs.width() == size );

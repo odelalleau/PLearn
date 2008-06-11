@@ -827,7 +827,7 @@ void RBMGaussianLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
             }
     }
 }
-    
+
 void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
 {
     computeExpectation();
@@ -839,7 +839,7 @@ void RBMGaussianLayer::bpropNLL(const Vec& target, real nll, Vec& bias_gradient)
     substract(expectation, target, bias_gradient);
 
     if( compute_mse_instead_of_nll )
-        bias_gradient *= 2;
+        bias_gradient *= 2.;
     addBiasDecay(bias_gradient);
 
 }
@@ -859,7 +859,7 @@ void RBMGaussianLayer::bpropNLL(const Mat& targets, const Mat& costs_column,
     substract(expectations, targets, bias_gradients);
 
     if( compute_mse_instead_of_nll )
-        bias_gradients *= 2;
+        bias_gradients *= 2.;
     addBiasDecay(bias_gradients);
 
 }

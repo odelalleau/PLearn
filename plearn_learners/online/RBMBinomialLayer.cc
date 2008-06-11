@@ -87,7 +87,7 @@ void RBMBinomialLayer::generateSample()
             sample[i] = 2*random_gen->binomial_sample( (expectation[i]+1)/2 )-1;
     else
         for( int i=0 ; i<size ; i++ )
-            sample[i] = random_gen->binomial_sample( expectation[i] );        
+            sample[i] = random_gen->binomial_sample( expectation[i] );
 }
 
 /////////////////////
@@ -115,7 +115,7 @@ void RBMBinomialLayer::generateSamples()
             for (int i=0 ; i<size ; i++)
                 samples(k, i) = random_gen->binomial_sample( expectations(k, i) );
         }
-        
+
 }
 
 ////////////////////////
@@ -149,6 +149,7 @@ void RBMBinomialLayer::computeExpectation()
 /////////////////////////
 void RBMBinomialLayer::computeExpectations()
 {
+    PLASSERT( activations.length() == batch_size );
     if( expectations_are_up_to_date )
         return;
 
@@ -201,7 +202,7 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
 
 }
 
-void RBMBinomialLayer::fprop( const Mat& inputs, Mat& outputs ) const
+void RBMBinomialLayer::fprop( const Mat& inputs, Mat& outputs )
 {
     int mbatch_size = inputs.length();
     PLASSERT( inputs.width() == size );
@@ -285,7 +286,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
             real in_grad_i;
             in_grad_i = (1 -  output_i * output_i) * output_gradient[i];
             input_gradient[i] += in_grad_i;
-            
+
             if( momentum == 0. )
             {
                 // update the bias: bias -= learning_rate * input_gradient
@@ -309,7 +310,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& output,
             real in_grad_i;
             in_grad_i = output_i * (1-output_i) * output_gradient[i];
             input_gradient[i] += in_grad_i;
-            
+
             if( momentum == 0. )
             {
                 // update the bias: bias -= learning_rate * input_gradient
@@ -371,7 +372,7 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
                 real in_grad_i;
                 in_grad_i = (1 - output_i * output_i) * output_gradients(j, i);
                 input_gradients(j, i) += in_grad_i;
-                
+
                 if( momentum == 0. )
                 {
                     // update the bias: bias -= learning_rate * input_gradient
@@ -400,7 +401,7 @@ void RBMBinomialLayer::bpropUpdate(const Mat& inputs, const Mat& outputs,
                 real in_grad_i;
                 in_grad_i = output_i * (1-output_i) * output_gradients(j, i);
                 input_gradients(j, i) += in_grad_i;
-                
+
                 if( momentum == 0. )
                 {
                     // update the bias: bias -= learning_rate * input_gradient
@@ -441,7 +442,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
         for( int i=0 ; i<size ; i++ )
         {
             real output_i = output[i];
-            
+
             input_gradient[i] = ( 1 - output_i * output_i ) * output_gradient[i];
         }
     }
@@ -451,7 +452,7 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
         {
             real output_i = output[i];
             input_gradient[i] = output_i * (1-output_i) * output_gradient[i];
-        }   
+        }
     }
 
     rbm_bias_gradient << input_gradient;
@@ -470,19 +471,19 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
             {
                 target_i = (target[i]+1)/2;
                 activation_i = 2*activation[i];
-                
+
                 ret += tabulated_softplus(activation_i) - target_i * activation_i;
                 // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
                 // but it is numerically unstable, so use instead the following identity:
                 //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
-                //     = act + softplus(-act) - target*act 
+                //     = act + softplus(-act) - target*act
                 //     = softplus(act) - target*act
             }
         } else {
             for( int i=0 ; i<size ; i++ )
             {
                 target_i = (target[i]+1)/2;
-                activation_i = 2*activation[i];                
+                activation_i = 2*activation[i];
                 ret += softplus(activation_i) - target_i * activation_i;
             }
         }
@@ -498,7 +499,7 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
                 // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
                 // but it is numerically unstable, so use instead the following identity:
                 //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
-                //     = act + softplus(-act) - target*act 
+                //     = act + softplus(-act) - target*act
                 //     = softplus(act) - target*act
             }
         } else {
@@ -516,8 +517,6 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
 
 void RBMBinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
-    // computeExpectations(); // why?
-
     PLASSERT( targets.width() == input_size );
     PLASSERT( targets.length() == batch_size );
     PLASSERT( costs_column.width() == 1 );
@@ -703,13 +702,13 @@ void RBMBinomialLayer::getConfiguration(int conf_index, Vec& output)
 {
     PLASSERT( output.length() == size );
     PLASSERT( conf_index >= 0 && conf_index < getConfigurationCount() );
-    
+
     if( use_signed_samples )
     {
         for ( int i = 0; i < size; ++i ) {
             output[i] = 2 * (conf_index & 1) - 1;
             conf_index >>= 1;
-        }        
+        }
     }
     else
     {
