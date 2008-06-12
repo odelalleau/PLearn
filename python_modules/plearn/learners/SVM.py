@@ -1,3 +1,10 @@
+#! /usr/bin/env python
+#
+# This python code is to use with PLearn (A C++ Machine Learning Library)
+# Copyright (C) 2008 Jerome Louradour
+#
+# For any information or problem regarding this code, please contact jeromelouradour@gmail.com
+
 import os
 
 from libsvm import *
@@ -25,7 +32,6 @@ class SVMHyperParamOracle__kernel(object):
         -------------------    
 
     user options:
-
 
         'C_initvalue': <float> Default value for 'C'.
 
@@ -60,8 +66,6 @@ class SVMHyperParamOracle__kernel(object):
         'param_names': <list> of all hyperparameter names. It    
                        always includes at first the positive     
                        constant 'C' (trade-off bias/variance).   
-
-    private:
 
         'trials_param_list': <list> of <dict> hyperparameter values
                             that have been already tried.
@@ -1013,7 +1017,10 @@ class SVM(object):
                         valid_stats,
                         test_stats = None,
                         train_stats= None,
-                        only_stdout=False ):
+                        ntrain = None,
+                        nvalid = None,
+                        ntest = None,
+                        only_stdout= False ):
         if valid_stats==None and param == self.best_param:
                 valid_stats = self.valid_stats
         if test_stats==None and param == self.best_param:
@@ -1101,6 +1108,11 @@ class SVM(object):
                     costvalues_string += "%s " % costs[cn]
                 else:
                     costvalues_string += "None "
+        
+        for variable_name in ['ntrain','nvalid','ntest']:
+            if eval(variable_name) <> None:
+                preproc_optionnames += ' %s ' % variable_name
+                preproc_optionvalues += ' %s ' % eval(variable_name)
         
         # Write the result in the file specified by 'results_filename'
         os.system('makeresults  %s %s %s %s;' % \
@@ -1549,7 +1561,10 @@ class SVM(object):
         self.update_trials( self.best_param,
                             None, test_stats, train_stats )
         self.write_results( self.best_param,
-                            self.valid_stats, self.test_stats, self.train_stats )
+                            self.valid_stats, self.test_stats, self.train_stats,
+                            ntrain = (trainset <> None and trainset.length or 0),
+                            nvalid = (validset <> None and validset.length or 0),
+                            ntest = (testset <> None and testset.length or 0) )
         return dataspec
 
     """ THE interesting function of the class.
@@ -1559,6 +1574,7 @@ class SVM(object):
         cf. train_inputspec(), valid_inputspec(), and test_inputspec().
     """
     def run(self, dataspec, param = None, L0 = None):
+        random.seed(17)
         assert self.testlevel >= 0
         assert self.max_ntrials > 0
         trainset = self.train_inputspec(dataspec)
@@ -1599,7 +1615,11 @@ class SVM(object):
 
                 # We reject the model (to avoid testing on it)
                 self.model = None
-                self.write_results( param, valid_stats, None, None, self.testlevel < 2  )
+                self.write_results( param, valid_stats, None, None,
+                                    ntrain = (trainset <> None and trainset.length or 0),
+                                    nvalid = (validset <> None and validset.length or 0),
+                                    ntest = (testset <> None and testset.length or 0),
+                                    only_stdout = self.testlevel < 2  )
 
             # Better valid cost is obtained!
             else:
@@ -1610,7 +1630,11 @@ class SVM(object):
                 if self.testlevel > 0:
                     self.retrain_and_writeresults(dataspec)
                 else:
-                    self.write_results( param, valid_stats, None, None, True  )
+                    self.write_results( param, valid_stats, None, None,
+                                        ntrain = (trainset <> None and trainset.length or 0),
+                                        nvalid = (validset <> None and validset.length or 0),
+                                        ntest = (testset <> None and testset.length or 0),
+                                        only_stdout = True  )
 
             if( len(expert.trials_param_list)-L0 >= self.max_ntrials
             or  ( self.min_cost <> None and expert.best_cost <= self.min_cost ) ):
