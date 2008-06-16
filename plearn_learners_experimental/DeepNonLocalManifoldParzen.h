@@ -121,6 +121,9 @@ public:
     //! windows estimator should be saved during test, to speed up testing.
     bool save_manifold_parzen_parameters;
 
+    //! Indication that the value of sigma noise should not be learned.
+    bool do_not_learn_sigma_noise;
+
     //#####  Public Learnt Options  ###########################################
 
     //! Number of layers

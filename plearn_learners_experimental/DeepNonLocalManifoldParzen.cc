@@ -1,4 +1,4 @@
-// -*- C++ -*-
+// -*- C ++ -*-
 
 // DeepNonLocalManifoldParzen.cc
 //
@@ -69,6 +69,7 @@ DeepNonLocalManifoldParzen::DeepNonLocalManifoldParzen() :
     output_connections_l1_penalty_factor( 0 ),
     output_connections_l2_penalty_factor( 0 ),
     save_manifold_parzen_parameters( false ),
+    do_not_learn_sigma_noise( false ),
     n_layers( 0 ),
     currently_trained_layer( 0 ),
     manifold_parzen_parameters_are_up_to_date( false )
@@ -182,6 +183,11 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
                   "Indication that the parameters for the manifold parzen\n"
                   "windows estimator should be saved during test, to speed up "
                   "testing.");
+
+    declareOption(ol, "do_not_learn_sigma_noise", 
+                  &DeepNonLocalManifoldParzen::do_not_learn_sigma_noise,
+                  OptionBase::buildoption,
+                  "Indication that the value of sigma noise should not be learned.\n");
 
     declareOption(ol, "greedy_stages", 
                   &DeepNonLocalManifoldParzen::greedy_stages,
@@ -362,7 +368,7 @@ void DeepNonLocalManifoldParzen::build_layers_and_connections()
     activation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
     expectation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
 
-    int output_size = n_components*inputsize() + inputsize() + 1;
+    int output_size = n_components*inputsize() + inputsize() + (do_not_learn_sigma_noise ? 0 : 1);
     all_outputs.resize( output_size );
 
     if( !output_connections || output_connections->output_size != output_size)
@@ -785,7 +791,10 @@ void DeepNonLocalManifoldParzen::computeManifoldParzenParameters(
     F << all_outputs.subVec(0,n_components * inputsize()).toMat(
         n_components, inputsize());
     mu << all_outputs.subVec(n_components * inputsize(),inputsize());
-    pre_sigma_noise << all_outputs.subVec( (n_components+1) * inputsize(), 1 );
+    if( do_not_learn_sigma_noise )
+        pre_sigma_noise.clear();
+    else
+        pre_sigma_noise << all_outputs.subVec( (n_components+1) * inputsize(), 1 );
 
     F_copy.resize(F.length(),F.width());
     sm_svd.resize(n_components);
@@ -872,9 +881,11 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
         }
     }
 
+    all_outputs_gradient.resize((n_components+1) * inputsize()+ 
+                                (do_not_learn_sigma_noise ? 0 : 1));
     all_outputs_gradient.clear();
-    coef = 1.0/train_set->length();
-    all_outputs_gradient.resize((n_components+1) * inputsize()+1);
+    //coef = 1.0/train_set->length();
+    coef = 1.0/k_neighbors;
     for(int neighbor=0; neighbor<k_neighbors; neighbor++)
     {
         // dNLL/dF
@@ -890,10 +901,13 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
                     inv_Sigma_z(neighbor),
                     -coef) ;
 
-        // dNLL/dsn
-        all_outputs_gradient[(n_components + 1 )* inputsize()] += coef* 
-            0.5*(tr_inv_Sigma - pownorm(inv_Sigma_z(neighbor))) * 
-            2 * pre_sigma_noise[0];
+        if( !do_not_learn_sigma_noise )
+        {
+            // dNLL/dsn
+            all_outputs_gradient[(n_components + 1 )* inputsize()] += coef* 
+                0.5*(tr_inv_Sigma - pownorm(inv_Sigma_z(neighbor))) * 
+                2 * pre_sigma_noise[0];
+        }
     }
 
     // Propagating supervised gradient
@@ -953,6 +967,7 @@ void DeepNonLocalManifoldParzen::computeRepresentation(const Vec& input,
         return;
     }
 
+    expectations[0] << input;
     for( int i=0 ; i<layer; i++ )
     {
         connections[i]->fprop( expectations[i], activations[i+1] );
