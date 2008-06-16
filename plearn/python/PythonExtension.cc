@@ -258,13 +258,15 @@ void injectPLearnClasses(PyObject* module)
 
         // create new python type deriving from WrappedPLearnObject
         string classname= tit->first;
+        string class_help_text= HelpSystem::helpOnClass(classname);
+        search_replace(class_help_text, "\"\"\"", "\\\"\\\"\\\"");
         string pyclassname= classname;
         search_replace(pyclassname, " ", "_");
         search_replace(pyclassname, "<", "_");
         search_replace(pyclassname, ">", "_");
         string derivcode= string("\nclass ")
             + pyclassname + "(" + actual_wrapper_name + "):\n"
-            "  \"\"\" ... \"\"\"\n"
+            "  \"\"\" \n" + class_help_text + "\n \"\"\"\n"
             "  def __new__(cls,*args,**kwargs):\n"
             "    #print '** "+pyclassname+".__new__',kwargs\n"
             "    obj= object.__new__(cls,*args,**kwargs)\n"
