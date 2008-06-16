@@ -239,7 +239,7 @@ def outputres(f,mode,speclist,results):
         alist.append(concatenate([a,b],0))
       else:
         alist.append(a)
-    a = concatenate(arrays,1)
+    a = concatenate(alist,1)
     # write the array to file, without any []
     write_array(f,a)
   else:
