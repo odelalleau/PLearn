@@ -217,6 +217,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Returns the field names.\n"),
          RetDoc ("TVec of field names.\n")));
 
+    declareMethod(
+        rmm, "fieldName", &VMatrix::fieldName,
+        (BodyDoc("Returns the field name for a given column.\n"),
+         ArgDoc ("col", "column index.\n"),
+         RetDoc ("Field name.\n")));
+
      declareMethod(
         rmm, "findFieldIndex", &VMatrix::fieldIndex,
         (BodyDoc("Returns the index of a field, or -1 if the field does not "
@@ -284,6 +290,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("l", "length"),
          ArgDoc ("w", "width"),
          RetDoc ("The sub-VMatrix")));
+
+    declareMethod(
+        rmm, "get", &VMatrix::get,
+        (BodyDoc("Returns the element at position (i,j)\n"),
+         ArgDoc ("i", "row"),
+         ArgDoc ("j", "col"),
+         RetDoc ("Value at (i,j)")));
 
 
     declareMethod(
@@ -1364,7 +1377,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
     if(!hasMetaDataDir())
         PLERROR("In VMatrix::lockMetaDataDir() subclass %s -"
                 " metadatadir was not set", classname().c_str());
-    if(lockf_) // Already locked by this object!
+    if(lockf_.good()) // Already locked by this object!
         PLERROR("VMatrix::lockMetaDataDir() subclass %s -"
                 " called while already locked by this object.",
                 classname().c_str());
@@ -1454,12 +1467,12 @@ void VMatrix::loadStringMapping(int col)
         PLERROR( string("File "+fname+" is not a valid String mapping file.\nShould start with #SMAP on first line (this is to prevent inopportunely overwritting another type of file)").c_str());
 #endif
 
-    while(f)
+    while(f.good())
     {
         string s;
         real val;
         f >> s >> val;
-        if(f)
+        if(f.good())
         {
             map_sr[col][s]   = val;
             map_rs[col][val] = s;

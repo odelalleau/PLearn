@@ -247,7 +247,7 @@ bool PLearnServer::run()
         int c = -1;
         do 
             c = io.get(); 
-        while(io && c!='!' && c!=EOF);
+        while(io.good() && c!='!' && c!=EOF);
         
         if(c==EOF || !io)
             return true;

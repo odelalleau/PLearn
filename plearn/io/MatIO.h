@@ -306,7 +306,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
         skipBlanksAndComments(loadmat);
         for(int j=0; j<width; j++) 
         {
-            if (loadmat) 
+            if (loadmat.good()) 
             {
                 loadmat >> inp_element;
                 if (pl_isnumber(inp_element)) 

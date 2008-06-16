@@ -265,10 +265,10 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
 
             string  next_metaprotocol;
             PPath   next_metapath;    
-            while (ppath_config) {
+            while (ppath_config.good()) {
                 ppath_config >> next_metaprotocol >> next_metapath;
                 if (next_metaprotocol.empty())
-                    if (ppath_config)
+                    if (ppath_config.good())
                         PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
                                 "a blank line before reaching the end of the file",
                                 config_file_path.errorDisplay().c_str());

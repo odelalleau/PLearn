@@ -291,7 +291,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
     string token;
     size_t spos;
     map<string, string>::iterator pos;
-    while (in)
+    while (in.good())
     {
         in >> token;
         pos = defines.find(token);
@@ -708,7 +708,7 @@ void VMatLanguage::staticPreprocess(PStream& in, map<string, string>& defines,
 {
     string token;
     map<string,string>::iterator pos;
-    while(in)
+    while(in.good())
     {
         in >> token;
         pos=defines.find(token);

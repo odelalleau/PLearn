@@ -200,7 +200,7 @@ vector<string> execute(const string& command, bool redirect_stderr)
 {
     Popen p(command, redirect_stderr);
     vector<string> result;
-    while(p.in)
+    while(p.in.good())
     {
         string line = p.in.getline();
         result.push_back(line);

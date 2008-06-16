@@ -59,6 +59,12 @@ bool VMField::operator!=(const VMField& other) const
     return !((*this)==other);
 }
 
+PStream& operator>>(PStream& in, VMField::FieldType& x) // dummy placeholder; do not call
+{
+    PLERROR("operator>> for VMField::FieldType not implemented (yet).");
+    return in; // shut up compiler
+}
+
 
 /** VMFieldStat **/
 

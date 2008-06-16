@@ -224,7 +224,7 @@ void PyPLearnScript::run()
 
     PStream in = openString( plearn_script, PStream::plearn_ascii );
 
-    while ( in )
+    while ( in.good() )
     {
         PP<Object> o = readObject(in);
         o->run();

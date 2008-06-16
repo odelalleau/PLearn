@@ -187,7 +187,8 @@ void test_read() {
 
     test("Peek", s.peek(), 'v');
 
-    test("Conversion to bool, not on EOF", bool(s), 1);
+    //test("Conversion to bool, not on EOF", bool(s), 1);//DEPRECATED
+    test("stream.good(), not on EOF", s.good(), 1);
   
     s.putback('U');
     test("Putback of a single char", s.get(), 'U');
@@ -204,7 +205,8 @@ void test_read() {
     s.read(temp, 10);
     test("EOF, reading into a string", temp, "");
 
-    test("Conversion to bool on EOF", bool(s), 0);
+    //test("Conversion to bool on EOF", bool(s), 0);//DEPRECATED
+    test("stream.good() on EOF", s.good(), 0);
   
     test("EOF, second time", s.get(), EOF);
 

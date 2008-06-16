@@ -207,7 +207,7 @@ void RemotePLearnServer::deleteAllObjects()
 
 void RemotePLearnServer::deleteAllObjectsAsync()
 {
-    if(io)
+    if(io.good())
     {
         io.write("!Z "); 
         io << endl;

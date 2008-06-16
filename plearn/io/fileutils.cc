@@ -463,7 +463,7 @@ void skipBlanksAndComments(PStream& in)
 /////////////////////////
 void getNextNonBlankLine(PStream& in, string& line)
 {
-    while (in) {
+    while (in.good()) {
         in.getline(line);
         size_t l = line.size();
         bool ok = false;
@@ -722,7 +722,7 @@ string readAndMacroProcess(PStream& in, map<string, string>& variables,
     string text; // the processed text to return
     bool inside_a_quoted_string=false; // inside a quoted string we don't skip characters following a #
     int c=EOF, last_c=EOF;
-    while(in)
+    while(in.good())
     {
         last_c = c;
         c = in.get();

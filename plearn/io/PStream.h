@@ -424,8 +424,23 @@ public:
     bool good() const
     { return ptr && ptr->good(); }
 
+    /*****
+     * DEPRECATED: this implicit conversion is too dangerous!
+     *             use .good() instead.
     operator bool() const
     { return good(); }
+    */
+    /*****
+     * operator void*() causes a compile error ON PURPOSE! (ambiguous w/ PP<T>::operator T*())
+     * The implicit conversion of a PStream to a bool or pointer is
+     * too dangerous to be allowed; please use PStream::good() (or PP<T>::isNotNull()) instead.
+     * EXAMPLE of a flawed conversion to bool:
+     *  enum Machin { Truc, Bidule };
+     *  Machin mon_machin;
+     *  pin >> mon_machin; // OOPS!!! converts pin to bool and applies operator>>(int,int), a shift... 
+     */
+    /** !!! **/ operator void*() const // DO NOT USE IT; FAILS ON PURPOSE!
+                { PLERROR("!?! this should have failed at compile time !?!"); return 0; } 
 
     //! Test whether a PStream is in an invalid state.
     // This operator is required for compilation under Visual C++.

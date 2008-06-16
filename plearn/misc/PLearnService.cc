@@ -89,13 +89,13 @@ void PLearnService::connectToServers(PPath serversfile)
 
     TVec< pair<string,int> > hostname_and_port;
 
-    while(in)
+    while(in.good())
     {
         in.skipBlanksAndComments();
         if(!in)
             break;
         in >> hostname >> tcpport >> pid;
-        if(in)
+        if(in.good())
             hostname_and_port.append(pair<string,int>(hostname,tcpport));
     }
     connectToServers(hostname_and_port);

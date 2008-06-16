@@ -78,6 +78,7 @@ public:
 
 };
 
+PStream& operator>>(PStream& in, VMField::FieldType& x); // dummy placeholder; do not call
 
 //!  this class holds simple statistics about a field
 class VMFieldStat

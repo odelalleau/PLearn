@@ -134,7 +134,7 @@ void RunCommand::run(const vector<string>& args)
     else
         PLERROR("Invalid extension for script file. Must be one of .pyplearn .plearn .psave");
 
-    while ( in )
+    while ( in.good() )
     {
         PP<Object> o = readObject(in);
         o->run();
