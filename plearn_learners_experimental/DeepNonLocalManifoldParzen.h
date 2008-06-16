@@ -90,13 +90,13 @@ public:
     TVec<int> training_schedule;
 
     //! The layers of units in the network
-    TVec< PP<RBMLayer> > layers;
+    mutable TVec< PP<RBMLayer> > layers;
 
     //! The weights of the connections between the layers
-    TVec< PP<RBMConnection> > connections;
+    mutable TVec< PP<RBMConnection> > connections;
 
     //! The reconstruction weights of the autoassociators
-    TVec< PP<RBMConnection> > reconstruction_connections;
+    mutable TVec< PP<RBMConnection> > reconstruction_connections;
 
     //! Number of nearest neighbors to use to learn
     //! the manifold structure.
@@ -110,6 +110,9 @@ public:
 
     //! Number of classes
     int n_classes;
+
+    //! Indication that one network per class should be trained
+    bool train_one_network_per_class;
 
     //! Output weights L1 penalty factor
     real output_connections_l1_penalty_factor;
@@ -192,7 +195,8 @@ public:
 
     void computeManifoldParzenParameters( const Vec& input, 
                                           Mat& F, Vec& mu, Vec& pre_sigma_noise,
-                                          Mat& U, Vec& sm_svd) const;
+                                          Mat& U, Vec& sm_svd, 
+                                          int target_class = -1) const;
                                           
 
     //#####  PLearn::Object Protocol  #########################################
@@ -242,6 +246,12 @@ protected:
     //! Output weights
     mutable PP<OnlineLearningModule> output_connections;
     
+    //! Parameters for all networks, when training one network per class
+    mutable TVec< TVec< PP<RBMLayer> > > all_layers;
+    mutable TVec< TVec<PP<RBMConnection> > > all_connections;
+    mutable TVec< TVec<PP<RBMConnection> > > all_reconstruction_connections;
+    mutable TVec< PP<OnlineLearningModule> > all_output_connections;
+
     //! Example representation
     mutable Vec input_representation;
 

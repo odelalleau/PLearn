@@ -66,6 +66,7 @@ DeepNonLocalManifoldParzen::DeepNonLocalManifoldParzen() :
     n_components( 1 ),
     min_sigma_noise( 0 ),
     n_classes( -1 ),
+    train_one_network_per_class( false ),
     output_connections_l1_penalty_factor( 0 ),
     output_connections_l2_penalty_factor( 0 ),
     save_manifold_parzen_parameters( false ),
@@ -85,7 +86,7 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
                   &DeepNonLocalManifoldParzen::cd_learning_rate,
                   OptionBase::buildoption,
                   "The learning rate used during the RBM "
-                  "contrastive divergence training");
+                  "contrastive divergence training.\n");
 
     declareOption(ol, "cd_decrease_ct", 
                   &DeepNonLocalManifoldParzen::cd_decrease_ct,
@@ -100,7 +101,7 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
                   &DeepNonLocalManifoldParzen::greedy_learning_rate,
                   OptionBase::buildoption,
                   "The learning rate used during the autoassociator "
-                  "gradient descent training");
+                  "gradient descent training.\n");
 
     declareOption(ol, "greedy_decrease_ct", 
                   &DeepNonLocalManifoldParzen::greedy_decrease_ct,
@@ -114,7 +115,7 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
     declareOption(ol, "fine_tuning_learning_rate", 
                   &DeepNonLocalManifoldParzen::fine_tuning_learning_rate,
                   OptionBase::buildoption,
-                  "The learning rate used during the fine tuning gradient descent");
+                  "The learning rate used during the fine tuning gradient descent.\n");
 
     declareOption(ol, "fine_tuning_decrease_ct", 
                   &DeepNonLocalManifoldParzen::fine_tuning_decrease_ct,
@@ -139,50 +140,57 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
 
     declareOption(ol, "connections", &DeepNonLocalManifoldParzen::connections,
                   OptionBase::buildoption,
-                  "The weights of the connections between the layers");
+                  "The weights of the connections between the layers.\n");
 
     declareOption(ol, "reconstruction_connections", 
                   &DeepNonLocalManifoldParzen::reconstruction_connections,
                   OptionBase::buildoption,
-                  "The reconstruction weights of the autoassociators");
+                  "The reconstruction weights of the autoassociators.\n");
 
     declareOption(ol, "k_neighbors", 
                   &DeepNonLocalManifoldParzen::k_neighbors,
                   OptionBase::buildoption,
                   "Number of good nearest neighbors to attract and bad nearest "
-                  "neighbors to repel.");
+                  "neighbors to repel.\n");
 
     declareOption(ol, "n_components", 
                   &DeepNonLocalManifoldParzen::n_components,
                   OptionBase::buildoption,
-                  "Dimensionality of the manifold");
+                  "Dimensionality of the manifold.\n");
 
     declareOption(ol, "min_sigma_noise", 
                   &DeepNonLocalManifoldParzen::min_sigma_noise,
                   OptionBase::buildoption,
-                  "Minimum value for the noise variance");
+                  "Minimum value for the noise variance.\n");
 
     declareOption(ol, "n_classes", 
                   &DeepNonLocalManifoldParzen::n_classes,
                   OptionBase::buildoption,
-                  "Number of classes.");
+                  "Number of classes. If n_classes = 1, learner will output\n"
+                  "log likelihood of a given input. If n_classes > 1,\n"
+                  "classification will be performed.\n");
+
+    declareOption(ol, "train_one_network_per_class", 
+                  &DeepNonLocalManifoldParzen::train_one_network_per_class,
+                  OptionBase::buildoption,
+                  "Indication that one network per class should be trained.\n");
 
     declareOption(ol, "output_connections_l1_penalty_factor", 
                   &DeepNonLocalManifoldParzen::output_connections_l1_penalty_factor,
                   OptionBase::buildoption,
-                  "Output weights L1 penalty factor");
+                  "Output weights L1 penalty factor.\n");
 
     declareOption(ol, "output_connections_l2_penalty_factor", 
                   &DeepNonLocalManifoldParzen::output_connections_l2_penalty_factor,
                   OptionBase::buildoption,
-                  "Output weights L2 penalty factor");
+                  "Output weights L2 penalty factor.\n");
 
     declareOption(ol, "save_manifold_parzen_parameters", 
                   &DeepNonLocalManifoldParzen::save_manifold_parzen_parameters,
                   OptionBase::buildoption,
                   "Indication that the parameters for the manifold parzen\n"
                   "windows estimator should be saved during test, to speed up "
-                  "testing.");
+                  "testing.\n");
 
     declareOption(ol, "do_not_learn_sigma_noise", 
                   &DeepNonLocalManifoldParzen::do_not_learn_sigma_noise,
@@ -198,19 +206,19 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
 
     declareOption(ol, "n_layers", &DeepNonLocalManifoldParzen::n_layers,
                   OptionBase::learntoption,
-                  "Number of layers"
+                  "Number of layers.\n"
         );
 
     declareOption(ol, "output_connections", 
                   &DeepNonLocalManifoldParzen::output_connections,
                   OptionBase::learntoption,
-                  "Output weights"
+                  "Output weights.\n"
         );
 
     declareOption(ol, "train_set", 
                   &DeepNonLocalManifoldParzen::train_set,
                   OptionBase::learntoption,
-                  "Training set"
+                  "Training set.\n"
         );
 
     // Now call the parent class' declareOptions
@@ -232,7 +240,7 @@ void DeepNonLocalManifoldParzen::build_()
 
     MODULE_LOG << "build_() called" << endl;
 
-    if(inputsize_ > 0 && targetsize_ > 0)
+    if(inputsize_ > 0 )
     {
         // Initialize some learnt variables
         n_layers = layers.length();
@@ -284,6 +292,52 @@ void DeepNonLocalManifoldParzen::build_()
         }
 
         build_layers_and_connections();
+
+        if( train_one_network_per_class )
+        {
+            if( n_classes == 1 )
+                PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
+                        "train_one_network_per_class is useless for\n"
+                        "n_classes == 1.\n");
+            if( all_layers.length() != n_classes )
+            {
+                all_layers.resize( n_classes);
+                for( int i=0; i<all_layers.length(); i++ )
+                {
+                    CopiesMap copies;
+                    all_layers[i] = layers->deepCopy(copies);
+                }
+            }
+            if( all_connections.length() != n_classes )
+            {
+                all_connections.resize( n_classes);
+                for( int i=0; i<all_connections.length(); i++ )
+                {
+                    CopiesMap copies;
+                    all_connections[i] = connections->deepCopy(copies);
+                }
+            }
+            if( all_reconstruction_connections.length() != n_classes )
+            {
+                all_reconstruction_connections.resize( n_classes);
+                for( int i=0; i<all_reconstruction_connections.length(); i++ )
+                {
+                    CopiesMap copies;
+                    all_reconstruction_connections[i] = 
+                        reconstruction_connections->deepCopy(copies);
+                }
+            }
+            if( all_output_connections.length() != n_classes )
+            {
+                all_output_connections.resize( n_classes);
+                for( int i=0; i<all_output_connections.length(); i++ )
+                {
+                    CopiesMap copies;
+                    all_output_connections[i] = 
+                        output_connections->deepCopy(copies);
+                }
+            }
+        }
     }
 }
 
@@ -419,6 +473,10 @@ void DeepNonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(reconstruction_activation_gradients, copies);
     deepCopyField(reconstruction_expectation_gradients, copies);
     deepCopyField(output_connections, copies);
+    deepCopyField(all_layers, copies);
+    deepCopyField(all_connections, copies);
+    deepCopyField(all_reconstruction_connections, copies);
+    deepCopyField(all_output_connections, copies);
     deepCopyField(input_representation, copies);
     deepCopyField(previous_input_representation, copies);
     deepCopyField(all_outputs, copies);
@@ -463,7 +521,7 @@ int DeepNonLocalManifoldParzen::outputsize() const
     //if(currently_trained_layer < n_layers)
     //    return layers[currently_trained_layer]->size;
     //return layers[n_layers-1]->size;
-    return n_classes;
+    return 1;
 }
 
 void DeepNonLocalManifoldParzen::forget()
@@ -482,17 +540,38 @@ void DeepNonLocalManifoldParzen::forget()
 
     manifold_parzen_parameters_are_up_to_date = false;
 
-    for( int i=0 ; i<n_layers-1 ; i++ )
-        connections[i]->forget();
-    
-    for( int i=0 ; i<n_layers ; i++ )
-        layers[i]->forget();
-    
-    for( int i=0; i<reconstruction_connections.length(); i++)
-        reconstruction_connections[i]->forget();
+    if( train_one_network_per_class )
+    {
+        for(int c = 0; c<n_classes; c++ )
+        {
+            for( int i=0 ; i<n_layers-1 ; i++ )
+                all_connections[c][i]->forget();
+            
+            for( int i=0 ; i<n_layers ; i++ )
+                all_layers[c][i]->forget();
+            
+            for( int i=0; i<all_reconstruction_connections[c].length(); i++)
+                all_reconstruction_connections[c][i]->forget();
+            
+            if( all_output_connections[c] )
+                all_output_connections[c]->forget();
+        }
+    }
+    else
+    {
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            connections[i]->forget();
+        
+        for( int i=0 ; i<n_layers ; i++ )
+            layers[i]->forget();
+        
+        for( int i=0; i<reconstruction_connections.length(); i++)
+            reconstruction_connections[i]->forget();
+        
+        if( output_connections )
+            output_connections->forget();
 
-    if( output_connections )
-        output_connections->forget();
+    }
 
     stage = 0;
     greedy_stages.clear();
@@ -558,6 +637,15 @@ void DeepNonLocalManifoldParzen::train()
         {
             sample = *this_stage % nsamples;
             train_set->getExample(sample, input, target, weight);
+
+            if( train_one_network_per_class )
+            {
+                int c = (int) target[0];
+                layers = all_layers[c];
+                connections = all_connections[c];
+                reconstruction_connections = all_reconstruction_connections[c];
+                output_connections = all_output_connections[c];
+            }
             greedyStep( input, target, i, train_costs, *this_stage);
             train_stats->update( train_costs );
 
@@ -576,19 +664,32 @@ void DeepNonLocalManifoldParzen::train()
             // Find training nearest neighbors
             TVec<int> nearest_neighbors_indices_row;
             nearest_neighbors_indices.resize(train_set->length(), k_neighbors);
-            for(int k=0; k<n_classes; k++)
-            {
-                for(int i=0; i<class_datasets[k]->length(); i++)
+            if( n_classes > 1 )
+                for(int k=0; k<n_classes; k++)
                 {
-                    class_datasets[k]->getExample(i,input,target,weight);
-                    nearest_neighbors_indices_row = nearest_neighbors_indices(
-                        class_datasets[k]->indices[i]);
+                    for(int i=0; i<class_datasets[k]->length(); i++)
+                    {
+                        class_datasets[k]->getExample(i,input,target,weight);
+                        nearest_neighbors_indices_row = nearest_neighbors_indices(
+                            class_datasets[k]->indices[i]);
+                        
+                        computeNearestNeighbors(
+                            new GetInputVMatrix((VMatrix *)class_datasets[k]),input,
+                            nearest_neighbors_indices_row,
+                            i);
+                    }
+                }
+            else
+                for(int i=0; i<train_set->length(); i++)
+                {
+                    train_set->getExample(i,input,target,weight);
+                    nearest_neighbors_indices_row = nearest_neighbors_indices(i);
                     computeNearestNeighbors(
-                        new GetInputVMatrix((VMatrix *)class_datasets[k]),input,
+                        train_set,input,
                         nearest_neighbors_indices_row,
                         i);
                 }
-            }
+                
         }
 
         MODULE_LOG << "Fine-tuning all parameters, by gradient descent" << endl;
@@ -603,31 +704,50 @@ void DeepNonLocalManifoldParzen::train()
                                   + classname(),
                                   nstages - init_stage );
 
-        setLearningRate( fine_tuning_learning_rate );
         train_costs.fill(MISSING_VALUE);
 
         for( ; stage<nstages ; stage++ )
         {
             sample = stage % nsamples;
-            if( !fast_exact_is_equal( fine_tuning_decrease_ct, 0. ) )
-                setLearningRate( fine_tuning_learning_rate
-                                 / (1. + fine_tuning_decrease_ct * stage ) );
-
             train_set->getExample( sample, input, target, weight );
 
             // Find nearest neighbors
-            for( int k=0; k<k_neighbors; k++ )
-            {
-                class_datasets[(int)round(target[0])]->getExample(
-                    nearest_neighbors_indices(sample,k),
-                    nearest_neighbor, target2, weight2);
+            if( n_classes > 1 )
+                for( int k=0; k<k_neighbors; k++ )
+                {
+                    class_datasets[(int)round(target[0])]->getExample(
+                        nearest_neighbors_indices(sample,k),
+                        nearest_neighbor, target2, weight2);
+                    
+                    if(round(target[0]) != round(target2[0]))
+                        PLERROR("DeepNonLocalManifoldParzen::train(): similar"
+                                " example is not from same class!");
+                    nearest_neighbors(k) << nearest_neighbor;
+                }
+            else
+                for( int k=0; k<k_neighbors; k++ )
+                {
+                    train_set->getExample(
+                        nearest_neighbors_indices(sample,k),
+                        nearest_neighbor, target2, weight2);
+                    nearest_neighbors(k) << nearest_neighbor;
+                }
+                
 
-                if(round(target[0]) != round(target2[0]))
-                    PLERROR("DeepNonLocalManifoldParzen::train(): similar"
-                            " example is not from same class!");
-                nearest_neighbors(k) << nearest_neighbor;
+            if( train_one_network_per_class )
+            {
+                int c = (int) target[0];
+                layers = all_layers[c];
+                connections = all_connections[c];
+                reconstruction_connections = all_reconstruction_connections[c];
+                output_connections = all_output_connections[c];
             }
 
+            if( !fast_exact_is_equal( fine_tuning_decrease_ct, 0. ) )
+                setLearningRate( fine_tuning_learning_rate
+                                 / (1. + fine_tuning_decrease_ct * stage ) );
+            else
+                setLearningRate( fine_tuning_learning_rate );
 
             fineTuningStep( input, target, train_costs, 
                             nearest_neighbors);
@@ -775,8 +895,17 @@ void DeepNonLocalManifoldParzen::greedyStep(
 
 void DeepNonLocalManifoldParzen::computeManifoldParzenParameters( 
     const Vec& input, Mat& F, Vec& mu, 
-    Vec& pre_sigma_noise, Mat& U, Vec& sm_svd) const
+    Vec& pre_sigma_noise, Mat& U, Vec& sm_svd, int target_class) const
 {
+    if( train_one_network_per_class )
+    {
+        PLASSERT( target_class >= 0 );
+        layers = all_layers[target_class];
+        connections = all_connections[target_class];
+        reconstruction_connections = all_reconstruction_connections[target_class];
+        output_connections = all_output_connections[target_class];
+    }
+
     // Get example representation
     computeRepresentation(input, input_representation, 
                           n_layers-1);
@@ -816,7 +945,11 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
 {
     manifold_parzen_parameters_are_up_to_date = false;
 
-    computeManifoldParzenParameters( input, F, mu, pre_sigma_noise, U, sm_svd );
+    if( n_classes > 1 )
+        computeManifoldParzenParameters( input, F, mu, pre_sigma_noise, U, sm_svd,
+                                         (int)target[0]);
+    else
+        computeManifoldParzenParameters( input, F, mu, pre_sigma_noise, U, sm_svd);
 
     real sigma_noise = pre_sigma_noise[0]* pre_sigma_noise[0] + min_sigma_noise;
 
@@ -1011,11 +1144,23 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
         int input_j_index;
         for( int i=0; i<n_classes; i++ )
         {
-            for( int j=0; j<class_datasets[i]->length(); j++ )
+            for( int j=0; 
+                 j<(n_classes > 1 ? 
+                    class_datasets[i]->length() 
+                    : train_set->length()); 
+                 j++ )
             {
-                class_datasets[i]->getExample(j,input_j,target,weight);
+                if( n_classes > 1 )
+                {
+                    class_datasets[i]->getExample(j,input_j,target,weight);
+                    input_j_index = class_datasets[i]->indices[j];
+                }
+                else
+                {
+                    train_set->getExample(j,input_j,target,weight);
+                    input_j_index = j;
+                }
 
-                input_j_index = class_datasets[i]->indices[j];
                 U << eigenvectors[input_j_index];
                 sm_svd << eigenvalues(input_j_index);
                 sigma_noise = sigma_noises[input_j_index];
@@ -1034,7 +1179,7 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
                     dotp = dot(diff,uk);
                     coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
                     mahal -= dotp*dotp*0.5*coef;
-                    norm_term -= 0.5*pl_log(sm_svd[k]);
+                    norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
                 }
                 
                 if( j==0 )
@@ -1051,12 +1196,26 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
 
         for( int i=0; i<n_classes; i++ )
         {
-            for( int j=0; j<class_datasets[i]->length(); j++ )
+            for( int j=0; 
+                 j<(n_classes > 1 ? 
+                    class_datasets[i]->length() 
+                    : train_set->length()); 
+                 j++ )
             {
-                class_datasets[i]->getExample(j,input_j,target,weight);
+                if( n_classes > 1 )
+                {
+                    class_datasets[i]->getExample(j,input_j,target,weight);
+                    computeManifoldParzenParameters( input_j, F, mu, 
+                                                     pre_sigma_noise, U, sm_svd,
+                                                     (int) target[0]);
+                }
+                else
+                {
+                    train_set->getExample(j,input_j,target,weight);
+                    computeManifoldParzenParameters( input_j, F, mu, 
+                                                     pre_sigma_noise, U, sm_svd );
+                }
 
-                computeManifoldParzenParameters( input_j, F, mu, 
-                                                 pre_sigma_noise, U, sm_svd );
                 
                 sigma_noise = pre_sigma_noise[0]*pre_sigma_noise[0] 
                     + min_sigma_noise;
@@ -1074,7 +1233,7 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
                     dotp = dot(diff,uk);
                     coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
                     mahal -= dotp*dotp*0.5*coef;
-                    norm_term -= 0.5*pl_log(sm_svd[k]);
+                    norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
                 }
                 
                 if( j==0 )
@@ -1087,8 +1246,10 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
         }
     }
 
-
-    output[0] = argmax(test_votes);
+    if( n_classes > 1 )
+        output[0] = argmax(test_votes);
+    else
+        output[0] = test_votes[0]-pl_log(train_set->length());
 }
 
 void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const Vec& output,
@@ -1099,6 +1260,15 @@ void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const
 
     costs.resize( getTestCostNames().length() );
     costs.fill( MISSING_VALUE );
+
+    if( train_one_network_per_class )
+    {
+        int c = (int) target[0];
+        layers = all_layers[c];
+        connections = all_connections[c];
+        reconstruction_connections = all_reconstruction_connections[c];
+        output_connections = all_output_connections[c];
+    }
 
     if( currently_trained_layer<n_layers 
         && reconstruction_connections.length() != 0 )
@@ -1120,12 +1290,20 @@ void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const
     }
     else
     {
-        int target_class = ((int)round(target[0]));
-        if( ((int)round(output[0])) == target_class )
-            costs[n_layers-1] = 0;
+        if( n_classes > 1 )
+        {
+            int target_class = ((int)round(target[0]));
+            if( ((int)round(output[0])) == target_class )
+                costs[n_layers-1] = 0;
+            else
+                costs[n_layers-1] = 1;
+            costs[n_layers] = - test_votes[target_class]
+                +pl_log(class_datasets[target_class]->length()); // Must take into account the 1/n normalization
+        }
         else
-            costs[n_layers-1] = 1;
-        costs[n_layers] = - test_votes[target_class]+pl_log(class_datasets[target_class]->length());
+        {
+            costs[n_layers] = - output[0]; // 1/n normalization already accounted for
+        }
     }
 }
 
@@ -1151,8 +1329,13 @@ void DeepNonLocalManifoldParzen::updateManifoldParzenParameters() const
         {
             train_set->getExample(i,input,target,weight);
 
-            computeManifoldParzenParameters( input, F, mu, 
-                                             pre_sigma_noise, U, sm_svd );
+            if( n_classes > 1 )
+                computeManifoldParzenParameters( input, F, mu, 
+                                                 pre_sigma_noise, U, sm_svd,
+                                                 (int) target[0]);
+            else
+                computeManifoldParzenParameters( input, F, mu, 
+                                                 pre_sigma_noise, U, sm_svd);
             
             sigma_noise = pre_sigma_noise[0]*pre_sigma_noise[0] + min_sigma_noise;
 
@@ -1198,16 +1381,19 @@ void DeepNonLocalManifoldParzen::setTrainingSet(VMat training_set, bool call_for
     manifold_parzen_parameters_are_up_to_date = false;
 
     // Separate classes
-    class_datasets.resize(n_classes);
-    for(int k=0; k<n_classes; k++)
+    if( n_classes > 1 )
     {
-        class_datasets[k] = new ClassSubsetVMatrix();
-        class_datasets[k]->classes.resize(1);
-        class_datasets[k]->classes[0] = k;
-        class_datasets[k]->source = training_set;
-        class_datasets[k]->build();
+        class_datasets.resize(n_classes);
+        for(int k=0; k<n_classes; k++)
+        {
+            class_datasets[k] = new ClassSubsetVMatrix();
+            class_datasets[k]->classes.resize(1);
+            class_datasets[k]->classes[0] = k;
+            class_datasets[k]->source = training_set;
+            class_datasets[k]->build();
+        }
     }
-    
+
     //// Find other classes proportions
     //class_proportions.resize(n_classes);
     //class_proportions.fill(0);
