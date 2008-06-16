@@ -336,6 +336,15 @@ TVec<string> HyperOptimize::getResultNames() const
     return hlearner->tester->getStatNames();
 }
 
+void HyperOptimize::forget()
+{
+    trialnum = 0;    
+    option_vals.resize(0);
+    best_objective = REAL_MAX;
+    best_results = Vec();
+    best_learner = 0;
+}
+
 Vec HyperOptimize::optimize()
 {
 //in the case when auto_save is true. This function can be called even
@@ -383,10 +392,12 @@ Vec HyperOptimize::optimize()
             for(int commandnum=0; commandnum<sub_strategy.length(); commandnum++)
             {
                 sub_strategy[commandnum]->setHyperLearner(hlearner);
+                sub_strategy[commandnum]->forget();
                 if(!expdir.isEmpty() && provide_sub_expdir)
                     sub_strategy[commandnum]->setExperimentDirectory(
                         expdir / ("Trials"+tostring(trialnum)) / ("Step"+tostring(commandnum))
                         );
+                
                 best_sub_results = sub_strategy[commandnum]->optimize();
             }
             if(rerun_after_sub)

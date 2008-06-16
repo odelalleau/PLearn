@@ -178,6 +178,8 @@ public:
     //! Returns the names of the results returned by the optimize() method.
     virtual TVec<string> getResultNames() const;
 
+    virtual void forget();
+
     virtual Vec optimize();
 
     // simply calls inherited::build() then build_()

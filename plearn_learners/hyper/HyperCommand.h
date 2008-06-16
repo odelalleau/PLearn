@@ -112,6 +112,10 @@ public:
     PPath getExperimentDirectory() const
     { return expdir; }
 
+    //! Resets the command's internal state as if freshly constructed
+    //! (default does nothing)
+    virtual void forget();
+
     //! Executes the command, returning the resulting costvec of its optimization
     //! (or an empty vec if it didn't do any testng).
     virtual Vec optimize() =0;

@@ -97,6 +97,10 @@ void HyperCommand::build()
     build_();
 }
 
+void HyperCommand::forget()
+{}
+
+
 void HyperCommand::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
