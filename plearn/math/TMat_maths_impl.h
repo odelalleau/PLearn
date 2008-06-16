@@ -5921,11 +5921,14 @@ void operator-=(const TMat<T>& m1, const TMat<T>& m2)
         PLERROR("IN operator+=(const TMat<T>& m1(%d,%d), const TMat<T>& m2(%d,%d)): m1 and m2 must have same dimensions",
                 m1.length(),m1.width(),m2.length(),m2.width());
 #endif
-    T* m1_i = m1.data();
-    T* m2_i = m2.data();
-    for(int i=0; i<n; i++, m1_i+=m1.mod(),m2_i+=m2.mod())
-        for(int j=0; j<l; j++)
-            m1_i[j] -= m2_i[j];
+    if(m1.isNotEmpty()) // calc only if some data
+    {
+        T* m1_i = m1.data();
+        T* m2_i = m2.data();
+        for(int i=0; i<n; i++, m1_i+=m1.mod(),m2_i+=m2.mod())
+            for(int j=0; j<l; j++)
+                m1_i[j] -= m2_i[j];
+    }
 }
 
 template<class T>
