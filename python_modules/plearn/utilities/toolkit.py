@@ -52,8 +52,7 @@ def centered_square(s, width, ldelim='[', rdelim=']'):
 def command_output(command, stderr = True, stdout = True):
     """Returns the output lines of a shell command.    
     
-    Deprecated: please consider using the new python 2.4 subprocess module
-    instead.
+    @deprecated Please use the subprocess module instead.
 
     @param command: The shell command to execute.
     @type command: String
