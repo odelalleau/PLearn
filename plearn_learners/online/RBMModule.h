@@ -74,6 +74,8 @@ public:
     bool tied_connection_weights;
 
     bool compute_contrastive_divergence;
+    bool compare_true_gradient_with_cd;
+    int n_steps_compare;
 
     //! Number of Gibbs sampling steps in negative phase
     //! of contrastive divergence.
@@ -269,6 +271,27 @@ protected:
     //! Used to store inputs generated to compute the free energy.
     Mat energy_inputs;
 
+    //! P(x) for all possible configurations x of visible layer. Used only when
+    //! 'compare_true_gradient_with_cd' is true (computed at the same time as
+    //! the partition function).
+    Vec all_p_visible;
+
+    //! Used to store P(h|x) for all values of h and all values of x.
+    //! Element (i,j) is P(h_i | x_j).
+    Mat all_hidden_cond_prob;
+
+    //! Used to store P(x|h) for all values of h and all values of x.
+    //! Element (i,j) is P(x_i | h_j).
+    Mat all_visible_cond_prob;
+
+    //! Used to store P(h_t|x) for all values of h_t and some values of x.
+    //! Element (i,j) is P(h_ti | x_j).
+    Mat p_ht_given_x;
+
+    //! Used to store P(x_t|x) for all values of x_t and some values of x.
+    //! Element (i,j) is P(x_ti | x_j).
+    Mat p_xt_given_x;
+
     //#####  Protected Member Functions  ######################################
 
     //! Add a new port to the 'portname_to_index' map and 'ports' vector.
@@ -331,6 +354,12 @@ public:
                        bool positive_phase = true);
 
     void computePartitionFunction();
+
+    //! Compute probabilities of all hidden configurations given some visible
+    //! inputs. The 'p_hidden' matrix is filled such that the (i,j)-th element
+    //! is P(hidden_configuration_i | visible_j).
+    void computeAllHiddenProbabilities(const Mat& visible,
+                                       const Mat& p_hidden);
 
     void computeNegLogPVisibleGivenPHidden(Mat visible, Mat hidden, Mat* neg_log_phidden, Mat& neg_log_pvisible_given_phidden);
 

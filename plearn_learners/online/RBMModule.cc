@@ -87,7 +87,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "     values (expectations) through the conditional expectations of hidden | visible.\n"
     "  - 'reconstruction_error.state' : the auto-associator reconstruction error (NLL)\n"
     "    obtained by matching the visible_reconstruction with the given visible.\n"
-    "Note that the above determnistic reconstruction may be made stochastic\n"
+    "Note that the above deterministic reconstruction may be made stochastic\n"
     "by using the advanced option 'stochastic_reconstruction'.\n"
     "If compute_contrastive_divergence is true, then the RBM also has these ports\n"
     "  - 'contrastive_divergence' : the quantity minimized by contrastive-divergence training.\n"
@@ -109,6 +109,8 @@ RBMModule::RBMModule():
     grad_learning_rate(0),
     tied_connection_weights(false),
     compute_contrastive_divergence(false),
+    compare_true_gradient_with_cd(false),
+    n_steps_compare(1),
     n_Gibbs_steps_CD(1),
     min_n_Gibbs_steps(1),
     n_Gibbs_steps_per_generated_sample(-1),
@@ -251,6 +253,21 @@ void RBMModule::declareOptions(OptionList& ol)
                   "Whether to minimize the exact RBM generative model's log-likelihood\n"
                   "i.e. take stochastic gradient steps w.r.t. the log-likelihood instead\n"
                   "of w.r.t. the contrastive divergence.\n");
+
+    declareOption(ol, "compare_true_gradient_with_cd",
+                  &RBMModule::compare_true_gradient_with_cd,
+                  OptionBase::buildoption,
+        "If true, then will compute the true gradient (of the NLL) as well\n"
+        "as the exact non-stochastic CD update, and compare them.",
+                  OptionBase::advanced_level);
+
+    declareOption(ol, "n_steps_compare",
+                  &RBMModule::n_steps_compare,
+                  OptionBase::buildoption,
+        "Number of steps for which we want to compare CD with the true\n"
+        "gradient (when 'compare_true_gradient_with_cd' is true). This will\n"
+        "compute P(x_t|x) for t from 1 to 'n_steps_compare'.",
+                  OptionBase::advanced_level);
 
     // Learnt options.
 
@@ -574,6 +591,25 @@ void RBMModule::computeHiddenActivations(const Mat& visible)
     }
 }
 
+///////////////////////////////////
+// computeAllHiddenProbabilities //
+///////////////////////////////////
+void RBMModule::computeAllHiddenProbabilities(const Mat& visible,
+                                              const Mat& p_hidden)
+{
+    Vec hidden(hidden_layer->size);
+    computeHiddenActivations(visible);
+    int n_conf = hidden_layer->getConfigurationCount();
+    for (int i = 0; i < n_conf; i++) {
+        hidden_layer->getConfiguration(i, hidden);
+        for (int j = 0; j < visible.length(); j++) {
+            hidden_layer->activation = hidden_layer->activations(j);
+            real neg_log_p_h_given_v = hidden_layer->fpropNLL(hidden);
+            p_hidden(i, j) = exp(-neg_log_p_h_given_v);
+        }
+    }
+}
+
 ///////////////////////////////////////////
 // computePositivePhaseHiddenActivations //
 ///////////////////////////////////////////
@@ -660,6 +696,12 @@ void RBMModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
     deepCopyField(ports, copies);
     deepCopyField(energy_inputs, copies);
+
+    deepCopyField(all_p_visible,            copies);
+    deepCopyField(all_hidden_cond_prob,     copies);
+    deepCopyField(all_visible_cond_prob,    copies);
+    deepCopyField(p_ht_given_x,             copies);
+    deepCopyField(p_xt_given_x,             copies);
 }
 
 ///////////
@@ -681,29 +723,70 @@ void RBMModule::computePartitionFunction()
                  "or visible layer must be less than 2^31.");
 
     // Compute partition function
-    if (hidden_configurations > visible_configurations)
+    if (hidden_configurations > visible_configurations ||
+        compare_true_gradient_with_cd)
         // do it by log-summing minus-free-energy of visible configurations
     {
+        if (compare_true_gradient_with_cd) {
+            all_p_visible.resize(visible_configurations);
+            all_visible_cond_prob.resize(visible_configurations,
+                                         hidden_configurations);
+            all_hidden_cond_prob.resize(hidden_configurations,
+                                        visible_configurations);
+        }
         energy_inputs.resize(1, visible_layer->size);
         Vec input = energy_inputs(0);
         // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
         // AT ONCE IN A 'MINIBATCH'
         Mat free_energy(1, 1);
         log_partition_function = 0;
+        PP<ProgressBar> pb;
+        if (verbosity >= 2)
+            pb = new ProgressBar("Computing partition function",\
+                                 visible_configurations);
         for (int c = 0; c < visible_configurations; c++)
         {
             visible_layer->getConfiguration(c, input);
             computeFreeEnergyOfVisible(energy_inputs, free_energy, false);
+            real fe = free_energy(0,0);
             if (c==0)
-                log_partition_function = -free_energy(0,0);
+                log_partition_function = -fe;
             else
-                log_partition_function = logadd(log_partition_function,-free_energy(0,0));
+                log_partition_function = logadd(log_partition_function, -fe);
+            if (compare_true_gradient_with_cd) {
+                all_p_visible[c] = -fe;
+                // Compute P(visible | hidden) and P(hidden | visible) for all
+                // values of hidden.
+                computeAllHiddenProbabilities(input.toMat(1, input.length()),
+                                              all_hidden_cond_prob.column(c));
+                Vec hidden(hidden_layer->size);
+                for (int d = 0; d < hidden_configurations; d++) {
+                    hidden_layer->getConfiguration(d, hidden);
+                    computeVisibleActivations(hidden.toMat(1, hidden.length()),
+                                              false);
+                    visible_layer->activation = visible_layer->activations(0);
+                    real neg_log_p_v_given_h = visible_layer->fpropNLL(input);
+                    all_visible_cond_prob(c, d) = exp(-neg_log_p_v_given_h);
+                }
+            }
+            if (pb)
+                pb->update(c + 1);
         }
+        pb = NULL;
         hidden_activations_are_computed = false;
+        if (compare_true_gradient_with_cd) {
+            // Normalize probabilities.
+            for (int i = 0; i < all_p_visible.length(); i++)
+                all_p_visible[i] =
+                    exp(all_p_visible[i] - log_partition_function);
+            pout << "All P(x): " << all_p_visible << endl;
+            pout << "Sum_x P(x) = " << sum(all_p_visible) << endl;
+        }
     }
     else
         // do it by summing free-energy of hidden configurations
     {
+        PLASSERT( !compare_true_gradient_with_cd );
         energy_inputs.resize(1, hidden_layer->size);
         Vec input = energy_inputs(0);
         // COULD BE DONE MORE EFFICIENTLY BY DOING MANY CONFIGURATIONS
@@ -713,13 +796,18 @@ void RBMModule::computePartitionFunction()
         for (int c = 0; c < hidden_configurations; c++)
         {
             hidden_layer->getConfiguration(c, input);
+            //pout << "Input = " << input << endl;
             computeFreeEnergyOfHidden(energy_inputs, free_energy);
+            //pout << "FE = " << free_energy(0, 0) << endl;
+            real fe = free_energy(0,0);
             if (c==0)
-                log_partition_function = -free_energy(0,0);
+                log_partition_function = -fe;
             else
-                log_partition_function = logadd(log_partition_function,-free_energy(0,0));
+                log_partition_function = logadd(log_partition_function, -fe);
         }
     }
+    if (false)
+        pout << "Log Z(" << name << ") = " << log_partition_function << endl;
 }
 
 void RBMModule::fprop(const TVec<Mat*>& ports_value)
@@ -1325,6 +1413,40 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             PLERROR("RBMModule: unknown configuration to compute contrastive_divergence (currently\n"
                     "only possible if only visible are provided in input).\n");
         found_a_valid_configuration = true;
+    }
+
+    if (compare_true_gradient_with_cd) {
+        PLCHECK_MSG(!partition_function_is_stale,
+                "The partition function must be computed for the comparison "
+                "between true gradient and contrastive divergence to work.");
+        PLCHECK_MSG(visible && !visible_is_output, "Visible must be as input");
+        // Compute P(x_t|x) for all t and inputs x.
+        int n_visible_conf = visible_layer->getConfigurationCount();
+        int n_hidden_conf = hidden_layer->getConfigurationCount();
+        p_xt_given_x.resize(n_visible_conf, visible->length());
+        p_ht_given_x.resize(n_hidden_conf, visible->length());
+        for (int i = 0; i < visible->length(); i++) {
+            // First compute P(h|x) for inputs x.
+            computeAllHiddenProbabilities(*visible, p_ht_given_x);
+            for (int t = 0; t < n_steps_compare; t++) {
+                // Compute P(x_t|x).
+                product(p_xt_given_x, all_visible_cond_prob, p_ht_given_x);
+                pout << "P(x_" << (t + 1) << "|x) = " << endl << p_xt_given_x
+                     << endl;
+                Vec colsum(p_xt_given_x.width());
+                columnSum(p_xt_given_x, colsum);
+                pout << "Sum = " << endl << colsum << endl;
+                int best_idx = argmax(p_xt_given_x.column(0).toVecCopy());
+                Vec tmp(visible_layer->size);
+                visible_layer->getConfiguration(best_idx, tmp);
+                pout << "Best (P = " << p_xt_given_x.column(0)(best_idx, 0) <<
+                    ") for x = " << (*visible)(0) << ":" <<
+                    endl << tmp << endl;
+                // If it is not the last step, update P(h_t|x).
+                if (t < n_steps_compare - 1)
+                    product(p_ht_given_x, all_hidden_cond_prob, p_xt_given_x);
+            }
+        }
     }
 
     // UGLY HACK TO DEAL WITH THE PROBLEM THAT XXX.state MAY NOT BE NEEDED
@@ -2014,6 +2136,7 @@ void RBMModule::forget()
         // We avoid to call forget() twice if the connections are the same.
         reconstruction_connection->forget();
     Gibbs_step = 0;
+    partition_function_is_stale = true;
 }
 
 //////////////////
