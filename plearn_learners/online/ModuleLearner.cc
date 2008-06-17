@@ -53,8 +53,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "That module should have ports that can be fed with the input, target\n"
     "and weight of an example (defined by the 'input_ports', 'target_ports'\n"
     "and 'weight_ports' options), ports that compute costs (defined by the\n"
-    "'cost_ports' option), and a port named 'output' that computes the\n"
-    "output of this learner.\n"
+    "'cost_ports' option), and a port that computes the output of this\n"
+    "learner (whose name is given by the 'output_port' option).\n"
     "\n"
     "For example one can use a NetworkModule, which can define such ports.\n"
     "\n"
@@ -78,6 +78,7 @@ ModuleLearner::ModuleLearner():
     cost_ports(TVec<string>(1, "cost")),
     input_ports(TVec<string>(1, "input")),
     target_ports(TVec<string>(1, "target")),
+    output_port("output"),
     // Note: many learners do not use weights, thus the default behavior is not
     // to have a 'weight' port in 'weight_ports'.
     operate_on_bags(false),
@@ -124,6 +125,10 @@ void ModuleLearner::declareOptions(OptionList& ol)
     declareOption(ol, "weight_ports", &ModuleLearner::weight_ports,
                   OptionBase::buildoption,
        "List of ports that take the weight part of a sample as input.");
+
+    declareOption(ol, "output_port", &ModuleLearner::output_port,
+                  OptionBase::buildoption,
+       "The port that will contain the output of the learner.");
 
     declareOption(ol, "operate_on_bags", &ModuleLearner::operate_on_bags,
                   OptionBase::buildoption,
@@ -194,11 +199,11 @@ void ModuleLearner::build_()
                     module, weight_ports[i], false));
     }
 
-    if (ports.find("output") >= 0) {
+    if (ports.find(output_port) >= 0) {
         store_outputs = new MatrixModule("store_outputs", true);
         all_modules.append(get_pointer(store_outputs));
         all_connections.append(new NetworkConnection(
-                    module, "output",
+                    module, output_port,
                     get_pointer(store_outputs), "data", false));
     } else
         store_outputs = NULL;
@@ -266,7 +271,7 @@ void ModuleLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 int ModuleLearner::outputsize() const
 {
     if ( module && store_outputs )
-        return module->getPortWidth("output");
+        return module->getPortWidth(output_port);
     else
         return -1; // Undefined.
 }
@@ -449,11 +454,13 @@ void ModuleLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
     network->fprop(null_pointers);
 
     // Store output.
-    PLASSERT( store_outputs );
-    const Mat& net_out = store_outputs->getData();
-    PLASSERT( net_out.length() == 1 );
-    output.resize(net_out.width());
-    output << net_out;
+    if (store_outputs) {
+        const Mat& net_out = store_outputs->getData();
+        PLASSERT( net_out.length() == 1 );
+        output.resize(net_out.width());
+        output << net_out;
+    } else
+        output.resize(0);
 
     // Store costs.
     costs.resize(0);

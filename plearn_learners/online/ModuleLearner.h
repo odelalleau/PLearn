@@ -62,6 +62,7 @@ public:
     TVec<string> input_ports;
     TVec<string> target_ports;
     TVec<string> weight_ports;
+    string output_port;
 
     bool operate_on_bags;
 
