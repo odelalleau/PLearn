@@ -197,6 +197,13 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Indication that the value of sigma noise should not be learned.\n");
 
+    declareOption(ol, "use_test_centric_nlmp", 
+                  &DeepNonLocalManifoldParzen::use_test_centric_nlmp,
+                  OptionBase::buildoption,
+                  "Indication that the Test-Centric NLMP variant should "
+		  "be used.\n"
+		  "In this case, train_one_network_per_class must be true.\n");
+
     declareOption(ol, "greedy_stages", 
                   &DeepNonLocalManifoldParzen::greedy_stages,
                   OptionBase::learntoption,
@@ -274,6 +281,17 @@ void DeepNonLocalManifoldParzen::build_()
         if( min_sigma_noise < 0)
             PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
                     "min_sigma_noise should be > or = to 0.\n");
+
+	if( use_test_centric_nlmp && !train_one_network_per_class )
+	    PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
+                    "train_one_network_per_class must be true for "
+		    "Test-Centric NLMP variant.\n");
+	  
+	if( use_test_centric_nlmp && n_classes > 1)
+	    PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
+                    "n_classes must be > 1 for "
+		    "Test-Centric NLMP variant.\n");
+	  
 
         if(greedy_stages.length() == 0)
         {
@@ -1137,115 +1155,145 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
     Vec target(targetsize());
     real weight;
 
-    if( save_manifold_parzen_parameters )
+    if( use_test_centric_nlmp )
     {
-        updateManifoldParzenParameters();
-
-        int input_j_index;
         for( int i=0; i<n_classes; i++ )
-        {
-            for( int j=0; 
-                 j<(n_classes > 1 ? 
-                    class_datasets[i]->length() 
-                    : train_set->length()); 
-                 j++ )
-            {
-                if( n_classes > 1 )
-                {
-                    class_datasets[i]->getExample(j,input_j,target,weight);
-                    input_j_index = class_datasets[i]->indices[j];
-                }
-                else
-                {
-                    train_set->getExample(j,input_j,target,weight);
-                    input_j_index = j;
-                }
-
-                U << eigenvectors[input_j_index];
-                sm_svd << eigenvalues(input_j_index);
-                sigma_noise = sigma_noises[input_j_index];
-                mu << mus(input_j_index);
-
-                substract(input,input_j,diff_neighbor_input); 
-                substract(diff_neighbor_input,mu,diff); 
+	{
+	    computeManifoldParzenParameters( input, F, mu, 
+					     pre_sigma_noise, U, sm_svd,
+					     i);
                     
-                mahal = -0.5*pownorm(diff)/sigma_noise;      
-                norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
-                    pl_log(sigma_noise);
-
-                for(int k=0; k<n_components; k++)
-                { 
-                    uk = U(k);
-                    dotp = dot(diff,uk);
-                    coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
-                    mahal -= dotp*dotp*0.5*coef;
-                    norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
-                }
-                
-                if( j==0 )
-                    log_p_x_g_y = norm_term + mahal;
-                else
-                    log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
-            }
-
-            test_votes[i] = log_p_x_g_y;
-        }
+	    sigma_noise = pre_sigma_noise[0]*pre_sigma_noise[0] 
+	        + min_sigma_noise;
+                    
+	    mahal = -0.5*pownorm(mu)/sigma_noise;      
+	    norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
+	        pl_log(sigma_noise);
+        
+	    for(int k=0; k<n_components; k++)
+	    { 
+		uk = U(k);
+		dotp = dot(mu,uk);
+		coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
+		mahal -= dotp*dotp*0.5*coef;
+		norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
+	    }
+	    
+	    log_p_x_g_y = norm_term + mahal;
+	    test_votes[i] = log_p_x_g_y ;
+	}        
     }
     else
     {
-
-        for( int i=0; i<n_classes; i++ )
+        if( save_manifold_parzen_parameters )
         {
-            for( int j=0; 
-                 j<(n_classes > 1 ? 
-                    class_datasets[i]->length() 
-                    : train_set->length()); 
-                 j++ )
+            updateManifoldParzenParameters();
+        
+            int input_j_index;
+            for( int i=0; i<n_classes; i++ )
             {
-                if( n_classes > 1 )
+                for( int j=0; 
+                     j<(n_classes > 1 ? 
+                        class_datasets[i]->length() 
+                        : train_set->length()); 
+                     j++ )
                 {
-                    class_datasets[i]->getExample(j,input_j,target,weight);
-                    computeManifoldParzenParameters( input_j, F, mu, 
-                                                     pre_sigma_noise, U, sm_svd,
-                                                     (int) target[0]);
-                }
-                else
-                {
-                    train_set->getExample(j,input_j,target,weight);
-                    computeManifoldParzenParameters( input_j, F, mu, 
-                                                     pre_sigma_noise, U, sm_svd );
-                }
-
-                
-                sigma_noise = pre_sigma_noise[0]*pre_sigma_noise[0] 
-                    + min_sigma_noise;
-                
-                substract(input,input_j,diff_neighbor_input); 
-                substract(diff_neighbor_input,mu,diff); 
+                    if( n_classes > 1 )
+                    {
+                        class_datasets[i]->getExample(j,input_j,target,weight);
+                        input_j_index = class_datasets[i]->indices[j];
+                    }
+                    else
+                    {
+                        train_set->getExample(j,input_j,target,weight);
+                        input_j_index = j;
+                    }
+        
+                    U << eigenvectors[input_j_index];
+                    sm_svd << eigenvalues(input_j_index);
+                    sigma_noise = sigma_noises[input_j_index];
+                    mu << mus(input_j_index);
+        
+                    substract(input,input_j,diff_neighbor_input); 
+                    substract(diff_neighbor_input,mu,diff); 
+                        
+                    mahal = -0.5*pownorm(diff)/sigma_noise;      
+                    norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
+                        pl_log(sigma_noise);
+        
+                    for(int k=0; k<n_components; k++)
+                    { 
+                        uk = U(k);
+                        dotp = dot(diff,uk);
+                        coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
+                        mahal -= dotp*dotp*0.5*coef;
+                        norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
+                    }
                     
-                mahal = -0.5*pownorm(diff)/sigma_noise;      
-                norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
-                    pl_log(sigma_noise);
-
-                for(int k=0; k<n_components; k++)
-                { 
-                    uk = U(k);
-                    dotp = dot(diff,uk);
-                    coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
-                    mahal -= dotp*dotp*0.5*coef;
-                    norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
+                    if( j==0 )
+                        log_p_x_g_y = norm_term + mahal;
+                    else
+                        log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
                 }
-                
-                if( j==0 )
-                    log_p_x_g_y = norm_term + mahal;
-                else
-                    log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
+        
+                test_votes[i] = log_p_x_g_y;
             }
-
-            test_votes[i] = log_p_x_g_y;
+        }
+        else
+        {
+        
+            for( int i=0; i<n_classes; i++ )
+            {
+                for( int j=0; 
+                     j<(n_classes > 1 ? 
+                        class_datasets[i]->length() 
+                        : train_set->length()); 
+                     j++ )
+                {
+                    if( n_classes > 1 )
+                    {
+                        class_datasets[i]->getExample(j,input_j,target,weight);
+                        computeManifoldParzenParameters( input_j, F, mu, 
+                                                         pre_sigma_noise, U, sm_svd,
+                                                         (int) target[0]);
+                    }
+                    else
+                    {
+                        train_set->getExample(j,input_j,target,weight);
+                        computeManifoldParzenParameters( input_j, F, mu, 
+                                                         pre_sigma_noise, U, sm_svd );
+                    }
+        
+                    
+                    sigma_noise = pre_sigma_noise[0]*pre_sigma_noise[0] 
+                        + min_sigma_noise;
+                    
+                    substract(input,input_j,diff_neighbor_input); 
+                    substract(diff_neighbor_input,mu,diff); 
+                        
+                    mahal = -0.5*pownorm(diff)/sigma_noise;      
+                    norm_term = - n/2.0 * Log2Pi - 0.5*(n-n_components)*
+                        pl_log(sigma_noise);
+        
+                    for(int k=0; k<n_components; k++)
+                    { 
+                        uk = U(k);
+                        dotp = dot(diff,uk);
+                        coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
+                        mahal -= dotp*dotp*0.5*coef;
+                        norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
+                    }
+                    
+                    if( j==0 )
+                        log_p_x_g_y = norm_term + mahal;
+                    else
+                        log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
+                }
+        
+                test_votes[i] = log_p_x_g_y;
+            }
         }
     }
-
     if( n_classes > 1 )
         output[0] = argmax(test_votes);
     else
@@ -1297,8 +1345,9 @@ void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const
                 costs[n_layers-1] = 0;
             else
                 costs[n_layers-1] = 1;
-            costs[n_layers] = - test_votes[target_class]
-                +pl_log(class_datasets[target_class]->length()); // Must take into account the 1/n normalization
+	    if( !use_test_centric_nlmp )
+	        costs[n_layers] = - test_votes[target_class]
+                    +pl_log(class_datasets[target_class]->length()); // Must take into account the 1/n normalization
         }
         else
         {

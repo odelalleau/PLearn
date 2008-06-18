@@ -127,6 +127,10 @@ public:
     //! Indication that the value of sigma noise should not be learned.
     bool do_not_learn_sigma_noise;
 
+    //! Indication that the Test-Centric NLMP variant should be used.
+    //! In this case, train_one_network_per_class must be true.
+    bool use_test_centric_nlmp;
+
     //#####  Public Learnt Options  ###########################################
 
     //! Number of layers
