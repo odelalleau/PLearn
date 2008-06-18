@@ -448,11 +448,18 @@ vector<string> HelpSystem::listClassParents(const string& classname)
     vector<string> parents;
     const TypeMapEntry* e= 
         &TypeFactory::instance().getTypeMapEntry(cl);
-    while(e->parent_class != cl)
+    bool known_parent= true;
+    while(known_parent && e->parent_class != cl)
     {
         cl= e->parent_class;
         parents.push_back(cl);
-        e= &TypeFactory::instance().getTypeMapEntry(cl);
+        if(TypeFactory::instance().isRegistered(cl))
+            e= &TypeFactory::instance().getTypeMapEntry(cl);
+        else
+        {
+            known_parent= false;
+            parents.push_back("!?!UNKNOWN_PARENT_CLASS!?!");
+        }
     }
     return parents;
 }
