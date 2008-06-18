@@ -88,12 +88,12 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
     int INFO = 1;
     if (compute_all)
     {
-        char* JOBZ;
+        char JOBZ;
         if (compute_vectors)
-            JOBZ = "V";
+            JOBZ = 'V';
         else
-            JOBZ = "N";
-        char* UPLO = "U";
+            JOBZ = 'N';
+        char UPLO = 'U';
         int N = in.length();
         real* A = in.data();
         int LDA = N;
@@ -103,10 +103,10 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
 
         // we now call the LAPACK Fortran function <ssyev>
 #ifdef USEFLOAT
-        ssyev_(JOBZ, UPLO, &N, A, &LDA, W, WORK, &LWORK, &INFO);
+        ssyev_(&JOBZ, &UPLO, &N, A, &LDA, W, WORK, &LWORK, &INFO);
 #endif
 #ifdef USEDOUBLE
-        dsyev_(JOBZ, UPLO, &N, A, &LDA, W, WORK, &LWORK, &INFO);
+        dsyev_(&JOBZ, &UPLO, &N, A, &LDA, W, WORK, &LWORK, &INFO);
 #endif
 
         if (INFO != 0)
@@ -134,13 +134,13 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
     }
     else
     {
-        char* JOBZ;
+        char JOBZ;
         if (compute_vectors)
-            JOBZ = "V";
+            JOBZ = 'V';
         else
-            JOBZ = "N";
-        char* RANGE = "I";
-        char* UPLO = "U";
+            JOBZ = 'N';
+        char RANGE = 'I';
+        char UPLO = 'U';
         int N = in.length();
         real* A = in.data();
         int LDA = N;
@@ -167,7 +167,7 @@ int eigen_SymmMat(Mat& in, Vec& e_value, Mat& e_vector, int& n_evalues_found,
         int* IFAIL = new int[N];
 
         // we now call the LAPACK Fortran function <ssyevx>
-        lapack_Xsyevx_(JOBZ, RANGE, UPLO, &N, A, &LDA, &VL, &VU, &IL, &IU, &ABSTOL, &M, W, Z, &LDZ, WORK, &LWORK, IWORK, IFAIL, &INFO);
+        lapack_Xsyevx_(&JOBZ, &RANGE, &UPLO, &N, A, &LDA, &VL, &VU, &IL, &IU, &ABSTOL, &M, W, Z, &LDZ, WORK, &LWORK, IWORK, IFAIL, &INFO);
 
         n_evalues_found = M;
         if (M != nb_eigen)
