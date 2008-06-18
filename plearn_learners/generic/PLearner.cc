@@ -1318,7 +1318,8 @@ Mat PLearner::computeInputOutputConfMat(VMat inputs, real probability) const
 //! Version of computeOutput that returns a result by value
 Vec PLearner::remote_computeOutput(const Vec& input) const
 {
-    tmp_output.resize(outputsize());
+    int os = outputsize();
+    tmp_output.resize(os >= 0 ? os : 0);
     computeOutput(input, tmp_output);
     return tmp_output;
 }
