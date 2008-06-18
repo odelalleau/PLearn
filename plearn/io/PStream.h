@@ -42,6 +42,7 @@
 #include <set>
 #include <sstream>
 #include <fstream>
+#include <limits>
 #include <plearn/base/byte_order.h>
 #include <plearn/base/pl_hash_fun.h>
 #include <plearn/base/plerror.h>
@@ -342,8 +343,8 @@ public:
         // Check if there was a conversion problem (sign or overflow)
 
         if (static_cast<I>(x) != y
-            || !(numeric_limits<J>::is_signed) 
-            && chkUnsigned<numeric_limits<I>::is_signed>::notOk(y))
+            || (!(numeric_limits<J>::is_signed) 
+                && chkUnsigned<numeric_limits<I>::is_signed>::notOk(y)))
         {
             std::stringstream error;
             error << "In PStream::readBinaryNumAs, overflow error: " << std::endl

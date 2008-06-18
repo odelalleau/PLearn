@@ -51,7 +51,7 @@
 #include <plearn/base/plerror.h>
 //#include "pl_math.h"
 #include <plearn/base/byte_order.h> //!< For endianswap.
-
+#include <cstring>
 namespace PLearn {
 using namespace std;
 

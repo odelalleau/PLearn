@@ -36,7 +36,7 @@
 #define pl_hash_fun_H
 
 #include "ms_hash_wrapper.h"
-#include <string>
+#include <cstring>
 
 namespace PLearn {
 
