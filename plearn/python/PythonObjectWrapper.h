@@ -116,7 +116,7 @@ I integerFromPyObject(PyObject* pyobj, bool print_traceback)
 // explicit here.
 #endif
         if (static_cast<long>(result) != x
-            || !(numeric_limits<I>::is_signed) && x<0)
+            || (!(numeric_limits<I>::is_signed) && x<0))
         {
             PLPythonConversionError("integerFromPyObject<I>", pyobj,
                                     print_traceback);
