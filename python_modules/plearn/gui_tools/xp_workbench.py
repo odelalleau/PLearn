@@ -314,8 +314,23 @@ class ExperimentWorkbench(HasTraits) :
 
     @staticmethod
     def expdir_name(expdir_root):
+        """Return an experiment directory from a root location."""
         return os.path.join(expdir_root,
                             datetime.now().strftime("expdir_%Y%m%d_%H%m%S"))
+
+
+    @staticmethod
+    def print_all_traits(root, out = sys.stdout, prefix=""):
+        """Recursively print out all traits in a key=value format.
+        Useful for generating metainfo files for experiments.
+        """
+        for (trait_name, trait_value) in root.get():
+            if trait_name in ["trait_added", "trait_modified"]:
+                continue
+            elif isinstance(trait_value, "HasTraits"):
+                print_all_traits(trait_value, out, trait_name+".")
+            else:
+                print prefix+trait_name+" = "+str(trait_value)
 
 
 #####  Top-Level Options  ###################################################
@@ -356,19 +371,6 @@ class TopLevelOptions(HasStrictTraits):
                    if t not in [ "expdir_root", "trait_added", "trait_modified" ] ]
         kwargs = { "show_labels":False, "layout":"tabbed" }
         return View(Group(*items, **kwargs))
-
-    @staticmethod
-    def print_all_traits(root, out = sys.stdout, prefix=""):
-        """Recursively print out all traits in a key=value format.
-        Useful for generating metainfo files for experiments.
-        """
-        for (trait_name, trait_value) in root.get():
-            if trait_name in ["trait_added", "trait_modified"]:
-                continue
-            elif isinstance(trait_value, "HasTraits"):
-                print_all_traits(trait_value, out, trait_name+".")
-            else:
-                print prefix+trait_name+" = "+str(trait_value)
     
 
 #####  Utilities  ###########################################################

@@ -43,7 +43,7 @@ import wx
 from   select import select
 
 from enthought.traits.api       import *
-from enthought.traits.ui.api    import CodeEditor, Group, Item, View
+from enthought.traits.ui.api    import CodeEditor, TextEditor, Group, Handler, Item, View
 from enthought.traits.ui.menu   import NoButtons
 
 
@@ -51,6 +51,23 @@ from enthought.traits.ui.menu   import NoButtons
 _raw_stdout = None
 _raw_stderr = None
 
+#####  Handler  #############################################################
+
+class LoggerHandler(Handler):
+
+    def object_data_changed(self, info):
+        """The purpose of this bit of trickery is to ensure that
+        the display does not scroll back to the first line when
+        data is added to the logger...
+        """
+        numlines = len(info.object.data.split("\n"))
+        assert len(info.ui._editors) == 1
+        editor = info.ui._editors[0]
+        editor.selected_line = numlines # Select the last line of text
+        editor.control.Refresh()
+
+
+#####  Logger Per Se  #######################################################
 
 class ConsoleLogger(HasTraits):
 
@@ -69,7 +86,19 @@ class ConsoleLogger(HasTraits):
     active_logger = None
 
     ## Default view
-    traits_view = View(Item('data~', editor=CodeEditor(foldable=False), show_label=False))
+    traits_view = View(Item('data~',
+                            editor=CodeEditor(foldable=False, search='top', auto_scroll=False,
+                                              mark_color=0xFFFFFF),
+                            #editor=TextEditor(multi_line=True),
+                            show_label=False),
+                       handler = LoggerHandler())
+
+    ## Unwrapped (non-autoflush) python stdout and stderr
+    orig_stdout = None
+    orig_stderr = None
+
+    def _data_changed(self):
+        editor = self.traits()['data'].get_editor()
 
     def activate_stdouterr_redirect(self, streams_to_watch={}):
         """Redirect standard output and error to be sent to the log pane
@@ -81,6 +110,11 @@ class ConsoleLogger(HasTraits):
                   "while it is already active for a different one"
         ConsoleLogger.active_logger = self
 
+        ## If redirection is already active, don't insist
+        global _raw_stdout, _raw_stderr
+        if _raw_stdout is not None or _raw_stderr is not None:
+            return
+
         ## Ensure that any pending writes are expelled before redirection
         ## (Python only)
         sys.stdout.flush()
@@ -91,7 +125,6 @@ class ConsoleLogger(HasTraits):
         ## display debugging messages.  They are called, respectively,
         ## raw_stdout and raw_stderr (Python file objects); make them
         ## global for ease of debugging.
-        global _raw_stdout, _raw_stderr
         if _raw_stdout is None:
             old_stdout_fd = os.dup(sys.stdout.fileno())
             _raw_stdout   = os.fdopen(old_stdout_fd, 'w')
@@ -140,6 +173,27 @@ class ConsoleLogger(HasTraits):
         listener.setDaemon(True)        # Allow quitting Python even if thread running
         self.is_active = True
         listener.start()
+
+        ## Ensure that all Python-level prints are auto-flushing
+        class AutoFlush(object):
+            def __init__(self, stream):
+                self.stream = stream
+
+            def write(self, text):
+                self.stream.write(text)
+                self.stream.flush()
+
+            def writelines(self, lines):
+                self.stream.writelines(lines)
+                self.stream.flush()
+
+            def flush(self):
+                self.stream.flush()
+
+        self.orig_stdout = sys.stdout
+        self.orig_stderr = sys.stderr
+        sys.stdout = AutoFlush(sys.stdout)
+        sys.stderr = AutoFlush(sys.stderr)
         
 
     def desactivate_stdout_err_redirect(self):
@@ -155,13 +209,17 @@ class ConsoleLogger(HasTraits):
             sys.stderr.flush()
             time.sleep(0.1)
             
-            if _raw_stdout is not None:
-                os.dup2(_raw_stdout.fileno(), sys.stdout.fileno())
-                _raw_stdout = None
+            if _raw_stdout is not None and self.orig_stdout is not None:
+                os.dup2(_raw_stdout.fileno(), self.orig_stdout.fileno())
+                sys.stdout       = self.orig_stdout
+                _raw_stdout      = None
+                self.orig_stdout = None
 
-            if _raw_stderr is not None:
-                os.dup2(_raw_stderr.fileno(), sys.stderr.fileno())
-                _raw_stderr = None
+            if _raw_stderr is not None and self.orig_stderr is not None:
+                os.dup2(_raw_stderr.fileno(), self.orig_stderr.fileno())
+                sys.stderr       = self.orig_stderr
+                _raw_stderr      = None
+                self.orig_stderr = None
 
             ConsoleLogger.active_logger = None
             self.is_active = False
