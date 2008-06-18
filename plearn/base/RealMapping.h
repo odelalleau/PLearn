@@ -140,7 +140,7 @@ class RealMapping: public Object
 public:
     typedef pair<RealRange, real> single_mapping_t;
     typedef TVec< single_mapping_t > ordered_mapping_t;
-    typedef map<RealRange, real> mapping_t;
+    typedef std::map<RealRange, real> mapping_t;
     typedef mapping_t::iterator iterator;
     typedef mapping_t::const_iterator const_iterator;
 
