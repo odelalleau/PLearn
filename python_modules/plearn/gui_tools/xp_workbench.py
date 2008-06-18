@@ -154,7 +154,8 @@ class WorkbenchHandler(Handler):
         experiment is currently running.  If so, pop a dialog to ask
         whether it's really OK to close the thing.
         """
-        workbench = info.ui.context['object']
+        #workbench = info.ui.context['object']
+        workbench = info.object
         if workbench.curworker is not None:
             msg = "An experiment is currently running.\n" \
                   "Do you really want to interrupt it and\n" \
@@ -187,14 +188,14 @@ class ExperimentWorkbench(HasTraits) :
 
     ## The main view
     traits_view  = View(
-        HSplit(Group(Item("script_params@", show_label=False, springy=True),
-                     spring, spring,
+        HSplit(Group(Group(Item("script_params@", show_label=False, springy=False)),
+                     #spring,
                      Group(Item("launch", springy=True, enabled_when="curworker is None"),
                            Item("cancel", springy=True, enabled_when="curworker is not None"),
                            show_labels=False, orientation="horizontal")),
                Group(Item("experiments@", dock="fixed", show_label=False, width=300),
                      springy=True)),
-        resizable=True,
+        resizable=True, #scrollable=True,
         height=0.75, width=0.75,
         buttons=NoButtons,
         handler=WorkbenchHandler() )
@@ -285,8 +286,28 @@ class ExperimentWorkbench(HasTraits) :
             if arg.startswith('-'):
                 continue
             if '=' in arg:
-                (k,v) = arg.split('=')
-                exec("params.%s = %s" % (k,v))
+                (k,v) = arg.split('=', 1)
+                v = v.replace("'", "\\'")
+
+                ## For compatibility between mixed plnamespace and traits,
+                ## if the first argument to a compound option does not
+                ## exist, skip it without complaining -- it is destined for
+                ## plnamespace, which have been processed before
+                if '.' in k:
+                    k_parts = k.split('.')
+                    try:
+                        getattr(params, k_parts[0])
+                    except AttributeError:
+                        continue
+                
+                if isinstance(eval("params.%s" % k), str):
+                    exec("params.%s = '%s'" % (k,v))
+                else:
+                    ## Potentially dangerous use of 'eval' with
+                    ## command-line arguments; expeditive solution for now,
+                    ## but may opt for more restricted/lenient parsing in
+                    ## the future, like we had for plargs.
+                    exec("params.%s = eval('%s')" % (k,v))
 
         return params
 
@@ -296,6 +317,59 @@ class ExperimentWorkbench(HasTraits) :
         return os.path.join(expdir_root,
                             datetime.now().strftime("expdir_%Y%m%d_%H%m%S"))
 
+
+#####  Top-Level Options  ###################################################
+
+class SingletonOptions(HasStrictTraits):
+    """Subclasses of this class are singletons, designed to provide an
+    approximate drop-in traits-based replacement to plnamespace.  If you
+    don't want or need the singleton behavior, simply have your options
+    classes inherit from HasTraits or HasStrictTraits.
+
+    Note: this class inherits from HasStrictTraits since it is intended to
+    mimic plnamespace as closely as possible to ease migration.  It should
+    be avoided for writing new code.
+    """
+    class __metaclass__(HasStrictTraits.__metaclass__):
+        __instances = {}
+        
+        def __call__(cls, *args, **kwargs):
+            klass_key = str(cls)
+            if klass_key not in SingletonOptions.__instances:
+                instance = type.__call__(cls, *args, **kwargs)
+                SingletonOptions.__instances[klass_key] = instance
+                return instance
+            else:
+                return SingletonOptions.__instances[klass_key]
+                
+
+class TopLevelOptions(HasStrictTraits):
+    """Utility class from which one can inherit for top-level options.
+    It provides a reasonable default traits_view implementation.
+    """
+    def trait_view(self, name=None, view_element=None):
+        if (name or view_element) != None:
+            return super(TopLevelOptions, self).trait_view( name=name,
+                                                            view_element=view_element )
+
+        items  = [ Item(t+"@") for t in self.trait_names()
+                   if t not in [ "expdir_root", "trait_added", "trait_modified" ] ]
+        kwargs = { "show_labels":False, "layout":"tabbed" }
+        return View(Group(*items, **kwargs))
+
+    @staticmethod
+    def print_all_traits(root, out = sys.stdout, prefix=""):
+        """Recursively print out all traits in a key=value format.
+        Useful for generating metainfo files for experiments.
+        """
+        for (trait_name, trait_value) in root.get():
+            if trait_name in ["trait_added", "trait_modified"]:
+                continue
+            elif isinstance(trait_value, "HasTraits"):
+                print_all_traits(trait_value, out, trait_name+".")
+            else:
+                print prefix+trait_name+" = "+str(trait_value)
+    
 
 #####  Utilities  ###########################################################
 
@@ -325,9 +399,9 @@ if __name__ == "__main__":
         weight_decay      = Trait(1e-8,  desc="weight decay to use for neural-net training")
 
     class MinorOpt(HasStrictTraits):
-        earlystop_fraction  = Trait(  0.0, Desc="fraction of training set to use for early stopping")
-        earlystop_check     = Trait(    1, Desc="check early-stopping criterion every N epochs")
-        earlystop_minstage  = Trait(    1, Desc="minimum optimization stage after which early-stopping can kick in")
+        earlystop_fraction  = Trait(  0.0, desc="fraction of training set to use for early stopping")
+        earlystop_check     = Trait(    1, desc="check early-stopping criterion every N epochs")
+        earlystop_minstage  = Trait(    1, desc="minimum optimization stage after which early-stopping can kick in")
 
     class AllOpt(HasStrictTraits):
         expdir_root = Delegate("GlobalOpt")
