@@ -324,13 +324,15 @@ class ExperimentWorkbench(HasTraits) :
         """Recursively print out all traits in a key=value format.
         Useful for generating metainfo files for experiments.
         """
-        for (trait_name, trait_value) in root.get():
-            if trait_name in ["trait_added", "trait_modified"]:
+        traits = root.get()
+        for trait_name in sorted(traits.keys()):
+            trait_value = traits[trait_name]
+            if trait_name in ["trait_added", "trait_modified"] or trait_name.startswith('_'):
                 continue
-            elif isinstance(trait_value, "HasTraits"):
-                print_all_traits(trait_value, out, trait_name+".")
+            elif isinstance(trait_value, HasTraits):
+                ExperimentWorkbench.print_all_traits(trait_value, out, trait_name+".")
             else:
-                print prefix+trait_name+" = "+str(trait_value)
+                print >>out, ("%-40s" % (prefix+trait_name)) + " = " + str(trait_value)
 
 
 #####  Top-Level Options  ###################################################
