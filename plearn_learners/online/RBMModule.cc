@@ -1425,7 +1425,23 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         int n_hidden_conf = hidden_layer->getConfigurationCount();
         p_xt_given_x.resize(n_visible_conf, visible->length());
         p_ht_given_x.resize(n_hidden_conf, visible->length());
+        Vec input(visible_layer->size);
+        Mat input_mat = input.toMat(1, input.length());
+        Mat grad_nll(hidden_layer->size, visible_layer->size);
+        Mat grad_cd(hidden_layer->size, visible_layer->size);
+        Mat grad_first_term(hidden_layer->size, visible_layer->size);
+        grad_nll.fill(0);
+        grad_cd.fill(0);
         for (int i = 0; i < visible->length(); i++) {
+            // Compute dF(visible)/dWij.
+            PLASSERT_MSG( visible->length() == 1, "The comparison can "
+                    "currently be made only with one input example at a "
+                    "time" );
+            computeHiddenActivations(*visible);
+            hidden_layer->computeExpectations();
+            transposeProduct(grad_first_term,
+                    hidden_layer->getExpectations(),
+                    *visible);
             // First compute P(h|x) for inputs x.
             computeAllHiddenProbabilities(*visible, p_ht_given_x);
             for (int t = 0; t < n_steps_compare; t++) {
@@ -1442,10 +1458,52 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 pout << "Best (P = " << p_xt_given_x.column(0)(best_idx, 0) <<
                     ") for x = " << (*visible)(0) << ":" <<
                     endl << tmp << endl;
+                // Compute E_{X_t}[dF(X_t)/dWij | x].
+                for (int k = 0; k < n_visible_conf; k++) {
+                    visible_layer->getConfiguration(k, input);
+                    computeHiddenActivations(input_mat);
+                    hidden_layer->computeExpectations();
+                    transposeProductScaleAcc(grad_cd,
+                                             hidden_layer->getExpectations(),
+                                             input_mat,
+                                             -p_xt_given_x(k, 0),
+                                             real(1));
+                    if (t == 0) {
+                        // Also compute the gradient for the NLL.
+                        transposeProductScaleAcc(
+                                grad_nll,
+                                hidden_layer->getExpectations(),
+                                input_mat,
+                                -all_p_visible[k],
+                                real(1));
+                    }
+                }
+                // Compute difference between CD and NLL updates.
+                Mat diff = grad_nll.copy();
+                diff -= grad_cd;
+                grad_cd += grad_first_term;
+                if (t == 0)
+                    grad_nll += grad_first_term;
+                pout << "Grad_CD_" << t+1 << "=" << endl << grad_cd << endl;
+                // Compute average relative difference.
+                Vec all_relative_diffs;
+                for (int p = 0; p < diff.length(); p++)
+                    for (int q = 0; q < diff.width(); q++) {
+                        if (!fast_exact_is_equal(grad_nll(p, q), 0))
+                            all_relative_diffs.append(abs(diff(p, q) / grad_nll(p, q)));
+                    }
+                pout << "Median relative difference: "
+                    << median(all_relative_diffs) << endl;
+                pout << "Mean relative difference: "
+                    << mean(all_relative_diffs) << endl;
+                grad_cd.fill(0);
                 // If it is not the last step, update P(h_t|x).
                 if (t < n_steps_compare - 1)
                     product(p_ht_given_x, all_hidden_cond_prob, p_xt_given_x);
             }
+            pout << "P(x)=" << endl << all_p_visible << endl;
+            pout << "Grad_NLL=" << endl << grad_nll << endl;
+            pout << "Grad first term=" << endl << grad_first_term << endl;
         }
     }
 
