@@ -1025,7 +1025,7 @@ def parallel_compile(files_to_compile, list_of_hosts, nice_values={},
                 hostname = wait_for_some_completion(outs, errs, ofiles_to_copy, files_to_check)
                 # This should not happen unless localhost is unable to compile
                 if not list_of_hosts:
-                    raise "Couldn't access ANY of the listed hosts for compilation"
+                    raise Exception("Couldn't access ANY of the listed hosts for compilation")
             else:
                 nice_value = nice_values.get(hostname, default_nice_value)
                 ccfile.launch_compilation(hostname, nice_value)
@@ -1594,7 +1594,7 @@ class FileInfo:
 
     def __init__(self,filepath):
         if not os.path.exists(filepath):
-            raise "Couldn't find file " + filepath
+            raise IOError("Couldn't find file " + filepath)
         if platform == 'win32':
             self.filepath = filepath
             if self.filepath[1] == ":":
@@ -1760,7 +1760,7 @@ class FileInfo:
         if not hasattr(self,"ccfiles_to_link"):
             #if not self.hasmain or not self.is_ccfile:
             if (not self.hasmain and not create_dll and not create_so and not create_pyso) or not self.is_ccfile:
-                raise "called get_ccfiles_to_link on a file that is not a .cc file or that does not contain a main()"
+                raise Exception("called get_ccfiles_to_link on a file that is not a .cc file or that does not contain a main()")
             self.ccfiles_to_link = []
             visited_hfiles = []
             self.collect_ccfiles_to_link(self.ccfiles_to_link,visited_hfiles)
