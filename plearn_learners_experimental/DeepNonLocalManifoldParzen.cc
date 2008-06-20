@@ -1,4 +1,4 @@
-// -*- C ++ -*-
+// -*- C++ -*-
 
 // DeepNonLocalManifoldParzen.cc
 //
@@ -286,7 +286,7 @@ void DeepNonLocalManifoldParzen::build_()
                     "train_one_network_per_class must be true for "
 		    "Test-Centric NLMP variant.\n");
 	  
-	if( use_test_centric_nlmp && n_classes > 1)
+	if( use_test_centric_nlmp && n_classes <= 1)
 	    PLERROR("DeepNonLocalManifoldParzen::build_() - \n"
                     "n_classes must be > 1 for "
 		    "Test-Centric NLMP variant.\n");
