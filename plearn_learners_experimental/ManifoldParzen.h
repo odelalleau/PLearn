@@ -69,7 +69,7 @@ public:
     bool learn_mu;
 
     //! Number of classes
-    int n_classes;
+    int nclasses;
 
 public:
     //#####  Public Member Functions  #########################################

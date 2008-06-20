@@ -1,4 +1,4 @@
-// -*- C ++ -*-
+// -*- C++ -*-
 
 // ManifoldParzen.cc
 //
@@ -59,7 +59,7 @@ ManifoldParzen::ManifoldParzen() :
     ncomponents( 1 ),
     global_lambda0( 0 ),
     learn_mu( false ),
-    n_classes( -1 )
+    nclasses( -1 )
 {
 }
 
@@ -86,11 +86,11 @@ void ManifoldParzen::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Additive minimum value for the variance in all directions.\n");
 
-    declareOption(ol, "n_classes", 
-                  &ManifoldParzen::n_classes,
+    declareOption(ol, "nclasses", 
+                  &ManifoldParzen::nclasses,
                   OptionBase::buildoption,
-                  "Number of classes. If n_classes = 1, learner will output\n"
-                  "log likelihood of a given input. If n_classes > 1,\n"
+                  "Number of classes. If nclasses = 1, learner will output\n"
+                  "log likelihood of a given input. If nclasses > 1,\n"
                   "classification will be performed.\n");
 
     declareOption(ol, "train_set", 
@@ -140,11 +140,11 @@ void ManifoldParzen::build_()
     {
         // Builds some variables using the training set
         setTrainingSet(train_set, false);
-
-        if( n_classes <= 0 )
+        
+        if( nclasses <= 0 )
             PLERROR("ManifoldParzen::build_() - \n"
-                    "n_classes should be > 0.\n");
-        test_votes.resize(n_classes);
+                    "nclasses should be > 0.\n");
+        test_votes.resize(nclasses);
 
         if( nneighbors <= 0 )
             PLERROR("ManifoldParzen::build_() - \n"
@@ -255,8 +255,8 @@ void ManifoldParzen::train()
 	// Find training nearest neighbors
 	TVec<int> nearest_neighbors_indices_row;
 	nearest_neighbors_indices.resize(train_set->length(), nneighbors);
-	if( n_classes > 1 )
-	  for(int k=0; k<n_classes; k++)
+	if( nclasses > 1 )
+	  for(int k=0; k<nclasses; k++)
 	    {
 	      for(int i=0; i<class_datasets[k]->length(); i++)
 		{
@@ -297,7 +297,7 @@ void ManifoldParzen::train()
             train_set->getExample( sample, input, target, weight );
 	    
             // Find nearest neighbors
-            if( n_classes > 1 )
+            if( nclasses > 1 )
 	      for( int k=0; k<nneighbors; k++ )
                 {
 		  class_datasets[(int)round(target[0])]->getExample(
@@ -349,7 +349,7 @@ void ManifoldParzen::train()
 void ManifoldParzen::computeOutput(const Vec& input, Vec& output) const
 {
 
-    test_votes.resize(n_classes);
+    test_votes.resize(nclasses);
     test_votes.clear();
 
     // Variables for probability computations
@@ -365,16 +365,21 @@ void ManifoldParzen::computeOutput(const Vec& input, Vec& output) const
     Vec target(targetsize());
     real weight;
 
+    U.resize( ncomponents, inputsize() );
+    sm_svd.resize( ncomponents );
+    mu.resize( inputsize() );
+
+
     int input_j_index;
-    for( int i=0; i<n_classes; i++ )
+    for( int i=0; i<nclasses; i++ )
       {
 	for( int j=0; 
-	     j<(n_classes > 1 ? 
+	     j<(nclasses > 1 ? 
 		class_datasets[i]->length() 
 		: train_set->length()); 
 	     j++ )
 	  {
-	    if( n_classes > 1 )
+	    if( nclasses > 1 )
 	      {
 		class_datasets[i]->getExample(j,input_j,target,weight);
 		input_j_index = class_datasets[i]->indices[j];
@@ -415,7 +420,7 @@ void ManifoldParzen::computeOutput(const Vec& input, Vec& output) const
 	test_votes[i] = log_p_x_g_y;
       }
 
-    if( n_classes > 1 )
+    if( nclasses > 1 )
         output[0] = argmax(test_votes);
     else
         output[0] = test_votes[0]-pl_log(train_set->length());
@@ -430,7 +435,7 @@ void ManifoldParzen::computeCostsFromOutputs(const Vec& input, const Vec& output
     costs.resize( getTestCostNames().length() );
     costs.fill( MISSING_VALUE );
 
-    if( n_classes > 1 )
+    if( nclasses > 1 )
       {
 	int target_class = ((int)round(target[0]));
 	if( ((int)round(output[0])) == target_class )
@@ -471,10 +476,10 @@ void ManifoldParzen::setTrainingSet(VMat training_set, bool call_forget)
     inherited::setTrainingSet(training_set,call_forget);
     
     // Separate classes
-    if( n_classes > 1 )
+    if( nclasses > 1 )
     {
-        class_datasets.resize(n_classes);
-        for(int k=0; k<n_classes; k++)
+        class_datasets.resize(nclasses);
+        for(int k=0; k<nclasses; k++)
         {
             class_datasets[k] = new ClassSubsetVMatrix();
             class_datasets[k]->classes.resize(1);
