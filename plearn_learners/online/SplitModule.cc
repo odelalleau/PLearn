@@ -59,12 +59,17 @@ PLEARN_IMPLEMENT_OBJECT(
     "can be seen as performed on each row of these matrices.\n"
     );
 
+/////////////////
+// SplitModule //
+/////////////////
 SplitModule::SplitModule()
     : down_port_name("down_port")
-/* ### Initialize all fields to their default value here */
 {
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void SplitModule::declareOptions(OptionList& ol)
 {
     declareOption(ol, "down_port_name", &SplitModule::down_port_name,
@@ -91,6 +96,9 @@ void SplitModule::declareOptions(OptionList& ol)
                     "output_size = sum(up_ports_size) but is set automatically.");
 }
 
+////////////
+// build_ //
+////////////
 void SplitModule::build_()
 {
     int n_up_ports = up_port_sizes.length();
