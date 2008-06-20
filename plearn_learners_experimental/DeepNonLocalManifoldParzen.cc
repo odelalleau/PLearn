@@ -550,7 +550,7 @@ void DeepNonLocalManifoldParzen::forget()
     /*!
       A typical forget() method should do the following:
       - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
+      with the 'seed' option
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
@@ -626,7 +626,7 @@ void DeepNonLocalManifoldParzen::train()
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         MODULE_LOG << "Training connection weights between layers " << i
-            << " and " << i+1 << endl;
+                   << " and " << i+1 << endl;
 
         int end_stage = training_schedule[i];
         int* this_stage = greedy_stages.subVec(i,1).data();
@@ -804,7 +804,7 @@ void DeepNonLocalManifoldParzen::greedyStep(
     computeRepresentation(input, previous_input_representation, 
                           index);
     connections[index]->fprop(previous_input_representation,
-                                     activations[index+1]);
+                              activations[index+1]);
     layers[index+1]->fprop(activations[index+1],
                            expectations[index+1]);
 
@@ -896,7 +896,7 @@ void DeepNonLocalManifoldParzen::greedyStep(
     {
         if( !fast_exact_is_equal( cd_decrease_ct , 0 ) )
             lr = cd_learning_rate/(1 + cd_decrease_ct 
-                                       * this_stage); 
+                                   * this_stage); 
         else
             lr = cd_learning_rate;
 
@@ -1005,7 +1005,7 @@ void DeepNonLocalManifoldParzen::fineTuningStep(
             coef = (1.0/(sm_svd[k]+sigma_noise) - 1.0/sigma_noise);
             multiplyAcc(inv_sigma_zj,uk,dotp*coef);
             mahal -= dotp*dotp*0.5*coef;
-            norm_term -= 0.5*pl_log(sm_svd[k]);
+            norm_term -= 0.5*pl_log(sm_svd[k]+sigma_noise);
             if(j==0)
                 tr_inv_Sigma += coef;
         }
@@ -1107,8 +1107,8 @@ void DeepNonLocalManifoldParzen::bprop_to_bases(const Mat& R, const Mat& M,
 
 
 void DeepNonLocalManifoldParzen::computeRepresentation(const Vec& input,
-                                                             Vec& representation,
-                                                             int layer) const
+                                                       Vec& representation,
+                                                       int layer) const
 {
     if(layer == 0)
     {
@@ -1301,7 +1301,7 @@ void DeepNonLocalManifoldParzen::computeOutput(const Vec& input, Vec& output) co
 }
 
 void DeepNonLocalManifoldParzen::computeCostsFromOutputs(const Vec& input, const Vec& output,
-                                           const Vec& target, Vec& costs) const
+                                                         const Vec& target, Vec& costs) const
 {
 
     //Assumes that computeOutput has been called

@@ -212,14 +212,14 @@ void ManifoldParzen::forget()
     /*!
       A typical forget() method should do the following:
       - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
+      with the 'seed' option
       - initialize the learner's parameters, using this random generator
       - stage = 0
     */
     inherited::forget();
 
     for(int i=0; i < eigenvectors.length(); i++)
-      eigenvectors[i].clear();
+        eigenvectors[i].clear();
     eigenvalues.clear();
     sigma_noises.clear();
     mus.clear();
@@ -249,43 +249,43 @@ void ManifoldParzen::train()
     train_stats->forget();
 
     if( stage < 1 && nstages > 0 )
-      {
+    {
 	stage = 1;
 	MODULE_LOG << "Finding the nearest neighbors" << endl;
 	// Find training nearest neighbors
 	TVec<int> nearest_neighbors_indices_row;
 	nearest_neighbors_indices.resize(train_set->length(), nneighbors);
 	if( nclasses > 1 )
-	  for(int k=0; k<nclasses; k++)
+            for(int k=0; k<nclasses; k++)
 	    {
-	      for(int i=0; i<class_datasets[k]->length(); i++)
+                for(int i=0; i<class_datasets[k]->length(); i++)
 		{
-		  class_datasets[k]->getExample(i,input,target,weight);
-		  nearest_neighbors_indices_row = nearest_neighbors_indices(
-									    class_datasets[k]->indices[i]);
+                    class_datasets[k]->getExample(i,input,target,weight);
+                    nearest_neighbors_indices_row = nearest_neighbors_indices(
+                        class_datasets[k]->indices[i]);
 		
-		  computeNearestNeighbors(
-					  new GetInputVMatrix((VMatrix *)class_datasets[k]),input,
-					  nearest_neighbors_indices_row,
-					  i);
+                    computeNearestNeighbors(
+                        new GetInputVMatrix((VMatrix *)class_datasets[k]),input,
+                        nearest_neighbors_indices_row,
+                        i);
 		}
 	    }
 	else
-	  for(int i=0; i<train_set->length(); i++)
+            for(int i=0; i<train_set->length(); i++)
 	    {
-	      train_set->getExample(i,input,target,weight);
-	      nearest_neighbors_indices_row = nearest_neighbors_indices(i);
-	      computeNearestNeighbors(
-				      train_set,input,
-				      nearest_neighbors_indices_row,
-				      i);
+                train_set->getExample(i,input,target,weight);
+                nearest_neighbors_indices_row = nearest_neighbors_indices(i);
+                computeNearestNeighbors(
+                    train_set,input,
+                    nearest_neighbors_indices_row,
+                    i);
 	    }
       
         train_costs.fill(MISSING_VALUE);
 
         if( report_progress )
-	  pb = new ProgressBar( "Training ManifoldParzen",
-				train_set->length() );
+            pb = new ProgressBar( "Training ManifoldParzen",
+                                  train_set->length() );
 
 	eigenvectors.resize( train_set->length() );
 	eigenvalues.resize( train_set->length(), ncomponents );
@@ -293,54 +293,54 @@ void ManifoldParzen::train()
 	mus.resize( train_set->length(), inputsize() );
 	mus.clear();
         for( sample = 0; sample < train_set->length() ; sample++ )
-	  { 
+        { 
             train_set->getExample( sample, input, target, weight );
 	    
             // Find nearest neighbors
             if( nclasses > 1 )
-	      for( int k=0; k<nneighbors; k++ )
+                for( int k=0; k<nneighbors; k++ )
                 {
-		  class_datasets[(int)round(target[0])]->getExample(
-								    nearest_neighbors_indices(sample,k),
-								    nearest_neighbor, target2, weight2);
+                    class_datasets[(int)round(target[0])]->getExample(
+                        nearest_neighbors_indices(sample,k),
+                        nearest_neighbor, target2, weight2);
 		  
-		  if(round(target[0]) != round(target2[0]))
-		    PLERROR("ManifoldParzen::train(): similar"
-			    " example is not from same class!");
-		  nearest_neighbors(k) << nearest_neighbor;
+                    if(round(target[0]) != round(target2[0]))
+                        PLERROR("ManifoldParzen::train(): similar"
+                                " example is not from same class!");
+                    nearest_neighbors(k) << nearest_neighbor;
                 }
             else
-	      for( int k=0; k<nneighbors; k++ )
+                for( int k=0; k<nneighbors; k++ )
                 {
-		  train_set->getExample(
-					nearest_neighbors_indices(sample,k),
-					nearest_neighbor, target2, weight2);
-		  nearest_neighbors(k) << nearest_neighbor;
+                    train_set->getExample(
+                        nearest_neighbors_indices(sample,k),
+                        nearest_neighbor, target2, weight2);
+                    nearest_neighbors(k) << nearest_neighbor;
                 }
 	    
 	    if( learn_mu )
-	      {
+            {
 		mu.resize(inputsize());
 		columnMean( nearest_neighbors, mu );
 		mus(sample) << mu;
 		mus(sample) -= input;
-	      }
+            }
 	    substractFromRows(nearest_neighbors, input, false); // Boolean is somehow unused???
 	    lapackSVD(nearest_neighbors, Ut, S, V,'A',1.5);
 	    eigenvectors[sample].resize(ncomponents,inputsize());
 	    for (int k=0;k<ncomponents;k++)
-	      {
-		eigenvalues(sample,k) = mypow(S[k],2);
+            {
+		eigenvalues(sample,k) = mypow(S[k],2)/nneighbors;
 		eigenvectors[sample](k) << Ut(k);
-	      }
+            }
 	    sigma_noises[sample] = 0; // HUGO: Seems stupid for now, but I keep 
 	                              //       this variable in case I want to use
 	                              //       the last eigen value or something...
 
             if( pb )
-	      pb->update( sample + 1 );
-	  }
-      }
+                pb->update( sample + 1 );
+        }
+    }
     
     train_stats->finalize();
     MODULE_LOG << "  train costs = " << train_stats->getMean() << endl;
@@ -372,23 +372,23 @@ void ManifoldParzen::computeOutput(const Vec& input, Vec& output) const
 
     int input_j_index;
     for( int i=0; i<nclasses; i++ )
-      {
+    {
 	for( int j=0; 
 	     j<(nclasses > 1 ? 
 		class_datasets[i]->length() 
 		: train_set->length()); 
 	     j++ )
-	  {
+        {
 	    if( nclasses > 1 )
-	      {
+            {
 		class_datasets[i]->getExample(j,input_j,target,weight);
 		input_j_index = class_datasets[i]->indices[j];
-	      }
+            }
 	    else
-	      {
+            {
 		train_set->getExample(j,input_j,target,weight);
 		input_j_index = j;
-	      }
+            }
 	    
 	    U << eigenvectors[input_j_index];
 	    sm_svd << eigenvalues(input_j_index);
@@ -400,25 +400,25 @@ void ManifoldParzen::computeOutput(const Vec& input, Vec& output) const
             
 	    mahal = -0.5*pownorm(diff)/sigma_noise;      
 	    norm_term = - n/2.0 * Log2Pi - 0.5*(n-ncomponents)*
-	      pl_log(sigma_noise);
+                pl_log(sigma_noise);
 	    
 	    for(int k=0; k<ncomponents; k++)
-	      { 
+            { 
 		uk = U(k);
 		dotp = dot(diff,uk);
 		coef = (1.0/(sm_svd[k]+global_lambda0) - 1.0/sigma_noise);
 		mahal -= dotp*dotp*0.5*coef;
 		norm_term -= 0.5*pl_log(sm_svd[k]+global_lambda0);
-	      }
+            }
 	    
 	    if( j==0 )
-	      log_p_x_g_y = norm_term + mahal;
+                log_p_x_g_y = norm_term + mahal;
 	    else
-	      log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
-	  }
+                log_p_x_g_y = logadd(norm_term + mahal, log_p_x_g_y);
+        }
         
 	test_votes[i] = log_p_x_g_y;
-      }
+    }
 
     if( nclasses > 1 )
         output[0] = argmax(test_votes);
@@ -427,7 +427,7 @@ void ManifoldParzen::computeOutput(const Vec& input, Vec& output) const
 }
 
 void ManifoldParzen::computeCostsFromOutputs(const Vec& input, const Vec& output,
-                                           const Vec& target, Vec& costs) const
+                                             const Vec& target, Vec& costs) const
 {
 
     //Assumes that computeOutput has been called
@@ -436,19 +436,19 @@ void ManifoldParzen::computeCostsFromOutputs(const Vec& input, const Vec& output
     costs.fill( MISSING_VALUE );
 
     if( nclasses > 1 )
-      {
+    {
 	int target_class = ((int)round(target[0]));
 	if( ((int)round(output[0])) == target_class )
-	  costs[0] = 0;
+            costs[0] = 0;
 	else
-	  costs[0] = 1;
+            costs[0] = 1;
 	costs[1] = - test_votes[target_class]
-	  +pl_log(class_datasets[target_class]->length()); // Must take into account the 1/n normalization
-      }
+            +pl_log(class_datasets[target_class]->length()); // Must take into account the 1/n normalization
+    }
     else
-      {
+    {
 	costs[1] = - output[0]; // 1/n normalization already accounted for
-      }
+    }
 }
 
 TVec<string> ManifoldParzen::getTestCostNames() const
