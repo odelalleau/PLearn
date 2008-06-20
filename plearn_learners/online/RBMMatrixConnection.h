@@ -79,7 +79,7 @@ public:
     string L2_decrease_type;
     int L2_n_updates;
 
-    //! Matrix containing unit-to-unit weights (output_size × input_size)
+    //! Matrix containing unit-to-unit weights (input_size × output_size)
     Mat weights;
 
     //! used for Gibbs chain methods only
