@@ -120,9 +120,58 @@ public:
     //! Number of symbols for each symbolic field of train_set
     TVec< TVec<int> > target_symbol_sizes;
 
+    //! Chooses what type of encoding to apply to an input sequence
+    //! Possibilities: "timeframe", "note_duration", "note_octav_duration", "raw_masked_supervised"
+    string encoding;
     
+    //! Input window size
+    int input_window_size;
+
+    // Phase greedy (unsupervised)
+    double input_noise_prob;
+    double input_reconstruction_lr;
+    double hidden_noise_prob;
+    double hidden_reconstruciton_lr;
+
+    // Phase noisy recurrent (supervised): uses input_noise_prob
+    double noisy_recurrent_lr;
+    double dynamic_gradient_scale_factor;
+    
+    // Phase recurrent no noise (supervised fine tuning)
+    double recurrent_lr;
+
     
     //#####  Not Options  #####################################################
+
+
+public:
+    //#####  Public static Functions  #########################################
+        
+    // Finding sequence end indexes
+    static TVec<int> locateSequenceBoundaries(VMat dataset, real end_of_sequence_symbol);
+
+    // encodings
+
+    static void encode_onehot_note_octav_duration(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows,
+                                                  bool use_silence=true, int octav_nbits=0, int duration_nbits=8);
+    
+    static void encode_onehot_timeframe(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows, 
+                                        bool use_silence=true);
+    
+
+    // input noise injection
+    void inject_zero_forcing_noise(Mat sequence, double noise_prob);
+
+    inline static Vec getInputWindow(Mat sequence, int startpos, int winsize)
+    { return sequence.subMatRows(startpos, winsize).toVec(); }
+          
+    // 
+    inline static void getNoteAndOctave(int midi_number, int& note, int& octave)
+    {
+        note = midi_number%12;
+        octave = midi_number/12;
+    }
+    
 
 
 public:
@@ -137,6 +186,8 @@ public:
     //! Returns the size of this learner's output, (which typically
     //! may depend on its inputsize(), targetsize() and set options).
     virtual int outputsize() const;
+
+    void setTrainingSet(VMat training_set, bool call_forget=true);
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
@@ -162,11 +213,16 @@ public:
     //! thus the test method).
     virtual TVec<std::string> getTestCostNames() const;
 
-    
+    //! Returns the number of sequences in the training_set
+    int nSequences() const
+    { return boundaries.length(); }
 
-//    //! Generate music in a folder
+    //! Returns the ith sequence
+    void getSequence(int i, Mat& seq) const;
+
+    //! Generate music in a folder
     void generate(int t, int n);
-//
+
 //    //! Generate a part of the data in a folder
 //    void gen();
 
@@ -243,31 +299,42 @@ protected:
     mutable Vec hidden_temporal_gradient;
         
     //! List of hidden layers values
-    mutable TVec< Vec > hidden_list;
-    mutable TVec< Vec > hidden_act_no_bias_list;
+    // mutable TVec< Vec > hidden_list;
+    mutable Mat hidden_list;
+    // mutable TVec< Vec > hidden_act_no_bias_list;
+    mutable Mat hidden_act_no_bias_list;
 
     //! List of second hidden layers values
-    mutable TVec< Vec > hidden2_list;
-    mutable TVec< Vec > hidden2_act_no_bias_list;
+    // mutable TVec< Vec > hidden2_list;
+    mutable Mat hidden2_list;
+    // mutable TVec< Vec > hidden2_act_no_bias_list;
+    mutable Mat hidden2_act_no_bias_list;
 
     //! List of target prediction values
-    mutable TVec< TVec< Vec > > target_prediction_list;
-    mutable TVec< TVec< Vec > > target_prediction_act_no_bias_list;
+    // mutable TVec< TVec< Vec > > target_prediction_list;
+    mutable TVec<Mat> target_prediction_list;
+    // mutable TVec< TVec< Vec > > target_prediction_act_no_bias_list;
+    mutable TVec<Mat> target_prediction_act_no_bias_list;
 
     //! List of inputs values
     mutable TVec< Vec > input_list;
 
     //! List of inputs values
-    mutable TVec< TVec< Vec > > targets_list;
+    // mutable TVec< TVec< Vec > > targets_list;
+    mutable TVec<Mat> targets_list;
 
     //! List of the nll of the input samples in a sequence
     mutable Mat nll_list;
 
     //! List of all targets' masks
-    mutable TVec< TVec< Vec > > masks_list;
+    // mutable TVec< TVec< Vec > > masks_list;
+    mutable TVec< Mat > masks_list;
 
     //! Contribution of dynamic weights to hidden layer activation
     mutable Vec dynamic_act_no_bias_contribution;
+
+    TVec<int> boundaries;
+
 
 protected:
     //#####  Protected Member Functions  ######################################
