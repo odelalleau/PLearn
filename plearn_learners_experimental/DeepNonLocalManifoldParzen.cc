@@ -77,7 +77,6 @@ DeepNonLocalManifoldParzen::DeepNonLocalManifoldParzen() :
 {
     // random_gen will be initialized in PLearner::build_()
     random_gen = new PRandom();
-    nstages = 0;
 }
 
 void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
@@ -150,8 +149,8 @@ void DeepNonLocalManifoldParzen::declareOptions(OptionList& ol)
     declareOption(ol, "k_neighbors", 
                   &DeepNonLocalManifoldParzen::k_neighbors,
                   OptionBase::buildoption,
-                  "Number of good nearest neighbors to attract and bad nearest "
-                  "neighbors to repel.\n");
+                  "Number of nearest neighbors to use to learn "
+                  "the manifold structure..\n");
 
     declareOption(ol, "n_components", 
                   &DeepNonLocalManifoldParzen::n_components,
@@ -512,6 +511,7 @@ void DeepNonLocalManifoldParzen::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(temp_ncomp, copies);
     deepCopyField(diff_neighbor_input, copies);
     deepCopyField(sm_svd, copies);
+    deepCopyField(S, copies);
     deepCopyField(uk, copies);
     deepCopyField(fk, copies);
     deepCopyField(uk2, copies);
