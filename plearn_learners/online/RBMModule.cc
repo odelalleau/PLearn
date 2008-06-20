@@ -78,12 +78,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "    a column matrix with entries = -log( sum_h P(x|h) w_h ) for each row x in the input\n"
     "    'visible' port. This quantity would be a valid - log P(x) if sum_h w_h = 1, under the\n"
     "    joint model P(x,h) = P(x|h) P(h), with P(h)=w_h.\n"
-    "   - 'median_reldiff_cd_nll': median relative difference between the CD\n"
-    "     update and the true NLL gradient. Here, the CD update is not\n"
-    "     stochastic, but is computed exactly as the truncation of the log-\n"
-    "     likelihood expansion. This port has size 'n_steps_compare': there\n"
-    "     is one value for each step of the CD.\n"
-    "    \n"
+    "\n"
     "An RBM also has other ports that exist only if some options are set.\n"
     "If reconstruction_connection is given, then it has\n"
     "  - 'visible_reconstruction_activations.state' : the deterministic reconstruction of the\n"
@@ -100,6 +95,20 @@ PLEARN_IMPLEMENT_OBJECT(
     "    of the visible units, only provided to avoid recomputing them in bpropUpdate.\n"
     "  - 'negative_phase_hidden_expectations.state' : the negative phase hidden units\n"
     "    expected values, only provided to avoid recomputing them in bpropUpdate.\n"
+    "The following ports are filled only in test mode when the option\n"
+    "'compare_true_gradient_with_cd' is true:\n"
+    "   - 'median_reldiff_cd_nll': median relative difference between the CD\n"
+    "     update and the true NLL gradient. Here, the CD update is not\n"
+    "     stochastic, but is computed exactly as the truncation of the log-\n"
+    "     likelihood expansion. This port has size 'n_steps_compare': there\n"
+    "     is one value for each step of the CD.\n"
+    "   - 'mean_diff_cd_nll': mean of the absolute difference between the CD\n"
+    "     and NLL gradient updates.\n"
+    "   - 'agreement_cd_nll': fraction of weights for which the CD and NLL\n"
+    "     gradient updates agree on the sign.\n"
+    "   - 'bound_cd_nll': bound on the difference between the CD and NLL\n"
+    "     gradient updates, as computed in (Bengio & Delalleau, 2008)\n"
+    "    \n"
     "\n"
     "The RBM can be trained by gradient descent (wrt to gradients provided on\n"
     "the 'hidden.state' port or on the 'reconstruction_error.state' port)\n"
@@ -382,6 +391,9 @@ void RBMModule::build_()
     // in "neg_log_phidden" for the set of h's in "hidden".
     addPortName("neg_log_pvisible_given_phidden");
     addPortName("median_reldiff_cd_nll");
+    addPortName("mean_diff_cd_nll");
+    addPortName("agreement_cd_nll");
+    addPortName("bound_cd_nll");
     if(reconstruction_connection)
     {
         addPortName("visible_reconstruction.state");
@@ -788,8 +800,9 @@ void RBMModule::computePartitionFunction()
             for (int i = 0; i < all_p_visible.length(); i++)
                 all_p_visible[i] =
                     exp(all_p_visible[i] - log_partition_function);
-            pout << "All P(x): " << all_p_visible << endl;
-            pout << "Sum_x P(x) = " << sum(all_p_visible) << endl;
+            //pout << "All P(x): " << all_p_visible << endl;
+            //pout << "Sum_x P(x) = " << sum(all_p_visible) << endl;
+            PLASSERT( is_equal(sum(all_p_visible), 1) );
         }
     }
     else
@@ -855,6 +868,12 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     bool neg_log_pvisible_given_phidden_is_output = neg_log_pvisible_given_phidden && neg_log_pvisible_given_phidden->isEmpty();
     Mat* median_reldiff_cd_nll = ports_value[getPortIndex("median_reldiff_cd_nll")];
     bool median_reldiff_cd_nll_is_output = median_reldiff_cd_nll && median_reldiff_cd_nll->isEmpty();
+    Mat* mean_diff_cd_nll = ports_value[getPortIndex("mean_diff_cd_nll")];
+    bool mean_diff_cd_nll_is_output = mean_diff_cd_nll && mean_diff_cd_nll->isEmpty();
+    Mat* agreement_cd_nll = ports_value[getPortIndex("agreement_cd_nll")];
+    bool agreement_cd_nll_is_output = agreement_cd_nll && agreement_cd_nll->isEmpty();
+    Mat* bound_cd_nll = ports_value[getPortIndex("bound_cd_nll")];
+    bool bound_cd_nll_is_output = bound_cd_nll && bound_cd_nll->isEmpty();
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     //bool hidden_bias_is_output = hidden_bias && hidden_bias->isEmpty();
     weights = ports_value[getPortIndex("weights")];
@@ -1447,6 +1466,43 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         grad_nll.fill(0);
         if (median_reldiff_cd_nll_is_output)
             median_reldiff_cd_nll->resize(visible->length(), n_steps_compare);
+        if (mean_diff_cd_nll_is_output)
+            mean_diff_cd_nll->resize(visible->length(), n_steps_compare);
+        if (agreement_cd_nll_is_output)
+            agreement_cd_nll->resize(visible->length(), n_steps_compare);
+        real bound_coeff = MISSING_VALUE;
+        if (bound_cd_nll_is_output) {
+            bound_cd_nll->resize(visible->length(), n_steps_compare);
+            // Compute main bound coefficient:
+            // (1 - N_x N_h sigm(-alpha)^d_x sigm(-beta)^d_h).
+            PP<RBMMatrixConnection> matrix_conn =
+                (RBMMatrixConnection*) get_pointer(connection);
+            PLCHECK(matrix_conn);
+            // Compute alpha.
+            real alpha = 0;
+            for (int j = 0; j < hidden_layer->size; j++) {
+                real alpha_j = abs(hidden_layer->bias[j]);
+                for (int i = 0; i < visible_layer->size; i++)
+                    alpha_j += abs(matrix_conn->weights(j, i));
+                if (alpha_j > alpha)
+                    alpha = alpha_j;
+            }
+            // Compute beta.
+            real beta = 0;
+            for (int i = 0; i < visible_layer->size; i++) {
+                real beta_i = abs(visible_layer->bias[i]);
+                for (int j = 0; j < hidden_layer->size; j++)
+                    beta_i += abs(matrix_conn->weights(j, i));
+                if (beta_i > beta)
+                    beta = beta_i;
+            }
+            bound_coeff = 1 -
+                (visible_layer->getConfigurationCount() *
+                    ipow(sigmoid(-alpha), visible_layer->size)) *
+                (hidden_layer->getConfigurationCount() *
+                    ipow(sigmoid(-beta), hidden_layer->size));
+            pout << "bound_coeff = " << bound_coeff << endl;
+        }
         for (int i = 0; i < visible->length(); i++) {
             // Compute dF(visible)/dWij.
             PLASSERT_MSG( visible->length() == 1, "The comparison can "
@@ -1505,38 +1561,74 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 Mat diff = grad_nll.copy();
                 diff -= grad_cd;
                 grad_cd += grad_first_term;
-                pout << "Grad_CD_" << t+1 << "=" << endl << grad_cd << endl;
-                pout << "Diff =" << endl << diff << endl;
+                //pout << "Grad_CD_" << t+1 << "=" << endl << grad_cd << endl;
+                //pout << "Diff =" << endl << diff << endl;
                 // Compute average relative difference.
                 Vec all_relative_diffs;
+                Vec all_abs_diffs;
                 for (int p = 0; p < diff.length(); p++)
                     for (int q = 0; q < diff.width(); q++) {
+                        all_abs_diffs.append(abs(diff(p, q)));
                         if (!fast_exact_is_equal(grad_nll(p, q), 0))
                             all_relative_diffs.append(abs(diff(p, q) / grad_nll(p, q)));
                     }
-                pout << "All relative diffs: " << all_relative_diffs << endl;
+                //pout << "All relative diffs: " << all_relative_diffs << endl;
                 (*median_reldiff_cd_nll)(i, t) = median(all_relative_diffs);
+                (*mean_diff_cd_nll)(i, t) = mean(all_abs_diffs);
+                // Compute the fraction of parameters for which both updates
+                // agree.
+                int agree = 0;
+                for (int p = 0; p < grad_cd.length(); p++)
+                    for (int q = 0; q < grad_cd.width(); q++) {
+                        if (grad_cd(p, q) *
+                                (grad_first_term(p, q) + grad_nll(p, q)) >= 0)
+                        {
+                            agree++;
+                        }
+                    }
+                if (agreement_cd_nll_is_output)
+                    (*agreement_cd_nll)(i, t) = agree / real(grad_cd.size());
+                if (bound_cd_nll_is_output)
+                    (*bound_cd_nll)(i, t) =
+                        visible_layer->getConfigurationCount() *
+                        ipow(bound_coeff, t + 1);
+                /*
                 pout << "Median relative difference: "
                     << median(all_relative_diffs) << endl;
                 pout << "Mean relative difference: "
                     << mean(all_relative_diffs) << endl;
+                    */
                 // If it is not the last step, update P(h_t|x).
                 if (t < n_steps_compare - 1)
                     product(p_ht_given_x, all_hidden_cond_prob, p_xt_given_x);
             }
             //pout << "P(x)=" << endl << all_p_visible << endl;
             grad_nll += grad_first_term;
-            pout << "Grad_NLL=" << endl << grad_nll << endl;
-            pout << "Grad first term=" << endl << grad_first_term << endl;
+            //pout << "Grad_NLL=" << endl << grad_nll << endl;
+            //pout << "Grad first term=" << endl << grad_first_term << endl;
         }
     }
 
+    // Fill ports that are skipped during training with missing values.
     if (median_reldiff_cd_nll_is_output && median_reldiff_cd_nll->isEmpty()) {
-        // We still need to compute 'median_reldiff_cd_nll'. This is not done
-        // during training, in order to save time.
         PLASSERT( during_training );
         median_reldiff_cd_nll->resize(visible->length(), n_steps_compare);
         median_reldiff_cd_nll->fill(MISSING_VALUE);
+    }
+    if (mean_diff_cd_nll_is_output && mean_diff_cd_nll->isEmpty()) {
+        PLASSERT( during_training );
+        mean_diff_cd_nll->resize(visible->length(), n_steps_compare);
+        mean_diff_cd_nll->fill(MISSING_VALUE);
+    }
+    if (agreement_cd_nll_is_output && agreement_cd_nll->isEmpty()) {
+        PLASSERT( during_training );
+        agreement_cd_nll->resize(visible->length(), n_steps_compare);
+        agreement_cd_nll->fill(MISSING_VALUE);
+    }
+    if (bound_cd_nll_is_output && bound_cd_nll->isEmpty()) {
+        PLASSERT( during_training );
+        bound_cd_nll->resize(visible->length(), n_steps_compare);
+        bound_cd_nll->fill(MISSING_VALUE);
     }
 
     // UGLY HACK TO DEAL WITH THE PROBLEM THAT XXX.state MAY NOT BE NEEDED
