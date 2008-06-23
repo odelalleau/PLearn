@@ -108,6 +108,11 @@ PLEARN_IMPLEMENT_OBJECT(
     "     gradient updates agree on the sign.\n"
     "   - 'bound_cd_nll': bound on the difference between the CD and NLL\n"
     "     gradient updates, as computed in (Bengio & Delalleau, 2008)\n"
+    "   - 'weights_stats': first element is the median of the absolute value\n"
+    "     of all weights and biases, second element is the mean, third\n"
+    "     element is the maximum sum of weights and biases (in absolute\n"
+    "     values) over columns of the weight matrix, and third element is\n"
+    "     the same over rows.\n"
     "    \n"
     "\n"
     "The RBM can be trained by gradient descent (wrt to gradients provided on\n"
@@ -394,6 +399,7 @@ void RBMModule::build_()
     addPortName("mean_diff_cd_nll");
     addPortName("agreement_cd_nll");
     addPortName("bound_cd_nll");
+    addPortName("weights_stats");
     if(reconstruction_connection)
     {
         addPortName("visible_reconstruction.state");
@@ -874,6 +880,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     bool agreement_cd_nll_is_output = agreement_cd_nll && agreement_cd_nll->isEmpty();
     Mat* bound_cd_nll = ports_value[getPortIndex("bound_cd_nll")];
     bool bound_cd_nll_is_output = bound_cd_nll && bound_cd_nll->isEmpty();
+    Mat* weights_stats = ports_value[getPortIndex("weights_stats")];
+    bool weights_stats_is_output = weights_stats && weights_stats->isEmpty();
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     //bool hidden_bias_is_output = hidden_bias && hidden_bias->isEmpty();
     weights = ports_value[getPortIndex("weights")];
@@ -1471,19 +1479,27 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         if (agreement_cd_nll_is_output)
             agreement_cd_nll->resize(visible->length(), n_steps_compare);
         real bound_coeff = MISSING_VALUE;
-        if (bound_cd_nll_is_output) {
-            bound_cd_nll->resize(visible->length(), n_steps_compare);
+        if (bound_cd_nll_is_output || weights_stats_is_output) {
+            if (bound_cd_nll_is_output)
+                bound_cd_nll->resize(visible->length(), n_steps_compare);
+            if (weights_stats_is_output)
+                weights_stats->resize(visible->length(), 4);
             // Compute main bound coefficient:
             // (1 - N_x N_h sigm(-alpha)^d_x sigm(-beta)^d_h).
             PP<RBMMatrixConnection> matrix_conn =
                 (RBMMatrixConnection*) get_pointer(connection);
             PLCHECK(matrix_conn);
+            Vec all_abs_weights_and_biases;
             // Compute alpha.
             real alpha = 0;
             for (int j = 0; j < hidden_layer->size; j++) {
                 real alpha_j = abs(hidden_layer->bias[j]);
-                for (int i = 0; i < visible_layer->size; i++)
-                    alpha_j += abs(matrix_conn->weights(j, i));
+                all_abs_weights_and_biases.append(alpha_j);
+                for (int i = 0; i < visible_layer->size; i++) {
+                    real abs_w_ij = abs(matrix_conn->weights(j, i));
+                    alpha_j += abs_w_ij;
+                    all_abs_weights_and_biases.append(abs_w_ij);
+                }
                 if (alpha_j > alpha)
                     alpha = alpha_j;
             }
@@ -1491,6 +1507,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             real beta = 0;
             for (int i = 0; i < visible_layer->size; i++) {
                 real beta_i = abs(visible_layer->bias[i]);
+                all_abs_weights_and_biases.append(beta_i);
                 for (int j = 0; j < hidden_layer->size; j++)
                     beta_i += abs(matrix_conn->weights(j, i));
                 if (beta_i > beta)
@@ -1501,7 +1518,17 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     ipow(sigmoid(-alpha), visible_layer->size)) *
                 (hidden_layer->getConfigurationCount() *
                     ipow(sigmoid(-beta), hidden_layer->size));
-            pout << "bound_coeff = " << bound_coeff << endl;
+            //pout << "bound_coeff = " << bound_coeff << endl;
+            if (weights_stats_is_output) {
+                real med_weight = median(all_abs_weights_and_biases);
+                real mean_weight = mean(all_abs_weights_and_biases);
+                for (int i = 0; i < visible->length(); i++) {
+                    (*weights_stats)(i, 0) = med_weight;
+                    (*weights_stats)(i, 1) = mean_weight;
+                    (*weights_stats)(i, 2) = alpha;
+                    (*weights_stats)(i, 3) = beta;
+                }
+            }
         }
         for (int i = 0; i < visible->length(); i++) {
             // Compute dF(visible)/dWij.
@@ -1629,6 +1656,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         PLASSERT( during_training );
         bound_cd_nll->resize(visible->length(), n_steps_compare);
         bound_cd_nll->fill(MISSING_VALUE);
+    }
+    if (weights_stats_is_output && weights_stats->isEmpty()) {
+        PLASSERT( during_training );
+        weights_stats->resize(visible->length(), 4);
+        weights_stats->fill(MISSING_VALUE);
     }
 
     // UGLY HACK TO DEAL WITH THE PROBLEM THAT XXX.state MAY NOT BE NEEDED
