@@ -46,7 +46,6 @@ from enthought.traits.ui.menu      import NoButtons
 from enthought.pyface.api          import confirm, YES
 
 from console_logger    import ConsoleLogger
-from mpl_figure_editor import TraitedFigure
 
 
 #####  ExperimentContext  ###################################################
@@ -58,33 +57,73 @@ class ExperimentContext(HasTraits):
     ## Complete path to experiment directory
     expdir = Directory
 
-    ## The console logger
-    console_logger = ConsoleLogger
+    ## Whether we are using a GUI interface or not
+    gui = false
 
-    
+    ## Copy of experiment parameters
+    script_params = Instance(HasTraits, ())
+
+    ## Function to call to run experiment
+    expfunc = Function
+
+    ## The console logger (default value is None)
+    console_logger = Instance(ConsoleLogger)
 
     ## All tabs
-    _all_tabs       = List(HasTraits, desc="Set of tabs associated with experiment",
-                           editor=ListEditor(use_notebook=True,
-                                             deletable=False,
-                                             dock_style="tab",
-                                             page_name=".title"))
-    
-    @property
-    def _display_expdir(self):
-        """Shortened version of expdir suitable for display."""
-        return os.path.basename(self.expdir)
+    _all_tabs = List(HasTraits, desc="Set of tabs associated with experiment",
+                     editor=ListEditor(use_notebook=True,
+                                       deletable=False,
+                                       dock_style="tab",
+                                       page_name=".title"))
 
-    def Figure(self, title="Figure"):
+    def run_experiment(self):
+        """Run the current expfunc with current script_params."""
+        self.expfunc(self.script_params, self)
+
+
+    def figure(self, title="Figure"):
         """Return a new Matplotlib figure and add it to the notebook.
 
         Note that you must paint on this figure using the Matplotlib OO
         API, not pylab.
         """
-        f = TraitedFigure()
-        f.title = title
-        self._all_tabs.append(f)
-        return f.figure
+        if self.gui:
+            ## Late import to allow backend to be chosen
+            from mpl_figure_editor import TraitedFigure
+            f = TraitedFigure()
+            f.title = title
+            f.figure.__traited_figure = f
+            return f.figure
+        else:
+            ## Late import to allow backend to be chosen
+            import pylab
+            return pylab.figure()
+
+
+    def show(self, fig):
+        """Take a figure returned by Figure() and show it on screen.
+
+        Depending on whether we are under a GUI or not, the behavior
+        changes.
+        """
+        if self.gui:
+            self._all_tabs.append(fig.__traited_figure)
+        else:
+            ## Late import to allow backend to be chosen
+            import pylab
+            pylab.show()
+
+    @property
+    def _display_expdir(self):
+        """Shortened version of expdir suitable for display."""
+        return os.path.basename(self.expdir)
+
+    def _console_logger_changed(self, old, new):
+        """Keep the logger in the list of tabs."""
+        if old is not None and old in self._all_tabs:
+            self._all_tabs.remove(old)
+        self._all_tabs.append(new)
+    
     
     ## Default view
     traits_view = View(Item('_all_tabs@', show_label=False))
@@ -106,16 +145,16 @@ class _WorkerThread(threading.Thread):
     http://sebulba.wikispaces.com/recipe+thread2 for details of how this is
     done.  However it does not seem to work very well for now...
     """
-    def __init__(self, func, params, context, wkbench):
+    def __init__(self, xp_context, wkbench):
         def work():
             ## Call user-defined work function, and before quitting
             ## notify that we are done
-            func(params, context)
+            xp_context.run_experiment()
             wkbench.curworker = None
 
         super(_WorkerThread,self).__init__(target=work)
         self.setDaemon(True)     # Allow quitting Python even if thread still running
-        self.context = context
+        self.xp_context = xp_context
 
     def _get_my_tid(self):
         """determines this (self's) thread id"""
@@ -182,6 +221,9 @@ class ExperimentWorkbench(HasTraits) :
     expfunc   = Function(desc="Function to run when experiment is running")
     curworker = Instance(threading.Thread, desc="Worker thread, if any is running")
 
+    ## Whether we are running under a gui
+    gui = false
+
     ## Active traits
     launch = Button("Launch Experiment")
     cancel = Button("Cancel")
@@ -202,14 +244,22 @@ class ExperimentWorkbench(HasTraits) :
 
     ## Experiment management
     def _launch_fired(self):
-        expdir  = self.expdir_name(self.script_params.expdir_root)
-        logger  = ConsoleLogger()
-        context = ExperimentContext(expdir = expdir,
-                                    console_logger = logger,
-                                    _all_tabs = [ logger ])
-        self.experiments.append(context)
-        self.curworker = _WorkerThread(self.expfunc, self.script_params, context, self)
+        """Called when the 'launch' button is clicked."""
+        context = self._new_xp_context()
+        context.console_logger = ConsoleLogger()
+        self.curworker = _WorkerThread(context, self)
         self.curworker.start()
+
+    def _new_xp_context(self):
+        """Initialize an experiment context
+        """
+        expdir  = self.expdir_name(self.script_params.expdir_root)
+        context = ExperimentContext(expdir = expdir,
+                                    gui = self.gui,
+                                    script_params = self.script_params,
+                                    expfunc = self.expfunc)
+        self.experiments.append(context)
+        return context
 
     def _cancel_fired(self):
         if self.curworker is not None:
@@ -220,14 +270,14 @@ class ExperimentWorkbench(HasTraits) :
     def _curworker_changed(self, old, new):
         ## If curworker had an active console logger, disable it
         if old is not None:
-            context = old.context
+            context = old.xp_context
             logger  = context.console_logger
             if logger is not None:
                 logger.desactivate_stdout_err_redirect()
 
         ## And redirect output to the new logger...
         if new is not None:
-            context = new.context
+            context = new.xp_context
             logger = context.console_logger
             if logger is not None:
                 logger.activate_stdouterr_redirect()
@@ -265,13 +315,18 @@ class ExperimentWorkbench(HasTraits) :
                 gui = False
             else:
                 gui = True
+        self.gui = gui
 
         ## Bind the command-line arguments to the parameters
         self.script_params = self.bind(params, sys.argv)
         self.expfunc = func
 
         ## Run the thing
-        self.configure_traits()
+        if self.gui:
+            self.configure_traits()
+        else:
+            context = self._new_xp_context()
+            context.run_experiment()
 
 
     @staticmethod
@@ -424,10 +479,11 @@ if __name__ == "__main__":
 
         from numpy import sin, cos, linspace, pi
         print "Drawing a figure..."
-        f = context.Figure()
+        f = context.figure()
         axes = f.add_subplot(111)
         t = linspace(0, 2*pi, 200)
         axes.plot(sin(t)*(1+0.5*cos(11*t)), cos(t)*(1+0.5*cos(11*t)))
+        context.show(f)
 
         print "Sleeping during a long computation..."
         sys.stdout.flush()
