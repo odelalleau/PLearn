@@ -284,14 +284,17 @@ options_choices = [
 
 pyver = sys.version.split()[0][0:3]
 pyoption = 'python%s' % pyver.replace('.', '')
-#verify/set optionargs for python and numpy
+
+# Verify/set optionargs for python and numpy
 python_choices= [x for x in options_choices if 'autopython' in x][0]
-if [x for x in python_choices if x in optionargs]==[]:
+if [x for x in python_choices if x in optionargs]==[] and not domain_name.endswith('.apstat.com'):
     optionargs.append('autopython')
+
 numpy_choices= [x for x in options_choices if 'numpy' in x][0]
 if [x for x in numpy_choices if x in optionargs]==[]:
     optionargs.append('numpy')
-#auto-detected python version, if needed
+
+# Auto-detected python version, if needed
 if 'autopython' in optionargs:
     optionargs.remove('autopython')
     optionargs += [ pyoption ]
@@ -300,7 +303,15 @@ if not 'nopython' in optionargs:
     # First find which version of python is installed.
     python_includedirs=[]
     numpy_includedirs = []
-    if domain_name.endswith('iro.umontreal.ca'):
+
+    if domain_name.endswith('apstat.com'):
+        python_version = '2.4'
+        optionargs += [ 'python%s' % python_version.replace('.', '') ]
+        python_lib_root = '/usr/lib'
+        numpy_site_packages = '-L/usr/lib/python' + python_version + '/site-packages/numarray'
+        python_includedirs = [ '/usr/include/python' + python_version]
+        numpy_includedirs = python_includedirs
+    elif domain_name.endswith('iro.umontreal.ca'):
         optionargs += [ pyoption ]
         python_version = pyver
         python_lib_root = '/usr/lib'
