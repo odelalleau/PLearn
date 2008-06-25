@@ -105,7 +105,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "   - 'mean_diff_cd_nll': mean of the absolute difference between the CD\n"
     "     and NLL gradient updates.\n"
     "   - 'agreement_cd_nll': fraction of weights for which the CD and NLL\n"
-    "     gradient updates agree on the sign.\n"
+    "     gradient updates agree on the sign, followed by the fraction of\n"
+    "     weights for which the CD update has same sign as the difference\n"
+    "     between the NLL gradient and the CD update.\n"
     "   - 'bound_cd_nll': bound on the difference between the CD and NLL\n"
     "     gradient updates, as computed in (Bengio & Delalleau, 2008)\n"
     "   - 'weights_stats': first element is the median of the absolute value\n"
@@ -1477,7 +1479,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         if (mean_diff_cd_nll_is_output)
             mean_diff_cd_nll->resize(visible->length(), n_steps_compare);
         if (agreement_cd_nll_is_output)
-            agreement_cd_nll->resize(visible->length(), n_steps_compare);
+            agreement_cd_nll->resize(visible->length(), 2 * n_steps_compare);
         real bound_coeff = MISSING_VALUE;
         if (bound_cd_nll_is_output || weights_stats_is_output) {
             if (bound_cd_nll_is_output)
@@ -1605,16 +1607,22 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 // Compute the fraction of parameters for which both updates
                 // agree.
                 int agree = 0;
+                int agree2 = 0;
                 for (int p = 0; p < grad_cd.length(); p++)
                     for (int q = 0; q < grad_cd.width(); q++) {
                         if (grad_cd(p, q) *
-                                (grad_first_term(p, q) + grad_nll(p, q)) >= 0)
+                                (grad_first_term(p, q) + grad_nll(p, q)) > 0)
                         {
                             agree++;
                         }
+                        if (grad_cd(p, q) * diff(p, q) > 0)
+                            agree2++;
                     }
-                if (agreement_cd_nll_is_output)
+                if (agreement_cd_nll_is_output) {
                     (*agreement_cd_nll)(i, t) = agree / real(grad_cd.size());
+                    (*agreement_cd_nll)(i, t + n_steps_compare) =
+                        agree2 / real(grad_cd.size());
+                }
                 if (bound_cd_nll_is_output)
                     (*bound_cd_nll)(i, t) =
                         visible_layer->getConfigurationCount() *
@@ -1649,7 +1657,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     }
     if (agreement_cd_nll_is_output && agreement_cd_nll->isEmpty()) {
         PLASSERT( during_training );
-        agreement_cd_nll->resize(visible->length(), n_steps_compare);
+        agreement_cd_nll->resize(visible->length(), 2 * n_steps_compare);
         agreement_cd_nll->fill(MISSING_VALUE);
     }
     if (bound_cd_nll_is_output && bound_cd_nll->isEmpty()) {
