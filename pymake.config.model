@@ -365,7 +365,7 @@ if not 'nopython' in optionargs:
         
     python_includedirs= numpy_includedirs
 
-    if python_version != pyver:
+    if python_version != pyver and not domain_name.endswith('apstat.com'):
         print '*** WARNING: python version mismatch:'
         print '\tcompiling for python'+python_version+' using python'+pyver
 
