@@ -861,20 +861,19 @@ void DeepBeliefNet::train()
         ? train_stats_window
         : train_set->length();
 
-    if (stage == 0) {
-        // Training set-dependent initialization.
-        minibatch_size = batch_size > 0 ? batch_size : train_set->length();
-        for (int i = 0 ; i < n_layers; i++) {
-            activations_gradients[i].resize(minibatch_size, layers[i]->size);
-            expectations_gradients[i].resize(minibatch_size, layers[i]->size);
+    // Training set-dependent initialization.
+    minibatch_size = batch_size > 0 ? batch_size : train_set->length();
+    for (int i = 0 ; i < n_layers; i++)
+    {
+        activations_gradients[i].resize(minibatch_size, layers[i]->size);
+        expectations_gradients[i].resize(minibatch_size, layers[i]->size);
 
-            if (background_gibbs_update_ratio>0 && i<n_layers-1)
-                gibbs_down_state[i].resize(minibatch_size, layers[i]->size);
-        }
-        if (final_cost)
-            final_cost_gradients.resize(minibatch_size, final_cost->input_size);
-        optimized_costs.resize(minibatch_size);
+        if (background_gibbs_update_ratio>0 && i<n_layers-1)
+            gibbs_down_state[i].resize(minibatch_size, layers[i]->size);
     }
+    if (final_cost)
+        final_cost_gradients.resize(minibatch_size, final_cost->input_size);
+    optimized_costs.resize(minibatch_size);
 
     Vec input( inputsize() );
     Vec target( targetsize() );
