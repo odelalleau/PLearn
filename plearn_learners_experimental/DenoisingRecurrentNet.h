@@ -152,12 +152,18 @@ public:
 
     // encodings
 
+    //! encodes sequence according to specified encoding option
+    void encodeSequence(Mat sequence, Mat& encoded_seq);
+
     static void encode_onehot_note_octav_duration(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows,
                                                   bool use_silence=true, int octav_nbits=0, int duration_nbits=8);
     
-    static void encode_onehot_timeframe(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows, 
-                                        bool use_silence=true);
-    
+    static void encode_onehot_timeframe(Mat sequence, Mat& encoded_sequence, 
+                                        int prepend_zero_rows, bool use_silence=true);    
+
+    static int duration_to_number_of_timeframes(int duration);
+
+
 
     // input noise injection
     void inject_zero_forcing_noise(Mat sequence, double noise_prob);
@@ -350,6 +356,16 @@ private:
 
     //! This does the actual building.
     void build_();
+
+    //! does encoding if needed and populates the list.
+    void encodeSequenceAndPopulateLists(Mat seq);
+
+    //! encodes seq, then populates: inputslist, targets_list, masks_list
+    void encodeAndCreateSupervisedSequence(Mat seq);
+
+    //! For the (backward testing) raw_masked_supervised case. Populates: input_list, targets_list, masks_list
+    void splitRawMaskedSupervisedSequence(Mat seq);
+
 
 private:
     //#####  Private Data Members  ############################################
