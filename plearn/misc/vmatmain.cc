@@ -165,6 +165,12 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
                     out << "Elements at " << i << ',' << j << " differ by "
                         << v1[j] - v2[j] << endl;
                 ++ndiff;
+            } else if (m1->getValString(j, v1[j]) != m2->getValString(j, v2[j])) {
+                if (verbose)
+                    out << "Elements at " << i << ',' << j << " differ: "
+                        << "'" << m1->getValString(j, v1[j]) << "' != "
+                        << "'" << m2->getValString(j, v2[j]) << "'" << endl;
+                ++ndiff;
             }
         }
     }
