@@ -336,6 +336,9 @@ protected:
     TVec<int> trainset_boundaries;
     TVec<int> testset_boundaries;
 
+    Mat seq; // contains the current train or test sequence
+    Mat encoded_seq; // contains encoded version of current train or test sequence
+
 protected:
     //#####  Protected Member Functions  ######################################
 
