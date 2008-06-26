@@ -504,10 +504,6 @@ public:
             *it = val;
     }
 
-    //! same as fill(f)
-    inline void operator=(const T& f) const
-    { fill(f); }
-
     inline void clear() const
     { if(isNotEmpty()) clear_n(data(),length()); }
 
