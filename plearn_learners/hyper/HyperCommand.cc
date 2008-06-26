@@ -79,6 +79,28 @@ void HyperCommand::declareOptions(OptionList& ol)
         " The verbosity level. Default to 0.");
 }
 
+void HyperCommand::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this is different from
+    // declareOptions().
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "forget", &HyperCommand::forget,
+        (BodyDoc("Resets the command's internal state as if freshly constructed")));
+
+    declareMethod(
+        rmm, "optimize", &HyperCommand::optimize,
+        (BodyDoc("Executes the command, returning the resulting costvec of its optimization\n"
+                 "(or an empty vec if it didn't do any testng)."),
+         RetDoc ("Cost vectors arising from optimization")));
+
+    declareMethod(
+        rmm, "getResultNames", &HyperCommand::getResultNames,
+        (BodyDoc("Returns the names of the results returned by the optimize() method"),
+         RetDoc ("Vector of strings containing the result names")));
+}
+
 void HyperCommand::build_()
 {
     // ### This method should do the real building of the object,

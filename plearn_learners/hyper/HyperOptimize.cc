@@ -343,6 +343,9 @@ void HyperOptimize::forget()
     best_objective = REAL_MAX;
     best_results = Vec();
     best_learner = 0;
+
+    for (int i=0, n=sub_strategy.size() ; i<n ; ++i)
+        sub_strategy[i]->forget();
 }
 
 Vec HyperOptimize::optimize()

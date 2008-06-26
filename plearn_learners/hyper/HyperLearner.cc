@@ -251,6 +251,10 @@ void HyperLearner::forget()
 {
     learner_->forget();
     stage = 0;
+
+    // Forward the forget to each command of the strategy.
+    for (int i=0, n=strategy.size() ; i<n ; ++i)
+        strategy[i]->forget();
 }
 
 ////////////

@@ -97,6 +97,9 @@ protected:
     //! Declares this class' options
     static void declareOptions(OptionList& ol);
 
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
+
 public:
     // simply calls inherited::build() then build_()
     virtual void build();
