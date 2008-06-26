@@ -1095,6 +1095,11 @@ def sequential_link(executables_to_link, linkname):
         else:
             if not local_compilation:
                 print 'Waiting for NFS to catch up...',
+                # Flush stdhout to make sure the previous message shows up,
+                # so if wait_for_all_...() doesn't work properly, then at
+                # least we learn we are waiting for NFS now and not when we
+                # press Ctrl+C.
+                sys.stdout.flush()
                 ccfile.nfs_wait_for_all_linkable_ofiles()
                 print 'done'
             if local_ofiles:
