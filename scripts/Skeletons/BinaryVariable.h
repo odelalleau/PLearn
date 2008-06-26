@@ -31,18 +31,18 @@ public:
 public:
     //#####  Public Member Functions  #########################################
 
-    //! Default constructor, usually does nothing
+    //! Default constructor.
     DERIVEDCLASS();
 
-    //! Constructor initializing from two input variables
+    //! Constructor initializing from two input variables.
     // ### Make sure the implementation in the .cc calls inherited constructor
     // ### and initializes all fields with reasonable default values.
-    DERIVEDCLASS(Variable* input1, Variable* input2);
+    DERIVEDCLASS(Variable* input1, Variable* input2, bool call_build_ = true);
 
     // ### If your class has parameters, you probably want a constructor that
     // ### initializes them
     // DERIVEDCLASS(Variable* input1, Variable* input2,
-    //              param_type the_parameter, ...);
+    //              param_type the_parameter, ..., bool call_build_ = true);
 
     // Your other public member functions go here
 

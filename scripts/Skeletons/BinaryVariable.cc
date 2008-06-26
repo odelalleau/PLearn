@@ -19,26 +19,30 @@ DERIVEDCLASS::DERIVEDCLASS()
     // ### in the parent classes' constructors, something that you must ensure)
 }
 
-// constructor from input variables.
-DERIVEDCLASS::DERIVEDCLASS(Variable* input1, Variable* input2)
+DERIVEDCLASS::DERIVEDCLASS(Variable* input1, Variable* input2,
+                           bool call_build_)
 // ### replace with actual parameters
-//  : inherited(input1, input2, this_variable_length, this_variable_width),
+//  : inherited(input1, input2, this_variable_length, this_variable_width,
+//              call_build_),
 //    parameter(default_value),
 //    ...
 {
-    // ### You may (or not) want to call build_() to finish building the object
+    if (call_build_)
+        build_();
 }
 
 // constructor from input variable and parameters
 // DERIVEDCLASS::DERIVEDCLASS(Variable* input1, Variable* input2,
-//                            param_type the_parameter,...)
+//                            param_type the_parameter, ...,
+//                            bool call_build_)
 // ### replace with actual parameters
-//  : inherited(input1, input2, this_variable_length, this_variable_width),
+//  : inherited(input1, input2, this_variable_length, this_variable_width,
+//              call_build_),
 //    parameter(the_parameter),
 //    ...
 //{
-//    // ### You may (or not) want to call build_() to finish building the
-//    // ### object
+//    if (call_build_)
+//        build_();
 //}
 
 void DERIVEDCLASS::recomputeSize(int& l, int& w) const
