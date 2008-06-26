@@ -115,6 +115,10 @@ PLEARN_IMPLEMENT_OBJECT(
     "     element is the maximum sum of weights and biases (in absolute\n"
     "     values) over columns of the weight matrix, and third element is\n"
     "     the same over rows.\n"
+    "   - 'ratio_cd_leftout': median ratio between the absolute value of the\n"
+    "     CD update and the absolute value of the term left out in CD (i.e.\n"
+    "     the difference between NLL gradient and CD).\n"
+    "   - 'abs_cd': average absolute value of the CD update\n"
     "    \n"
     "\n"
     "The RBM can be trained by gradient descent (wrt to gradients provided on\n"
@@ -402,6 +406,8 @@ void RBMModule::build_()
     addPortName("agreement_cd_nll");
     addPortName("bound_cd_nll");
     addPortName("weights_stats");
+    addPortName("ratio_cd_leftout");
+    addPortName("abs_cd");
     if(reconstruction_connection)
     {
         addPortName("visible_reconstruction.state");
@@ -810,7 +816,7 @@ void RBMModule::computePartitionFunction()
                     exp(all_p_visible[i] - log_partition_function);
             //pout << "All P(x): " << all_p_visible << endl;
             //pout << "Sum_x P(x) = " << sum(all_p_visible) << endl;
-            PLASSERT( is_equal(sum(all_p_visible), 1) );
+            PLCHECK( is_equal(sum(all_p_visible), 1) );
         }
     }
     else
@@ -884,6 +890,10 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     bool bound_cd_nll_is_output = bound_cd_nll && bound_cd_nll->isEmpty();
     Mat* weights_stats = ports_value[getPortIndex("weights_stats")];
     bool weights_stats_is_output = weights_stats && weights_stats->isEmpty();
+    Mat* ratio_cd_leftout = ports_value[getPortIndex("ratio_cd_leftout")];
+    bool ratio_cd_leftout_is_output = ratio_cd_leftout && ratio_cd_leftout->isEmpty();
+    Mat* abs_cd = ports_value[getPortIndex("abs_cd")];
+    bool abs_cd_is_output = abs_cd && abs_cd->isEmpty();
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     //bool hidden_bias_is_output = hidden_bias && hidden_bias->isEmpty();
     weights = ports_value[getPortIndex("weights")];
@@ -1486,6 +1496,10 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 bound_cd_nll->resize(visible->length(), n_steps_compare);
             if (weights_stats_is_output)
                 weights_stats->resize(visible->length(), 4);
+            if (ratio_cd_leftout_is_output)
+                ratio_cd_leftout->resize(visible->length(), n_steps_compare);
+            if (abs_cd_is_output)
+                abs_cd->resize(visible->length(), n_steps_compare);
             // Compute main bound coefficient:
             // (1 - N_x N_h sigm(-alpha)^d_x sigm(-beta)^d_h).
             PP<RBMMatrixConnection> matrix_conn =
@@ -1554,7 +1568,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 Vec colsum(p_xt_given_x.width());
                 columnSum(p_xt_given_x, colsum);
                 for (int j = 0; j < colsum.length(); j++) {
-                    PLASSERT( is_equal(colsum[j], 1) );
+                    PLCHECK( is_equal(colsum[j], 1) );
                 }
                 //pout << "Sum = " << endl << colsum << endl;
                 int best_idx = argmax(p_xt_given_x.column(0).toVecCopy());
@@ -1595,11 +1609,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 // Compute average relative difference.
                 Vec all_relative_diffs;
                 Vec all_abs_diffs;
+                Vec all_ratios;
                 for (int p = 0; p < diff.length(); p++)
                     for (int q = 0; q < diff.width(); q++) {
                         all_abs_diffs.append(abs(diff(p, q)));
                         if (!fast_exact_is_equal(grad_nll(p, q), 0))
                             all_relative_diffs.append(abs(diff(p, q) / grad_nll(p, q)));
+                        if (!fast_exact_is_equal(diff(p, q), 0))
+                            all_ratios.append(abs(grad_cd(p, q) / diff(p, q)));
                     }
                 //pout << "All relative diffs: " << all_relative_diffs << endl;
                 (*median_reldiff_cd_nll)(i, t) = median(all_relative_diffs);
@@ -1608,6 +1625,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 // agree.
                 int agree = 0;
                 int agree2 = 0;
+                real mean_abs_updates = 0;
                 for (int p = 0; p < grad_cd.length(); p++)
                     for (int q = 0; q < grad_cd.width(); q++) {
                         if (grad_cd(p, q) *
@@ -1617,7 +1635,9 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                         }
                         if (grad_cd(p, q) * diff(p, q) > 0)
                             agree2++;
+                        mean_abs_updates += abs(grad_cd(p, q));
                     }
+                mean_abs_updates /= real(grad_cd.size());
                 if (agreement_cd_nll_is_output) {
                     (*agreement_cd_nll)(i, t) = agree / real(grad_cd.size());
                     (*agreement_cd_nll)(i, t + n_steps_compare) =
@@ -1627,6 +1647,10 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     (*bound_cd_nll)(i, t) =
                         visible_layer->getConfigurationCount() *
                         ipow(bound_coeff, t + 1);
+                if (ratio_cd_leftout_is_output)
+                    (*ratio_cd_leftout)(i, t) = median(all_ratios);
+                if (abs_cd_is_output)
+                    (*abs_cd)(i, t) = mean_abs_updates;
                 /*
                 pout << "Median relative difference: "
                     << median(all_relative_diffs) << endl;
@@ -1669,6 +1693,16 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         PLASSERT( during_training );
         weights_stats->resize(visible->length(), 4);
         weights_stats->fill(MISSING_VALUE);
+    }
+    if (ratio_cd_leftout_is_output && ratio_cd_leftout->isEmpty()) {
+        PLASSERT( during_training );
+        ratio_cd_leftout->resize(visible->length(), n_steps_compare);
+        ratio_cd_leftout->fill(MISSING_VALUE);
+    }
+    if (abs_cd_is_output && abs_cd->isEmpty()) {
+        PLASSERT( during_training );
+        abs_cd->resize(visible->length(), n_steps_compare);
+        abs_cd->fill(MISSING_VALUE);
     }
 
     // UGLY HACK TO DEAL WITH THE PROBLEM THAT XXX.state MAY NOT BE NEEDED
