@@ -277,6 +277,11 @@ public:
 
     void fillGradient(real value) { gradient.fill(value); }
     void fillValue(real val) { value.fill(val); }
+
+    //! Replace with 'submat' the sub-matrix of the value starting at row
+    //! 'istart' and column 'jstart'.
+    void setValueSubMat(const Mat& submat, int istart, int jstart);
+    
     void clearRowsToUpdate()
     {
         rows_to_update.resize(0);

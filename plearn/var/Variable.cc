@@ -285,6 +285,13 @@ void Variable::declareMethods(RemoteMethodMap& rmm)
              ArgDoc ("val", "Value to fill with")));
 
     declareMethod(
+            rmm, "setValueSubMat", &Variable::setValueSubMat,
+            (BodyDoc("Replace a sub-matrix of the value with the given data"),
+             ArgDoc ("submat", "Data to set (as a matrix)"),
+             ArgDoc ("istart", "Row where 'submat' is inserted"),
+             ArgDoc ("jstart", "Column where 'submat' is inserted")));
+
+    declareMethod(
             rmm, "fprop", &Variable::fprop,
             (BodyDoc("Update value of this Var")));
 
@@ -1101,11 +1108,17 @@ void Variable::makeSharedRValue(real* x, int n)
     matRValue.mod_ = matRValue.width();
 }
 
+//////////////////////
+// makeSharedRValue //
+//////////////////////
 void Variable::makeSharedRValue(Vec& v, int offset_)
 {
     makeSharedRValue(v.storage,v.offset_+offset_);
 }
     
+///////////////////////
+// resizeDiagHessian //
+///////////////////////
 void Variable::resizeDiagHessian()
 {
     matDiagHessian.resize(length(),width());
@@ -1113,6 +1126,9 @@ void Variable::resizeDiagHessian()
     diaghessiandata = diaghessian.data();
 }
 
+//////////////////
+// resizeRValue //
+//////////////////
 void Variable::resizeRValue()
 {
     if (!rvaluedata)
@@ -1123,6 +1139,13 @@ void Variable::resizeRValue()
     }
 }
 
+////////////////////
+// setValueSubMat //
+////////////////////
+void Variable::setValueSubMat(const Mat& submat, int istart, int jstart)
+{
+    matValue.subMat(istart, jstart, submat.length(), submat.width()) << submat;
+}
 
 
 } // end of namespace PLearn
