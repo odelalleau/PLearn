@@ -56,7 +56,7 @@ bqtools only options:
 cluster and condor options:
   The '--3264', '--32' or '--64' specify which type of cpu the node must have to execute the commands.
   The '--mem=X' speficify the number of meg the program need to execute.
-  The '--os=X' speficify the os of the server: fc4 or fc7. Default: fc4
+  The '--os=X' speficify the os of the server. Cluster default: fc4. Condor default to the same as the submit host. On condor, --os=FC7,FC9 tell to use FC7 or FC9 hosts.
 
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. This must be enabled if there is not nb_proc available nodes. Otherwise when there are no nodes available, the launch of that command fails.

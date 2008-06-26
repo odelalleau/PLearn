@@ -834,8 +834,11 @@ class DBICondor(DBIBase):
             req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         else :
             req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
+
         if self.os:
-            req+='&&(OpSyS == "'+self.os+'")'
+            req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
+                       self.os.split(','),
+                       req+'&&(False ')+")"
 
         source_file=os.getenv("CONDOR_LOCAL_SOURCE")
         condor_home = os.getenv('CONDOR_HOME')
