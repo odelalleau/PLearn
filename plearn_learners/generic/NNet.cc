@@ -579,86 +579,7 @@ void NNet::buildCosts(const Var& the_output, const Var& the_target, const Var& h
     costs.resize(ncosts);
 
     for (int k=0; k<ncosts; k++)
-    {
-        // create costfuncs and apply individual weights if weightpart > 1
-        if (cost_funcs[k]=="mse")
-            costs[k]= sumsquare(the_output-the_target);
-        else if (cost_funcs[k]=="mse_onehot")
-            costs[k] = onehot_squared_loss(the_output, the_target);
-        else if (cost_funcs[k]=="NLL") 
-        {
-            if (the_output->width() == 1) {
-                // Assume sigmoid output here!
-                costs[k] = stable_cross_entropy(before_transfer_func, the_target);
-            } else {
-                if (output_transfer_func == "log_softmax")
-                    costs[k] = -the_output[the_target];
-                else
-                    costs[k] = neg_log_pi(the_output, the_target);
-            }
-        } 
-        else if (cost_funcs[k]=="class_error")
-        {
-            if (the_output->width()==1)
-                costs[k] = binary_classification_loss(the_output, the_target);
-            else
-                costs[k] = classification_loss(the_output, the_target);
-        }
-        else if (cost_funcs[k]=="binary_class_error")
-            costs[k] = binary_classification_loss(the_output, the_target);
-        else if (cost_funcs[k]=="multiclass_error")
-            costs[k] = multiclass_loss(the_output, the_target);
-        else if (cost_funcs[k]=="cross_entropy")
-            costs[k] = cross_entropy(the_output, the_target);
-        else if(cost_funcs[k]=="conf_rated_adaboost_cost")
-        {
-            if(output_transfer_func != "sigmoid")
-                PLWARNING("In NNet:buildCosts(): conf_rated_adaboost_cost expects an output in (0,1)");
-            alpha_adaboost = Var(1,1); alpha_adaboost->value[0] = 1.0;
-            params.append(alpha_adaboost);
-            costs[k] = conf_rated_adaboost_cost(the_output, the_target, alpha_adaboost);
-        }
-        else if (cost_funcs[k]=="gradient_adaboost_cost")
-        {
-            if(output_transfer_func != "sigmoid")
-                PLWARNING("In NNet:buildCosts(): gradient_adaboost_cost expects an output in (0,1)");
-            costs[k] = gradient_adaboost_cost(the_output, the_target);
-        }
-        else if (cost_funcs[k]=="stable_cross_entropy") {
-            Var c = stable_cross_entropy(before_transfer_func, the_target);
-            costs[k] = c;
-            PLASSERT( classification_regularizer >= 0 );
-            if (classification_regularizer > 0) {
-                // There is a regularizer to add to the cost function.
-                dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
-                    setRegularizer(classification_regularizer);
-            }
-        }
-        else if (cost_funcs[k]=="margin_perceptron_cost")
-            costs[k] = margin_perceptron_cost(the_output,the_target,margin);
-        else if (cost_funcs[k]=="lift_output")
-            costs[k] = lift_output(the_output, the_target);
-        else if (cost_funcs[k]=="poisson_nll") {
-            VarArray the_varray(the_output, the_target);
-            if (weightsize()>0)
-                the_varray.push_back(sampleweight);
-            costs[k] = neglogpoissonvariable(the_varray);
-        }
-        else if (cost_funcs[k] == "L1")
-            costs[k] = sumabs(the_output - the_target);
-        else {
-            // Assume we got a Variable name and its options                
-            costs[k]= dynamic_cast<Variable*>(newObject(cost_funcs[k]));
-            if(costs[k].isNull())
-                PLERROR("In NNet::build_()  unknown cost_func option: %s",cost_funcs[k].c_str());
-            costs[k]->setParents(the_output & the_target);
-            costs[k]->build();
-        }
-
-        // We don't need to take into account the sampleweight, because it is
-        // taken care of in stats->update.
-    }
-
+        costs[k] = getCost(cost_funcs[k], the_output, the_target, before_transfer_func);
 
     /*
      * weight and bias decay penalty
@@ -1047,6 +968,95 @@ void NNet::forget()
         optimizer->reset();
     stage = 0;
     n_training_bags = -1;
+}
+
+/////////////
+// getCost //
+/////////////
+Var NNet::getCost(const string& costname, const Var& the_output,
+                  const Var& the_target, const Var& before_transfer_func)
+{
+    // We don't need to take into account the sampleweight, because it is
+    // taken care of in stats->update.
+    if (costname=="mse")
+        return sumsquare(the_output-the_target);
+    else if (costname=="mse_onehot")
+        return onehot_squared_loss(the_output, the_target);
+    else if (costname=="NLL") 
+    {
+        if (the_output->width() == 1) {
+            // Assume sigmoid output here!
+            return stable_cross_entropy(before_transfer_func, the_target);
+        } else {
+            if (output_transfer_func == "log_softmax")
+                return -the_output[the_target];
+            else
+                return neg_log_pi(the_output, the_target);
+        }
+    } 
+    else if (costname=="class_error")
+    {
+        if (the_output->width()==1)
+            return binary_classification_loss(the_output, the_target);
+        else
+            return classification_loss(the_output, the_target);
+    }
+    else if (costname=="binary_class_error")
+        return binary_classification_loss(the_output, the_target);
+    else if (costname=="multiclass_error")
+        return multiclass_loss(the_output, the_target);
+    else if (costname=="cross_entropy")
+        return cross_entropy(the_output, the_target);
+    else if(costname=="conf_rated_adaboost_cost")
+    {
+        if(output_transfer_func != "sigmoid")
+            PLWARNING("In NNet:buildCosts(): conf_rated_adaboost_cost expects an output in (0,1)");
+        alpha_adaboost = Var(1,1); alpha_adaboost->value[0] = 1.0;
+        params.append(alpha_adaboost);
+        return conf_rated_adaboost_cost(the_output, the_target, alpha_adaboost);
+    }
+    else if (costname=="gradient_adaboost_cost")
+    {
+        if(output_transfer_func != "sigmoid")
+            PLWARNING("In NNet:buildCosts(): gradient_adaboost_cost expects an output in (0,1)");
+        return gradient_adaboost_cost(the_output, the_target);
+    }
+    else if (costname=="stable_cross_entropy") {
+        Var c = stable_cross_entropy(before_transfer_func, the_target);
+        PLASSERT( classification_regularizer >= 0 );
+        if (classification_regularizer > 0) {
+            // There is a regularizer to add to the cost function.
+            dynamic_cast<NegCrossEntropySigmoidVariable*>((Variable*) c)->
+                setRegularizer(classification_regularizer);
+        }
+        return c;
+    }
+    else if (costname=="margin_perceptron_cost")
+        return margin_perceptron_cost(the_output,the_target,margin);
+    else if (costname=="lift_output")
+        return lift_output(the_output, the_target);
+    else if (costname=="poisson_nll") {
+        VarArray the_varray(the_output, the_target);
+        if (weightsize()>0) {
+            PLERROR("In NNet::getCost - The weight is used, is this really "
+                    "intended? (see comment in code at the top of this "
+                    "method");
+            the_varray.push_back(sampleweight);
+        }
+        return neglogpoissonvariable(the_varray);
+    }
+    else if (costname == "L1")
+        return sumabs(the_output - the_target);
+    else {
+        // Assume we got a Variable name and its options                
+        Var cost = dynamic_cast<Variable*>(newObject(costname));
+        if(cost.isNull())
+            PLERROR("In NNet::build_() - unknown cost name: %s",
+                    costname.c_str());
+        cost->setParents(the_output & the_target);
+        cost->build();
+        return cost;
+    }
 }
 
 ///////////////////////

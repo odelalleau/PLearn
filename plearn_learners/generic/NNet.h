@@ -267,6 +267,11 @@ protected:
     //! Build the costs variable from other variables.
     void buildCosts(const Var& output, const Var& target, const Var& hidden_layer, const Var& before_transfer_func);
 
+    //! Return the cost corresponding to the given cost name. This method is
+    //! virtual so that subclasses can implement their own custom costs.
+    virtual Var getCost(const string& costname, const Var& output,
+                        const Var& target, const Var& before_transfer_func);
+
     //! Build the various functions used in the network.
     void buildFuncs(const Var& the_input, const Var& the_output, const Var& the_target, const Var& the_sampleweight, const Var& the_bag_size);
 
