@@ -71,6 +71,7 @@ public:
     bool consider_raw_inputs;
     bool consider_normalized_inputs;
     bool consider_input_range_indicators;
+    bool fixed_min_range;
     real indicator_desired_prob;
     real indicator_min_prob;
     TVec<Ker> kernels;
@@ -78,6 +79,8 @@ public:
     int n_kernel_centers_to_pick;
     bool consider_interaction_terms;
     int max_interaction_terms;
+    int consider_n_best_for_interaction;
+    int interaction_max_order;
     bool consider_sorted_encodings;
     int max_n_vals_for_sorted_encodings;
     bool normalize_features;
@@ -89,6 +92,7 @@ public:
     //#####  Public Learnt Options  ############################################
     TVec<RealFunc> selected_functions;
     Vec alphas;
+    mutable Mat scores;
 
 
     struct thread_wawr;
@@ -190,13 +194,22 @@ private:
     void buildSimpleCandidateFunctions();
 
     //! Builds candidate_functions.
-    //! If consider_interactionis false, candidate_functions is the same as simple_candidate_functions
+    //! If consider_interactions is false, candidate_functions is the same as simple_candidate_functions
     //! If consider_interactions is true,  candidate_functions will in addidion include all products 
     //! between simple_candidate_functions and selected_functions 
     void buildAllCandidateFunctions();
 
+    //! Builds top best candidate functions (from simple_candidate_functions only)
+    TVec<RealFunc> buildTopCandidateFunctions();
+
     //! Returns the index of the best candidate function (most colinear with the residue)
     void findBestCandidateFunction(int& best_candidate_index, real& best_score) const;
+
+    //! Adds an interaction term to all_functions as RealFunctionProduct(f1, f2)
+    void addInteractionFunction(RealFunc& f1, RealFunc& f2, TVec<RealFunc>& all_functions);
+
+    //! Computes the order of the given function (number of single function embedded)
+    void computeOrder(RealFunc& func, int& order);
 
     void computeWeightedAveragesWithResidue(const TVec<RealFunc>& functions,   
                                             real& wsum,
@@ -204,6 +217,7 @@ private:
                                             real& E_y, real& E_yy,
                                             Vec& E_xy) const;
 
+    /*
     void computeWeightedCorrelationsWithY(const TVec<RealFunc>& functions, const Vec& Y,  
                                           real& wsum,
                                           Vec& E_x, Vec& V_x,
@@ -211,6 +225,7 @@ private:
                                           Vec& E_xy, Vec& V_xy,
                                           Vec& covar, Vec& correl,
                                           real min_variance = 1e-6) const;
+    */
     void appendFunctionToSelection(int candidate_index);
     void retrainLearner();
     void initTargetsResidueWeight();
