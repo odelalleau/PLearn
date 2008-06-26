@@ -458,8 +458,8 @@ void DenoisingRecurrentNet::train()
     MODULE_LOG << "train() called " << endl;
 
     // reserve memory for sequences
-    Mat seq(5000,2); // contains the current sequence
-    Mat encoded_seq(5000, 4);
+    seq.resize(5000,2); // contains the current sequence
+    encoded_seq.resize(5000, 4);
 
     Vec input( inputsize() );
     Vec target( targetsize() );
@@ -534,7 +534,9 @@ void DenoisingRecurrentNet::train()
                     createSupervisedSequence(encoded_seq);
                 }
 
-                fbpropupdate();
+                resize_lists();
+                fprop(train_costs, train_n_items);
+                recurrent_update();
             }
 
             if( pb )
@@ -603,14 +605,6 @@ void DenoisingRecurrentNet::splitMaskedSupervisedSequence(Mat seq)
 }
 
 
-void DenoisingRecurrentNet::fbpropupdate()
-{
-    resize_lists();
-    fprop();
-    recurrent_update();
-}
-
-
 void DenoisingRecurrentNet::resize_lists()
 {
     int l = input_list.length();
@@ -640,7 +634,8 @@ void DenoisingRecurrentNet::resize_lists()
 
 // TODO: think properly about prepended stuff
 
-void DenoisingRecurrentNet::fprop()
+// fprop accumulates costs in costs and n_items in n_items
+void DenoisingRecurrentNet::fprop(Vec train_costs, Vec train_n_items)
 {
     int l = input_list.length();
     int ntargets = target_layers.length();
@@ -1287,8 +1282,8 @@ void DenoisingRecurrentNet::getSequence(int i, Mat& seq) const
 { 
     int start = 0;
     if(i>0)
-        start = boundaries[i-1]+1;
-    int end = boundaries[i];
+        start = trainset_boundaries[i-1]+1;
+    int end = trainset_boundaries[i];
     int w = train_set->width();
     seq.resize(end-start, w);
     train_set->getMat(start,0,seq);
@@ -1298,7 +1293,7 @@ void DenoisingRecurrentNet::getSequence(int i, Mat& seq) const
 void DenoisingRecurrentNet::setTrainingSet(VMat training_set, bool call_forget)
 {
     inherited::setTrainingSet(training_set, call_forget);
-    locateSequenceBoundaries(training_set, boundaries, end_of_sequence_symbol);
+    locateSequenceBoundaries(training_set, trainset_boundaries, end_of_sequence_symbol);
 }
 
 
@@ -1542,7 +1537,108 @@ void DenoisingRecurrentNet::computeCostsFromOutputs(const Vec& input, const Vec&
             "log-likelihooh costs for a whole VMat");
 }
 
+
+
 void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
+                  VMat testoutputs, VMat testcosts)const
+{
+    int len = testset.length();
+    Vec input;
+    Vec target;
+    real weight;
+
+
+    Vec output(outputsize());
+    output.clear();
+    Vec costs(nTestCosts());
+    costs.clear();
+    Vec n_items(nTestCosts());
+    n_items.clear();
+
+    PP<ProgressBar> pb;
+    if (report_progress) 
+        pb = new ProgressBar("Testing learner", len);
+
+    if (len == 0) {
+        // Empty test set: we give -1 cost arbitrarily.
+        costs.fill(-1);
+        test_stats->update(costs);
+    }
+
+    int w = testset->width();
+    locateSequenceBoundaries(testset, testset_boundaries, end_of_sequence_symbol);
+    int nseq = testset_boundaries.length();
+
+    seq.resize(5000,2); // contains the current sequence
+    seq.resize(5000, 4);
+
+    for(int i=0; i<nseq; i++)
+    {
+        int start = 0;
+        if(i>0)
+            start = testset_boundaries[i-1]+1;
+        int end = testset_boundaries[i];
+        seq.resize(end-start, w);
+        testset->getMat(start,0,seq);
+
+        if(encoding=="raw_masked_supervised")
+        {
+            splitMaskedSupervisedSequence(seq);
+        }
+        else
+        {
+            encodeSequence(seq, encoded_seq);
+            createSupervisedSequence(encoded_seq);
+        }
+
+        resize_lists();
+        fprop(test_costs, test_n_items);
+
+        /*
+        if (testoutputs)
+        {
+            int sum_target_layers_size = 0;
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    output.subVec(sum_target_layers_size,target_layers[tar]->size)
+                        << target_prediction_list[tar][ ith_sample_in_sequence ];
+                }
+                sum_target_layers_size += target_layers[tar]->size;
+            }
+            testoutputs->putOrAppendRow(i, output);
+        }
+        */
+
+    }
+
+        if (report_progress)
+            pb->update(i);
+
+    }
+
+    for(int i=0; i<costs.length(); i++)
+    {
+        if( !fast_exact_is_equal(target_layers_weights[i],0) )
+            costs[i] /= n_items[i];
+        else
+            costs[i] = MISSING_VALUE;
+    }
+    if (testcosts)
+        testcosts->putOrAppendRow(0, costs);
+    
+    if (test_stats)
+        test_stats->update(costs, weight);
+
+
+    if( pb )
+        pb->update( stage + 1 - init_stage);
+
+}
+
+/*
+void DenoisingRecurrentNet::oldtest(VMat testset, PP<VecStatsCollector> test_stats,
                   VMat testoutputs, VMat testcosts)const
 { 
 
@@ -1828,7 +1924,7 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
     nll_list.resize(0,0);
     masks_list.resize(0);   
 }
-
+*/
 
 TVec<string> DenoisingRecurrentNet::getTestCostNames() const
 {

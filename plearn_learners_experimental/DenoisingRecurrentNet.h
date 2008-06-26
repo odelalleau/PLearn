@@ -148,7 +148,7 @@ public:
     //#####  Public static Functions  #########################################
         
     // Finding sequence end indexes
-    static TVec<int> locateSequenceBoundaries(VMat dataset, real end_of_sequence_symbol);
+    static void locateSequenceBoundaries(VMat dataset, TVec<int>& boundaries, real end_of_sequence_symbol);
 
     // encodings
 
@@ -333,8 +333,8 @@ protected:
     //! Contribution of dynamic weights to hidden layer activation
     mutable Vec dynamic_act_no_bias_contribution;
 
-    TVec<int> boundaries;
-
+    TVec<int> trainset_boundaries;
+    TVec<int> testset_boundaries;
 
 protected:
     //#####  Protected Member Functions  ######################################
