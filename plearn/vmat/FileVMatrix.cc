@@ -282,7 +282,7 @@ void FileVMatrix::build_()
         PRInt64 expectedsize=DATAFILE_HEADERLENGTH+length_*width_*elemsize;
         if(info.size!=expectedsize)
             PLWARNING("In FileVMatrix::build_() - The file '%s' have a size"
-                      " of %d, expected %d",
+                      " of %ld, expected %ld",
                       filename_.c_str(), info.size, expectedsize);
 #endif
         

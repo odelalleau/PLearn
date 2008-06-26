@@ -385,7 +385,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     // Keyword indicating we go till the end.
                     a = srcfieldnames.length() - 1;
                 else
-                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
 
                 if (parts[1][0] == '@')
                 {
@@ -402,12 +402,12 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     // Keyword indicating we go till the end.
                     b = srcfieldnames.length() - 1;
                 else
-                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
 
                 if (a > b)
                     PLERROR("In copyfield macro '%s', you have specified a "
                             "start field (%d) that is after the end field "
-                            "(%d). E.g.: [%10:%5]", token.c_str(), a, b);
+                            "(%d). E.g.: [%%10:%%5]", token.c_str(), a, b);
                 if (a == -1)
                     PLERROR("In copyfield macro, unknown field : '%s'", astr.c_str());
                 if (b == -1)
@@ -448,11 +448,11 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 else if (parts[0][0] == '%')
                     a = toint(parts[0].substr(1));
                 else
-                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
 
                 if (a == -1) {
                     if (!ignore_if_missing)
-                        PLERROR("In copyfield macro, unknown field :%s",astr.c_str());
+                        PLERROR("In copyfield macro, unknown field: '%s'", astr.c_str());
                 }
                 else {
                     processed_sourcecode += string("%") + tostring(a) + " ";
@@ -462,7 +462,7 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     fieldnames.push_back(srcfieldnames[a]);
                 }
             }
-            else PLERROR("Strange fieldcopy format. e.g : [%0:%5]. Found parts '%s'",join(parts," ").c_str());
+            else PLERROR("Strange fieldcopy format. e.g : [%%0:%%5]. Found parts '%s'",join(parts," ").c_str());
         }
 
         // did we find a comment?

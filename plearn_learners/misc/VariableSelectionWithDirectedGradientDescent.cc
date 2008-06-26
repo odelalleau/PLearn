@@ -130,7 +130,7 @@ void VariableSelectionWithDirectedGradientDescent::train()
         if (inputsize < 1)
             PLERROR("VariableSelectionWithDirectedGradientDescent: expected  inputsize greater than 0, got %d", inputsize);
         if (targetsize <= 0)
-            PLERROR("In VariableSelectionWithDirectedGradientDescent::train - The targetsize must be >= 1", targetsize);
+            PLERROR("In VariableSelectionWithDirectedGradientDescent::train - The targetsize (%d) must be >= 1", targetsize);
         if (weightsize != 0)
             PLERROR("VariableSelectionWithDirectedGradientDescent: expected weightsize to be 1, got %d", weightsize_);
         input_weights.resize(targetsize, inputsize + 1);

@@ -1012,7 +1012,7 @@ void Variable::makeSharedValue(PP<Storage<real> > storage, int offset_)
 {
     int n=nelems();
     if (storage->length()<offset_+n) 
-        PLERROR("Variable::makeSharedValue, storage(%d) too small({d+%d)",
+        PLERROR("Variable::makeSharedValue, storage(%d) too small(%d+%d)",
                 storage->length(),offset_,nelems());
     real* v=value.data();
     real* x=valuedata=storage->data+offset_;
@@ -1035,7 +1035,7 @@ void Variable::makeSharedGradient(PP<Storage<real> > storage, int offset_)
 {
     int n=nelems();
     if (storage->length()<offset_+n) 
-        PLERROR("Variable::makeSharedGradient, storage(%d) too small({d+%d)",
+        PLERROR("Variable::makeSharedGradient, storage(%d) too small(%d+%d)",
                 storage->length(),offset_,nelems());
     real* v=gradient.data();
     real* x=gradientdata=storage->data+offset_;
@@ -1076,7 +1076,7 @@ void Variable::makeSharedRValue(PP<Storage<real> > storage, int offset_)
     resizeRValue();
     int n=nelems();
     if (storage->length()<offset_+n) 
-        PLERROR("Variable::makeSharedRValue, storage(%d) too small({d+%d)",
+        PLERROR("Variable::makeSharedRValue, storage(%d) too small(%d+%d)",
                 storage->length(),offset_,nelems());
     real* v=rValue.data();
     real* x=rvaluedata=storage->data+offset_;

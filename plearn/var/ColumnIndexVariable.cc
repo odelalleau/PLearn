@@ -83,7 +83,7 @@ void ColumnIndexVariable::build_()
                 "variable representing the indices of input1");
     if (input1 && input2 && input1->width() != input2->size())
         PLERROR("In ColumnIndexVariable::build_ - input1's width (%d) "
-                "should be equal to input2's size (%s)",
+                "should be equal to input2's size (%d)",
                 input1->width(), input2->size());
 }
 

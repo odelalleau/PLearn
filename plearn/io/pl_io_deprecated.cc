@@ -72,7 +72,7 @@ int readHeader(PStream& in, const string& classname)
     if (   headerlen<classnamelen+2 
            || header[0]!='<' || header.substr(1,classnamelen)!=classname
            || (header[1+classnamelen]!='>' && header[1+classnamelen]!=':') )
-        PLERROR("In Object::readHeader WRONG HEADER: %s (SHOULD BE {s:version>)",header.c_str(),classname.c_str());
+        PLERROR("In Object::readHeader WRONG HEADER: %s (SHOULD BE {%s:version>)",header.c_str(),classname.c_str());
     if (header[1+classnamelen]==':')
         return toint(header.substr(2+classnamelen, headerlen-classnamelen-2));
     else return 0;

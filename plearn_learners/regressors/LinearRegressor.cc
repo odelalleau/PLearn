@@ -225,7 +225,7 @@ void LinearRegressor::forget()
 void LinearRegressor::train()
 {
     if(targetsize()<=0)
-        PLERROR("In LinearRegressor::train() -  Targetsize (%s) must be "
+        PLERROR("In LinearRegressor::train() -  Targetsize (%d) must be "
                 "positive", targetsize());
     // Preparatory buffer allocation
     bool recompute_XXXY = (XtX.length()==0);

@@ -251,7 +251,7 @@ void SummationKernel::computeGramMatrixDerivative(
         int i = lexical_cast<int>(term_index);
         if (i < 0 || i >= m_terms.size())
             PLERROR("%s: out of bounds access to term %d when computing derivative\n"
-                    "for kernel parameter '%d'; only %d terms (0..%d) are available\n"
+                    "for kernel parameter '%s'; only %d terms (0..%d) are available\n"
                     "in the SummationKernel", __FUNCTION__, i, kernel_param.c_str(),
                     m_terms.size(), m_terms.size()-1);
         

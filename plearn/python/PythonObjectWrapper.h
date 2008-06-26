@@ -471,7 +471,7 @@ struct ConvertFromPyObject<VMField>
 template <typename T>
 int numpyType()
 {
-    PLERROR("in numpyType: no numpy equivalent to C++ type ",
+    PLERROR("in numpyType: no numpy equivalent to C++ type %s",
             TypeTraits<T*>::name().c_str());
     return -1; //shut up compiler
 }

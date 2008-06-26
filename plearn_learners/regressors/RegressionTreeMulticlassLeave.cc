@@ -134,7 +134,7 @@ void RegressionTreeMulticlassLeave::addRow(int row)
         }
     }
     if (multiclass_found < 1) 
-        PLERROR("RegressionTreeMultilassLeave: Unknown target: %d row: %d\n", target,row);
+        PLERROR("RegressionTreeMultilassLeave: Unknown target: %g row: %d\n", target, row);
 }
 
 void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
