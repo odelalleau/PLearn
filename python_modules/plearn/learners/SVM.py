@@ -996,20 +996,12 @@ class SVM(object):
                 param.pop(pn)
             elif pn == 'kernel_type':
                 # libsvm wants upper case for kernel_type
-                param[pn] = param[pn].upper()
-        #s= ', '.join( pn+' = '+str(param[pn])
-        #              for pn in param )
-        #if len(s)>0:s=', '+s
+                param[pn] = eval(param[pn].upper())
 
-        
         if 'proba' in self.outputs_type:
-            # if this function is defined (see 
-            #return eval('svm_parameter( svm_type = C_SVC, probability = 1 '+s+')' )
-            return svm_parameter( svm_type = C_SVC, probability = 1, **param )
-        else:
-            # Note: 'svm_type = C_SVC' stands for classification
-            #return eval('svm_parameter( svm_type = C_SVC '+s+')' )
-            return svm_parameter( svm_type = C_SVC, **param )
+            param.update({'probability':1})
+        
+        return svm_parameter( svm_type = C_SVC, **param )
     
 
     """ Write given results with corresponding parameters
