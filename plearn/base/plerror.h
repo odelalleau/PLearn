@@ -51,6 +51,12 @@
 #include <string>
 #include "plexceptions.h"
 
+#ifndef __GNUC__
+// Suppress __attribute__(()) GCC extension on other compilers.
+#define __attribute__(x)
+#endif
+
+
 namespace PLearn {
 
 #ifndef USE_EXCEPTIONS
@@ -62,15 +68,25 @@ extern ostream* error_stream;
 #define PLWARNING warningmsg
 #define PLDEPRECATED deprecationmsg
 
-void errormsg2(const char* filename,const int linenumber,const char* msg, ...);
-void errormsg(const char* msg, ...);
-void warningmsg(const char* msg, ...);
-void deprecationmsg(const char* msg, ...);
-void exitmsg(const char* msg, ...);
+void errormsg2(const char* filename, const int linenumber, const char* msg, ...)
+    __attribute__((noreturn))
+    __attribute__((format(printf, 3, 4)));
+void errormsg(const char* msg, ...)
+    __attribute__((noreturn))
+    __attribute__((format(printf, 1, 2)));
+void warningmsg(const char* msg, ...)
+    __attribute__((format(printf, 1, 2)));
+void deprecationmsg(const char* msg, ...)
+    __attribute__((format(printf, 1, 2)));
+void exitmsg(const char* msg, ...)
+    __attribute__((noreturn))
+    __attribute__((format(printf, 1, 2)));
 void pl_assert_fail(const char* expr, const char* file, unsigned line,
-                    const char* function, const std::string& message);
+                    const char* function, const std::string& message)
+    __attribute__((noreturn));
 void pl_check_fail(const char* expr, const char* file, unsigned line,
-                   const char* function, const std::string& message);
+                   const char* function, const std::string& message)
+    __attribute__((noreturn));
 
 // Redefine the assert mechanism to throw an exception through PLERROR.
 // The following macros are defined:
