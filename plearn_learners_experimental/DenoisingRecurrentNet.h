@@ -153,7 +153,8 @@ public:
     // encodings
 
     //! encodes sequence according to specified encoding option
-    void encodeSequence(Mat sequence, Mat& encoded_seq);
+    //! (declared const because it needs to be called in test)
+    void encodeSequence(Mat sequence, Mat& encoded_seq) const;
 
     static void encode_onehot_note_octav_duration(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows,
                                                   bool use_silence=true, int octav_nbits=0, int duration_nbits=8);
@@ -221,7 +222,7 @@ public:
 
     //! Returns the number of sequences in the training_set
     int nSequences() const
-    { return boundaries.length(); }
+    { return trainset_boundaries.length(); }
 
     //! Returns the ith sequence
     void getSequence(int i, Mat& seq) const;
@@ -340,10 +341,10 @@ protected:
     mutable Vec dynamic_act_no_bias_contribution;
 
     TVec<int> trainset_boundaries;
-    TVec<int> testset_boundaries;
+    mutable TVec<int> testset_boundaries;
 
-    Mat seq; // contains the current train or test sequence
-    Mat encoded_seq; // contains encoded version of current train or test sequence
+    mutable Mat seq; // contains the current train or test sequence
+    mutable Mat encoded_seq; // contains encoded version of current train or test sequence
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -357,15 +358,21 @@ private:
     //! This does the actual building.
     void build_();
 
+    // note: the following functions are declared const because they have
+    // to be called by test (which is const). Similarly, the members they 
+    // manipulate are all declared mutable.
+    void fprop(Vec train_costs, Vec train_n_items) const;
+
     //! does encoding if needed and populates the list.
-    void encodeSequenceAndPopulateLists(Mat seq);
+    void encodeSequenceAndPopulateLists(Mat seq) const;
 
     //! encodes seq, then populates: inputslist, targets_list, masks_list
-    void encodeAndCreateSupervisedSequence(Mat seq);
+    void encodeAndCreateSupervisedSequence(Mat seq) const;
 
     //! For the (backward testing) raw_masked_supervised case. Populates: input_list, targets_list, masks_list
-    void splitRawMaskedSupervisedSequence(Mat seq);
+    void splitRawMaskedSupervisedSequence(Mat seq) const;
 
+    void resize_lists(int l) const;
 
 private:
     //#####  Private Data Members  ############################################

@@ -460,9 +460,7 @@ void DenoisingRecurrentNet::train()
     // reserve memory for sequences
     seq.resize(5000,2); // contains the current sequence
 
-    Vec input( inputsize() );
-    Vec target( targetsize() );
-    real weight = 0; // Unused
+    // real weight = 0; // Unused
     Vec train_costs( getTrainCostNames().length() );
     train_costs.clear();
     Vec train_n_items( getTrainCostNames().length() );
@@ -547,22 +545,21 @@ void DenoisingRecurrentNet::train()
 
 
 //! does encoding if needed and populates the list.
-void DenoisingRecurrentNet::encodeSequenceAndPopulateLists(Mat seq)
+void DenoisingRecurrentNet::encodeSequenceAndPopulateLists(Mat seq) const
 {
     if(encoding=="raw_masked_supervised") // old already encoded format (for backward testing)
         splitRawMaskedSupervisedSequence(seq);
     else
         encodeAndCreateSupervisedSequence(seq);
-    resize_lists();
 }
 
 // TO DO: penser a gestion des prepended dans ce cas
 // encodes sequ, then populates: inputslist, targets_list, masks_list
-void DenoisingRecurrentNet::encodeAndCreateSupervisedSequence(Mat seq)
+void DenoisingRecurrentNet::encodeAndCreateSupervisedSequence(Mat seq) const
 {
     encodeSequence(seq, encoded_seq);
     // now work with encoded_seq
-    int l = encoded_seq;
+    int l = encoded_seq.length();
     resize_lists(l);
 
     // TO DO: populate lists
@@ -576,7 +573,7 @@ void DenoisingRecurrentNet::encodeAndCreateSupervisedSequence(Mat seq)
 // TO DO: penser a prepend dans ce cas
 
 // For the (backward testing) raw_masked_supervised case. Populates: input_list, targets_list, masks_list
-void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq)
+void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq) const
 {
     int l = seq.length();
     resize_lists(l);
@@ -589,7 +586,7 @@ void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq)
         input_list[i] = input_part(i);
 
     int ntargets = target_layers.length();
-    targets_list.resize(ntagets);
+    targets_list.resize(ntargets);
     masks_list.resize(ntargets);
     int startcol = 0; // starting column of next target in target_part and mask_part
     for(int k=0; k<ntargets; k++)
@@ -602,7 +599,7 @@ void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq)
 }
 
 
-void DenoisingRecurrentNet::resize_lists(int l)
+void DenoisingRecurrentNet::resize_lists(int l) const
 {
     input_list.resize(l);
     hidden_list.resize(l, hidden_layer->size);
@@ -620,7 +617,7 @@ void DenoisingRecurrentNet::resize_lists(int l)
 
     for( int tar=0; tar < ntargets; tar++ )
     {
-        int targsize = target_layers[k]->size;
+        int targsize = target_layers[tar]->size;
         target_prediction_list[tar].resize(l, targsize);
         target_prediction_act_no_bias_list[tar].resize(l, targsize);
     }
@@ -631,12 +628,12 @@ void DenoisingRecurrentNet::resize_lists(int l)
 // TODO: think properly about prepended stuff
 
 // fprop accumulates costs in costs and counts in n_items
-void DenoisingRecurrentNet::fprop(Vec train_costs, Vec train_n_items)
+void DenoisingRecurrentNet::fprop(Vec train_costs, Vec train_n_items) const
 {
     int l = input_list.length();
     int ntargets = target_layers.length();
 
-    for(int i=0; i<input_list.length(); i++ )
+    for(int i=0; i<l; i++ )
     {
         Vec hidden_act_no_bias_i = hidden_act_no_bias_list(i);
         input_connections->fprop( input_list[i], hidden_act_no_bias_i);
@@ -671,8 +668,8 @@ void DenoisingRecurrentNet::fprop(Vec train_costs, Vec train_n_items)
             {
                 Vec target_prediction_i = target_prediction_list[tar](i);
                 Vec target_prediction_act_no_bias_i = target_prediction_act_no_bias_i;
-                target_connections[tar]->fprop(last_hidden, target_prediction_act_no_bias_list_i);
-                target_layers[tar]->fprop(target_prediction_act_no_bias_i, target_prediction_list_i);
+                target_connections[tar]->fprop(last_hidden, target_prediction_act_no_bias_i);
+                target_layers[tar]->fprop(target_prediction_act_no_bias_i, target_prediction_i);
                 if( use_target_layers_masks )
                     target_prediction_i *= masks_list[tar](i);
             }
@@ -798,14 +795,14 @@ void DenoisingRecurrentNet::recurrent_update()
                 hidden_temporal_gradient, hidden_gradient);
                 
             dynamic_connections->bpropUpdate(
-                hidden_list[i-1],
+                hidden_list(i-1),
                 hidden_act_no_bias_list(i), // Here, it should be cond_bias, but doesn't matter
                 hidden_gradient, hidden_temporal_gradient);
                 
             hidden_temporal_gradient << hidden_gradient;
                 
             input_connections->bpropUpdate(
-                input_list(i),
+                input_list[i],
                 hidden_act_no_bias_list(i), 
                 visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
                 
@@ -816,7 +813,7 @@ void DenoisingRecurrentNet::recurrent_update()
                 hidden_act_no_bias_list(i), hidden_list(i),
                 hidden_temporal_gradient, hidden_gradient); // Not really temporal gradient, but this is the final iteration...
             input_connections->bpropUpdate(
-                input_list(i),
+                input_list[i],
                 hidden_act_no_bias_list(i), 
                 visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
 
@@ -1254,7 +1251,7 @@ duree: 1 double-croche
 
  */
 
-void DenoisingRecurrentNet::encodeSequence(Mat sequence, Mat& encoded_seq)
+void DenoisingRecurrentNet::encodeSequence(Mat sequence, Mat& encoded_seq) const
 {
     //! Possibilities: "timeframe", "note_duration", "note_octav_duration", "generic"
     int prepend_zero_rows = input_window_size;
@@ -1263,11 +1260,11 @@ void DenoisingRecurrentNet::encodeSequence(Mat sequence, Mat& encoded_seq)
     encoded_seq.resize(5000, 4);
 
     if(encoding=="timeframe")
-        encode_onehot_timeframe(sequence, encoded_sequence, prepend_zero_rows);
+        encode_onehot_timeframe(sequence, encoded_seq, prepend_zero_rows);
     else if(encoding=="note_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_sequence, prepend_zero_rows);
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows);
     else if(encoding=="note_octav_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_sequence, prepend_zero_rows, true, 4);    
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, true, 4);    
     else if(encoding=="raw_masked_supervised")
         PLERROR("raw_masked_supervised encoding not yet implemented");
     else if(encoding=="generic")
@@ -1298,6 +1295,7 @@ void DenoisingRecurrentNet::setTrainingSet(VMat training_set, bool call_forget)
 
 void DenoisingRecurrentNet::locateSequenceBoundaries(VMat dataset, TVec<int>& boundaries, real end_of_sequence_symbol)
 {
+    boundaries.resize(10000);
     boundaries.resize(0);
     int l = dataset->length();
     for(int i=0; i<l; i++)
@@ -1328,15 +1326,15 @@ void DenoisingRecurrentNet::locateSequenceBoundaries(VMat dataset, TVec<int>& bo
  */
 
 void DenoisingRecurrentNet::encode_onehot_note_octav_duration(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows,
-                                                              bool use_silence, in octav_nbits, int duration_nbits)
+                                                              bool use_silence, int octav_nbits, int duration_nbits)
 {
     int l = sequence.length();
+    int note_nbits = use_silence ?13 :12;
+
     encoded_sequence.resize(prepend_zero_rows+l,note_nbits+octav_nbits+duration_nbits);
     encoded_sequence.clear();
     int octav_min = 10000;
     int octav_max = -10000;
-
-    int note_nbits = use_silence ?13 :12;
 
     if(octav_nbits>0)
     {
@@ -1429,10 +1427,10 @@ void DenoisingRecurrentNet::encode_onehot_timeframe(Mat sequence, Mat& encoded_s
     
 
 // input noise injection
-void inject_zero_forcing_noise(Mat sequence, double noise_prob)
+void DenoisingRecurrentNet::inject_zero_forcing_noise(Mat sequence, double noise_prob)
 {
     if(!sequence.isCompact())
-        PLEERROR("Expected a compact sequence");
+        PLERROR("Expected a compact sequence");
     real* p = sequence.data();
     int n = sequence.size();
     while(n--)
@@ -1542,13 +1540,10 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
                   VMat testoutputs, VMat testcosts)const
 {
     int len = testset.length();
-    Vec input;
-    Vec target;
-    real weight;
 
+    //Vec output(outputsize());
+    //output.clear();
 
-    Vec output(outputsize());
-    output.clear();
     Vec costs(nTestCosts());
     costs.clear();
     Vec n_items(nTestCosts());
@@ -1583,7 +1578,7 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         seq.resize(seqlen, w);
         testset->getMat(start,0,seq);
         encodeSequenceAndPopulateLists(seq);
-        fprop(test_costs, test_n_items);
+        fprop(costs, n_items);
 
         if (testoutputs)
         {
@@ -1607,9 +1602,6 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
 
         if (report_progress)
             pb->update(pos);
-    }
-
-
     }
 
     for(int i=0; i<costs.length(); i++)
@@ -1928,7 +1920,15 @@ TVec<string> DenoisingRecurrentNet::getTrainCostNames() const
     return getTestCostNames();
 }
 
+
 void DenoisingRecurrentNet::generate(int t, int n)
+{
+    PLERROR("generate not yet implemented");
+}
+
+
+/*
+void DenoisingRecurrentNet::oldgenerate(int t, int n)
 {
     //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
     data = new AutoVMatrix();
@@ -1955,10 +1955,10 @@ void DenoisingRecurrentNet::generate(int t, int n)
 
     Vec output(outputsize());
     output.clear();
-    /*Vec costs(nTestCosts());
-    costs.clear();
-    Vec n_items(nTestCosts());
-    n_items.clear();*/
+//     Vec costs(nTestCosts());
+//     costs.clear();
+//     Vec n_items(nTestCosts());
+//     n_items.clear();
 
     int r,r2;
     
@@ -1987,32 +1987,32 @@ void DenoisingRecurrentNet::generate(int t, int n)
             }       
         }
     
-/*
-        for (int k = 1; k <= t; k++)
-        {
-            partTarSize = outputsize();
-            for( int tar=0; tar < target_layers.length(); tar++ )
-            {
-                if(i>=t){
-                    input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar][ith_sample_in_sequence-k];
-                    partTarSize -= target_layers[tar]->size;
-                }
-            }
-        }
-*/
+
+//         for (int k = 1; k <= t; k++)
+//         {
+//             partTarSize = outputsize();
+//             for( int tar=0; tar < target_layers.length(); tar++ )
+//             {
+//                 if(i>=t){
+//                     input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar][ith_sample_in_sequence-k];
+//                     partTarSize -= target_layers[tar]->size;
+//                 }
+//             }
+//         }
+
         if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
         {
-            /*  ith_sample_in_sequence = 0;
-            hidden_list.resize(0);
-            hidden_act_no_bias_list.resize(0);
-            hidden2_list.resize(0);
-            hidden2_act_no_bias_list.resize(0);
-            target_prediction_list.resize(0);
-            target_prediction_act_no_bias_list.resize(0);
-            input_list.resize(0);
-            targets_list.resize(0);
-            nll_list.resize(0,0);
-            masks_list.resize(0);*/
+//             ith_sample_in_sequence = 0;
+//             hidden_list.resize(0);
+//             hidden_act_no_bias_list.resize(0);
+//             hidden2_list.resize(0);
+//             hidden2_act_no_bias_list.resize(0);
+//             target_prediction_list.resize(0);
+//             target_prediction_act_no_bias_list.resize(0);
+//             input_list.resize(0);
+//             targets_list.resize(0);
+//             nll_list.resize(0,0);
+//             masks_list.resize(0);
 
             
 
@@ -2186,18 +2186,18 @@ void DenoisingRecurrentNet::generate(int t, int n)
                 nll_list(ith_sample_in_sequence,tar) = 
                     target_layers[tar]->fpropNLL( 
                         targets_list[tar][ith_sample_in_sequence] ); 
-                /*costs[tar] += nll_list(ith_sample_in_sequence,tar);
+//                 costs[tar] += nll_list(ith_sample_in_sequence,tar);
                 
-                // Normalize by the number of things to predict
-                if( use_target_layers_masks )
-                {
-                    n_items[tar] += sum(
-                        input.subVec( inputsize_without_masks 
-                                      + sum_target_elements, 
-                                      target_layers_n_of_target_elements[tar]) );
-                }
-                else
-                n_items[tar]++;*/
+//                 // Normalize by the number of things to predict
+//                 if( use_target_layers_masks )
+//                 {
+//                     n_items[tar] += sum(
+//                         input.subVec( inputsize_without_masks 
+//                                       + sum_target_elements, 
+//                                       target_layers_n_of_target_elements[tar]) );
+//                 }
+//                 else
+//                 n_items[tar]++;
             }
             if( use_target_layers_masks )
                 sum_target_elements += 
@@ -2209,29 +2209,17 @@ void DenoisingRecurrentNet::generate(int t, int n)
 
     }
 
-    /*  
-    ith_sample_in_sequence = 0;
-    hidden_list.resize(0);
-    hidden_act_no_bias_list.resize(0);
-    hidden2_list.resize(0);
-    hidden2_act_no_bias_list.resize(0);
-    target_prediction_list.resize(0);
-    target_prediction_act_no_bias_list.resize(0);
-    input_list.resize(0);
-    targets_list.resize(0);
-    nll_list.resize(0,0);
-    masks_list.resize(0);   
-
-
-    */
-
-
-
-
-
-
-
-
+//     ith_sample_in_sequence = 0;
+//     hidden_list.resize(0);
+//     hidden_act_no_bias_list.resize(0);
+//     hidden2_list.resize(0);
+//     hidden2_act_no_bias_list.resize(0);
+//     target_prediction_list.resize(0);
+//     target_prediction_act_no_bias_list.resize(0);
+//     input_list.resize(0);
+//     targets_list.resize(0);
+//     nll_list.resize(0,0);
+//     masks_list.resize(0);   
 
     
     //Vec tempo;
@@ -2264,6 +2252,9 @@ void DenoisingRecurrentNet::generate(int t, int n)
      myfile.close();
 
 }
+
+*/
+
 /*
 void DenoisingRecurrentNet::gen()
 {
