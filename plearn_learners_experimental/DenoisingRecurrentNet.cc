@@ -72,11 +72,10 @@ PLEARN_IMPLEMENT_OBJECT(
 
 
 DenoisingRecurrentNet::DenoisingRecurrentNet() :
-    //rbm_learning_rate( 0.01 ),
     recurrent_net_learning_rate( 0.01),
     use_target_layers_masks( false ),
-    end_of_sequence_symbol( -1000 )
-    //rbm_nstages( 0 ),
+    end_of_sequence_symbol( -1000 ),
+    encoding("raw_masked_supervised")
 {
     random_gen = new PRandom();
 }
@@ -153,12 +152,11 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The RBMConnection from input_layer to hidden_layer.\n");
 
-    /*
-    declareOption(ol, "", 
-                  &DenoisingRecurrentNet::,
+    declareOption(ol, "encoding", 
+                  &DenoisingRecurrentNet::encoding,
                   OptionBase::buildoption,
-                  "");
-    */
+                  "Chooses what type of encoding to apply to an input sequence\n"
+                  "Possibilities: timeframe, note_duration, note_octav_duration, raw_masked_supervised");
 
 
     declareOption(ol, "target_layers_n_of_target_elements", 
@@ -667,40 +665,26 @@ void DenoisingRecurrentNet::fprop(Vec train_costs, Vec train_n_items) const
             if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
                 Vec target_prediction_i = target_prediction_list[tar](i);
-                Vec target_prediction_act_no_bias_i = target_prediction_act_no_bias_i;
+                Vec target_prediction_act_no_bias_i = target_prediction_act_no_bias_list[tar](i);
                 target_connections[tar]->fprop(last_hidden, target_prediction_act_no_bias_i);
                 target_layers[tar]->fprop(target_prediction_act_no_bias_i, target_prediction_i);
                 if( use_target_layers_masks )
                     target_prediction_i *= masks_list[tar](i);
-            }
-        }
 
-        int sum_target_elements = 0;
-        for( int tar=0; tar < ntargets; tar++ )
-        {
-            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-            {
-                target_layers[tar]->activation << target_prediction_act_no_bias_list[tar](i);
+                target_layers[tar]->activation << target_prediction_act_no_bias_i;
                 target_layers[tar]->activation += target_layers[tar]->bias;
-                target_layers[tar]->setExpectation(target_prediction_list[tar](i));
+                target_layers[tar]->setExpectation(target_prediction_i);
+
                 Vec target_vec = targets_list[tar](i);
                 nll_list(i,tar) = target_layers[tar]->fpropNLL(target_vec); 
                 train_costs[tar] += nll_list(i,tar);
-                        
+
                 // Normalize by the number of things to predict
                 if( use_target_layers_masks )
-                {
-                    train_n_items[tar] += sum(
-                        input.subVec( inputsize_without_masks 
-                                      + sum_target_elements, 
-                                      target_layers_n_of_target_elements[tar]) );
-                }
+                    train_n_items[tar] += sum(masks_list[tar](i));
                 else
                     train_n_items[tar]++;
             }
-            if( use_target_layers_masks )
-                sum_target_elements += target_layers_n_of_target_elements[tar];
-                    
         }
     }
 }
@@ -1541,8 +1525,8 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
 {
     int len = testset.length();
 
-    //Vec output(outputsize());
-    //output.clear();
+    Vec output(outputsize());
+    output.clear();
 
     Vec costs(nTestCosts());
     costs.clear();
@@ -1596,6 +1580,8 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
                 }
                 testoutputs->putOrAppendRow(pos++, output);
             }
+            output.fill(end_of_sequence_symbol);
+            testoutputs->putOrAppendRow(pos++, output);
         }
         else
             pos += seqlen;
@@ -1615,7 +1601,7 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         testcosts->putOrAppendRow(0, costs);
     
     if (test_stats)
-        test_stats->update(costs, weight);
+        test_stats->update(costs, 1.);
 }
 
 /*
