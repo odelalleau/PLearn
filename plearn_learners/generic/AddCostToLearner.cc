@@ -572,7 +572,7 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
 #ifdef BOUNDCHECK
             if (sub_learner_out >= n_classes
                 || is_missing(sub_learner_out))
-                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of sub_learner: sub_learner_out=%f,  "
+                PLERROR("In AddCostToLearner::computeCostsFromOutputs - bad output value of sub_learner: sub_learner_out=%d,  "
                         " missing or higher or egual to n_classes (%d)",
                         sub_learner_out,n_classes);
             if (the_target >= n_classes

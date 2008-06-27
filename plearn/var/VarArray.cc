@@ -313,7 +313,7 @@ void VarArray::copyGradientFrom(const Array<Vec>& datavec)
             real* value = v->gradientdata;
             int vlength = v->nelems();
             if(vlength!=n)
-                PLERROR("IN VarArray::copyGradientFrom length of -th Var in the array differs from length of %d-th argument",i,i);
+                PLERROR("IN VarArray::copyGradientFrom length of -th Var in the array differs from length of %d-th argument",i);
             for(int j=0; j<vlength; j++)
                 value[j] = *data++;
         }
@@ -333,7 +333,7 @@ void VarArray::copyGradientTo(const Array<Vec>& datavec)
             real* value = v->gradientdata;
             int vlength = v->nelems();
             if(vlength!=n)
-                PLERROR("IN VarArray::copyGradientFrom length of -th Var in the array differs from length of %d-th argument",i,i);
+                PLERROR("IN VarArray::copyGradientFrom length of -th Var in the array differs from length of %d-th argument",i);
             for(int j=0; j<vlength; j++)
                 *data++ = value[j];
         }

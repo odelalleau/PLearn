@@ -219,7 +219,7 @@ void ProcessDatasetVMatrix::build_()
             vm = old_vm;
     } else
         PLERROR("In ProcessDatasetVMatrix::build_ - Unknown value for the "
-                "'precompute' option: ", precompute.c_str());
+                "'precompute' option: '%s'", precompute.c_str());
 
     inherited::build();
 }
