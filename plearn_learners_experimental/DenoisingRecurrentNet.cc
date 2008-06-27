@@ -75,7 +75,8 @@ DenoisingRecurrentNet::DenoisingRecurrentNet() :
     recurrent_net_learning_rate( 0.01),
     use_target_layers_masks( false ),
     end_of_sequence_symbol( -1000 ),
-    encoding("raw_masked_supervised")
+    encoding("raw_masked_supervised"),
+    input_window_size(1)
 {
     random_gen = new PRandom();
 }
@@ -158,6 +159,12 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   "Chooses what type of encoding to apply to an input sequence\n"
                   "Possibilities: timeframe, note_duration, note_octav_duration, raw_masked_supervised");
 
+    declareOption(ol, "input_window_size", 
+                  &DenoisingRecurrentNet::input_window_size,
+                  OptionBase::buildoption,
+                  "How many time steps to present as input\n"
+                  "This option is ignored when mode is raw_masked_supervised,"
+                  "since in this mode the full expanded and preprocessed input and target are given explicitly.");
 
     declareOption(ol, "target_layers_n_of_target_elements", 
                   &DenoisingRecurrentNet::target_layers_n_of_target_elements,
