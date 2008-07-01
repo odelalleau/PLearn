@@ -42,6 +42,7 @@
 #include "RegressionTreeRegisters.h"
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/MemoryVMatrixNoSave.h>
+#include <limits>
 
 namespace PLearn {
 using namespace std;
@@ -123,7 +124,7 @@ void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {   
     //check that we can put all the examples of the train_set
     //with respect to the size of RTR_type who limit the capacity
-    PLCHECK(the_train_set.length()<pow((real)2,(real)(sizeof(RTR_type)*8)));
+    PLCHECK(the_train_set.length()<=std::numeric_limits<RTR_type>::max());
 
     if(the_train_set==source && tsource)
         //we set the existing source file
