@@ -666,8 +666,8 @@ void DeepBeliefNet::build_final_cost()
 
         if( final_module->output_size != final_cost->input_size )
             PLERROR("DeepBeliefNet::build_final_cost() - "
-                    "final_module->output_size (%d) != final_cost->input_size."
-                    "\n", n_layers-1, layers[n_layers-1]->size,
+                    "final_module->output_size (%d) != final_cost->input_size (%d)."
+                    "\n", final_module->output_size,
                     final_module->input_size);
 
         final_module->setLearningRate( grad_learning_rate );
