@@ -376,20 +376,20 @@ void MultiClassAdaBoost::getSubLearnerTarget(Vec target,
                                              TVec<Vec> sub_target) 
 {
     if(fast_is_equal(target[0],0.)){
-        sub_target[0]=0;
-        sub_target[1]=0;
+        sub_target[0][0]=0;
+        sub_target[1][0]=0;
     }else if(fast_is_equal(target[0],1.)){
-        sub_target[0]=1;
-        sub_target[1]=0;
+        sub_target[0][0]=1;
+        sub_target[1][0]=0;
     }else if(fast_is_equal(target[0],2.)){
-        sub_target[0]=1;
-        sub_target[1]=1;
+        sub_target[0][0]=1;
+        sub_target[1][0]=1;
     }else if(target[0]>2){
         PLWARNING("In MultiClassAdaBoost::getSubLearnerTarget - "
                   "We only support target 0/1/2. We got %f. We transform "
                   "it to a target of 2.", target[0]);
-        sub_target[0]=1;
-        sub_target[1]=1;
+        sub_target[0][0]=1;
+        sub_target[1][0]=1;
     }else
         PLERROR("In MultiClassAdaBoost::getSubLearnerTarget - "
                   "We only support target 0/1/2. We got %f.", target[0]); 
