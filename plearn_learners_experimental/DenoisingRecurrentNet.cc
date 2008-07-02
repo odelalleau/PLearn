@@ -58,7 +58,7 @@
 //     * du code pour entraîner séparément les hidden_connections (si présentes)
 // - pourrait avoir le gradient du denoising recurrent net en même temps que
 //   celui du "fine-tuning"
-// - add dynamic_activations_list and use it in recurrent_update
+// - add dynamic_activations_list and use it in recurrentUpdate
 
 
 namespace PLearn {
@@ -70,13 +70,20 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
     );
 
-
 DenoisingRecurrentNet::DenoisingRecurrentNet() :
-    recurrent_net_learning_rate( 0.01),
     use_target_layers_masks( false ),
     end_of_sequence_symbol( -1000 ),
     encoding("raw_masked_supervised"),
-    input_window_size(1)
+    input_window_size(1),
+    tied_input_reconstruction_weights( true ),
+    input_noise_prob( 0.15 ),
+    input_reconstruction_lr( 0 ),
+    hidden_noise_prob( 0.15 ),
+    hidden_reconstruction_lr( 0 ),
+    tied_hidden_reconstruction_weights( false ),
+    noisy_recurrent_lr( 0),
+    dynamic_gradient_scale_factor( 0.5 ),
+    recurrent_lr( 0.01 )
 {
     random_gen = new PRandom();
 }
@@ -88,11 +95,6 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
 //                  "The learning rate used during RBM contrastive "
 //                  "divergence learning phase.\n");
 
-    declareOption(ol, "recurrent_net_learning_rate", 
-                  &DenoisingRecurrentNet::recurrent_net_learning_rate,
-                  OptionBase::buildoption,
-                  "The learning rate used during the recurrent phase.\n");
-
 //    declareOption(ol, "rbm_nstages", &DenoisingRecurrentNet::rbm_nstages,
 //                  OptionBase::buildoption,
 //                  "Number of epochs for rbm phase.\n");
@@ -102,12 +104,6 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   &DenoisingRecurrentNet::target_layers_weights,
                   OptionBase::buildoption,
                   "The training weights of each target layers.\n");
-
-    declareOption(ol, "use_target_layers_masks", 
-                  &DenoisingRecurrentNet::use_target_layers_masks,
-                  OptionBase::buildoption,
-                  "Indication that a mask indicating which target to predict\n"
-                  "is present in the input part of the VMatrix dataset.\n");
 
     declareOption(ol, "end_of_sequence_symbol", 
                   &DenoisingRecurrentNet::end_of_sequence_symbol,
@@ -153,19 +149,6 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The RBMConnection from input_layer to hidden_layer.\n");
 
-    declareOption(ol, "encoding", 
-                  &DenoisingRecurrentNet::encoding,
-                  OptionBase::buildoption,
-                  "Chooses what type of encoding to apply to an input sequence\n"
-                  "Possibilities: timeframe, note_duration, note_octav_duration, raw_masked_supervised");
-
-    declareOption(ol, "input_window_size", 
-                  &DenoisingRecurrentNet::input_window_size,
-                  OptionBase::buildoption,
-                  "How many time steps to present as input\n"
-                  "This option is ignored when mode is raw_masked_supervised,"
-                  "since in this mode the full expanded and preprocessed input and target are given explicitly.");
-
     declareOption(ol, "target_layers_n_of_target_elements", 
                   &DenoisingRecurrentNet::target_layers_n_of_target_elements,
                   OptionBase::learntoption,
@@ -182,7 +165,73 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "Number of symbols for each symbolic field of train_set.\n");
 
-    /*
+
+
+
+
+    
+    declareOption(ol, "encoding", 
+                  &DenoisingRecurrentNet::encoding,
+                  OptionBase::buildoption,
+                  "Chooses what type of encoding to apply to an input sequence\n"
+                  "Possibilities: timeframe, note_duration, note_octav_duration, raw_masked_supervised");
+
+    declareOption(ol, "input_window_size", 
+                  &DenoisingRecurrentNet::input_window_size,
+                  OptionBase::buildoption,
+                  "How many time steps to present as input\n"
+                  "This option is ignored when mode is raw_masked_supervised,"
+                  "since in this mode the full expanded and preprocessed input and target are given explicitly.");
+
+    declareOption(ol, "tied_input_reconstruction_weights", 
+                  &DenoisingRecurrentNet::tied_input_reconstruction_weights,
+                  OptionBase::buildoption,
+                  "Do we want the input reconstruction weights tied or not\n"
+                  "Boolean, yes or no");
+
+    declareOption(ol, "input_noise_prob", 
+                  &DenoisingRecurrentNet::input_noise_prob,
+                  OptionBase::buildoption,
+                  "Probability, for each neurone of each input, to be set to zero\n");
+
+    declareOption(ol, "input_reconstruction_lr", 
+                  &DenoisingRecurrentNet::input_reconstruction_lr,
+                  OptionBase::buildoption,
+                  "The learning rate used for the reconstruction\n");
+
+    declareOption(ol, "hidden_noise_prob", 
+                  &DenoisingRecurrentNet::hidden_noise_prob,
+                  OptionBase::buildoption,
+                  "Probability, for each neurone of each hidden layer, to be set to zero\n");
+
+    declareOption(ol, "hidden_reconstruction_lr", 
+                  &DenoisingRecurrentNet::hidden_reconstruction_lr,
+                  OptionBase::buildoption,
+                  "The learning rate used for the dynamic reconstruction through time\n");
+
+    declareOption(ol, "tied_hidden_reconstruction_weights", 
+                  &DenoisingRecurrentNet::tied_hidden_reconstruction_weights,
+                  OptionBase::buildoption,
+                  "Do we want the dynamic reconstruction weights tied or not\n"
+                  "Boolean, yes or no");
+
+    declareOption(ol, "noisy_recurrent_lr", 
+                  &DenoisingRecurrentNet::noisy_recurrent_lr,
+                  OptionBase::buildoption,
+                  "The learning rate used in the noisy recurrent phase for the input reconstruction\n");
+
+    declareOption(ol, "dynamic_gradient_scale_factor", 
+                  &DenoisingRecurrentNet::dynamic_gradient_scale_factor,
+                  OptionBase::buildoption,
+                  "The scale factor of the learning rate used in the noisy recurrent phase for the dynamic hidden reconstruction\n");
+
+    declareOption(ol, "recurrent_lr", 
+                  &DenoisingRecurrentNet::recurrent_lr,
+                  OptionBase::buildoption,
+                  "The learning rate used in the fine tuning phase\n");
+
+
+ /*
     declareOption(ol, "", &DenoisingRecurrentNet::,
                   OptionBase::learntoption,
                   "");
@@ -209,6 +258,8 @@ void DenoisingRecurrentNet::build_()
 
     if(train_set)
     {
+        use_target_layers_masks = (encoding=="raw_masked_supervised");
+
         PLASSERT( target_layers_weights.length() == target_layers.length() );
         PLASSERT( target_connections.length() == target_layers.length() );
         PLASSERT( target_layers.length() > 0 );
@@ -497,14 +548,18 @@ void DenoisingRecurrentNet::train()
 
         MODULE_LOG << "  stage = " << stage << endl;
         MODULE_LOG << "  end_stage = " << end_stage << endl;
-        MODULE_LOG << "  recurrent_net_learning_rate = " << recurrent_net_learning_rate << endl;
+        MODULE_LOG << "  input_noise_prob = " <<                input_noise_prob  << endl;              
+        MODULE_LOG << "  input_reconstruction_lr = " <<         input_reconstruction_lr  << endl;       
+        MODULE_LOG << "  hidden_noise_prob = " <<               hidden_noise_prob  << endl;             
+        MODULE_LOG << "  hidden_reconstruction_lr = " <<        hidden_reconstruction_lr  << endl;      
+        MODULE_LOG << "  noisy_recurrent_lr = " <<              noisy_recurrent_lr  << endl;            
+        MODULE_LOG << "  dynamic_gradient_scale_factor = " <<   dynamic_gradient_scale_factor  << endl; 
+        MODULE_LOG << "  recurrent_lr = " <<                    recurrent_lr  << endl;                  
+
 
         if( report_progress && stage < end_stage )
             pb = new ProgressBar( "Recurrent training phase of "+classname(),
                                   end_stage - init_stage );
-
-        // TO DO: check this line
-        setLearningRate( recurrent_net_learning_rate );
 
         while(stage < end_stage)
         {
@@ -516,8 +571,36 @@ void DenoisingRecurrentNet::train()
             {
                 getSequence(i, seq);
                 encodeSequenceAndPopulateLists(seq);
-                fprop(train_costs, train_n_items);
-                recurrent_update();
+              
+                bool corrupt_input = input_noise_prob!=0 && (noisy_recurrent_lr!=0 || input_reconstruction_lr!=0);
+
+                clean_encoded_seq.resize(encoded_seq.length(), encoded_seq.width());
+                clean_encoded_seq << encoded_seq;
+
+                if(corrupt_input)  // WARNING: encoded_sequence will be dirty!!!!
+                    inject_zero_forcing_noise(encoded_seq, input_noise_prob);
+                
+                // greedy phase
+                if(input_reconstruction_lr!=0 || hidden_reconstruction_lr!=0)
+                    performGreedyDenoisingPhase();
+
+                // recurrent noisy phase
+                if(noisy_recurrent_lr!=0)
+                {
+                    setLearningRate( noisy_recurrent_lr );
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate();
+                }
+
+                // recurrent no noise phase
+                if(recurrent_lr!=0)
+                {
+                    if(corrupt_input) // need to recover the clean sequence
+                        encoded_seq << clean_encoded_seq;                    
+                    setLearningRate( recurrent_lr );
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate();
+                }
             }
 
             if( pb )
@@ -549,6 +632,13 @@ void DenoisingRecurrentNet::train()
 }
 
 
+void DenoisingRecurrentNet::performGreedyDenoisingPhase()
+{
+    // TO DO!
+    PLERROR("performGreedyDenoisingPhase not yet implemented");
+}
+
+
 //! does encoding if needed and populates the list.
 void DenoisingRecurrentNet::encodeSequenceAndPopulateLists(Mat seq) const
 {
@@ -558,24 +648,30 @@ void DenoisingRecurrentNet::encodeSequenceAndPopulateLists(Mat seq) const
         encodeAndCreateSupervisedSequence(seq);
 }
 
-// TO DO: penser a gestion des prepended dans ce cas
-// encodes sequ, then populates: inputslist, targets_list, masks_list
+// encodes sequ, then populates: input_list, targets_list, masks_list
 void DenoisingRecurrentNet::encodeAndCreateSupervisedSequence(Mat seq) const
 {
+    if(use_target_layers_masks)
+        PLERROR("Bug: use_target_layers_masks is expected to be false (no masks) when in encodeAndCreateSupervisedSequence");
+
     encodeSequence(seq, encoded_seq);
     // now work with encoded_seq
     int l = encoded_seq.length();
     resize_lists(l);
 
-    // TO DO: populate lists
-    // ....
-
-    PLERROR("Not implemented yet");
+    Mat targets = targets_list[0];
+    targets.resize(l, encoded_seq.width());
+                   
+    for(int t=input_window_size; t<l; t++)
+    {
+        input_list[t] = encoded_seq.subMatRows(t-input_window_size,input_window_size).toVec();
+        // target is copied so that when adding noise to input, it doesn't modify target 
+        targets(t) << encoded_seq(t);
+    }
 }
 
 
 
-// TO DO: penser a prepend dans ce cas
 
 // For the (backward testing) raw_masked_supervised case. Populates: input_list, targets_list, masks_list
 void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq) const
@@ -633,7 +729,7 @@ void DenoisingRecurrentNet::resize_lists(int l) const
 // TODO: think properly about prepended stuff
 
 // fprop accumulates costs in costs and counts in n_items
-void DenoisingRecurrentNet::fprop(Vec train_costs, Vec train_n_items) const
+void DenoisingRecurrentNet::recurrentFprop(Vec train_costs, Vec train_n_items) const
 {
     int l = input_list.length();
     int ntargets = target_layers.length();
@@ -709,7 +805,7 @@ target_prediction_act_no_bias_list
 nll_list
 */
 
-void DenoisingRecurrentNet::recurrent_update()
+void DenoisingRecurrentNet::recurrentUpdate()
 {
     hidden_temporal_gradient.resize(hidden_layer->size);
     hidden_temporal_gradient.clear();
@@ -813,413 +909,10 @@ void DenoisingRecurrentNet::recurrent_update()
     
 }
 
-/*
-void DenoisingRecurrentNet::old_recurrent_update()
-{
-    hidden_temporal_gradient.resize(hidden_layer->size);
-    hidden_temporal_gradient.clear();
-    for(int i=hidden_list.length()-1; i>=0; i--){   
-
-        if( hidden_layer2 )
-            hidden_gradient.resize(hidden_layer2->size);
-        else
-            hidden_gradient.resize(hidden_layer->size);
-        hidden_gradient.clear();
-        if(use_target_layers_masks)
-        {
-            for( int tar=0; tar<target_layers.length(); tar++)
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
-                    target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
-                    bias_gradient *= target_layers_weights[tar];
-                    bias_gradient *= masks_list[tar][i];
-                    target_layers[tar]->update(bias_gradient);
-                    if( hidden_layer2 )
-                        target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true);
-                    else
-                        target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true);
-                }
-            }
-        }
-        else
-        {
-            for( int tar=0; tar<target_layers.length(); tar++)
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar][i];
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(target_prediction_list[tar][i]);
-                    target_layers[tar]->bpropNLL(targets_list[tar][i],nll_list(i,tar),bias_gradient);
-                    bias_gradient *= target_layers_weights[tar];
-                    target_layers[tar]->update(bias_gradient);
-                    if( hidden_layer2 )
-                        target_connections[tar]->bpropUpdate(hidden2_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true); 
-                    else
-                        target_connections[tar]->bpropUpdate(hidden_list[i],target_prediction_act_no_bias_list[tar][i],
-                                                             hidden_gradient, bias_gradient,true); 
-                        
-                }
-            }
-        }
-
-        if (hidden_layer2)
-        {
-            hidden_layer2->bpropUpdate(
-                hidden2_act_no_bias_list[i], hidden2_list[i],
-                bias_gradient, hidden_gradient);
-                
-            hidden_connections->bpropUpdate(
-                hidden_list[i],
-                hidden2_act_no_bias_list[i], 
-                hidden_gradient, bias_gradient);
-        }
-            
-        if(i!=0 && dynamic_connections )
-        {   
-            hidden_gradient += hidden_temporal_gradient;
-                
-            hidden_layer->bpropUpdate(
-                hidden_act_no_bias_list[i], hidden_list[i],
-                hidden_temporal_gradient, hidden_gradient);
-                
-            dynamic_connections->bpropUpdate(
-                hidden_list[i-1],
-                hidden_act_no_bias_list[i], // Here, it should be cond_bias, but doesn't matter
-                hidden_gradient, hidden_temporal_gradient);
-                
-            hidden_temporal_gradient << hidden_gradient;
-                
-            input_connections->bpropUpdate(
-                input_list[i],
-                hidden_act_no_bias_list[i], 
-                visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
-                
-        }
-        else
-        {
-            hidden_layer->bpropUpdate(
-                hidden_act_no_bias_list[i], hidden_list[i],
-                hidden_temporal_gradient, hidden_gradient); // Not really temporal gradient, but this is the final iteration...
-            input_connections->bpropUpdate(
-                input_list[i],
-                hidden_act_no_bias_list[i], 
-                visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
-
-        }
-    }
-    
-}
-*/
-
-
-/*
-void DenoisingRecurrentNet::oldtrain()
-{
-    MODULE_LOG << "train() called " << endl;
-
-    Vec input( inputsize() );
-    Vec target( targetsize() );
-    real weight = 0; // Unused
-    Vec train_costs( getTrainCostNames().length() );
-    train_costs.clear();
-    Vec train_n_items( getTrainCostNames().length() );
-
-    if( !initTrain() )
-    {
-        MODULE_LOG << "train() aborted" << endl;
-        return;
-    }
-
-    ProgressBar* pb = 0;
-
-    // clear stats of previous epoch
-    train_stats->forget();
-
-
-//    if(rbm_stage < rbm_nstages)
-//    {
-//    }
-
-
-    if( stage >= nstages )
-        return;
-
-    if( stage < nstages )
-    {        
-
-        MODULE_LOG << "Training the whole model" << endl;
-
-        int init_stage = stage;
-        //int end_stage = max(0,nstages-(rbm_nstages + dynamic_nstages));
-        int end_stage = nstages;
-
-        MODULE_LOG << "  stage = " << stage << endl;
-        MODULE_LOG << "  end_stage = " << end_stage << endl;
-        MODULE_LOG << "  recurrent_net_learning_rate = " << recurrent_net_learning_rate << endl;
-
-        if( report_progress && stage < end_stage )
-            pb = new ProgressBar( "Recurrent training phase of "+classname(),
-                                  end_stage - init_stage );
-
-        setLearningRate( recurrent_net_learning_rate );
-
-        int ith_sample_in_sequence = 0;
-        int inputsize_without_masks = inputsize() 
-            - ( use_target_layers_masks ? targetsize() : 0 );
-        int sum_target_elements = 0;
-        while(stage < end_stage)
-        {
-            train_costs.clear();
-            train_n_items.clear();
-            for(int sample=0 ; sample<train_set->length() ; sample++ )
-            {
-                train_set->getExample(sample, input, target, weight);
-
-                if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
-                {
-                    //update
-                    recurrent_update();
-                    
-                    ith_sample_in_sequence = 0;
-                    hidden_list.resize(0);
-                    hidden_act_no_bias_list.resize(0);
-                    hidden2_list.resize(0);
-                    hidden2_act_no_bias_list.resize(0);
-                    target_prediction_list.resize(0);
-                    target_prediction_act_no_bias_list.resize(0);
-                    input_list.resize(0);
-                    targets_list.resize(0);
-                    nll_list.resize(0,0);
-                    masks_list.resize(0);
-                    continue;
-                }
-
-                // Resize internal variables
-                hidden_list.resize(ith_sample_in_sequence+1);
-                hidden_act_no_bias_list.resize(ith_sample_in_sequence+1);
-                if( hidden_layer2 )
-                {
-                    hidden2_list.resize(ith_sample_in_sequence+1);
-                    hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1);
-                }
-                 
-                input_list.resize(ith_sample_in_sequence+1);
-                input_list[ith_sample_in_sequence].resize(input_layer->size);
-
-                targets_list.resize( target_layers.length() );
-                target_prediction_list.resize( target_layers.length() );
-                target_prediction_act_no_bias_list.resize( target_layers.length() );
-                for( int tar=0; tar < target_layers.length(); tar++ )
-                {
-                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                    {                        
-                        targets_list[tar].resize( ith_sample_in_sequence+1);
-                        targets_list[tar][ith_sample_in_sequence].resize( 
-                            target_layers[tar]->size);
-                        target_prediction_list[tar].resize(
-                            ith_sample_in_sequence+1);
-                        target_prediction_act_no_bias_list[tar].resize(
-                            ith_sample_in_sequence+1);
-                    }
-                }
-                nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
-                if( use_target_layers_masks )
-                {
-                    masks_list.resize( target_layers.length() );
-                    for( int tar=0; tar < target_layers.length(); tar++ )
-                        if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                            masks_list[tar].resize( ith_sample_in_sequence+1 );
-                }
-
-                // Forward propagation
-
-                // Fetch right representation for input
-                clamp_units(input.subVec(0,inputsize_without_masks),
-                            input_layer,
-                            input_symbol_sizes);                
-                input_list[ith_sample_in_sequence] << input_layer->expectation;
-
-                // Fetch right representation for target
-                sum_target_elements = 0;
-                for( int tar=0; tar < target_layers.length(); tar++ )
-                {
-                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                    {
-                        if( use_target_layers_masks )
-                        {
-                            clamp_units(target.subVec(
-                                            sum_target_elements,
-                                            target_layers_n_of_target_elements[tar]),
-                                        target_layers[tar],
-                                        target_symbol_sizes[tar],
-                                        input.subVec(
-                                            inputsize_without_masks 
-                                            + sum_target_elements, 
-                                            target_layers_n_of_target_elements[tar]),
-                                        masks_list[tar][ith_sample_in_sequence]
-                                );
-                            
-                        }
-                        else
-                        {
-                            clamp_units(target.subVec(
-                                            sum_target_elements,
-                                            target_layers_n_of_target_elements[tar]),
-                                        target_layers[tar],
-                                        target_symbol_sizes[tar]);
-                        }
-                        targets_list[tar][ith_sample_in_sequence] << 
-                            target_layers[tar]->expectation;
-                    }
-                    sum_target_elements += target_layers_n_of_target_elements[tar];
-                }
-                
-                input_connections->fprop( input_list[ith_sample_in_sequence], 
-                                          hidden_act_no_bias_list[ith_sample_in_sequence]);
-                
-                if( ith_sample_in_sequence > 0 && dynamic_connections )
-                {
-                    dynamic_connections->fprop( 
-                        hidden_list[ith_sample_in_sequence-1],
-                        dynamic_act_no_bias_contribution );
-
-                    hidden_act_no_bias_list[ith_sample_in_sequence] += 
-                        dynamic_act_no_bias_contribution;
-                }
-                 
-                hidden_layer->fprop( hidden_act_no_bias_list[ith_sample_in_sequence], 
-                                     hidden_list[ith_sample_in_sequence] );
-                 
-                if( hidden_layer2 )
-                {
-                    hidden_connections->fprop( 
-                        hidden_list[ith_sample_in_sequence],
-                        hidden2_act_no_bias_list[ith_sample_in_sequence]);
-
-                    hidden_layer2->fprop( 
-                        hidden2_act_no_bias_list[ith_sample_in_sequence],
-                        hidden2_list[ith_sample_in_sequence] 
-                        );
-
-                    for( int tar=0; tar < target_layers.length(); tar++ )
-                    {
-                        if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                        {
-                            target_connections[tar]->fprop(
-                                hidden2_list[ith_sample_in_sequence],
-                                target_prediction_act_no_bias_list[tar][
-                                    ith_sample_in_sequence]
-                                );
-                            target_layers[tar]->fprop(
-                                target_prediction_act_no_bias_list[tar][
-                                    ith_sample_in_sequence],
-                                target_prediction_list[tar][
-                                    ith_sample_in_sequence] );
-                            if( use_target_layers_masks )
-                                target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                                    masks_list[tar][ith_sample_in_sequence];
-                        }
-                    }
-                }
-                else
-                {
-                    for( int tar=0; tar < target_layers.length(); tar++ )
-                    {
-                        if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                        {
-                            target_connections[tar]->fprop(
-                                hidden_list[ith_sample_in_sequence],
-                                target_prediction_act_no_bias_list[tar][
-                                    ith_sample_in_sequence]
-                                );
-                            target_layers[tar]->fprop(
-                                target_prediction_act_no_bias_list[tar][
-                                    ith_sample_in_sequence],
-                                target_prediction_list[tar][
-                                    ith_sample_in_sequence] );
-                            if( use_target_layers_masks )
-                                target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                                    masks_list[tar][ith_sample_in_sequence];
-                        }
-                    }
-                }
-
-                sum_target_elements = 0;
-                for( int tar=0; tar < target_layers.length(); tar++ )
-                {
-                    if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                    {
-                        target_layers[tar]->activation << 
-                            target_prediction_act_no_bias_list[tar][
-                                ith_sample_in_sequence];
-                        target_layers[tar]->activation += target_layers[tar]->bias;
-                        target_layers[tar]->setExpectation(
-                            target_prediction_list[tar][
-                                ith_sample_in_sequence]);
-                        nll_list(ith_sample_in_sequence,tar) = 
-                            target_layers[tar]->fpropNLL( 
-                                targets_list[tar][ith_sample_in_sequence] ); 
-                        train_costs[tar] += nll_list(ith_sample_in_sequence,tar);
-                        
-                        // Normalize by the number of things to predict
-                        if( use_target_layers_masks )
-                        {
-                            train_n_items[tar] += sum(
-                                input.subVec( inputsize_without_masks 
-                                              + sum_target_elements, 
-                                              target_layers_n_of_target_elements[tar]) );
-                        }
-                        else
-                            train_n_items[tar]++;
-                    }
-                    if( use_target_layers_masks )
-                        sum_target_elements += 
-                            target_layers_n_of_target_elements[tar];
-                    
-                }
-                ith_sample_in_sequence++;
-            }
-            if( pb )
-                pb->update( stage + 1 - init_stage);
-            
-            for(int i=0; i<train_costs.length(); i++)
-            {
-                if( !fast_exact_is_equal(target_layers_weights[i],0) )
-                    train_costs[i] /= train_n_items[i];
-                else
-                    train_costs[i] = MISSING_VALUE;
-            }
-
-            if(verbosity>0)
-                cout << "mean costs at stage " << stage << 
-                    " = " << train_costs << endl;
-            stage++;
-            train_stats->update(train_costs);
-        }    
-        if( pb )
-        {
-            delete pb;
-            pb = 0;
-        }
-
-    }
-
-
-    train_stats->finalize();
-}
-*/
 
 /* TO DO:
 verifier nombre de temps
-implementer correctmeent duration_to_number_of_timeframes(duration)
+implementer correctement duration_to_number_of_timeframes(duration)
 declare nouvelles options et valeurs par defaut correctes
 */
 
@@ -1235,8 +928,8 @@ note: midi_number (21..108 numero de touche sur piano)
       ou -1 (missing)
       ou -999 (fin de sequence)
 
-duree: 1 double-croche
-       2 
+duree: 0 double-croche
+       1 
 ..16   exprimee en 1/16 de mesure (resultat du quantize de Stan)
 
 
@@ -1253,11 +946,11 @@ void DenoisingRecurrentNet::encodeSequence(Mat sequence, Mat& encoded_seq) const
     if(encoding=="timeframe")
         encode_onehot_timeframe(sequence, encoded_seq, prepend_zero_rows);
     else if(encoding=="note_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows);
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, true, 0);
     else if(encoding=="note_octav_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, true, 4);    
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, true, 5);    
     else if(encoding=="raw_masked_supervised")
-        PLERROR("raw_masked_supervised encoding not yet implemented");
+        PLERROR("raw_masked_supervised means already encoded! You shouldnt have landed here!!!");
     else if(encoding=="generic")
         PLERROR("generic encoding not yet implemented");
     else
@@ -1370,6 +1063,7 @@ void DenoisingRecurrentNet::encode_onehot_note_octav_duration(Mat sequence, Mat&
 
 int DenoisingRecurrentNet::duration_to_number_of_timeframes(int duration)
 {
+    PLERROR("duration_to_number_of_timeframes (used only when encoding==timeframe) is not yet implemented");
     return duration+1;
 }
 
@@ -1495,7 +1189,7 @@ void DenoisingRecurrentNet::setLearningRate( real the_learning_rate )
     hidden_layer->setLearningRate( the_learning_rate );
     input_connections->setLearningRate( the_learning_rate );
     if( dynamic_connections )
-        dynamic_connections->setLearningRate( the_learning_rate ); //HUGO: multiply by dynamic_connections_learning_weight;
+        dynamic_connections->setLearningRate( dynamic_gradient_scale_factor*the_learning_rate ); 
     if( hidden_layer2 )
     {
         hidden_layer2->setLearningRate( the_learning_rate );
@@ -1569,7 +1263,7 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         seq.resize(seqlen, w);
         testset->getMat(start,0,seq);
         encodeSequenceAndPopulateLists(seq);
-        fprop(costs, n_items);
+        recurrentFprop(costs, n_items);
 
         if (testoutputs)
         {
@@ -1611,294 +1305,6 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         test_stats->update(costs, 1.);
 }
 
-/*
-void DenoisingRecurrentNet::oldtest(VMat testset, PP<VecStatsCollector> test_stats,
-                  VMat testoutputs, VMat testcosts)const
-{ 
-
-    int len = testset.length();
-    Vec input;
-    Vec target;
-    real weight;
-
-    Vec output(outputsize());
-    output.clear();
-    Vec costs(nTestCosts());
-    costs.clear();
-    Vec n_items(nTestCosts());
-    n_items.clear();
-
-    PP<ProgressBar> pb;
-    if (report_progress) 
-        pb = new ProgressBar("Testing learner", len);
-
-    if (len == 0) {
-        // Empty test set: we give -1 cost arbitrarily.
-        costs.fill(-1);
-        test_stats->update(costs);
-    }
-    
-    int ith_sample_in_sequence = 0;
-    int inputsize_without_masks = inputsize() 
-        - ( use_target_layers_masks ? targetsize() : 0 );
-    int sum_target_elements = 0;
-    for (int i = 0; i < len; i++)
-    {
-        testset.getExample(i, input, target, weight);
-
-        if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
-        {
-            ith_sample_in_sequence = 0;
-            hidden_list.resize(0);
-            hidden_act_no_bias_list.resize(0);
-            hidden2_list.resize(0);
-            hidden2_act_no_bias_list.resize(0);
-            target_prediction_list.resize(0);
-            target_prediction_act_no_bias_list.resize(0);
-            input_list.resize(0);
-            targets_list.resize(0);
-            nll_list.resize(0,0);
-            masks_list.resize(0);
-
-            if (testoutputs)
-            {
-                output.fill(end_of_sequence_symbol);
-                testoutputs->putOrAppendRow(i, output);
-            }
-
-            continue;
-        }
-
-        // Resize internal variables
-        hidden_list.resize(ith_sample_in_sequence+1);
-        hidden_act_no_bias_list.resize(ith_sample_in_sequence+1);
-        if( hidden_layer2 )
-        {
-            hidden2_list.resize(ith_sample_in_sequence+1);
-            hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1);
-        }
-                 
-        input_list.resize(ith_sample_in_sequence+1);
-        input_list[ith_sample_in_sequence].resize(input_layer->size);
-
-        targets_list.resize( target_layers.length() );
-        target_prediction_list.resize( target_layers.length() );
-        target_prediction_act_no_bias_list.resize( target_layers.length() );
-        for( int tar=0; tar < target_layers.length(); tar++ )
-        {
-            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-            {
-                targets_list[tar].resize( ith_sample_in_sequence+1);
-                targets_list[tar][ith_sample_in_sequence].resize( 
-                    target_layers[tar]->size);
-                target_prediction_list[tar].resize(
-                    ith_sample_in_sequence+1);
-                target_prediction_act_no_bias_list[tar].resize(
-                    ith_sample_in_sequence+1);
-            }
-        }
-        nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
-        if( use_target_layers_masks )
-        {
-            masks_list.resize( target_layers.length() );
-            for( int tar=0; tar < target_layers.length(); tar++ )
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                    masks_list[tar].resize( ith_sample_in_sequence+1 );
-        }
-
-        // Forward propagation
-
-        // Fetch right representation for input
-        clamp_units(input.subVec(0,inputsize_without_masks),
-                    input_layer,
-                    input_symbol_sizes);                
-        input_list[ith_sample_in_sequence] << input_layer->expectation;
-
-        // Fetch right representation for target
-        sum_target_elements = 0;
-        for( int tar=0; tar < target_layers.length(); tar++ )
-        {
-            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-            {
-                if( use_target_layers_masks )
-                {
-                    clamp_units(target.subVec(
-                                    sum_target_elements,
-                                    target_layers_n_of_target_elements[tar]),
-                                target_layers[tar],
-                                target_symbol_sizes[tar],
-                                input.subVec(
-                                    inputsize_without_masks 
-                                    + sum_target_elements, 
-                                    target_layers_n_of_target_elements[tar]),
-                                masks_list[tar][ith_sample_in_sequence]
-                        );
-                    
-                }
-                else
-                {
-                    clamp_units(target.subVec(
-                                    sum_target_elements,
-                                    target_layers_n_of_target_elements[tar]),
-                                target_layers[tar],
-                                target_symbol_sizes[tar]);
-                }
-                targets_list[tar][ith_sample_in_sequence] << 
-                    target_layers[tar]->expectation;
-            }
-            sum_target_elements += target_layers_n_of_target_elements[tar];
-        }
-                
-        input_connections->fprop( input_list[ith_sample_in_sequence], 
-                                  hidden_act_no_bias_list[ith_sample_in_sequence]);
-                
-        if( ith_sample_in_sequence > 0 && dynamic_connections )
-        {
-            dynamic_connections->fprop( 
-                hidden_list[ith_sample_in_sequence-1],
-                dynamic_act_no_bias_contribution );
-
-            hidden_act_no_bias_list[ith_sample_in_sequence] += 
-                dynamic_act_no_bias_contribution;
-        }
-                 
-        hidden_layer->fprop( hidden_act_no_bias_list[ith_sample_in_sequence], 
-                             hidden_list[ith_sample_in_sequence] );
-                 
-        if( hidden_layer2 )
-        {
-            hidden_connections->fprop( 
-                hidden_list[ith_sample_in_sequence],
-                hidden2_act_no_bias_list[ith_sample_in_sequence]);
-
-            hidden_layer2->fprop( 
-                hidden2_act_no_bias_list[ith_sample_in_sequence],
-                hidden2_list[ith_sample_in_sequence] 
-                );
-
-            for( int tar=0; tar < target_layers.length(); tar++ )
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_connections[tar]->fprop(
-                        hidden2_list[ith_sample_in_sequence],
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence]
-                        );
-                    target_layers[tar]->fprop(
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence],
-                        target_prediction_list[tar][
-                            ith_sample_in_sequence] );
-                    if( use_target_layers_masks )
-                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                            masks_list[tar][ith_sample_in_sequence];
-                }
-            }
-        }
-        else
-        {
-            for( int tar=0; tar < target_layers.length(); tar++ )
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_connections[tar]->fprop(
-                        hidden_list[ith_sample_in_sequence],
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence]
-                        );
-                    target_layers[tar]->fprop(
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence],
-                        target_prediction_list[tar][
-                            ith_sample_in_sequence] );
-                    if( use_target_layers_masks )
-                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                            masks_list[tar][ith_sample_in_sequence];
-                }
-            }
-        }
-
-        if (testoutputs)
-        {
-            int sum_target_layers_size = 0;
-            for( int tar=0; tar < target_layers.length(); tar++ )
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    output.subVec(sum_target_layers_size,target_layers[tar]->size)
-                        << target_prediction_list[tar][ ith_sample_in_sequence ];
-                }
-                sum_target_layers_size += target_layers[tar]->size;
-            }
-            testoutputs->putOrAppendRow(i, output);
-        }
-
-        sum_target_elements = 0;
-        for( int tar=0; tar < target_layers.length(); tar++ )
-        {
-            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-            {
-                target_layers[tar]->activation << 
-                    target_prediction_act_no_bias_list[tar][
-                        ith_sample_in_sequence];
-                target_layers[tar]->activation += target_layers[tar]->bias;
-                target_layers[tar]->setExpectation(
-                    target_prediction_list[tar][
-                        ith_sample_in_sequence]);
-                nll_list(ith_sample_in_sequence,tar) = 
-                    target_layers[tar]->fpropNLL( 
-                        targets_list[tar][ith_sample_in_sequence] ); 
-                costs[tar] += nll_list(ith_sample_in_sequence,tar);
-                
-                // Normalize by the number of things to predict
-                if( use_target_layers_masks )
-                {
-                    n_items[tar] += sum(
-                        input.subVec( inputsize_without_masks 
-                                      + sum_target_elements, 
-                                      target_layers_n_of_target_elements[tar]) );
-                }
-                else
-                    n_items[tar]++;
-            }
-            if( use_target_layers_masks )
-                sum_target_elements += 
-                    target_layers_n_of_target_elements[tar];
-        }
-        ith_sample_in_sequence++;
-
-        if (report_progress)
-            pb->update(i);
-
-    }
-
-    for(int i=0; i<costs.length(); i++)
-    {
-        if( !fast_exact_is_equal(target_layers_weights[i],0) )
-            costs[i] /= n_items[i];
-        else
-            costs[i] = MISSING_VALUE;
-    }
-    if (testcosts)
-        testcosts->putOrAppendRow(0, costs);
-    
-    if (test_stats)
-        test_stats->update(costs, weight);
-    
-    ith_sample_in_sequence = 0;
-    hidden_list.resize(0);
-    hidden_act_no_bias_list.resize(0);
-    hidden2_list.resize(0);
-    hidden2_act_no_bias_list.resize(0);
-    target_prediction_list.resize(0);
-    target_prediction_act_no_bias_list.resize(0);
-    input_list.resize(0);
-    targets_list.resize(0);
-    nll_list.resize(0,0);
-    masks_list.resize(0);   
-}
-*/
 
 TVec<string> DenoisingRecurrentNet::getTestCostNames() const
 {

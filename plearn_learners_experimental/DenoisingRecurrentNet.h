@@ -68,9 +68,6 @@ public:
     ////! The learning rate used during RBM contrastive divergence learning phase
     //real rbm_learning_rate;
 
-    //! The learning rate used during the recurrent phase
-    real recurrent_net_learning_rate;
-
     ////! Number of epochs for rbm phase
     //int rbm_nstages;
 
@@ -79,6 +76,7 @@ public:
     
     //! Indication that a mask indicating which target to predict
     //! is present in the input part of the VMatrix dataset.
+    //! no loinger an option: this is set to true only for (encoding=="raw_masked_supervised")
     bool use_target_layers_masks;
 
     //! Value of the first input component for end-of-sequence delimiter
@@ -128,12 +126,15 @@ public:
     int input_window_size;
 
     // Phase greedy (unsupervised)
+    bool tied_input_reconstruction_weights;
     double input_noise_prob;
     double input_reconstruction_lr;
     double hidden_noise_prob;
-    double hidden_reconstruciton_lr;
+    double hidden_reconstruction_lr;
+    bool tied_hidden_reconstruction_weights;
 
     // Phase noisy recurrent (supervised): uses input_noise_prob
+    // this phase *also* uses dynamic_gradient_scale_factor;
     double noisy_recurrent_lr;
     double dynamic_gradient_scale_factor;
     
@@ -157,7 +158,7 @@ public:
     void encodeSequence(Mat sequence, Mat& encoded_seq) const;
 
     static void encode_onehot_note_octav_duration(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows,
-                                                  bool use_silence=true, int octav_nbits=0, int duration_nbits=8);
+                                                  bool use_silence, int octav_nbits, int duration_nbits=20);
     
     static void encode_onehot_timeframe(Mat sequence, Mat& encoded_sequence, 
                                         int prepend_zero_rows, bool use_silence=true);    
@@ -253,7 +254,7 @@ public:
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,
     //! after the visible units have been clamped
-    void recurrent_update();
+    void recurrentUpdate();
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
@@ -344,7 +345,8 @@ protected:
     mutable TVec<int> testset_boundaries;
 
     mutable Mat seq; // contains the current train or test sequence
-    mutable Mat encoded_seq; // contains encoded version of current train or test sequence
+    mutable Mat encoded_seq; // contains encoded version of current train or test sequence (possibly corrupted by noise)
+    mutable Mat clean_encoded_seq; // copy of clean sequence contains encoded version of current train or test sequence
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -358,10 +360,13 @@ private:
     //! This does the actual building.
     void build_();
 
+
+    void performGreedyDenoisingPhase();
+
     // note: the following functions are declared const because they have
     // to be called by test (which is const). Similarly, the members they 
     // manipulate are all declared mutable.
-    void fprop(Vec train_costs, Vec train_n_items) const;
+    void recurrentFprop(Vec train_costs, Vec train_n_items) const;
 
     //! does encoding if needed and populates the list.
     void encodeSequenceAndPopulateLists(Mat seq) const;
