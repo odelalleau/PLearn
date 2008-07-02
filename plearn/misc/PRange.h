@@ -143,14 +143,15 @@ public:
     //! Intersection-assignment operator.
     PRange& operator&=(const PRange<T>& r)
     {
-        if (! isEmpty())
+        if (! isEmpty()){
             if (! r.isEmpty()) {
                 lower_ = max(lower_, r.lower());
                 upper_ = min(upper_, r.upper());
             }
             else
                 clear();
-    
+        }
+            
         return (*this);
     }
   

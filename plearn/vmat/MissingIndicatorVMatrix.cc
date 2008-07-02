@@ -168,9 +168,10 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
 
     if(train_set){
       int train_length = train_set->length();
-      if (number_of_train_samples_to_use > 0.0)
+      if (number_of_train_samples_to_use > 0.0){
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
         else train_length = (int) number_of_train_samples_to_use;
+      }
       if (train_length > train_set->length()) train_length = train_set->length();
 
       int train_width = train_set->width();

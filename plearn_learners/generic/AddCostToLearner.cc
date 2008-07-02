@@ -289,12 +289,13 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
     costs.resize(nTestCosts());
     Vec sub_costs = costs.subVec(0, n_original_costs);
     int target_length = target.length();
-    if(add_sub_learner_costs)
+    if(add_sub_learner_costs){
         if (compute_costs_on_bags) {
             learner_->computeCostsFromOutputs(input, output, target.subVec(0, target_length - 1), sub_costs);
         } else {
             learner_->computeCostsFromOutputs(input, output, target, sub_costs);
         }
+    }
 
     if (compute_costs_on_bags) {
         // We only need to compute the costs when the whole bag has been seen,

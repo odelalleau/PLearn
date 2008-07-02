@@ -74,7 +74,8 @@ void ThresholdVMatrix::getNewRow(int i, const Vec& v) const
 #endif
     source->getRow(i,v);
     int p= v.size()-1;
-    if(gt_threshold && v[p] <= threshold || !gt_threshold && v[p] < threshold)
+    if((gt_threshold && v[p] <= threshold) 
+       || (!gt_threshold && v[p] < threshold))
         v[p]= cold_value;
     else
         v[p]= hot_value;

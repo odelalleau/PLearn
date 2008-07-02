@@ -195,12 +195,13 @@ void MissingInstructionVMatrix::build_()
             PLWARNING("In MergeDond2Files::build_() - merge instruction empty for field '%s', we keep the previous instruction who could be the default_instruction",(missing_instructions[source_col].first).c_str());
         else PLERROR("In MergeDond2Files::build_() - unsupported merge instruction: '%s'", 
                      (missing_instructions[ins_col].second).c_str());
-        if (ins[source_col] == "skip")
+        if (ins[source_col] == "skip"){
             if(source_col<source->inputsize())
                 skip_instruction_input++;
             else if(source_col<(source->inputsize()+source->targetsize()))
                 skip_instruction_target++;
             else skip_instruction_weight++;
+        }
     }
     setMetaInfoFromSource();
     inputsize_ = source->inputsize() - skip_instruction_input;

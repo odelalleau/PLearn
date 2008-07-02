@@ -504,7 +504,7 @@ void FieldConvertCommand::run(const vector<string> & args)
             }
 
             // If we're still not sure (that is to say, type==unknown && message=="").
-            if(type==unknown && message=="")
+            if(type==unknown && message==""){
                 // is data 'uncorrelated + discrete + sparse'? Yes : Flag 
                 if((real)(sc[i].max()-sc[i].min()+1) > (real)(count)*2 ) {
                     type=continuous;
@@ -518,6 +518,7 @@ void FieldConvertCommand::run(const vector<string> & args)
                     type = discrete_uncorr;
                     // cout << "Discrete uncorrelated: " << i << endl;
                 }
+            }
         }
 
         // Now find out which actions to perform according to type.

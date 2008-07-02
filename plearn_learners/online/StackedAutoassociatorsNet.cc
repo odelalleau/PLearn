@@ -1107,12 +1107,13 @@ void StackedAutoassociatorsNet::train()
                     }
 
                     // Update stats if we are in the last n_train_stats_samples
-                    if (stage >= nstages - n_train_stats_samples)
+                    if (stage >= nstages - n_train_stats_samples){
                         if (minibatch_size > 1 || minibatch_hack)
                             for (int k = 0; k < minibatch_size; k++)
                                 train_stats->update(train_costs_m(k));
                         else
                             train_stats->update(train_costs);
+                    }
                 }
 
                 if (pb)

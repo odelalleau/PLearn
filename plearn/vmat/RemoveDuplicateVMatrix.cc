@@ -207,12 +207,13 @@ void RemoveDuplicateVMatrix::build_()
             if (!removed[i])
                 indices.append(i);
         inherited::build();
-        if (verbosity >= 2)
+        if (verbosity >= 2){
             if (count > 0)
                 pout << "Removed a total of " << count << " duplicated samples (new length: "
                      << length() << ")" << endl;
             else
                 pout << "No duplicated samples found." << endl;
+        }
     }
 }
 

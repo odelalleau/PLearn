@@ -138,11 +138,12 @@ void RankLearner::computeCostsFromOutputs(const Vec& input, const Vec& output,
             else
                 left = mid;
         }
-        if (right == left)
+        if (right == left){
             if (left == n - 1)
                 left--;
             else
                 right++;
+        }
         frac = sorted_targets[right] - sorted_targets[left];
         if (frac < 1e-30)
             // Equal targets, up to numerical precision.

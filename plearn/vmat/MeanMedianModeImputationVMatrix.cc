@@ -167,7 +167,7 @@ void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
 {  
   source->getSubRow(i, j, v);
   for (int source_col = 0; source_col < v->length(); source_col++) 
-    if (is_missing(v[source_col]))
+    if (is_missing(v[source_col])){
       if (variable_imputation_instruction[source_col + j] == 1)
 	v[source_col] = variable_mean[source_col + j];
       else if (variable_imputation_instruction[source_col + j] == 2)
@@ -183,6 +183,7 @@ void MeanMedianModeImputationVMatrix::getSubRow(int i, int j, Vec v) const
 	PLERROR("In MeanMedianModeImputationVMatrix::getSubRow(%d,%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,j,
 		variable_imputation_instruction[source_col + j] );
+    }
 
 }
 
@@ -190,7 +191,7 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
 {  
   source-> getRow(i, v);
   for (int source_col = 0; source_col < v->length(); source_col++)
-    if (is_missing(v[source_col]))
+    if (is_missing(v[source_col])){
       if (variable_imputation_instruction[source_col] == 1)
 	v[source_col] = variable_mean[source_col];
       else if (variable_imputation_instruction[source_col] == 2)
@@ -206,14 +207,14 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
 	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,
 		variable_imputation_instruction[source_col] );
-  
+    }
 }
 
 void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
 {  
   source-> getColumn(i, v);
   for (int source_row = 0; source_row < v->length(); source_row++)
-    if (is_missing(v[source_row]))
+    if (is_missing(v[source_row])){
       if (variable_imputation_instruction[i] == 1) v[source_row] = variable_mean[i];
       else if (variable_imputation_instruction[i] == 2) v[source_row] = variable_median[i];
       else if (variable_imputation_instruction[i] == 3) v[source_row] = variable_mode[i];
@@ -226,7 +227,7 @@ void MeanMedianModeImputationVMatrix::getColumn(int i, Vec v) const
 	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,
 		variable_imputation_instruction[i] );
-
+    }
 }
 
 
@@ -243,9 +244,10 @@ void MeanMedianModeImputationVMatrix::build_()
     int train_length = train_set->length();
     int train_width = train_set->width();
 
-    if (number_of_train_samples_to_use > 0.0)
+    if (number_of_train_samples_to_use > 0.0){
         if (number_of_train_samples_to_use < 1.0) train_length = (int) (number_of_train_samples_to_use * (real) train_length);
         else train_length = (int) number_of_train_samples_to_use;
+    }
     if (train_length > train_set->length()) train_length = train_set->length();
     if(train_length < 1) 
       PLERROR("In MeanMedianModeImputationVMatrix::length of the number of"

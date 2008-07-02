@@ -259,7 +259,7 @@ void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
     PLASSERT( source );
     source->getRow(i, v);
 
-    if (v.hasMissing())
+    if (v.hasMissing()){
         if (distribution) {
             Vec target;
             bool restore_target = false;
@@ -284,6 +284,7 @@ void MeanImputationVMatrix::getNewRow(int i, const Vec& v) const
             for (int j = 0; j < v.length(); j++)
                 if (is_missing(v[j]))
                     v[j] = variable_mean[j];
+    }
 }
 
 ///////////////////
