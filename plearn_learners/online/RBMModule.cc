@@ -2304,8 +2304,8 @@ void RBMModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
                 // The length of 'visible_grad' must be either 0 (if not computed
                 // previously) or the size of the mini-batches (otherwise).
                 PLASSERT( visible_grad->width() == visible_layer->size &&
-                          visible_grad->length() == 0 ||
-                          visible_grad->length() == mbs );
+                          (visible_grad->length() == 0 ||
+                           visible_grad->length() == mbs) );
                 visible_grad->resize(mbs, visible_grad->width());
                 connection->bpropUpdate(
                     *visible, *hidden_act,
