@@ -108,6 +108,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "     gradient updates agree on the sign, followed by the fraction of\n"
     "     weights for which the CD update has same sign as the difference\n"
     "     between the NLL gradient and the CD update.\n"
+    "   - 'agreement_stoch': same as the first half of above, except that\n"
+    "     it is for the stochastic CD update rather than its expected value.\n"
     "   - 'bound_cd_nll': bound on the difference between the CD and NLL\n"
     "     gradient updates, as computed in (Bengio & Delalleau, 2008)\n"
     "   - 'weights_stats': first element is the median of the absolute value\n"
@@ -118,7 +120,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "   - 'ratio_cd_leftout': median ratio between the absolute value of the\n"
     "     CD update and the absolute value of the term left out in CD (i.e.\n"
     "     the difference between NLL gradient and CD).\n"
-    "   - 'abs_cd': average absolute value of the CD update\n"
+    "   - 'abs_cd': average absolute value of the CD update. First for the\n"
+    "     expected CD update, then its stochastic (sampled) version.\n"
+    "   - 'nll_grad': NLL gradient.\n"
     "    \n"
     "\n"
     "The RBM can be trained by gradient descent (wrt to gradients provided on\n"
@@ -404,10 +408,12 @@ void RBMModule::build_()
     addPortName("median_reldiff_cd_nll");
     addPortName("mean_diff_cd_nll");
     addPortName("agreement_cd_nll");
+    addPortName("agreement_stoch");
     addPortName("bound_cd_nll");
     addPortName("weights_stats");
     addPortName("ratio_cd_leftout");
     addPortName("abs_cd");
+    addPortName("nll_grad");
     if(reconstruction_connection)
     {
         addPortName("visible_reconstruction.state");
@@ -816,6 +822,12 @@ void RBMModule::computePartitionFunction()
                     exp(all_p_visible[i] - log_partition_function);
             //pout << "All P(x): " << all_p_visible << endl;
             //pout << "Sum_x P(x) = " << sum(all_p_visible) << endl;
+            if (!is_equal(sum(all_p_visible), 1)) {
+                PLWARNING("The sum of all probability is not 1: %f",
+                        sum(all_p_visible));
+                // Renormalize.
+                all_p_visible /= sum(all_p_visible);
+            }
             PLCHECK( is_equal(sum(all_p_visible), 1) );
         }
     }
@@ -886,6 +898,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     bool mean_diff_cd_nll_is_output = mean_diff_cd_nll && mean_diff_cd_nll->isEmpty();
     Mat* agreement_cd_nll = ports_value[getPortIndex("agreement_cd_nll")];
     bool agreement_cd_nll_is_output = agreement_cd_nll && agreement_cd_nll->isEmpty();
+    Mat* agreement_stoch = ports_value[getPortIndex("agreement_stoch")];
+    bool agreement_stoch_is_output = agreement_stoch && agreement_stoch->isEmpty();
     Mat* bound_cd_nll = ports_value[getPortIndex("bound_cd_nll")];
     bool bound_cd_nll_is_output = bound_cd_nll && bound_cd_nll->isEmpty();
     Mat* weights_stats = ports_value[getPortIndex("weights_stats")];
@@ -894,6 +908,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     bool ratio_cd_leftout_is_output = ratio_cd_leftout && ratio_cd_leftout->isEmpty();
     Mat* abs_cd = ports_value[getPortIndex("abs_cd")];
     bool abs_cd_is_output = abs_cd && abs_cd->isEmpty();
+    Mat* nll_grad = ports_value[getPortIndex("nll_grad")];
+    bool nll_grad_is_output = nll_grad && nll_grad->isEmpty();
     hidden_bias = ports_value[getPortIndex("hidden_bias")];
     //bool hidden_bias_is_output = hidden_bias && hidden_bias->isEmpty();
     weights = ports_value[getPortIndex("weights")];
@@ -1482,6 +1498,7 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         Mat input_mat = input.toMat(1, input.length());
         Mat grad_nll(hidden_layer->size, visible_layer->size);
         Mat grad_cd(hidden_layer->size, visible_layer->size);
+        Mat grad_stoch_cd(hidden_layer->size, visible_layer->size);
         Mat grad_first_term(hidden_layer->size, visible_layer->size);
         grad_nll.fill(0);
         if (median_reldiff_cd_nll_is_output)
@@ -1490,6 +1507,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             mean_diff_cd_nll->resize(visible->length(), n_steps_compare);
         if (agreement_cd_nll_is_output)
             agreement_cd_nll->resize(visible->length(), 2 * n_steps_compare);
+        if (agreement_stoch_is_output)
+            agreement_stoch->resize(visible->length(), n_steps_compare);
         real bound_coeff = MISSING_VALUE;
         if (bound_cd_nll_is_output || weights_stats_is_output) {
             if (bound_cd_nll_is_output)
@@ -1499,7 +1518,10 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             if (ratio_cd_leftout_is_output)
                 ratio_cd_leftout->resize(visible->length(), n_steps_compare);
             if (abs_cd_is_output)
-                abs_cd->resize(visible->length(), n_steps_compare);
+                abs_cd->resize(visible->length(), 2 * n_steps_compare);
+            if (nll_grad_is_output)
+                nll_grad->resize(visible->length(),
+                        visible_layer->size * hidden_layer->size);
             // Compute main bound coefficient:
             // (1 - N_x N_h sigm(-alpha)^d_x sigm(-beta)^d_h).
             PP<RBMMatrixConnection> matrix_conn =
@@ -1579,6 +1601,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     ") for x = " << (*visible)(0) << ":" <<
                     endl << tmp << endl;
                 */
+                int stoch_idx = -1;
+                if (abs_cd_is_output) {
+                    grad_stoch_cd.fill(0);
+                    // Pick a random X_t drawn from X_t | x.
+                    stoch_idx = random_gen->multinomial_sample(
+                            p_xt_given_x.toVecCopy());
+                }
                 // Compute E_{X_t}[dF(X_t)/dWij | x].
                 grad_cd.fill(0);
                 for (int k = 0; k < n_visible_conf; k++) {
@@ -1599,11 +1628,20 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                                 -all_p_visible[k],
                                 real(1));
                     }
+                    if (k == stoch_idx) {
+                        transposeProduct(grad_stoch_cd,
+                                hidden_layer->getExpectations(),
+                                input_mat);
+                        negateElements(grad_stoch_cd);
+                    }
                 }
                 // Compute difference between CD and NLL updates.
                 Mat diff = grad_nll.copy();
                 diff -= grad_cd;
                 grad_cd += grad_first_term;
+                if (abs_cd_is_output) {
+                    grad_stoch_cd += grad_first_term;
+                }
                 //pout << "Grad_CD_" << t+1 << "=" << endl << grad_cd << endl;
                 //pout << "Diff =" << endl << diff << endl;
                 // Compute average relative difference.
@@ -1625,32 +1663,48 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 // agree.
                 int agree = 0;
                 int agree2 = 0;
+                int agree_stoch = 0;
                 real mean_abs_updates = 0;
+                real mean_abs_stoch_updates = 0;
                 for (int p = 0; p < grad_cd.length(); p++)
                     for (int q = 0; q < grad_cd.width(); q++) {
                         if (grad_cd(p, q) *
-                                (grad_first_term(p, q) + grad_nll(p, q)) > 0)
+                                (grad_first_term(p, q) + grad_nll(p, q)) >= 0)
                         {
                             agree++;
                         }
-                        if (grad_cd(p, q) * diff(p, q) > 0)
+                        if (grad_cd(p, q) * diff(p, q) >= 0)
                             agree2++;
-                        mean_abs_updates += abs(grad_cd(p, q));
+                        if (abs_cd_is_output) {
+                            mean_abs_updates += abs(grad_cd(p, q));
+                            mean_abs_stoch_updates += abs(grad_stoch_cd(p, q));
+                        }
+                        if (agreement_stoch_is_output &&
+                                grad_stoch_cd(p, q) *
+                                (grad_first_term(p, q) + grad_nll(p, q)) >= 0)
+                        {
+                            agree_stoch++;
+                        }
                     }
                 mean_abs_updates /= real(grad_cd.size());
+                mean_abs_stoch_updates /= real(grad_cd.size());
                 if (agreement_cd_nll_is_output) {
                     (*agreement_cd_nll)(i, t) = agree / real(grad_cd.size());
                     (*agreement_cd_nll)(i, t + n_steps_compare) =
                         agree2 / real(grad_cd.size());
                 }
+                if (agreement_stoch_is_output)
+                    (*agreement_stoch)(i, t) = agree_stoch / real(grad_cd.size());
                 if (bound_cd_nll_is_output)
                     (*bound_cd_nll)(i, t) =
                         visible_layer->getConfigurationCount() *
                         ipow(bound_coeff, t + 1);
                 if (ratio_cd_leftout_is_output)
                     (*ratio_cd_leftout)(i, t) = median(all_ratios);
-                if (abs_cd_is_output)
+                if (abs_cd_is_output) {
                     (*abs_cd)(i, t) = mean_abs_updates;
+                    (*abs_cd)(i, t + n_steps_compare) = mean_abs_stoch_updates;
+                }
                 /*
                 pout << "Median relative difference: "
                     << median(all_relative_diffs) << endl;
@@ -1663,6 +1717,16 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             }
             //pout << "P(x)=" << endl << all_p_visible << endl;
             grad_nll += grad_first_term;
+            if (nll_grad_is_output) {
+                //real mean_nll_grad = 0;
+                int idx = 0;
+                for (int p = 0; p < grad_nll.length(); p++)
+                    for (int q = 0; q < grad_nll.width(); q++, idx++)
+                        (*nll_grad)(i, idx) = grad_nll(p, q);
+                        //mean_nll_grad += abs(grad_nll(p, q));
+                //mean_nll_grad /= real(grad_nll.size());
+                //(*nll_grad)(i, 0) = mean_nll_grad;
+            }
             //pout << "Grad_NLL=" << endl << grad_nll << endl;
             //pout << "Grad first term=" << endl << grad_first_term << endl;
         }
@@ -1684,6 +1748,11 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         agreement_cd_nll->resize(visible->length(), 2 * n_steps_compare);
         agreement_cd_nll->fill(MISSING_VALUE);
     }
+    if (agreement_stoch_is_output && agreement_stoch->isEmpty()) {
+        PLASSERT( during_training );
+        agreement_stoch->resize(visible->length(), n_steps_compare);
+        agreement_stoch->fill(MISSING_VALUE);
+    }
     if (bound_cd_nll_is_output && bound_cd_nll->isEmpty()) {
         PLASSERT( during_training );
         bound_cd_nll->resize(visible->length(), n_steps_compare);
@@ -1701,8 +1770,14 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
     }
     if (abs_cd_is_output && abs_cd->isEmpty()) {
         PLASSERT( during_training );
-        abs_cd->resize(visible->length(), n_steps_compare);
+        abs_cd->resize(visible->length(), 2 * n_steps_compare);
         abs_cd->fill(MISSING_VALUE);
+    }
+    if (nll_grad_is_output && nll_grad->isEmpty()) {
+        PLASSERT( during_training );
+        nll_grad->resize(visible->length(),
+                         visible_layer->size * hidden_layer->size);
+        nll_grad->fill(MISSING_VALUE);
     }
 
     // UGLY HACK TO DEAL WITH THE PROBLEM THAT XXX.state MAY NOT BE NEEDED
