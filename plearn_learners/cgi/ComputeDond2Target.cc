@@ -160,7 +160,7 @@ void ComputeDond2Target::computeTarget()
         {
             if (input_vector[ins_col] == main_names[main_col]) break;
         }
-        if (main_col >= main_width) PLERROR("In ComputeDond2Target: no field with this name in input dataset: %", (input_vector[ins_col]).c_str());
+        if (main_col >= main_width) PLERROR("In ComputeDond2Target: no field with this name in input dataset: %s", (input_vector[ins_col]).c_str());
         output_variable_src[ins_col] = main_col;
         output_names[ins_col] = input_vector[ins_col];
     }

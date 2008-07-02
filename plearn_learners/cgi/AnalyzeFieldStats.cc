@@ -153,7 +153,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
             if (fields[fields_col] == main_names[main_col]) break;
         }
         if (main_col >= main_width) 
-            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in input dataset: %", (fields[fields_col]).c_str());
+            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in input dataset: %s", (fields[fields_col]).c_str());
         fields_selected[main_col] = 1;
     }
     
@@ -243,7 +243,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
             if (fields[fields_col] == main_names[main_col]) break;
         }
         if (main_col >= main_width) 
-            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in input dataset: %", (fields[fields_col]).c_str());
+            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in input dataset: %s", (fields[fields_col]).c_str());
         if (fields_col != to_deal_with_next && header_record[main_col] != 1)
         {
             output_variable_src[output_col] = main_col;
@@ -284,7 +284,7 @@ void AnalyzeFieldStats::analyzeVariableStats()
             if (fields[fields_col] == targeted_names[main_col]) break;
         }
         if (main_col >= targeted_width) 
-            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in targeted dataset: %", (fields[fields_col]).c_str());
+            PLERROR("In AnalyzeFieldStats::analyzeVariableStats() no field with this name in targeted dataset: %s", (fields[fields_col]).c_str());
         if (fields_col != to_deal_with_next && header_record[main_col] != 1)
         {
             train_test_variable_src[output_col] = main_col;

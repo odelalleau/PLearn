@@ -555,7 +555,7 @@ void TestImputations::createHeaderFile()
         if (train_missing <= 0.0) header_record[train_col] = 0.0;                       // no missing, noting to do.
         else if (train_present < min_number_of_samples){
             header_record[train_col] = -1.0; // should not happen
-            PLERROR("In TestImputations::createHeaderFile: train_present(%d) < min_number_of_samples (%d) for variable %d()",
+            PLERROR("In TestImputations::createHeaderFile: train_present(%d) < min_number_of_samples (%d) for variable %d(%s)",
                     train_present,min_number_of_samples,train_col,train_set.fieldName(train_col).c_str());
         }
         else header_record[train_col] = 1.0;                                            // test imputations

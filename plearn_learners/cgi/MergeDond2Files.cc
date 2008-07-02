@@ -181,12 +181,12 @@ void MergeDond2Files::mergeFiles()
         {
             if (merge_instructions[ins_col].first == sec_names[sec_col]) break;
         }
-        if (sec_col >= sec_width) PLERROR("In MergeDond2Files: no field with this name in external_dataset data set: %", (merge_instructions[ins_col].first).c_str());
+        if (sec_col >= sec_width) PLERROR("In MergeDond2Files: no field with this name in external_dataset data set: %s", (merge_instructions[ins_col].first).c_str());
         if (merge_instructions[ins_col].second == "skip") sec_ins[sec_col] = "skip";
         else if (merge_instructions[ins_col].second == "mean") sec_ins[sec_col] = "mean";
         else if (merge_instructions[ins_col].second == "mode") sec_ins[sec_col] = "mode";
         else if (merge_instructions[ins_col].second == "present") sec_ins[sec_col] = "present";
-        else PLERROR("In MergeDond2Files: unsupported merge instruction: %", (merge_instructions[ins_col].second).c_str());
+        else PLERROR("In MergeDond2Files: unsupported merge instruction: %s", (merge_instructions[ins_col].second).c_str());
         if (sec_ins[sec_col] != "skip") extension_width += 1;
     }
     extension_pos.resize(sec_width);
@@ -232,13 +232,13 @@ void MergeDond2Files::mergeFiles()
         {
             if (missing_instructions[ins_col].first == main_names[main_col]) break;
         }
-        if (main_col >= main_width) PLERROR("In MergeDond2Files: no field with this name in external_dataset data set: %", (missing_instructions[ins_col].first).c_str());
+        if (main_col >= main_width) PLERROR("In MergeDond2Files: no field with this name in external_dataset data set: %s", (missing_instructions[ins_col].first).c_str());
         if (missing_instructions[ins_col].second == "skip") main_ins[main_col] = "skip";
         else if (missing_instructions[ins_col].second == "as_is") main_ins[main_col] = "as_is";
         else if (missing_instructions[ins_col].second == "zero_is_missing") main_ins[main_col] = "zero_is_missing";
         else if (missing_instructions[ins_col].second == "2436935_is_missing") main_ins[main_col] = "2436935_is_missing";
         else if (missing_instructions[ins_col].second == "present") main_ins[main_col] = "present";
-        else PLERROR("In MergeDond2Files: unsupported merge instruction: %", (missing_instructions[ins_col].second).c_str());
+        else PLERROR("In MergeDond2Files: unsupported merge instruction: %s", (missing_instructions[ins_col].second).c_str());
         if (main_ins[main_col] != "skip") primary_width += 1;
     }
     primary_names.resize(primary_width);
