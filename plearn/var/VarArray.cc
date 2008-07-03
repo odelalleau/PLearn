@@ -46,6 +46,9 @@
 namespace PLearn {
 using namespace std;
 
+//////////////
+// VarArray //
+//////////////
 VarArray::VarArray()
     : Array<Var>(0,10) 
 {}
@@ -92,6 +95,13 @@ VarArray::VarArray(Variable*  v1, Variable*  v2)
     (*this)[1] = Var(v2); 
 }
 
+VarArray::VarArray(Variable*  v1, Variable*  v2, Variable* v3):
+    Array<Var>(3)
+{ 
+    (*this)[0] = Var(v1); 
+    (*this)[1] = Var(v2); 
+    (*this)[2] = Var(v3); 
+}
 // This is really EXTERN!  Don't try to define it...
 //template<>
 //extern void deepCopyField(Var& field, CopiesMap& copies);
@@ -103,13 +113,18 @@ extern void varDeepCopyField(Var& field, CopiesMap& copies); // a cause d'une bu
 #pragma warning(default:1419)
 #endif
 
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void VarArray::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     for(int i=0; i<size(); i++)
         varDeepCopyField((*this)[i], copies);
 }
 
-
+////////////////////
+// copyValuesFrom //
+////////////////////
 void VarArray::copyValuesFrom(const VarArray& from)
 {
     if (size()!=from.size())
@@ -119,8 +134,9 @@ void VarArray::copyValuesFrom(const VarArray& from)
         (*this)[i]->value << from[i]->value;
 }
 
-
-
+//////////////
+// copyFrom //
+//////////////
 void VarArray::copyFrom(const Vec& datavec)
 {
     copyFrom(datavec.data(),datavec.length());

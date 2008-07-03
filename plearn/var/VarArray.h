@@ -70,6 +70,7 @@ public:
     VarArray(const Var& v1, const Var& v2);
     VarArray(Variable* v);
     VarArray(Variable* v1, Variable* v2);
+    VarArray(Variable* v1, Variable* v2, Variable* v3);
 
     void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
