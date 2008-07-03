@@ -63,18 +63,29 @@ RegressionTreeMulticlassLeave::~RegressionTreeMulticlassLeave()
 
 void RegressionTreeMulticlassLeave::declareOptions(OptionList& ol)
 { 
-    declareOption(ol, "multiclass_outputs", &RegressionTreeMulticlassLeave::multiclass_outputs, OptionBase::buildoption,
+    declareOption(ol, "multiclass_outputs", 
+                  &RegressionTreeMulticlassLeave::multiclass_outputs,
+                  OptionBase::buildoption,
                   "A vector of possible output values when solving a multiclass problem.\n"
                   "The leave will output the value with the largest weight sum.");
-    declareOption(ol, "objective_function", &RegressionTreeMulticlassLeave::objective_function, OptionBase::buildoption,
+    declareOption(ol, "objective_function",
+                  &RegressionTreeMulticlassLeave::objective_function,
+                  OptionBase::buildoption,
                   "The function to be used to compute the leave error.\n"
                   "Current supported values are l1 and l2 (default is l1).");
       
-    declareOption(ol, "multiclass_weights_sum", &RegressionTreeMulticlassLeave::multiclass_weights_sum, OptionBase::learntoption,
-                  "A vector to count the weight sum of each possible output for the sample in this leave.\n");
-    declareOption(ol, "l1_loss_function_factor", &RegressionTreeMulticlassLeave::l1_loss_function_factor, OptionBase::learntoption,
+    declareOption(ol, "multiclass_weights_sum",
+                  &RegressionTreeMulticlassLeave::multiclass_weights_sum,
+                  OptionBase::learntoption,
+                  "A vector to count the weight sum of each possible output "
+                  "for the sample in this leave.\n");
+    declareOption(ol, "l1_loss_function_factor",
+                  &RegressionTreeMulticlassLeave::l1_loss_function_factor,
+                  OptionBase::learntoption,
                   "2 / loss_function_weight.\n");
-    declareOption(ol, "l2_loss_function_factor", &RegressionTreeMulticlassLeave::l2_loss_function_factor, OptionBase::learntoption,
+    declareOption(ol, "l2_loss_function_factor",
+                  &RegressionTreeMulticlassLeave::l2_loss_function_factor,
+                  OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
     inherited::declareOptions(ol);
 }
@@ -124,17 +135,18 @@ void RegressionTreeMulticlassLeave::addRow(int row)
     length += 1;
     weights_sum += weight;
     int multiclass_found = 0;
-    for (int multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+    for (int mc_ind = 0; mc_ind < multiclass_outputs.length(); mc_ind++)
     {
-        if (target == multiclass_outputs[multiclass_ind])
+        if (target == multiclass_outputs[mc_ind])
         {
-            multiclass_weights_sum[multiclass_ind] += weight;
+            multiclass_weights_sum[mc_ind] += weight;
             multiclass_found = 1;      
             break;      
         }
     }
     if (multiclass_found < 1) 
-        PLERROR("RegressionTreeMultilassLeave: Unknown target: %g row: %d\n", target, row);
+        PLERROR("RegressionTreeMultilassLeave: Unknown target: %g row: %d\n",
+                target, row);
 }
 
 void RegressionTreeMulticlassLeave::addRow(int row, Vec outputv, Vec errorv)
@@ -151,14 +163,18 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
     weights_sum -= weight;
     PLASSERT(length>=0);
     PLASSERT(weights_sum>=0);
-    for (int multiclass_ind = 0; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+    PLASSERT(length>0 || weights_sum==0);
+    bool found=false;
+    for (int mc_ind = 0; mc_ind < multiclass_outputs.length(); mc_ind++)
     {
-        if (target == multiclass_outputs[multiclass_ind])
+        if (target == multiclass_outputs[mc_ind])
         {
-            multiclass_weights_sum[multiclass_ind] -= weight;
+            multiclass_weights_sum[mc_ind] -= weight;
+            found=true;
             break;      
         }
     }
+    PLASSERT(found);
     getOutputAndError(outputv,errorv);
 }
 
@@ -166,7 +182,8 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
 {
 #ifdef BOUNDCHECK
     if(multiclass_outputs.length()<=0)
-        PLERROR("In RegressionTreeMulticlassLeave::getOutputAndError() - multiclass_outputs must not be empty");
+        PLERROR("In RegressionTreeMulticlassLeave::getOutputAndError() -"
+                " multiclass_outputs must not be empty");
 #endif
     if(length==0){        
         output.clear();
@@ -174,13 +191,14 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
         error.clear();
         return;
     }
-    int multiclass_winer = 0;
-    for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+    int mc_winer = 0;
+    for (int mc_ind = 1; mc_ind < multiclass_outputs.length(); mc_ind++)
     {
-        if (multiclass_weights_sum[multiclass_ind] > multiclass_weights_sum[multiclass_winer]) multiclass_winer = multiclass_ind;
+        if (multiclass_weights_sum[mc_ind] > multiclass_weights_sum[mc_winer])
+            mc_winer = mc_ind;
     }
-    output[0] = multiclass_outputs[multiclass_winer];
-    if (missing_leave >= 1)
+    output[0] = multiclass_outputs[mc_winer];
+    if (missing_leave)
     {
         output[1] = 0.0;
         error[0] = 0.0;
@@ -189,27 +207,33 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
     }
     else
     {
-        output[1] = multiclass_weights_sum[multiclass_winer] / weights_sum;;
+        output[1] = multiclass_weights_sum[mc_winer] / weights_sum;;
         error[0] = 0.0;
         if (objective_function == "l1")
         {
-            for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+            for (int mc_ind = 1; mc_ind < multiclass_outputs.length();mc_ind++)
             {
-                error[0] += abs(output[0] - multiclass_outputs[multiclass_ind]) * multiclass_weights_sum[multiclass_ind];
+                error[0] += abs(output[0] - multiclass_outputs[mc_ind]) 
+                    * multiclass_weights_sum[mc_ind];
             }
             error[0] *= l1_loss_function_factor * length / weights_sum;
             if (error[0] < 1E-10) error[0] = 0.0;
-            if (error[0] > weights_sum * l1_loss_function_factor) error[2] = weights_sum * l1_loss_function_factor; else error[2] = error[0];
+            if (error[0] > weights_sum * l1_loss_function_factor)
+                error[2] = weights_sum * l1_loss_function_factor;
+            else error[2] = error[0];
         }
         else
         {
-            for (int multiclass_ind = 1; multiclass_ind < multiclass_outputs.length(); multiclass_ind++)
+            for (int mc_ind = 1; mc_ind < multiclass_outputs.length();mc_ind++)
             {
-                error[0] += pow(output[0] - multiclass_outputs[multiclass_ind], 2) * multiclass_weights_sum[multiclass_ind];
+                error[0] += pow(output[0] - multiclass_outputs[mc_ind], 2) 
+                    * multiclass_weights_sum[mc_ind];
             }
             error[0] *= l2_loss_function_factor * length / weights_sum;
             if (error[0] < 1E-10) error[0] = 0.0;
-            if (error[0] > weights_sum * l2_loss_function_factor) error[2] = weights_sum * l2_loss_function_factor; else error[2] = error[0];
+            if (error[0] > weights_sum * l2_loss_function_factor) 
+                error[2] = weights_sum * l2_loss_function_factor; 
+            else error[2] = error[0];
         }
         error[1] = (1.0 - output[1]) * length;
     }
