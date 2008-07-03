@@ -85,10 +85,12 @@ tutonly: tutonly.tex
 
 #generic rules that transform a .dvi file to a .ps file
 %.ps: %.dvi
+	mkdir -p $(TMPDIR)
 	dvips -Pcmps -t letter $(TMPDIR)$< -o
 
 #generic rules that transform a .tex file to a .pdf file
 %.pdf: %.tex
+	mkdir -p $(TMPDIR)
 	pdflatex $(PDFTEX_OPTIONS) $<
 	cp $(TMPDIR)$@ .
 
