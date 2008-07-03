@@ -119,10 +119,10 @@ bool RealRange::contains(real val) const
 }
 
 bool RealRange::operator<(real x) const
-{ return high < x || fast_exact_is_equal(high, x) && rightbracket == '['; }
+{ return high < x || (fast_exact_is_equal(high, x) && rightbracket == '['); }
 
 bool RealRange::operator>(real x) const
-{ return low > x || fast_exact_is_equal(low, x) && leftbracket == ']'; }
+{ return low > x || (fast_exact_is_equal(low, x) && leftbracket == ']'); }
 
 bool RealRange::operator<(const RealRange& x) const
 { return high < x.low || (fast_exact_is_equal(high, x.low) && (rightbracket=='[' || x.leftbracket==']')); }

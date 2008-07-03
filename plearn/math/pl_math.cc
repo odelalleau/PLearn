@@ -77,11 +77,12 @@ bool is_equal(real a, real b, real absolute_tolerance_threshold,
               real absolute_tolerance,
               real relative_tolerance)
 {
-    if (isnan(a))
+    if (isnan(a)){
         if (isnan(b))
             return true;
         else
             return false;
+    }
     if (isnan(b))
         return false;
     if (int inf_a = isinf(a))

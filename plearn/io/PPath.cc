@@ -267,7 +267,7 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
             PPath   next_metapath;    
             while (ppath_config.good()) {
                 ppath_config >> next_metaprotocol >> next_metapath;
-                if (next_metaprotocol.empty())
+                if (next_metaprotocol.empty()){
                     if (ppath_config.good())
                         PLERROR("In PPath::metaprotocolToMetapath - Error while parsing PPath config file (%s): read "
                                 "a blank line before reaching the end of the file",
@@ -275,6 +275,7 @@ const map<string, PPath>& PPath::metaprotocolToMetapath()
                     else
                         // Nothing left to read.
                         break;
+                }
                 // Make sure we managed to read the metapath associated with the metaprotocol.
                 if (next_metapath.empty())
                     PLERROR("In PPath::metaprotocolToMetapath - Error in PPath config file (%s): could not read the "
@@ -939,11 +940,12 @@ PPath PPath::dirname() const
     if (isEmpty() || isRoot())
         return PPath(*this);
     size_t slash_pos = rfind(_slash_char());
-    if ( slash_pos == npos )
+    if ( slash_pos == npos ){
         if (_protocol.empty())
             return ".";  
         else
             return _protocol + ":.";
+    }
     PPath result = substr(0, slash_pos + 1);
     // Remove trailing slash if it is not a root directory.
     result.removeTrailingSlash();

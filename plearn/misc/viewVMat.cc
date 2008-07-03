@@ -300,7 +300,7 @@ void viewVMat(const VMat& vm, PPath filename)
                         mvprintw(y, x, valstrformat, "...");
                     else if(fast_exact_is_equal(hide_sameval, 1) && i>starti &&
                             (fast_exact_is_equal(val, oldv[j]) ||
-                             is_missing(val) && is_missing(oldv[j])))
+                             (is_missing(val) && is_missing(oldv[j]))))
                         mvprintw(y, x, valstrformat, "...");
                     else
                         mvprintw(y, x, valstrformat,

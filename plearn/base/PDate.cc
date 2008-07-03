@@ -120,9 +120,9 @@ PDate::PDate(string date,bool invalid_value_as_missing)
     // Format "2003/01/27"
     if (date.size() == 10 && date[4] == '/' && date[7] == '/') 
     {
-        year = toint(date.substr(0,4));
-        month = toint(date.substr(5,2));
-        day = toint(date.substr(8,2));
+        year = (short)toint(date.substr(0,4));
+        month = (unsigned char)toint(date.substr(5,2));
+        day = (unsigned char)toint(date.substr(8,2));
     }
     // Format "27JAN2003" or "27-jan-2003" or "27-jan-03"
     else if((date.size()==9 || date.size()==7)
@@ -202,12 +202,13 @@ PDate::PDate(string date,bool invalid_value_as_missing)
     else
         PLERROR("PDate::PDate: the passed date string is not in a known format: %s", date.c_str());
 
-    if( !isValid() )
+    if( !isValid() ){
         if(invalid_value_as_missing){
             setMissing();
             PLWARNING("Invalid date string: %s",date.c_str());
         }else
             PLERROR("Invalid date string: %s",date.c_str());
+    }
 }
 
 bool PDate::isMissing() const
