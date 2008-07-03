@@ -297,7 +297,7 @@ bool PythonCodeSnippet::isInvokable(const char* function_name) const
                                     function_name);
     // pFunc: Borrowed reference if not instance_method
     bool ret= pFunc && PyCallable_Check(pFunc);
-    if(instance_method) Py_DECREF(pFunc);
+    if(instance_method) {Py_DECREF(pFunc);}
     return ret;
 }
 
@@ -334,8 +334,9 @@ PythonCodeSnippet::invoke(const char* function_name) const
         return_value = PyObject_CallObject(pFunc, NULL);
         if (! return_value)
         {
-            if(instance_method)
+            if(instance_method){
                 Py_DECREF(pFunc);
+            }
             handlePythonErrors(string("Error while calling function '")
                                + function_name
                                + "' with no params.");
@@ -346,12 +347,12 @@ PythonCodeSnippet::invoke(const char* function_name) const
     }
     else
     {
-        if(instance_method) Py_DECREF(pFunc);
+        if(instance_method) {Py_DECREF(pFunc);}
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s' (not callable).",
                 function_name);
     }
 
-    if(instance_method) Py_DECREF(pFunc);
+    if(instance_method) {Py_DECREF(pFunc);}
     //return PythonObjectWrapper(return_value);
     PythonObjectWrapper r(return_value);
     Py_DECREF(return_value);
@@ -403,7 +404,7 @@ PythonCodeSnippet::invoke(const char* function_name,
         if (! return_value)
         {
             if(instance_method)
-                Py_DECREF(pFunc);
+            {Py_DECREF(pFunc);}
             handlePythonErrors(string("Error while calling function '")
                                + function_name
                                + "' with "
@@ -416,13 +417,13 @@ PythonCodeSnippet::invoke(const char* function_name,
     else
     {
         if(instance_method)
-            Py_DECREF(pFunc);
+        {Py_DECREF(pFunc);}
         PLERROR("PythonCodeSnippet::invoke: cannot call function '%s'",
                 function_name);
     }
 
     if(instance_method)
-        Py_DECREF(pFunc);
+    {Py_DECREF(pFunc);}
     //return PythonObjectWrapper(return_value);
     PythonObjectWrapper r(return_value);
     Py_DECREF(return_value);

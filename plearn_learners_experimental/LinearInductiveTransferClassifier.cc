@@ -808,7 +808,7 @@ void LinearInductiveTransferClassifier::train()
             else
                 for(int j=0; j<target.length(); j++)
                 {
-                    if(fast_exact_is_equal(target[j], 1))
+                    if(fast_exact_is_equal(target[j], 1)){
                         if(weightsize()>0)
                         {
                             externalProductScaleAcc(ww,class_reps_var->matValue(j),class_reps_var->matValue(j),weight);
@@ -818,7 +818,8 @@ void LinearInductiveTransferClassifier::train()
                         {
                             externalProductAcc(ww,class_reps_var->matValue(j),class_reps_var->matValue(j));
                             externalProductAcc(xw,input,class_reps_var->matValue(j));
-                        }   
+                        }
+                    }
                 }
         }
         if(weight_decay > 0)

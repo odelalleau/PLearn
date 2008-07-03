@@ -145,9 +145,9 @@ void save_load_compare( const AutoVMatrix& vm,
     AutoVMatrix reloaded( save_to );
     bool success = ( vm.toMat().isEqual( reloaded.toMat() ) );
     if ( success )
-      MAND_LOG << "Save and load suceeded on " << save_to << endl << endl;
+    {MAND_LOG << "Save and load suceeded on " << save_to << endl << endl;}
     else
-      MAND_LOG << "!!! Save and load FAILED on " << save_to << endl << endl;
+    {MAND_LOG << "!!! Save and load FAILED on " << save_to << endl << endl;}
 }
 
 void unitTest(const PPath& path)
