@@ -211,7 +211,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
         error[0] = 0.0;
         if (objective_function == "l1")
         {
-            for (int mc_ind = 1; mc_ind < multiclass_outputs.length();mc_ind++)
+            for (int mc_ind = 0; mc_ind < multiclass_outputs.length();mc_ind++)
             {
                 error[0] += abs(output[0] - multiclass_outputs[mc_ind]) 
                     * multiclass_weights_sum[mc_ind];
@@ -224,7 +224,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
         }
         else
         {
-            for (int mc_ind = 1; mc_ind < multiclass_outputs.length();mc_ind++)
+            for (int mc_ind = 0; mc_ind < multiclass_outputs.length();mc_ind++)
             {
                 error[0] += pow(output[0] - multiclass_outputs[mc_ind], 2) 
                     * multiclass_weights_sum[mc_ind];
