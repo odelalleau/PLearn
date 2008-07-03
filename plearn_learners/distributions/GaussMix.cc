@@ -2697,7 +2697,7 @@ void GaussMix::resizeDataBeforeTraining() {
     nsamples = train_set->length();
     D = train_set->inputsize();
 
-    if (f_eigen > 0)
+    if (f_eigen > 0){
         if (is_equal(f_eigen, 1))
             n_eigen = -1;
         else {
@@ -2706,6 +2706,7 @@ void GaussMix::resizeDataBeforeTraining() {
                 // We always want to keep at least one eigenvector.
                 n_eigen = 1;
         }
+    }
 
     alpha.resize(L);
     clust_imputed_missing.resize(0);

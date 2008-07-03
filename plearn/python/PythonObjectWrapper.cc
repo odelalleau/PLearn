@@ -406,7 +406,7 @@ PythonObjectWrapper::PythonObjectWrapper(OwnershipMode o,
       m_object(Py_None)
 {
     if (m_ownership == control_ownership)
-        Py_XINCREF(m_object);
+    {Py_XINCREF(m_object);}
 }
 
 //! Constructor for pre-existing PyObject
@@ -417,7 +417,7 @@ PythonObjectWrapper::PythonObjectWrapper(PyObject* pyobj, OwnershipMode o,
       m_object(pyobj)
 {
     if (m_ownership == control_ownership)
-        Py_XINCREF(m_object);
+    {Py_XINCREF(m_object);}
 }
 
 
@@ -428,7 +428,7 @@ PythonObjectWrapper::PythonObjectWrapper(const PythonObjectWrapper& other)
       m_object(other.m_object)
 {
     if (m_ownership == control_ownership)
-        Py_XINCREF(m_object);
+    {Py_XINCREF(m_object);}
 }
 
 // Destructor decrements refcount if controlling ownership.
