@@ -118,7 +118,7 @@ void Molecule::readFromVRMLFile( const PPath& filename )
     }
     else
         PLERROR("Molecule::readFromFile - File %s.vrml should contain a"
-                " 'Coordinate3' block.\n");
+                " 'Coordinate3' block.\n", filename.c_str());
 
     // Read the other geometrical informations (edges or faces)
     // Search for edges informations
