@@ -978,9 +978,14 @@ Var NNet::getCost(const string& costname, const Var& the_output,
 {
     // We don't need to take into account the sampleweight, because it is
     // taken care of in stats->update.
-    if (costname=="mse")
-        return sumsquare(the_output-the_target);
-    else if (costname=="mse_onehot")
+    if (costname=="mse") {
+        // The following assert may be useful since 'operator-' on variables
+        // can be used to do subtractions on Variables of different sizes,
+        // which should not be the case in a NNet.
+        PLASSERT( the_output->length() == the_target->length() &&
+                  the_output->width() == the_target->width() );
+        return sumsquare(the_output - the_target);
+    } else if (costname=="mse_onehot")
         return onehot_squared_loss(the_output, the_target);
     else if (costname=="NLL") 
     {
