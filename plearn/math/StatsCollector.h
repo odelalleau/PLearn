@@ -381,6 +381,20 @@ public:
     //! @return true if all value seen are integer, false otherwise and is not
     //! defined in case where we reload an old version that have maxnvalues==0
     bool isinteger(){return integer_;}
+
+    //! @return the value stored in a StatsCollectorCount:
+    //!         (n, nbellow, sum, sumsquare, id)
+    Vec getCount(real value){
+        Vec v(0,5);
+        StatsCollectorCounts c = counts[value];
+        
+        v.append(c.n);
+        v.append(c.nbelow);
+        v.append(c.sum);
+        v.append(c.sumsquare);
+        v.append(c.id);
+        return v;
+    }
 };
 
 DECLARE_OBJECT_PTR(StatsCollector);

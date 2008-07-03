@@ -456,6 +456,22 @@ void StatsCollector::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Return mean_over_kurtosis of the seen value\n"),
          RetDoc ("mean_over_kurtosis")));
 
+    declareMethod(
+        rmm, "isbinary", &StatsCollector::isbinary,
+        (BodyDoc("Return true is all value seen are binary value\n"),
+         RetDoc ("binary_")));
+
+    declareMethod(
+        rmm, "isinteger", &StatsCollector::isinteger,
+        (BodyDoc("Return true is all value seen are integer value\n"),
+         RetDoc ("integer_")));
+
+    declareMethod(
+        rmm, "getCount", &StatsCollector::getCount,
+        (BodyDoc("return the value stored in a StatsCollectorCount: (n, nbellow, sum, sumsquare, id)\n"),
+         ArgDoc ("v", "The value of the counts to lookup.\n"),
+         RetDoc ("Vec(n, nbellow, sum, sumsquare, id)")));
+
 }
 ////////////
 // build_ //
