@@ -116,8 +116,7 @@ bool RemoveObservationTest::
 compareCovariance(int t,
                   const VecStatsCollector& batch, const VecStatsCollector& online)
 {
-    int len = batch.length();
-    PLASSERT(len==online.length());
+    PLASSERT(batch.length()==online.length());
     
     batch.getCovariance(m_batch_cov);
     online.getCovariance(m_online_cov);
