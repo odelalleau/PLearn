@@ -1539,8 +1539,8 @@ bool VMatrix::isUpToDate(const PPath& path, bool warning_mtime0,
     if(warning_older && exist && !uptodate)
         PLWARNING("In VMatrix::isUpToDate - for class '%s'"
                   " File '%s' is older than this "
-                  "VMat's mtime of %d, and should not be re-used.",
-                  classname().c_str(), path.absolute().c_str(), getMtime());
+                  "VMat's mtime of %ld, and should not be re-used.",
+                  classname().c_str(), path.absolute().c_str(), long(getMtime()));
 
     return exist && uptodate;
 }
@@ -1564,9 +1564,9 @@ bool VMatrix::isUpToDate(VMat vm, bool warning_mtime0,
                   classname().c_str());
     if(warning_older && !uptodate)
         PLWARNING("In VMatrix::isUpToDate - for class '%s'"
-                  " The VMat with mtime of %d is older than this "
-                  "VMat's with mtime of %d, and should not be re-used.",
-                  classname().c_str(), vm->getMtime(), getMtime());
+                  " The VMat with mtime of %ld is older than this "
+                  "VMat's with mtime of %ld, and should not be re-used.",
+                  classname().c_str(), long(vm->getMtime()), long(getMtime()));
 
     return uptodate;
 }

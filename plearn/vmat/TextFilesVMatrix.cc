@@ -430,7 +430,7 @@ void TextFilesVMatrix::loadMappings()
                 string real_val_str = map_line.substr(end_of_string + 1);
                 real real_val;
                 if (!pl_isnumber(real_val_str, &real_val))
-                    PLERROR("In TextFilesVMatrix::loadMappings - Found a mapping to something that is not a number (%s) in file %s at non-black line %d", map_line.c_str(), fname.c_str(), i);
+                    PLERROR("In TextFilesVMatrix::loadMappings - Found a mapping to something that is not a number (%s) in file %s at non-black line %ld", map_line.c_str(), fname.c_str(), long(i));
                 mapping[k][strval] = real_val;
             }
         }

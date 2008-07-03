@@ -194,7 +194,7 @@ PStreamBuf::streamsize PStreamBuf::read(char* p, streamsize n)
 void PStreamBuf::unread(const char* p, streamsize n)
 {
     if(streamsize(inbuf_p-inbuf)<n)
-        PLERROR("Cannot unread that many characters: %d, input buffer bound reached (you may want to increase the unget_capacity)", n);
+        PLERROR("Cannot unread that many characters: %ld, input buffer bound reached (you may want to increase the unget_capacity)", long(n));
   
     inbuf_p -= n;
     memcpy(inbuf_p,p,n);

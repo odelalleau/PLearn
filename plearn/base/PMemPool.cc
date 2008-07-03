@@ -58,8 +58,8 @@ PMemArena::PMemArena(size_t object_size_, size_t max_num_objects)
       allocated_objects(0), watermark(0), free_list(0)
 {
     if (object_size < sizeof(void*))
-        PLERROR("PMemArena::PMemArena: object_size must be at least %d; passed size is %d",
-                sizeof(void*), object_size);
+        PLERROR("PMemArena::PMemArena: object_size must be at least %ld; passed size is %ld",
+                long(sizeof(void*)), long(object_size));
     size_t mem_size = object_size * max_num_objects;
     size_t num_align = mem_size / sizeof(Aligner);
     if (mem_size % sizeof(Aligner) != 0)

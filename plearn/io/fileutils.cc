@@ -418,7 +418,7 @@ void readWhileMatches(PStream& in, const string& s){
         {
             in.unget(); // Match failed, unget that last character.
             PLERROR("In readWhileMatches. Failure while matching %s: "
-                    "at position %d expected a '%c', but read a '%c'",s.c_str(),i,s[i],c);
+                    "at position %ld expected a '%c', but read a '%c'",s.c_str(),long(i),s[i],c);
         }
         ++i;
         if(i==n) // passed through the whole string 

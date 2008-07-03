@@ -96,7 +96,7 @@ void PrPStreamBuf::write_(const char* p, streamsize n)
     streamsize nwritten = ::PR_Write(out, p, PRInt32(n));
     if (nwritten != n)
         PLERROR("In PrPStreamBuf::write_ failed to write the requested number "
-                "of bytes: wrote %ld instead of %ld", nwritten, n);
+                "of bytes: wrote %ld instead of %ld",long(nwritten),long(n));
 }
   
 } // end of namespace PLearn
