@@ -136,7 +136,7 @@ PythonCodeSnippet::PythonCodeSnippet(const PythonObjectWrapper& instance,
       m_python_methods(4)
 {
     PyObject* compiled_code= 
-        PyObject_GetAttrString(m_instance.getPyObject(), "__dict__");
+        PyObject_GetAttrString(m_instance.getPyObject(), const_cast<char*>("__dict__"));
     m_compiled_code= PythonObjectWrapper(compiled_code, PythonObjectWrapper::transfer_ownership);
     // NOTE: build() not called
 }
@@ -495,7 +495,7 @@ void PythonCodeSnippet::injectInternal(const char* python_name,
     py_method->ml_name  = const_cast<char*>(python_name);
     py_method->ml_meth  = pythonTrampoline;
     py_method->ml_flags = METH_VARARGS;
-    py_method->ml_doc   = "injected-function-from-PythonCodeSnippet";
+    py_method->ml_doc   = const_cast<char*>("injected-function-from-PythonCodeSnippet");
 
     PyObject* py_funcobj = PyCFunction_NewEx(py_method,
                                              self /* info for trampoline */,
@@ -767,7 +767,8 @@ void PythonCodeSnippet::handlePythonErrors(const string& extramsg) const
             if(!formatFunc)
                 throw PythonException("PythonCodeSnippet::handlePythonErrors :"
                                       " Can't find cgitb.text");
-            PyObject* args= Py_BuildValue("((OOO))", exception, v, traceback);
+            PyObject* args= Py_BuildValue(const_cast<char*>("((OOO))"),
+                                          exception, v, traceback);
             if(!args)
                 throw PythonException("PythonCodeSnippet::handlePythonErrors :"
                                       " Can't build args for cgitb.text");

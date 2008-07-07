@@ -380,10 +380,17 @@ Vec HyperOptimize::optimize()
     {
         auto_save_timer->startTimer("auto_save");
 
-        if(verbosity>0)
+        if(verbosity>0) {
+            // Print current option-value pairs in slightly comprehensible form
+            string kv;
+            for (int i=0, n=option_names.size() ; i<n ; ++i) {
+                kv += option_names[i] + '=' + option_vals[i];
+                if (i < n-1)
+                    kv += ", ";
+            }
             perr << "In HyperOptimize::optimize() - We optimize with "
-                "parameters " << option_names << " with value " << option_vals
-                << endl;
+                "parameters " << kv;
+        }
 
         // This will also call build and forget on the learner unless unnecessary
         // because the modified options don't require it.

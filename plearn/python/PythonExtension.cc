@@ -138,7 +138,7 @@ void injectPLearnClasses(PyObject* module)
     // import python class for wrapping PLearn objects
     string importcode= "\nfrom plearn.pybridge.wrapped_plearn_object "
         "import *\n";
-    PyObject_SetAttrString(module, "__builtins__", PyEval_GetBuiltins());
+    PyObject_SetAttrString(module, const_cast<char*>("__builtins__"), PyEval_GetBuiltins());
     PyObject* res= PyRun_String(importcode.c_str(), Py_file_input, 
                                 PyModule_GetDict(module), PyModule_GetDict(module));
     if(!res)
@@ -165,11 +165,11 @@ void injectPLearnClasses(PyObject* module)
 
     //inject unref and newCPPObj methods
     PyMethodDef* py_method= &PythonObjectWrapper::m_unref_method_def;
-    py_method->ml_name  = "_unref";
+    py_method->ml_name  = const_cast<char*>("_unref");
     py_method->ml_meth  = PythonObjectWrapper::python_del;
     py_method->ml_flags = METH_VARARGS;
-    py_method->ml_doc   = "Injected unref function from PythonObjectWrapper; "
-        "DO NOT USE THIS FUNCTION! IT MAY DEALLOCATE THE PLEARN OBJECT!";
+    py_method->ml_doc   = const_cast<char*>("Injected unref function from PythonObjectWrapper; "
+                                            "DO NOT USE THIS FUNCTION! IT MAY DEALLOCATE THE PLEARN OBJECT!");
     PyObject* py_funcobj= PyCFunction_NewEx(py_method, NULL, NULL);
     PyObject* py_methobj= PyMethod_New(py_funcobj, NULL, wrapper);
     Py_XDECREF(py_funcobj);
@@ -187,17 +187,17 @@ void injectPLearnClasses(PyObject* module)
     // inject 'newCPPObj' and 'refCPPObj' class methods
     TVec<PyMethodDef*> classmethods(2);
     classmethods[0]= &PythonObjectWrapper::m_newCPPObj_method_def;
-    classmethods[0]->ml_name  = "_newCPPObj";
+    classmethods[0]->ml_name  = const_cast<char*>("_newCPPObj");
     classmethods[0]->ml_meth  = PythonObjectWrapper::newCPPObj;
     classmethods[0]->ml_flags = METH_VARARGS;
-    classmethods[0]->ml_doc   = "Injected new function from PythonObjectWrapper; "
-        "DO NOT USE THIS FUNCTION!";
+    classmethods[0]->ml_doc   = const_cast<char*>("Injected new function from PythonObjectWrapper; "
+                                                  "DO NOT USE THIS FUNCTION!");
     classmethods[1]= &PythonObjectWrapper::m_refCPPObj_method_def;
-    classmethods[1]->ml_name  = "_refCPPObj";
+    classmethods[1]->ml_name  = const_cast<char*>("_refCPPObj");
     classmethods[1]->ml_meth  = PythonObjectWrapper::refCPPObj;
     classmethods[1]->ml_flags = METH_VARARGS;
-    classmethods[1]->ml_doc   = "Injected new function from PythonObjectWrapper; "
-        "DO NOT USE THIS FUNCTION!";
+    classmethods[1]->ml_doc   = const_cast<char*>("Injected new function from PythonObjectWrapper; "
+                                                  "DO NOT USE THIS FUNCTION!");
 
     for(TVec<PyMethodDef*>::iterator mit= classmethods.begin();
         mit != classmethods.end(); ++mit)
@@ -297,7 +297,7 @@ void injectPLearnClasses(PyObject* module)
         for(unsigned int i= 0; i < nopts; ++i)
             optionnames.insert(options[i]->optionname());
         the_pyclass= clit->second;
-        if(-1==PyObject_SetAttrString(the_pyclass, "_optionnames", 
+        if(-1==PyObject_SetAttrString(the_pyclass, const_cast<char*>("_optionnames"), 
                                       PythonObjectWrapper(optionnames).getPyObject()))
         {
             Py_DECREF(module);
@@ -406,7 +406,7 @@ void createWrappedObjectsSet(PyObject* module)
 void addToWrappedObjectsSet(PyObject* o)
 {
     PLASSERT(the_PLearn_python_module);
-    if(-1 == PyObject_SetAttrString(the_PLearn_python_module, "_tmp_wrapped_instance", o))
+    if(-1 == PyObject_SetAttrString(the_PLearn_python_module, const_cast<char*>("_tmp_wrapped_instance"), o))
         PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to module.");
     PyObject* res= PyRun_String("\nwrapped_PLearn_instances.add(_tmp_wrapped_instance)"
                                 "\ndel _tmp_wrapped_instance\n", 
@@ -423,7 +423,7 @@ void addToWrappedObjectsSet(PyObject* o)
 void removeFromWrappedObjectsSet(PyObject* o)
 {
     PLASSERT(the_PLearn_python_module);
-    if(-1 == PyObject_SetAttrString(the_PLearn_python_module, "_tmp_wrapped_instance", o))
+    if(-1 == PyObject_SetAttrString(the_PLearn_python_module, const_cast<char*>("_tmp_wrapped_instance"), o))
         PLERROR("in removeFromWrappedObjectsSet : cannot add wrapped object to module.");
     PyObject* res= PyRun_String("\nwrapped_PLearn_instances.remove(_tmp_wrapped_instance)"
                                 "\ndel _tmp_wrapped_instance\n", 
