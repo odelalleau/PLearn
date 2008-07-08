@@ -73,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(
 DenoisingRecurrentNet::DenoisingRecurrentNet() :
     use_target_layers_masks( false ),
     end_of_sequence_symbol( -1000 ),
-    encoding("raw_masked_supervised"),
+    encoding("note_duration"),
     input_window_size(1),
     tied_input_reconstruction_weights( true ),
     input_noise_prob( 0.15 ),
@@ -299,10 +299,11 @@ void DenoisingRecurrentNet::build_()
         // Parsing symbols in target
         int tar_layer = 0;
         int tar_layer_size = 0;
+        int lala = target_layers.length();
         target_symbol_sizes.resize(target_layers.length());
-        for( int tar_layer=0; tar_layer<target_layers.length(); 
-             tar_layer++ )
+        for( tar_layer=0; tar_layer<target_layers.length(); tar_layer++ )
             target_symbol_sizes[tar_layer].resize(0);
+
         target_layers_n_of_target_elements.resize( targetsize() );
         target_layers_n_of_target_elements.clear();
 
