@@ -389,7 +389,7 @@ Vec HyperOptimize::optimize()
                     kv += ", ";
             }
             perr << "In HyperOptimize::optimize() - We optimize with "
-                "parameters " << kv;
+                "parameters " << kv << "\n";
         }
 
         // This will also call build and forget on the learner unless unnecessary
