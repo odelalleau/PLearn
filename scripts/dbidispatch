@@ -123,6 +123,7 @@ In the file of the option --file=FILEPATH, there must not be double quotes aroun
 The '--[*no_]clean_up' set the DBI option clean_up to true(false)
 
 The environnement variable DBIDISPATCH_DEFAULT_OPTION can contain default option that you always want to pass to dbidispatch. You can override them on the command line.
+The environnement variable DBIDISPATCH_LOGDIR set the name of the directory where all the individual logs directory will be put. If not present default to LOGS.
 """%{'ShortHelp':ShortHelp,'ScriptName':ScriptName}
 
 if len(sys.argv) == 1:
@@ -141,6 +142,10 @@ elif search_file('cluster',PATH):
     launch_cmd = 'Cluster'
 else:
     launch_cmd = 'Local'
+LOGDIR=os.getenv("DBIDISPATCH_LOGDIR")
+if not LOGDIR:
+    LOGDIR="LOGS"
+
 to_parse=[]
 env=os.getenv("DBIDISPATCH_DEFAULT_OPTION")
 if env:
@@ -321,10 +326,10 @@ if FILE == "":
     tmp=re.sub( ',', '-', tmp )
     tmp=tmp[:200]
     tmp+='_'+str(datetime.datetime.now()).replace(' ','_')
-    dbi_param["log_dir"]=os.path.join("LOGS",tmp)
+    dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 else:
-    dbi_param["log_dir"]=os.path.join("LOGS",FILE)
+    dbi_param["log_dir"]=os.path.join(LOGDIR,FILE)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
 
