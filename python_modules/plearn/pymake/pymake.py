@@ -187,6 +187,7 @@ a corresponding .<target>.override_compile_options file:
 The environment variable PYMAKE_OPTIONS is prepended to the command line 
 options. You can define your default options there if they do not conflict
 with the ones from the command line.
+The environment variable PYMAKE_OBJS_DIR can be set to change the OBJS dir to the value of this variable. This is usefull if you don't want to backup the OBJS dir.
 """
 
 
@@ -251,19 +252,25 @@ def get_hostname():
         myhostname = myhostname[0:pos]
     return myhostname
 
+def get_OBJS_dir():
+    dir=os.getenv("PYMAKE_OBJS_DIR")
+    if not dir:
+        dir="OBJS"
+    return dir
+
 def join(*path_list):
     """simply call os.path.join and convertWinToLinux"""
     return convertWinToLinux(os.path.join(*path_list))
 
 def lsdirs(basedir):
     """returns the recursive list of all subdirectories of the given directory,
-    excluding OBJS and CVS directories and those whose name starts with a dot.
+    excluding OBJS, os.getenv("PYMAKE_OBJS_DIR") and CVS directories and those whose name starts with a dot.
     The first element of the returned list is the basedir"""
     if not os.path.isdir(basedir):
         return []
     dirs = [ basedir ]
     for dname in os.listdir(basedir):
-        if dname!='CVS' and dname!='OBJS' and dname[0]!='.':
+        if dname!='CVS' and dname!='OBJS' and dname!=get_OBJS_dir() and dname[0]!='.':
             dname = join(basedir,dname)
             if os.path.isdir(dname):
                 dirs.append(dname)
@@ -917,7 +924,7 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link,
     if os.path.basename(target)[0] == '.': # ignore files and directories starting with a dot
         return
     if os.path.isdir(target):
-        if os.path.basename(target) not in ['OBJS','CVS']: # skip OBJS and CVS directories
+        if os.path.basename(target) not in ['OBJS','CVS',get_OBJS_dir()]: # skip OBJS and CVS directories
             print "Entering " + target
             for direntry in os.listdir(target):
                 newtarget = join(target,direntry)
@@ -1144,7 +1151,7 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
         print "Directory " + dist_dir + " already exists"
         sys.exit(100)
     os.makedirs(dist_dir)
-    os.makedirs(os.path.join(dist_dir,"OBJS"))
+    os.makedirs(os.path.join(dist_dir,get_OBJS_dir()))
     makefile = open(os.path.join(dist_dir,"Makefile"),"w")
     compiler = default_compiler
     compileroptions = ""
@@ -1181,7 +1188,8 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
     for ccfile in executables_to_link:
         objsfilelist = []
         for lf in ccfile.get_ccfiles_to_link():
-            objsfilelist.append("OBJS/" + os.path.basename(lf.corresponding_ofile))
+            objsfilelist.append(os.path.join(get_OBJS_dir(),
+                                             os.path.basename(lf.corresponding_ofile)))
 
         command = linker + so_options + ' -o ' + os.path.basename(ccfile.corresponding_output) +\
                   ' ' + string.join(objsfilelist,' ') + ' ' + \
@@ -1194,10 +1202,11 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
 
     for ccfile in ccfiles_to_compile.keys():
         [dir_cc, file_cc] = ccfile.get_rel_dir_file()
-
-        makefile.write('OBJS/' + ccfile.filebase + ".o : " + os.path.join(dir_cc,file_cc) + "\n")
+        out_file_o=os.path.join(get_OBJS_dir(),ccfile.filebase + ".o")
+        makefile.write(out_file_o+" : " + os.path.join(dir_cc,file_cc) + "\n")
         makefile.write('\t' + compiler + ' ' + compileflags + ' ' + \
-                       compileroptions + ' -o OBJS/' + ccfile.filebase + ".o -c " + os.path.join(dir_cc,file_cc))
+                           compileroptions + ' -o ' + out_file_o + " -c " + \
+                           os.path.join(dir_cc,file_cc))
         makefile.write("\n")
         makefile.write("\n")
 
@@ -1213,6 +1222,7 @@ def find_dependency(args,type='link'):
     target = args[0]
     configpath = get_config_path(target)
     execfile( configpath, globals() )
+    global options
     options = getOptions(options_choices, optionargs)
 
     sourcedirs = unique(sourcedirs)
@@ -1524,19 +1534,24 @@ def generate_vcproj_files(target, ccfiles_to_compile, executables_to_link, linkn
 def reportMissingObj(arg, dirpath, names):
     if 'OBJS' in names: names.remove('OBJS')
     if 'CVS' in names: names.remove('CVS')
+    objs_dir_to_use=get_OBJS_dir()
+    if objs_dir_to_use in names: names.remove(objs_dir_to_use)
     for fname in names:
         fpath = join(dirpath,fname)
         if os.path.isfile(fpath):
             basename, ext = os.path.splitext(fname)
             if ext in cpp_exts:
                 foundobj = 0 # found the .o file?
-                for f in glob.glob(join(dirpath,'OBJS','*',basename+'.o')):
+                for f in glob.glob(join(dirpath,objs_dir_to_use,
+                                        '*',basename+'.o')):
                     if os.path.isfile(f): foundobj = 1
                 if not foundobj:
                     print fpath
 
 def rmOBJS(arg, dirpath, names):
-    if os.path.basename(dirpath) == 'OBJS':
+    objs_dir_to_use=get_OBJS_dir()
+    if os.path.basename(dirpath) == 'OBJS' or\
+            os.path.basename(dirpath)==objs_dir_to_use:
         print 'Removing', dirpath
         shutil.rmtree(dirpath)
 
@@ -2768,13 +2783,18 @@ def main( args ):
         temp_objs=1
         local_compilation = 1
         if (objsdir == ''):
-            objsdir = '/tmp/OBJS'
+            objsdir = '/tmp/'+get_OBJS_dir()
         optionargs.remove('tmp')
     else:
         temp_objs = 0
 
     ##  Special options that will not compile, but perform various operations
     if 'clean' in optionargs:
+        #remove some option that are save to have.
+        #some people can put those option in their PYMAKE_OPTIONS and 
+        #we want them to be able to do pymake -clean .
+        if 'local_ofiles' in optionargs: optionargs.remove('local_ofiles')
+        if 'logging=dbg' in optionargs: optionargs.remove('logging=dbg')
         if len(optionargs)!=1 or len(otherargs)==0:
             print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
             sys.exit(100)
@@ -2881,7 +2901,7 @@ def main( args ):
 
         # Building name of object subdirectory
         if  objspolicy== 1:
-            objsdir = join('OBJS', target_platform + '__')
+            objsdir = join(get_OBJS_dir(), target_platform + '__')
         elif objspolicy == 2:
             objsdir = join(objsdir, target_platform + '__')
         # We append options name to the objsdir name if they modify the compiled objects file
