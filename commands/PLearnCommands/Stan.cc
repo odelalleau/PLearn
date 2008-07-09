@@ -52,7 +52,7 @@ Stan::Stan()
         "stan",
         "La commande pour les affaires de Stan",
         "stan generate path_to_model.psave nb_notes \n"
-        "ex: stan generate /u/laulysta/recherche_maitrise/projet_GenerationDeMusique/exp/croche/00001__1a40000_80N/Split0/final_learner.psave 20 \n"
+        "ex: stan generate /home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/exp_tar_tm1__in_tm1_tp1/exp-expressive_timing-rnet_1hid-sizes=95-7-7-1-1-1-1-1-1-mds=20-stepsize=1-seed=654321-eoss=8-nhid=40-lrl=0.0001-utlm=1-20080529:185450/Split0/LearnerExpdir/final_learner.psave 1 \n"
         "\n"
         )
 {}
@@ -85,9 +85,12 @@ void Stan::run(const vector<string>& args)
     
     if(subcommand=="generate")
     {        
-        int nb_notes = toint(args[2]);
-        perr << "Generating " << nb_notes << " notes!" << endl;
-        model->generate(nb_notes);
+        int t = toint(args[2]);
+        int n = toint(args[3]);
+        //perr << "Generating " << nb_notes << " notes!" << endl;
+        perr << "Generating " << endl;
+        model->generate(t, n);
+        
     }
     else
         perr << "No such subcommand: " << subcommand << endl;
