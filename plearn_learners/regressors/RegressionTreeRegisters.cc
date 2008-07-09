@@ -146,7 +146,7 @@ void RegressionTreeRegisters::reinitRegisters()
     sortRows();
 }
 
-void RegressionTreeRegisters::registerLeave(int leave_id, int row)
+void RegressionTreeRegisters::registerLeave(RTR_type leave_id, int row)
 {
     leave_register[row] = leave_id;
 }
@@ -189,7 +189,7 @@ RTR_type RegressionTreeRegisters::getNextId()
     return next_id;
 }
 
-void RegressionTreeRegisters::getAllRegisteredRow(int leave_id, int col, TVec<RTR_type> &reg)
+void RegressionTreeRegisters::getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg)
 {
     for(int i=0;i<length();i++)
     {

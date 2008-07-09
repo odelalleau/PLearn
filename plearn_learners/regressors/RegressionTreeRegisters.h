@@ -49,7 +49,6 @@
 
 //!used to limit the memory used by limiting the length of the dataset.
 //!work with unsigned int, uint16_t, but fail with uint8_t???
-//!always use unsigned type! Otherwise you need to modif RegressionTreeRegisters.cc too
 #define RTR_type uint32_t 
 
 namespace PLearn {
@@ -92,13 +91,13 @@ public:
     virtual void         build();
     void         initRegisters(VMat train_set);
     void         reinitRegisters();
-    void         registerLeave(int leave_id, int row);
+    void         registerLeave(RTR_type leave_id, int row);
     virtual real get(int row, int col) const;
     real         getTarget(int row);
     real         getWeight(int row);
     void         setWeight(int row,real val);
     RTR_type     getNextId();
-    void         getAllRegisteredRow(int leave_id, int col, TVec<RTR_type> &reg);
+    void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg);
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
