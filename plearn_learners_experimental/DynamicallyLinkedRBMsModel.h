@@ -165,7 +165,7 @@ public:
     
 
 //    //! Generate music in a folder
-//    void generate(int nbNotes);
+    void generate(int t, int n);
 //
 //    //! Generate a part of the data in a folder
 //    void gen();

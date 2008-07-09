@@ -398,6 +398,7 @@ void DynamicallyLinkedRBMsModel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     
 
     deepCopyField( bias_gradient , copies);
+    deepCopyField( visi_bias_gradient , copies);
     deepCopyField( hidden_gradient , copies);
     deepCopyField( hidden_temporal_gradient , copies);
     deepCopyField( hidden_list , copies);
@@ -825,7 +826,7 @@ void DynamicallyLinkedRBMsModel::setLearningRate( real the_learning_rate )
     hidden_layer->setLearningRate( the_learning_rate );
     input_connections->setLearningRate( the_learning_rate );
     if( dynamic_connections )
-        dynamic_connections->setLearningRate( the_learning_rate );
+        dynamic_connections->setLearningRate( the_learning_rate ); //HUGO: multiply by dynamic_connections_learning_weight;
     if( hidden_layer2 )
     {
         hidden_layer2->setLearningRate( the_learning_rate );
@@ -1259,137 +1260,474 @@ TVec<string> DynamicallyLinkedRBMsModel::getTrainCostNames() const
     return getTestCostNames();
 }
 
-//void DynamicallyLinkedRBMsModel::gen()
-//{
-//    //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
-//    data = new AutoVMatrix();
-//    data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
-//    data->defineSizes(21,0,0);
-//    //data->inputsize = 21;
-//    //data->targetsize = 0;
-//    //data->weightsize = 0;
-//    data->build();
-//
-//    
-//    int len = data->length();
-//    Vec score;
-//    Vec target;
-//    real weight;
-//    Vec bias_tempo;
-//    Vec visi_bias_tempo;
-//   
-//   
-//    
-//    previous_hidden_layer.resize(hidden_layer->size);
-//    connections_idem = connections;
-//
-//    for (int ith_sample = 0; ith_sample < len ; ith_sample++ ){
-//        
-//        data->getExample(ith_sample, score, target, weight);
-//        //score << data(ith_sample);
-//        input_prediction_list.resize(
-//            ith_sample+1,visible_layer->size);
-//        if(ith_sample > 0)
-//        {
-//            
-//            //input_list(ith_sample_in_sequence) << previous_input;
-//            //h*_{t-1}
-//            //////////////////////////////////
-//            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
-//            hidden_layer->setAllBias(cond_bias); //**************************
-//            
-//            
-//            
-//            //up phase
-//            connections->setAsDownInput( input_prediction_list(ith_sample-1) );
-//            hidden_layer->getAllActivations( connections_idem );
-//            hidden_layer->computeExpectation();
-//            //////////////////////////////////
-//            
-//            //previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour//******************************
-//            //previous_hidden_layer_act_no_bias << hidden_layer->activation;
-//            
-//            
-//            //h*_{t}
-//            ////////////
-//            if(dynamic_connections_copy)
-//                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-//            else
-//                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-//            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-//            hidden_layer->expectation_is_not_up_to_date();
-//            hidden_layer->computeExpectation();//h_{t}
-//            ///////////
-//            
-//            //previous_input << visible_layer->expectation;//v_{t-1}
-//            
-//        }
-//        else
-//        {
-//            
-//            previous_hidden_layer.clear();//h_{t-1}
-//            if(dynamic_connections_copy)
-//                dynamic_connections_copy->fprop( previous_hidden_layer ,
-//                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-//            else
-//                dynamic_connections->fprop(previous_hidden_layer,
-//                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
-//            
-//            hidden_layer->expectation_is_not_up_to_date();
-//            hidden_layer->computeExpectation();//h_{t}
-//            //previous_input.resize(data->inputsize);
-//            //previous_input << data(ith_sample);
-//            
-//        }
-//        
-//        //connections_transpose->setAsDownInput( hidden_layer->expectation );
-//        //visible_layer->getAllActivations( connections_idem_t );
-//        
-//        connections->setAsUpInput( hidden_layer->expectation );
-//        visible_layer->getAllActivations( connections_idem );
-//        
-//        visible_layer->computeExpectation();
-//        //visible_layer->generateSample();
-//        partition(score.subVec(14,taillePart), visible_layer->activation.subVec(14+taillePart,taillePart), visible_layer->activation.subVec(14+(taillePart*2),taillePart));
-//        partition(score.subVec(14,taillePart), visible_layer->expectation.subVec(14+taillePart,taillePart), visible_layer->expectation.subVec(14+(taillePart*2),taillePart));
-//
-//
-//        visible_layer->activation.subVec(0,14+taillePart) << score;
-//        visible_layer->expectation.subVec(0,14+taillePart) << score;
-//
-//        input_prediction_list(ith_sample) << visible_layer->expectation;
-//        
-//    }
-//    
-//    //Vec tempo;
-//    TVec<real> tempo;
-//    tempo.resize(visible_layer->size);
-//    ofstream myfile;
-//    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/test.txt");
-//    
-//    for (int i = 0; i < len ; i++ ){
-//        tempo << input_prediction_list(i);
-//        
-//        //cout << tempo[2] << endl;
-//       
-//        for (int j = 0; j < tempo.length() ; j++ ){
-//            
-//            
-//                
-//                
-//               myfile << tempo[j] << " ";
-//               
-//
-//               
-//           
-//        }
-//        myfile << "\n";
-//    }
-//     
-//
-//     myfile.close();
-//
-//}
+void DynamicallyLinkedRBMsModel::generate(int t, int n)
+{
+    //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
+    data = new AutoVMatrix();
+    data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/listData/target_tm12_input_t_tm12_tp12/scoreGen_tar_tm12__in_tm12_tp12.amat";
+    //data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/create_data/scoreGenSuitePerf.amat";
+
+    data->defineSizes(208,16,0);
+    //data->inputsize = 21;
+    //data->targetsize = 0;
+    //data->weightsize = 0;
+    data->build();
+
+    
+    
+   
+   
+
+    int len = data->length();
+    int tarSize = outputsize();
+    int partTarSize;
+    Vec input;
+    Vec target;
+    real weight;
+
+    Vec output(outputsize());
+    output.clear();
+    /*Vec costs(nTestCosts());
+    costs.clear();
+    Vec n_items(nTestCosts());
+    n_items.clear();*/
+
+    int r,r2;
+    
+    int ith_sample_in_sequence = 0;
+    int inputsize_without_masks = inputsize() 
+        - ( use_target_layers_masks ? targetsize() : 0 );
+    int sum_target_elements = 0;
+    for (int i = 0; i < len; i++)
+    {
+        data->getExample(i, input, target, weight);
+        if(i>n)
+        {
+            for (int k = 1; k <= t; k++)
+            {
+                if(k<=i){
+                    partTarSize = outputsize();
+                    for( int tar=0; tar < target_layers.length(); tar++ )
+                    {
+                        
+                        input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar][ith_sample_in_sequence-k];
+                        partTarSize -= target_layers[tar]->size;
+                        
+                        
+                    }
+                }
+            }       
+        }
+    
+/*
+        for (int k = 1; k <= t; k++)
+        {
+            partTarSize = outputsize();
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                if(i>=t){
+                    input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar][ith_sample_in_sequence-k];
+                    partTarSize -= target_layers[tar]->size;
+                }
+            }
+        }
+*/
+        if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
+        {
+            /*  ith_sample_in_sequence = 0;
+            hidden_list.resize(0);
+            hidden_act_no_bias_list.resize(0);
+            hidden2_list.resize(0);
+            hidden2_act_no_bias_list.resize(0);
+            target_prediction_list.resize(0);
+            target_prediction_act_no_bias_list.resize(0);
+            input_list.resize(0);
+            targets_list.resize(0);
+            nll_list.resize(0,0);
+            masks_list.resize(0);*/
+
+            
+
+            continue;
+        }
+
+        // Resize internal variables
+        hidden_list.resize(ith_sample_in_sequence+1);
+        hidden_act_no_bias_list.resize(ith_sample_in_sequence+1);
+        if( hidden_layer2 )
+        {
+            hidden2_list.resize(ith_sample_in_sequence+1);
+            hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1);
+        }
+                 
+        input_list.resize(ith_sample_in_sequence+1);
+        input_list[ith_sample_in_sequence].resize(input_layer->size);
+
+        targets_list.resize( target_layers.length() );
+        target_prediction_list.resize( target_layers.length() );
+        target_prediction_act_no_bias_list.resize( target_layers.length() );
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                targets_list[tar].resize( ith_sample_in_sequence+1);
+                targets_list[tar][ith_sample_in_sequence].resize( 
+                    target_layers[tar]->size);
+                target_prediction_list[tar].resize(
+                    ith_sample_in_sequence+1);
+                target_prediction_act_no_bias_list[tar].resize(
+                    ith_sample_in_sequence+1);
+            }
+        }
+        nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
+        if( use_target_layers_masks )
+        {
+            masks_list.resize( target_layers.length() );
+            for( int tar=0; tar < target_layers.length(); tar++ )
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                    masks_list[tar].resize( ith_sample_in_sequence+1 );
+        }
+
+        // Forward propagation
+
+        // Fetch right representation for input
+        clamp_units(input.subVec(0,inputsize_without_masks),
+                    input_layer,
+                    input_symbol_sizes);                
+        input_list[ith_sample_in_sequence] << input_layer->expectation;
+
+        // Fetch right representation for target
+        sum_target_elements = 0;
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                if( use_target_layers_masks )
+                {
+                    clamp_units(target.subVec(
+                                    sum_target_elements,
+                                    target_layers_n_of_target_elements[tar]),
+                                target_layers[tar],
+                                target_symbol_sizes[tar],
+                                input.subVec(
+                                    inputsize_without_masks 
+                                    + sum_target_elements, 
+                                    target_layers_n_of_target_elements[tar]),
+                                masks_list[tar][ith_sample_in_sequence]
+                        );
+                    
+                }
+                else
+                {
+                    clamp_units(target.subVec(
+                                    sum_target_elements,
+                                    target_layers_n_of_target_elements[tar]),
+                                target_layers[tar],
+                                target_symbol_sizes[tar]);
+                }
+                targets_list[tar][ith_sample_in_sequence] << 
+                    target_layers[tar]->expectation;
+            }
+            sum_target_elements += target_layers_n_of_target_elements[tar];
+        }
+                
+        input_connections->fprop( input_list[ith_sample_in_sequence], 
+                                  hidden_act_no_bias_list[ith_sample_in_sequence]);
+                
+        if( ith_sample_in_sequence > 0 && dynamic_connections )
+        {
+            dynamic_connections->fprop( 
+                hidden_list[ith_sample_in_sequence-1],
+                dynamic_act_no_bias_contribution );
+
+            hidden_act_no_bias_list[ith_sample_in_sequence] += 
+                dynamic_act_no_bias_contribution;
+        }
+                 
+        hidden_layer->fprop( hidden_act_no_bias_list[ith_sample_in_sequence], 
+                             hidden_list[ith_sample_in_sequence] );
+                 
+        if( hidden_layer2 )
+        {
+            hidden_connections->fprop( 
+                hidden_list[ith_sample_in_sequence],
+                hidden2_act_no_bias_list[ith_sample_in_sequence]);
+
+            hidden_layer2->fprop( 
+                hidden2_act_no_bias_list[ith_sample_in_sequence],
+                hidden2_list[ith_sample_in_sequence] 
+                );
+
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    target_connections[tar]->fprop(
+                        hidden2_list[ith_sample_in_sequence],
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence]
+                        );
+                    target_layers[tar]->fprop(
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence],
+                        target_prediction_list[tar][
+                            ith_sample_in_sequence] );
+                    if( use_target_layers_masks )
+                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
+                            masks_list[tar][ith_sample_in_sequence];
+                }
+            }
+        }
+        else
+        {
+            for( int tar=0; tar < target_layers.length(); tar++ )
+            {
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    target_connections[tar]->fprop(
+                        hidden_list[ith_sample_in_sequence],
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence]
+                        );
+                    target_layers[tar]->fprop(
+                        target_prediction_act_no_bias_list[tar][
+                            ith_sample_in_sequence],
+                        target_prediction_list[tar][
+                            ith_sample_in_sequence] );
+                    if( use_target_layers_masks )
+                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
+                            masks_list[tar][ith_sample_in_sequence];
+                }
+            }
+        }
+
+        
+
+        sum_target_elements = 0;
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                target_layers[tar]->activation << 
+                    target_prediction_act_no_bias_list[tar][
+                        ith_sample_in_sequence];
+                target_layers[tar]->activation += target_layers[tar]->bias;
+                target_layers[tar]->setExpectation(
+                    target_prediction_list[tar][
+                        ith_sample_in_sequence]);
+                nll_list(ith_sample_in_sequence,tar) = 
+                    target_layers[tar]->fpropNLL( 
+                        targets_list[tar][ith_sample_in_sequence] ); 
+                /*costs[tar] += nll_list(ith_sample_in_sequence,tar);
+                
+                // Normalize by the number of things to predict
+                if( use_target_layers_masks )
+                {
+                    n_items[tar] += sum(
+                        input.subVec( inputsize_without_masks 
+                                      + sum_target_elements, 
+                                      target_layers_n_of_target_elements[tar]) );
+                }
+                else
+                n_items[tar]++;*/
+            }
+            if( use_target_layers_masks )
+                sum_target_elements += 
+                    target_layers_n_of_target_elements[tar];
+        }
+        ith_sample_in_sequence++;
+
+        
+
+    }
+
+    /*  
+    ith_sample_in_sequence = 0;
+    hidden_list.resize(0);
+    hidden_act_no_bias_list.resize(0);
+    hidden2_list.resize(0);
+    hidden2_act_no_bias_list.resize(0);
+    target_prediction_list.resize(0);
+    target_prediction_act_no_bias_list.resize(0);
+    input_list.resize(0);
+    targets_list.resize(0);
+    nll_list.resize(0,0);
+    masks_list.resize(0);   
+
+
+    */
+
+
+
+
+
+
+
+
+
+    
+    //Vec tempo;
+    //TVec<real> tempo;
+    //tempo.resize(visible_layer->size);
+    ofstream myfile;
+    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/test.txt");
+    
+    for (int i = 0; i < target_prediction_list[0].length() ; i++ ){
+       
+       
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            for (int j = 0; j < target_prediction_list[tar][i].length() ; j++ ){
+                
+                if(i>n){
+                    myfile << target_prediction_list[tar][i][j] << " ";
+                }
+                else{
+                    myfile << targets_list[tar][i][j] << " ";
+                }
+                       
+           
+            }
+        }
+        myfile << "\n";
+    }
+     
+
+     myfile.close();
+
+}
+/*
+void DynamicallyLinkedRBMsModel::gen()
+{
+    //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
+    data = new AutoVMatrix();
+    data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
+    data->defineSizes(21,0,0);
+    //data->inputsize = 21;
+    //data->targetsize = 0;
+    //data->weightsize = 0;
+    data->build();
+
+    
+    int len = data->length();
+    Vec score;
+    Vec target;
+    real weight;
+    Vec bias_tempo;
+    Vec visi_bias_tempo;
+   
+   
+    
+    previous_hidden_layer.resize(hidden_layer->size);
+    connections_idem = connections;
+
+    for (int ith_sample = 0; ith_sample < len ; ith_sample++ ){
+        
+        data->getExample(ith_sample, score, target, weight);
+        //score << data(ith_sample);
+        input_prediction_list.resize(
+            ith_sample+1,visible_layer->size);
+        if(ith_sample > 0)
+        {
+            
+            //input_list(ith_sample_in_sequence) << previous_input;
+            //h*_{t-1}
+            //////////////////////////////////
+            dynamic_connections->fprop(previous_hidden_layer, cond_bias);
+            hidden_layer->setAllBias(cond_bias); 
+            
+            
+            
+            //up phase
+            connections->setAsDownInput( input_prediction_list(ith_sample-1) );
+            hidden_layer->getAllActivations( connections_idem );
+            hidden_layer->computeExpectation();
+            //////////////////////////////////
+            
+            //previous_hidden_layer << hidden_layer->expectation;//h_{t-2} au prochain tour
+            //previous_hidden_layer_act_no_bias << hidden_layer->activation;
+            
+            
+            //h*_{t}
+            ////////////
+            if(dynamic_connections_copy)
+                dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            else
+                dynamic_connections->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            //dynamic_connections_copy->fprop( hidden_layer->expectation ,hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            hidden_layer->expectation_is_not_up_to_date();
+            hidden_layer->computeExpectation();//h_{t}
+            ///////////
+            
+            //previous_input << visible_layer->expectation;//v_{t-1}
+            
+        }
+        else
+        {
+            
+            previous_hidden_layer.clear();//h_{t-1}
+            if(dynamic_connections_copy)
+                dynamic_connections_copy->fprop( previous_hidden_layer ,
+                                                 hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            else
+                dynamic_connections->fprop(previous_hidden_layer,
+                                           hidden_layer->activation);//conection entre h_{t-1} et h_{t}
+            
+            hidden_layer->expectation_is_not_up_to_date();
+            hidden_layer->computeExpectation();//h_{t}
+            //previous_input.resize(data->inputsize);
+            //previous_input << data(ith_sample);
+            
+        }
+        
+        //connections_transpose->setAsDownInput( hidden_layer->expectation );
+        //visible_layer->getAllActivations( connections_idem_t );
+        
+        connections->setAsUpInput( hidden_layer->expectation );
+        visible_layer->getAllActivations( connections_idem );
+        
+        visible_layer->computeExpectation();
+        //visible_layer->generateSample();
+        partition(score.subVec(14,taillePart), visible_layer->activation.subVec(14+taillePart,taillePart), visible_layer->activation.subVec(14+(taillePart*2),taillePart));
+        partition(score.subVec(14,taillePart), visible_layer->expectation.subVec(14+taillePart,taillePart), visible_layer->expectation.subVec(14+(taillePart*2),taillePart));
+
+
+        visible_layer->activation.subVec(0,14+taillePart) << score;
+        visible_layer->expectation.subVec(0,14+taillePart) << score;
+
+        input_prediction_list(ith_sample) << visible_layer->expectation;
+        
+    }
+    
+    //Vec tempo;
+    TVec<real> tempo;
+    tempo.resize(visible_layer->size);
+    ofstream myfile;
+    myfile.open ("/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/test.txt");
+    
+    for (int i = 0; i < len ; i++ ){
+        tempo << input_prediction_list(i);
+        
+        //cout << tempo[2] << endl;
+       
+        for (int j = 0; j < tempo.length() ; j++ ){
+            
+            
+                
+                
+               myfile << tempo[j] << " ";
+               
+
+               
+           
+        }
+        myfile << "\n";
+    }
+     
+
+     myfile.close();
+
+}*/
 //void DynamicallyLinkedRBMsModel::generate(int nbNotes)
 //{
 //    
