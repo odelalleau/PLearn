@@ -371,7 +371,7 @@ class ExperimentWorkbench(HasTraits) :
     def expdir_name(expdir_root):
         """Return an experiment directory from a root location."""
         return os.path.join(expdir_root,
-                            datetime.now().strftime("expdir_%Y%m%d_%H%m%S"))
+                            datetime.now().strftime("expdir_%Y%m%d_%H%M%S"))
 
 
     @staticmethod
