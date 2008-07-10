@@ -505,6 +505,7 @@ public:
      *  weightsize_ and extrasize_
      */
     virtual void getExtra(int i, Vec& extra);
+    Vec remote_getExtra(int i);
 
     /// This method must be implemented in all subclasses
     virtual real get(int i, int j) const = 0; ///<  Returns element (i,j).

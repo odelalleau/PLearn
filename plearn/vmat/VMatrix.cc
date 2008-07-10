@@ -160,6 +160,12 @@ void VMatrix::declareOptions(OptionList & ol)
         "DO NOT play with this if you don't know the implementation!\n"
         "This add a dependency mtime to the gived value.");
 
+
+    declareOption(
+        ol, "fieldinfos", &VMatrix::fieldinfos, OptionBase::learntoption,
+        "Field infos.\n");
+
+
     inherited::declareOptions(ol);
 }
 
@@ -180,6 +186,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Returns the input, target and weight parts of a row.\n"),
          ArgDoc ("i", "Position of the row to get.\n"),
          RetDoc ("An (input, target, weight) tuple.")));
+
+    declareMethod(
+        rmm, "getExtra", &VMatrix::remote_getExtra,
+        (BodyDoc("Returns the extra part of a row.\n"),
+         ArgDoc ("i", "Position of the row to get.\n"),
+         RetDoc ("Values for extrafields.")));
 
     declareMethod(
         rmm, "getColumn", &VMatrix::remote_getColumn,
@@ -313,6 +325,11 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("extrasize", "extrasize")));
 
     declareMethod(
+        rmm, "copySizesFrom", &VMatrix::copySizesFrom,
+        (BodyDoc("Define this vmatrix's sizes from another vmatrix\n"),
+         ArgDoc ("vm", "the other vmatrix")));
+
+    declareMethod(
         rmm, "addStringMapping", static_cast<void (VMatrix::*)(int, string, real)>(&VMatrix::addStringMapping),
         (BodyDoc("Add or replace a string mapping for a column\n"),
          ArgDoc ("col", "column number"),
@@ -330,6 +347,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Get the real->string mapping for a given column.\n"),
          ArgDoc ("col", "column number"),
          RetDoc ("map of real->string")));
+
+    declareMethod(
+        rmm, "setMetaInfoFrom", &VMatrix::setMetaInfoFrom,
+        (BodyDoc("Set this vmatrix's meta-info from another vmatrix\n"),
+         ArgDoc ("vm", "the other vmatrix")));
+
 }
 
 
@@ -695,6 +718,13 @@ void VMatrix::getExtra(int i, Vec& extra)
     extra.resize(extrasize_);
     if(extrasize_>0)
         getSubRow(i,inputsize_+targetsize_+weightsize_, extra);
+}
+
+Vec VMatrix::remote_getExtra(int i)
+{
+    Vec extra;
+    getExtra(i, extra);
+    return extra;
 }
 
 
