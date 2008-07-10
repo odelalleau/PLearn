@@ -145,7 +145,8 @@ else:
 LOGDIR=os.getenv("DBIDISPATCH_LOGDIR")
 if not LOGDIR:
     LOGDIR="LOGS"
-os.mkdir(LOGDIR)
+if not os.path.exists(LOGDIR):
+    os.mkdir(LOGDIR)
 
 to_parse=[]
 env=os.getenv("DBIDISPATCH_DEFAULT_OPTION")
