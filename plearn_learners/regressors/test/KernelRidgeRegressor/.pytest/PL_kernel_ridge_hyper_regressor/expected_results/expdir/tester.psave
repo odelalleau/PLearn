@@ -10,7 +10,8 @@ inputsize = 1 ;
 targetsize = 2 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/sin_signcos_1x_2y.amat.metadata/" ;
+fieldinfos = 3 [ "x" 0 "y1" 0 "y2" 0 ]  )
 ;
 splitter = *2 ->FractionSplitter(
 round_to_closest = 0 ;
@@ -93,7 +94,8 @@ which_cost = "0" ;
 min_n_trials = 0 ;
 oracle = *8 ->CartesianProductOracle(
 option_names = 2 [ "weight_decay" "kernel.sigma" ] ;
-option_values = 2 [ 5 [ "1e-8" "1e-6" "1e-4" "1e-2" "1e0" ] 5 [ "1e-2" "1e-1" "1e0" "1e1" "1e2" ] ]  )
+option_values = 2 [ 5 [ "1e-8" "1e-6" "1e-4" "1e-2" "1e0" ] 5 [ "1e-2" "1e-1" "1e0" "1e1" "1e2" ] ] ;
+option_values_indices = 2 [ 0 0 ]  )
 ;
 provide_tester_expdir = 0 ;
 sub_strategy = []
@@ -106,8 +108,12 @@ K = 10 ;
 append_train = 0 ;
 append_non_constant_test = 0 ;
 include_test_in_train = 0 ;
-cross_range = (0 , 1 ) )
+cross_range = (0 , 1 );
+balance_classes = 0  )
 ;
+auto_save = 0 ;
+auto_save_diff_time = 10800 ;
+auto_save_test = 0 ;
 best_objective = 1.79769313486231571e+308 ;
 best_results = []
 ;

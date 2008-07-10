@@ -11,7 +11,8 @@ inputsize = 6 ;
 targetsize = 0 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.amat.metadata/" ;
+fieldinfos = 6 [ "x1" 0 "x2" 0 "x3" 0 "x4" 0 "y1" 0 "y2" 0 ]  )
 
 200  6  [ 
 -0.676509999999999945 	-0.354930000000000023 	-6.93189999999999973 	-1.70795000000000008 	-35.9233100000000007 	-7.30156999999999989 	
@@ -236,7 +237,8 @@ inputsize = 4 ;
 targetsize = 2 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/" ;
+fieldinfos = 6 [ "0" 0 "1" 0 "2" 0 "3" 0 "4" 0 "5" 0 ]  )
 
 200  6  [ 
 -0.676509999999999945 	-0.354930000000000023 	-6.93189999999999973 	-1.70795000000000008 	-35.9233100000000007 	-7.30156999999999989 	
@@ -461,7 +463,8 @@ inputsize = 3 ;
 targetsize = 0 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.metadata/" ;
+fieldinfos = 3 [ "x1" 0 "y2" 0 "class" 0 ]  )
 
 200  3  [ 
 2.52609296787849136 	0.32105044573636482 	0 	
