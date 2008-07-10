@@ -253,8 +253,11 @@ class ExperimentWorkbench(HasTraits) :
     def _new_xp_context(self):
         """Initialize an experiment context
         """
-        expdir  = self.expdir_name(self.script_params.expdir_root)
-        context = ExperimentContext(expdir = expdir,
+        expdir = None
+        if hasattr(self.script_params, 'expdir'):
+            expdir = self.script_params.expdir
+        expdir_path = self.expdir_name(self.script_params.expdir_root, expdir)
+        context = ExperimentContext(expdir = expdir_path,
                                     gui = self.gui,
                                     script_params = self.script_params,
                                     expfunc = self.expfunc)
@@ -368,10 +371,11 @@ class ExperimentWorkbench(HasTraits) :
 
 
     @staticmethod
-    def expdir_name(expdir_root):
-        """Return an experiment directory from a root location."""
-        return os.path.join(expdir_root,
-                            datetime.now().strftime("expdir_%Y%m%d_%H%M%S"))
+    def expdir_name(expdir_root, expdir=None):
+        """Return an experiment directory from a root location and possibly a dir name."""
+        if expdir is None or expdir == '':
+            expdir = datetime.now().strftime("expdir_%Y%m%d_%H%M%S")
+        return os.path.join(expdir_root, expdir)
 
 
     @staticmethod
@@ -452,7 +456,8 @@ def _async_raise(tid, exctype):
 if __name__ == "__main__":
     class GlobalOpt(HasStrictTraits):
         expdir_root       = Directory(".", auto_set=True,
-                                         desc="Where the experiment directory should be created")
+                                         desc="where the experiment directory should be created")
+        expdir            = Str("",      desc="experiment directory name")
         max_train_size    = Trait( -1 ,  desc="maximum size of training set (in days)")
         nhidden           = Trait(3,     desc="number of hidden units")
         weight_decay      = Trait(1e-8,  desc="weight decay to use for neural-net training")
@@ -464,6 +469,7 @@ if __name__ == "__main__":
 
     class AllOpt(HasStrictTraits):
         expdir_root = Delegate("GlobalOpt")
+        expdir      = Delegate("GlobalOpt")
         GlobalOpt   = Instance(GlobalOpt, ())
         MinorOpt    = Instance(MinorOpt,  ())
 
