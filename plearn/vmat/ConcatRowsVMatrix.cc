@@ -162,11 +162,12 @@ void ConcatRowsVMatrix::build_()
     // Set length_ and width_.
     recomputeDimensions();
 
-    // Note that the 3 lines below will overwrite any provided sizes.
+    // Note that the 4 lines below will overwrite any provided sizes.
     if(inputsize_<0 && targetsize_<0 && weightsize_<0){
         inputsize_ = to_concat[0]->inputsize();
         targetsize_ = to_concat[0]->targetsize();
         weightsize_ = to_concat[0]->weightsize();
+        extrasize_ = to_concat[0]->extrasize();
         if(fieldinfos.size()!=to_concat[0].width())
             PLERROR("In ConcatRowsVMatrix::build_() - We override "
                       "inputsize, targetsize and weightsize with the value"
