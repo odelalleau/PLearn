@@ -68,13 +68,13 @@ PStream& operator>>(PStream& in, VMField::FieldType& x) // dummy placeholder; do
 PStream& operator>>(PStream& in, VMField& x)
 {
     int y;
-    in >> ws >> x.name >> ws >> y;//x.fieldtype;
+    in >> ws >> x.name >> ws >> y;
     x.fieldtype= static_cast<VMField::FieldType>(y);
     return in;
 }
 PStream& operator<<(PStream& out, const VMField& x)
 {
-    out << ' ' << x.name << ' ' << x.fieldtype << ' ';
+    out << x.name << x.fieldtype;
     return out;
 }
 

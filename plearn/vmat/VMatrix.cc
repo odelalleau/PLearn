@@ -162,7 +162,7 @@ void VMatrix::declareOptions(OptionList & ol)
 
 
     declareOption(
-        ol, "fieldinfos", &VMatrix::fieldinfos, OptionBase::learntoption,
+        ol, "fieldinfos", &VMatrix::fieldinfos, OptionBase::buildoption,
         "Field infos.\n");
 
 
