@@ -412,6 +412,12 @@ struct ConvertFromPyObject< TVec<T> >
 };
 
 template <class T>
+struct ConvertFromPyObject< Array<T> >
+{
+    static Array<T> convert(PyObject*, bool print_traceback);
+};
+
+template <class T>
 struct ConvertFromPyObject<TMat<T> >
 {
     static TMat<T> convert(PyObject*, bool print_traceback);
@@ -652,6 +658,10 @@ struct ConvertToPyObject<tuple<T,U,V,W,X,Y> >
 template <class T, class U, class V, class W, class X, class Y, class Z>
 struct ConvertToPyObject<tuple<T,U,V,W,X,Y,Z> >
 { static PyObject* newPyObject(const tuple<T, U, V, W, X, Y, Z>&); };
+
+//! Generic array: create a Python list of those objects recursively
+template <class T> struct ConvertToPyObject<Array<T> >
+{ static PyObject* newPyObject(const Array<T>&); };
 
 //! Generic vector: create a Python list of those objects recursively
 template <class T> struct ConvertToPyObject<TVec<T> >
@@ -1024,6 +1034,48 @@ PP<T> ConvertFromPyObject<PP<T> >::convert(PyObject* pyobj,
 PyObject* convertArrayCheck(PyObject* pyobj, int numpy_type, int ndim, bool print_traceback);
 
 template <class T>
+Array<T> ConvertFromPyObject<Array<T> >::convert(PyObject* pyobj,
+                                                  bool print_traceback)
+{
+    PLASSERT(pyobj);
+
+    // Here, we support both Python Tuples and Lists
+    if(PyTuple_Check(pyobj)) {
+        // Tuple case
+        int size = PyTuple_GET_SIZE(pyobj);
+        Array<T> v(size);
+        for (int i=0 ; i<size ; ++i) {
+            PyObject* elem_i = PyTuple_GET_ITEM(pyobj, i);
+            v[i] = ConvertFromPyObject<T>::convert(elem_i, print_traceback);
+        }
+        return v;
+    }
+    else if (PyList_Check(pyobj)) {
+        // List case
+        int size = PyList_GET_SIZE(pyobj);
+        Array<T> v(size);
+        for (int i=0 ; i<size ; ++i) {
+            PyObject* elem_i = PyList_GET_ITEM(pyobj, i);
+            v[i] = ConvertFromPyObject<T>::convert(elem_i, print_traceback);
+        }
+        return v;
+    }
+    else if (PyObject* pyarr= convertArrayCheck(pyobj, numpyType<T>(), 1, print_traceback))
+    {
+        int sz= PyArray_DIM(pyarr,0);
+        Array<T> v(sz);
+        v.copyFrom(static_cast<T*>(PyArray_DATA(pyarr)), sz);
+        Py_XDECREF(pyarr);
+        return v;
+    }
+    else
+        PLPythonConversionError("ConvertFromPyObject<Array<T> >", pyobj,
+                                print_traceback);
+
+    return Array<T>();                        // Shut up compiler
+}
+
+template <class T>
 TVec<T> ConvertFromPyObject< TVec<T> >::convert(PyObject* pyobj,
                                                 bool print_traceback)
 {
@@ -1254,6 +1306,19 @@ PyObject* ConvertToPyObject<PP<T> >::newPyObject(const PP<T>& data)
     if(o)
         return ConvertToPyObject<Object*>::newPyObject(o);
     return ConvertToPyObject<T*>::newPyObject(static_cast<T*>(data));
+}
+
+template <class T>
+PyObject* ConvertToPyObject<Array<T> >::newPyObject(const Array<T>& data)
+{
+    PyObject* newlist = PyList_New(data.size());
+    for (int i=0, n=data.size() ; i<n ; ++i) {
+        // Since PyList_SET_ITEM steals the reference to the item being set,
+        // one does not need to Py_XDECREF the inserted string as was required
+        // for the PyArrayObject code above...
+        PyList_SET_ITEM(newlist, i, ConvertToPyObject<T>::newPyObject(data[i]));
+    }
+    return newlist;
 }
 
 template <class T>

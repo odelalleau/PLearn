@@ -232,11 +232,14 @@ void ConvertFromPyObject<Mat>::convert(PyObject* pyobj, Mat& m,
     PLASSERT( pyobj );
     PyObject* pyarr0= PyArray_CheckFromAny(pyobj, NULL,
                                            2, 2, NPY_CARRAY_RO, Py_None);
+    if(!pyarr0)
+        PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj,
+                                print_traceback);
     PyObject* pyarr= 
         PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
                            PyArray_DescrFromType(PL_NPY_REAL), 0);
     Py_XDECREF(pyarr0);
-    if (! pyarr)
+    if(!pyarr)
         PLPythonConversionError("ConvertFromPyObject<Mat>", pyobj,
                                 print_traceback);
     m.resize(PyArray_DIM(pyarr,0), PyArray_DIM(pyarr,1));
@@ -258,6 +261,8 @@ PP<VMatrix> ConvertFromPyObject<PP<VMatrix> >::convert(PyObject* pyobj,
                                                        bool print_traceback)
 {
     PLASSERT(pyobj);
+    if(pyobj == Py_None)
+        return 0;
     if(PyObject_HasAttrString(pyobj, "_cptr"))
         return static_cast<VMatrix*>(
             ConvertFromPyObject<Object*>::convert(pyobj, print_traceback));
@@ -506,6 +511,8 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
     // separate self from other params.
     Object* obj= args_tvec[0];
     args_tvec.subVecSelf(1, args_tvec.size()-1);
+
+    //perr << "REMOTE METHOD: " << obj->classname() << "::" << tramp->documentation().name() << endl;
 
     gc_collect1();
 
