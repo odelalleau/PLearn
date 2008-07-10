@@ -57,20 +57,25 @@ def set_remote_pickle(rp):
 
 
 class WrappedPLearnObject(object):
-
+    """
+    Wrapper class for PLearn objects used from Python.
+    """
+    
+    # for debug purposes: can print warnings when setting attributes
+    # which are not PLearn options 
     allowed_non_PLearn_options= ['_cptr']
     warn_non_PLearn_options= False # you can turn this on to help debugging
 
     def __init__(self, **kwargs):
-        #print 'WrappedPLearnObject.__init__',type(self),kwargs
+        """
+        ctor.: manage pointer to underlying C++ object
+        """
         if '_cptr' in kwargs:
             self._cptr= kwargs['_cptr'] # ptr to c++ obj
         elif hasattr(self,'_cptr'):
-            #print 'init->SETOPTIONS2',kwargs
             self.setOptions(kwargs)
             
     def setOptions(self, kwargs):
-        #print 'SETOPTIONS',kwargs
         call_build= True
         for k in kwargs:
             if k=='__call_build':
@@ -104,8 +109,9 @@ class WrappedPLearnObject(object):
         if hasattr(self, '_cptr'):
             self._unref()
 
-    def __repr__(self):
-        return self.asString() #PLearn repr. for now
+    # DEPRECATED: now use Python's default <modulename.classname object>
+    #def __repr__(self):
+    #    return self.asString() #PLearn repr. for now
 
     def __deepcopy__(self, memo= None):
         if not memo: memo= {}
@@ -124,14 +130,64 @@ class WrappedPLearnObject(object):
         return newone
 
     def __getstate__(self):
+        """
+        Returns self's dict, except that the value associated with the '_cptr'
+        key is replaced by 
+        """
+        PLEARN_PICKLE_PROTOCOL_VERSION= 2
         d= self.__dict__.copy()
-        if remote_pickle:
-            d['_cptr']= self.asStringRemoteTransmit()
-        else:
-            d['_cptr']= self.asString()
+        d['_cptr']= (PLEARN_PICKLE_PROTOCOL_VERSION,self.classname(),{})
+        for o in self._optionnames:
+            d['_cptr'][2][o]= self.getOption(o)
         return d
+        ##### old, deprecated version follows: (for reference only)
+        #d= self.__dict__.copy()
+        #if remote_pickle:
+        #    d['_cptr']= self.asStringRemoteTransmit()
+        #else:
+        #    d['_cptr']= self.asString()
+        #return d
     
     def __setstate__(self, dict):
+        """
+        Unpickle wrapped PLearn objects pickled using
+        pybridge's 2nd protocol; the original protocol is
+        also supported for backward compatibility
+        (through old_deprecated___setstate__)
+        Protocol #2 expects a standard pickle dictionary,
+        except that the '_cptr' element of this dict. is
+        a 3-tuple as follows:
+          ( <protocol version>, <PLearn class name>, <dict of PLearn options->values> )
+        e.g.:
+          (2, 'LinearRegressor', {'weight_decay': 1e-3})
+        Note that only protocol version 2 is allowed; the version 1 protocol
+        uses a totally different format (see old_deprecated___setstate__) 
+        """
+        d= dict['_cptr']
+        if isinstance(d, str):# Protocol v.1 (deprecated)
+            return self.old_deprecated___setstate__(dict)
+        # Protocol v.2:
+        PLEARN_PICKLE_PROTOCOL_VERSION= 2
+        if d[0] != PLEARN_PICKLE_PROTOCOL_VERSION:
+            raise RuntimeError, "PLearn pickle protocol version should be 2"
+        newone= plearn_module.newObjectFromClassname(d[1])
+        self._cptr= newone._cptr
+        self._refCPPObj(self, False)
+        for k in dict:
+            if k != '_cptr':
+                self.__setattr__(k, dict[k])
+        for o in d[1]:
+            self.setOptionFromPython(o,d[2][o])
+        self.build()
+        return dict
+
+    def old_deprecated___setstate__(self, dict):
+        """
+        Provide support to unpickle objects saved
+        in the original (PLearn) format.  This is
+        automatically called from __setstate__ when
+        needed.
+        """
         newone= plearn_module.newObject(dict['_cptr'])
         self._cptr= newone._cptr
         self._refCPPObj(self, False)
@@ -141,10 +197,11 @@ class WrappedPLearnObject(object):
         return dict
 
 
-from numpy.numarray import *
-
 class WrappedPLearnVMat(WrappedPLearnObject):
-
+    """
+    Specialized wrapper for PLearn VMatrices;
+    supplies __len__ and __getitem__ methods.
+    """
     def __len__(self):
         return self.length
 
@@ -163,7 +220,6 @@ class WrappedPLearnVMat(WrappedPLearnObject):
             if stop < 0: stop+= l
             if step==1:
                 return self.subMat(start, 0, stop-start, self.width)
-            #return pl.MemoryVMatrix(data= [self[i] for i in xrange(start, stop, step)])
             raise NotImplementedError, 'slice step != 1'
         raise TypeError, "key should be an int or a slice"
     
