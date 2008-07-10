@@ -171,7 +171,8 @@ TVec<VMat> KFoldSplitter::getSplit(int k)
     real start = cross_range.first;
     real end   = cross_range.second;
     int n_data = dataset->length();
-    PLASSERT( start >= 0 && end >= 0 && end > start && start < n_data && end < n_data );
+    PLASSERT_MSG(start >= 0 && end >= 0 && end > start && start < n_data && end < n_data,
+                 string("start=")+tostring(start)+", end="+tostring(end)+", n_data="+tostring(n_data));
     int i_start = 0;
     if (start > 0)
         i_start = start >= 1 ? int(round(start)) : int(round(n_data * start));
