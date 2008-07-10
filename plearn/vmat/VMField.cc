@@ -65,6 +65,18 @@ PStream& operator>>(PStream& in, VMField::FieldType& x) // dummy placeholder; do
     return in; // shut up compiler
 }
 
+PStream& operator>>(PStream& in, VMField& x)
+{
+    int y;
+    in >> ws >> x.name >> ws >> y;//x.fieldtype;
+    x.fieldtype= static_cast<VMField::FieldType>(y);
+    return in;
+}
+PStream& operator<<(PStream& out, const VMField& x)
+{
+    out << ' ' << x.name << ' ' << x.fieldtype << ' ';
+    return out;
+}
 
 /** VMFieldStat **/
 

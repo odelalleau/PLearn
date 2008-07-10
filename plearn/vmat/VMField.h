@@ -80,6 +80,9 @@ public:
 
 PStream& operator>>(PStream& in, VMField::FieldType& x); // dummy placeholder; do not call
 
+PStream& operator>>(PStream& in, VMField& x);
+PStream& operator<<(PStream& out, const VMField& x);
+
 //!  this class holds simple statistics about a field
 class VMFieldStat
 {
