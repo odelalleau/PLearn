@@ -141,12 +141,13 @@ class WrappedPLearnObject(object):
             d['_cptr'][2][o]= self.getOption(o)
         return d
         ##### old, deprecated version follows: (for reference only)
-        #d= self.__dict__.copy()
-        #if remote_pickle:
-        #    d['_cptr']= self.asStringRemoteTransmit()
-        #else:
-        #    d['_cptr']= self.asString()
-        #return d
+	def old_deprecated___getstate__(self):
+		d= self.__dict__.copy()
+	        if remote_pickle:
+        	    d['_cptr']= self.asStringRemoteTransmit()
+        	else:
+        	    d['_cptr']= self.asString()
+        	return d
     
     def __setstate__(self, dict):
         """
