@@ -84,6 +84,7 @@
 #include <plearn/vmat/DichotomizeVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
 #include <plearn/vmat/GaussianizeVMatrix.h>
+#include <plearn/vmat/ConstantVMatrix.h>
 #include <plearn/vmat/MemoryVMatrixNoSave.h>
 #include <plearn/vmat/MissingInstructionVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
