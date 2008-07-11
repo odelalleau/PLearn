@@ -81,9 +81,9 @@ DenoisingRecurrentNet::DenoisingRecurrentNet() :
     hidden_noise_prob( 0.15 ),
     hidden_reconstruction_lr( 0 ),
     tied_hidden_reconstruction_weights( false ),
-    noisy_recurrent_lr( 0),
-    dynamic_gradient_scale_factor( 0.5 ),
-    recurrent_lr( 0.01 )
+    noisy_recurrent_lr( 0.000001),
+    dynamic_gradient_scale_factor( 1.0 ),
+    recurrent_lr( 0.00001 )
 {
     random_gen = new PRandom();
 }
@@ -291,11 +291,11 @@ void DenoisingRecurrentNet::build_()
                 input_layer_size++;
             }
         }
-
+/*
         if( input_layer->size != input_layer_size )
             PLERROR("DenoisingRecurrentNet::build_(): input_layer->size %d "
                     "should be %d", input_layer->size, input_layer_size);
-
+*/
         // Parsing symbols in target
         int tar_layer = 0;
         int tar_layer_size = 0;
@@ -658,16 +658,22 @@ void DenoisingRecurrentNet::encodeAndCreateSupervisedSequence(Mat seq) const
     encodeSequence(seq, encoded_seq);
     // now work with encoded_seq
     int l = encoded_seq.length();
-    resize_lists(l);
+    resize_lists(l-input_window_size);
 
-    Mat targets = targets_list[0];
-    targets.resize(l, encoded_seq.width());
-                   
+
+    int ntargets = target_layers.length();
+    targets_list.resize(ntargets);
+    //Mat targets = targets_list[0];
+    //targets.resize(l, encoded_seq.width());
+    targets_list[0].resize(l-input_window_size, encoded_seq.width());   
+         
     for(int t=input_window_size; t<l; t++)
     {
-        input_list[t] = encoded_seq.subMatRows(t-input_window_size,input_window_size).toVec();
+
+        input_list[t-input_window_size] = encoded_seq.subMatRows(t-input_window_size,input_window_size).toVec();
         // target is copied so that when adding noise to input, it doesn't modify target 
-        targets(t) << encoded_seq(t);
+        //targets(t-input_window_size) << encoded_seq(t);
+        targets_list[0](t-input_window_size) << encoded_seq(t);
     }
 }
 
@@ -947,9 +953,9 @@ void DenoisingRecurrentNet::encodeSequence(Mat sequence, Mat& encoded_seq) const
     if(encoding=="timeframe")
         encode_onehot_timeframe(sequence, encoded_seq, prepend_zero_rows);
     else if(encoding=="note_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, true, 0);
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, false, 0);
     else if(encoding=="note_octav_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, true, 5);    
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, false, 5);    
     else if(encoding=="raw_masked_supervised")
         PLERROR("raw_masked_supervised means already encoded! You shouldnt have landed here!!!");
     else if(encoding=="generic")

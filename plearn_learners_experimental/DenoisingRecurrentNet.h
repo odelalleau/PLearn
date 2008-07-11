@@ -161,7 +161,7 @@ public:
                                                   bool use_silence, int octav_nbits, int duration_nbits=20);
     
     static void encode_onehot_timeframe(Mat sequence, Mat& encoded_sequence, 
-                                        int prepend_zero_rows, bool use_silence=true);    
+                                        int prepend_zero_rows, bool use_silence=false);    
 
     static int duration_to_number_of_timeframes(int duration);
 
