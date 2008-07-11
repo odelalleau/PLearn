@@ -335,8 +335,8 @@ void MeanMedianModeImputationVMatrix::build_()
     PPath train_metadata = train_set->getMetaDataDir();
     PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
     train_set->lockMetaDataDir();
-    if (!train_set->isUpToDate(mean_median_mode_file_name,true,true)
-	||!source->isUpToDate(mean_median_mode_file_name,true,true))
+    if (!train_set->isUpToDate(mean_median_mode_file_name)
+	||!source->isUpToDate(mean_median_mode_file_name))
     {
         computeMeanMedianModeVectors();
         createMeanMedianModeFile(mean_median_mode_file_name);
