@@ -707,7 +707,7 @@ public:
      *  @param in          PStream from which to read the new option value
      *  @param optionname  Name of the option to read from the stream
      */
-    void readOptionVal(PStream &in, const string &optionname);
+    void readOptionVal(PStream &in, const string &optionname, unsigned int id = UINT_MAX);
     
     /**
      *  Writes the value of the specified option to the specified stream.
@@ -861,7 +861,7 @@ public:
      *
      *  @param in  Stream from which read the object
      */
-    void newread(PStream& in);
+    void newread(PStream& in, unsigned int id = UINT_MAX);
 
 
     //#####  Remote Method Invocation  ########################################

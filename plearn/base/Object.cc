@@ -211,7 +211,7 @@ void Object::changeOption(const string& optionname, const string& value)
 
 //#####  Object::readOptionVal  ###############################################
 
-void Object::readOptionVal(PStream &in, const string &optionname)
+void Object::readOptionVal(PStream &in, const string &optionname, unsigned int id)
 {
     try 
     {
@@ -277,8 +277,13 @@ void Object::readOptionVal(PStream &in, const string &optionname)
     }
     catch(const PLearnError& e)
     { 
-        PLERROR("Problem while attempting to read value of option \"%s\" of a \"%s\":\n %s", 
-                optionname.c_str(), classname().c_str(), e.message().c_str()); 
+        if(id == UINT_MAX)
+            PLERROR("Problem while attempting to read value of option \"%s\" of a \"%s\":\n %s", 
+                    optionname.c_str(), classname().c_str(), e.message().c_str());
+        else
+            PLERROR("Problem while reading ptr %d while attempting to read value of option \"%s\" of a \"%s\":\n %s", 
+                    id, optionname.c_str(), classname().c_str(), e.message().c_str());
+            
     }
 
     // There are bigger problems in the world but still it isn't always funny
@@ -476,7 +481,7 @@ string Object::getOptionsToRemoteTransmit() const
 
 //#####  Object::newread  #####################################################
 
-void Object::newread(PStream &in)
+void Object::newread(PStream &in, unsigned int id)
 {
     PP<Object> dummy_obj = 0; // Used to read skipped options.
     string cl;
@@ -541,12 +546,12 @@ void Object::newread(PStream &in)
                     dummy_obj =
                         TypeFactory::instance().newObject(this->classname());
                 }
-                dummy_obj->readOptionVal(in, optionname);
+                dummy_obj->readOptionVal(in, optionname, id);
             }
             else
             {
                 // cerr << "Reading option: " << optionname << endl;
-                readOptionVal(in, optionname);
+                readOptionVal(in, optionname, id);
                 // cerr << "returned from reading optiion " << optionname << endl;
             }
             in.skipBlanksAndCommentsAndSeparators();
@@ -893,7 +898,7 @@ Object* readObject(PStream &in, unsigned int id)
         in.unread(cl+'(');
 
         // Finally read the guts of the object
-        o->newread(in);
+        o->newread(in, id);
     }
 
 #if 0
