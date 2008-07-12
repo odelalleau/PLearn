@@ -54,12 +54,19 @@ class MPLFigureEditor(BasicEditorFactory):
 class TraitedFigure( HasTraits ):
     """Traited object acting as a container for a single figure.
     """
-    figure = Instance(Figure, editor=MPLFigureEditor())
-    title  = "Figure"
+    figure  = Instance(Figure, editor=MPLFigureEditor())
+    __title = Str
 
-    def _figure_default(self):
-        return Figure()
+    def __init__(self, title = "Figure", **kwargs):
+        """Instantiate a TraitedFigure.
 
+        Apart from the title, the other **kwargs are passed to the
+        matplotlib Figure() constructor.
+        """
+        super(TraitedFigure,self).__init__()
+        self.__title = title
+        self.figure  = Figure(**kwargs)
+    
     traits_view = View(Item('figure', show_label=False))
 
 

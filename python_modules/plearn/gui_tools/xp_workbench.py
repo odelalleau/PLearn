@@ -47,6 +47,11 @@ from enthought.pyface.api          import confirm, YES
 
 from console_logger    import ConsoleLogger
 
+## If there is no display, set the matplotlib backend to Agg
+if not os.environ.has_key("DISPLAY"):
+    import matplotlib
+    matplotlib.use('Agg')
+
 
 #####  ExperimentContext  ###################################################
 
@@ -81,23 +86,26 @@ class ExperimentContext(HasTraits):
         self.expfunc(self.script_params, self)
 
 
-    def figure(self, title="Figure"):
+    def figure(self, title="Figure", **kwargs):
         """Return a new Matplotlib figure and add it to the notebook.
 
         Note that you must paint on this figure using the Matplotlib OO
-        API, not pylab.
+        API, not pylab.  Apart from 'title', the other **kwargs arguments
+        are passed to matplotlib figure constructor.
         """
         if self.gui:
             ## Late import to allow backend to be chosen
             from mpl_figure_editor import TraitedFigure
-            f = TraitedFigure()
+            f = TraitedFigure(title=title, **kwargs)
             f.title = title
             f.figure.__traited_figure = f
             return f.figure
         else:
             ## Late import to allow backend to be chosen
             import pylab
-            return pylab.figure()
+            f = pylab.figure(**kwargs)
+            f._title = title
+            return f
 
 
     def show(self, fig):
@@ -110,9 +118,24 @@ class ExperimentContext(HasTraits):
             self._all_tabs.append(fig.__traited_figure)
         else:
             ## Late import to allow backend to be chosen
-            import pylab
-            pylab.show()
+            from mpl_utilities import showOrSave
 
+            ## Determine a semi-intelligent name to save the
+            ## figure under, if we are indeed saving figures.
+            figname = getattr(fig, "_title", "figure").lower().replace(" ", "_")
+            figname = os.path.join(self.expdir, figname)
+
+            i = 1
+            while True:
+                if os.path.exists(figname+("_%d.png"%i)):
+                    i += 1
+                else:
+                    figname += "_%d.png" % i
+                    break
+                
+            showOrSave(filename = figname, use_environment=True)
+
+    
     @property
     def _display_expdir(self):
         """Shortened version of expdir suitable for display."""
