@@ -177,11 +177,7 @@ string ConvertFromPyObject<string>::convert(PyObject* pyobj,
 PPath ConvertFromPyObject<PPath>::convert(PyObject* pyobj,
                                           bool print_traceback)
 {
-    PLASSERT( pyobj );
-    if (! PyString_Check(pyobj))
-        PLPythonConversionError("ConvertFromPyObject<PPath>", pyobj,
-                                print_traceback);
-    return PPath(PyString_AsString(pyobj));
+    return PPath(ConvertFromPyObject<string>::convert(pyobj, print_traceback));
 }
 
 PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj,
