@@ -149,8 +149,26 @@ float ConvertFromPyObject<float>::convert(PyObject* pyobj,
 string ConvertFromPyObject<string>::convert(PyObject* pyobj,
                                             bool print_traceback)
 {
-    PLASSERT( pyobj );
-    if (! PyString_Check(pyobj))
+    PLASSERT(pyobj);
+
+    // if unicode, encode into a string (utf8) then return
+    if(PyUnicode_Check(pyobj))
+    {
+        PyObject* pystr= PyUnicode_AsUTF8String(pyobj);
+        if(!pystr)
+        {
+            if(PyErr_Occurred()) PyErr_Print();
+            Py_DECREF(pystr);
+            PLERROR("in ConvertFromPyObject<string>::convert : "
+                    "Unicode to string conversion failed.");
+        }
+        string str= PyString_AsString(pystr);
+        Py_DECREF(pystr);
+        return str;
+    }
+    
+    // otherwise, should already be a string
+    if(!PyString_Check(pyobj))
         PLPythonConversionError("ConvertFromPyObject<string>", pyobj,
                                 print_traceback);
     return PyString_AsString(pyobj);
@@ -183,13 +201,13 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
     if(pyobj == Py_None)
         return 0;
 
-    if(!PyObject_HasAttrString(pyobj, "_cptr"))
+    if(!PyObject_HasAttrString(pyobj, const_cast<char*>("_cptr")))
     {
         PLERROR("in ConvertFromPyObject<Object*>::convert : "
                 "python object has no attribute '_cptr'");
         return 0;
     }
-    PyObject* cptr= PyObject_GetAttrString(pyobj, "_cptr");
+    PyObject* cptr= PyObject_GetAttrString(pyobj, const_cast<char*>("_cptr"));
 
     if (! PyCObject_Check(cptr))
         PLPythonConversionError("ConvertFromPyObject<Object*>", pyobj,
@@ -263,7 +281,7 @@ PP<VMatrix> ConvertFromPyObject<PP<VMatrix> >::convert(PyObject* pyobj,
     PLASSERT(pyobj);
     if(pyobj == Py_None)
         return 0;
-    if(PyObject_HasAttrString(pyobj, "_cptr"))
+    if(PyObject_HasAttrString(pyobj, const_cast<char*>("_cptr")))
         return static_cast<VMatrix*>(
             ConvertFromPyObject<Object*>::convert(pyobj, print_traceback));
     Mat m;
@@ -316,28 +334,28 @@ VarArray ConvertFromPyObject<VarArray>::convert(PyObject* pyobj,
 RealRange ConvertFromPyObject<RealRange>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT(pyobj);
-    PyObject* py_leftbracket= PyObject_GetAttrString(pyobj, "leftbracket");
+    PyObject* py_leftbracket= PyObject_GetAttrString(pyobj, const_cast<char*>("leftbracket"));
     if(!py_leftbracket)
         PLPythonConversionError("ConvertFromPyObject<RealRange>: "
                                 "not a RealRange (no 'leftbracket' attr.)",
                                 pyobj, print_traceback);
     string leftbracket= ConvertFromPyObject<string>::convert(py_leftbracket, print_traceback);
     Py_DECREF(py_leftbracket);
-    PyObject* py_low= PyObject_GetAttrString(pyobj, "low");
+    PyObject* py_low= PyObject_GetAttrString(pyobj, const_cast<char*>("low"));
     if(!py_low) 
         PLPythonConversionError("ConvertFromPyObject<RealRange>: "
                                 "not a RealRange (no 'low' attr.)",
                                 pyobj, print_traceback);
     real low= ConvertFromPyObject<real>::convert(py_low, print_traceback);
     Py_DECREF(py_low);
-    PyObject* py_high= PyObject_GetAttrString(pyobj, "high");
+    PyObject* py_high= PyObject_GetAttrString(pyobj, const_cast<char*>("high"));
     if(!py_high) 
         PLPythonConversionError("ConvertFromPyObject<RealRange>: "
                                 "not a RealRange (no 'high' attr.)",
                                 pyobj, print_traceback);
     real high= ConvertFromPyObject<real>::convert(py_high, print_traceback);
     Py_DECREF(py_high);
-    PyObject* py_rightbracket= PyObject_GetAttrString(pyobj, "rightbracket");
+    PyObject* py_rightbracket= PyObject_GetAttrString(pyobj, const_cast<char*>("rightbracket"));
     if(!py_rightbracket) 
         PLPythonConversionError("ConvertFromPyObject<RealRange>: "
                                 "not a RealRange (no 'rightbracket' attr.)",
@@ -350,14 +368,14 @@ RealRange ConvertFromPyObject<RealRange>::convert(PyObject* pyobj, bool print_tr
 VMField ConvertFromPyObject<VMField>::convert(PyObject* pyobj, bool print_traceback)
 {
     PLASSERT(pyobj);
-    PyObject* py_name = PyObject_GetAttrString(pyobj, "name");
+    PyObject* py_name = PyObject_GetAttrString(pyobj, const_cast<char*>("name"));
     if (!py_name)
         PLPythonConversionError("ConvertFromPyObject<VMField>: not a VMField (no 'name' attr.)",
                                 pyobj, print_traceback);
     string name = ConvertFromPyObject<string>::convert(py_name, print_traceback);
     Py_DECREF(py_name);
 
-    PyObject* py_fieldtype = PyObject_GetAttrString(pyobj, "fieldtype");
+    PyObject* py_fieldtype = PyObject_GetAttrString(pyobj, const_cast<char*>("fieldtype"));
     if(!py_fieldtype) 
         PLPythonConversionError("ConvertFromPyObject<VMField>: not a VMField (no 'fieldtype' attr.)",
                                 pyobj, print_traceback);

@@ -48,7 +48,7 @@ void injectPLearnGlobalFunctions(PyObject* env);
 void injectPLearnClasses(PyObject* env);
 
 // Init func for python module.
-void initPythonExtensionModule(char* module_name);
+void initPythonExtensionModule(char const * module_name);
 
 // inject funcs. and classes, set global module.
 void setPythonModuleAndInject(PyObject* module);

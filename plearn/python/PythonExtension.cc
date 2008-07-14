@@ -440,10 +440,10 @@ void removeFromWrappedObjectsSet(PyObject* o)
 
 // Init func for python module.
 // init module, then inject global funcs
-void initPythonExtensionModule(char* module_name)
+void initPythonExtensionModule(char const * module_name)
 {
     PythonObjectWrapper::initializePython();
-    PyObject* plext= Py_InitModule(module_name, NULL);
+    PyObject* plext= Py_InitModule(const_cast<char*>(module_name), NULL);
     setPythonModuleAndInject(plext);
 }
 
