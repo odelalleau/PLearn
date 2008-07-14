@@ -620,6 +620,8 @@ public:
     /**
      *  Returns a vector of length outputsize() containing the outputs' names.
      *  Default version returns ["out0", "out1", ...]
+     *  Don't forget name should not have space or it will cause trouble when
+     *  they are saved in the file {metadatadir}/fieldnames
      */
     virtual TVec<string> getOutputNames() const;
 
