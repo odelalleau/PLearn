@@ -115,6 +115,8 @@ public:
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
+    virtual TVec<string> getOutputNames() const;
+
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
     // (PLEASE IMPLEMENT IN .cc)

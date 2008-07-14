@@ -220,12 +220,14 @@ void MultiClassAdaBoost::train()
 
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
-    Vec tmp1(learner1.outputsize());
-    Vec tmp2(learner2.outputsize());
-    learner1.computeOutput(input,tmp1);
-    learner2.computeOutput(input,tmp2);
-    int ind1=int(round(tmp1[0]));
-    int ind2=int(round(tmp2[0]));
+    PLASSERT(output.size()==outputsize());
+
+    Vec output1(learner1.outputsize());
+    Vec output2(learner2.outputsize());
+    learner1.computeOutput(input,output1);
+    learner2.computeOutput(input,output2);
+    int ind1=int(round(output1[0]));
+    int ind2=int(round(output2[0]));
 
     int ind=-1;
     if(ind1==0 && ind2==0)
@@ -237,8 +239,8 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
     else
         ind=1;//TODOself.confusion_target;
     output[0]=ind;
-    output[1]=tmp1[0];
-    output[2]=tmp2[0];
+    output[1]=output1[0];
+    output[2]=output2[0];
 }
 void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
                                                const Vec& target,
@@ -334,6 +336,15 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
     }
 
     PLASSERT(costs.size()==nTestCosts());
+}
+
+TVec<string> MultiClassAdaBoost::getOutputNames() const
+{
+    TVec<string> names(3);
+    names[0]="prediction";
+    names[1]="prediction_learner_1";
+    names[2]="prediction_learner_2";
+    return names;
 }
 
 TVec<string> MultiClassAdaBoost::getTestCostNames() const
