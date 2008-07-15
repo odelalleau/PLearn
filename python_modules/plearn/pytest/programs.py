@@ -1,4 +1,4 @@
-import logging, os, sets, sys
+import logging, os, sets, sys, subprocess
 from plearn.utilities import ppath
 from plearn.utilities import moresh
 from plearn.utilities import toolkit
@@ -267,28 +267,21 @@ class Program(core.PyTestObject):
                 raise Not_Implemented
             the_compiler = "python " + \
                 os.path.join(ppath.ppath('PLEARNDIR'), 'scripts', 'pymake')
-            redirection = ">"
         else:
             the_compiler = self.compiler
-            redirection = ">&"
 
         compile_options = ""
         if self.compile_options is not None:
             compile_options = self.compile_options
 
-        compile_cmd   = "%s %s %s -link-target %s %s %s" \
-                          % ( the_compiler, compile_options,
-                              self.getProgramPath(),
-                              self.getInternalExecPath(),
-                              redirection, log_fname )
-
-        compile_cmd= self.getCompileCommand(the_compiler, compile_options, redirection, log_fname)
+        compile_cmd= self.getCompileCommand(the_compiler, compile_options)
 
         logging.debug(compile_cmd)
-        if sys.platform == 'win32':
-            compile_exit_code = os.system(compile_cmd)
-        else:
-            compile_exit_code = os.WEXITSTATUS( os.system(compile_cmd) )
+        p= subprocess.Popen(compile_cmd, 
+                            shell= True,
+                            stdout= open(log_fname, 'w'),
+                            stderr= subprocess.STDOUT)
+        compile_exit_code= p.wait()
         logging.debug("compile_exit_code <- %d\n"%compile_exit_code)
 
         moresh.popd()
@@ -304,12 +297,11 @@ class Program(core.PyTestObject):
             
         return compile_exit_code==0
 
-    def getCompileCommand(self, the_compiler, compile_options, redirection, log_fname):
-        compile_cmd   = "%s %s %s -link-target %s %s %s" \
+    def getCompileCommand(self, the_compiler, compile_options):
+        compile_cmd   = "%s %s %s -link-target %s" \
                         % ( the_compiler, compile_options,
                             self.getProgramPath(),
-                            self.getInternalExecPath(),
-                            redirection, log_fname )
+                            self.getInternalExecPath())
         return compile_cmd
 
 
@@ -431,14 +423,13 @@ class PythonSharedLibrary(Program):
     def _signature(self):
         return self.getProgramPath()[:-2]+'so'
 
-    def getCompileCommand(self, the_compiler, compile_options, redirection, log_fname):
+    def getCompileCommand(self, the_compiler, compile_options):
         """
         WARNING: this replaces the shared object in-place
         """
-        compile_cmd   = "%s %s %s %s %s" \
+        compile_cmd   = "%s %s %s" \
                         % ( the_compiler, compile_options,
-                            self.getProgramPath(),
-                            redirection, log_fname )
+                            self.getProgramPath())
         return compile_cmd
 
         
