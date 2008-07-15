@@ -73,7 +73,7 @@ PLEARN_IMPLEMENT_OBJECT(
 DenoisingRecurrentNet::DenoisingRecurrentNet() :
     use_target_layers_masks( false ),
     end_of_sequence_symbol( -1000 ),
-    encoding("note_duration"),
+    encoding("note_octav_duration"),
     input_window_size(1),
     tied_input_reconstruction_weights( true ),
     input_noise_prob( 0.15 ),
@@ -111,6 +111,7 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   "Value of the first input component for end-of-sequence "
                   "delimiter.\n");
 
+    // TO DO: input_layer is to be removed eventually because only its size is really used
     declareOption(ol, "input_layer", &DenoisingRecurrentNet::input_layer,
                   OptionBase::buildoption,
                   "The input layer of the model.\n");
@@ -180,8 +181,10 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   &DenoisingRecurrentNet::input_window_size,
                   OptionBase::buildoption,
                   "How many time steps to present as input\n"
+                  "If it's 0, then all layers are essentially ignored, and instead an unconditional predictor is trained\n"
                   "This option is ignored when mode is raw_masked_supervised,"
-                  "since in this mode the full expanded and preprocessed input and target are given explicitly.");
+                  "since in this mode the full expanded and preprocessed input and target are given explicitly."
+        );
 
     declareOption(ol, "tied_input_reconstruction_weights", 
                   &DenoisingRecurrentNet::tied_input_reconstruction_weights,
@@ -230,6 +233,9 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The learning rate used in the fine tuning phase\n");
 
+    declareOption(ol, "mean_encoded_vec", &DenoisingRecurrentNet::mean_encoded_vec,
+                  OptionBase::learntoption,
+                  "When training with trainUnconditionalPredictor (if input_window_size==0), this is simply used to store the the avg encoded frame");
 
  /*
     declareOption(ol, "", &DenoisingRecurrentNet::,
@@ -299,7 +305,6 @@ void DenoisingRecurrentNet::build_()
         // Parsing symbols in target
         int tar_layer = 0;
         int tar_layer_size = 0;
-        int lala = target_layers.length();
         target_symbol_sizes.resize(target_layers.length());
         for( tar_layer=0; tar_layer<target_layers.length(); tar_layer++ )
             target_symbol_sizes[tar_layer].resize(0);
@@ -510,8 +515,73 @@ void DenoisingRecurrentNet::forget()
     stage = 0;
 }
 
+void DenoisingRecurrentNet::trainUnconditionalPredictor()
+{
+    MODULE_LOG << "trainUnconditionalPredictor() called " << endl;
+
+    // reserve memory for sequences
+    seq.resize(5000,2); // contains the current sequence
+
+    // real weight = 0; // Unused
+    Vec train_costs( getTrainCostNames().length() );
+    train_costs.fill(-1);
+
+    if( !initTrain() )
+    {
+        MODULE_LOG << "train() aborted" << endl;
+        return;
+    }
+
+
+    if( stage==0 && nstages==1 )
+    {        
+        // clear stats of previous epoch
+        train_stats->forget();
+
+
+        int nvecs = 0;
+        int nseq = nSequences();        
+
+        ProgressBar* pb = 0;
+        if( report_progress)
+            pb = new ProgressBar( "Sequences ",nseq);
+        for(int i=0; i<nseq; i++)
+        {
+            getSequence(i, seq);
+            encodeSequenceAndPopulateLists(seq);
+            if(i==0)
+            {
+                mean_encoded_vec.resize(encoded_seq.width());
+                mean_encoded_vec.clear();
+            }
+            for(int t=0; t<encoded_seq.length(); t++)
+            {
+                mean_encoded_vec += encoded_seq(t);                
+                nvecs++;
+            }
+        }
+        mean_encoded_vec *= 1./nvecs;            
+        train_stats->update(train_costs);
+        train_stats->finalize();            
+
+        if( pb )
+        {
+            delete pb;
+            pb = 0;
+        }
+        ++stage;
+    }
+}
+
+
 void DenoisingRecurrentNet::train()
 {
+    if(input_window_size==0)
+    {
+        trainUnconditionalPredictor();
+        return;
+    }
+
     MODULE_LOG << "train() called " << endl;
 
     // reserve memory for sequences
@@ -671,6 +741,10 @@ void DenoisingRecurrentNet::encodeAndCreateSupervisedSequence(Mat seq) const
     {
 
         input_list[t-input_window_size] = encoded_seq.subMatRows(t-input_window_size,input_window_size).toVec();
+        //perr << "t-input_window_size = " << endl;
+        //perr << "subMat:" << endl << encoded_seq.subMatRows(t-input_window_size,input_window_size) << endl;
+        //perr << "toVec:" << endl << encoded_seq.subMatRows(t-input_window_size,input_window_size).toVec() << endl;
+        //perr << "input_list:" << endl << input_list[t-input_window_size] << endl;
         // target is copied so that when adding noise to input, it doesn't modify target 
         //targets(t-input_window_size) << encoded_seq(t);
         targets_list[0](t-input_window_size) << encoded_seq(t);
@@ -733,7 +807,49 @@ void DenoisingRecurrentNet::resize_lists(int l) const
     nll_list.resize(l,ntargets);
 }
 
-// TODO: think properly about prepended stuff
+
+// must fill train_costs, train_n_items and     target_prediction_list[0](t)
+void DenoisingRecurrentNet::unconditionalFprop(Vec train_costs, Vec train_n_items) const
+{
+    int pred_size = mean_encoded_vec.length();
+    if(pred_size<=0)
+        PLERROR("mean_encoded_vec not properly initialized. Did you call trainUnconditionalPredictor prior to unconditionalFprop ?");
+
+    int l = input_list.length();
+    int tar = 0;
+    train_n_items[tar] += l;
+    target_prediction_list[tar].resize(l,pred_size);
+    for(int i=0; i<l; i++)
+    {        
+        Vec target_prediction_i = target_prediction_list[tar](i);
+        target_prediction_i << mean_encoded_vec;
+        Vec target_vec = targets_list[tar](i);
+
+        /*
+        target_layers[tar]->setExpectation(target_prediction_i);
+        nll_list(i,tar) = target_layers[tar]->fpropNLL(target_vec); 
+        */
+        double nllcost = 0;
+        for(int k=0; k<target_vec.length(); k++)
+            if(target_vec[k]!=0)
+                nllcost -= target_vec[k]*safelog(target_prediction_i[k]);
+        nll_list(i,tar) = nllcost;
+
+        if (isinf(nll_list(i,tar)))
+        {
+            PLWARNING("Row %d of sequence of length %d lead to inf cost",i,l);
+            perr << "Problem at positions (vec of length " << target_vec.length() << "): ";
+            for(int k=0; k<target_vec.length(); k++)
+                if(target_vec[k]!=0 && target_prediction_i[k]==0)
+                    perr << k << " ";
+            perr << endl;
+            // perr << "target_vec = " << target_vec << endl;
+            // perr << "target_prediction_i = " << target_prediction_i << endl;
+        }
+        else
+            train_costs[tar] += nll_list(i,tar);
+    }
+}
 
 // fprop accumulates costs in costs and counts in n_items
 void DenoisingRecurrentNet::recurrentFprop(Vec train_costs, Vec train_n_items) const
@@ -823,51 +939,26 @@ void DenoisingRecurrentNet::recurrentUpdate()
         else
             hidden_gradient.resize(hidden_layer->size);
         hidden_gradient.clear();
-        if(use_target_layers_masks)
+        for( int tar=0; tar<target_layers.length(); tar++)
         {
-            for( int tar=0; tar<target_layers.length(); tar++)
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar](i);
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(target_prediction_list[tar](i));
-                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
-                    bias_gradient *= target_layers_weights[tar];
+                target_layers[tar]->activation << target_prediction_act_no_bias_list[tar](i);
+                target_layers[tar]->activation += target_layers[tar]->bias;
+                target_layers[tar]->setExpectation(target_prediction_list[tar](i));
+                target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
+                bias_gradient *= target_layers_weights[tar];
+                if(use_target_layers_masks)
                     bias_gradient *= masks_list[tar](i);
-                    target_layers[tar]->update(bias_gradient);
-                    if( hidden_layer2 )
-                        target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
-                                                             hidden_gradient, bias_gradient,true);
-                    else
-                        target_connections[tar]->bpropUpdate(hidden_list(i),target_prediction_act_no_bias_list[tar](i),
-                                                             hidden_gradient, bias_gradient,true);
-                }
+                target_layers[tar]->update(bias_gradient);
+                if( hidden_layer2 )
+                    target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
+                                                         hidden_gradient, bias_gradient,true);
+                else
+                    target_connections[tar]->bpropUpdate(hidden_list(i),target_prediction_act_no_bias_list[tar](i),
+                                                         hidden_gradient, bias_gradient,true);
             }
         }
-        else
-        {
-            for( int tar=0; tar<target_layers.length(); tar++)
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar](i);
-                    target_layers[tar]->activation += target_layers[tar]->bias;
-                    target_layers[tar]->setExpectation(target_prediction_list[tar](i));
-                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
-                    bias_gradient *= target_layers_weights[tar];
-                    target_layers[tar]->update(bias_gradient);
-                    if( hidden_layer2 )
-                        target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
-                                                             hidden_gradient, bias_gradient,true); 
-                    else
-                        target_connections[tar]->bpropUpdate(hidden_list(i),target_prediction_act_no_bias_list[tar](i),
-                                                             hidden_gradient, bias_gradient,true); 
-                        
-                }
-            }
-        }
-
         if (hidden_layer2)
         {
             hidden_layer2->bpropUpdate(
@@ -890,16 +981,15 @@ void DenoisingRecurrentNet::recurrentUpdate()
                 
             dynamic_connections->bpropUpdate(
                 hidden_list(i-1),
-                hidden_act_no_bias_list(i), // Here, it should be cond_bias, but doesn't matter
+                hidden_act_no_bias_list(i), // Here, it should be dynamic_act_no_bias_contribution, but doesn't matter because a RBMMatrixConnection::bpropUpdate doesn't use its second argument
                 hidden_gradient, hidden_temporal_gradient);
-                
-            hidden_temporal_gradient << hidden_gradient;
                 
             input_connections->bpropUpdate(
                 input_list[i],
                 hidden_act_no_bias_list(i), 
                 visi_bias_gradient, hidden_temporal_gradient);// Here, it should be activations - cond_bias, but doesn't matter
                 
+            hidden_temporal_gradient << hidden_gradient;                
         }
         else
         {
@@ -925,6 +1015,55 @@ declare nouvelles options et valeurs par defaut correctes
 
 
 /*
+  
+Frequences dans le trainset:
+
+**NOTES**
+0  DO            0.0872678308077029924            
+1  DO#           0.00716010857716887095                   
+2  RE            0.178895847137025221                   
+3  RE#           0.0037189817684399511                   
+4  MI            0.114241135358112283                   
+5  FA            0.00517237694231303512                   
+6  FA#           0.0806848056083954851                   
+7  SOL           0.194776326757432616                   
+8  SOL#          0.00301365763994271892                   
+9  LA            0.13988928548528437                   
+10 LA#           0.00369760831000064084                   
+11 SI            0.181482035608181741                   
+
+**OCTAVES**
+0  OCT1          0.362130506337230429                   
+1  OCT2          0.574048346762989659                   
+2  OCT3          0.0635219184816295107                   
+3  OCT4          0.000299228418150340866                
+
+**DUREES**
+0  1/8           0.00333425951653236984                   
+1  1/6           0.000170987667514480506                   
+2  1/4           0.0386432128582725951                   
+3  1/3           0.00716010857716887095                   
+4  2/4           0.569880522367324227                   
+5  2/3           0                               
+6  3/4           0.00220146621924893673                   
+7  4/4           0.305896937183405604                   
+8  5/4           4.27469168786201266e-05                   
+9  6/4           0.0222283967768824656                   
+10 8/4           0.0365058670143415878                   
+11 10/4          0.000876311796011712552                   
+12 12/4          0.0078440592472267933                   
+13 14/4          6.41203753179301933e-05                   
+14 16/4          0.00331288605809306001                   
+15 18/4          8.54938337572402532e-05                   
+16 20/4          0.000726697586936542119                   
+17 24/4          0.000619830294739991887                   
+18 28/4          0.000149614209075170433                   
+19 32/4          0.000256481501271720773         
+
+ */
+
+
+/*
 Format de donnees:
 
 matrice de 2 colonnes:
@@ -935,10 +1074,8 @@ note: midi_number (21..108 numero de touche sur piano)
       ou -1 (missing)
       ou -999 (fin de sequence)
 
-duree: 0 double-croche
-       1 
-..16   exprimee en 1/16 de mesure (resultat du quantize de Stan)
-
+duree: voir indices (colonne de gauche) et DUREES dans table de frequences ci-dessus
+       1 unite correspond a une noire.
 
  */
 
@@ -955,7 +1092,7 @@ void DenoisingRecurrentNet::encodeSequence(Mat sequence, Mat& encoded_seq) const
     else if(encoding=="note_duration")
         encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, false, 0);
     else if(encoding=="note_octav_duration")
-        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, false, 5);    
+        encode_onehot_note_octav_duration(sequence, encoded_seq, prepend_zero_rows, false, 4);    
     else if(encoding=="raw_masked_supervised")
         PLERROR("raw_masked_supervised means already encoded! You shouldnt have landed here!!!");
     else if(encoding=="generic")
@@ -997,6 +1134,12 @@ void DenoisingRecurrentNet::locateSequenceBoundaries(VMat dataset, TVec<int>& bo
 }
 
 
+int DenoisingRecurrentNet::getDurationBit(int duration)
+{
+    if(duration==5)  // map infrequent 5 to 4
+        duration=4;
+    return duration;
+}
 
 
 // encodings
@@ -1060,10 +1203,10 @@ void DenoisingRecurrentNet::encode_onehot_note_octav_duration(Mat sequence, Mat&
             encoded_sequence(prepend_zero_rows+i,note_nbits+octavpos) = 1;
         }
 
-        int duration = int(sequence(i,1));
-        if(duration<0 || duration>=duration_nbits)
-            PLERROR("duration out of valid range");
-        encoded_sequence(prepend_zero_rows+i,note_nbits+octav_nbits+duration) = 1;
+        int duration_bit = getDurationBit(int(sequence(i,1)));
+        if(duration_bit<0 || duration_bit>=duration_nbits)
+            PLERROR("duration_bit out of valid range");
+        encoded_sequence(prepend_zero_rows+i,note_nbits+octav_nbits+duration_bit) = 1;
     }
 }
 
@@ -1270,7 +1413,11 @@ void DenoisingRecurrentNet::test(VMat testset, PP<VecStatsCollector> test_stats,
         seq.resize(seqlen, w);
         testset->getMat(start,0,seq);
         encodeSequenceAndPopulateLists(seq);
-        recurrentFprop(costs, n_items);
+
+        if(input_window_size==0)
+            unconditionalFprop(costs, n_items);
+        else
+            recurrentFprop(costs, n_items);
 
         if (testoutputs)
         {

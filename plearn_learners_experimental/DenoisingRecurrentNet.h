@@ -141,6 +141,9 @@ public:
     // Phase recurrent no noise (supervised fine tuning)
     double recurrent_lr;
 
+
+    // When training with trainUnconditionalPredictor, this is simply used to store the avg encoded frame
+    Vec mean_encoded_vec;
     
     //#####  Not Options  #####################################################
 
@@ -164,7 +167,7 @@ public:
                                         int prepend_zero_rows, bool use_silence=false);    
 
     static int duration_to_number_of_timeframes(int duration);
-
+    static int getDurationBit(int duration);
 
 
     // input noise injection
@@ -378,6 +381,10 @@ private:
     void splitRawMaskedSupervisedSequence(Mat seq) const;
 
     void resize_lists(int l) const;
+
+    void trainUnconditionalPredictor();
+    void unconditionalFprop(Vec train_costs, Vec train_n_items) const;
+
 
 private:
     //#####  Private Data Members  ############################################
