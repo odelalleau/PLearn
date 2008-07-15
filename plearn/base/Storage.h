@@ -53,6 +53,7 @@
 #include <plearn/sys/MemoryMap.h>
 #include "PP.h"
 #include <plearn/io/PStream.h>
+#include <limits>
 
 //! A define used to debug Storage::resize.
 //! Compile with this symbol defined to enable it.
@@ -97,10 +98,17 @@ public:
         }
     }
 
-    inline Storage(int the_length, T* dataptr)
-        :length_(the_length), data(dataptr), 
+    inline Storage(long the_length, T* dataptr)
+        :length_(int(the_length)), data(dataptr), 
          dont_delete_data(true), fd(STORAGE_UNUSED_HANDLE)
     {
+        //we do the check outside a BOUNDCHECK as we normaly do our test with
+        //small dataset. Also, this is not a performance bottleneck and is a
+        //fraction of the time of the malloc.
+        if(the_length>std::numeric_limits<int>::max())
+            PLERROR("In Storage(%ld) - we ask to create a bigger Storage than "
+                    "is possible (limited to 2e31, int)",the_length);
+
     }
 
     inline int length() const
@@ -127,14 +135,21 @@ public:
 	
 
     //!  data is initially filled with zeros
-    Storage(int the_length=0)
-        :length_(the_length), data(0), 
+    Storage(long the_length=0)
+        :length_((int)the_length), data(0), 
          dont_delete_data(false), fd((tFileHandle)STORAGE_UNUSED_HANDLE)
     {
+        //we do the check outside the BOUNDCHECK as we normaly do our test with
+        //small dataset. Also, this is not a performance bottleneck and is a
+        //fraction of the time of the malloc.
+        if(the_length>std::numeric_limits<int>::max())
+            PLERROR("In Storage(%ld) - we ask to create a bigger Storage than "
+                    "is possible (limited to 2e31, int)",the_length);
+
         int l = length();
 #ifdef BOUNDCHECK
         if(l<0)
-            PLERROR("new Storage called with a length() <0");
+            PLERROR("new Storage called with a length() <0; lenght = %d", l);
 #endif
         if (l>0) 
         {
@@ -231,8 +246,16 @@ public:
   It is the job of the CALLER (Mat and Vec) to have an appropriate
   policy to minimize the number of calls to Storage::resize 
 */
-    inline void resize(int newlength)
+    inline void resize(long lnewlength)
     {
+        //we do the check outside a BOUNDCHECK as we normaly do our test with
+        //small dataset. Also, this is not a performance bottleneck and is a
+        //fraction of the time of the malloc.
+        if(lnewlength>std::numeric_limits<int>::max())
+            PLERROR("In Storage(%ld) - we ask to create a bigger Storage than "
+                    "is possible (limited to 2e31, int)",lnewlength);
+        int newlength=(int)lnewlength;
+
 #ifdef BOUNDCHECK
         if(newlength<0)
             PLERROR("Storage::resize called with a length() <0");
@@ -316,10 +339,19 @@ public:
 
     inline void resizeMat(int new_length, int new_width, int extrarows, int extracols, int new_offset, int old_mod, int old_length, int old_width, int old_offset)
     {
-        int s = new_length*new_width;
-        int extrabytes = (new_length+extrarows)*(new_width+extracols) - s;
-        int newsize = new_offset+s+extrabytes;
+        long ls = new_length*new_width;
+        long lextrabytes = (new_length+extrarows)*(new_width+extracols) - ls;
+        long lnewsize = new_offset+ls+lextrabytes;
+
+        //we do the check outside a BOUNDCHECK as we normaly do our test with
+        //small dataset. Also, this is not a performance bottleneck and is a
+        //fraction of the time of the malloc.
+        if(lnewsize>std::numeric_limits<int>::max())
+            PLERROR("In Storage.resizeMat - we ask to create a bigger Storage "
+                    " %ld then is possible (limited to 2e31, int)",lnewsize);
+        int newsize=(int)lnewsize;
         int new_mod = new_width+extracols;
+
 #ifdef BOUNDCHECK
         if(newsize<0)
             PLERROR("Storage::resize called with a length() <0");

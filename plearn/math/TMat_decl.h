@@ -210,7 +210,8 @@ public:
             length_ = new_length;
             width_  = new_width;
             mod_    = new_width;
-            storage = new Storage<T>(length()*mod() + extra);
+            long newsize=(long)length()*mod() + extra;
+            storage = new Storage<T>(newsize);
         }
         else
         {
