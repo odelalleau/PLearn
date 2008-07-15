@@ -387,16 +387,13 @@ bool rm(const PPath& file)
 ////////
 // mv //
 ////////
-void mv(const PPath& source, const PPath& destination)
+PRStatus mv(const PPath& source, const PPath& destination, bool fail_on_error)
 {
-    // TODO Cross-platform
-#ifdef WIN32
-    string cmd="rename";
-#else
-    string cmd="mv";
-#endif
-    string command = "\\"+cmd+" '" + source.absolute() + "' '" + destination.absolute()+"'";
-    system(command.c_str());
+    PRStatus ret=PR_Rename(source.absolute().c_str(),destination.absolute().c_str());
+    if(ret!=PR_SUCCESS && fail_on_error)
+        PLERROR("In mv(%s,%s) - the move failed!",source.c_str(),destination.c_str());
+
+    return ret;
 }
 
 /////////////
@@ -404,6 +401,7 @@ void mv(const PPath& source, const PPath& destination)
 /////////////
 void mvforce(const PPath& source, const PPath& destination)
 {
+    // TODO Cross-platform, PR_Access, PR_Delete and PR_Rename
     string command = "\\mv -f '" + source.absolute() + "' '" + destination.absolute()+"'";
     system(command.c_str());
 }

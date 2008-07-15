@@ -132,7 +132,8 @@ void cp(const PPath& srcpath, const PPath& destpath);
 bool rm(const PPath& file);
 
 //! Calls system mv command to move the given source file to destination.
-void mv(const PPath& source, const PPath& dest);
+//! It fail if file exist. Use mvforce to force the overwrite existing file.
+PRStatus mv(const PPath& source, const PPath& dest, bool fail_on_error = true);
 
 //! Same as mv, but will not prompt before overwriting.
 void mvforce(const PPath& source, const PPath& dest);
