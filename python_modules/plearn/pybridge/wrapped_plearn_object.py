@@ -177,7 +177,7 @@ class WrappedPLearnObject(object):
         for k in dict:
             if k != '_cptr':
                 self.__setattr__(k, dict[k])
-        for o in d[1]:
+        for o in d[2]:
             self.setOptionFromPython(o,d[2][o])
         self.build()
         return dict
