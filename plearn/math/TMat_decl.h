@@ -231,7 +231,7 @@ public:
                 // otherwise a matrix reallocation will occur EVERY TIME
                 // appendRow is called, turning an amortized O(N) algorithm
                 // into an O(N^2) one.
-                int new_size = offset_+new_length*MAX(mod(),new_width);
+                long new_size = offset_+(long)new_length*MAX(mod(),new_width);
                 if(new_size > storage->length())
                     storage->resize(new_size + extra);
                 if(new_width > mod())
