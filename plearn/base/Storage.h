@@ -251,15 +251,18 @@ public:
         //we do the check outside a BOUNDCHECK as we normaly do our test with
         //small dataset. Also, this is not a performance bottleneck and is a
         //fraction of the time of the malloc.
-        if(lnewlength>std::numeric_limits<int>::max())
-            PLERROR("In Storage(%ld) - we ask to create a bigger Storage than "
-                    "is possible (limited to 2e31, int)",lnewlength);
+        if(lnewlength>std::numeric_limits<int>::max() || lnewlength<std::numeric_limits<int>::min())
+            PLERROR("In Storage(%ld) - we ask to create a bigger/smaller"
+                    " Storage than is possible with an int",
+                    lnewlength);
+#ifdef BOUNDCHECK
+        if(lnewlength<0)
+            PLERROR("Storage::resize(%ld) called with a length() <0",
+                    lnewlength);
+#endif
+
         int newlength=(int)lnewlength;
 
-#ifdef BOUNDCHECK
-        if(newlength<0)
-            PLERROR("Storage::resize called with a length() <0");
-#endif
         if (newlength==length())
             return;
 #if defined(_MINGW_) || defined(WIN32)
