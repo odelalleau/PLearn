@@ -338,6 +338,11 @@ int plearn_main( int argc, char** argv,
         cerr << "FATAL ERROR: " << e.message() << endl;
         EXIT_CODE = 1;
     }
+    catch (std::exception& e)
+    {
+        cerr << "FATAL ERROR thrown by STL : " << e.what() << endl;
+        EXIT_CODE = 2;
+    }
     catch (...) 
     {
         cerr << "FATAL ERROR: uncaught unknown exception "
