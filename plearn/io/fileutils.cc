@@ -390,7 +390,12 @@ bool rm(const PPath& file)
 void mv(const PPath& source, const PPath& destination)
 {
     // TODO Cross-platform
-    string command = "\\mv '" + source.absolute() + "' '" + destination.absolute()+"'";
+#ifdef WIN32
+    string cmd="rename";
+#else
+    string cmd="mv";
+#endif
+    string command = "\\"+cmd+" '" + source.absolute() + "' '" + destination.absolute()+"'";
     system(command.c_str());
 }
 
