@@ -855,6 +855,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "Currently supported types: \n"
                   "- skip       : Ignore the content of the field, won't be inserted in the resulting VMat\n"
                   "- auto       : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
+                  "- auto-num   : take any float value with the decimal separator as the dot. If theirs is a $ at the start or end it is removed. If their is comma they are removed.\n"
                   "- num        : numeric value, keep as is\n"
                   "- num-comma  : numeric value where thousands are separeted by comma\n"
                   "- char       : look it up in the mapping (possibly inserting a new mapping if it's not there)\n"
