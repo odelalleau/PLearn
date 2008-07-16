@@ -135,8 +135,9 @@ public:
 
     // Phase noisy recurrent (supervised): uses input_noise_prob
     // this phase *also* uses dynamic_gradient_scale_factor;
-    double noisy_recurrent_lr;
+    double noisy_recurrent_lr;    
     double dynamic_gradient_scale_factor;
+    double dynamic_input_reconstruction_lr;
     
     // Phase recurrent no noise (supervised fine tuning)
     double recurrent_lr;
@@ -144,6 +145,9 @@ public:
 
     // When training with trainUnconditionalPredictor, this is simply used to store the avg encoded frame
     Vec mean_encoded_vec;
+
+    // learnt bias for input reconstruction
+    Vec input_reconstruction_bias;
     
     //#####  Not Options  #####################################################
 
@@ -257,7 +261,7 @@ public:
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,
     //! after the visible units have been clamped
-    void recurrentUpdate();
+    void recurrentUpdate(bool input_is_corrupted);
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
@@ -351,6 +355,10 @@ protected:
     mutable Mat encoded_seq; // contains encoded version of current train or test sequence (possibly corrupted by noise)
     mutable Mat clean_encoded_seq; // copy of clean sequence contains encoded version of current train or test sequence
 
+    mutable Vec input_reconstruction_activation; // temporary Vec to hold input reconstruction activation (before softmax)
+    mutable Vec input_reconstruction_prob;       // temporary Vec to hold input reconstruction prob (after applying softmax)
+
+
 protected:
     //#####  Protected Member Functions  ######################################
 
@@ -365,6 +373,8 @@ private:
 
 
     void performGreedyDenoisingPhase();
+
+    void applyMultipleSoftmaxToInputWindow(Vec input_reconstruction_activation, Vec input_reconstruction_prob);
 
     // note: the following functions are declared const because they have
     // to be called by test (which is const). Similarly, the members they 
@@ -384,6 +394,15 @@ private:
 
     void trainUnconditionalPredictor();
     void unconditionalFprop(Vec train_costs, Vec train_n_items) const;
+
+    Mat getInputConnectionsWeightMatrix();
+
+    //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
+    //! then backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
+    //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
+    void fpropUpdateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
+                                                  Vec clean_input, Vec hidden_gradient, double input_reconstruction_lr);
+
 
 
 private:
