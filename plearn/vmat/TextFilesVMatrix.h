@@ -128,6 +128,10 @@ public:
 
     bool reorder_fieldspec_from_headers;
     bool partial_match;
+    
+    //! If their is no fieldspec, we will use this value
+    //! reorder_fieldspec_from_headers must be true.
+    string default_spec;
 
     // ****************
     // * Constructors *

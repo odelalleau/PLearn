@@ -253,13 +253,6 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 
     if(reorder_fieldspec_from_headers)
     {
-        if(fnames_header.size()!=fieldspec.size())
-        {
-            PLWARNING("In TextFilesVMatrix::setColumnNamesAndWidth() - "
-                    "We read %d field names from the header but have %d"
-                    "fieldspec",fnames_header.size(),fieldspec.size());
-        }
-
         //check that all field names from the header have a spec
         TVec<string> not_used_fn;
         for(int i=0;i<fnames_header.size();i++)
@@ -269,8 +262,12 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
             for(;j<fieldspec.size();j++)
                 if(fieldspec[j].first==name)
                     break;
-            if(j>=fieldspec.size())
-                not_used_fn.append(name);
+            if(j>=fieldspec.size()){
+                if(default_spec!=""){
+                    fieldspec.append(make_pair(name,default_spec));
+                }else
+                    not_used_fn.append(name);
+            }
         }
         //check that all fieldspec names are also in the header
         TVec<string> not_used_fs;
@@ -284,6 +281,14 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
             if(j>=fnames_header.size())
                 not_used_fs.append(name);
         }
+        //check that we have the good number of fieldspec
+        if(fnames_header.size()!=fieldspec.size())
+        {
+            PLWARNING("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                    "We read %d field names from the header but have %d"
+                    "fieldspec",fnames_header.size(),fieldspec.size());
+        }
+
         if(not_used_fs.size()!=0)
             PLWARNING("TextFilesVMatrix::setColumnNamesAndWidth() - "
                       "Fieldspecs do not exist in source for field(s): %s\n"
@@ -343,7 +348,9 @@ void TextFilesVMatrix::build_()
         metadatadir = metadatapath;
         setMetaDataDir(metadatapath);
     }
-
+    if (!default_spec.empty() && !reorder_fieldspec_from_headers)
+        PLERROR("In TextFilesVMatrix::build_: when the option default_spec is used, reorder_fieldspec_from_headers must be true");
+    
     if(!force_mkdir(getMetaDataDir()))
         PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
                 getMetaDataDir().absolute().c_str());
@@ -894,6 +901,12 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "with * to the full name from header."
                   "The expansion is equivalent to the regex 'field_spec_name*'."
                   "The option reorder_fieldspec_from_headers must be true");
+
+    declareOption(ol, "default_spec", 
+                  &TextFilesVMatrix::default_spec,
+                  OptionBase::buildoption,
+                  "If their is no fieldspec for a fieldname, we will use this"
+                  "value. reorder_fieldspec_from_headers must be true.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
