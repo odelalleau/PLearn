@@ -124,7 +124,8 @@ void RegressionTreeRegisters::initRegisters(VMat the_train_set)
 {   
     //check that we can put all the examples of the train_set
     //with respect to the size of RTR_type who limit the capacity
-    PLCHECK(the_train_set.length()<=std::numeric_limits<RTR_type>::max());
+    PLCHECK(the_train_set.length()>0 
+            && (unsigned)the_train_set.length()<=std::numeric_limits<RTR_type>::max());
 
     if(the_train_set==source && tsource)
         //we set the existing source file
