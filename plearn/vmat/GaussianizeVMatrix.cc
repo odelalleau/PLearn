@@ -193,10 +193,14 @@ void GaussianizeVMatrix::build_()
     for (int i = 0; i < candidates.length(); i++) {
         int j = candidates[i];
         StatsCollector& stat = stats[j];
-        if (fast_exact_is_equal(stat.stddev(), 0))
+        if (fast_exact_is_equal(stat.stddev(), 0)){
+            stats[j].forget();//to keep the total memory used lower faster
             continue;
-        if (!gaussianize_binary && stat.isbinary())
+        }
+        if (!gaussianize_binary && stat.isbinary()) {
+            stats[j].forget();//to keep the total memory used lower faster
             continue;
+        }
         if ((stat.max() - stat.min()) > threshold_ratio * stat.stddev()) {
             features_to_gaussianize.append(j);
             values.append(Vec());
