@@ -1425,7 +1425,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
                     " leaks may occur), thus I prefer to stop here. "
                     " Comment this line if you don't care."
                     " The error message is: %s",e.message().c_str());
-            bywho = "UNKNOWN (could not read .lock file)" 
+            bywho = "UNKNOWN (could not read .lock file)" ;
         } catch(...) {
             PLERROR("In VMatrix::lockMetaDataDir - Catching exceptions is dangerous in PLearn (memory "
                     "leaks may occur), thus I prefer to stop here. Comment this line if you don't care.");
