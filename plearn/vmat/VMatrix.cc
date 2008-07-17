@@ -1419,7 +1419,14 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
         // There is a lock file, and it is not older than 'max_lock_age'.
         string bywho;
         try{ bywho = loadFileAsString(lockfile); }
-        catch(...) {
+        catch(const PLearnError& e) {
+            PLERROR("In VMatrix::lockMetaDataDir - Catching exceptions is"
+                    " dangerous in PLearn (memory"
+                    " leaks may occur), thus I prefer to stop here. "
+                    " Comment this line if you don't care."
+                    " The error message is: %s",e.message().c_str());
+            bywho = "UNKNOWN (could not read .lock file)" 
+        } catch(...) {
             PLERROR("In VMatrix::lockMetaDataDir - Catching exceptions is dangerous in PLearn (memory "
                     "leaks may occur), thus I prefer to stop here. Comment this line if you don't care.");
             bywho = "UNKNOWN (could not read .lock file)";
