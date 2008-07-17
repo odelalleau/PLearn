@@ -929,7 +929,7 @@ class DBICondor(DBIBase):
                     echo "PATH: $PATH" 1>&2
                     echo "PYTHONPATH: $PYTHONPATH" 1>&2
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS"
+                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
                     #which python 1>&2
                     #echo -n python version: 1>&2
                     #python -V 1>&2
