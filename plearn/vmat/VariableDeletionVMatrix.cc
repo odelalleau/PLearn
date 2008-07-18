@@ -260,7 +260,7 @@ void VariableDeletionVMatrix::build_()
             getPrecomputedStatsFromFile("stats_variableDeletionVMatrix_"+
                                         tostring(maxnvalues)+".psave",
                                         maxnvalues, true);
-        PLASSERT( stats.length() == source->width() );
+        PLCHECK( stats.length() == source->width() );
     }
 
     indices.resize(0);
