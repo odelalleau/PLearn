@@ -180,8 +180,6 @@ class DBIBase:
             self.__dict__[key] = args[key]
 
         # check if log directory exists, if not create it
-        if (not os.path.exists('LOGS')):
-            os.mkdir('LOGS')
         if (not os.path.exists(self.log_dir)):
 #            if self.dolog or self.file_redirect_stdout or self.file_redirect_stderr:
             os.mkdir(self.log_dir)
