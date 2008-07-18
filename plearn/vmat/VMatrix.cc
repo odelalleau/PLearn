@@ -1621,16 +1621,22 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     if (!metadatadir.isEmpty()) {
         lockMetaDataDir();
         statsfile =  metadatadir / filename;
-        uptodate = isUpToDate(statsfile, true, true);
+        uptodate = isUpToDate(statsfile);
     }
-    if (uptodate)
-        PLearn::load(statsfile, stats);
-    else
-    {
-        VMat vm = const_cast<VMatrix*>(this);
-        stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
+    try{
+        if (uptodate)
+            PLearn::load(statsfile, stats);
+        else
+        {
+            VMat vm = const_cast<VMatrix*>(this);
+            stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
+            if(!metadatadir.isEmpty())
+                PLearn::save(statsfile, stats);
+        }
+    }catch(const PLearnError& e){
         if(!metadatadir.isEmpty())
-            PLearn::save(statsfile, stats);
+            unlockMetaDataDir();
+        throw e;
     }
     if (!metadatadir.isEmpty())
         unlockMetaDataDir();

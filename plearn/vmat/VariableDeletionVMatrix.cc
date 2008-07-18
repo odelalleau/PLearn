@@ -254,6 +254,8 @@ void VariableDeletionVMatrix::build_()
         if(is_equal(max_constant_threshold,1))
 //We don't need all the value, if (min==max && non_missing_value>0) it is constant value.
             maxnvalues = 0;
+        if(!the_train_source->hasMetaDataDir() && hasMetaDataDir())
+            the_train_source->setMetaDataDir(getMetaDataDir()+"/source");
         stats = the_train_source->
             getPrecomputedStatsFromFile("stats_variableDeletionVMatrix_"+
                                         tostring(maxnvalues)+".psave",
