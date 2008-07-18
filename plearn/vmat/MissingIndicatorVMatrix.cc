@@ -151,6 +151,9 @@ void MissingIndicatorVMatrix::getColumn(int i, Vec v) const
 void MissingIndicatorVMatrix::build_()
 {
     if (!source) PLERROR("In MissingIndicatorVMatrix:: source vmat must be supplied");
+    if(source->inputsize()>0)
+      PLERROR("In MissingIndicatorVMatrix::build_() source must have an inputsize > 0."
+	      " inputsize = %d", source->inputsize());
     if(!train_set && !fields){
       train_set = source;
     }
