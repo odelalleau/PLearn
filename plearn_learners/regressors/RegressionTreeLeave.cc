@@ -81,7 +81,8 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
                   "The hyper parameter to balance the error and the confidence factor\n");
     declareStaticOption(ol, "verbosity", &RegressionTreeLeave::verbosity, OptionBase::buildoption,
                   "The desired level of verbosity\n");
-    declareOption(ol, "train_set", &RegressionTreeLeave::train_set, OptionBase::buildoption,
+    declareOption(ol, "train_set", &RegressionTreeLeave::train_set, 
+                  OptionBase::buildoption | OptionBase::nosave,
                   "The train set with the sorted row index matrix and the leave id vector\n");
     declareOption(ol, "length", &RegressionTreeLeave::length, OptionBase::learntoption,
                   "The number of rows in this leave\n");
@@ -96,9 +97,9 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
     declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
 
-    declareOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::buildoption,
+    declareOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
-    declareOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::buildoption,
+    declareOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
 
     inherited::declareOptions(ol);

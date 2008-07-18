@@ -80,7 +80,8 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   "The desired level of verbosity\n");
     declareOption(ol, "leave_template", &RegressionTreeNode::leave, OptionBase::buildoption,
                   "The template for the leave objects to create.\n");
-    declareOption(ol, "train_set", &RegressionTreeNode::train_set, OptionBase::buildoption,
+    declareOption(ol, "train_set", &RegressionTreeNode::train_set,
+                  OptionBase::buildoption | OptionBase::nosave,
                   "The matrix with the sorted train set\n");
     declareOption(ol, "leave", &RegressionTreeNode::leave, OptionBase::buildoption,
                   "The leave of all the  belonging rows when this node is a leave\n");
@@ -211,6 +212,7 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
 
     leave->getOutputAndError(leave_output,leave_error);
 }
+
 #define BY_ROW
 //#define RCMP
 void RegressionTreeNode::lookForBestSplit()
@@ -300,6 +302,7 @@ void RegressionTreeNode::lookForBestSplit()
         <<row_split_value[27]<<endl;
 #endif
 }
+
 tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     int col,
     TVec<RTR_type>& candidates,

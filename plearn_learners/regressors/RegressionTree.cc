@@ -107,9 +107,10 @@ void RegressionTree::declareOptions(OptionList& ol)
                   "When making a prediction, the tree will adjust the output value of each leave to the closest value provided in this vector.");
     declareOption(ol, "leave_template", &RegressionTree::leave_template, OptionBase::buildoption,
                   "The template for the leave objects to create.\n");
-    declareOption(ol, "sorted_train_set", &RegressionTree::sorted_train_set, OptionBase::buildoption, 
-                  "The train set sorted on all columns\n"
-                  "If it is not provided by a wrapping algorithm, it is created at stage 0.\n");
+    declareOption(ol, "sorted_train_set", &RegressionTree::sorted_train_set,
+                  OptionBase::buildoption | OptionBase::nosave, 
+                  "The train set sorted on all columns. If it is not provided by a\n"
+                  " wrapping algorithm, it is created at stage 0.\n");
       
     declareOption(ol, "root", &RegressionTree::root, OptionBase::learntoption,
                   "The root node of the tree being built\n");
