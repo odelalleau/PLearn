@@ -251,9 +251,9 @@ void KFoldLogisticClassifier::train()
         // Oracle.
         PP<EarlyStoppingOracle> early_stop = new EarlyStoppingOracle();
         early_stop->max_degraded_steps = this->max_degraded_steps;
-        early_stop->range = TVec<double>(3, 1);
+        early_stop->range = TVec<double>(3, this->step_size);
         early_stop->range[1] = this->max_epochs + 1;
-        early_stop->range[2] = this->step_size;
+        early_stop->option = "nstages";
         early_stop->build();
         // Strategy.
         PP<HyperOptimize> strategy = new HyperOptimize();
