@@ -477,7 +477,12 @@ void TextFilesVMatrix::autoBuildMappings() {
             if(fieldspec[i].second=="char" && mapping[i].empty())//should add auto when it is char that are selected
                 PLWARNING("In TextFilesVMatrix::autoBuildMappings - mapping already existing but not for field %d (%s)",i,fieldspec[i].first.c_str());
 
-        PLWARNING("In TextFilesVMatrix::autoBuildMappings - The existing mapping is not complete! Their is %d fields with build mapping and their is %d fields that do not need mapping with a total of %d fields. Erase the mapping directory in the metadatadir to have it regenerated next time!",nb_already_exist,nb_type_no_mapping,mapping.length());
+        PLWARNING("In TextFilesVMatrix::autoBuildMappings - The existing "
+                "mapping is not complete! There are %d fields with build "
+                "mapping and there are %d fields that do not need mapping "
+                "in a total of %d fields. Erase the mapping directory in "
+                "the metadatadir to have it regenerated next time!",
+                nb_already_exist,nb_type_no_mapping,mapping.length());
     }//else already build
 }
 
@@ -862,7 +867,8 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "Currently supported types: \n"
                   "- skip       : Ignore the content of the field, won't be inserted in the resulting VMat\n"
                   "- auto       : If a numeric value, keep it as is, if not, look it up in the mapping (possibly inserting a new mapping if it's not there) \n"
-                  "- auto-num   : take any float value with the decimal separator as the dot. If theirs is a $ at the start or end it is removed. If their is comma they are removed.\n"
+                  "- auto-num   : take any float value with the decimal separator as the dot. If there is a $\n"
+                  "               at the start or end it is removed. If there are commas they are removed.\n"
                   "- num        : numeric value, keep as is\n"
                   "- num-comma  : numeric value where thousands are separeted by comma\n"
                   "- char       : look it up in the mapping (possibly inserting a new mapping if it's not there)\n"
@@ -905,7 +911,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "default_spec", 
                   &TextFilesVMatrix::default_spec,
                   OptionBase::buildoption,
-                  "If their is no fieldspec for a fieldname, we will use this"
+                  "If there is no fieldspec for a fieldname, we will use this"
                   "value. reorder_fieldspec_from_headers must be true.");
 
     // Now call the parent class' declareOptions
