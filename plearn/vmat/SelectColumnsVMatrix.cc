@@ -214,62 +214,7 @@ void SelectColumnsVMatrix::build_()
     if (source) {
         updateMtime(source);
         if (fields.isNotEmpty()) {
-            // Find out the indices from the fields.
-            indices.resize(0);
-            if (!fields_partial_match) {
-                TVec<string> missing_field;
-                for (int i = 0; i < fields.length(); i++) {
-                    string the_field = fields[i];
-                    int the_index = source->fieldIndex(the_field);  // string only
-                    if (!extend_with_missing && the_index == -1) {
-                        // The_field does not exist AS A STRING in the vmat
-                        // It may be of the form FIELD1-FIELDN (a range of fields).
-                        size_t pos = the_field.find('-');
-                        bool ok = false;
-                        if (pos != string::npos) {
-                            string field1 = the_field.substr(0, pos);
-                            string fieldn = the_field.substr(pos + 1);
-                            int the_index1 = source->getFieldIndex(field1);  // either string or number
-                            int the_indexn = source->getFieldIndex(fieldn);  // either string or number
-                            if (the_index1 >= 0 && the_indexn > the_index1) {
-                                // Indeed, this is a range.
-                                ok = true;
-                                for (int j = the_index1; j <= the_indexn; j++)
-                                    indices.append(j);
-                            }
-                        }
-                        // OR it may be a number by itself only
-                        else if (pl_islong(the_field) &&
-                                 (the_index = source->getFieldIndex(the_field)) != -1)
-                        {
-                            ok = true;
-                            indices.append(the_index);
-                        }
-                        if (!ok)
-                            PLERROR("In SelectColumnsVMatrix::build_ - Unknown field \"%s\" in source VMat;\n"
-                                    "    (you may want to use the 'extend_with_missing' option)", the_field.c_str());
-                    } else
-                        indices.append(the_index);
-                    if(extend_with_missing && the_index == -1)
-                        missing_field.append(the_field);
-                }
-                if(missing_field.size()>0){
-                    PLWARNING("In SelectColumnsVMatrix::build_() - We are"
-                              " adding %d columns to the source matrix with missing values."
-                              " The columns names are: %s",missing_field.size(),
-                              tostring(missing_field).c_str());
-                }
-            } else {
-                // We need to check whether or not we should add each field.
-                TVec<string> source_fields = source->fieldNames();
-                for (int i = 0; i < source_fields.length(); i++)
-                    for (int j = 0; j < fields.length(); j++)
-                        if (source_fields[i].find(fields[j]) != string::npos) {
-                            // We want to add this field.
-                            indices.append(i);
-                            break;
-                        }
-            }
+            getIndicesFromFields();
         }
         
         //we inverse the selection
@@ -360,6 +305,65 @@ void SelectColumnsVMatrix::build_()
 
         sinput.resize(width());
         sinput.fill(MISSING_VALUE);
+    }
+}
+
+void SelectColumnsVMatrix::getIndicesFromFields(){
+            // Find out the indices from the fields.
+    indices.resize(0);
+    if (!fields_partial_match) {
+        TVec<string> missing_field;
+        for (int i = 0; i < fields.length(); i++) {
+            string the_field = fields[i];
+            int the_index = source->fieldIndex(the_field);  // string only
+            if (!extend_with_missing && the_index == -1) {
+                // The_field does not exist AS A STRING in the vmat
+                // It may be of the form FIELD1-FIELDN (a range of fields).
+                size_t pos = the_field.find('-');
+                bool ok = false;
+                if (pos != string::npos) {
+                    string field1 = the_field.substr(0, pos);
+                    string fieldn = the_field.substr(pos + 1);
+                    int the_index1 = source->getFieldIndex(field1);  // either string or number
+                    int the_indexn = source->getFieldIndex(fieldn);  // either string or number
+                    if (the_index1 >= 0 && the_indexn > the_index1) {
+                        // Indeed, this is a range.
+                        ok = true;
+                        for (int j = the_index1; j <= the_indexn; j++)
+                            indices.append(j);
+                    }
+                }
+                // OR it may be a number by itself only
+                else if (pl_islong(the_field) &&
+                         (the_index = source->getFieldIndex(the_field)) != -1)
+                {
+                    ok = true;
+                    indices.append(the_index);
+                }
+                if (!ok)
+                    PLERROR("In SelectColumnsVMatrix::build_ - Unknown field \"%s\" in source VMat;\n"
+                            "    (you may want to use the 'extend_with_missing' option)", the_field.c_str());
+            } else
+                indices.append(the_index);
+            if(extend_with_missing && the_index == -1)
+                missing_field.append(the_field);
+        }
+        if(missing_field.size()>0){
+            PLWARNING("In SelectColumnsVMatrix::build_() - We are"
+                      " adding %d columns to the source matrix with missing values."
+                      " The columns names are: %s",missing_field.size(),
+                      tostring(missing_field).c_str());
+        }
+    } else {
+        // We need to check whether or not we should add each field.
+        TVec<string> source_fields = source->fieldNames();
+        for (int i = 0; i < source_fields.length(); i++)
+            for (int j = 0; j < fields.length(); j++)
+                if (source_fields[i].find(fields[j]) != string::npos) {
+                    // We want to add this field.
+                    indices.append(i);
+                    break;
+                }
     }
 }
 

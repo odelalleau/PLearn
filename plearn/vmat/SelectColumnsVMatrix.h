@@ -104,6 +104,9 @@ protected:
 
     static void declareOptions(OptionList &ol);
     void getNewRow(int i, const Vec& v) const { getSubRow(i, 0, v); }
+    //!fill this.indices from this.fields
+    //!We do the partial match if this.fields_partial_match is true.
+    void getIndicesFromFields();
 
 public:
 
