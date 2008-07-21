@@ -38,7 +38,7 @@
 
 
 #include "KFoldLogisticClassifier.h"
-#include <plearn/opt/GradientOptimizer.h>
+#include <plearn/opt/ConjGradientOptimizer.h>
 #include <plearn/vmat/ExplicitSplitter.h>
 #include <plearn/vmat/KFoldSplitter.h>
 #include <plearn_learners/generic/NNet.h>
@@ -64,9 +64,8 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////////////
 KFoldLogisticClassifier::KFoldLogisticClassifier():
     kfold(5),
-    learning_rate(1e-3),
-    max_degraded_steps(100),
-    max_epochs(1000),
+    max_degraded_steps(20),
+    max_epochs(500),
     step_size(1)
 {
 }
@@ -81,10 +80,6 @@ void KFoldLogisticClassifier::declareOptions(OptionList& ol)
     declareOption(ol, "kfold", &KFoldLogisticClassifier::kfold,
                   OptionBase::buildoption,
         "Number of splits of the data (and of classifiers being trained).");
-
-    declareOption(ol, "learning_rate", &KFoldLogisticClassifier::learning_rate,
-                  OptionBase::buildoption,
-        "Learning rate in the logistic classifiers.");
 
     declareOption(ol, "max_degraded_steps",
                   &KFoldLogisticClassifier::max_degraded_steps,
@@ -214,8 +209,7 @@ void KFoldLogisticClassifier::train()
     log_net.resize(0);
     string cost_func;
     for (int k = 0; k < kfold; k++) {
-        PP<GradientOptimizer> opt = new GradientOptimizer();
-        opt->start_learning_rate = this->learning_rate;
+        PP<ConjGradientOptimizer> opt = new ConjGradientOptimizer();
         opt->build();
         PP<NNet> nnet = new NNet();
         nnet->optimizer = opt;
@@ -230,6 +224,7 @@ void KFoldLogisticClassifier::train()
             nnet->noutputs = n_classes;
         }
         nnet->cost_funcs = TVec<string>(1, cost_func);
+        nnet->batch_size = 0;
         nnet->build();
         log_net.append(get_pointer(nnet));
     }

@@ -62,7 +62,6 @@ public:
     //#####  Public Build Options  ############################################
 
     int kfold;
-    real learning_rate;
     int max_degraded_steps;
     int max_epochs;
     int step_size;
