@@ -256,6 +256,10 @@ void HyperOptimize::getResultsMat()
         if(isfile(fname)){
             //we reload the old version if it exist
             resultsmat = new FileVMatrix(fname, true);
+            if(resultsmat.width()!=w)
+                PLERROR("In HyperOptimize::getResultsMat() - The existing "
+                        "results mat that we should reload don't have the "
+                        "width that we need. Did you added some statnames?");
             return;
         }else
             resultsmat = new FileVMatrix(fname,0,w);
