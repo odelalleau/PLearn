@@ -294,19 +294,22 @@ void KFoldLogisticClassifier::computeCostsFromOutputs(const Vec& input, const Ve
                                            const Vec& target, Vec& costs) const
 {
     int t = int(round(target[0]));
-    costs.resize(1);
+    costs.resize(2);
     if (output.length() == 1) {
         // Binary classification.
+        PLASSERT(output[0] >= 0 && output[0] <= 1);
         if (t == 1)
             costs[0] = - pl_log(output[0]);
         else {
             PLASSERT(t == 0);
             costs[0] = - pl_log(1 - output[0]);
         }
+        costs[1] = (output[0] - 0.5) * (2 * target[0] - 1) >= 0 ? 0 : 1;
     } else {
         // More than two targets.
         PLASSERT(is_equal(sum(output), 1));
         costs[0] = - pl_log(output[t]);
+        costs[1] = argmax(output) == t ? 0 : 1;
     }
 }
 
@@ -316,8 +319,10 @@ void KFoldLogisticClassifier::computeCostsFromOutputs(const Vec& input, const Ve
 TVec<string> KFoldLogisticClassifier::getTestCostNames() const
 {
     static TVec<string> costs;
-    if (costs.isEmpty())
+    if (costs.isEmpty()) {
         costs.append("nll");
+        costs.append("class_error");
+    }
     return costs;
 }
 
