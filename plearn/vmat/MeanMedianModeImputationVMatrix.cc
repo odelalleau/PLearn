@@ -332,17 +332,27 @@ void MeanMedianModeImputationVMatrix::build_()
       PLWARNING("In MeanMedianModeImputationVMatrix::build_() In the source VMatrix their is %d field(s) that do not have instruction: '%s'.",
 		no_instruction.size(),tostring(no_instruction).c_str());
 
-    PPath train_metadata = train_set->getMetaDataDir();
-    PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
-    train_set->lockMetaDataDir();
-    if (!train_set->isUpToDate(mean_median_mode_file_name)
-	||!source->isUpToDate(mean_median_mode_file_name))
+}
+void MeanMedianModeImputationVMatrix::setMetaDataDir(const PPath& the_metadatadir)
+{
+  inherited::setMetaDataDir(the_metadatadir);
+  if(!train_set->hasMetaDataDir() && !hasMetaDataDir())
+    PLERROR("In MeanMedianModeImputationVMatrix::setMetaDataDir() - the "
+	    " train_set should have a metadata dir or we should have one!");
+  else if(!train_set->hasMetaDataDir())
+    train_set->setMetaDataDir(getMetaDataDir()/"train_set");
+  
+  PPath train_metadata = train_set->getMetaDataDir();
+  PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
+  train_set->lockMetaDataDir();
+  if (!train_set->isUpToDate(mean_median_mode_file_name)
+      ||!source->isUpToDate(mean_median_mode_file_name))
     {
-        computeMeanMedianModeVectors();
-        createMeanMedianModeFile(mean_median_mode_file_name);
+      computeMeanMedianModeVectors();
+      createMeanMedianModeFile(mean_median_mode_file_name);
     }
-    else loadMeanMedianModeFile(mean_median_mode_file_name);
-    train_set->unlockMetaDataDir();
+  else loadMeanMedianModeFile(mean_median_mode_file_name);
+  train_set->unlockMetaDataDir();
 }
 
 void MeanMedianModeImputationVMatrix::createMeanMedianModeFile(PPath file_name)

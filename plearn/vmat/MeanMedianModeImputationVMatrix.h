@@ -106,6 +106,7 @@ private:
   VMat                 mean_median_mode_file;
 
           void         build_();
+  virtual void setMetaDataDir(const PPath& the_metadatadir);
           void         createMeanMedianModeFile(PPath file_name); 
           void         loadMeanMedianModeFile(PPath file_name); 
           void         computeMeanMedianModeVectors();  
