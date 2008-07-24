@@ -1636,6 +1636,10 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     }catch(const PLearnError& e){
         if(!metadatadir.isEmpty())
             unlockMetaDataDir();
+        //we erase the file if we are creating it
+        // as it can be partilly saved.
+        if(!uptodate && isfile(statsfile))
+            rm(statsfile);
         throw e;
     }
     if (!metadatadir.isEmpty())
