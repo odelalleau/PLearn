@@ -97,7 +97,7 @@ void LIBSVMSparseVMatrix::build_()
     updateMtime(libsvm_file);
     libsvm_stream.skipBlanks();
     int input_index = 0;
-    int largest_input_index = 0;
+    int largest_input_index = -1;
     int target_index = 0;
     int n_inputs = 0;
     string line;
@@ -131,7 +131,7 @@ void LIBSVMSparseVMatrix::build_()
         // Get inputs
         for( int i=0; i<n_inputs; i++)
         {
-            input_index = toint(tokens[2*i+1]);
+            input_index = toint(tokens[2*i+1])-1;
             extra_vec[i] = input_index;
             if( input_index > largest_input_index )
                 largest_input_index = input_index;
