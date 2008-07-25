@@ -131,6 +131,15 @@ public:
     //! the OTHER layer of an RBM, from which unit_activations was computed.
     virtual real freeEnergyContribution(const Vec& unit_activations) const;
 
+
+    //! Computes gradient of the result of freeEnergyContribution
+    //! -log(\sum_{possible values of h} exp(h' unit_activations))
+    //! with respect to unit_activations. Optionally, a gradient
+    //! with respect to freeEnergyContribution can be given
+    virtual void freeEnergyContributionGradient(const Vec& unit_activations,
+                                                Vec& unit_activations_gradient,
+                                                real output_gradient = 1,
+                                                bool accumulate = false) const;
     virtual int getConfigurationCount();
 
     virtual void getConfiguration(int conf_index, Vec& output);
@@ -166,6 +175,10 @@ protected:
     Vec off_tree_gradient;
     Vec on_free_energy_gradient;
     Vec off_free_energy_gradient;
+
+    // Temporary computations, for freeEnergyContribution() and its gradient variant
+    mutable Vec tree_free_energies;
+    mutable Vec tree_energies;
 
 protected:
     //#####  Protected Member Functions  ######################################

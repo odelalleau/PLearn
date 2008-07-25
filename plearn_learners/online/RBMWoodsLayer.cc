@@ -1028,38 +1028,146 @@ real RBMWoodsLayer::energy(const Vec& unit_values) const
 real RBMWoodsLayer::freeEnergyContribution(const Vec& unit_activations)
     const
 {
-    PLERROR( "RBMWoodsLayer::freeEnergyContribution(): not implemeted yet" );
     PLASSERT( unit_activations.size() == size );
+    int n_nodes_per_tree = size / n_trees;
+    tree_free_energies.resize(n_trees);
+    tree_energies.resize(n_trees * (n_nodes_per_tree+1) );
 
-    // result = -\sum_{i=0}^{size-1} softplus(a_i)
+    int offset=0;
+    int sub_tree_size = n_nodes_per_tree / 2;
+    int sub_root = sub_tree_size;
     real result = 0;
-    real* a = unit_activations.data();
-    for (int i=0; i<size; i++)
+    real tree_energy = 0;
+    real tree_free_energy = 0;
+    real leaf_activation = 0;
+    for( int t = 0; t<n_trees; t++ )
     {
-        if (use_fast_approximations)
-            result -= tabulated_softplus(a[i]);
-        else
-            result -= softplus(a[i]);
+        for( int n = 0; n < n_nodes_per_tree; n = n+2 ) // Looking only at leaves
+        {
+            // Computation energy of tree
+            tree_energy = 0;
+            sub_tree_size = n_nodes_per_tree / 2;
+            sub_root = sub_tree_size;
+            for( int d=0; d<tree_depth-1; d++ )
+            {
+                if( n < sub_root )
+                {
+                    tree_energy -= unit_activations[offset+sub_root];
+                    sub_tree_size /= 2;
+                    sub_root -= sub_tree_size + 1;
+                }
+                else
+                {
+                    if( use_signed_samples )
+                        tree_energy -= -unit_activations[offset+sub_root];
+                    sub_tree_size /= 2;
+                    sub_root += sub_tree_size+1;
+                }
+            }
+            
+            leaf_activation = unit_activations[offset+n];
+            // Add free energy of tree with activated leaf
+            if( n == 0)
+                tree_free_energy = -tree_energy + leaf_activation;
+            else
+                tree_free_energy = logadd( -tree_energy + leaf_activation, 
+                                           tree_free_energy );
+            tree_energies[offset+t+n] = tree_energy - leaf_activation;
+
+            // Add free_energy of tree with inactivated leaf
+            if( use_signed_samples )
+            {
+                tree_free_energy = logadd( -tree_energy - leaf_activation, 
+                                           tree_free_energy );
+                tree_energies[offset+t+n+1] = tree_energy + leaf_activation;
+            }
+            else
+            {
+                tree_free_energy = logadd( -tree_energy, tree_free_energy );
+                tree_energies[offset+t+n+1] = tree_energy;
+            }
+        }
+        tree_free_energies[t] = -tree_free_energy;
+        result -= tree_free_energy;
+        offset += n_nodes_per_tree;
     }
     return result;
 }
 
+void RBMWoodsLayer::freeEnergyContributionGradient( 
+    const Vec& unit_activations,
+    Vec& unit_activations_gradient,
+    real output_gradient, bool accumulate) const
+{
+    PLASSERT( unit_activations.size() == size );
+    unit_activations_gradient.resize( size );
+    if( !accumulate ) unit_activations_gradient.clear();
+    
+    // This method assumes freeEnergyContribution() has been called before,
+    // with the same unit_activations vector!!!
+    
+    int n_nodes_per_tree = size / n_trees;
+    int offset=0;
+    int sub_tree_size = n_nodes_per_tree / 2;
+    int sub_root = sub_tree_size;
+    real tree_energy = 0;
+    real tree_energy_gradient = 0;
+    real tree_energy_leaf_on_gradient = 0;
+    real tree_energy_leaf_off_gradient = 0;
+    for( int t = 0; t<n_trees; t++ )
+    {
+        for( int n = 0; n < n_nodes_per_tree; n = n+2 ) // Looking only at leaves
+        {
+            // Computation energy of tree
+            tree_energy = 0;
+            sub_tree_size = n_nodes_per_tree / 2;
+            sub_root = sub_tree_size;            
+            tree_energy_leaf_on_gradient = output_gradient * 
+                safeexp(-tree_energies[offset+t+n] + tree_free_energies[t]);
+            tree_energy_leaf_off_gradient = output_gradient * 
+                safeexp(-tree_energies[offset+t+n+1] + tree_free_energies[t]);
+            tree_energy_gradient = tree_energy_leaf_on_gradient + 
+                tree_energy_leaf_off_gradient;
+            for( int d=0; d<tree_depth-1; d++ )
+            {
+                if( n < sub_root )
+                {
+                    unit_activations_gradient[offset+sub_root] -= 
+                        tree_energy_gradient;
+                    sub_tree_size /= 2;
+                    sub_root -= sub_tree_size + 1;
+                }
+                else
+                {
+                    if( use_signed_samples )
+                    {
+                        unit_activations_gradient[offset+sub_root] += 
+                            tree_energy_gradient;
+                    }
+                    sub_tree_size /= 2;
+                    sub_root += sub_tree_size+1;
+                }
+            }
+            
+            unit_activations_gradient[offset+n] -= tree_energy_leaf_on_gradient;
+
+            if( use_signed_samples )
+                unit_activations_gradient[offset+n] += tree_energy_leaf_off_gradient;
+        }
+        offset += n_nodes_per_tree;
+    }
+}
+
 int RBMWoodsLayer::getConfigurationCount()
 {
-    PLERROR( "RBMWoodsLayer::getConfigurationCount(): not implemeted yet" );
-    return size < 31 ? 1<<size : INFINITE_CONFIGURATIONS;
+    PLWARNING( "RBMWoodsLayer::getConfigurationCount(): getConfiguration() not "
+               " implemented yet, so outputs INFINITE_CONFIGURATIONS");
+    return INFINITE_CONFIGURATIONS;
 }
 
 void RBMWoodsLayer::getConfiguration(int conf_index, Vec& output)
 {
     PLERROR( "RBMWoodsLayer::getConfigurationCount(): not implemeted yet" );
-    PLASSERT( output.length() == size );
-    PLASSERT( conf_index >= 0 && conf_index < getConfigurationCount() );
-
-    for ( int i = 0; i < size; ++i ) {
-        output[i] = conf_index & 1;
-        conf_index >>= 1;
-    }
 }
 
 } // end of namespace PLearn
