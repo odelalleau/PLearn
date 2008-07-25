@@ -461,7 +461,6 @@ void RBMBinomialLayer::bpropUpdate(const Vec& input, const Vec& rbm_bias,
 real RBMBinomialLayer::fpropNLL(const Vec& target)
 {
     PLASSERT( target.size() == input_size );
-    //I'm here!!!
     real ret = 0;
     real target_i, activation_i;
     if( use_signed_samples )
