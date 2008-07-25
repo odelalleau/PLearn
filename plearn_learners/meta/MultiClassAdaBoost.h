@@ -75,8 +75,8 @@ public:
     bool forward_sub_learner_test_costs;
 
     //! The learner1 and learner2 must be trained!
-    AdaBoost learner1;
-    AdaBoost learner2;
+    PP<AdaBoost> learner1;
+    PP<AdaBoost> learner2;
 
 public:
     //#####  Public Member Functions  #########################################
