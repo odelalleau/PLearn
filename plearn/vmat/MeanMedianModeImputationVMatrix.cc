@@ -41,6 +41,7 @@
 
 
 #include "MeanMedianModeImputationVMatrix.h"
+#include "MemoryVMatrix.h"
 
 namespace PLearn {
 using namespace std;
@@ -365,8 +366,7 @@ void MeanMedianModeImputationVMatrix::createMeanMedianModeFile(PPath file_name)
 
 void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
 {
-    isUpToDate(file_name,true,true);
-    source->isUpToDate(file_name,true,true);
+    train_set->isUpToDate(file_name,true,true);
 
     mean_median_mode_file = new FileVMatrix(file_name);
     mean_median_mode_file->getRow(0, variable_mean);
@@ -382,18 +382,17 @@ VMat MeanMedianModeImputationVMatrix::getMeanMedianModeFile()
 void MeanMedianModeImputationVMatrix::computeMeanMedianModeVectors()
 {
     TVec<int> variable_present_count(width_);
-    TVec<int> variable_missing_count(width_);
     TVec<int> variable_mode_count(width_);
     variable_mean.clear();
     variable_median.clear();
     variable_mode.clear();
     variable_present_count.clear();
-    variable_missing_count.clear();
     variable_mode_count.clear();
     Vec variable_vec(train_set->length());
     cout << fixed << showpoint;
     ProgressBar* pb = 0;
     pb = new ProgressBar("Computing the mean, median and mode vectors", width_);
+    VMat train_set = new MemoryVMatrix(train_set);
     for (int train_col = 0; train_col < width_; train_col++)
     {
         real current_value = 0.0;
@@ -403,10 +402,7 @@ void MeanMedianModeImputationVMatrix::computeMeanMedianModeVectors()
         for (int train_row = 0; train_row < train_set->length(); train_row++)
         {
             if (is_missing(variable_vec[train_row]))
-            {
-                variable_missing_count[train_col] += 1;
-                continue;
-            }
+	      continue;
             variable_mean[train_col] += variable_vec[train_row];
             variable_present_count[train_col] += 1;
             if (variable_vec[train_row] != current_value)
