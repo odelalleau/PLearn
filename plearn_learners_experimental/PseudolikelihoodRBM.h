@@ -131,6 +131,9 @@ public:
     //! Number of most correlated input elements over which to sample
     int k_most_correlated;
 
+    //! Weight of generative learning
+    real generative_learning_weight;
+
     //! The binomial input layer of the RBM
     PP<RBMBinomialLayer> input_layer;
 
@@ -151,6 +154,12 @@ public:
     TVec<string> cost_names;
 
     PP<RBMMatrixTransposeConnection> transpose_connection;
+
+    //! The target layer of the RBM
+    PP<RBMLayer> target_layer;
+
+    //! The connection weights between the target and hidden layer
+    PP<RBMMatrixConnection> target_connection;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -230,29 +239,12 @@ protected:
 
     //#####  Not Options  #####################################################
 
-    ////! Matrix connection weights between the hidden layer and the target layer
-    ////! (pointer to classification_module->last_to_target)
-    //PP<RBMMatrixConnection> last_to_target;
-    //
-    ////! Connection weights between the hidden layer and the target layer
-    ////! (pointer to classification_module->last_to_target)
-    //PP<RBMConnection> last_to_target_connection;
-    //
-    ////! Connection weights between the hidden layer and the visible layer
-    ////! (pointer to classification_module->joint_connection)
-    //PP<RBMConnection> joint_connection;
-    //
-    ////! Part of the RBM visible layer corresponding to the target
-    ////! (pointer to classification_module->target_layer)
-    //PP<RBMLayer> target_layer;
-
     //! Temporary variables for Contrastive Divergence
     mutable Vec target_one_hot;
 
     //! Temporary variables for RBM computations
     mutable Vec input_gradient;
     mutable Vec class_output;
-    mutable Vec before_class_output;
     mutable Vec class_gradient;
     mutable Vec hidden_activation_pos_i;
     mutable Vec hidden_activation_neg_i;
@@ -272,15 +264,16 @@ protected:
     mutable Vec gnums_act;
     mutable Vec conf;
     mutable Vec pos_input;
+    mutable Vec pos_target;
     mutable Vec pos_hidden;
     mutable Vec neg_input;
+    mutable Vec neg_target;
     mutable Vec neg_hidden;
     mutable Vec reconstruction_activation_gradient;
     mutable Vec hidden_layer_expectation_gradient;
     mutable Vec hidden_layer_activation_gradient;
     mutable Vec masked_autoencoder_input;
     mutable TVec<int> autoencoder_input_indices;
-    mutable TVec<Vec> pers_cd_input;
     mutable TVec<Vec> pers_cd_hidden;
 
     //! Keeps the index of the NLL cost in train_costs
