@@ -1,6 +1,7 @@
 from plearn.pyext import *
 from plearn.pyplearn.plargs import *
 import time,os.path
+from numpy import array
 
 class AdaBoostMultiClasses:
     def __init__(self,trainSet1,trainSet2,weakLearner,confusion_target=1):
@@ -26,6 +27,8 @@ class AdaBoostMultiClasses:
         self.nstages = 0
         self.stage = 0
         self.train_time = 0
+        self.test_time = 0
+        self.test_sub_time = 0
         self.confusion_target=confusion_target
         
     def myAdaBoostLearner(self,sublearner,trainSet):
@@ -167,6 +170,7 @@ class AdaBoostMultiClasses:
         return (output,costs)
 
     def test(self,testSet,test_stats,return_outputs,return_costs):
+        t1=time.time()
         testSet1=pl.ProcessingVMatrix(source=testSet,
                                prg = "[%0:%"+str(testSet.inputsize-1)+"] @CLASSE_REEL 1 0 ifelse :CLASSE_REEL")
         testSet2=pl.ProcessingVMatrix(source=testSet,
@@ -174,12 +178,14 @@ class AdaBoostMultiClasses:
 
         stats1=pl.VecStatsCollector()
         stats2=pl.VecStatsCollector()
+        t2=time.time()
         (test_stats1, testoutputs1, testcosts1)=self.learner1.test(testSet1,
                                                                    stats1,
                                                                    True,True)
         (test_stats2, testoutputs2, testcosts2)=self.learner2.test(testSet2,
                                                                    stats2,
                                                                    True,True)
+        t3=time.time()
         outputs=[]
         costs=[]
         #calculate stats, outputs, costs
@@ -209,6 +215,10 @@ class AdaBoostMultiClasses:
             test_stats.update(cost,1)
             if return_costs:
                 costs.append(cost)
+        t4=time.time()
+        self.test_time+=t4-t1
+        self.test_sub_time+=t3-t2
+
         return(test_stats,outputs,costs)
     
     def outputsize(self):
@@ -275,3 +285,6 @@ class AdaBoostMultiClasses:
         self.learner1.setTrainStatsCollector(VecStatsCollector())
         self.learner2.setTrainStatsCollector(VecStatsCollector())
 
+
+    def print_time(self):
+        print "train time=%.2f test time=%.2f test sub time=%.2f"%(self.train_time,self.test_time,self.test_sub_time)
