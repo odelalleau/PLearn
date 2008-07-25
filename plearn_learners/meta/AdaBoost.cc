@@ -275,6 +275,7 @@ void AdaBoost::forget()
 
 void AdaBoost::train()
 {
+
     if (nstages < stage){        //!< Asking to revert to previous stage
         PLCHECK(nstages>0); // should use forget
         cout<<"In AdaBoost::train() - reverting from stage "<<stage
@@ -299,6 +300,11 @@ void AdaBoost::train()
         PLERROR("In AdaBoost::train() -  we can't retrain a reverted learner...");
     }
     
+    if(found_zero_error_weak_learner) // Training is over...
+        return;
+
+    Profiler::pl_profile_start("AdaBoost::train");
+
     if(!train_set)
         PLERROR("In AdaBoost::train, you did not setTrainingSet");
     
@@ -316,8 +322,6 @@ void AdaBoost::train()
     PLCHECK_MSG(train_set->inputsize()>0, "In AdaBoost::train, the inputsize"
                 " of the train_set must be know.");
 
-    if(found_zero_error_weak_learner) // Training is over...
-        return;
 
     static Vec input;
     static Vec output;
@@ -659,6 +663,8 @@ void AdaBoost::train()
 
 
     }
+    Profiler::pl_profile_end("AdaBoost::train");
+
 }
 
 
