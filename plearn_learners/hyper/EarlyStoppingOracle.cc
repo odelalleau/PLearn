@@ -133,8 +133,12 @@ void EarlyStoppingOracle::build_()
     {
         option_values.resize(0);
         real step = 1;
-        if(range.length()==3)
+        if(range.length()==3){
             step = range[2];
+            if(step<0 || is_equal(step,0))
+                PLERROR("IN EarlyStoppingOracle::build_() - the"
+                        " step(=%f) should be greater the 0!",step);
+        }
         for(real x = range[0]; x<range[1]; x+=step)
             option_values.append(tostring(x));
         if(fast_exact_is_equal(range[0], range[1]))
