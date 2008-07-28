@@ -393,7 +393,7 @@ class PMat( VMat ):
 
     def appendRow(self,row):
         if len(row)!=self.width:
-            raise TypeError('length of row ('+str(len(row))+ ') differs from matrix width ('+str(self.width)+')')
+            raise TypeError('length of row ('+str(len(row))+ ') differs from matrix width ('+str(self.width)+') for file "'+self.fname+'"')
         if self.swap_bytes: # must make a copy and swap bytes
             ar = numpy.numarray.numarray(row,type=self.elemtype)
             ar.byteswap(True)
