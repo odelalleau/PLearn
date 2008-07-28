@@ -362,7 +362,9 @@ void AdaBoost::train()
         sum_voting_weights = 0;
         voting_weights.resize(0,nstages);
 
-    }
+    } else
+        PLCHECK_MSG(example_weights.length()==n,"In AdaBoost::train - the train"
+                    " set should not change between each train without a forget!");
 
     VMat unweighted_data = train_set.subMatColumns(0, inputsize()+1);
     learners_error.resize(nstages);
