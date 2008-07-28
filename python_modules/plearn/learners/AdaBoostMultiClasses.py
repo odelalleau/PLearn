@@ -2,7 +2,10 @@ from plearn.pyext import *
 from plearn.pyplearn.plargs import *
 import time,os.path
 from numpy import array
-
+##
+## This class will be removed in the futur when MultiClassAdaboost in C is complete.
+## The C version is much faster for all compute* and the test function.
+##
 class AdaBoostMultiClasses:
     def __init__(self,trainSet1,trainSet2,weakLearner,confusion_target=1):
 #        """
@@ -23,7 +26,15 @@ class AdaBoostMultiClasses:
             self.learner2 = self.myAdaBoostLearner(weakLearner(2),trainSet2)
             self.learner2.setExperimentDirectory(plargs.expdirr+"/learner2")
             self.learner2.setTrainingSet(trainSet2,True)
+        self.multi_class_adaboost = pl.MultiClassAdaBoost(forward_sub_learner_test_costs=True,
+                                                          report_progress=1,
+                                                          verbosity=1,
+                                                          nb_stage_to_use=-1
+                                                          )
+        self.multi_class_adaboost.learner1=self.learner1
+        self.multi_class_adaboost.learner2=self.learner2
 
+        self.multi_class_adaboost
         self.nstages = 0
         self.stage = 0
         self.train_time = 0
@@ -65,6 +76,7 @@ class AdaBoostMultiClasses:
 
         
     def getTestCostNames(self):
+        return self.multi_class_adaboost.getTestCostNames()
         costnames = ["class_error","linear_class_error","square_class_error"]
         for i in range(3):
             for j in range(3):
@@ -80,6 +92,7 @@ class AdaBoostMultiClasses:
         return costnames
     
     def getTrainCostNames(self):
+        return self.multi_class_adaboost.getTrainCostNames()
         costnames = ["sublearner1."+x for x in self.learner1.getTrainCostNames()]
         costnames += ["sublearner2."+x for x in self.learner2.getTrainCostNames()]                                
         return costnames
@@ -108,6 +121,7 @@ class AdaBoostMultiClasses:
         
         return a tuple: (predicted result, output of sub learner1,output of sub learner2)
         """
+        return self.multi_class_adaboost.computeOutput(input)
         out1=self.learner1.computeOutput(input)[0]
         out2=self.learner2.computeOutput(input)[0]
         ind1=int(round(out1))
@@ -123,6 +137,8 @@ class AdaBoostMultiClasses:
         return (ind,out1,out2)
     
     def computeCostsFromOutput(self,input,output,target_,costs=[],forward_sub_learner_costs=True):
+
+        return self.multi_class_adaboost.computeCostsFromOutput(input,output,target_)
         target=int(target_)
         del costs[:]
         class_error=int(output[0] != target)
@@ -165,12 +181,19 @@ class AdaBoostMultiClasses:
         return costs
 
     def computeOutputAndCosts(self,input,target):
+        return self.multi_class_adaboost.computeOutputAndCosts(input,target)
         output=self.computeOutput(input)
         costs=self.computeCostsFromOutput(input,output,target)
         return (output,costs)
 
     def test(self,testSet,test_stats,return_outputs,return_costs):
         t1=time.time()
+        (test_stats2,outputs,costs)=self.multi_class_adaboost.test(testSet, test_stats, return_outputs, return_costs)
+        t2=time.time()
+        self.test_sub_time+=t2-t1
+
+        return(test_stats,outputs,costs)
+
         testSet1=pl.ProcessingVMatrix(source=testSet,
                                prg = "[%0:%"+str(testSet.inputsize-1)+"] @CLASSE_REEL 1 0 ifelse :CLASSE_REEL")
         testSet2=pl.ProcessingVMatrix(source=testSet,
@@ -284,7 +307,8 @@ class AdaBoostMultiClasses:
 
         self.learner1.setTrainStatsCollector(VecStatsCollector())
         self.learner2.setTrainStatsCollector(VecStatsCollector())
-
+        self.multi_class_adaboost.learner1=self.learner1
+        self.multi_class_adaboost.learner2=self.learner2
 
     def print_time(self):
         print "train time=%.2f test time=%.2f test sub time=%.2f"%(self.train_time,self.test_time,self.test_sub_time)
