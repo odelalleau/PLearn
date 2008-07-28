@@ -18,6 +18,11 @@ class AdaBoostMultiClasses:
         self.trainSet1=trainSet1
         self.trainSet2=trainSet2
 
+        self.multi_class_adaboost = pl.MultiClassAdaBoost(forward_sub_learner_test_costs=True,
+                                                          report_progress=1,
+                                                          verbosity=1,
+                                                          nb_stage_to_use=-1
+                                                          )
         if weakLearner:
             self.learner1 = self.myAdaBoostLearner(weakLearner(0),trainSet1)
             self.learner1.setExperimentDirectory(plargs.expdirr+"/learner1")
@@ -26,15 +31,9 @@ class AdaBoostMultiClasses:
             self.learner2 = self.myAdaBoostLearner(weakLearner(2),trainSet2)
             self.learner2.setExperimentDirectory(plargs.expdirr+"/learner2")
             self.learner2.setTrainingSet(trainSet2,True)
-        self.multi_class_adaboost = pl.MultiClassAdaBoost(forward_sub_learner_test_costs=True,
-                                                          report_progress=1,
-                                                          verbosity=1,
-                                                          nb_stage_to_use=-1
-                                                          )
-        self.multi_class_adaboost.learner1=self.learner1
-        self.multi_class_adaboost.learner2=self.learner2
+            self.multi_class_adaboost.learner1=self.learner1
+            self.multi_class_adaboost.learner2=self.learner2
 
-        self.multi_class_adaboost
         self.nstages = 0
         self.stage = 0
         self.train_time = 0
@@ -65,7 +64,7 @@ class AdaBoostMultiClasses:
         self.learner1.train()
         self.learner2.nstages = self.nstages
         self.learner2.train()
-        self.stage=self.learner1.stage
+        self.stage=max(self.learner1.stage,self.learner2.stage)
         t2=time.time()
         self.train_time+=t2-t1
         self.train_stats=VecStatsCollector()
@@ -309,6 +308,9 @@ class AdaBoostMultiClasses:
         self.learner2.setTrainStatsCollector(VecStatsCollector())
         self.multi_class_adaboost.learner1=self.learner1
         self.multi_class_adaboost.learner2=self.learner2
+        for (learner,trainSet) in [(self.learner1,trainSet1), (self.learner2,trainSet2)]:
+            for weak in learner.weak_learners:
+                weak.setTrainingSet(trainSet,False)
 
     def print_time(self):
         print "train time=%.2f test time=%.2f test sub time=%.2f"%(self.train_time,self.test_time,self.test_sub_time)
