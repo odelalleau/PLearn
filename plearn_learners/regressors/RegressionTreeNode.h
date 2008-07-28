@@ -114,7 +114,7 @@ public:
     {
         computeOutputAndNodes(inputv,outputv);
     }
-
+    bool         haveChildrenNode(){return left_node;}
     
 private:
     void         build_();
