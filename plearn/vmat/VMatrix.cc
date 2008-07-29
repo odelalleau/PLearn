@@ -160,11 +160,9 @@ void VMatrix::declareOptions(OptionList & ol)
         "DO NOT play with this if you don't know the implementation!\n"
         "This add a dependency mtime to the gived value.");
 
-
     declareOption(
         ol, "fieldinfos", &VMatrix::fieldinfos, OptionBase::buildoption,
         "Field infos.\n");
-
 
     inherited::declareOptions(ol);
 }

@@ -55,6 +55,7 @@ SelectRowsVMatrix::SelectRowsVMatrix()
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
+      obtained_extrasize_from_source(false),
       rows_to_remove(false)
 {}
 
@@ -62,6 +63,7 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, boo
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
+      obtained_extrasize_from_source(false),
       indices(the_indices),
       rows_to_remove(the_rows_to_remove)
 {
@@ -74,6 +76,7 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
+      obtained_extrasize_from_source(false),
       rows_to_remove(the_rows_to_remove)
 {
     source = the_source;
@@ -127,6 +130,9 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
                   "Set to 1 if the targetsize was obtained from the source VMat.");
 
     declareOption(ol, "obtained_weightsize_from_source", &SelectRowsVMatrix::obtained_weightsize_from_source, OptionBase::learntoption,
+                  "Set to 1 if the weightsize was obtained from the source VMat.");
+
+    declareOption(ol, "obtained_extrasize_from_source", &SelectRowsVMatrix::obtained_extrasize_from_source, OptionBase::learntoption,
                   "Set to 1 if the weightsize was obtained from the source VMat.");
 
     inherited::declareOptions(ol);
@@ -219,6 +225,11 @@ void SelectRowsVMatrix::build_()
             weightsize_ = source->weightsize();
             obtained_weightsize_from_source = true;
         } else if (obtained_weightsize_from_source && weightsize_ != source->weightsize())
+            PLERROR(error_msg.c_str());
+        if(extrasize_ == 0) {
+            extrasize_ = source->extrasize();
+            obtained_extrasize_from_source = true;
+        } else if (obtained_extrasize_from_source && extrasize_ != source->extrasize())
             PLERROR(error_msg.c_str());
         fieldinfos = source->fieldinfos;
     } else {

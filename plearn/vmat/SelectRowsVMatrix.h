@@ -65,6 +65,7 @@ protected:
     bool obtained_inputsize_from_source;
     bool obtained_targetsize_from_source;
     bool obtained_weightsize_from_source;
+    bool obtained_extrasize_from_source;
 
     TVec<int> selected_indices;
 
