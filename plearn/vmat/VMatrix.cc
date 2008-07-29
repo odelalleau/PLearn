@@ -288,9 +288,22 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("dot product")));         
 
     declareMethod(
+        rmm, "saveAMAT", &VMatrix::saveAMAT,
+        (BodyDoc("Saves this matrix as an .amat file."),
+         ArgDoc ("amatfile", "Path of the file to create."),
+         ArgDoc ("verbose", "output details?"),
+         ArgDoc ("no_header", "save data only"),
+         ArgDoc ("save_strings", "save string instead of real values")));
+
+    declareMethod(
         rmm, "savePMAT", &VMatrix::savePMAT,
         (BodyDoc("Saves this matrix as a .pmat file."),
          ArgDoc ("pmatfile", "Path of the file to create.")));
+
+    declareMethod(
+        rmm, "saveDMAT", &VMatrix::saveDMAT,
+        (BodyDoc("Saves this matrix as a .dmat directory."),
+         ArgDoc ("dmatdir", "Path of the dir to create.")));
 
     declareMethod(
         rmm, "subMat", &VMatrix::subMat,
@@ -2007,7 +2020,7 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
     ProgressBar pb(cout, "Saving to pmat", nsamples);
 
     for(int i=0; i<nsamples; i++)
-    {
+    { 
         getRow(i,tmpvec);
         m.putRow(i,tmpvec);
         pb(i);
