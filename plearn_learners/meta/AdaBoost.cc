@@ -743,7 +743,7 @@ TVec<string> AdaBoost::getTestCostNames() const
     TVec<string> costs=getTrainCostNames();
 
     if(forward_sub_learner_test_costs){
-        TVec<string> subcosts=weak_learners[0]->getTestCostNames();
+        TVec<string> subcosts=weak_learner_template->getTestCostNames();
         for(int i=0;i<subcosts.length();i++){
             subcosts[i]="weighted_weak_learner."+subcosts[i];
         }
