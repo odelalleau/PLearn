@@ -97,7 +97,7 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
     PP<ProgressBar> pb;
     if (verbose)
         pb = new ProgressBar(cout, "Saving to CSV", source.length());
-  
+
     // Next, output each line.  Perform missing-value checks if required.
     for (int i=0, n=source.length() ; i<n ; ++i) {
         if (pb)
@@ -105,28 +105,33 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
         Vec currow = source(i);
         if (! skip_missings || ! currow.hasMissing()) {
             for (int j=0, m=currow.size() ; j<m ; ++j) {
+                string strval="";
                 if (convert_date && j==0)
                     // Date conversion: add 19000000 to convert from CYYMMDD to
                     // YYYYMMDD, and always output without trailing . if not
                     // necessary
                     sprintf(buffer, "%8f", currow[j] + 19000000.0);
-                else
+                else if((strval=source->getValString(j,currow[j]))!=""){
+                    if(strval.length()>1000-1)
+                        PLERROR("a value is too big!");
+                    strncpy(buffer,strval.c_str(),1000);
+                }else{
                     // Normal processing
                     sprintf(buffer, "%#.*f", precision, currow[j]);
 
-                // strip all trailing zeros and final period
-                // there is always a period since sprintf includes # modifier
-                char* period = buffer;
-                while (*period && *period != '.')
-                    period++;
-                for (char* last = period + strlen(period) - 1 ;
-                     last >= period && (*last == '0' || *last == '.') ; --last) {
-                    bool should_break = *last == '.';
-                    *last = '\0';
-                    if (should_break)
-                        break;
+                    // strip all trailing zeros and final period
+                    // there is always a period since sprintf includes # modifier
+                    char* period = buffer;
+                    while (*period && *period != '.')
+                        period++;
+                    for (char* last = period + strlen(period) - 1 ;
+                         last >= period && (*last == '0' || *last == '.') ; --last) {
+                        bool should_break = *last == '.';
+                        *last = '\0';
+                        if (should_break)
+                            break;
+                    }
                 }
-        
                 destination << buffer;
                 if (j < m-1)
                     destination << delimiter;
