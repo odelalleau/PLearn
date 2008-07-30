@@ -392,14 +392,14 @@ void MeanMedianModeImputationVMatrix::computeMeanMedianModeVectors()
     cout << fixed << showpoint;
     ProgressBar* pb = 0;
     pb = new ProgressBar("Computing the mean, median and mode vectors", width_);
-    VMat train_set = new MemoryVMatrix(train_set);
+    VMat train_set_mem = new MemoryVMatrix(train_set);
     for (int train_col = 0; train_col < width_; train_col++)
     {
         real current_value = 0.0;
         int current_value_count = 0;
-        train_set->getColumn(train_col, variable_vec);
-        sortColumn(variable_vec, 0, train_set->length());
-        for (int train_row = 0; train_row < train_set->length(); train_row++)
+        train_set_mem->getColumn(train_col, variable_vec);
+        sortColumn(variable_vec, 0, train_set_mem->length());
+        for (int train_row = 0; train_row < train_set_mem->length(); train_row++)
         {
             if (is_missing(variable_vec[train_row]))
 	      continue;
