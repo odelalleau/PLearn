@@ -271,7 +271,9 @@ options_choices = [
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
     'logging=extreme', 'logging=dbg-profile' ],
 
-  [ 'numpy', 'numarray' ]
+  [ 'numpy', 'numarray' ],
+
+#  [ '', 'nolock' ]
 
 ]
 
@@ -721,7 +723,12 @@ pymakeOption( name = 'pydbg',
 
 cpp_variables += ['BOUNDCHECK', 'NDEBUG', 'Py_DEBUG']
 
+pymakeOption( name = '',description = 'dummy option to hide optional options' )
+pymakeOption( name = 'nolock',
+              description = 'USE WITH CARE: disable vmatrix lock',
+              cpp_definitions = ['DISABLE_VMATRIX_LOCK'])
 
+cpp_variables += ['DISABLE_VMATRIX_LOCK']
 #####  Floating-Point Number Representation  ################################
 
 pymakeOption( name = 'float',
