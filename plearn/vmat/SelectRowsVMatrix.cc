@@ -133,7 +133,7 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
                   "Set to 1 if the weightsize was obtained from the source VMat.");
 
     declareOption(ol, "obtained_extrasize_from_source", &SelectRowsVMatrix::obtained_extrasize_from_source, OptionBase::learntoption,
-                  "Set to 1 if the weightsize was obtained from the source VMat.");
+                  "Set to 1 if the extrasize was obtained from the source VMat.");
 
     inherited::declareOptions(ol);
 
