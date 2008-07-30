@@ -1415,6 +1415,7 @@ string getUser()
 /////////////////////
 void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 {
+#ifndef DISABLE_VMATRIX_LOCK
     if(!hasMetaDataDir())
         PLERROR("In VMatrix::lockMetaDataDir() subclass %s -"
                 " metadatadir was not set", classname().c_str());
@@ -1452,6 +1453,7 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
     string lock_content = "host " + hostname() + ", pid " + tostring(getPid()) + ", user " + getUser();
     lockf_ << lock_content;
     lockf_.flush();
+#endif
 }
 
 ///////////////////////
@@ -1459,11 +1461,13 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
 ///////////////////////
 void VMatrix::unlockMetaDataDir() const
 {
+#ifndef DISABLE_VMATRIX_LOCK
     if(!lockf_)
         PLERROR("In VMatrix::unlockMetaDataDir() was called while no lock is held by this object");
     lockf_ = PStream();   // Release the lock.
     PPath lockfile = metadatadir / ".lock";
     rm(lockfile); // Remove the file.
+#endif
 }
 
 ////////////////////
