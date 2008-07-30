@@ -229,6 +229,14 @@ void AdaBoost::build_()
 {
     if(conf_rated_adaboost && pseudo_loss_adaboost)
         PLERROR("In Adaboost:build_(): conf_rated_adaboost and pseudo_loss_adaboost cannot both be true, a choice must be made");
+
+    
+    int n;
+    if(weak_learners.size()>0)
+        n=weak_learners[0]->outputsize();
+    else
+        n=weak_learner_template->outputsize();
+    weak_learner_output.resize(n);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -673,20 +681,22 @@ void AdaBoost::train()
 void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     PLASSERT(weak_learners.size()>0);
-    
+    PLASSERT(weak_learner_output.size()==weak_learners[0]->outputsize());
+    PLASSERT(output.size()==1);
     real sum_out=0;
-    weak_learner_output.resize(weak_learners[0]->outputsize());
-    for (int i=0;i<weak_learners.size();i++)
-    {
-        weak_learners[i]->computeOutput(input,weak_learner_output);
-        if(!pseudo_loss_adaboost && !conf_rated_adaboost)
+    if(!pseudo_loss_adaboost && !conf_rated_adaboost)
+        for (int i=0;i<weak_learners.size();i++){
+            weak_learners[i]->computeOutput(input,weak_learner_output);
             sum_out += (weak_learner_output[0] < output_threshold ? 0 : 1) 
                 *voting_weights[i];
-        else
+        }
+    else
+        for (int i=0;i<weak_learners.size();i++){
+            weak_learners[i]->computeOutput(input,weak_learner_output);
             sum_out += weak_learner_output[0]*voting_weights[i];
-    }
+        }
+
     output[0] = sum_out/sum_voting_weights;
-    output.resize(1);
 }
 
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
