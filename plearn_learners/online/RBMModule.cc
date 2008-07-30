@@ -1273,6 +1273,10 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                           n_samples == hidden_sample->length() );
                 n_samples = hidden_sample->length();
             }
+            // The code above to generate more than 1 sample is buggy. Olivier (D)
+            // is supposed to look into it. In the meantime, we just only
+            // generate 1 sample.
+            n_samples = 1;
             PLCHECK( n_samples > 0 );
 
             // the visible_layer->expectations contain the "state" from which we
