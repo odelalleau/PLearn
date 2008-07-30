@@ -313,4 +313,4 @@ class AdaBoostMultiClasses:
                 weak.setTrainingSet(trainSet,False)
 
     def print_time(self):
-        print "train time=%.2f test time=%.2f test sub time=%.2f"%(self.train_time,self.test_time,self.test_sub_time)
+        print "AdaBoostMultiClass: train time=%.2f test time=%.2f test sub time=%.2f"%(self.train_time,self.test_time,self.test_sub_time)
