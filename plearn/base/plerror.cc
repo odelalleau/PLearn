@@ -65,13 +65,22 @@ void errormsg2(const char* filename,const int linenumber,const char* msg, ...){
     snprintf(message, ERROR_MSG_SIZE, "In file: \"%s\" at line %d\n", filename, linenumber);
     PLASSERT(ERROR_MSG_SIZE>=strlen(message)+strlen(msg));
     strcat(message,msg);
-    errormsg(message, args);
+    verrormsg(message, args);
+
+    va_end(args);
 
 }
+
 void errormsg(const char* msg, ...)
 {
     va_list args;
     va_start(args,msg);
+    verrormsg(msg, args);
+    va_end(args);
+}
+
+void verrormsg(const char* msg, va_list args)
+{
     char message[ERROR_MSG_SIZE];
 
 #if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
@@ -79,8 +88,6 @@ void errormsg(const char* msg, ...)
 #else
     vsprintf(message,msg,args);
 #endif
-
-    va_end(args);
 
 #ifndef USE_EXCEPTIONS
 #if USING_MPI

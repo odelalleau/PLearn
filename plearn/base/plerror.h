@@ -71,9 +71,13 @@ extern ostream* error_stream;
 void errormsg2(const char* filename, const int linenumber, const char* msg, ...)
     __attribute__((noreturn))
     __attribute__((format(printf, 3, 4)));
+//errormsg: version that takes a variable number of args
 void errormsg(const char* msg, ...)
     __attribute__((noreturn))
     __attribute__((format(printf, 1, 2)));
+//verrormsg: internal errormsg that takes a single va_list
+void verrormsg(const char* msg, va_list args)
+    __attribute__((noreturn));
 void warningmsg(const char* msg, ...)
     __attribute__((format(printf, 1, 2)));
 void deprecationmsg(const char* msg, ...)
