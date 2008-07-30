@@ -1699,8 +1699,12 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                     (*bound_cd_nll)(i, t) =
                         visible_layer->getConfigurationCount() *
                         ipow(bound_coeff, t + 1);
-                if (ratio_cd_leftout_is_output)
-                    (*ratio_cd_leftout)(i, t) = median(all_ratios);
+                if (ratio_cd_leftout_is_output) {
+                    if (all_ratios.isEmpty())
+                        (*ratio_cd_leftout)(i, t) = MISSING_VALUE;
+                    else
+                        (*ratio_cd_leftout)(i, t) = median(all_ratios);
+                }
                 if (abs_cd_is_output) {
                     (*abs_cd)(i, t) = mean_abs_updates;
                     (*abs_cd)(i, t + n_steps_compare) = mean_abs_stoch_updates;
