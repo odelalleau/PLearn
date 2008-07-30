@@ -723,14 +723,6 @@ pymakeOption( name = 'pydbg',
 
 cpp_variables += ['BOUNDCHECK', 'NDEBUG', 'Py_DEBUG']
 
-pymakeOption( name = '',
-              description = 'dummy option to hide unusual options',
-              in_output_dirname = False)
-pymakeOption( name = 'nolock',
-              description = 'USE WITH CARE: disable vmatrix lock',
-              cpp_definitions = ['DISABLE_VMATRIX_LOCK'])
-
-cpp_variables += ['DISABLE_VMATRIX_LOCK']
 #####  Floating-Point Number Representation  ################################
 
 pymakeOption( name = 'float',
@@ -915,6 +907,18 @@ pymakeOption( name = 'numpy',
               cpp_definitions = ['PL_USE_NUMPY'] )
 
 cpp_variables += ['PL_USE_NUMARRAY', 'PL_USE_NUMPY']
+
+
+#####  Hidden option   ###################################################
+pymakeOption( name = '',
+              description = 'dummy option to hide unusual options',
+              in_output_dirname = False)
+pymakeOption( name = 'nolock',
+              description = 'USE WITH CARE: disable vmatrix lock',
+              cpp_definitions = ['DISABLE_VMATRIX_LOCK'])
+
+cpp_variables += ['DISABLE_VMATRIX_LOCK']
+
 
 #####  Network Setup  #######################################################
 
