@@ -193,10 +193,12 @@ void RegressionTree::build_()
         if (weightsize != 1 && weightsize != 0)
             PLERROR("RegressionTree: expected weightsize to be 1 or 0, got %d",
                     weightsize);
-        nodes = new TVec<PP<RegressionTreeNode> >();
-        tmp_vec.resize(2);
     }
 
+    tmp_vec.resize(2);
+    nodes = new TVec<PP<RegressionTreeNode> >();
+    tmp_computeCostsFromOutput.resize(outputsize());
+    
     if (loss_function_weight != 0.0)
     {
         l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2);
@@ -211,6 +213,8 @@ void RegressionTree::build_()
 
 void RegressionTree::train()
 {
+    Profiler::pl_profile_start("RegressionTree::train");
+
     if (stage == 0) initialiseTree();
     PP<ProgressBar> pb;
     if (report_progress)
@@ -231,7 +235,10 @@ void RegressionTree::train()
     pb = NULL;
     verbose("split_cols: "+tostring(split_cols),2);
     verbose("split_values: "+tostring(split_values),2);
-    if (compute_train_stats < 1) return;
+    if (compute_train_stats < 1){
+        Profiler::pl_profile_end("RegressionTree::train");
+        return;
+    }
     if (report_progress)
     {
         pb = new ProgressBar("RegressionTree : computing the statistics: ", length);
@@ -248,12 +255,13 @@ void RegressionTree::train()
          train_sample_index++)
     {  
         sorted_train_set->getExample(train_sample_index, sample_input, sample_target, sample_weight);
-        computeOutput(sample_input, sample_output);
-        computeCostsFromOutputs(sample_input, sample_output, sample_target, sample_costs); 
+        computeOutputAndCosts(sample_input,sample_target,sample_output,sample_costs);
         train_stats->update(sample_costs);
         if (report_progress) pb->update(train_sample_index);
     }
     train_stats->finalize();
+
+    Profiler::pl_profile_end("RegressionTree::train");
 }
 
 void RegressionTree::verbose(string the_msg, int the_level)
@@ -415,29 +423,39 @@ void RegressionTree::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
     outputv[0] = closest_value;
 }
 
-void RegressionTree::computeOutputAndCosts(const Vec& inputv,
-                                           const Vec& targetv,
-                                           Vec& outputv, Vec& costsv) const
+void RegressionTree::computeOutputAndCosts(const Vec& input,
+                                           const Vec& target,
+                                           Vec& output, Vec& costs) const
 {
-    PLASSERT(costsv.size()==nTestCosts());
+    PLASSERT(costs.size()==nTestCosts());
     PLASSERT(nodes);
     nodes->resize(0);
 
-    computeOutputAndNodes(inputv, tmp_vec, nodes);
+    computeOutputAndNodes(input, tmp_vec, nodes);
     if(!output_confidence_target)
-        outputv[0]=tmp_vec[0];
+        output[0]=tmp_vec[0];
     else
-        outputv<<tmp_vec;
+        output<<tmp_vec;
 
-    costsv.clear();
-    costsv[0] = pow((outputv[0] - targetv[0]), 2);
-    
-    costsv[1] = tmp_vec[1];
-    costsv[2] = 1.0 - (l2_loss_function_factor * costsv[0]);
-    costsv[3] = 1.0 - (l1_loss_function_factor * abs(outputv[0] - targetv[0]));
-    costsv[4] = !fast_is_equal(targetv[0],outputv[0]);
-    for(int i=0;i<nodes->length();i++)
-        costsv[5+(*nodes)[i]->getSplitCol()]++;
+    computeCostsFromOutputsAndNodes(input, tmp_vec, target, *nodes, costs);
+}
+
+void RegressionTree::computeCostsFromOutputsAndNodes(const Vec& input,
+                                                     const Vec& output, 
+                                                     const Vec& target,
+                                                     const TVec<PP<RegressionTreeNode> >& nodes,
+                                                     Vec& costs) const
+{
+    costs.clear();
+    costs[0] = pow((output[0] - target[0]), 2);
+    if(output.length()>1) costs[1] = output[1];
+    else costs[1] = MISSING_VALUE;
+    costs[2] = 1.0 - (l2_loss_function_factor * costs[0]);
+    costs[3] = 1.0 - (l1_loss_function_factor * abs(output[0] - target[0]));
+    costs[4] = !fast_is_equal(target[0],output[0]);
+
+    for(int i=0;i<nodes.length();i++)
+        costs[5+nodes[i]->getSplitCol()]++;
 }
 
 void RegressionTree::computeCostsFromOutputs(const Vec& input,
@@ -445,11 +463,9 @@ void RegressionTree::computeCostsFromOutputs(const Vec& input,
                                              const Vec& target,
                                              Vec& costs) const
 {
-    Vec tmp(output.size());
-    computeOutputAndCosts(input, target, tmp, costs); 
-    PLASSERT(output==tmp);
+    computeOutputAndCosts(input, target, tmp_computeCostsFromOutput, costs); 
+    PLASSERT(output==tmp_computeCostsFromOutput);
 }
-
 
 } // end of namespace PLearn
 

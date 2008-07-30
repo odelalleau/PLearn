@@ -93,6 +93,8 @@ private:
     TVec<PP<RegressionTreeNode> > *nodes;
 
     mutable Vec tmp_vec;
+    mutable Vec tmp_computeCostsFromOutput;
+
 public:
     RegressionTree();
     virtual              ~RegressionTree();
@@ -114,7 +116,11 @@ public:
     virtual void         computeOutputAndNodes(const Vec& input, Vec& output,
                                                TVec<PP<RegressionTreeNode> >* nodes=0) const;
     virtual void         computeCostsFromOutputs(const Vec& input, const Vec& output, const Vec& target, Vec& costs) const;
-  
+    virtual void         computeCostsFromOutputsAndNodes(const Vec& input,
+                                                         const Vec& output, 
+                                                         const Vec& target,
+                                                         const TVec<PP<RegressionTreeNode> >& nodes,
+                                                         Vec& costs) const;
 private:
     void                   build_();
     void                   initialiseTree();
