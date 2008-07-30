@@ -59,8 +59,10 @@ class MultiClassAdaBoost : public PLearner
 {
     typedef PLearner inherited;
 
-    Vec tmp_costs;
-    Vec tmp_target;
+    mutable Vec output1;
+    mutable Vec output2;
+    mutable Vec subcosts1;
+    mutable Vec subcosts2;
 
 public:
     //#####  Public Build Options  ############################################

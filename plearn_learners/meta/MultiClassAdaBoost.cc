@@ -115,6 +115,10 @@ void MultiClassAdaBoost::build_()
     sub_target_tmp.resize(2);
     for(int i=0;i<sub_target_tmp.size();i++)
         sub_target_tmp[i].resize(1);
+
+    output1.resize(learner1->outputsize());
+    output2.resize(learner2->outputsize());
+
 }
 
 // ### Nothing to add here, simply calls build_
@@ -222,10 +226,8 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     PLASSERT(output.size()==outputsize());
 
-    Vec output1(learner1->outputsize());
-    Vec output2(learner2->outputsize());
-    learner1->computeOutput(input,output1);
-    learner2->computeOutput(input,output2);
+    learner1->computeOutput(input, output1);
+    learner2->computeOutput(input, output2);
     int ind1=int(round(output1[0]));
     int ind2=int(round(output2[0]));
 
@@ -247,13 +249,14 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
                                                Vec& output, Vec& costs) const
 {
     PLASSERT(costs.size()==nTestCosts());
-
+    PLASSERT_MSG(output.length()!=outputsize(),
+                 "In MultiClassAdaBoost::computeOutputAndCosts -"
+                 " output don't have the good length!");
     output.resize(outputsize());
 
-    Vec output1(learner1->outputsize());
-    Vec output2(learner2->outputsize());
-    Vec subcosts1(learner1->nTestCosts());
-    Vec subcosts2(learner1->nTestCosts());
+    subcosts1.resize(learner1->nTestCosts());
+    subcosts2.resize(learner1->nTestCosts());
+
     getSubLearnerTarget(target, sub_target_tmp);
 
     learner1->computeOutputAndCosts(input, sub_target_tmp[0],
@@ -322,11 +325,11 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
 
     costs[4]=costs[5]=costs[6]=0;
     costs[out+4]=1;
-    PLASSERT(nTestCosts()==costs.size());
+
     if(forward_sub_learner_test_costs){
         costs.resize(7);
-        Vec subcosts1(learner1->nTestCosts());
-        Vec subcosts2(learner1->nTestCosts());
+        subcosts1.resize(learner1->nTestCosts());
+        subcosts2.resize(learner1->nTestCosts());
         getSubLearnerTarget(target, sub_target_tmp);
 
         learner1->computeCostsOnly(input,sub_target_tmp[0],subcosts1);
