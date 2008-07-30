@@ -526,7 +526,10 @@ if target_platform=='linux-i386':
 else:
     gcc_opt_options = ''
 
-pedantic_mode = ' -pedantic '
+#-pedantic check for conformity with ISO C
+#plerror.h use variadic macro that is introduced in ISO C99
+#So we add -Wno-variadic-macros to allow this exception to ISO C90
+pedantic_mode = ' -pedantic -Wno-variadic-macros '
 if platform=='darwin':
     pedantic_mode = ' '
     
