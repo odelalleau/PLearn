@@ -743,7 +743,15 @@ TVec<string> AdaBoost::getTestCostNames() const
     TVec<string> costs=getTrainCostNames();
 
     if(forward_sub_learner_test_costs){
-        TVec<string> subcosts=weak_learner_template->getTestCostNames();
+        TVec<string> subcosts;
+        //We try to find a weak_learner with a train set
+        //as a RegressionTree need it to generate the test costs names
+        if(weak_learner_template->getTrainingSet())
+            subcosts=weak_learner_template->getTestCostNames();
+        else if(weak_learners.length()>0)
+            subcosts=weak_learners[0]->getTestCostNames();
+        else
+            subcosts=weak_learner_template->getTestCostNames();
         for(int i=0;i<subcosts.length();i++){
             subcosts[i]="weighted_weak_learner."+subcosts[i];
         }
