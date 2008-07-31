@@ -79,7 +79,7 @@ VMat getDataSet(const PPath& dataset_path)
         dataset_abs = dataset_path;
     else
         // There may be parameters that need parsing.
-        parseBaseAndParameters(dataset_path.absolute(), dataset_abs, params);
+        parseBaseAndParameters(dataset_path, dataset_abs, params);
     PPath dataset(dataset_abs);
     bool use_params = false;
 
@@ -114,13 +114,13 @@ VMat getDataSet(const PPath& dataset_path)
                 // Old XML-like format.
                 PLDEPRECATED("In getDataSet - File %s is using the old XML-like VMat format, " 
                              "you should switch to a PLearn script (ideally a .pymat file).",
-                             dataset.absolute().c_str());
+                             dataset.c_str());
                 vm = new VVMatrix(dataset);
             } else {
                 vm = dynamic_cast<VMatrix*>(newObject(code));
                 if (vm.isNull())
                     PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
-                            dataset.absolute().c_str());
+                            dataset.c_str());
             }
             vm->updateMtime(date);
         } else if (ext == "pymat" || ext == "py") {
@@ -137,7 +137,7 @@ VMat getDataSet(const PPath& dataset_path)
             vm = dynamic_cast<VMatrix*>(newObject(code));
             if (vm.isNull())
                 PLERROR("In getDataSet - Object described in %s is not a VMatrix subclass",
-                        dataset.absolute().c_str());
+                        dataset.c_str());
             //Their is two case:
             //1) params.size()>0, The mtime should be now
             //2) params.size()==0 the mtime should be the file mtime
@@ -168,7 +168,7 @@ VMat getDataSet(const PPath& dataset_path)
             PLERROR("In getDataSet - Unknown extension for VMat file: %s", ext.c_str());
         if (!use_params && !params.empty())
             PLWARNING("In getDataSet - Ignoring parameters when reading file %s",
-                      dataset.absolute().c_str());
+                      dataset.c_str());
         // Set default metadata directory if not already set.
         if (!vm->hasMetaDataDir())
             vm->setMetaDataDir(dataset.dirname() / (dataset.basename() + ".metadata"));
