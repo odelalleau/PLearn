@@ -65,6 +65,7 @@ void HelpCommand::helpOverview()
         "To get help on datasets:                            " + prgname() + " help datasets \n\n" 
         ""
         "Global parameter:\n"
+        "                 --no-progress: don't print progress bar\n"
         "                 --no-version: do not print the version \n"
         "                 --profile: print some profiling information\n"
         "                     Must have been compiled with '-logging=dbg-profile'\n"
@@ -76,6 +77,13 @@ void HelpCommand::helpOverview()
         "                             VLEVEL_NORMAL  // Normal (Default)\n"
         "                             VLEVEL_DBG     // Debug Info\n"
         "                             VLEVEL_EXTREME // Extreme Verbosity\n"
+        "                 --enable-logging module1,module2,module3,...:\n"
+        "                     Option to enable logging for the specified modules,\n"
+        "                     specified a comma-separated list of modules (without spaces).\n"
+        "                     Special keywords __ALL__ and __NONE__ can be specified to log\n"
+        "                     for all modules or no modules respectively."
+        "                 --servers\n"
+        "                 --global-calendars\n"
          << endl;
 }
 
