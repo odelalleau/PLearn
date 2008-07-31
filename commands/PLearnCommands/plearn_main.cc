@@ -50,9 +50,8 @@
 #include <plearn/misc/Calendar.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/vmat/VMat.h>
-#ifdef PL_PROFILE
 #include <plearn/sys/Profiler.h>
-#endif
+
 // From C++ stdlib
 #include <exception>
 
