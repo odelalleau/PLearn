@@ -127,6 +127,9 @@ void Profiler::pl_profile_end(const string& name_of_piece_of_code){
 // call Profiler::activate if PL_PROFILE is set
 void Profiler::pl_profile_activate(){
     Profiler::activate();}
+// call Profiler::disactivate if PL_PROFILE is set
+void Profiler::pl_profile_disactivate(){
+    Profiler::disactivate();}
 // call Profiler::report if PL_PROFILE is set
 void Profiler::pl_profile_report(ostream& out){
     Profiler::report(out);}

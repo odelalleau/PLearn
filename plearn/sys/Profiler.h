@@ -175,6 +175,13 @@ public:
     static inline void pl_profile_activate() {}
 #endif
 
+    //!  call disactivate() if if PL_PROFILE is set
+#if defined(PROFILE) && defined(PL_PROFILE)
+    static void pl_profile_disactivate();
+#else
+    static inline void pl_profile_disactivate() {}
+#endif
+
     //!  call report() if if PL_PROFILE is set
 #if defined(PROFILE) && defined(PL_PROFILE)
     static void pl_profile_report(ostream& out);
