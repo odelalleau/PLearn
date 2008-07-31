@@ -50,6 +50,7 @@
 
 #include <string>
 #include "plexceptions.h"
+#include <cstdarg>
 
 #ifndef __GNUC__
 // Suppress __attribute__(()) GCC extension on other compilers.
