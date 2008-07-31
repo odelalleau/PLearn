@@ -273,7 +273,8 @@ options_choices = [
 
   [ 'numpy', 'numarray' ],
 
-  [ '', 'nolock' ]
+  [ '', 'nolock'],
+  [ '', 'Wno-uninitialized' ],
 
 ]
 
@@ -535,6 +536,7 @@ if platform != 'cygwin':
     pedantic_mode = ' -pedantic -Wno-variadic-macros '
 else:
     pedantic_mode = ' -pedantic '
+
 if platform=='darwin':
     pedantic_mode = ' '
     
@@ -916,9 +918,17 @@ cpp_variables += ['PL_USE_NUMARRAY', 'PL_USE_NUMPY']
 pymakeOption( name = '',
               description = 'dummy option to hide unusual options',
               in_output_dirname = False)
+              
+#On cygwin with gcc 3.3 they generate useless such warning
+pymakeOption( name = 'Wno-uninitialized',
+	      description = 'to remove warning about uninitialized variables',
+	      compileroptions = '-Wno-uninitialized',
+              in_output_dirname = False)
+              
 pymakeOption( name = 'nolock',
               description = 'USE WITH CARE: disable vmatrix lock',
               cpp_definitions = ['DISABLE_VMATRIX_LOCK'])
+
 
 cpp_variables += ['DISABLE_VMATRIX_LOCK']
 
