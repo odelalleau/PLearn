@@ -66,6 +66,8 @@ void HelpCommand::helpOverview()
         ""
         "Global parameter:\n"
         "                 --no-version: do not print the version \n"
+        "                 --profile: print some profiling information\n"
+        "                     Must have been compiled with '-logging=dbg-profile'\n"
         "                 --verbosity LEVEL: The level of log to print.\n"
         "                     Must have been compiled with the same level of more\n"
         "                     Available level:\n"

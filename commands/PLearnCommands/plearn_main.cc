@@ -156,6 +156,11 @@ static string global_options( vector<string>& command_line)
 
     // Note that the findpos function (stringutils.h) returns -1 if the
     // option is not found.
+    int profile_pos       = findpos( command_line, "--profile" );
+    if(profile_pos != -1)
+        Profiler::activate();
+    // Note that the findpos function (stringutils.h) returns -1 if the
+    // option is not found.
     int no_version_pos       = findpos( command_line, "--no-version" );
 
     // If we don't want no progress bars
@@ -243,6 +248,7 @@ static string global_options( vector<string>& command_line)
     for ( int c=0; c < argc; c++ )
         // Neglecting to copy options
         if ( c != no_version_pos             &&
+             c != profile_pos                &&
              c != no_progress_bars           &&
              c != verbosity_pos              &&
              c != verbosity_value_pos        &&
@@ -295,11 +301,6 @@ void plearn_terminate_handler()
 int plearn_main( int argc, char** argv,
                  int major_version, int minor_version, int fixlevel )
 {
-#ifdef PL_PROFILE    
-    Profiler::activate();
-    Profiler::start("Prog");
-#endif
-
     setVersion(major_version, minor_version, fixlevel);
 
     // Establish the terminate handler that's called in situations of
@@ -320,6 +321,7 @@ int plearn_main( int argc, char** argv,
 
         vector<string> command_line = stringvector(argc-1, argv+1);
         string command = global_options(command_line);
+        Profiler::pl_profile_start("Prog");
 
         if ( command == "" )
         {
@@ -350,12 +352,12 @@ int plearn_main( int argc, char** argv,
         EXIT_CODE = 2;
     }
 
-#ifdef PL_PROFILE
-    Profiler::end("Prog");
-    Profiler::disactivate();
-    Profiler::report(cerr);
-    Profiler::reportwall(cerr);
-#endif
+    Profiler::pl_profile_end("Prog");
+    if(Profiler::isActive()){
+        Profiler::pl_profile_disactivate();
+        Profiler::pl_profile_report(cerr);
+        Profiler::pl_profile_reportwall(cerr);
+    }
     return EXIT_CODE;
 }
 
