@@ -69,6 +69,7 @@
 #include <plearn_learners/generic/AddCostToLearner.h>
 #endif
 #include <plearn_learners/regressors/RegressionTree.h>
+#include <plearn_learners/meta/MultiClassAdaBoost.h>
 
 /************
  * Splitter *
@@ -94,8 +95,6 @@
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/VariableDeletionVMatrix.h>
 #include <plearn/vmat/MeanMedianModeImputationVMatrix.h>
-
-#include <plearn_learners/meta/MultiClassAdaBoost.h>
 #include <plearn/vmat/MissingIndicatorVMatrix.h>
 
 
