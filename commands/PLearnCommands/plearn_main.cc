@@ -50,6 +50,7 @@
 #include <plearn/misc/Calendar.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/vmat/VMat.h>
+#include <plearn/sys/Profiler.h>
 
 // From C++ stdlib
 #include <exception>
@@ -58,10 +59,6 @@
 #include <plearn/sys/PLMPI.h>
 #endif
 
-//#define PL_PROFILE
-#ifdef PL_PROFILE
-#include <plearn/sys/Profiler.h>
-#endif
 
 namespace PLearn {
 using namespace std;
