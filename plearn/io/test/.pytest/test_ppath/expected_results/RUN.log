@@ -32,9 +32,11 @@ PPath('foo/bar/') / 'file.cc' == 'foo/bar/file.cc'          True
 
 #####  Methods up and dirname  ############################################
 
-PPath('PL_ROOT:').up()                                      FATAL ERROR: In PPath::up - Cannot go up on directory 'PL_ROOT:'
+PPath('PL_ROOT:').up()                                      FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/io/PPath.cc" at line 931
+In PPath::up - Cannot go up on directory 'PL_ROOT:'
 
-PPath('').up()                                              FATAL ERROR: In PPath::up - Cannot go up on directory ''
+PPath('').up()                                              FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/io/PPath.cc" at line 931
+In PPath::up - Cannot go up on directory ''
 
 PPath('PL_ROOT:foo').up() == 'PL_ROOT:'                     True
 
@@ -76,7 +78,8 @@ PPath('foo/bar.d/hi.').no_extension() == 'foo/bar.d/hi.'    True
 
 PPath('/foo/bar').addProtocol()                             file:/foo/bar
 
-PPath('foo/bar').addProtocol()                              FATAL ERROR: In PPath::addProtocol - A protocol can only be added to an absolute path, and 'foo/bar' is relative
+PPath('foo/bar').addProtocol()                              FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/io/PPath.cc" at line 851
+In PPath::addProtocol - A protocol can only be added to an absolute path, and 'foo/bar' is relative
 
 PPath('file:/foo/bar').removeProtocol()                     PL_ROOT:foo/bar
 
@@ -130,9 +133,11 @@ foo/.bar                                                    foo/.bar
 
 foo./bar                                                    foo./bar
 
-PL_ROOT:..                                                  FATAL ERROR: In PPath::resolveDots - 'PL_ROOT:..' is invalid
+PL_ROOT:..                                                  FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/io/PPath.cc" at line 609
+In PPath::resolveDots - 'PL_ROOT:..' is invalid
 
-PL_ROOT:../foo                                              FATAL ERROR: In PPath::resolveDots - 'PL_ROOT:../foo' is invalid
+PL_ROOT:../foo                                              FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/io/PPath.cc" at line 609
+In PPath::resolveDots - 'PL_ROOT:../foo' is invalid
 
 ../foo                                                      ../foo
 
