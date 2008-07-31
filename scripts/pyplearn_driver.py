@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-__cvs_id__ = "$Id$"
 
-import sys
-import os
-from plearn.pyplearn             import *
+import sys, os
+from plearn.pyplearn import *
 from plearn.pyplearn.plearn_repr import *
+from plearn.utilities import options_dialog
 
 # Add the absolute directory portion of the current script to the path
 sys.path = [os.path.dirname(os.path.abspath(sys.argv[1]))] + sys.path
@@ -13,18 +12,15 @@ pyplearn_file = open(sys.argv[1], 'U')
 lines = pyplearn_file.read()
 pyplearn_file.close()
 
-from plearn.utilities import options_dialog
-orig_verb, orig_logs, gui_namespaces, use_gui= options_dialog.getGuiInfo(sys.argv)
-
-gui_code= """
-from plearn.utilities import options_dialog
-runit, verb, logs= options_dialog.optionsDialog(%s,plargs.expdir,%d,%s,%s)
-"""%(repr(sys.argv[1]),orig_verb,repr(orig_logs),repr(gui_namespaces))
+orig_verb, orig_logs, gui_namespaces, use_gui = options_dialog.getGuiInfo(sys.argv)
 
 if use_gui:
-    lines+= gui_code
+    lines += """
+from plearn.utilities import options_dialog
+runit, verb, logs= options_dialog.optionsDialog(%s,plargs.expdir,%d,%s,%s)
+""" % (repr(sys.argv[1]), orig_verb, repr(orig_logs), repr(gui_namespaces))
 else:
-    lines+= "\nrunit, verb, logs= True, %d, %s\n"%(orig_verb,repr(orig_logs))
+    lines += "\nrunit, verb, logs= True, %d, %s\n" % (orig_verb, repr(orig_logs))
 
 if len(sys.argv) == 3 and sys.argv[2] == '--help':
     # Simply print the docstring of the pyplearn script
