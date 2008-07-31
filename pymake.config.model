@@ -531,7 +531,10 @@ else:
 #-pedantic check for conformity with ISO C
 #plerror.h use variadic macro that is introduced in ISO C99
 #So we add -Wno-variadic-macros to allow this exception to ISO C90
-pedantic_mode = ' -pedantic -Wno-variadic-macros '
+if platform != 'cygwin':
+    pedantic_mode = ' -pedantic -Wno-variadic-macros '
+else:
+    pedantic_mode = ' -pedantic '
 if platform=='darwin':
     pedantic_mode = ' '
     
