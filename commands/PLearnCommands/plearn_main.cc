@@ -50,8 +50,9 @@
 #include <plearn/misc/Calendar.h>
 #include <plearn/misc/PLearnService.h>
 #include <plearn/vmat/VMat.h>
+#ifdef PL_PROFILE
 #include <plearn/sys/Profiler.h>
-
+#endif
 // From C++ stdlib
 #include <exception>
 
@@ -155,7 +156,7 @@ static string global_options( vector<string>& command_line)
     // option is not found.
     int profile_pos       = findpos( command_line, "--profile" );
     if(profile_pos != -1)
-        Profiler::activate();
+        Profiler::pl_profile_activate();
     // Note that the findpos function (stringutils.h) returns -1 if the
     // option is not found.
     int no_version_pos       = findpos( command_line, "--no-version" );
@@ -303,7 +304,8 @@ int plearn_main( int argc, char** argv,
     // Establish the terminate handler that's called in situations of
     // double-fault.
     set_terminate(plearn_terminate_handler);
-    
+
+    vector<string> command_line;
     int EXIT_CODE = 0;
     try {
 
@@ -316,15 +318,16 @@ int plearn_main( int argc, char** argv,
         // set program name
         prgname(argv[0]);
 
-        vector<string> command_line = stringvector(argc-1, argv+1);
+        command_line = stringvector(argc-1, argv+1);
         string command = global_options(command_line);
-        Profiler::pl_profile_start("Prog");
 
         if ( command == "" )
         {
             cerr << "Type '" << prgname() << " help' for help" << endl;
             return 0;
         }
+
+        Profiler::pl_profile_start("Prog");
 
         PLearnCommandRegistry::run(command, command_line);
 #if USING_MPI
@@ -349,8 +352,8 @@ int plearn_main( int argc, char** argv,
         EXIT_CODE = 2;
     }
 
-    Profiler::pl_profile_end("Prog");
-    if(Profiler::isActive()){
+    if(findpos( command_line, "--profile" )!=-1){
+        Profiler::pl_profile_end("Prog");
         Profiler::pl_profile_disactivate();
         Profiler::pl_profile_report(cerr);
         Profiler::pl_profile_reportwall(cerr);
