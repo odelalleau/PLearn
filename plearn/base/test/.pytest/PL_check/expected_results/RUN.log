@@ -1,4 +1,5 @@
-FATAL ERROR: Check failed: ein == stein
+FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/base/plerror.cc" at line 187
+Check failed: ein == stein
 Function: void PLearn::PLCheckTest::perform()
     File: PLCheckTest.cc
     Line: 116
