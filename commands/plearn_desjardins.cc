@@ -65,7 +65,9 @@
 /************
  * PLearner *
  ************/
+#ifndef WIN32
 #include <plearn_learners/generic/AddCostToLearner.h>
+#endif
 #include <plearn_learners/regressors/RegressionTree.h>
 
 /************
