@@ -147,11 +147,8 @@ void AddCostToLearner::declareOptions(OptionList& ol)
         " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
         " - 'train_time': the time spend in the train() function\n"
         " - 'type1_err': SUM[type1_err] will return the number of type 1 error(false positive).\n"
-        "                E[type1_err], will return  type1_err/NNONMISSING\n" 
-        "                you probably want false_positive_rate\n"
+        "                E[type1_err], will return the false positive rate: # false positive/# of positive\n" 
         " - 'type2_err': idem as type1_err but for the type 2 error(false negative)\n" 
-        " - 'false_positive_rate': E[false_positive_rate] return nb of false pos/nb total of neg"
-        " - 'false_negative_rate': E[false_negative_rate] return nb of false neg/nb total of pos"
         " - 'sensitivity': E[sensitivity] return nb true pos/nb total pos"
         " - 'specificity': E[specificity] return nb true neg/nb total ng"
     );
@@ -285,12 +282,6 @@ void AddCostToLearner::build_()
             output_min = 0;
             output_max = 1;
         } else if (c == "type2_err") {
-            output_min = 0;
-            output_max = 1;
-        } else if (c == "false_negative_rate") {
-            output_min = 0;
-            output_max = 1;
-        } else if (c == "false_positive_rate") {
             output_min = 0;
             output_max = 1;
         } else if (c == "sensitivity") {
@@ -631,56 +622,33 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             costs[ind_cost] = train_time;
         } else if (c == "type1_err") {
             //false positive error
+            //faux negatif/(faux negatif+vrai positif)
 #ifdef BOUNDCHECK
             PLASSERT(sub_learner_output.length()==1);
 #endif
             real target=desired_target[0];
             real out=sub_learner_output[0];
-            if( fast_is_equal(target,0) && fast_is_equal(out,1))
-                costs[ind_cost] = 1;
-            else
-                costs[ind_cost] = 0;
+            if(fast_is_equal(target,1)){
+                if (fast_is_equal(out,0))
+                    costs[ind_cost] = 1;
+                else
+                    costs[ind_cost] = 0;
+            }else
+                costs[ind_cost] = MISSING_VALUE;
         } else if (c == "type2_err") {
             //false negative error
+            //faux positif/(faux positif+ vrai negatif)
 #ifdef BOUNDCHECK
             PLASSERT(sub_learner_output.length()==1);
 #endif
             real target=desired_target[0];
             real out=sub_learner_output[0];
-            if( fast_is_equal(target,1) && fast_is_equal(out,0))
-                costs[ind_cost] = 1;
-            else
-                costs[ind_cost] = 0;
-        } else if (c == "false_positive_rate") {
-            //=1 - the specificity
-            //nb of false pos/nb total of neg
-            //should use X[test1.E[false_positive_rate]] to have the real value
-#ifdef BOUNDCHECK
-            PLASSERT(sub_learner_output.length()==1);
-#endif
-            real target=desired_target[0];
-            real out=sub_learner_output[0];
-
-            if( fast_is_equal(target,0) && fast_is_equal(out,1))
-                costs[ind_cost] = 1;                
-            else if( fast_is_equal(target, 0))
-                costs[ind_cost] = 0;
-            else
-                costs[ind_cost] = MISSING_VALUE;
-        } else if (c == "false_negative_rate") {
-            //nb of false neg/nb total of pos
-            //should use X[test1.E[false_nagative_rate]] to have the real value
-#ifdef BOUNDCHECK
-            PLASSERT(sub_learner_output.length()==1);
-#endif
-            real target=desired_target[0];
-            real out=sub_learner_output[0];
-
-             if( fast_is_equal(target,1) && fast_is_equal(out,0))
-                costs[ind_cost] = 1;                
-            else if( fast_is_equal(target, 1))
-                costs[ind_cost] = 0;
-            else
+            if(fast_is_equal(target,0)){
+                if(fast_is_equal(out,1))
+                    costs[ind_cost] = 1;
+                else
+                    costs[ind_cost] = 0;
+            }else
                 costs[ind_cost] = MISSING_VALUE;
         } else if (c == "sensitivity") {
             //nb true pos/(nb true pos + nb false neg)
@@ -796,8 +764,10 @@ void AddCostToLearner::train()
 
     }
     Profiler::end("AddCostToLearner::train");
-    const Profiler::Stats& stats = Profiler::getStats("AddCostToLearner::train");
-    train_time=stats.wall_duration/Profiler::ticksPerSecond();
+    if(Profiler::isActive()){
+        const Profiler::Stats& stats = Profiler::getStats("AddCostToLearner::train");
+        train_time=stats.wall_duration/Profiler::ticksPerSecond();
+    }
 }
 
 ///////////////////////////
