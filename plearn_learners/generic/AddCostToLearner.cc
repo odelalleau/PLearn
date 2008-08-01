@@ -775,7 +775,13 @@ void AddCostToLearner::train()
 ///////////////////////////
 void AddCostToLearner::computeOutputAndCosts(const Vec& input, const Vec& target,
                                              Vec& output, Vec& costs) const {
-    PLearner::computeOutputAndCosts(input, target, output, costs);
+    PLASSERT( learner_ );
+    //done this way to use a possibly optimizer version 
+    //of computeOutputAndCosts from the sub learner as with NatGradNNet
+
+    Vec sub_costs = costs.subVec(0, learner_->nTestCosts());
+    learner_->computeOutputAndCosts(input, target, output, sub_costs);
+    computeCostsFromOutputs(input,output,target,costs,false);
 }
 
 ///////////////////////////
