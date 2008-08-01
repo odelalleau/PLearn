@@ -345,14 +345,27 @@ void MeanMedianModeImputationVMatrix::setMetaDataDir(const PPath& the_metadatadi
   
   PPath train_metadata = train_set->getMetaDataDir();
   PPath mean_median_mode_file_name = train_metadata + "mean_median_mode_file.pmat";
+
+  bool uptodate = train_set->isUpToDate(mean_median_mode_file_name,false)
+    && source->isUpToDate(mean_median_mode_file_name,false);
+
   train_set->lockMetaDataDir();
-  if (!train_set->isUpToDate(mean_median_mode_file_name,false)
-      ||!source->isUpToDate(mean_median_mode_file_name,false))
-    {
-      computeMeanMedianModeVectors();
-      createMeanMedianModeFile(mean_median_mode_file_name);
-    }
-  else loadMeanMedianModeFile(mean_median_mode_file_name);
+  try{
+    if (!uptodate)
+      {
+	computeMeanMedianModeVectors();
+	createMeanMedianModeFile(mean_median_mode_file_name);
+      }
+    else loadMeanMedianModeFile(mean_median_mode_file_name);
+  }catch(const PLearnError& e){
+    train_set->unlockMetaDataDir();
+
+    //we erase the file if we are creating it
+    // as it can be partilly saved.
+    if(!uptodate && isfile(mean_median_mode_file_name))
+      rm(mean_median_mode_file_name);
+    throw e;
+  }
   train_set->unlockMetaDataDir();
 }
 
@@ -369,6 +382,8 @@ void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
     train_set->isUpToDate(file_name,true,true);
 
     mean_median_mode_file = new FileVMatrix(file_name);
+    compatibleSizeError(mean_median_mode_file);
+    PLCHECK(mean_median_mode_file->fieldNames()==fieldNames());
     mean_median_mode_file->getRow(0, variable_mean);
     mean_median_mode_file->getRow(1, variable_median);
     mean_median_mode_file->getRow(2, variable_mode);
