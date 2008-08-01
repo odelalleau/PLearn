@@ -372,6 +372,7 @@ void MeanMedianModeImputationVMatrix::setMetaDataDir(const PPath& the_metadatadi
 void MeanMedianModeImputationVMatrix::createMeanMedianModeFile(PPath file_name)
 {
     mean_median_mode_file = new FileVMatrix(file_name, 3, train_field_names);
+    mean_median_mode_file->setMetaInfoFrom(this);
     mean_median_mode_file->putRow(0, variable_mean);
     mean_median_mode_file->putRow(1, variable_median);
     mean_median_mode_file->putRow(2, variable_mode);
