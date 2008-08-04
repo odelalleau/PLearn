@@ -147,6 +147,33 @@ void TextFilesVMatrix::buildIdx()
             int pos = int(pos_long);
             if(!fgets(buf, sizeof(buf), f))
                 break;
+
+#ifdef 0 //__CYGWIN__
+            // Bugfix for CYGWIN carriage return bug.
+            long new_pos = ftell(f);
+            long lbuf = long(strlen(buf));
+            if (lbuf+pos != new_pos)
+                if(lbuf+1+pos==new_pos && buf[lbuf-1]=='\n' && buf[lbuf-2]!='\r')
+                {
+                    //bug under windows. fgets return the good string if unix end of lines, but
+                    //change the position suppossing the use of \r\n as carrige return.
+                    //So if their is only a \n, we are a caractere too far.
+                    //if dos end of lines, return \n as end of lines in the strings and put the pos correctly.
+                    
+                    fseek(f,-1,SEEK_CUR);
+                    
+		    //if unix end of lines
+                    if(fgetc(f)!='\n')
+                    	fseek(f,-1,SEEK_CUR);
+                }
+                //in the eof case?
+                else if(lbuf-1+pos==new_pos && buf[lbuf-1]=='\n' && buf[lbuf-2]!='\r')
+                    fseek(f,+1,SEEK_CUR);
+                else
+                    PLERROR("In TextFilesVMatrix::buildId - The number of characters read "
+                            "does not match the position in the file.");
+#endif
+
             buf[sizeof(buf)-1] = '\0';         // ensure null-terminated
             lineno++;
             if(nskip>0)
