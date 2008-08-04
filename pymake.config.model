@@ -276,7 +276,7 @@ options_choices = [
   [ '', 'nolock'],
   [ '', 'Wno-uninitialized' ],
   [ '', 'march=native'],
-  [ '', 'cygwin_fgets_bugfix'],
+  [ '', 'cygwin-fgets-bugfix'],
 ]
 
 ### Using Python code snippets in C++ code
@@ -934,7 +934,7 @@ pymakeOption( name = 'march=native',
               description = 'add the compiler option -march=native',
               compileroptions = '-march=native')
 
-pymakeOption( name = 'cygwin_fgets_bugfix',
+pymakeOption( name = 'cygwin-fgets-bugfix',
               description = 'add the cpp definition CYGWIN_FGETS_BUGFIX',
               cpp_definitions = ['CYGWIN_FGETS_BUGFIX'])
 
