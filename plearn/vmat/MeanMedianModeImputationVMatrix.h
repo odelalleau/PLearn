@@ -73,19 +73,6 @@ public:
   //! Pairs of instruction of the form field_name : mean | median | mode | none.
   TVec< pair<string, string> >  imputation_spec;
   
-  //! The vector of variable means observed from the train set.
-  Vec                           variable_mean;
-  
-  //! The vector of variable medians observed from the train set.
-  Vec                           variable_median;
-  
-  //! The vector of variable modes observed from the train set.
-  Vec                           variable_mode;
-  
-  //! The vector of coded instruction for each variables.
-  TVec<int>                     variable_imputation_instruction;
-  
-
                         MeanMedianModeImputationVMatrix();
   virtual               ~MeanMedianModeImputationVMatrix();
 
@@ -105,6 +92,19 @@ private:
   TVec<string>         train_field_names;
   VMat                 mean_median_mode_file;
 
+
+  //! The vector of variable means observed from the train set.
+  Vec                           variable_mean;
+  
+  //! The vector of variable medians observed from the train set.
+  Vec                           variable_median;
+  
+  //! The vector of variable modes observed from the train set.
+  Vec                           variable_mode;
+  
+  //! The vector of coded instruction for each variables.
+  TVec<int>                     variable_imputation_instruction;
+  
           void         build_();
   virtual void setMetaDataDir(const PPath& the_metadatadir);
           void         createMeanMedianModeFile(PPath file_name); 
