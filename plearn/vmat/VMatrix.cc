@@ -158,7 +158,8 @@ void VMatrix::declareOptions(OptionList & ol)
         ol, "mtime", &VMatrix::mtime_update, 
         OptionBase::buildoption|OptionBase::nosave,
         "DO NOT play with this if you don't know the implementation!\n"
-        "This add a dependency mtime to the gived value.");
+        "This add a dependency mtime to the gived value.\n"
+        " -1 or "+tostring(numeric_limits<time_t>::max())+" set permannetly that we don't know the mtime.");
 
     declareOption(
         ol, "fieldinfos", &VMatrix::fieldinfos, OptionBase::buildoption,
@@ -532,7 +533,9 @@ void VMatrix::build_()
 {
     if(!metadatadir.isEmpty())
         setMetaDataDir(metadatadir); // make sure we perform all necessary operations
-    if(mtime_update!=0)
+    if(mtime_update == time_t(-1))
+        updateMtime(0);
+    else if(mtime_update!=0)
         updateMtime(mtime_update);
 }
 
