@@ -148,8 +148,9 @@ void TextFilesVMatrix::buildIdx()
             if(!fgets(buf, sizeof(buf), f))
                 break;
 
-#ifdef 0 //__CYGWIN__
+#ifdef CYGWIN_FGETS_BUGFIX
             // Bugfix for CYGWIN carriage return bug.
+            // Should be safe to enable in all case, but need to be tester more widely.
             long new_pos = ftell(f);
             long lbuf = long(strlen(buf));
             if (lbuf+pos != new_pos)

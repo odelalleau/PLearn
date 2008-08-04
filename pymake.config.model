@@ -275,7 +275,8 @@ options_choices = [
 
   [ '', 'nolock'],
   [ '', 'Wno-uninitialized' ],
-
+  [ '', 'march=native'],
+  [ '', 'cygwin_fgets_bugfix'],
 ]
 
 ### Using Python code snippets in C++ code
@@ -929,8 +930,15 @@ pymakeOption( name = 'nolock',
               description = 'USE WITH CARE: disable vmatrix lock',
               cpp_definitions = ['DISABLE_VMATRIX_LOCK'])
 
+pymakeOption( name = 'march=native',
+              description = 'add the compiler option -march=native',
+              compileroptions = '-march=native')
 
-cpp_variables += ['DISABLE_VMATRIX_LOCK']
+pymakeOption( name = 'cygwin_fgets_bugfix',
+              description = 'add the cpp definition CYGWIN_FGETS_BUGFIX',
+              cpp_definitions = ['CYGWIN_FGETS_BUGFIX'])
+
+cpp_variables += ['DISABLE_VMATRIX_LOCK', 'CYGWIN_FGETS_BUGFIX']
 
 
 #####  Network Setup  #######################################################
