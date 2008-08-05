@@ -354,7 +354,7 @@ void PseudolikelihoodRBM::build_layers_and_connections()
         if( n_classes <= 1 )
             PLERROR("In PseudolikelihoodRBM::build_layers_and_connections(): "
                     "n_classes should be > 1");
-        if( target_layer->size != n_classes )
+        if( !target_layer || target_layer->size != n_classes )
         {
             target_layer = new RBMMultinomialLayer();
             target_layer->size = n_classes;
@@ -363,7 +363,8 @@ void PseudolikelihoodRBM::build_layers_and_connections()
             target_layer->forget();
         }
         
-        if( target_connection->up_size != hidden_layer->size ||
+        if( !target_connection || 
+            target_connection->up_size != hidden_layer->size ||
             target_connection->down_size != target_layer->size )
         {
             target_connection = new RBMMatrixConnection(); 
@@ -376,7 +377,7 @@ void PseudolikelihoodRBM::build_layers_and_connections()
     }
     else if ( targetsize() > 1 )
     {
-        if( target_layer->size != targetsize() )
+        if( !target_layer || target_layer->size != targetsize() )
         {
             target_layer = new RBMBinomialLayer();
             target_layer->size = targetsize();
@@ -385,7 +386,8 @@ void PseudolikelihoodRBM::build_layers_and_connections()
             target_layer->forget();
         }
         
-        if( target_connection->up_size != hidden_layer->size ||
+        if( !target_connection || 
+            target_connection->up_size != hidden_layer->size ||
             target_connection->down_size != target_layer->size )
         {
             target_connection = new RBMMatrixConnection(); 
@@ -716,6 +718,7 @@ void PseudolikelihoodRBM::train()
                 hidden_activation_gradient += hidden_activation_pos_i_gradient;
 
                 // Update target connections
+                w = &(target_connection->weights(0,i));
                 for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
                     *w -= learning_rate * hidden_activation_pos_i_gradient[j];
             }
@@ -743,12 +746,16 @@ void PseudolikelihoodRBM::train()
             PLERROR("NNNNNNNNNNOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!!!!!!!");
         }
 
-        if( !fast_is_equal(learning_rate, 0.) )
+        if( !fast_is_equal(learning_rate, 0.) &&
+            (targetsize() == 0 || generative_learning_weight > 0) )
         {
             if( decrease_ct != 0 )
                 lr = learning_rate / (1.0 + stage * decrease_ct );
             else
                 lr = learning_rate;
+
+            if( targetsize() > 0 )
+                lr *= generative_learning_weight;
 
             setLearningRate(lr);
 
@@ -863,9 +870,6 @@ void PseudolikelihoodRBM::train()
 
                 externalProductAcc( connection_gradient, hidden_activation_gradient,
                                     input );
-
-                if( targetsize() > 0 )
-                    lr *= generative_learning_weight;
 
                 // Hidden bias update
                 multiplyScaledAdd(hidden_activation_gradient, 1.0, -lr,
@@ -1343,8 +1347,6 @@ void PseudolikelihoodRBM::train()
 
                 externalProductAcc( connection_gradient, hidden_activation_gradient,
                                     input );
-                if( targetsize() > 0 )
-                    lr *= generative_learning_weight;
 
                 // Hidden bias update
                 multiplyScaledAdd(hidden_activation_gradient, 1.0, -lr,
@@ -1375,7 +1377,8 @@ void PseudolikelihoodRBM::train()
         }
             
         // CD learning
-        if( !fast_is_equal(cd_learning_rate, 0.) )
+        if( !fast_is_equal(cd_learning_rate, 0.) &&
+            (targetsize() == 0 || generative_learning_weight > 0) )
         {
 
             if( !fast_is_equal(persistent_cd_weight, 1.) )
@@ -1598,7 +1601,8 @@ void PseudolikelihoodRBM::train()
             }
         }
         
-        if( !fast_is_equal(denoising_learning_rate, 0.) )
+        if( !fast_is_equal(denoising_learning_rate, 0.) &&
+            (targetsize() == 0 || generative_learning_weight > 0) )
         {
             if( denoising_decrease_ct != 0 )
                 lr = denoising_learning_rate / 
@@ -1719,10 +1723,40 @@ void PseudolikelihoodRBM::train()
 void PseudolikelihoodRBM::computeOutput(const Vec& input, Vec& output) const
 {
     // Compute the output from the input.
-    if( n_classes > 1 )
+    if( targetsize() == 1 )
     {
         // Get output probabilities
-        PLERROR("n_classes > 1 not implemented yet");
+        connection->setAsDownInput( input );
+        hidden_layer->getAllActivations( 
+            (RBMMatrixConnection*) connection );
+        
+        Vec target_act = target_layer->activation;
+        Vec hidden_act = hidden_layer->activation;
+        for( int i=0 ; i<target_layer->size ; i++ )
+        {
+            target_act[i] = target_layer->bias[i];
+            // LATERAL CONNECTIONS CODE HERE!!
+            real *w = &(target_connection->weights(0,i));
+            // step from one row to the next in weights matrix
+            int m = target_connection->weights.mod();                
+            
+            for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
+            {
+                // *w = weights(j,i)
+                hidden_activation_pos_i[j] = hidden_act[j] + *w;
+            }
+            target_act[i] -= hidden_layer->freeEnergyContribution(
+                hidden_activation_pos_i);
+        }
+        
+        target_layer->expectation_is_up_to_date = false;
+        target_layer->computeExpectation();
+        output << target_layer->expectation;
+    }
+    else if(targetsize() > 1 )
+    {
+        PLERROR("In PseudolikelihoodRBM::computeOutput(): not implemented yet for\n"
+                "targetsize() > 1");
     }
     else
     {
@@ -1745,11 +1779,16 @@ void PseudolikelihoodRBM::computeCostsFromOutputs(const Vec& input,
     costs.resize( cost_names.length() );
     costs.fill( MISSING_VALUE );
 
-    if( n_classes > 1 )
+    if( targetsize() == 1 )
     {
         costs[class_cost_index] =
             (argmax(output) == (int) round(target[0]))? 0 : 1;
         costs[nll_cost_index] = -pl_log(output[(int) round(target[0])]);
+    }
+    else if( targetsize() > 1 )
+    {
+        PLERROR("In PseudolikelihoodRBM::computeCostsFromOutputs(): not implemented yet for\n"
+                "targetsize() > 1");
     }
     else
     {        
