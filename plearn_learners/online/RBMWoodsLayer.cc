@@ -1068,27 +1068,27 @@ real RBMWoodsLayer::freeEnergyContribution(const Vec& unit_activations)
             leaf_activation = unit_activations[offset+n];
             // Add free energy of tree with activated leaf
             if( n == 0)
-                tree_free_energy = -tree_energy + leaf_activation;
+                tree_free_energy = tree_energy - leaf_activation;
             else
-                tree_free_energy = logadd( -tree_energy + leaf_activation, 
-                                           tree_free_energy );
+                tree_free_energy = -logadd( -tree_energy + leaf_activation, 
+                                            -tree_free_energy );
             tree_energies[offset+t+n] = tree_energy - leaf_activation;
 
             // Add free_energy of tree with inactivated leaf
             if( use_signed_samples )
             {
-                tree_free_energy = logadd( -tree_energy - leaf_activation, 
-                                           tree_free_energy );
+                tree_free_energy = -logadd( -tree_energy - leaf_activation, 
+                                            -tree_free_energy );
                 tree_energies[offset+t+n+1] = tree_energy + leaf_activation;
             }
             else
             {
-                tree_free_energy = logadd( -tree_energy, tree_free_energy );
+                tree_free_energy = -logadd( -tree_energy, -tree_free_energy );
                 tree_energies[offset+t+n+1] = tree_energy;
             }
         }
-        tree_free_energies[t] = -tree_free_energy;
-        result -= tree_free_energy;
+        tree_free_energies[t] = tree_free_energy;
+        result += tree_free_energy;
         offset += n_nodes_per_tree;
     }
     return result;
@@ -1114,6 +1114,12 @@ void RBMWoodsLayer::freeEnergyContributionGradient(
     real tree_energy_gradient = 0;
     real tree_energy_leaf_on_gradient = 0;
     real tree_energy_leaf_off_gradient = 0;
+
+    // Fills in the internal variables tree_energies and tree_free_energies.
+    // I have to do this because I can't assume the last time freeEnergyContribution was
+    // called was with the same unit_activations...
+    freeEnergyContribution(unit_activations);
+
     for( int t = 0; t<n_trees; t++ )
     {
         for( int n = 0; n < n_nodes_per_tree; n = n+2 ) // Looking only at leaves
