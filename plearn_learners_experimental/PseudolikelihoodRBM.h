@@ -135,7 +135,7 @@ public:
     real generative_learning_weight;
 
     //! The binomial input layer of the RBM
-    PP<RBMBinomialLayer> input_layer;
+    PP<RBMLayer> input_layer;
 
     //! The hidden layer of the RBM
     PP<RBMLayer> hidden_layer;

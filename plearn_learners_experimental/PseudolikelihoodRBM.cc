@@ -95,7 +95,10 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
 {
     declareOption(ol, "learning_rate", &PseudolikelihoodRBM::learning_rate,
                   OptionBase::buildoption,
-                  "The learning rate used for pseudolikelihood training.\n");
+                  "The learning rate used for pseudolikelihood training.\n"
+                  "Pseudolikelihood training assumes input_layer is a\n"
+                  "RBMBinomialLayer. It will work even if it isn't,\n"
+                  "but training won't be appropriate.\n");
 
     declareOption(ol, "decrease_ct", &PseudolikelihoodRBM::decrease_ct,
                   OptionBase::buildoption,
