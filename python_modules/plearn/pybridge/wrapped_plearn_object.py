@@ -101,9 +101,9 @@ class WrappedPLearnObject(object):
         if attr in self._optionnames:
             return self.getOption(attr)
         else:
-            raise AttributeError, ("no attribute "
-                                   + attr + " in "
-                                   + repr(self))
+            raise AttributeError("no attribute "
+                                 + attr + " in "
+                                 + repr(self))
         
     def __del__(self):
         if hasattr(self, '_cptr'):

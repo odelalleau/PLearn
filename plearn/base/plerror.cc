@@ -64,7 +64,7 @@ void errormsg2(const char* filename,const int linenumber,const char* msg, ...){
     
     snprintf(message, ERROR_MSG_SIZE, "In file: \"%s\" at line %d\n", filename, linenumber);
     PLASSERT(ERROR_MSG_SIZE>=strlen(message)+strlen(msg));
-    strcat(message,msg);
+    strncat(message,msg,ERROR_MSG_SIZE);
     verrormsg(message, args);
 
     va_end(args);
