@@ -1505,7 +1505,9 @@ void VMatrix::loadStringMapping(int col)
         return;
     PPath fname = getSFIFFilename(col,".smap");
     init_map_sr();
-    force_mkdir( getSFIFDirectory() );
+    string SFIFdir= getSFIFDirectory();
+    if(!pathexists(SFIFdir))
+        force_mkdir(SFIFdir);
     if(!isfile(fname))
         return;
 
