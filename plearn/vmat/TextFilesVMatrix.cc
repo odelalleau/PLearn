@@ -370,17 +370,18 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 void TextFilesVMatrix::build_()
 {
     if (metadatapath != "") {
-        PLWARNING("In TextFilesVMatrix::build_: metadatapath option is deprecated. "
+        PLWARNING("In TextFilesVMatrix::build_() metadatapath option is deprecated. "
                   "You should use metadatadir instead.\n");
 
         metadatadir = metadatapath;
         setMetaDataDir(metadatapath);
     }
     if (!default_spec.empty() && !reorder_fieldspec_from_headers)
-        PLERROR("In TextFilesVMatrix::build_: when the option default_spec is used, reorder_fieldspec_from_headers must be true");
-    
+        PLERROR("In TextFilesVMatrix::build_() when the option default_spec is used, reorder_fieldspec_from_headers must be true");
+    if(getMetaDataDir().empty())
+        PLERROR("In TextFilesVMatrix::build_() We need a metadatadir");
     if(!force_mkdir(getMetaDataDir()))
-        PLERROR("In TextFilesVMatrix::build_: could not create directory '%s'",
+        PLERROR("In TextFilesVMatrix::build_() could not create directory '%s'",
                 getMetaDataDir().absolute().c_str());
     
     for(int i=0;i<txtfilenames.length();i++)
@@ -616,7 +617,7 @@ TVec<string> TextFilesVMatrix::getTextFields(int i) const
     string rowi = getTextRow(i);
     TVec<string> fields =  splitIntoFields(rowi);
     if(fields.size() != fieldspec.size())
-        PLERROR("In TextFilesVMatrix::getMapping - In getting fields of row %d, wrong number of fields: %d (should be %d):\n%s\n",i,fields.size(),fieldspec.size(),rowi.c_str());
+        PLERROR("In TextFilesVMatrix::getTextFields - In getting fields of row %d, wrong number of fields: %d (should be %d):\n%s\n",i,fields.size(),fieldspec.size(),rowi.c_str());
     for(int k=0; k<fields.size(); k++)
         fields[k] = removeblanks(fields[k]);
     return fields;
