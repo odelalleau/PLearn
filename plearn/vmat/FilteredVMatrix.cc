@@ -130,21 +130,29 @@ void FilteredVMatrix::openIndex()
                 "directory %s", getMetaDataDir().absolute().c_str());
 
     lockMetaDataDir();
-    if(isUpToDate(idxfname))
-        indexes.open(idxfname.absolute());
-    else  // let's (re)create the index
-    {
-        computeFilteredIndices();
-        rm(idxfname);       // force remove it
-        indexes.open(idxfname.absolute(), true);
-        for (int i = 0; i < mem_indices.length(); i++)
-            indexes.append(mem_indices[i]);
-        indexes.close();
-        indexes.open(idxfname.absolute());
-        mem_indices = TVec<int>();  // Free memory.
+    try{
+        if(isUpToDate(idxfname))
+            indexes.open(idxfname.absolute());
+        else  // let's (re)create the index
+        {
+            computeFilteredIndices();
+            rm(idxfname);       // force remove it
+            indexes.open(idxfname.absolute(), true);
+            for (int i = 0; i < mem_indices.length(); i++)
+                indexes.append(mem_indices[i]);
+            indexes.close();
+            indexes.open(idxfname.absolute());
+            mem_indices = TVec<int>();  // Free memory.
+        }
+    }catch(const PLearnError& e){
+        unlockMetaDataDir();
+        //we erase the file if we are creating it
+        // as it can be partilly saved.
+        if(!isUpToDate(idxfname) && isfile(idxfname))
+            rm(idxfname);
+        throw e;
     }
     unlockMetaDataDir();
-
     length_ = indexes.length();
 }
 
