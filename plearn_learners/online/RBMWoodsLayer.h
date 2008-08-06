@@ -179,7 +179,11 @@ protected:
     // Temporary computations, for freeEnergyContribution() and its gradient variant
     mutable Vec tree_free_energies;
     mutable Vec tree_energies;
-
+    mutable Vec unit_activations_pos_gradient;
+    mutable Vec unit_activations_neg_gradient;
+    mutable TVec<bool> unit_activations_pos_gradient_init;
+    mutable TVec<bool> unit_activations_neg_gradient_init;
+    
 protected:
     //#####  Protected Member Functions  ######################################
 

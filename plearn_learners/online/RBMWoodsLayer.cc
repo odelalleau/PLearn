@@ -1120,6 +1120,16 @@ void RBMWoodsLayer::freeEnergyContributionGradient(
     // called was with the same unit_activations...
     freeEnergyContribution(unit_activations);
 
+    unit_activations_neg_gradient.resize(size);
+    unit_activations_neg_gradient_init.resize(size);
+    unit_activations_neg_gradient_init.fill(false);
+    if( use_signed_samples )
+    {
+        unit_activations_pos_gradient.resize(size);
+        unit_activations_pos_gradient_init.resize(size);
+        unit_activations_pos_gradient_init.fill(false);
+    }
+
     for( int t = 0; t<n_trees; t++ )
     {
         for( int n = 0; n < n_nodes_per_tree; n = n+2 ) // Looking only at leaves
@@ -1127,19 +1137,27 @@ void RBMWoodsLayer::freeEnergyContributionGradient(
             // Computation energy of tree
             tree_energy = 0;
             sub_tree_size = n_nodes_per_tree / 2;
-            sub_root = sub_tree_size;            
-            tree_energy_leaf_on_gradient = output_gradient * 
-                safeexp(-tree_energies[offset+t+n] + tree_free_energies[t]);
-            tree_energy_leaf_off_gradient = output_gradient * 
-                safeexp(-tree_energies[offset+t+n+1] + tree_free_energies[t]);
-            tree_energy_gradient = tree_energy_leaf_on_gradient + 
-                tree_energy_leaf_off_gradient;
+            sub_root = sub_tree_size;
+            // First do things on log-scale
+            tree_energy_leaf_on_gradient = -tree_energies[offset+t+n] + tree_free_energies[t];
+            tree_energy_leaf_off_gradient = -tree_energies[offset+t+n+1] + tree_free_energies[t];
+            tree_energy_gradient = logadd(tree_energy_leaf_on_gradient,
+                                          tree_energy_leaf_off_gradient);
             for( int d=0; d<tree_depth-1; d++ )
             {
                 if( n < sub_root )
                 {
-                    unit_activations_gradient[offset+sub_root] -= 
-                        tree_energy_gradient;
+                    if( unit_activations_neg_gradient_init[offset+sub_root] )
+                        unit_activations_neg_gradient[offset+sub_root] = 
+                            logadd(tree_energy_gradient,
+                                   unit_activations_neg_gradient[offset+sub_root]);
+                    else
+                    {
+                        unit_activations_neg_gradient[offset+sub_root] = 
+                            tree_energy_gradient;
+                        unit_activations_neg_gradient_init[offset+sub_root] = true;
+                    }
+                        
                     sub_tree_size /= 2;
                     sub_root -= sub_tree_size + 1;
                 }
@@ -1147,21 +1165,44 @@ void RBMWoodsLayer::freeEnergyContributionGradient(
                 {
                     if( use_signed_samples )
                     {
-                        unit_activations_gradient[offset+sub_root] += 
-                            tree_energy_gradient;
+                        if( unit_activations_pos_gradient_init[offset+sub_root] )
+                            unit_activations_pos_gradient[offset+sub_root] = 
+                                logadd(tree_energy_gradient,
+                                       unit_activations_pos_gradient[offset+sub_root]);
+                        else
+                        {
+                            unit_activations_pos_gradient[offset+sub_root] = 
+                                tree_energy_gradient;
+                            unit_activations_pos_gradient_init[offset+sub_root] = true;
+                        }
                     }
                     sub_tree_size /= 2;
                     sub_root += sub_tree_size+1;
                 }
             }
             
-            unit_activations_gradient[offset+n] -= tree_energy_leaf_on_gradient;
+            unit_activations_neg_gradient[offset+n] = 
+                tree_energy_leaf_on_gradient;
+            unit_activations_neg_gradient_init[offset+n] = true;
 
             if( use_signed_samples )
-                unit_activations_gradient[offset+n] += tree_energy_leaf_off_gradient;
+            {
+                unit_activations_pos_gradient[offset+n] = 
+                    tree_energy_leaf_off_gradient;
+                unit_activations_pos_gradient_init[offset+n] = true;
+            }
         }
         offset += n_nodes_per_tree;
     }
+
+    // Go back to linear-scale
+    for(int i=0; i<size; i++)
+        unit_activations_gradient[i] -= output_gradient * safeexp( unit_activations_neg_gradient[i] );
+
+    if( use_signed_samples )
+        for(int i=0; i<size; i++)
+            unit_activations_gradient[i] += output_gradient * 
+                safeexp( unit_activations_pos_gradient[i] );
 }
 
 int RBMWoodsLayer::getConfigurationCount()
