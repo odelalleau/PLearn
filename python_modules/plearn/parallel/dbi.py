@@ -687,6 +687,7 @@ class DBICondor(DBIBase):
         self.redirect_stderr_to_stdout = False
         self.env = ''
         self.os = ''
+        self.base_tasks_log_file = []
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
@@ -885,9 +886,19 @@ class DBICondor(DBIBase):
             for i in condor_datas:
                 condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
         else:
-            for task in self.tasks:
-                argstring = condor_escape_argument(' ; '.join(task.commands))
-                condor_dat.write("arguments      = %s \nqueue\n" % argstring)
+            if self.base_tasks_log_file:
+                for (task,task_log) in zip(self.tasks,self.base_tasks_log_file):
+                    argstring =condor_escape_argument(' ; '.join(task.commands))
+                    stdout_file=self.log_dir+"/condor."+task_log+".out"
+                    stderr_file=self.log_dir+"/condor."+task_log+".err"
+
+                    condor_dat.write("arguments    = %s \n" %argstring)
+                    condor_dat.write("output       = %s \n" %stdout_file)
+                    condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+            else:
+                for task in self.tasks:
+                    argstring =condor_escape_argument(' ; '.join(task.commands))
+                    condor_dat.write("arguments      = %s \nqueue\n" %argstring)
         condor_dat.close()
 
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'

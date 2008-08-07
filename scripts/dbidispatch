@@ -10,8 +10,14 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor|--bqtools
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
     all except condor options:[--[*no_]nb_proc=N]
     cluster, condor options  : [--32|--64|--3264] [--os=X] [--mem=N]
-    condor option            : [--req="CONDOR_REQUIREMENT"] [--[*no_]nice] [--[*no_]getenv] [*--[no_]prefserver] [--rank=RANK_EXPRESSION] [--files=file1[,file2...]] [--env=VAR=VALUE[;VAR2=VALUE2]][--raw=CONDOR_EXPRESSION]
-    cluster option           : [*--[no_]cwait]  [--[*no_]force] [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
+    condor option            : [--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
+                               [--[*no_]getenv] [*--[no_]prefserver] 
+                               [--rank=RANK_EXPRESSION] 
+                               [--files=file1[,file2...]]
+                               [--env=VAR=VALUE[;VAR2=VALUE2]]
+                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,nb0,nb1}]
+    cluster option           : [*--[no_]cwait]  [--[*no_]force]
+                               [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
 An * after '[' signals the default value.
 '''
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
@@ -88,6 +94,12 @@ condor only options:
   The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
   If the CONDOR_HOME environment variable is set, then the HOME variable will
      be set to this value for jobs submitted to condor.
+  The '--tasks_filename={compact,explicit,nb0,nb1}' option will change the filename where the stdout,stderr are redirected. They have this patter condor.X.{out,error} where X=:
+      - default : same as nb0
+      - compact : will be a unic string with parameter that change of value between jobs
+      - explicit: will be a unic string that represent the full command to execute
+      - nb0     : a number from 0 to nb job -1.
+      - nb1     : a number from 1 to nb job.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -132,6 +144,7 @@ if len(sys.argv) == 1:
 FILE = ""
 dbi_param={}
 testmode=False
+tasks_filename=""
 
 PATH=os.getenv('PATH')
 if search_file('condor_submit',PATH):
@@ -180,6 +193,13 @@ for argv in to_parse:
         if len(argv)>7:
             assert(argv[7]=="=")
             dbi_param["micro"]=argv[8:]
+    elif argv.startswith("--tasks_filename="):
+        part = argv.split('=',1)
+        accepted_value=["compact","explicit","nb0","nb1"]
+        if part[1] not in accepted_value:
+            print "The option '"+argv+"' have an invalid value. possible value are:", accepted_value
+            sys.exit(2)
+        tasks_filename = part[1]
     elif argv in  ["--force", "--interruptible", "--long", 
                    "--getenv", "--cwait", "--clean_up" ,"--nice"]:
         dbi_param[argv[2:]]=True
@@ -285,8 +305,7 @@ def generate_combination(repl):
             if res1 == []:
                 res.append(y)
             else:
-                for r in res1:
-                    res.append(y+" "+r)
+                res.extend([y+" "+r for r in res1])
         return res
 
 def generate_commands(sp):
@@ -305,19 +324,24 @@ def generate_commands(sp):
         else:
             repl.append([arg])
     argscombination = generate_combination(repl)
-    return argscombination
+    args_modif = generate_combination([x for x in repl if len(x)>1])
+
+    return (argscombination,args_modif)
 
 #generate the command
 if FILE != "":
     FD = open(FILE,'r')#|| die "couldn't open the file $FILE!";
     commands=[]
+    choise_args = []
     for line in FD.readlines():
         line = line.rstrip()
         sp = line.split(" ")
-        commands+=generate_commands(sp)
+        (t1,t2)=generate_commands(sp)
+        commands+=t1
+        choise_args+=t2
     FD.close
 else:
-    commands=generate_commands(command_argv)
+    (commands,choise_args)=generate_commands(command_argv)
 
 if FILE == "":
     t = [x for x in sys.argv[1:] if not x[:2]=="--"]
@@ -330,6 +354,19 @@ if FILE == "":
     tmp+='_'+str(datetime.datetime.now()).replace(' ','_')
     dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
+    if tasks_filename == "explicit":
+        dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands]
+    elif tasks_filename == "compact":
+        dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args]
+    elif tasks_filename == "nb0":
+        dbi_param["base_tasks_log_file"]=map(str,range(len(commands)))
+    elif tasks_filename == "nb1":
+        dbi_param["base_tasks_log_file"]=map(str,range(1,len(commands)+1))
+    elif tasks_filename == "":
+        pass
+    else:
+        print "internal ERROR!"
+        sys.exit(2)
 else:
     dbi_param["log_dir"]=os.path.join(LOGDIR,FILE)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
