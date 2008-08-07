@@ -287,6 +287,9 @@ void Object::readOptionVal(PStream &in, const string &optionname, unsigned int i
     }
 
     // There are bigger problems in the world but still it isn't always funny
+    if(optionname.empty())
+        PLERROR("There is no option named \"%s\" in a \"%s\". Meaby we forget an ')'?",
+                optionname.c_str(),classname().c_str());
     PLERROR("There is no option named \"%s\" in a \"%s\"",
             optionname.c_str(),classname().c_str());
 }
@@ -575,6 +578,17 @@ void Object::newwrite(PStream& out) const
         out.remote_plearn_comm?
         getOptionsToRemoteTransmit():
         getOptionsToSave());
+
+    //we swap the VMatrix option at the end for better lisibility of the file
+    for(size_t i =0; i<optnames.size() - 1 ;i++)
+    {
+        if("source"==optnames[i] || "vm"==optnames[i])
+        {
+            string tmp = optnames[i];
+            optnames[i] = optnames.back();
+            optnames.back() = tmp;
+        }
+    }
 
     out.write(classname());
     out.write("(\n");
