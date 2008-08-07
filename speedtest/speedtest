@@ -1,7 +1,7 @@
 #!/bin/bash
 #nb experience executed=size(PROGEXT)*size(SIZE)
 BP=$1 #BASEPROG
-if [ "x$SIZE" == "x" -o "x$TITLE" == "x" -o "x$RESFILE" == "x" -o "x$APPENDRESULT" == "x" ]; then
+if [ "x$SIZE" == "x" -o "x$TITLE" == "x" -o "x$RESFILE" == "x" ]; then
     echo "You should not call '$0' directly! See speedtest.general on how to call this script!"
     exit
 fi
@@ -20,7 +20,7 @@ if [ "$1" == "" ];then
 else
     for p in "${@}"
       do
-      PROG=( "${PROG[@]}" "${BP}${p/\ /_}" )
+      PROG=( "${PROG[@]}" "${BP}${p//\ /_}" )
     done
 fi
 
@@ -52,10 +52,8 @@ touch ${DATAFILE}
 touch ${LOGFILE}
 touch $PLOTFILE
 
-if [ ! $APPENDRESULT == "YES" ]; then
-    echo -n ""  > ${DATAFILE}
-    echo -n ""  > ${LOGFILE}
-fi
+echo -n ""  > ${DATAFILE}
+echo -n ""  > ${LOGFILE}
 
 echo "BP: $BP"
 for p in "${PROG[@]}"
@@ -64,7 +62,6 @@ do
 done
 echo "SIZE: ${SIZE[@]}"
 echo "RESFILE: $RESFILE"
-echo "APPENDRESULT: $APPENDRESULT"
 echo -n "#SIZE " >> ${DATAFILE}
 for p in "${PROG[@]}"
   do
@@ -79,7 +76,7 @@ for i in "${SIZE[@]}"
     do
     date
     echo -n "" > ${DATAFILE}.tmp
-    echo -n "Executing ${p} with size of ${i} " >> ${LOGFILE}
+    echo  "Executing ${p} with size of ${i} " >> ${LOGFILE}
     echo -n "Executing ${p} with size of ${i} ..."
     f "/usr/bin/time -o${DATAFILE}.tmp -a -f %e" "$p" "$i" >> ${LOGFILE} 2>>${LOGFILE}
     read time < ${DATAFILE}.tmp
