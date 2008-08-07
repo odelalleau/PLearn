@@ -94,7 +94,7 @@ condor only options:
   The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
   If the CONDOR_HOME environment variable is set, then the HOME variable will
      be set to this value for jobs submitted to condor.
-  The '--tasks_filename={compact,explicit,nb0,nb1}' option will change the filename where the stdout,stderr are redirected. They have this patter condor.X.{out,error} where X=:
+  The '--tasks_filename={compact,explicit,nb0,nb1}' option will change the filename where the stdout, stderr are redirected. They have this pattern condor.X.{out,error} where X=:
       - default : same as nb0
       - compact : will be a unic string with parameter that change of value between jobs
       - explicit: will be a unic string that represent the full command to execute
