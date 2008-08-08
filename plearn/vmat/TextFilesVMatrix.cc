@@ -223,22 +223,31 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
     width_ = 0;
     TVec<string> fnames;
     TVec<string> fnames_header;//field names take in the header of source file
-    if(reorder_fieldspec_from_headers || partial_match)
-    {
-        //read the fieldnames from the files.
-        for(int i=0; i<txtfiles.size(); i++)
-        {
-            FILE* f = txtfiles[i];
-            fseek(f,0,SEEK_SET);
-            if(!fgets(buf, sizeof(buf), f))
-                PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
-                        "Couldn't read the fields names from file '%s'",
-                        txtfilenames[i].c_str());
-            fseek(f,0,SEEK_SET);
+    
+    //read the fieldnames from the files.
+    for(int i=0; i<txtfiles.size(); i++){
+        FILE* f = txtfiles[i];
+        fseek(f,0,SEEK_SET);
+        if(!fgets(buf, sizeof(buf), f))
+            PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                    "Couldn't read the fields names from file '%s'",
+                    txtfilenames[i].c_str());
+        fseek(f,0,SEEK_SET);
 
-            TVec<string> fields = splitIntoFields(buf);
+        TVec<string> fields = splitIntoFields(buf);
+
+        //check that we have the good delimiter
+        if(fields.size()==1 && fieldspec.size()>1)
+            PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() -"
+                    " We found only 1 column in the first line, but"
+                    " their is %d fieldspec. Meaby the delimiter '%s'"
+                    " is not the right one. The line is %s",
+                    fieldspec.size(),delimiter.c_str(),
+                    string(buf).c_str());
+        
+        if(reorder_fieldspec_from_headers || partial_match){
             fields.append(removeblanks(fields.pop()));
-
+            
             fnames_header.append(fields);
         }
     }
