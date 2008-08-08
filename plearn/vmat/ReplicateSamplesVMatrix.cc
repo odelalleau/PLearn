@@ -61,6 +61,7 @@ PLEARN_IMPLEMENT_OBJECT(
 /////////////////////////////
 ReplicateSamplesVMatrix::ReplicateSamplesVMatrix():
     operate_on_bags(false),
+    bag_index(-1),
     seed(1827),
     random_gen(new PRandom())
 {}
@@ -84,6 +85,12 @@ void ReplicateSamplesVMatrix::declareOptions(OptionList& ol)
         "If set to 1, then bags in the source VMat will be taken into\n"
         "account so as to preserve their integrity. The classes will also be\n"
         "reweighted so that they have the same number of bags.");
+
+    declareOption(ol, "bag_index",
+                  &ReplicateSamplesVMatrix::bag_index,
+                  OptionBase::buildoption,
+        "Index of the target corresponding to the bag information (useful\n"
+        "only when operate_on_bags is True). -1 means the last element.\n");
 
     declareOption(ol, "seed", &ReplicateSamplesVMatrix::seed,
                   OptionBase::buildoption,
@@ -124,6 +131,10 @@ void ReplicateSamplesVMatrix::build_()
     updateMtime(indices_vmat);
     updateMtime(source);
 
+    if (bag_index < 0)
+        bag_index = source->targetsize()-1;
+    PLASSERT(bag_index < source->targetsize());
+
     // Build the vector of indices.
     indices.resize(0);
     Vec input, target;
@@ -139,7 +150,8 @@ void ReplicateSamplesVMatrix::build_()
             for (int j = 0; j < n_to_add; j++)
                 class_indices.append(TVec<int>());
         }
-        if (!operate_on_bags || int(round(target.lastElement())) &
+        
+        if (!operate_on_bags || int(round(target[bag_index])) &
                                 SumOverBagsVariable::TARGET_COLUMN_FIRST) {
             class_indices[c].append(i);
             indices.append(i);

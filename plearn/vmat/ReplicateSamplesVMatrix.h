@@ -63,6 +63,7 @@ public:
     //#####  Public Build Options  ############################################
 
     bool operate_on_bags;
+    int bag_index;
     int32_t seed;
 
 public:
