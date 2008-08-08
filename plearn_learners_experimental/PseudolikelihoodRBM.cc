@@ -70,6 +70,10 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     fraction_of_masked_inputs( 0. ),
     only_reconstruct_masked_inputs( false ),
     n_classes( -1 ),
+    input_is_sparse( false ),
+    factorized_connection_rank( 10 ),
+    n_selected_inputs_pseudolikelihood( 1. ),
+    select_among_k_most_frequent( -1 ),
     compute_input_space_nll( false ),
     pseudolikelihood_context_size ( 0 ),
     pseudolikelihood_context_type( "uniform_random" ),
@@ -161,6 +165,30 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   "Number of classes in the training set (for supervised learning).\n"
                   "If < 2, unsupervised learning will be performed.\n"
                   );
+
+    declareOption(ol, "input_is_sparse", &PseudolikelihoodRBM::input_is_sparse,
+                  OptionBase::buildoption,
+                  "Indication that the input is in a sparse format. Input is also assumed\n"
+                  "to be binary.\n"
+                  );
+
+    declareOption(ol, "factorized_connection_rank", &PseudolikelihoodRBM::factorized_connection_rank,
+                  OptionBase::buildoption,
+                  "Rank of factorized connection for sparse inputs.\n"
+                  );    
+
+    declareOption(ol, "n_selected_inputs_pseudolikelihood", 
+                  &PseudolikelihoodRBM::n_selected_inputs_pseudolikelihood,
+                  OptionBase::buildoption,
+                  "Number of randomly selected inputs for pseudolikelihood cost.\n"
+                  );    
+
+    declareOption(ol, "select_among_k_most_frequent", 
+                  &PseudolikelihoodRBM::select_among_k_most_frequent,
+                  OptionBase::buildoption,
+                  "Indication that inputs for pseudolikelihood cost are selected among the\n"
+                  "k most frequently active inputs.\n"
+                  );    
 
     declareOption(ol, "compute_input_space_nll", 
                   &PseudolikelihoodRBM::compute_input_space_nll,

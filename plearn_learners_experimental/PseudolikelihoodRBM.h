@@ -108,6 +108,20 @@ public:
     //! Number of classes in the training set (for supervised learning)
     int n_classes;
     
+    //! Indication that the input is in a sparse format. Input is also assumed
+    //! to be binary
+    bool input_is_sparse;
+
+    //! Rank of factorized connection for sparse inputs
+    int factorized_connection_rank;
+
+    //! Number of randomly selected inputs for pseudolikelihood cost
+    real n_selected_inputs_pseudolikelihood;
+
+    //! Indication that inputs for pseudolikelihood cost are selected among the
+    //! k most frequently active inputs
+    int select_among_k_most_frequent;
+
     //! Indication that the input space NLL should be computed
     //! during test
     bool compute_input_space_nll;
