@@ -104,7 +104,7 @@ int TextFilesVMatrix::getIndexOfTextField(const string& fieldname) const
 
 void TextFilesVMatrix::buildIdx()
 {
-    cerr << "Building the index file. PLease be patient..." << endl;
+    cerr << "Building the index file. Please be patient..." << endl;
 
     if(idxfile)
         fclose(idxfile);
