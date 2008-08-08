@@ -15,10 +15,11 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor|--bqtools
                                [--rank=RANK_EXPRESSION] 
                                [--files=file1[,file2...]]
                                [--env=VAR=VALUE[;VAR2=VALUE2]]
-                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,nb0,nb1}]
+                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1}]
+                               [*--[no_]set_special_env]
     cluster option           : [*--[no_]cwait]  [--[*no_]force]
                                [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
-An * after '[' signals the default value.
+An * after '[', '{' or ',' signals the default value.
 '''
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
@@ -27,7 +28,7 @@ LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtool
 common options:
   The -h, --help print the long help(this)
   The --condor, --bqtools, --cluster, --local or --ssh option specify on which system the jobs will be sent. If not present, we will use the first available in the previously given order. ssh is never automaticaly selected.
-  The --dbilog (--nodbilog) tells dbi to generate (or not) an additional log
+  The --dbilog (--no_dbilog) tells dbi to generate (or not) an additional log
   The '--[no_]test' option makes dbidispatch generate the file %(ScriptName)s, without executing it. That way you can see what dbidispatch generates. Also, this file calls dbi in test mode, so dbi executes everything in the script except the experiment in %(ScriptName)s (so you can check the script).
   The '--testdbi' set only dbi in test mode. Not dbidispatch
   The --file=FILEPATH specifies a file containing the jobs to execute, one per line. This is instead of specifying only one job on the command line.
@@ -100,6 +101,7 @@ condor only options:
       - explicit: will be a unic string that represent the full command to execute
       - nb0     : a number from 0 to nb job -1.
       - nb1     : a number from 1 to nb job.
+  The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -161,6 +163,7 @@ if not LOGDIR:
 if not os.path.exists(LOGDIR):
     os.mkdir(LOGDIR)
 
+
 to_parse=[]
 env=os.getenv("DBIDISPATCH_DEFAULT_OPTION")
 if env:
@@ -172,7 +175,8 @@ for argv in to_parse:
     if argv == "--help" or argv == "-h":
         print LongHelp
         sys.exit(0)
-    elif argv == "--nodbilog":
+    #--nodbilog should be allowed do to bug in old version that requested it with _.
+    elif argv == "--no_dbilog" or argv == "--nodbilog":
         dbi_param["dolog"]=False
     elif argv == "--dbilog":
         dbi_param["dolog"]=True
@@ -201,8 +205,13 @@ for argv in to_parse:
             sys.exit(2)
         tasks_filename = part[1]
     elif argv in  ["--force", "--interruptible", "--long", 
-                   "--getenv", "--cwait", "--clean_up" ,"--nice"]:
+                   "--getenv", "--cwait", "--clean_up" ,"--nice",
+                   "--set_special_env"]:
         dbi_param[argv[2:]]=True
+    elif argv in ["--no_force", "--no_interruptible", "--no_long",
+                  "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice",
+                  "--no_set_special_env"]:
+        dbi_param[argv[5:]]=False
     elif argv=="--testdbi":
         dbi_param["test"]=True
     elif argv=="--no_testdbi":
@@ -213,9 +222,6 @@ for argv in to_parse:
     elif argv=="--no_test":
         dbi_param[argv[2:]]=True
         testmode=False
-    elif argv in ["--no_force", "--no_interruptible", "--no_long",
-                  "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice"]:
-        dbi_param[argv[5:]]=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env"]:
         param=argv.split('=')[0][2:]
@@ -228,7 +234,7 @@ for argv in to_parse:
             dbi_param[param]+='\n'+argv.split('=',1)[1]
         elif param=="env":
             dbi_param.setdefault(param,"")
-            dbi_param[param]+=";"+argv.split('=',1)[1]
+            dbi_param[param]+='"'+argv.split('=',1)[1]+'"'
         else:
             #otherwise we erase the old value
             dbi_param[param]=argv.split('=',1)[1]
@@ -259,6 +265,8 @@ for argv in to_parse:
     command_argv.remove(argv)
 
 if len(command_argv) == 0 and FILE == "":
+    print "No command or file with command to execute!"
+    print
     print ShortHelp
     sys.exit(1)
 
@@ -270,7 +278,7 @@ elif launch_cmd=="Cluster":
                        "duree","cpu","mem","os"]
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
-                       "raw", "os"]
+                       "raw", "os", "set_special_env"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["micro", "long","nb_proc","duree"]
 elif launch_cmd=="Local":

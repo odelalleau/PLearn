@@ -688,6 +688,7 @@ class DBICondor(DBIBase):
         self.env = ''
         self.os = ''
         self.base_tasks_log_file = []
+        self.set_special_env = True
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
@@ -803,6 +804,12 @@ class DBICondor(DBIBase):
     def run_all_job(self):
         if len(self.tasks)==0:
             return #no task to run
+
+        #set special environment variable
+        if self.set_special_env:
+            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) "'
+
+
         # create the bqsubmit.dat, with
         condor_datas = []
 
@@ -932,6 +939,7 @@ class DBICondor(DBIBase):
                     launch_dat.write('export HOME=%s\n' % condor_home)
                 if source_file:
                     launch_dat.write('source ' + source_file + '\n')
+
                 launch_dat.write(dedent('''\
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
