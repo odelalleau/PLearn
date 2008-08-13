@@ -1901,7 +1901,7 @@ void PseudolikelihoodRBM::train()
 
             if( !fast_exact_is_equal(persistent_cd_weight, 1.) )
             {
-                if( cd_decrease_ct != 0 )
+                if( !fast_exact_is_equal(cd_decrease_ct, 0) )
                     lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
                 else
                     lr = cd_learning_rate;
@@ -2020,7 +2020,7 @@ void PseudolikelihoodRBM::train()
                             "Contrastive Divergence was not implemented for "
                             "MF-CD");
 
-                if( cd_decrease_ct != 0 )
+                if( !fast_exact_is_equal(cd_decrease_ct, 0) )
                     lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
                 else
                     lr = cd_learning_rate;
@@ -2122,7 +2122,7 @@ void PseudolikelihoodRBM::train()
         if( !fast_exact_is_equal(denoising_learning_rate, 0.) &&
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
-            if( denoising_decrease_ct != 0 )
+            if( !fast_exact_is_equal(denoising_decrease_ct, 0) )
                 lr = denoising_learning_rate / 
                     (1.0 + stage * denoising_decrease_ct );
             else
@@ -2292,10 +2292,10 @@ void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     Vec target_act = target_layer->activation;
     Vec hidden_act = hidden_layer->activation;
-    for (int i = 0; i < len; i++)
+    for (int l = 0; l < len; l++)
     {
-        testset.getExample(i, input, target, weight);
-        testset->getExtra(i, extra );
+        testset.getExample(l, input, target, weight);
+        testset->getExtra(l, extra );
 
         if( targetsize() == 1 )
         {
@@ -2307,16 +2307,16 @@ void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
             if( factorized_connection_rank > 0 )
             {
                 Vx.clear();
-                for( int i=0; i<extra.length(); i++ )
-                    Vx += V((int)extra[i]);
+                for( int e=0; e<extra.length(); e++ )
+                    Vx += V((int)extra[e]);
                 
                 product(hidden_act,U,Vx);
             }
             else
             {
                 hidden_act.clear();
-                for( int i=0; i<extra.length(); i++ )
-                    hidden_act += V((int)extra[i]);
+                for( int e=0; e<extra.length(); e++ )
+                    hidden_act += V((int)extra[e]);
             }
             
             for( int i=0 ; i<target_layer->size ; i++ )
@@ -2349,10 +2349,10 @@ void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
             PLERROR("PseudolikelihoodRBM::test(): targetsize() > 1 "
                     "not implemented yet for sparse inputs");
         costs[cumulative_training_time_cost_index] = cumulative_training_time;
-        if (testoutputs) testoutputs->putOrAppendRow(i, output);
-        if (testcosts) testcosts->putOrAppendRow(i, costs);
+        if (testoutputs) testoutputs->putOrAppendRow(l, output);
+        if (testcosts) testcosts->putOrAppendRow(l, costs);
         if (test_stats) test_stats->update(costs, weight);
-        if (report_progress) pb->update(i);
+        if (report_progress) pb->update(l);
     }
 
     if (use_a_separate_random_generator_for_testing && random_gen)
