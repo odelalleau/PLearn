@@ -71,9 +71,9 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     only_reconstruct_masked_inputs( false ),
     n_classes( -1 ),
     input_is_sparse( false ),
-    factorized_connection_rank( 10 ),
-    n_selected_inputs_pseudolikelihood( 1. ),
-    select_among_k_most_frequent( -1 ),
+    factorized_connection_rank( -1 ),
+    n_selected_inputs_pseudolikelihood( -1 ),
+    //select_among_k_most_frequent( -1 ),
     compute_input_space_nll( false ),
     pseudolikelihood_context_size ( 0 ),
     pseudolikelihood_context_type( "uniform_random" ),
@@ -180,15 +180,16 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
     declareOption(ol, "n_selected_inputs_pseudolikelihood", 
                   &PseudolikelihoodRBM::n_selected_inputs_pseudolikelihood,
                   OptionBase::buildoption,
-                  "Number of randomly selected inputs for pseudolikelihood cost.\n"
+                  "Number of randomly selected inputs for pseudolikelihood cost."
+                  "This option is ignored for pseudolikelihood_context_size > 0.\n"
                   );    
 
-    declareOption(ol, "select_among_k_most_frequent", 
-                  &PseudolikelihoodRBM::select_among_k_most_frequent,
-                  OptionBase::buildoption,
-                  "Indication that inputs for pseudolikelihood cost are selected among the\n"
-                  "k most frequently active inputs.\n"
-                  );    
+    //declareOption(ol, "select_among_k_most_frequent", 
+    //              &PseudolikelihoodRBM::select_among_k_most_frequent,
+    //              OptionBase::buildoption,
+    //              "Indication that inputs for pseudolikelihood cost are selected among the\n"
+    //              "k most frequently active inputs.\n"
+    //              );    
 
     declareOption(ol, "compute_input_space_nll", 
                   &PseudolikelihoodRBM::compute_input_space_nll,
@@ -264,6 +265,15 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "The connection weights between the target and hidden layer.\n");
 
+    declareOption(ol, "U", &PseudolikelihoodRBM::U,
+                  OptionBase::learntoption,
+                  "First connection factorization matrix.\n");
+
+    declareOption(ol, "V", &PseudolikelihoodRBM::V,
+                  OptionBase::learntoption,
+                  "If factorized_connection_rank > 0, second connection "
+                  "factorization matrix. Otherwise, input connections.\n");
+
     declareOption(ol, "log_Z", &PseudolikelihoodRBM::log_Z,
                   OptionBase::learntoption,
                   "Normalisation constant (on log scale).\n");
@@ -303,7 +313,11 @@ void PseudolikelihoodRBM::build_()
     {
         if( compute_input_space_nll && targetsize() > 0 )
             PLERROR("In PseudolikelihoodRBM::build_(): compute_input_space_nll "
-                    "is not compatible with n_classes > 1");
+                    "is not compatible with targetsize() > 0");
+
+        if( compute_input_space_nll && input_is_sparse )
+            PLERROR("In PseudolikelihoodRBM::build_(): compute_input_space_nll "
+                    "is not compatible with sparse inputs");
 
         if( pseudolikelihood_context_size < 0 )
             PLERROR("In PseudolikelihoodRBM::build_(): "
@@ -430,24 +444,76 @@ void PseudolikelihoodRBM::build_layers_and_connections()
         }
     }
 
-    if( !connection )
+    if( !connection && !input_is_sparse )
         PLERROR("PseudolikelihoodRBM::build_layers_and_connections(): \n"
                 "connection must be provided");
 
-    if( connection->up_size != hidden_layer->size ||
-        connection->down_size != input_layer->size )
-        PLERROR("PseudolikelihoodRBM::build_layers_and_connections(): \n"
-                "connection's size (%d x %d) should be %d x %d",
-                connection->up_size, connection->down_size,
-                hidden_layer->size, input_layer->size);
+    if( input_is_sparse )
+    {
+        if( factorized_connection_rank > 0 )
+        {
+            U.resize( hidden_layer->size, factorized_connection_rank );
+            V.resize( inputsize(), factorized_connection_rank );
 
+            U_gradient.resize( hidden_layer->size, factorized_connection_rank );
+            Vx_gradient.resize( factorized_connection_rank );
+        }
+        else
+        {
+            V.resize( inputsize(), hidden_layer->size );
+        }
+        input_is_active.resize( inputsize() );
+        input_is_active.clear();
+    }
+    else
+    {
+        if( connection->up_size != hidden_layer->size ||
+            connection->down_size != input_layer->size )
+            PLERROR("PseudolikelihoodRBM::build_layers_and_connections(): \n"
+                    "connection's size (%d x %d) should be %d x %d",
+                    connection->up_size, connection->down_size,
+                    hidden_layer->size, input_layer->size);
+        connection_gradient.resize( connection->up_size, connection->down_size );
+
+        if( !connection->random_gen )
+        {
+            connection->random_gen = random_gen;
+            connection->forget();
+        }
+
+        // CD option
+        pos_hidden.resize( hidden_layer->size );
+        pers_cd_hidden.resize( n_gibbs_chains );
+        for( int i=0; i<n_gibbs_chains; i++ )
+        {
+            pers_cd_hidden[i].resize( hidden_layer->size );
+        }
+        if( persistent_gibbs_chain_is_started.length() != n_gibbs_chains )
+        {
+            persistent_gibbs_chain_is_started.resize( n_gibbs_chains );
+            persistent_gibbs_chain_is_started.fill( false );
+        }
+
+        // Denoising autoencoder options
+        transpose_connection = new RBMMatrixTransposeConnection;
+        transpose_connection->rbm_matrix_connection = connection;
+        transpose_connection->build();
+        reconstruction_activation_gradient.resize(input_layer->size);
+        hidden_layer_expectation_gradient.resize(hidden_layer->size);
+        hidden_layer_activation_gradient.resize(hidden_layer->size);
+        masked_autoencoder_input.resize(input_layer->size);
+        autoencoder_input_indices.resize(input_layer->size);
+        for(int i=0; i<input_layer->size; i++)
+            autoencoder_input_indices[i] = i;
+    }
+        
     input_gradient.resize( input_layer->size );
     hidden_activation_pos_i.resize( hidden_layer->size );
     hidden_activation_neg_i.resize( hidden_layer->size );
     hidden_activation_gradient.resize( hidden_layer->size );
     hidden_activation_pos_i_gradient.resize( hidden_layer->size );
     hidden_activation_neg_i_gradient.resize( hidden_layer->size );
-    connection_gradient.resize( connection->up_size, connection->down_size );
+
 
     // Generalized pseudolikelihood option
     context_indices.resize( input_layer->size - 1);
@@ -464,30 +530,7 @@ void PseudolikelihoodRBM::build_layers_and_connections()
         hidden_activations_context_k_gradient.resize( hidden_layer->size );
     }
 
-    // CD option
-    pos_hidden.resize( hidden_layer->size );
-    pers_cd_hidden.resize( n_gibbs_chains );
-    for( int i=0; i<n_gibbs_chains; i++ )
-    {
-        pers_cd_hidden[i].resize( hidden_layer->size );
-    }
-    if( persistent_gibbs_chain_is_started.length() != n_gibbs_chains )
-    {
-        persistent_gibbs_chain_is_started.resize( n_gibbs_chains );
-        persistent_gibbs_chain_is_started.fill( false );
-    }
 
-    // Denoising autoencoder options
-    transpose_connection = new RBMMatrixTransposeConnection;
-    transpose_connection->rbm_matrix_connection = connection;
-    transpose_connection->build();
-    reconstruction_activation_gradient.resize(input_layer->size);
-    hidden_layer_expectation_gradient.resize(hidden_layer->size);
-    hidden_layer_activation_gradient.resize(hidden_layer->size);
-    masked_autoencoder_input.resize(input_layer->size);
-    autoencoder_input_indices.resize(input_layer->size);
-    for(int i=0; i<input_layer->size; i++)
-        autoencoder_input_indices[i] = i;
 
     if( inputsize_ >= 0 )
         PLASSERT( input_layer->size == inputsize() );
@@ -512,12 +555,6 @@ void PseudolikelihoodRBM::build_layers_and_connections()
     {
         hidden_layer->random_gen = random_gen;
         hidden_layer->forget();
-    }
-
-    if( !connection->random_gen )
-    {
-        connection->random_gen = random_gen;
-        connection->forget();
     }
 }
 
@@ -544,6 +581,8 @@ void PseudolikelihoodRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(transpose_connection, copies);
     deepCopyField(target_layer, copies);
     deepCopyField(target_connection, copies);
+    deepCopyField(U, copies);
+    deepCopyField(V, copies);
 
     deepCopyField(target_one_hot, copies);
     deepCopyField(input_gradient, copies);
@@ -578,6 +617,12 @@ void PseudolikelihoodRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(masked_autoencoder_input, copies);
     deepCopyField(autoencoder_input_indices, copies);
     deepCopyField(pers_cd_hidden, copies);
+    deepCopyField(Vx, copies);
+    deepCopyField(U_gradient, copies);
+    deepCopyField(Vx_gradient, copies);
+    deepCopyField(V_gradients, copies);
+    deepCopyField(input_is_active, copies);
+    deepCopyField(input_indices, copies);
     deepCopyField(persistent_gibbs_chain_is_started, copies);
 }
 
@@ -607,6 +652,21 @@ void PseudolikelihoodRBM::forget()
 
     persistent_gibbs_chain_is_started.fill( false );
     correlations_per_i.resize(0,0);
+
+    if( U.size() != 0 )
+    {
+        real d = 1. / max( U.length(), U.width() );
+        random_gen->fill_random_uniform( U, -d, d );
+    }
+    
+    if( V.size() != 0 )
+        V.clear();
+
+    if( target_layer )
+        target_layer->forget();
+
+    if( target_connection )
+        target_connection->forget();
 }
 
 ///////////
@@ -623,6 +683,7 @@ void PseudolikelihoodRBM::train()
 
     Vec input( inputsize() );
     Vec target( targetsize() );
+    Vec extra( 1 );
     int target_index;
     real weight; // unused
     real lr;
@@ -695,6 +756,8 @@ void PseudolikelihoodRBM::train()
 
         if( targetsize() == 1 )
         {
+            Vec target_act = target_layer->activation;
+            Vec hidden_act = hidden_layer->activation;
 
             // For gradient verification
             //Mat estimated_gradient(connection->up_size, connection->down_size);
@@ -766,13 +829,40 @@ void PseudolikelihoodRBM::train()
             //}
 
             // Multi-class classification
+            
+            if( input_is_sparse )
+            {
+                if( factorized_connection_rank > 0 )
+                {
+                    Vx.clear();
+                    train_set->getExtra(stage%nsamples,extra);
+                    input_is_active.clear();
+                    for( int i=0; i<extra.length(); i++ )
+                    {
+                        Vx += V((int)extra[i]);
+                        input_is_active[(int)extra[i]] = true;
+                    }
+                    
+                    product(hidden_act,U,Vx);
+                }
+                else
+                {
+                    hidden_act.clear();
+                    train_set->getExtra(stage%nsamples,extra);
+                    for( int i=0; i<extra.length(); i++ )
+                    {
+                        hidden_act += V((int)extra[i]);
+                        input_is_active[(int)extra[i]] = true;
+                    }
+                }
+            }
+            else
+            {
+                connection->setAsDownInput( input );
+                hidden_layer->getAllActivations( 
+                    (RBMMatrixConnection*) connection );
+            }
 
-            connection->setAsDownInput( input );
-            hidden_layer->getAllActivations( 
-                (RBMMatrixConnection*) connection );
-
-            Vec target_act = target_layer->activation;
-            Vec hidden_act = hidden_layer->activation;
             for( int i=0 ; i<target_layer->size ; i++ )
             {
                 target_act[i] = target_layer->bias[i];
@@ -795,7 +885,7 @@ void PseudolikelihoodRBM::train()
             real nll = target_layer->fpropNLL(target_one_hot);
             train_costs[nll_cost_index] = nll;
             train_costs[class_cost_index] = 
-                argmax(target_layer->expectation) == target_index;
+                (argmax(target_layer->expectation) == target_index)? 0 : 1;
             target_layer->bpropNLL(target_one_hot,nll,class_gradient);
 
             hidden_activation_gradient.clear();
@@ -821,11 +911,8 @@ void PseudolikelihoodRBM::train()
                 // Update target connections
                 w = &(target_connection->weights(0,i));
                 for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
-                    *w -= learning_rate * hidden_activation_pos_i_gradient[j];
+                    *w -= lr * hidden_activation_pos_i_gradient[j];
             }
-
-            externalProduct( connection_gradient, hidden_activation_gradient,
-                             input );
 
             //real cos_ang = dot(connection_gradient.toVec(),estimated_gradient.toVec())
             //    / (norm(connection_gradient.toVec()) *norm(estimated_gradient.toVec()));
@@ -835,16 +922,39 @@ void PseudolikelihoodRBM::train()
             // Update target bias            
             multiplyScaledAdd(class_gradient, 1.0, -lr,
                               target_layer->bias);
-
             // Hidden bias update
             multiplyScaledAdd(hidden_activation_gradient, 1.0, -lr,
                               hidden_layer->bias);
-            // Connection weights update
-            multiplyScaledAdd( connection_gradient, 1.0, -lr,
-                               connection->weights );
-            // Input bias update
-            multiplyScaledAdd(input_gradient, 1.0, -lr,
-                              input_layer->bias);            
+
+            if( input_is_sparse )
+            {
+                if( factorized_connection_rank > 0 )
+                {
+                    externalProduct( U_gradient, hidden_activation_gradient,
+                                     Vx );
+                    transposeProduct( Vx_gradient, U, hidden_activation_gradient );
+                    for( int i=0; i<extra.length(); i++ )
+                        V((int)extra[i]) -= lr * Vx_gradient;
+                    
+                    multiplyScaledAdd( U_gradient, 1.0, -lr,
+                                       U );
+                }
+                else
+                {
+                    for( int i=0; i<extra.length(); i++ )
+                        V((int)extra[i]) -= lr * hidden_activation_gradient;
+                }
+
+            }
+            else
+            {
+                externalProduct( connection_gradient, hidden_activation_gradient,
+                                 input );
+
+                // Connection weights update
+                multiplyScaledAdd( connection_gradient, 1.0, -lr,
+                                   connection->weights );
+            }
         }
         if( targetsize() > 1 )
         {
@@ -869,7 +979,7 @@ void PseudolikelihoodRBM::train()
             {
                 // Compute input_probs
                 //
-                //a = W x + c
+                //  a = W x + c
                 //  for i in 1...d
                 //      num_pos = b_i
                 //      num_neg = 0
@@ -878,25 +988,7 @@ void PseudolikelihoodRBM::train()
                 //          num_neg += softplus( a_j - W_ji x_i)
                 //      p_i = exp(num_pos) / (exp(num_pos) + exp(num_neg))
 
-                if( targetsize() <= 0 )
-                {
-                    // This was not computed previously
-                    connection->setAsDownInput( input );
-                    hidden_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                }
-                else
-                {
-                    if( targetsize() == 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target_one_hot );
-                    else if( targetsize() > 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target );
-                }
-
+                Vec hidden_act = hidden_layer->activation;
                 real num_pos_act;
                 real num_neg_act;
                 real num_pos;
@@ -910,19 +1002,150 @@ void PseudolikelihoodRBM::train()
                 real pseudolikelihood = 0;
                 real* ga_pos_i = hidden_activation_pos_i_gradient.data();
                 real* ga_neg_i = hidden_activation_neg_i_gradient.data();
-                hidden_activation_gradient.clear();
-                connection_gradient.clear();
-                for( int i=0; i<input_layer->size ; i++ )
+
+                if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                    n_selected_inputs_pseudolikelihood > 0 )
                 {
+                    if ( input_indices.length() == 0 )
+                    {
+                        input_indices.resize(inputsize());
+                        for( int i=0; i<input_indices.length(); i++ )
+                            input_indices[i] = i;
+                        
+                        if( input_is_sparse )
+                        {
+                            if( factorized_connection_rank > 0 )
+                                V_gradients.resize(
+                                    n_selected_inputs_pseudolikelihood,
+                                    factorized_connection_rank );
+                            else
+                                V_gradients.resize(
+                                    n_selected_inputs_pseudolikelihood,
+                                    hidden_layer->size );
+                        }
+                    }
+                 
+                    // Randomly selected inputs
+                    int tmp;
+                    int k;
+                    for (int j = 0; j < n_selected_inputs_pseudolikelihood; j++) 
+                    {
+                        k = j + 
+                            random_gen->uniform_multinomial_sample(
+                                n_selected_inputs_pseudolikelihood - j);
+                        
+                        tmp = input_indices[j];
+                        input_indices[j] = input_indices[k];
+                        input_indices[k] = tmp;
+                    }
+                }
+
+                if( targetsize() <= 0 )
+                {
+                    // This was not computed previously
+                    if( input_is_sparse )
+                    {
+                        if( factorized_connection_rank > 0 )
+                        {
+                            Vx.clear();
+                            train_set->getExtra(stage%nsamples,extra);
+                            for( int i=0; i<extra.length(); i++ )
+                            {
+                                Vx += V((int)extra[i]);
+                                input_is_active[(int)extra[i]] = true;
+                            }
+
+                            product(hidden_act,U,Vx);
+                        }
+                        else
+                        {
+                            hidden_act.clear();
+                            train_set->getExtra(stage%nsamples,extra);
+                            for( int i=0; i<extra.length(); i++ )
+                            {
+                                hidden_act += V((int)extra[i]);
+                                input_is_active[(int)extra[i]] = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        connection->setAsDownInput( input );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                    }
+                }
+                else
+                {
+                    if( targetsize() == 1 )
+                        productAcc( hidden_layer->activation,
+                                    target_connection->weights,
+                                    target_one_hot );
+                    else if( targetsize() > 1 )
+                        productAcc( hidden_layer->activation,
+                                    target_connection->weights,
+                                    target );
+                }
+
+                // Clear gradients
+                hidden_activation_gradient.clear();
+                if( !input_is_sparse )
+                {
+                    connection_gradient.clear();
+                    input_gradient.clear(); // If input is sparse, only the 
+                                            // appropriage elements of this 
+                                            // gradient will be used
+                }
+                
+                if( factorized_connection_rank > 0 )
+                {
+                    U_gradient.clear();
+                    Vx_gradient.clear();
+                }
+                V_gradients.clear();
+
+                int i=0;
+                for( int l=0; l<input_layer->size ; l++ )
+                {
+                    if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                        n_selected_inputs_pseudolikelihood > 0 )
+                    {
+                        if( l >= n_selected_inputs_pseudolikelihood )
+                            break;
+                        i = input_indices[l];
+                    }
+                    else
+                        i = l;
+
                     num_pos_act = input_layer->bias[i];
                     // LATERAL CONNECTIONS CODE HERE!
                     num_neg_act = 0;
-                    w = &(connection->weights(0,i));
-                    input_i = input[i];
-                    for( int j=0; j<hidden_layer->size; j++,w+=m )
+                    if( input_is_sparse )
                     {
-                        a_pos_i[j] = a[j] - *w * ( input_i - 1 );
-                        a_neg_i[j] = a[j] - *w * input_i;
+                        hidden_activation_pos_i << hidden_act;
+                        hidden_activation_neg_i << hidden_act;
+                        if( factorized_connection_rank > 0 )
+                            if( input_is_active[i] )
+                                productScaleAcc( hidden_activation_neg_i,
+                                                U, V(i), -1.,1.);
+                            else
+                                productScaleAcc( hidden_activation_pos_i,
+                                                U, V(i), 1.,1.);
+                        else
+                            if( input_is_active[i] )
+                                hidden_activation_neg_i -= V(i);
+                            else
+                                hidden_activation_pos_i += V(i);
+                    }
+                    else
+                    {
+                        w = &(connection->weights(0,i));
+                        input_i = input[i];
+                        for( int j=0; j<hidden_layer->size; j++,w+=m )
+                        {
+                            a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                            a_neg_i[j] = a[j] - *w * input_i;
+                        }
                     }
                     num_pos_act -= hidden_layer->freeEnergyContribution(
                         hidden_activation_pos_i);
@@ -966,37 +1189,128 @@ void PseudolikelihoodRBM::train()
                         false);
                     hidden_activation_gradient += hidden_activation_neg_i_gradient;
 
-                    gw = &(connection_gradient(0,i));
-                    for( int j=0; j<hidden_layer->size; j++,gw+=m )
+                    if( input_is_sparse )
                     {
-                        *gw -= ga_pos_i[j] * ( input_i - 1 );
-                        *gw -= ga_neg_i[j] * input_i;
+                        if( factorized_connection_rank > 0 )
+                        {
+                            if( input_is_active[i] )
+                            {
+                                Vec vg = V_gradients(l);
+                                transposeProductScaleAcc(
+                                    vg, U, hidden_activation_neg_i_gradient,
+                                    -1., 0);
+                                externalProductScaleAcc( 
+                                    U_gradient, 
+                                    hidden_activation_neg_i_gradient,
+                                    V(i), -1 );
+                            }
+                            else
+                            {
+                                Vec vg = V_gradients(l);
+                                transposeProduct(
+                                    vg, U, hidden_activation_pos_i_gradient);
+                                externalProductAcc( 
+                                    U_gradient, 
+                                    hidden_activation_pos_i_gradient,
+                                    V(i) );
+                            }
+                        }
+                        else
+                        {
+                            if( input_is_active[i] )
+                                V_gradients(l) -= 
+                                    hidden_activation_neg_i_gradient;
+                            else
+                                V_gradients(l) += 
+                                    hidden_activation_pos_i_gradient;
+                        }
+                    }
+                    else
+                    {
+                        gw = &(connection_gradient(0,i));
+                        for( int j=0; j<hidden_layer->size; j++,gw+=m )
+                        {
+                            *gw -= ga_pos_i[j] * ( input_i - 1 );
+                            *gw -= ga_neg_i[j] * input_i;
+                        }
                     }
                 }
-
-                externalProductAcc( connection_gradient, hidden_activation_gradient,
-                                    input );
 
                 // Hidden bias update
                 multiplyScaledAdd(hidden_activation_gradient, 1.0, -lr,
                                   hidden_layer->bias);
-                // Connection weights update
-                multiplyScaledAdd( connection_gradient, 1.0, -lr,
-                                   connection->weights );
-                // Input bias update
-                multiplyScaledAdd(input_gradient, 1.0, -lr,
-                                  input_layer->bias);
+
+                if( input_is_sparse )
+                {
+                    if( factorized_connection_rank > 0 )
+                    {
+                        // Factorized connection U update
+                        externalProductAcc( U_gradient, 
+                                            hidden_activation_gradient,
+                                            Vx );
+                        multiplyScaledAdd( U_gradient, 1.0, -lr, U );
+                        
+                        // Factorized connection V update
+                        transposeProduct( Vx_gradient, U, 
+                                          hidden_activation_gradient );
+                        for( int e=0; e<extra.length(); e++ )
+                        {
+                            V((int)extra[e]) -= lr * Vx_gradient;
+                            input_is_active[(int)extra[e]] = false;
+                        }
+                    }
+                    else
+                    {
+                        // Update input connection V
+                        for( int e=0; e<extra.length(); e++ )
+                        {
+                            V((int)extra[e]) -= lr * hidden_activation_gradient;
+                            input_is_active[(int)extra[e]] = false;
+                        }
+                    }
+                    
+                    for( int l=0; l<input_layer->size ; l++ )
+                    {
+                        if( n_selected_inputs_pseudolikelihood <= inputsize() 
+                            && n_selected_inputs_pseudolikelihood > 0 )
+                        {
+                            if( l >= n_selected_inputs_pseudolikelihood )
+                                break;
+                            i = input_indices[l];
+                        }
+                        else
+                            i = l;
+                        // Extra V gradients
+                        V(i) -= lr * V_gradients(l);
+                        
+                        // Input update
+                        input_layer->bias[i] -= lr * input_gradient[i];
+                    }
+                }
+                else
+                {
+                    externalProductAcc( connection_gradient, hidden_activation_gradient,
+                                        input );
+                    
+                    // Connection weights update
+                    multiplyScaledAdd( connection_gradient, 1.0, -lr,
+                                       connection->weights );
+                    // Input bias update
+                    multiplyScaledAdd(input_gradient, 1.0, -lr,
+                                      input_layer->bias);
+                }
+                
 
                 if( targetsize() == 1 )
                     externalProductScaleAcc( target_connection->weights, 
                                              hidden_activation_gradient,
                                              target_one_hot,
-                                             lr );
+                                             -lr );
                 if( targetsize() > 1 )
                     externalProductScaleAcc( target_connection->weights, 
                                              hidden_activation_gradient,
                                              target,
-                                             lr );
+                                             -lr );
 
                 // N.B.: train costs contains pseudolikelihood
                 //       or pseudoNLL, not NLL
@@ -1009,6 +1323,11 @@ void PseudolikelihoodRBM::train()
             }
             else
             {
+                if( input_is_sparse )
+                    PLERROR("In PseudolikelihoodRBM::train(): "
+                            "pseudolikelihood_context_size with > 0 "
+                            "not implemented for sparse inputs");
+                
                 if( ( pseudolikelihood_context_type == "most_correlated" ||
                       pseudolikelihood_context_type == "most_correlated_uniform_random" )
                     && correlations_per_i.length() == 0 )
@@ -1468,12 +1787,12 @@ void PseudolikelihoodRBM::train()
                     externalProductScaleAcc( target_connection->weights, 
                                              hidden_activation_gradient,
                                              target_one_hot,
-                                             lr );
+                                             -lr );
                 if( targetsize() > 1 )
                     externalProductScaleAcc( target_connection->weights, 
                                              hidden_activation_gradient,
                                              target,
-                                             lr );
+                                             -lr );
 
                 // N.B.: train costs contains pseudolikelihood
                 //       or pseudoNLL, not NLL
@@ -1481,11 +1800,22 @@ void PseudolikelihoodRBM::train()
                     train_costs[nll_cost_index] = pseudolikelihood;
             }
         }
-            
+        else
+        {
+            if( input_is_sparse )
+                // This is for the case where pseudolikelihood is
+                // not used, but discriminative learning was performed
+                for( int e=0; e<extra.length(); e++ )
+                    input_is_active[(int)extra[e]] = false;
+        }
+    
         // CD learning
         if( !fast_is_equal(cd_learning_rate, 0.) &&
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
+            if( input_is_sparse )
+                PLERROR("In PseudolikelihoodRBM::train(): CD is not implemented "
+                        "for sparse inputs");
 
             if( !fast_is_equal(persistent_cd_weight, 1.) )
             {
@@ -1724,6 +2054,12 @@ void PseudolikelihoodRBM::train()
                 PLERROR("In PseudolikelihoodRBM::train(): denoising "
                         "autoencoder training is not implemented for "
                         "targetsize() > 0"); 
+
+            if( input_is_sparse )
+                PLERROR("In PseudolikelihoodRBM::train(): denoising autoencoder "
+                        "training is not implemented for sparse inputs");
+
+
             if( fraction_of_masked_inputs > 0 )
                 random_gen->shuffleElements(autoencoder_input_indices);
                 
@@ -1822,12 +2158,135 @@ void PseudolikelihoodRBM::train()
     train_stats->finalize();
 }
 
+void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
+                               VMat testoutputs, VMat testcosts) const
+{
+    if( !input_is_sparse )
+    {
+        inherited::test( testset, test_stats, testoutputs, testcosts );
+        return;
+    }
+
+    Profiler::pl_profile_start("PLearner::test");
+
+    int len = testset.length();
+    Vec input;
+    Vec target;
+    Vec extra;
+    real weight;
+    int out_size = outputsize() >= 0 ? outputsize() : 0;
+    int target_index;
+
+    if( targetsize() <= 0 )
+        PLERROR("PseudolikelihoodRBM::test(): targetsize() must be "
+            "> 0 for sparse inputs");
+
+    Vec output(out_size);
+    Vec costs(nTestCosts());
+
+    if (test_stats) {
+        // Set names of test_stats costs
+        test_stats->setFieldNames(getTestCostNames());
+
+        if (len == 0) {
+            // Empty test set: we give -1 cost arbitrarily.
+            costs.fill(-1);
+            test_stats->update(costs);
+        }
+    }
+
+    PP<ProgressBar> pb;
+    if (report_progress)
+        pb = new ProgressBar("Testing learner", len);
+
+    PP<PRandom> copy_random_gen=0;
+    if (use_a_separate_random_generator_for_testing && random_gen)
+    {
+        CopiesMap copies;
+        copy_random_gen = random_gen->deepCopy(copies);
+        random_gen->manual_seed(use_a_separate_random_generator_for_testing);
+    }
+
+    Vec target_act = target_layer->activation;
+    Vec hidden_act = hidden_layer->activation;
+    for (int i = 0; i < len; i++)
+    {
+        if( targetsize() == 1 )
+        {
+
+            target_one_hot.clear();
+            target_index = (int)round( target[0] );
+            target_one_hot[ target_index ] = 1;
+
+            testset.getExample(i, input, target, weight);
+            testset->getExtra(i, extra );
+            if( factorized_connection_rank > 0 )
+            {
+                Vx.clear();
+                for( int i=0; i<extra.length(); i++ )
+                    Vx += V((int)extra[i]);
+                
+                product(hidden_act,U,Vx);
+            }
+            else
+            {
+                hidden_act.clear();
+                for( int i=0; i<extra.length(); i++ )
+                    hidden_act += V((int)extra[i]);
+            }
+            
+            for( int i=0 ; i<target_layer->size ; i++ )
+            {
+                target_act[i] = target_layer->bias[i];
+                // LATERAL CONNECTIONS CODE HERE!!
+                real *w = &(target_connection->weights(0,i));
+                // step from one row to the next in weights matrix
+                int m = target_connection->weights.mod();                
+                
+                for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
+                {
+                    // *w = weights(j,i)
+                    hidden_activation_pos_i[j] = hidden_act[j] + *w;
+                }
+                target_act[i] -= hidden_layer->freeEnergyContribution(
+                    hidden_activation_pos_i);
+            }
+            
+            target_layer->expectation_is_up_to_date = false;
+            target_layer->computeExpectation();
+            output << target_layer->expectation;
+            real nll = target_layer->fpropNLL(target_one_hot);
+            costs.fill( MISSING_VALUE );
+            costs[nll_cost_index] = nll;
+            costs[class_cost_index] = 
+                (argmax(target_layer->expectation) == target_index)? 0 : 1;
+        }
+        else if( targetsize() > 1 )
+            PLERROR("PseudolikelihoodRBM::test(): targetsize() > 1 "
+                    "not implemented yet for sparse inputs");
+        costs[cumulative_training_time_cost_index] = cumulative_training_time;
+        if (testoutputs) testoutputs->putOrAppendRow(i, output);
+        if (testcosts) testcosts->putOrAppendRow(i, costs);
+        if (test_stats) test_stats->update(costs, weight);
+        if (report_progress) pb->update(i);
+    }
+
+    if (use_a_separate_random_generator_for_testing && random_gen)
+        *random_gen = *copy_random_gen;
+
+    Profiler::pl_profile_end("PLearner::test");
+
+}
 
 ///////////////////
 // computeOutput //
 ///////////////////
 void PseudolikelihoodRBM::computeOutput(const Vec& input, Vec& output) const
 {
+    if( input_is_sparse )
+        PLERROR("In PseudolikelihoodRBM::computeOutput(): "
+                "not compatible with sparse inputs");
+
     // Compute the output from the input.
     if( targetsize() == 1 )
     {
@@ -1880,6 +2339,10 @@ void PseudolikelihoodRBM::computeCostsFromOutputs(const Vec& input,
                                                   const Vec& target, 
                                                   Vec& costs) const
 {
+
+    if( input_is_sparse )
+        PLERROR("In PseudolikelihoodRBM::computeCostsFromOutputs(): "
+                "not compatible with sparse inputs");
 
     // Compute the costs from *already* computed output.
     costs.resize( cost_names.length() );

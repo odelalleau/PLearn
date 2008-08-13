@@ -116,11 +116,11 @@ public:
     int factorized_connection_rank;
 
     //! Number of randomly selected inputs for pseudolikelihood cost
-    real n_selected_inputs_pseudolikelihood;
+    int n_selected_inputs_pseudolikelihood;
 
-    //! Indication that inputs for pseudolikelihood cost are selected among the
-    //! k most frequently active inputs
-    int select_among_k_most_frequent;
+    ////! Indication that inputs for pseudolikelihood cost are selected among the
+    ////! k most frequently active inputs
+    //int select_among_k_most_frequent;
 
     //! Indication that the input space NLL should be computed
     //! during test
@@ -175,6 +175,13 @@ public:
     //! The connection weights between the target and hidden layer
     PP<RBMMatrixConnection> target_connection;
 
+    //! First connection factorization matrix
+    Mat U;
+    
+    //! If factorized_connection_rank > 0, second connection 
+    //! factorization matrix. Otherwise, input connections.
+    Mat V;
+
 public:
     //#####  Public Member Functions  #########################################
 
@@ -198,6 +205,17 @@ public:
     //! measured on-line in the process.
     // (PLEASE IMPLEMENT IN .cc)
     virtual void train();
+
+    /**
+     *  Performs test on testset, updating test cost statistics, and optionally
+     *  filling testoutputs and testcosts.  The default version repeatedly
+     *  calls computeOutputAndCosts or computeCostsOnly.  Note that neither
+     *  test_stats->forget() nor test_stats->finalize() is called, so that you
+     *  should call them yourself (respectively before and after calling this
+     *  method) if you don't plan to accumulate statistics.
+     */
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats, 
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
     //! Computes the output from the input.
     // (PLEASE IMPLEMENT IN .cc)
@@ -289,6 +307,14 @@ protected:
     mutable Vec masked_autoencoder_input;
     mutable TVec<int> autoencoder_input_indices;
     mutable TVec<Vec> pers_cd_hidden;
+
+    //! Temporary variables for sparse inputs computations
+    Vec Vx;
+    Mat U_gradient;
+    Vec Vx_gradient;
+    Mat V_gradients;
+    TVec<bool> input_is_active;
+    TVec<int> input_indices;
 
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;
