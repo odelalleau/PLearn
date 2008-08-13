@@ -580,15 +580,16 @@ void Object::newwrite(PStream& out) const
         getOptionsToSave());
 
     //we swap the VMatrix option at the end for better lisibility of the file
-    for(size_t i =0; i<optnames.size() - 1 ;i++)
-    {
-        if("source"==optnames[i] || "vm"==optnames[i])
+    if (!optnames.empty())
+        for(size_t i =0; i<optnames.size() - 1 ;i++)
         {
-            string tmp = optnames[i];
-            optnames[i] = optnames.back();
-            optnames.back() = tmp;
+            if("source"==optnames[i] || "vm"==optnames[i])
+            {
+                string tmp = optnames[i];
+                optnames[i] = optnames.back();
+                optnames.back() = tmp;
+            }
         }
-    }
 
     out.write(classname());
     out.write("(\n");
