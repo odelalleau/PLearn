@@ -434,7 +434,7 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
                  "- Vec containing cost")));
 
     declareMethod(
-        rmm, "computeOutputsAndCosts", &PLearner::computeOutputsAndCosts,
+        rmm, "computeOutputsAndCosts", &PLearner::remote_computeOutputsAndCosts,
         (BodyDoc("Compute both the output from the input, and the costs associated\n"
                  "with the desired target.  The computed costs\n"
                  "are returned in the order given by getTestCostNames()\n"
@@ -442,8 +442,9 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
                  "for a whole batch of examples (rows of the argument matrices)\n"),
          ArgDoc ("inputs", "Input matrix (batch_size x inputsize)"),
          ArgDoc ("targets", "Target matrix (batch_size x targetsize)"),
-         ArgDoc ("outputs", "Resulting output matrix (batch_size x outputsize)"),
-         ArgDoc ("costs", "Resulting costs matrix (batch_size x costsize)")));
+         RetDoc ("Pair containing first the resulting output matrix\n"
+                 "(batch_size x outputsize), then the costs matrix\n"
+                 "(batch_size x costsize)")));
 
     declareMethod(
         rmm, "computeCostsFromOutputs", &PLearner::remote_computeCostsFromOutputs,
@@ -1315,6 +1316,9 @@ Mat PLearner::computeInputOutputConfMat(VMat inputs, real probability) const
 }
 
 
+//////////////////////////
+// remote_computeOutput //
+//////////////////////////
 //! Version of computeOutput that returns a result by value
 Vec PLearner::remote_computeOutput(const Vec& input) const
 {
@@ -1324,6 +1328,20 @@ Vec PLearner::remote_computeOutput(const Vec& input) const
     return tmp_output;
 }
 
+///////////////////////////////////
+// remote_computeOutputsAndCosts //
+///////////////////////////////////
+pair<Mat, Mat> PLearner::remote_computeOutputsAndCosts(const Mat& input,
+                                                       const Mat& target) const
+{
+    Mat output, cost;
+    computeOutputsAndCosts(input, target, output, cost);
+    return pair<Mat, Mat>(output, cost);
+}
+
+////////////////
+// remote_use //
+////////////////
 //! Version of use that's called by RMI
 void PLearner::remote_use(VMat inputs, string output_fname) const
 {
