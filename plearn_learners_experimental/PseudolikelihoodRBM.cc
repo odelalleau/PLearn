@@ -740,17 +740,17 @@ void PseudolikelihoodRBM::train()
         // Discriminative learning is the sum of all learning rates
         lr = 0;
 
-        if( decrease_ct != 0 ) 
+        if( !fast_exact_is_equal(decrease_ct, 0) ) 
             lr += learning_rate / (1.0 + stage * decrease_ct );
         else 
             lr += learning_rate;
 
-        if( cd_decrease_ct != 0 ) 
+        if( !fast_exact_is_equal(cd_decrease_ct, 0) ) 
             lr += cd_learning_rate / (1.0 + stage * cd_decrease_ct );
         else 
             lr += cd_learning_rate;
         
-        if( denoising_decrease_ct != 0 ) 
+        if( !fast_exact_is_equal(denoising_decrease_ct, 0) ) 
             lr += denoising_learning_rate / (1.0 + stage * denoising_decrease_ct );
         else 
             lr += denoising_learning_rate;
@@ -769,8 +769,8 @@ void PseudolikelihoodRBM::train()
             //    hidden_layer->getAllActivations( 
             //        (RBMMatrixConnection*) connection );
             //    
-            //    Vec target_act = target_layer->activation;
-            //    Vec hidden_act = hidden_layer->activation;
+            //    target_act = target_layer->activation;
+            //    hidden_act = hidden_layer->activation;
             //    for( int i=0 ; i<target_layer->size ; i++ )
             //    {
             //        target_act[i] = target_layer->bias[i];
@@ -828,6 +828,75 @@ void PseudolikelihoodRBM::train()
             //            
             //            estimated_gradient(i1,j1) = (nll - estimated_gradient(i1,j1) )/epsilon;
             //            connection->weights(i1,j1) -= epsilon;
+            //        }
+            //}
+
+            // For gradient verification of target connections
+            //Mat estimated_target_gradient(target_connection->up_size, target_connection->down_size);
+            //{
+            //    connection->setAsDownInput( input );
+            //    hidden_layer->getAllActivations( 
+            //        (RBMMatrixConnection*) connection );
+            //    
+            //    target_act = target_layer->activation;
+            //    hidden_act = hidden_layer->activation;
+            //    for( int i=0 ; i<target_layer->size ; i++ )
+            //    {
+            //        target_act[i] = target_layer->bias[i];
+            //        // LATERAL CONNECTIONS CODE HERE!!
+            //        real *w = &(target_connection->weights(0,i));
+            //        // step from one row to the next in weights matrix
+            //        int m = target_connection->weights.mod();                
+            //        
+            //        for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
+            //        {
+            //            // *w = weights(j,i)
+            //            hidden_activation_pos_i[j] = hidden_act[j] + *w;
+            //        }
+            //        target_act[i] -= hidden_layer->freeEnergyContribution(
+            //            hidden_activation_pos_i);
+            //    }
+            //    
+            //    target_layer->expectation_is_up_to_date = false;
+            //    target_layer->computeExpectation();
+            //    real true_nll = target_layer->fpropNLL(target_one_hot);
+            //    
+            //    estimated_target_gradient.fill(true_nll);
+            //    
+            //    real epsilon = 1e-5;
+            //    for( int i1=0; i1<target_connection->up_size; i1++)
+            //        for( int j1=0; j1<target_connection->down_size; j1++)
+            //        {
+            //            target_connection->weights(i1,j1) += epsilon;
+            //            connection->setAsDownInput( input );
+            //            hidden_layer->getAllActivations( 
+            //                (RBMMatrixConnection*) connection );
+            //            
+            //            Vec target_act = target_layer->activation;
+            //            Vec hidden_act = hidden_layer->activation;
+            //            for( int i=0 ; i<target_layer->size ; i++ )
+            //            {
+            //                target_act[i] = target_layer->bias[i];
+            //                // LATERAL CONNECTIONS CODE HERE!!
+            //                real *w = &(target_connection->weights(0,i));
+            //                // step from one row to the next in weights matrix
+            //                int m = target_connection->weights.mod();                
+            //                
+            //                for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
+            //                {
+            //                    // *w = weights(j,i)
+            //                    hidden_activation_pos_i[j] = hidden_act[j] + *w;
+            //                }
+            //                target_act[i] -= hidden_layer->freeEnergyContribution(
+            //                    hidden_activation_pos_i);
+            //            }
+            //            
+            //            target_layer->expectation_is_up_to_date = false;
+            //            target_layer->computeExpectation();
+            //            real nll = target_layer->fpropNLL(target_one_hot);
+            //            
+            //            estimated_target_gradient(i1,j1) = (nll - estimated_target_gradient(i1,j1) )/epsilon;
+            //            target_connection->weights(i1,j1) -= epsilon;
             //        }
             //}
 
@@ -892,6 +961,8 @@ void PseudolikelihoodRBM::train()
             target_layer->bpropNLL(target_one_hot,nll,class_gradient);
 
             hidden_activation_gradient.clear();
+
+            //Mat target_real_gradient(target_connection->up_size, target_connection->down_size);
             for( int i=0 ; i<target_layer->size ; i++ )
             {
                 real *w = &(target_connection->weights(0,i));
@@ -913,14 +984,26 @@ void PseudolikelihoodRBM::train()
 
                 // Update target connections
                 w = &(target_connection->weights(0,i));
+                //real* gw = &(target_real_gradient(0,i));
+                //int gm = target_real_gradient.mod();
                 for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
+                {
                     *w -= lr * hidden_activation_pos_i_gradient[j];
+                    //*gw += hidden_activation_pos_i_gradient[j];
+                    //gw += gm;
+                }
+                    
             }
 
             //real cos_ang = dot(connection_gradient.toVec(),estimated_gradient.toVec())
             //    / (norm(connection_gradient.toVec()) *norm(estimated_gradient.toVec()));
             //cout << "cos_ang=" << cos_ang << endl;
             //cout << "ang=" << acos(cos_ang) << endl;
+
+            //real cos_target_ang = dot(target_real_gradient.toVec(),estimated_target_gradient.toVec())
+            //    / (norm(target_real_gradient.toVec()) *norm(estimated_target_gradient.toVec()));
+            //cout << "cos_target_ang=" << cos_target_ang << endl;
+            //cout << "target_ang=" << acos(cos_target_ang) << endl;
 
             // Update target bias            
             multiplyScaledAdd(class_gradient, 1.0, -lr,
@@ -971,7 +1054,7 @@ void PseudolikelihoodRBM::train()
             PLERROR("NNNNNNNNNNOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!!!!!!!");
         }
 
-        if( !fast_is_equal(learning_rate, 0.) &&
+        if( !fast_exact_is_equal(learning_rate, 0.) &&
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
             if( decrease_ct != 0 )
@@ -1012,6 +1095,7 @@ void PseudolikelihoodRBM::train()
                 real* ga_pos_i = hidden_activation_pos_i_gradient.data();
                 real* ga_neg_i = hidden_activation_neg_i_gradient.data();
 
+                // Randomly select inputs
                 if( n_selected_inputs_pseudolikelihood <= inputsize() &&
                     n_selected_inputs_pseudolikelihood > 0 )
                 {
@@ -1038,10 +1122,9 @@ void PseudolikelihoodRBM::train()
                     }
                 }
 
-
+                // Resize V_gradients
                 if( input_is_sparse )
                 {
-                    // Resize V_gradients
                     int n_V_gradients;
                     if( n_selected_inputs_pseudolikelihood <= inputsize() &&
                         n_selected_inputs_pseudolikelihood > 0 )
@@ -1058,7 +1141,8 @@ void PseudolikelihoodRBM::train()
                             n_V_gradients,
                             hidden_layer->size );
                 }
-                
+
+                // Compute activations
                 if( input_is_sparse )
                 {
                     if( factorized_connection_rank > 0 )
@@ -1808,14 +1892,14 @@ void PseudolikelihoodRBM::train()
         }
     
         // CD learning
-        if( !fast_is_equal(cd_learning_rate, 0.) &&
+        if( !fast_exact_is_equal(cd_learning_rate, 0.) &&
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
             if( input_is_sparse )
                 PLERROR("In PseudolikelihoodRBM::train(): CD is not implemented "
                         "for sparse inputs");
 
-            if( !fast_is_equal(persistent_cd_weight, 1.) )
+            if( !fast_exact_is_equal(persistent_cd_weight, 1.) )
             {
                 if( cd_decrease_ct != 0 )
                     lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
@@ -1929,7 +2013,7 @@ void PseudolikelihoodRBM::train()
                 }
             }
 
-            if( !fast_is_equal(persistent_cd_weight, 0.) )
+            if( !fast_exact_is_equal(persistent_cd_weight, 0.) )
             {
                 if( use_mean_field_cd )
                     PLERROR("In PseudolikelihoodRBM::train(): Persistent "
@@ -1971,7 +2055,7 @@ void PseudolikelihoodRBM::train()
                     persistent_gibbs_chain_is_started[chain_i] = true;
                 }
 
-                if( fast_is_equal(persistent_cd_weight, 1.) )
+                if( fast_exact_is_equal(persistent_cd_weight, 1.) )
                 {
                     // Hidden positive sample was not computed previously
                     connection->setAsDownInput( input );
@@ -2035,7 +2119,7 @@ void PseudolikelihoodRBM::train()
             }
         }
         
-        if( !fast_is_equal(denoising_learning_rate, 0.) &&
+        if( !fast_exact_is_equal(denoising_learning_rate, 0.) &&
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
             if( denoising_decrease_ct != 0 )
