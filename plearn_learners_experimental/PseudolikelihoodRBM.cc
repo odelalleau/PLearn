@@ -454,6 +454,7 @@ void PseudolikelihoodRBM::build_layers_and_connections()
         {
             U.resize( hidden_layer->size, factorized_connection_rank );
             V.resize( inputsize(), factorized_connection_rank );
+            Vx.resize( factorized_connection_rank );
 
             U_gradient.resize( hidden_layer->size, factorized_connection_rank );
             Vx_gradient.resize( factorized_connection_rank );
@@ -687,6 +688,8 @@ void PseudolikelihoodRBM::train()
     int target_index;
     real weight; // unused
     real lr;
+
+    //real mean_pseudolikelihood = 0;
 
     TVec<string> train_cost_names = getTrainCostNames() ;
     Vec train_costs( train_cost_names.length() );
@@ -934,7 +937,10 @@ void PseudolikelihoodRBM::train()
                                      Vx );
                     transposeProduct( Vx_gradient, U, hidden_activation_gradient );
                     for( int i=0; i<extra.length(); i++ )
+                    {
                         V((int)extra[i]) -= lr * Vx_gradient;
+                        input_is_active[(int)extra[i]] = false;
+                    }
                     
                     multiplyScaledAdd( U_gradient, 1.0, -lr,
                                        U );
@@ -942,7 +948,10 @@ void PseudolikelihoodRBM::train()
                 else
                 {
                     for( int i=0; i<extra.length(); i++ )
+                    {
                         V((int)extra[i]) -= lr * hidden_activation_gradient;
+                        input_is_active[(int)extra[i]] = false;
+                    }
                 }
 
             }
@@ -1012,17 +1021,6 @@ void PseudolikelihoodRBM::train()
                         for( int i=0; i<input_indices.length(); i++ )
                             input_indices[i] = i;
                         
-                        if( input_is_sparse )
-                        {
-                            if( factorized_connection_rank > 0 )
-                                V_gradients.resize(
-                                    n_selected_inputs_pseudolikelihood,
-                                    factorized_connection_rank );
-                            else
-                                V_gradients.resize(
-                                    n_selected_inputs_pseudolikelihood,
-                                    hidden_layer->size );
-                        }
                     }
                  
                     // Randomly selected inputs
@@ -1032,7 +1030,7 @@ void PseudolikelihoodRBM::train()
                     {
                         k = j + 
                             random_gen->uniform_multinomial_sample(
-                                n_selected_inputs_pseudolikelihood - j);
+                                inputsize() - j);
                         
                         tmp = input_indices[j];
                         input_indices[j] = input_indices[k];
@@ -1040,52 +1038,67 @@ void PseudolikelihoodRBM::train()
                     }
                 }
 
-                if( targetsize() <= 0 )
-                {
-                    // This was not computed previously
-                    if( input_is_sparse )
-                    {
-                        if( factorized_connection_rank > 0 )
-                        {
-                            Vx.clear();
-                            train_set->getExtra(stage%nsamples,extra);
-                            for( int i=0; i<extra.length(); i++ )
-                            {
-                                Vx += V((int)extra[i]);
-                                input_is_active[(int)extra[i]] = true;
-                            }
 
-                            product(hidden_act,U,Vx);
-                        }
-                        else
+                if( input_is_sparse )
+                {
+                    // Resize V_gradients
+                    int n_V_gradients;
+                    if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                        n_selected_inputs_pseudolikelihood > 0 )
+                        n_V_gradients = n_selected_inputs_pseudolikelihood;
+                    else
+                        n_V_gradients = inputsize();
+
+                    if( factorized_connection_rank > 0 )
+                        V_gradients.resize(
+                            n_V_gradients,
+                            factorized_connection_rank );
+                    else
+                        V_gradients.resize(
+                            n_V_gradients,
+                            hidden_layer->size );
+                }
+                
+                if( input_is_sparse )
+                {
+                    if( factorized_connection_rank > 0 )
+                    {
+                        Vx.clear();
+                        train_set->getExtra(stage%nsamples,extra);
+                        for( int i=0; i<extra.length(); i++ )
                         {
-                            hidden_act.clear();
-                            train_set->getExtra(stage%nsamples,extra);
-                            for( int i=0; i<extra.length(); i++ )
-                            {
-                                hidden_act += V((int)extra[i]);
-                                input_is_active[(int)extra[i]] = true;
-                            }
+                            Vx += V((int)extra[i]);
+                            input_is_active[(int)extra[i]] = true;
                         }
+                        
+                        product(hidden_act,U,Vx);
                     }
                     else
                     {
-                        connection->setAsDownInput( input );
-                        hidden_layer->getAllActivations( 
-                            (RBMMatrixConnection*) connection );
+                        hidden_act.clear();
+                        train_set->getExtra(stage%nsamples,extra);
+                        for( int i=0; i<extra.length(); i++ )
+                        {
+                            hidden_act += V((int)extra[i]);
+                            input_is_active[(int)extra[i]] = true;
+                        }
                     }
                 }
                 else
                 {
-                    if( targetsize() == 1 )
+                    connection->setAsDownInput( input );
+                    hidden_layer->getAllActivations( 
+                        (RBMMatrixConnection*) connection );
+                }
+
+                if( targetsize() == 1 )
                         productAcc( hidden_layer->activation,
                                     target_connection->weights,
                                     target_one_hot );
-                    else if( targetsize() > 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target );
-                }
+                else if( targetsize() > 1 )
+                    productAcc( hidden_layer->activation,
+                                target_connection->weights,
+                                target );
 
                 // Clear gradients
                 hidden_activation_gradient.clear();
@@ -1314,9 +1327,9 @@ void PseudolikelihoodRBM::train()
 
                 // N.B.: train costs contains pseudolikelihood
                 //       or pseudoNLL, not NLL
-                if( compute_input_space_nll )
+                if( compute_input_space_nll && targetsize() == 0 )
                     train_costs[nll_cost_index] = pseudolikelihood;
-
+                //mean_pseudolikelihood += pseudolikelihood;
 //                    cout << "input_gradient: " << input_gradient << endl;
 //                    cout << "hidden_activation_gradient" << hidden_activation_gradient << endl;
 
@@ -1533,25 +1546,18 @@ void PseudolikelihoodRBM::train()
                     }
                 }
 
-                if( targetsize() <= 0 )
-                {
-                    // This was not computed previously
-                    connection->setAsDownInput( input );
-                    hidden_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                }
-                else
-                {
-                    if( targetsize() == 1 )
-                        productAcc( hidden_layer->activation,
+                connection->setAsDownInput( input );
+                hidden_layer->getAllActivations( 
+                    (RBMMatrixConnection*) connection );
+
+                if( targetsize() == 1 )
+                    productAcc( hidden_layer->activation,
+                                target_connection->weights,
+                                target_one_hot );
+                else if( targetsize() > 1 )
+                    productAcc( hidden_layer->activation,
                                     target_connection->weights,
-                                    target_one_hot );
-                    else if( targetsize() > 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target );
-                            
-                }
+                                target );
 
                 int n_conf = ipow(2, pseudolikelihood_context_size);
                 //nums_act.resize( 2 * n_conf );
@@ -1796,17 +1802,9 @@ void PseudolikelihoodRBM::train()
 
                 // N.B.: train costs contains pseudolikelihood
                 //       or pseudoNLL, not NLL
-                if( compute_input_space_nll )
+                if( compute_input_space_nll && targetsize() == 0 )
                     train_costs[nll_cost_index] = pseudolikelihood;
             }
-        }
-        else
-        {
-            if( input_is_sparse )
-                // This is for the case where pseudolikelihood is
-                // not used, but discriminative learning was performed
-                for( int e=0; e<extra.length(); e++ )
-                    input_is_active[(int)extra[e]] = false;
         }
     
         // CD learning
@@ -2132,7 +2130,8 @@ void PseudolikelihoodRBM::train()
     train_costs[training_cpu_time_cost_index] = cpu_time;
     train_costs[cumulative_training_time_cost_index] = cumulative_training_time;
     train_stats->update( train_costs );
-
+    
+    //cout << "mean_pseudolikelihood=" << mean_pseudolikelihood / (stage - init_stage) << endl;
     // Sums to 1 test
     //compute_Z();
     //conf.resize( input_layer->size );
@@ -2211,6 +2210,9 @@ void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
     Vec hidden_act = hidden_layer->activation;
     for (int i = 0; i < len; i++)
     {
+        testset.getExample(i, input, target, weight);
+        testset->getExtra(i, extra );
+
         if( targetsize() == 1 )
         {
 
@@ -2218,8 +2220,6 @@ void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
             target_index = (int)round( target[0] );
             target_one_hot[ target_index ] = 1;
 
-            testset.getExample(i, input, target, weight);
-            testset->getExtra(i, extra );
             if( factorized_connection_rank > 0 )
             {
                 Vx.clear();
