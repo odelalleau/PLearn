@@ -180,6 +180,12 @@ public:
     //! Return the statnames (potentially modified by statmask, if provided).
     TVec<string> getStatNames();
 
+    //! Set the stat names. The vector 'statnames' is copied. By default,
+    //! the object is re-built, but this can be disabled by setting
+    //! 'call_build' to false.
+    void setStatNames(const TVec<string>& the_statnames,
+                      bool call_build = true);
+
     //! runs the tester
     virtual void run();
 

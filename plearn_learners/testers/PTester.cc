@@ -876,7 +876,21 @@ void PTester::computeConfidence(VMat test_set, VMat confidence)
     }
 }
 
+//////////////////
+// setStatNames //
+//////////////////
+void PTester::setStatNames(const TVec<string>& the_statnames,
+                           bool call_build)
+{
+    statnames.resize(the_statnames.length());
+    statnames << the_statnames;
+    if (call_build)
+        build();
+}
 
+//////////////////
+// getStatNames //
+//////////////////
 TVec<string> PTester::getStatNames()
 {
     return statnames_processed;
