@@ -2488,11 +2488,14 @@ template<class T>
 inline T kthOrderedElement(const TVec<T>& vec, int k)
 { return vec[positionOfkthOrderedElement(vec,k)]; }
 
-//!  returns the median value of vec
+//! Return the median value of vector.
 template<class T>
 inline T median(const TVec<T>& vec)
-{ return kthOrderedElement(vec, (vec.length()-1)/2); }
-
+{
+    if (vec.isEmpty())
+        PLERROR("In median - Cannot compute median of an empty vector");
+    return kthOrderedElement(vec, (vec.length()-1)/2);
+}
 
 //-------------- These were previouslty methods of TVec ----------------------------------
 
