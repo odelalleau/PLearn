@@ -84,9 +84,7 @@ BasisSelectionRegressor::BasisSelectionRegressor()
       n_threads(0),
       thread_subtrain_length(0),
       residue_sum(0),
-      residue_sum_sq(0),
-      weights_sum(0)
-
+      residue_sum_sq(0)
 {}
 
 void BasisSelectionRegressor::declareOptions(OptionList& ol)
@@ -199,9 +197,9 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "EXPERIMENTAL OPTION (under development)");
 
-    declareOption(ol, "learner", &BasisSelectionRegressor::learner,
+    declareOption(ol, "learner", &BasisSelectionRegressor::template_learner,
                   OptionBase::buildoption,
-                  "The underlying learner to be trained with the extracted features.");
+                  "The underlying template learner.");
 
     declareOption(ol, "precompute_features", &BasisSelectionRegressor::precompute_features,
                   OptionBase::buildoption,
@@ -242,6 +240,10 @@ void BasisSelectionRegressor::declareOptions(OptionList& ol)
                   "will get included in the dictionary for interaction terms ONLY\n"
                   "(i.e. these interact with the other functions.)");
 
+    declareOption(ol, "true_learner", &BasisSelectionRegressor::learner,
+                  OptionBase::learntoption,
+                  "The underlying learner to be trained with the extracted features.");
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -255,7 +257,7 @@ void BasisSelectionRegressor::build_()
 void BasisSelectionRegressor::setExperimentDirectory(const PPath& the_expdir)
 { 
     inherited::setExperimentDirectory(the_expdir);
-    learner->setExperimentDirectory(the_expdir / "SubLearner");
+    template_learner->setExperimentDirectory(the_expdir / "SubLearner");
 }
 
 
@@ -278,6 +280,7 @@ void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(kernels, copies);
     deepCopyField(kernel_centers, copies);
     deepCopyField(learner, copies);
+    deepCopyField(template_learner, copies);
     deepCopyField(selected_functions, copies);
     deepCopyField(alphas, copies);
     deepCopyField(scores, copies);
@@ -302,17 +305,6 @@ int BasisSelectionRegressor::outputsize() const
 
 void BasisSelectionRegressor::forget()
 {
-    
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
-    //! a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - initialize a random number generator with the seed option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
-
     selected_functions.resize(0);
     targets.resize(0);
     residue.resize(0);
@@ -1078,11 +1070,22 @@ void BasisSelectionRegressor::retrainLearner()
     bool weighted = train_set->hasWeights();
 
     // set dummy training set, so that undelying learner frees reference to previous training set
+    /*
     VMat newtrainset = new MemoryVMatrix(1,nf+(weighted?2:1));
     newtrainset->defineSizes(nf,1,weighted?1:0);
     learner->setTrainingSet(newtrainset);
     learner->forget();
+    */
 
+    // Deep-copy the underlying learner
+    CopiesMap copies;
+    learner = template_learner->deepCopy(copies);
+    PP<VecStatsCollector> statscol = template_learner->getTrainStatsCollector();
+    learner->setTrainStatsCollector(statscol);
+    PPath expdir = template_learner->getExperimentDirectory();
+    learner->setExperimentDirectory(expdir);
+
+    VMat newtrainset;
     if(precompute_features)
     {
         features.resize(l,nf+(weighted?2:1), max(1,int(0.25*l*nf)), true); // enlarge width while preserving content
@@ -1102,12 +1105,9 @@ void BasisSelectionRegressor::retrainLearner()
     else
         newtrainset= new RealFunctionsProcessedVMatrix(train_set, selected_functions, false, true, true);
     newtrainset->defineSizes(nf,1,weighted?1:0);
-    // perr.clearOutMap();
-    // perr << "new train set:\n" << newtrainset << endl;
     learner->setTrainingSet(newtrainset);
     learner->forget();
     learner->train();
-    // perr << "retrained learner:\n" << learner << endl;
     // resize features matrix so it contains only the features
     if(precompute_features)
         features.resize(l,nf);
@@ -1186,7 +1186,6 @@ void BasisSelectionRegressor::initTargetsResidueWeight()
     residue_sum = 0.;
     residue_sum_sq = 0.;
     weights.resize(l);
-    weights_sum = 0.;
 
     real w;
     for(int i=0; i<l; i++)
@@ -1195,10 +1194,9 @@ void BasisSelectionRegressor::initTargetsResidueWeight()
         real t = targ[0];
         targets[i] = t;
         residue[i] = t;
+        weights[i] = w;
         residue_sum += w*t;
         residue_sum_sq += w*square(t);
-        weights[i] = w;
-        weights_sum += w;
     }
 }
 
@@ -1293,13 +1291,13 @@ TVec<string> BasisSelectionRegressor::getTestCostNames() const
 void BasisSelectionRegressor::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 { 
     train_stats = statscol;
-    learner->setTrainStatsCollector(statscol);
+    template_learner->setTrainStatsCollector(statscol);
 }
 
 
 TVec<string> BasisSelectionRegressor::getTrainCostNames() const
 {
-    return learner->getTrainCostNames();
+    return template_learner->getTrainCostNames();
 }
 
 

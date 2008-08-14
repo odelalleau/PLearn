@@ -233,6 +233,12 @@ private:
     void recomputeResidue();
     void computeOutputFromFeaturevec(const Vec& featurevec, Vec& output) const;
 
+protected:
+    //#####  Protected Data Members  ##########################################
+
+    // Template learner.  Each train step is done with a copy of this one.
+    PP<PLearner> template_learner;
+
 private:
     //#####  Private Data Members  ############################################
 
@@ -244,7 +250,6 @@ private:
     Vec weights;
     double residue_sum;
     double residue_sum_sq;
-    double weights_sum;
 
     mutable Vec input;
     mutable Vec targ;
