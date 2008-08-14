@@ -1,4 +1,4 @@
-FATAL ERROR: In file: "/home/fringant2/lisa/bastienf/PLearn/plearn/base/plerror.cc" at line 173
+FATAL ERROR: In file: "plerror.cc" at line 175
 Assertion failed: 3+8 == 123+46
 Function: int main()
     File: assertions.cc
