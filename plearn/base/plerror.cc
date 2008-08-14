@@ -41,6 +41,7 @@
 
 #include "plerror.h"
 #include <plearn/io/pl_log.h>
+#include <plearn/io/PPath.h>
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
@@ -62,7 +63,8 @@ void errormsg2(const char* filename,const int linenumber,const char* msg, ...){
     va_start(args,msg);
     char message[ERROR_MSG_SIZE];
     
-    snprintf(message, ERROR_MSG_SIZE, "In file: \"%s\" at line %d\n", filename, linenumber);
+    snprintf(message, ERROR_MSG_SIZE, "In file: \"%s\" at line %d\n",
+            PPath(filename).basename().c_str(), linenumber);
     PLASSERT(ERROR_MSG_SIZE>=strlen(message)+strlen(msg));
     strncat(message,msg,ERROR_MSG_SIZE);
     verrormsg(message, args);
