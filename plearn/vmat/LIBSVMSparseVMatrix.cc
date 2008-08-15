@@ -143,10 +143,10 @@ void LIBSVMSparseVMatrix::build_()
     }
 
     // Set sizes
-    inputsize_ = largest_input_index+1;
-    targetsize_ = 1;
-    weightsize_ = 0;
-    extrasize_ = largest_input_index+1;
+    if( inputsize_ < 0 ) inputsize_ = largest_input_index+1;
+    if( targetsize_ < 0 ) targetsize_ = 1;
+    if( weightsize_ < 0 ) weightsize_ = 0;
+    if( extrasize_ < 0 ) extrasize_ = largest_input_index+1;
 }
  
 
