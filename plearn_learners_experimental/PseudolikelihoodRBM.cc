@@ -1081,6 +1081,7 @@ void PseudolikelihoodRBM::train()
                 //      p_i = exp(num_pos) / (exp(num_pos) + exp(num_neg))
 
                 Vec hidden_act = hidden_layer->activation;
+
                 real num_pos_act;
                 real num_neg_act;
                 real num_pos;
@@ -1142,6 +1143,812 @@ void PseudolikelihoodRBM::train()
                             hidden_layer->size );
                 }
 
+                //Mat estimated_gradient;
+                //Mat U_estimated_gradient;
+                //{
+                //    real epsilon=1e-5;
+                //    // Empirically estimate gradient
+                //    if( input_is_sparse )
+                //    {
+                //        estimated_gradient.resize(V.length(), V.width());
+                //        U_estimated_gradient.resize(U.length(), U.width() );
+                //
+                //        int i=0;
+                //        pseudolikelihood = 0;
+                //
+                //        // Compute activations
+                //        if( input_is_sparse )
+                //        {
+                //            if( factorized_connection_rank > 0 )
+                //            {
+                //                Vx.clear();
+                //                train_set->getExtra(stage%nsamples,extra);
+                //                for( int i=0; i<extra.length(); i++ )
+                //                {
+                //                    Vx += V((int)extra[i]);
+                //                    input_is_active[(int)extra[i]] = true;
+                //                }
+                //        
+                //                product(hidden_act,U,Vx);
+                //            }
+                //            else
+                //            {
+                //                hidden_act.clear();
+                //                train_set->getExtra(stage%nsamples,extra);
+                //                for( int i=0; i<extra.length(); i++ )
+                //                {
+                //                    hidden_act += V((int)extra[i]);
+                //                    input_is_active[(int)extra[i]] = true;
+                //                }
+                //            }
+                //        }
+                //        else
+                //        {
+                //            connection->setAsDownInput( input );
+                //            hidden_layer->getAllActivations( 
+                //                (RBMMatrixConnection*) connection );
+                //        }
+                //
+                //        if( targetsize() == 1 )
+                //            productAcc( hidden_layer->activation,
+                //                        target_connection->weights,
+                //                        target_one_hot );
+                //        else if( targetsize() > 1 )
+                //            productAcc( hidden_layer->activation,
+                //                        target_connection->weights,
+                //                        target );
+                //
+                //        for( int l=0; l<input_layer->size ; l++ )
+                //        {
+                //            if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                //                n_selected_inputs_pseudolikelihood > 0 )
+                //            {
+                //                if( l >= n_selected_inputs_pseudolikelihood )
+                //                    break;
+                //                i = input_indices[l];
+                //            }
+                //            else
+                //                i = l;
+                //            
+                //            num_pos_act = input_layer->bias[i];
+                //            // LATERAL CONNECTIONS CODE HERE!
+                //            num_neg_act = 0;
+                //            if( input_is_sparse )
+                //            {
+                //                hidden_activation_pos_i << hidden_act;
+                //                hidden_activation_neg_i << hidden_act;
+                //                if( factorized_connection_rank > 0 )
+                //                    if( input_is_active[i] )
+                //                    {
+                //                        input_i = 1;
+                //                        productScaleAcc( hidden_activation_neg_i,
+                //                                         U, V(i), -1.,1.);
+                //                    }
+                //                    else
+                //                    {
+                //                        input_i = 0;
+                //                        productScaleAcc( hidden_activation_pos_i,
+                //                                         U, V(i), 1.,1.);
+                //                    }
+                //                else
+                //                    if( input_is_active[i] )
+                //                    {
+                //                        input_i = 1;
+                //                        hidden_activation_neg_i -= V(i);
+                //                    }
+                //                    else
+                //                    {
+                //                        input_i = 0;
+                //                        hidden_activation_pos_i += V(i);
+                //                    }
+                //            }
+                //            else
+                //            {
+                //                w = &(connection->weights(0,i));
+                //                input_i = input[i];
+                //                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                //                {
+                //                    a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                //                    a_neg_i[j] = a[j] - *w * input_i;
+                //                }
+                //            }
+                //            num_pos_act -= hidden_layer->freeEnergyContribution(
+                //                hidden_activation_pos_i);
+                //            num_neg_act -= hidden_layer->freeEnergyContribution(
+                //                hidden_activation_neg_i);
+                //            //num_pos = safeexp(num_pos_act);
+                //            //num_neg = safeexp(num_neg_act);
+                //            //input_probs_i = num_pos / (num_pos + num_neg);
+                //            if( input_layer->use_fast_approximations )
+                //                input_probs_i = fastsigmoid(
+                //                    num_pos_act - num_neg_act);
+                //            else
+                //            {
+                //                num_pos = safeexp(num_pos_act);
+                //                num_neg = safeexp(num_neg_act);
+                //                input_probs_i = num_pos / (num_pos + num_neg);
+                //            }
+                //            if( input_layer->use_fast_approximations )
+                //                pseudolikelihood += tabulated_softplus( 
+                //                    num_pos_act - num_neg_act ) 
+                //                    - input_i * (num_pos_act - num_neg_act);
+                //            else
+                //                pseudolikelihood += softplus( 
+                //                    num_pos_act - num_neg_act ) 
+                //                    - input_i * (num_pos_act - num_neg_act);
+                //
+                //        }
+                //
+                //        estimated_gradient.fill(pseudolikelihood);
+                //
+                //        for( int i1=0; i1<estimated_gradient.length(); i1++)
+                //            for( int j1=0; j1<estimated_gradient.width(); j1++)
+                //            {
+                //                V(i1,j1) += epsilon;
+                //                pseudolikelihood = 0;
+                //
+                //                // Compute activations
+                //                if( input_is_sparse )
+                //                {
+                //                    if( factorized_connection_rank > 0 )
+                //                    {
+                //                        Vx.clear();
+                //                        train_set->getExtra(stage%nsamples,extra);
+                //                        for( int i=0; i<extra.length(); i++ )
+                //                        {
+                //                            Vx += V((int)extra[i]);
+                //                            input_is_active[(int)extra[i]] = true;
+                //                        }
+                //        
+                //                        product(hidden_act,U,Vx);
+                //                    }
+                //                    else
+                //                    {
+                //                        hidden_act.clear();
+                //                        train_set->getExtra(stage%nsamples,extra);
+                //                        for( int i=0; i<extra.length(); i++ )
+                //                        {
+                //                            hidden_act += V((int)extra[i]);
+                //                            input_is_active[(int)extra[i]] = true;
+                //                        }
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    connection->setAsDownInput( input );
+                //                    hidden_layer->getAllActivations( 
+                //                        (RBMMatrixConnection*) connection );
+                //                }
+                //
+                //                if( targetsize() == 1 )
+                //                    productAcc( hidden_layer->activation,
+                //                                target_connection->weights,
+                //                                target_one_hot );
+                //                else if( targetsize() > 1 )
+                //                    productAcc( hidden_layer->activation,
+                //                                target_connection->weights,
+                //                                target );
+                //
+                //                for( int l=0; l<input_layer->size ; l++ )
+                //                {
+                //                    if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                //                        n_selected_inputs_pseudolikelihood > 0 )
+                //                    {
+                //                        if( l >= n_selected_inputs_pseudolikelihood )
+                //                            break;
+                //                        i = input_indices[l];
+                //                    }
+                //                    else
+                //                        i = l;
+                //            
+                //                    num_pos_act = input_layer->bias[i];
+                //                    // LATERAL CONNECTIONS CODE HERE!
+                //                    num_neg_act = 0;
+                //                    if( input_is_sparse )
+                //                    {
+                //                        hidden_activation_pos_i << hidden_act;
+                //                        hidden_activation_neg_i << hidden_act;
+                //                        if( factorized_connection_rank > 0 )
+                //                            if( input_is_active[i] )
+                //                            {
+                //                                input_i = 1;
+                //                                productScaleAcc( hidden_activation_neg_i,
+                //                                                 U, V(i), -1.,1.);
+                //                            }
+                //                            else
+                //                            {
+                //                                input_i = 0;
+                //                                productScaleAcc( hidden_activation_pos_i,
+                //                                                 U, V(i), 1.,1.);
+                //                            }
+                //                        else
+                //                            if( input_is_active[i] )
+                //                            {
+                //                                input_i = 1;
+                //                                hidden_activation_neg_i -= V(i);
+                //                            }
+                //                            else
+                //                            {
+                //                                input_i = 0;
+                //                                hidden_activation_pos_i += V(i);
+                //                            }
+                //                    }
+                //                    else
+                //                    {
+                //                        w = &(connection->weights(0,i));
+                //                        input_i = input[i];
+                //                        for( int j=0; j<hidden_layer->size; j++,w+=m )
+                //                        {
+                //                            a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                //                            a_neg_i[j] = a[j] - *w * input_i;
+                //                        }
+                //                    }
+                //                    num_pos_act -= hidden_layer->freeEnergyContribution(
+                //                        hidden_activation_pos_i);
+                //                    num_neg_act -= hidden_layer->freeEnergyContribution(
+                //                        hidden_activation_neg_i);
+                //                    //num_pos = safeexp(num_pos_act);
+                //                    //num_neg = safeexp(num_neg_act);
+                //                    //input_probs_i = num_pos / (num_pos + num_neg);
+                //                    if( input_layer->use_fast_approximations )
+                //                        input_probs_i = fastsigmoid(
+                //                            num_pos_act - num_neg_act);
+                //                    else
+                //                    {
+                //                        num_pos = safeexp(num_pos_act);
+                //                        num_neg = safeexp(num_neg_act);
+                //                        input_probs_i = num_pos / (num_pos + num_neg);
+                //                    }
+                //                    if( input_layer->use_fast_approximations )
+                //                        pseudolikelihood += tabulated_softplus( 
+                //                            num_pos_act - num_neg_act ) 
+                //                            - input_i * (num_pos_act - num_neg_act);
+                //                    else
+                //                        pseudolikelihood += softplus( 
+                //                            num_pos_act - num_neg_act ) 
+                //                            - input_i * (num_pos_act - num_neg_act);
+                //
+                //                }
+                //                V(i1,j1) -= epsilon;
+                //                estimated_gradient(i1,j1) = (pseudolikelihood - estimated_gradient(i1,j1))
+                //                    / epsilon;
+                //            }
+                //
+                //        if( factorized_connection_rank > 0 )
+                //        {
+                //
+                //        pseudolikelihood = 0;
+                //
+                //        // Compute activations
+                //        if( input_is_sparse )
+                //        {
+                //            if( factorized_connection_rank > 0 )
+                //            {
+                //                Vx.clear();
+                //                train_set->getExtra(stage%nsamples,extra);
+                //                for( int i=0; i<extra.length(); i++ )
+                //                {
+                //                    Vx += V((int)extra[i]);
+                //                    input_is_active[(int)extra[i]] = true;
+                //                }
+                //        
+                //                product(hidden_act,U,Vx);
+                //            }
+                //            else
+                //            {
+                //                hidden_act.clear();
+                //                train_set->getExtra(stage%nsamples,extra);
+                //                for( int i=0; i<extra.length(); i++ )
+                //                {
+                //                    hidden_act += V((int)extra[i]);
+                //                    input_is_active[(int)extra[i]] = true;
+                //                }
+                //            }
+                //        }
+                //        else
+                //        {
+                //            connection->setAsDownInput( input );
+                //            hidden_layer->getAllActivations( 
+                //                (RBMMatrixConnection*) connection );
+                //        }
+                //
+                //        if( targetsize() == 1 )
+                //            productAcc( hidden_layer->activation,
+                //                        target_connection->weights,
+                //                        target_one_hot );
+                //        else if( targetsize() > 1 )
+                //            productAcc( hidden_layer->activation,
+                //                        target_connection->weights,
+                //                        target );
+                //
+                //        for( int l=0; l<input_layer->size ; l++ )
+                //        {
+                //            if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                //                n_selected_inputs_pseudolikelihood > 0 )
+                //            {
+                //                if( l >= n_selected_inputs_pseudolikelihood )
+                //                    break;
+                //                i = input_indices[l];
+                //            }
+                //            else
+                //                i = l;
+                //            
+                //            num_pos_act = input_layer->bias[i];
+                //            // LATERAL CONNECTIONS CODE HERE!
+                //            num_neg_act = 0;
+                //            if( input_is_sparse )
+                //            {
+                //                hidden_activation_pos_i << hidden_act;
+                //                hidden_activation_neg_i << hidden_act;
+                //                if( factorized_connection_rank > 0 )
+                //                    if( input_is_active[i] )
+                //                    {
+                //                        input_i = 1;
+                //                        productScaleAcc( hidden_activation_neg_i,
+                //                                         U, V(i), -1.,1.);
+                //                    }
+                //                    else
+                //                    {
+                //                        input_i = 0;
+                //                        productScaleAcc( hidden_activation_pos_i,
+                //                                         U, V(i), 1.,1.);
+                //                    }
+                //                else
+                //                    if( input_is_active[i] )
+                //                    {
+                //                        input_i = 1;
+                //                        hidden_activation_neg_i -= V(i);
+                //                    }
+                //                    else
+                //                    {
+                //                        input_i = 0;
+                //                        hidden_activation_pos_i += V(i);
+                //                    }
+                //            }
+                //            else
+                //            {
+                //                w = &(connection->weights(0,i));
+                //                input_i = input[i];
+                //                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                //                {
+                //                    a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                //                    a_neg_i[j] = a[j] - *w * input_i;
+                //                }
+                //            }
+                //            num_pos_act -= hidden_layer->freeEnergyContribution(
+                //                hidden_activation_pos_i);
+                //            num_neg_act -= hidden_layer->freeEnergyContribution(
+                //                hidden_activation_neg_i);
+                //            //num_pos = safeexp(num_pos_act);
+                //            //num_neg = safeexp(num_neg_act);
+                //            //input_probs_i = num_pos / (num_pos + num_neg);
+                //            if( input_layer->use_fast_approximations )
+                //                input_probs_i = fastsigmoid(
+                //                    num_pos_act - num_neg_act);
+                //            else
+                //            {
+                //                num_pos = safeexp(num_pos_act);
+                //                num_neg = safeexp(num_neg_act);
+                //                input_probs_i = num_pos / (num_pos + num_neg);
+                //            }
+                //            if( input_layer->use_fast_approximations )
+                //                pseudolikelihood += tabulated_softplus( 
+                //                    num_pos_act - num_neg_act ) 
+                //                    - input_i * (num_pos_act - num_neg_act);
+                //            else
+                //                pseudolikelihood += softplus( 
+                //                    num_pos_act - num_neg_act ) 
+                //                    - input_i * (num_pos_act - num_neg_act);
+                //
+                //        }
+                //
+                //        U_estimated_gradient.fill(pseudolikelihood);
+                //
+                //        for( int i1=0; i1<U_estimated_gradient.length(); i1++)
+                //            for( int j1=0; j1<U_estimated_gradient.width(); j1++)
+                //            {
+                //                U(i1,j1) += epsilon;
+                //                pseudolikelihood = 0;
+                //
+                //                // Compute activations
+                //                if( input_is_sparse )
+                //                {
+                //                    if( factorized_connection_rank > 0 )
+                //                    {
+                //                        Vx.clear();
+                //                        train_set->getExtra(stage%nsamples,extra);
+                //                        for( int i=0; i<extra.length(); i++ )
+                //                        {
+                //                            Vx += V((int)extra[i]);
+                //                            input_is_active[(int)extra[i]] = true;
+                //                        }
+                //        
+                //                        product(hidden_act,U,Vx);
+                //                    }
+                //                    else
+                //                    {
+                //                        hidden_act.clear();
+                //                        train_set->getExtra(stage%nsamples,extra);
+                //                        for( int i=0; i<extra.length(); i++ )
+                //                        {
+                //                            hidden_act += V((int)extra[i]);
+                //                            input_is_active[(int)extra[i]] = true;
+                //                        }
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    connection->setAsDownInput( input );
+                //                    hidden_layer->getAllActivations( 
+                //                        (RBMMatrixConnection*) connection );
+                //                }
+                //
+                //                if( targetsize() == 1 )
+                //                    productAcc( hidden_layer->activation,
+                //                                target_connection->weights,
+                //                                target_one_hot );
+                //                else if( targetsize() > 1 )
+                //                    productAcc( hidden_layer->activation,
+                //                                target_connection->weights,
+                //                                target );
+                //
+                //                for( int l=0; l<input_layer->size ; l++ )
+                //                {
+                //                    if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                //                        n_selected_inputs_pseudolikelihood > 0 )
+                //                    {
+                //                        if( l >= n_selected_inputs_pseudolikelihood )
+                //                            break;
+                //                        i = input_indices[l];
+                //                    }
+                //                    else
+                //                        i = l;
+                //            
+                //                    num_pos_act = input_layer->bias[i];
+                //                    // LATERAL CONNECTIONS CODE HERE!
+                //                    num_neg_act = 0;
+                //                    if( input_is_sparse )
+                //                    {
+                //                        hidden_activation_pos_i << hidden_act;
+                //                        hidden_activation_neg_i << hidden_act;
+                //                        if( factorized_connection_rank > 0 )
+                //                            if( input_is_active[i] )
+                //                            {
+                //                                input_i = 1;
+                //                                productScaleAcc( hidden_activation_neg_i,
+                //                                                 U, V(i), -1.,1.);
+                //                            }
+                //                            else
+                //                            {
+                //                                input_i = 0;
+                //                                productScaleAcc( hidden_activation_pos_i,
+                //                                                 U, V(i), 1.,1.);
+                //                            }
+                //                        else
+                //                            if( input_is_active[i] )
+                //                            {
+                //                                input_i = 1;
+                //                                hidden_activation_neg_i -= V(i);
+                //                            }
+                //                            else
+                //                            {
+                //                                input_i = 0;
+                //                                hidden_activation_pos_i += V(i);
+                //                            }
+                //                    }
+                //                    else
+                //                    {
+                //                        w = &(connection->weights(0,i));
+                //                        input_i = input[i];
+                //                        for( int j=0; j<hidden_layer->size; j++,w+=m )
+                //                        {
+                //                            a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                //                            a_neg_i[j] = a[j] - *w * input_i;
+                //                        }
+                //                    }
+                //                    num_pos_act -= hidden_layer->freeEnergyContribution(
+                //                        hidden_activation_pos_i);
+                //                    num_neg_act -= hidden_layer->freeEnergyContribution(
+                //                        hidden_activation_neg_i);
+                //                    //num_pos = safeexp(num_pos_act);
+                //                    //num_neg = safeexp(num_neg_act);
+                //                    //input_probs_i = num_pos / (num_pos + num_neg);
+                //                    if( input_layer->use_fast_approximations )
+                //                        input_probs_i = fastsigmoid(
+                //                            num_pos_act - num_neg_act);
+                //                    else
+                //                    {
+                //                        num_pos = safeexp(num_pos_act);
+                //                        num_neg = safeexp(num_neg_act);
+                //                        input_probs_i = num_pos / (num_pos + num_neg);
+                //                    }
+                //                    if( input_layer->use_fast_approximations )
+                //                        pseudolikelihood += tabulated_softplus( 
+                //                            num_pos_act - num_neg_act ) 
+                //                            - input_i * (num_pos_act - num_neg_act);
+                //                    else
+                //                        pseudolikelihood += softplus( 
+                //                            num_pos_act - num_neg_act ) 
+                //                            - input_i * (num_pos_act - num_neg_act);
+                //
+                //                }
+                //                U(i1,j1) -= epsilon;
+                //                U_estimated_gradient(i1,j1) = (pseudolikelihood - U_estimated_gradient(i1,j1))
+                //                    / epsilon;
+                //            }
+                //
+                //
+                //        }
+                //    }
+                //    else
+                //    {
+                //        estimated_gradient.resize(connection->up_size, connection->down_size);
+                //
+                //        int i=0;
+                //        pseudolikelihood = 0;
+                //
+                //        // Compute activations
+                //        if( input_is_sparse )
+                //        {
+                //            if( factorized_connection_rank > 0 )
+                //            {
+                //                Vx.clear();
+                //                train_set->getExtra(stage%nsamples,extra);
+                //                for( int i=0; i<extra.length(); i++ )
+                //                {
+                //                    Vx += V((int)extra[i]);
+                //                    input_is_active[(int)extra[i]] = true;
+                //                }
+                //        
+                //                product(hidden_act,U,Vx);
+                //            }
+                //            else
+                //            {
+                //                hidden_act.clear();
+                //                train_set->getExtra(stage%nsamples,extra);
+                //                for( int i=0; i<extra.length(); i++ )
+                //                {
+                //                    hidden_act += V((int)extra[i]);
+                //                    input_is_active[(int)extra[i]] = true;
+                //                }
+                //            }
+                //        }
+                //        else
+                //        {
+                //            connection->setAsDownInput( input );
+                //            hidden_layer->getAllActivations( 
+                //                (RBMMatrixConnection*) connection );
+                //        }
+                //
+                //        if( targetsize() == 1 )
+                //            productAcc( hidden_layer->activation,
+                //                        target_connection->weights,
+                //                        target_one_hot );
+                //        else if( targetsize() > 1 )
+                //            productAcc( hidden_layer->activation,
+                //                        target_connection->weights,
+                //                        target );
+                //
+                //        for( int l=0; l<input_layer->size ; l++ )
+                //        {
+                //            if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                //                n_selected_inputs_pseudolikelihood > 0 )
+                //            {
+                //                if( l >= n_selected_inputs_pseudolikelihood )
+                //                    break;
+                //                i = input_indices[l];
+                //            }
+                //            else
+                //                i = l;
+                //            
+                //            num_pos_act = input_layer->bias[i];
+                //            // LATERAL CONNECTIONS CODE HERE!
+                //            num_neg_act = 0;
+                //            if( input_is_sparse )
+                //            {
+                //                hidden_activation_pos_i << hidden_act;
+                //                hidden_activation_neg_i << hidden_act;
+                //                if( factorized_connection_rank > 0 )
+                //                    if( input_is_active[i] )
+                //                    {
+                //                        input_i = 1;
+                //                        productScaleAcc( hidden_activation_neg_i,
+                //                                         U, V(i), -1.,1.);
+                //                    }
+                //                    else
+                //                    {
+                //                        input_i = 0;
+                //                        productScaleAcc( hidden_activation_pos_i,
+                //                                         U, V(i), 1.,1.);
+                //                    }
+                //                else
+                //                    if( input_is_active[i] )
+                //                    {
+                //                        input_i = 1;
+                //                        hidden_activation_neg_i -= V(i);
+                //                    }
+                //                    else
+                //                    {
+                //                        input_i = 0;
+                //                        hidden_activation_pos_i += V(i);
+                //                    }
+                //            }
+                //            else
+                //            {
+                //                w = &(connection->weights(0,i));
+                //                input_i = input[i];
+                //                for( int j=0; j<hidden_layer->size; j++,w+=m )
+                //                {
+                //                    a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                //                    a_neg_i[j] = a[j] - *w * input_i;
+                //                }
+                //            }
+                //            num_pos_act -= hidden_layer->freeEnergyContribution(
+                //                hidden_activation_pos_i);
+                //            num_neg_act -= hidden_layer->freeEnergyContribution(
+                //                hidden_activation_neg_i);
+                //            //num_pos = safeexp(num_pos_act);
+                //            //num_neg = safeexp(num_neg_act);
+                //            //input_probs_i = num_pos / (num_pos + num_neg);
+                //            if( input_layer->use_fast_approximations )
+                //                input_probs_i = fastsigmoid(
+                //                    num_pos_act - num_neg_act);
+                //            else
+                //            {
+                //                num_pos = safeexp(num_pos_act);
+                //                num_neg = safeexp(num_neg_act);
+                //                input_probs_i = num_pos / (num_pos + num_neg);
+                //            }
+                //            if( input_layer->use_fast_approximations )
+                //                pseudolikelihood += tabulated_softplus( 
+                //                    num_pos_act - num_neg_act ) 
+                //                    - input_i * (num_pos_act - num_neg_act);
+                //            else
+                //                pseudolikelihood += softplus( 
+                //                    num_pos_act - num_neg_act ) 
+                //                    - input_i * (num_pos_act - num_neg_act);
+                //
+                //        }
+                //
+                //        estimated_gradient.fill(pseudolikelihood);
+                //
+                //        for( int i1=0; i1<estimated_gradient.length(); i1++)
+                //            for( int j1=0; j1<estimated_gradient.width(); j1++)
+                //            {
+                //                connection->weights(i1,j1) += epsilon;
+                //                pseudolikelihood = 0;
+                //
+                //                // Compute activations
+                //                if( input_is_sparse )
+                //                {
+                //                    if( factorized_connection_rank > 0 )
+                //                    {
+                //                        Vx.clear();
+                //                        train_set->getExtra(stage%nsamples,extra);
+                //                        for( int i=0; i<extra.length(); i++ )
+                //                        {
+                //                            Vx += V((int)extra[i]);
+                //                            input_is_active[(int)extra[i]] = true;
+                //                        }
+                //        
+                //                        product(hidden_act,U,Vx);
+                //                    }
+                //                    else
+                //                    {
+                //                        hidden_act.clear();
+                //                        train_set->getExtra(stage%nsamples,extra);
+                //                        for( int i=0; i<extra.length(); i++ )
+                //                        {
+                //                            hidden_act += V((int)extra[i]);
+                //                            input_is_active[(int)extra[i]] = true;
+                //                        }
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    connection->setAsDownInput( input );
+                //                    hidden_layer->getAllActivations( 
+                //                        (RBMMatrixConnection*) connection );
+                //                }
+                //
+                //                if( targetsize() == 1 )
+                //                    productAcc( hidden_layer->activation,
+                //                                target_connection->weights,
+                //                                target_one_hot );
+                //                else if( targetsize() > 1 )
+                //                    productAcc( hidden_layer->activation,
+                //                                target_connection->weights,
+                //                                target );
+                //
+                //                for( int l=0; l<input_layer->size ; l++ )
+                //                {
+                //                    if( n_selected_inputs_pseudolikelihood <= inputsize() &&
+                //                        n_selected_inputs_pseudolikelihood > 0 )
+                //                    {
+                //                        if( l >= n_selected_inputs_pseudolikelihood )
+                //                            break;
+                //                        i = input_indices[l];
+                //                    }
+                //                    else
+                //                        i = l;
+                //            
+                //                    num_pos_act = input_layer->bias[i];
+                //                    // LATERAL CONNECTIONS CODE HERE!
+                //                    num_neg_act = 0;
+                //                    if( input_is_sparse )
+                //                    {
+                //                        hidden_activation_pos_i << hidden_act;
+                //                        hidden_activation_neg_i << hidden_act;
+                //                        if( factorized_connection_rank > 0 )
+                //                            if( input_is_active[i] )
+                //                            {
+                //                                input_i = 1;
+                //                                productScaleAcc( hidden_activation_neg_i,
+                //                                                 U, V(i), -1.,1.);
+                //                            }
+                //                            else
+                //                            {
+                //                                input_i = 0;
+                //                                productScaleAcc( hidden_activation_pos_i,
+                //                                                 U, V(i), 1.,1.);
+                //                            }
+                //                        else
+                //                            if( input_is_active[i] )
+                //                            {
+                //                                input_i = 1;
+                //                                hidden_activation_neg_i -= V(i);
+                //                            }
+                //                            else
+                //                            {
+                //                                input_i = 0;
+                //                                hidden_activation_pos_i += V(i);
+                //                            }
+                //                    }
+                //                    else
+                //                    {
+                //                        w = &(connection->weights(0,i));
+                //                        input_i = input[i];
+                //                        for( int j=0; j<hidden_layer->size; j++,w+=m )
+                //                        {
+                //                            a_pos_i[j] = a[j] - *w * ( input_i - 1 );
+                //                            a_neg_i[j] = a[j] - *w * input_i;
+                //                        }
+                //                    }
+                //                    num_pos_act -= hidden_layer->freeEnergyContribution(
+                //                        hidden_activation_pos_i);
+                //                    num_neg_act -= hidden_layer->freeEnergyContribution(
+                //                        hidden_activation_neg_i);
+                //                    //num_pos = safeexp(num_pos_act);
+                //                    //num_neg = safeexp(num_neg_act);
+                //                    //input_probs_i = num_pos / (num_pos + num_neg);
+                //                    if( input_layer->use_fast_approximations )
+                //                        input_probs_i = fastsigmoid(
+                //                            num_pos_act - num_neg_act);
+                //                    else
+                //                    {
+                //                        num_pos = safeexp(num_pos_act);
+                //                        num_neg = safeexp(num_neg_act);
+                //                        input_probs_i = num_pos / (num_pos + num_neg);
+                //                    }
+                //                    if( input_layer->use_fast_approximations )
+                //                        pseudolikelihood += tabulated_softplus( 
+                //                            num_pos_act - num_neg_act ) 
+                //                            - input_i * (num_pos_act - num_neg_act);
+                //                    else
+                //                        pseudolikelihood += softplus( 
+                //                            num_pos_act - num_neg_act ) 
+                //                            - input_i * (num_pos_act - num_neg_act);
+                //
+                //                }
+                //                connection->weights(i1,j1) -= epsilon;
+                //                estimated_gradient(i1,j1) = (pseudolikelihood - estimated_gradient(i1,j1))
+                //                    / epsilon;
+                //            }
+                //
+                //    }
+                //}
+
+
                 // Compute activations
                 if( input_is_sparse )
                 {
@@ -1202,6 +2009,7 @@ void PseudolikelihoodRBM::train()
                 V_gradients.clear();
 
                 int i=0;
+                pseudolikelihood = 0;
                 for( int l=0; l<input_layer->size ; l++ )
                 {
                     if( n_selected_inputs_pseudolikelihood <= inputsize() &&
@@ -1223,16 +2031,28 @@ void PseudolikelihoodRBM::train()
                         hidden_activation_neg_i << hidden_act;
                         if( factorized_connection_rank > 0 )
                             if( input_is_active[i] )
+                            {
+                                input_i = 1;
                                 productScaleAcc( hidden_activation_neg_i,
                                                 U, V(i), -1.,1.);
+                            }
                             else
+                            {
+                                input_i = 0;
                                 productScaleAcc( hidden_activation_pos_i,
                                                 U, V(i), 1.,1.);
+                            }
                         else
                             if( input_is_active[i] )
+                            {
+                                input_i = 1;
                                 hidden_activation_neg_i -= V(i);
+                            }
                             else
+                            {
+                                input_i = 0;
                                 hidden_activation_pos_i += V(i);
+                            }
                     }
                     else
                     {
@@ -1339,6 +2159,7 @@ void PseudolikelihoodRBM::train()
 
                 if( input_is_sparse )
                 {
+                    //Mat true_gradient(V.length(), V.width());
                     if( factorized_connection_rank > 0 )
                     {
                         // Factorized connection U update
@@ -1347,6 +2168,12 @@ void PseudolikelihoodRBM::train()
                                             Vx );
                         multiplyScaledAdd( U_gradient, 1.0, -lr, U );
                         
+                        //real U_cos_ang = dot(U_gradient.toVec(),U_estimated_gradient.toVec())
+                        //    / (norm(U_gradient.toVec()) *norm(U_estimated_gradient.toVec()));
+                        //cout << "U_cos_ang=" << U_cos_ang << endl;
+                        //cout << "U_ang=" << acos(U_cos_ang) << endl;
+
+   
                         // Factorized connection V update
                         transposeProduct( Vx_gradient, U, 
                                           hidden_activation_gradient );
@@ -1354,6 +2181,7 @@ void PseudolikelihoodRBM::train()
                         {
                             V((int)extra[e]) -= lr * Vx_gradient;
                             input_is_active[(int)extra[e]] = false;
+                            //true_gradient((int)extra[e]) += Vx_gradient;
                         }
                     }
                     else
@@ -1363,6 +2191,7 @@ void PseudolikelihoodRBM::train()
                         {
                             V((int)extra[e]) -= lr * hidden_activation_gradient;
                             input_is_active[(int)extra[e]] = false;
+                            //true_gradient((int)extra[e]) += hidden_activation_gradient;
                         }
                     }
                     
@@ -1379,15 +2208,27 @@ void PseudolikelihoodRBM::train()
                             i = l;
                         // Extra V gradients
                         V(i) -= lr * V_gradients(l);
-                        
+                        //true_gradient(i) += V_gradients(l);
+
                         // Input update
                         input_layer->bias[i] -= lr * input_gradient[i];
                     }
+                    
+                    //real cos_ang = dot(true_gradient.toVec(),estimated_gradient.toVec())
+                    //    / (norm(true_gradient.toVec()) *norm(estimated_gradient.toVec()));
+                    //cout << "cos_ang=" << cos_ang << endl;
+                    //cout << "ang=" << acos(cos_ang) << endl;
+
                 }
                 else
                 {
                     externalProductAcc( connection_gradient, hidden_activation_gradient,
                                         input );
+
+                    //real cos_ang = dot(connection_gradient.toVec(),estimated_gradient.toVec())
+                    //    / (norm(connection_gradient.toVec()) *norm(estimated_gradient.toVec()));
+                    //cout << "cos_ang=" << cos_ang << endl;
+                    //cout << "ang=" << acos(cos_ang) << endl;
                     
                     // Connection weights update
                     multiplyScaledAdd( connection_gradient, 1.0, -lr,
