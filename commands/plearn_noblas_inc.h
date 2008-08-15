@@ -356,6 +356,7 @@
 #include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SparseVMatrix.h>
 #include <plearn/vmat/SplitWiseValidationVMatrix.h>
+#include <plearn/vmat/StochasticBinarizeVMatrix.h>
 #include <plearn/vmat/SubInputVMatrix.h>
 #include <plearn/vmat/TemporaryDiskVMatrix.h>
 #include <plearn/vmat/TemporaryFileVMatrix.h>
