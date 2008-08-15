@@ -58,6 +58,8 @@ class ClassErrorCostModule : public CostModule
 
 public:
     //#####  Public Build Options  ############################################
+    
+    Mat error_costs;
 
 public:
     //#####  Public Member Functions  #########################################

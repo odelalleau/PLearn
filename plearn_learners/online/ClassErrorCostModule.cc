@@ -54,7 +54,8 @@ PLEARN_IMPLEMENT_OBJECT(
     "you use this module inside a CombiningCostsModule, put its weight to 0.\n"
     );
 
-ClassErrorCostModule::ClassErrorCostModule()
+ClassErrorCostModule::ClassErrorCostModule():
+    error_costs(Mat())
 {
     output_size = 1;
     target_size = 1;
@@ -62,10 +63,10 @@ ClassErrorCostModule::ClassErrorCostModule()
 
 void ClassErrorCostModule::declareOptions(OptionList& ol)
 {
-    // declareOption(ol, "myoption", &ClassErrorCostModule::myoption,
-    //               OptionBase::buildoption,
-    //               "Help text describing this option");
-    // ...
+     declareOption(ol, "error_costs", &ClassErrorCostModule::error_costs,
+                   OptionBase::buildoption,
+                   "A square matrix containing the cost for each type of error (default is 0/1 cost). "
+                   "The two dimensions correspond to: (true class, prediction).");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -75,6 +76,9 @@ void ClassErrorCostModule::build_()
 {
     PLASSERT( output_size == 1 );
     PLASSERT( target_size == 1 );
+    PLASSERT(error_costs.width() == error_costs.length());
+    if( !error_costs.isEmpty() && input_size > 1 )
+        PLASSERT(error_costs.length() == input_size);   
 }
 
 void ClassErrorCostModule::build()
@@ -107,10 +111,16 @@ void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
     PLASSERT( input.size() == input_size );
     PLASSERT( target.size() == target_size );
 
-    if( input_size == 1 ) // is target[0] the closest integer to input[0]?
-        cost = ( round(input[0]) == round(target[0]) ) ? 0. : 1.;
-    else // is target[0] equals to argmax(input)?
-        cost = ( argmax(input) == int(round(target[0])) ) ? 0. : 1.;
+    if( error_costs.isEmpty() )
+        if( input_size == 1 ) // is target[0] the closest integer to input[0]?
+            cost = ( round(input[0]) == round(target[0]) ) ? 0. : 1.;
+        else // is target[0] equals to argmax(input)?
+            cost = ( argmax(input) == int(round(target[0])) ) ? 0. : 1.;
+    else
+        if( input_size == 1 )
+            cost = error_costs( int(round(target[0])), int(round(input[0])) );
+        else 
+            cost = error_costs( int(round(target[0])), argmax(input) );
 }
 
 void ClassErrorCostModule::fprop(const Mat& inputs, const Mat& targets,
