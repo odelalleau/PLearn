@@ -221,7 +221,8 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
         "A vector of size 2 [min,max]. For each column, the elements will be\n"
         "shifted and rescaled to be in [min,max]. If set, it will override\n"
-        "the value of the 'automatic' option.");        
+        "the value of the 'automatic' option. A constant column will be set\n"
+        "to the average of 'min' and 'max'.");        
     
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -308,10 +309,18 @@ void ShiftAndRescaleVMatrix::build_()
                 scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
 
                 for(int i=0 ; i<n_inputs ; ++i) { 
-                    shift[i] = (max_col[i] - min_col[i]) / (min_max[1] - min_max[0]) * 
-                                (min_max[0] - (min_max[1] - min_max[0])*min_col[i] /
-                                              (max_col[i] - min_col[i]) ); 
-                    scale[i] = (min_max[1] - min_max[0]) / (max_col[i] - min_col[i]) ; 
+                    if (fast_exact_is_equal(min_col[i], max_col[i])) {
+                        // Constant column.
+                        shift[i] = (min_max[1] + min_max[0]) / 2 - min_col[i];
+                        scale[i] = 1;
+                    } else {
+                        shift[i] = (max_col[i] - min_col[i]) /
+                            (min_max[1] - min_max[0]) * 
+                            (min_max[0] - (min_max[1] - min_max[0])*min_col[i]
+                             / (max_col[i] - min_col[i]) ); 
+                        scale[i] = (min_max[1] - min_max[0]) /
+                            (max_col[i] - min_col[i]); 
+                    }
                 }
 
             }
