@@ -645,7 +645,8 @@ void PseudolikelihoodRBM::forget()
 
     input_layer->forget();
     hidden_layer->forget();
-    connection->forget();
+    if( connection )
+        connection->forget();
 
     cumulative_training_time = 0;
     //cumulative_testing_time = 0;
@@ -1057,7 +1058,7 @@ void PseudolikelihoodRBM::train()
         if( !fast_exact_is_equal(learning_rate, 0.) &&
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
-            if( decrease_ct != 0 )
+            if( !fast_exact_is_equal(decrease_ct, 0) )
                 lr = learning_rate / (1.0 + stage * decrease_ct );
             else
                 lr = learning_rate;
@@ -1090,7 +1091,9 @@ void PseudolikelihoodRBM::train()
                 real* a_pos_i = hidden_activation_pos_i.data();
                 real* a_neg_i = hidden_activation_neg_i.data();
                 real* w, *gw;
-                int m = connection->weights.mod();
+                int m;
+                if( connection )
+                    m = connection->weights.mod();
                 real input_i, input_probs_i;
                 real pseudolikelihood = 0;
                 real* ga_pos_i = hidden_activation_pos_i_gradient.data();
@@ -2512,7 +2515,8 @@ void PseudolikelihoodRBM::train()
                     cp_data = context_probs.data();
                     input_i = input[i];
 
-                    m = connection->weights.mod();
+                    if( connection ) 
+                        m = connection->weights.mod();
                     // input_i = 1
                     for( int k=0; k<n_conf; k++)
                     {
@@ -3319,7 +3323,8 @@ void PseudolikelihoodRBM::setLearningRate( real the_learning_rate )
 {
     input_layer->setLearningRate( the_learning_rate );
     hidden_layer->setLearningRate( the_learning_rate );
-    connection->setLearningRate( the_learning_rate );
+    if( connection ) 
+        connection->setLearningRate( the_learning_rate );
     if( target_layer )
         target_layer->setLearningRate( the_learning_rate );
     if( target_connection )
