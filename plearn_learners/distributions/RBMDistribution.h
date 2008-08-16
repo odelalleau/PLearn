@@ -66,6 +66,8 @@ public:
     PP<RBMModule> rbm;
 
     real n_gibbs_chains;
+    VMat sample_data;
+    bool unnormalized_density;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -151,8 +153,11 @@ protected:
     TVec<Mat*> ports_val;
 
     //! Temporary storage.
-    mutable Mat work1, work2;
-    
+    mutable Mat work1, work2, work3;
+
+    //! Temporary storage.
+    mutable Vec workv1;
+
     //#####  Protected Options  ###############################################
 
     // ### Declare protected option fields (such as learned parameters) here

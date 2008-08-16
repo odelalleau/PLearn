@@ -52,7 +52,8 @@ PLEARN_IMPLEMENT_OBJECT(
 // RBMDistribution //
 /////////////////////
 RBMDistribution::RBMDistribution():
-    n_gibbs_chains(-1)
+    n_gibbs_chains(-1),
+    unnormalized_density(false)
 {}
 
 ////////////////////
@@ -81,6 +82,20 @@ void RBMDistribution::declareOptions(OptionList& ol)
         "absolute number of chains that are run simultaneously. Each chain\n"
         "will sample about N/n_chains samples, so as to obtain N samples.");
 
+    declareOption(ol, "unnormalized_density",
+                  &RBMDistribution::unnormalized_density,
+                  OptionBase::buildoption,
+        "If set to True, then the density will not be normalized (so the\n"
+        "partition function does not need to be computed). This means the\n"
+        "value returned by the 'log_density' method will instead be the\n"
+        "negative free energy of the visible input.");
+
+    declareOption(ol, "sample_data",
+                  &RBMDistribution::sample_data,
+                  OptionBase::buildoption,
+        "If provided, this data will be used to initialize the Gibbs\n"
+        "chains when generating samples.");
+ 
     // Now call the parent class' declareOptions().
     inherited::declareOptions(ol);
 }
@@ -140,9 +155,19 @@ void RBMDistribution::forget()
 //////////////
 void RBMDistribution::generate(Vec& y) const
 {
-    work1.resize(1, 0);
+    work1.resize(0, 0);
     ports_val.fill(NULL);
     ports_val[rbm->getPortIndex("visible_sample")] = &work1;
+    if (sample_data) {
+        // Pick a random sample to initialize the Gibbs chain.
+        int init_i =
+            random_gen->uniform_multinomial_sample(sample_data->length());
+        real dummy_weight;
+        work3.resize(1, sample_data->inputsize());
+        Vec w3 = work3.toVec();
+        sample_data->getExample(init_i, w3, workv1, dummy_weight);
+        ports_val[rbm->getPortIndex("visible")] = &work2;
+    }
     rbm->fprop(ports_val);
     y.resize(work1.width());
     y << work1(0);
@@ -166,17 +191,41 @@ void RBMDistribution::generateN(const Mat& Y) const
     if (n % n_chains > 0)
         n_gibbs_samples += 1;
     work2.resize(n_chains * n_gibbs_samples, Y.width());
-    PP<ProgressBar> pb = verbosity && n_gibbs_samples > 10
-        ? new ProgressBar("Gibbs sampling", n_gibbs_samples)
+    PP<ProgressBar> pb = verbosity && work2.length() > 10
+        ? new ProgressBar("Gibbs sampling", work2.length())
         : NULL;
-    for (int i = 0; i < n_gibbs_samples; i++) {
-        work1.resize(n_chains, 0);
+    int idx = 0;
+    for (int j = 0; j < n_chains; j++) {
         ports_val.fill(NULL);
-        ports_val[rbm->getPortIndex("visible_sample")] = &work1;
-        rbm->fprop(ports_val);
-        work2.subMatRows(i * n_chains, n_chains) << work1;
-        if (pb)
-            pb->updateone();
+        if (sample_data) {
+            // Pick a sample to initialize the Gibbs chain.
+            int init_i;
+            if (n_chains == sample_data->length())
+                // We use each sample once and only once.
+                init_i = j;
+            else
+                // Pick the sample randomly.
+                init_i = random_gen->uniform_multinomial_sample(sample_data->length());
+            real dummy_weight;
+            work3.resize(1, sample_data->inputsize());
+            Vec w3 = work3.toVec();
+            sample_data->getExample(init_i, w3, workv1, dummy_weight);
+            ports_val[rbm->getPortIndex("visible")] = &work3;
+        }
+        // Crash if not in the specific case where we have sample data and we
+        // compute only 1 sample in each chain. This is because otherwise I
+        // (Olivier D.) am not sure the chain is properly (i) restarted for
+        // each new chain, and (ii) kept intact when continuing the same chain.
+        PLCHECK(sample_data && n_gibbs_samples == 1);
+        for (int i = 0; i < n_gibbs_samples; i++) {
+            work1.resize(0, 0);
+            ports_val[rbm->getPortIndex("visible_sample")] = &work1;
+            rbm->fprop(ports_val);
+            work2(idx) << work1;
+            idx++;
+            if (pb)
+                pb->update(idx);
+        }
     }
     if (n_gibbs_samples > 1)
         // We shuffle rows to add more "randomness" since consecutive samples
@@ -194,7 +243,10 @@ real RBMDistribution::log_density(const Vec& y) const
     work1.resize(1, 0);
     work2.resize(1, y.length());
     work2 << y;
-    ports_val[rbm->getPortIndex("neg_log_likelihood")] = &work1;
+    if (unnormalized_density)
+        ports_val[rbm->getPortIndex("energy")] = &work1;
+    else
+        ports_val[rbm->getPortIndex("neg_log_likelihood")] = &work1;
     ports_val[rbm->getPortIndex("visible")] = &work2;
     rbm->fprop(ports_val);
     return -work1(0, 0);
