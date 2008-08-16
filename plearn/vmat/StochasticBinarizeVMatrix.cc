@@ -111,6 +111,7 @@ void StochasticBinarizeVMatrix::build_()
             rescaled_data = source;
         setMetaInfoFromSource();
     }
+    random_gen->manual_seed(seed);
 }
 
 ///////////////
