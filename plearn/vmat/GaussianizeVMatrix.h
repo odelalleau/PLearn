@@ -125,6 +125,7 @@ private:
     //! This does the actual building.
     // (PLEASE IMPLEMENT IN .cc)
     void build_();
+    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
 private:
     //#####  Private Data Members  ############################################

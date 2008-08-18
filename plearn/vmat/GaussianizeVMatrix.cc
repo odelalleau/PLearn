@@ -178,10 +178,30 @@ void GaussianizeVMatrix::build_()
                 TVec<int>(col, col + the_source->extrasize() - 1, 1));
     col += the_source->extrasize();
 
+    // Obtain meta information from source.
+    setMetaInfoFromSource();
+    
+}
+
+////////////////////
+// setMetaDataDir //
+////////////////////
+void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
+    inherited::setMetaDataDir(the_metadatadir);
+
+    VMat the_source = train_source ? train_source : source;
+    
     //to save the stats their must be a metadatadir
     if(!the_source->hasMetaDataDir() && hasMetaDataDir())
-        the_source->setMetaDataDir(getMetaDataDir()+"train_source");
+        if (train_source)
+            the_source->setMetaDataDir(getMetaDataDir()+"train_source");
+        else
+            the_source->setMetaDataDir(getMetaDataDir()+"source");
 
+    if(!the_source->hasMetaDataDir())
+        PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
+                " train_source, source or this VMatrix should have a metadata directory!");
+    
     TVec<StatsCollector> stats = the_source->
         getPrecomputedStatsFromFile("stats_gaussianizeVMatrix.psave", -1, true);
 
@@ -225,9 +245,6 @@ void GaussianizeVMatrix::build_()
     }
     if(features_to_gaussianize.size()==0)
         PLWARNING("GaussianizeVMatrix::build_() 0 variable was gaussianized");
-    // Obtain meta information from source.
-    setMetaInfoFromSource();
-    
 }
 
 ///////////////
