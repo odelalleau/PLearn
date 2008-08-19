@@ -118,7 +118,8 @@ void AddBagInformationVMatrix::build_()
         if (remove_bag_info_column) {
             // We need to remove a column from the source VMat.
             width_--;
-            inputsize_--;
+            if( bag_info_idx < inputsize_ )
+                inputsize_--;
             Array<VMField> new_fields;
             for (int i = 0; i < fields.length(); i++)
                 if (i != bag_info_idx)
