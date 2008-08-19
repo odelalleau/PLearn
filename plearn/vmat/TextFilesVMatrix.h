@@ -179,6 +179,7 @@ protected:
 
     //! Return true iff 'ftype' is a valid type that does not need to be skipped.
     virtual bool isValidNonSkipFieldType(const string& ftype) const;
+    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
 public:
 

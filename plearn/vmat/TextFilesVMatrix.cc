@@ -387,12 +387,20 @@ void TextFilesVMatrix::build_()
     }
     if (!default_spec.empty() && !reorder_fieldspec_from_headers)
         PLERROR("In TextFilesVMatrix::build_() when the option default_spec is used, reorder_fieldspec_from_headers must be true");
+}
+////////////////////
+// setMetaDataDir //
+////////////////////
+void TextFilesVMatrix::setMetaDataDir(const PPath& the_metadatadir){
+    inherited::setMetaDataDir(the_metadatadir);
+
     if(getMetaDataDir().empty())
-        PLERROR("In TextFilesVMatrix::build_() We need a metadatadir");
+        PLERROR("In TextFilesVMatrix::setMetaDataDir() - We need a metadatadir");
     if(!force_mkdir(getMetaDataDir()))
-        PLERROR("In TextFilesVMatrix::build_() could not create directory '%s'",
+        PLERROR("In TextFilesVMatrix::setMetaDataDir() - could not create"
+                " directory '%s'",
                 getMetaDataDir().absolute().c_str());
-    
+
     for(int i=0;i<txtfilenames.length();i++)
         updateMtime(txtfilenames[i]);
 
@@ -408,7 +416,8 @@ void TextFilesVMatrix::build_()
         txtfiles[k] = fopen(fnam.c_str(),"r");
         if(txtfiles[k]==NULL){
             perror("Can't open file");
-            PLERROR("In TextFilesVMatrix::build_ - Can't open file %s",fnam.c_str());
+            PLERROR("In TextFilesVMatrix::setMetaDataDir - Can't open file %s",
+                    fnam.c_str());
         }
     }
 
@@ -419,7 +428,7 @@ void TextFilesVMatrix::build_()
         buildIdx(); // (re)build it first!
     idxfile = fopen(idxfname.c_str(),"rb");
     if(fgetc(idxfile) != byte_order())
-        PLERROR("In TextFilesVMatrix::build_ - Wrong endianness."
+        PLERROR("In TextFilesVMatrix::setMetaDataDir - Wrong endianness."
                 " Remove the index file %s for it to be automatically rebuilt",
                 idxfname.c_str());
     fread(&length_, 4, 1, idxfile);
@@ -441,7 +450,8 @@ void TextFilesVMatrix::build_()
 
     // Sanity checking
     if (delimiter.size() != 1)
-        PLERROR("In TextFilesVMatrix::build_ - the 'delimiter' option '%s' must contain exactly one character",
+        PLERROR("In TextFilesVMatrix::setMetaDataDir - the 'delimiter' option"
+                " '%s' must contain exactly one character",
                 delimiter.c_str());
 }
 
