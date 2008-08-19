@@ -249,7 +249,7 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
                                                Vec& output, Vec& costs) const
 {
     PLASSERT(costs.size()==nTestCosts());
-    PLASSERT_MSG(output.length()!=outputsize(),
+    PLASSERT_MSG(output.length()==outputsize(),
                  "In MultiClassAdaBoost::computeOutputAndCosts -"
                  " output don't have the good length!");
     output.resize(outputsize());
