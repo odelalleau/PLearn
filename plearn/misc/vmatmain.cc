@@ -114,6 +114,7 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
                 else if((strval=source->getValString(j,currow[j]))!=""){
                     if(strval.length()>1000-1)
                         PLERROR("a value is too big!");
+                    strval = "\"" + strval + "\"";
                     strncpy(buffer,strval.c_str(),1000);
                 }else{
                     // Normal processing
