@@ -65,7 +65,12 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     online( false ),
     compute_all_test_costs( false ),
     reconstruct_hidden( false ),
+    noise_type( "none" ),
     fraction_of_masked_inputs( 0 ),
+    probability_of_masked_inputs( 0 ),
+    mask_with_mean( false ),
+    gaussian_std( 1. ),
+    binary_sampling_noise_parameter( 1. ),
     unsupervised_nstages( 0 ),
     unsupervised_fine_tuning_learning_rate( 0. ),
     unsupervised_fine_tuning_decrease_ct( 0. ),
@@ -219,11 +224,49 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "reconstruct their hidden layers (inspired from CD1 in an RBM).\n"
         );
 
+    declareOption(ol, "noise_type",
+                  &StackedAutoassociatorsNet::noise_type,
+                  OptionBase::buildoption,
+                  "Type of noise that corrupts the autoassociators input. "
+                  "Choose among:\n"
+                  " - \"masking noise\"\n"
+                  " - \"binary sampling\"\n"
+                  " - \"gaussian\"\n"
+        );
+
     declareOption(ol, "fraction_of_masked_inputs",
                   &StackedAutoassociatorsNet::fraction_of_masked_inputs,
                   OptionBase::buildoption,
                   "Random fraction of the autoassociators' input components that\n"
                   "masked, i.e. unsused to reconstruct the input.\n"
+        );
+
+    declareOption(ol, "probability_of_masked_inputs",
+                  &StackedAutoassociatorsNet::probability_of_masked_inputs,
+                  OptionBase::buildoption,
+                  "Probability of masking each input component. Either this "
+                  "option.\n"
+                  "or fraction_of_masked_inputs should be > 0.\n"
+        );
+
+    declareOption(ol, "mask_with_mean",
+                  &StackedAutoassociatorsNet::mask_with_mean,
+                  OptionBase::buildoption,
+                  "Indication that inputs should be masked with the "
+                  "training set mean of that component.\n"
+        );
+
+    declareOption(ol, "gaussian_std",
+                  &StackedAutoassociatorsNet::gaussian_std,
+                  OptionBase::buildoption,
+                  "Standard deviation of Gaussian noise.\n"
+        );
+
+    declareOption(ol, "binary_sampling_noise_parameter",
+                  &StackedAutoassociatorsNet::binary_sampling_noise_parameter,
+                  OptionBase::buildoption,
+                  "Parameter \tau for corrupted input sampling:\n"
+                  "  \tilde{x}_k ~ B((x_k - 0.5) \tau + 0.5)\n"
         );
 
     declareOption(ol, "unsupervised_nstages",
@@ -277,6 +320,12 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   &StackedAutoassociatorsNet::correlation_layers,
                   OptionBase::learntoption,
                   "Hidden layers for the correlation connections"
+        );
+
+    declareOption(ol, "input_mean",
+                  &StackedAutoassociatorsNet::input_mean,
+                  OptionBase::learntoption,
+                  "Mean of inputs on the training set"
         );
 
     // Now call the parent class' declareOptions
@@ -351,10 +400,30 @@ void StackedAutoassociatorsNet::build_()
                     " - \n"
                     "fraction_of_masked_inputs should be > or equal to 0.\n");
 
+        if( probability_of_masked_inputs < 0 )
+            PLERROR("StackedAutoassociatorsNet::build_()"
+                    " - \n"
+                    "probability_of_masked_inputs should be > or equal to 0.\n");
+
         if( online && fraction_of_masked_inputs > 0)
             PLERROR("StackedAutoassociatorsNet::build_()"
                     " - \n"
                     "masked inputs has not been implemented for online option.\n");
+
+        if( train_set && noise_type == "masking noise" && mask_with_mean )
+        {
+            Vec input(inputsize());
+            Vec target(train_set->targetsize());
+            real weight;
+            input_mean.resize(inputsize());
+            input_mean.clear();
+            for( int l = 0; l<train_set->length(); l++ )
+            {
+                train_set->getExample(l, input, target, weight);
+                input_mean += input;
+            }
+            input_mean /= train_set->length();
+        }
 
         if( !online )
         {
@@ -726,10 +795,9 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_values_0, copies);
     deepCopyField(final_cost_gradient, copies);
     deepCopyField(final_cost_gradients, copies);
-    deepCopyField(masked_autoassociator_input, copies);
-    deepCopyField(masked_autoassociator_expectations, copies);
-    deepCopyField(autoassociator_input_indices, copies);
+    deepCopyField(corrupted_autoassociator_expectations, copies);
     deepCopyField(autoassociator_expectation_indices, copies);
+    deepCopyField(input_mean, copies);
     deepCopyField(greedy_stages, copies);
 }
 
@@ -880,10 +948,6 @@ void StackedAutoassociatorsNet::train()
             reconstruction_expectation_gradients.resize(layers[i]->size);
             reconstruction_expectation_gradients_m.resize(minibatch_size,
                                                           layers[i]->size);
-            masked_autoassociator_input.resize(layers[i]->size);
-            autoassociator_input_indices.resize(layers[i]->size);
-            for( int j=0 ; j < autoassociator_input_indices.length() ; j++ )
-                autoassociator_input_indices[j] = j;
 
             if(reconstruct_hidden)
             {
@@ -971,14 +1035,14 @@ void StackedAutoassociatorsNet::train()
                     layers[i]->size );
             }
 
-            if( fraction_of_masked_inputs > 0 )
+            if( noise_type == "masking noise" && fraction_of_masked_inputs > 0 )
             {
-                masked_autoassociator_expectations.resize( n_layers-1 );
+                corrupted_autoassociator_expectations.resize( n_layers-1 );
                 autoassociator_expectation_indices.resize( n_layers-1 );
 
                 for( int i=0 ; i<n_layers-1 ; i++ )
                 {
-                    masked_autoassociator_expectations[i].resize( layers[i]->size );
+                    corrupted_autoassociator_expectations[i].resize( layers[i]->size );
                     autoassociator_expectation_indices[i].resize( layers[i]->size );
                     for( int j=0 ; j < autoassociator_expectation_indices[i].length() ; j++ )
                         autoassociator_expectation_indices[i][j] = j;
@@ -1124,25 +1188,75 @@ void StackedAutoassociatorsNet::train()
     }
 }
 
+void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_input, int layer)
+{
+    corrupted_input.resize(input.length());
+    if( noise_type == "masking noise" )
+    {
+        if( fraction_of_masked_inputs > 0 )
+        {
+            if( probability_of_masked_inputs > 0 )
+                PLERROR("In StackedAutoassociatorsNet::corrupt_input(): fraction_of_masked_inputs and probability_of_masked_inputs can't be both > 0");
+            random_gen->shuffleElements(autoassociator_expectation_indices[layer]);
+            corrupted_input << input;
+            if( mask_with_mean )
+                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
+                    corrupted_input[ autoassociator_expectation_indices[layer][j] ] = input_mean[autoassociator_expectation_indices[layer][j]];
+            else
+                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
+                    corrupted_input[ autoassociator_expectation_indices[layer][j] ] = 0;
+        }
+        else if( probability_of_masked_inputs > 0 )
+        {
+            if( mask_with_mean )
+                for( int j=0 ; j <input.length() ; j++)
+                    if( random_gen->uniform_sample() < probability_of_masked_inputs )
+                        corrupted_input[ j ] = input_mean[ j ];
+                    else
+                        corrupted_input[ j ] = input[ j ];
+            else
+                for( int j=0 ; j <input.length() ; j++)
+                    if( random_gen->uniform_sample() < probability_of_masked_inputs )
+                        corrupted_input[ j ] = 0;
+                    else
+                        corrupted_input[ j ] = input[ j ];
+                
+        }
+        else
+            PLERROR("In StackedAutoassociatorsNet::corrupt_input(): either fraction_of_masked_inputs or probability_of_masked_inputs should be > 0");
+
+    }
+    else if( noise_type == "binary sampling" )
+    {
+        for( int i=0; i<corrupted_input.length(); i++ )
+            corrupted_input[i] = random_gen->binomial_sample((input[i]-0.5)*binary_sampling_noise_parameter+0.5);
+    }
+    else if( noise_type == "gaussian" )
+    {
+        for( int i=0; i<corrupted_input.length(); i++ )
+            corrupted_input[i] = input[i] + 
+                random_gen->gaussian_01() * gaussian_std;
+    }
+    else if( noise_type == "none" )
+        corrupted_input << input; 
+    else
+        PLERROR("In StackedAutoassociatorsNet::corrupt_input(): noise_type %s not valid", noise_type.c_str());
+}
+
 void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                            int index, Vec train_costs)
 {
     PLASSERT( index < n_layers );
-
-    if( fraction_of_masked_inputs > 0 )
-        random_gen->shuffleElements(autoassociator_input_indices);
 
     expectations[0] << input;
     if(correlation_connections.length() != 0)
     {
         for( int i=0 ; i<index + 1; i++ )
         {
-            if( i == index && fraction_of_masked_inputs > 0 )
+            if( i == index )
             {
-                masked_autoassociator_input << expectations[i];
-                for( int j=0 ; j < round(fraction_of_masked_inputs*layers[index]->size) ; j++)
-                    masked_autoassociator_input[ autoassociator_input_indices[j] ] = 0;
-                connections[i]->fprop( masked_autoassociator_input, correlation_activations[i] );
+                corrupt_input( expectations[i], corrupted_autoassociator_expectations[i], i );
+                connections[i]->fprop( corrupted_autoassociator_expectations[i], correlation_activations[i] );
             }
             else
                 connections[i]->fprop( expectations[i], correlation_activations[i] );
@@ -1158,12 +1272,10 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
     {
         for( int i=0 ; i<index + 1; i++ )
         {
-            if( i == index && fraction_of_masked_inputs > 0 )
+            if( i == index )
             {
-                masked_autoassociator_input << expectations[i];
-                for( int j=0 ; j < round(fraction_of_masked_inputs*layers[index]->size) ; j++)
-                    masked_autoassociator_input[ autoassociator_input_indices[j] ] = 0;
-                connections[i]->fprop( masked_autoassociator_input, activations[i+1] );
+                corrupt_input( expectations[i], corrupted_autoassociator_expectations[i], i );
+                connections[i]->fprop( corrupted_autoassociator_expectations[i], activations[i+1] );
             }
             else
                 connections[i]->fprop( expectations[i], activations[i+1] );
@@ -1195,13 +1307,7 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                         activation_gradients[ index + 1 ],
                                         expectation_gradients[ index + 1 ] );
 
-        if( fraction_of_masked_inputs > 0 )
-            connections[ index ]->bpropUpdate( masked_autoassociator_input,
-                                               activations[ index + 1 ],
-                                               expectation_gradients[ index ],
-                                               activation_gradients[ index + 1 ] );
-        else
-            connections[ index ]->bpropUpdate( expectations[ index ],
+        connections[ index ]->bpropUpdate( corrupted_autoassociator_expectations[index],
                                            activations[ index + 1 ],
                                            expectation_gradients[ index ],
                                            activation_gradients[ index + 1 ] );
@@ -1211,12 +1317,8 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                                 reconstruction_activations);
     if(direct_connections.length() != 0)
     {
-        if( fraction_of_masked_inputs > 0 )
-            direct_connections[ index ]->fprop( masked_autoassociator_input,
-                                                direct_activations );
-        else
-            direct_connections[ index ]->fprop( expectations[ index ],
-                                                direct_activations );
+        direct_connections[ index ]->fprop( corrupted_autoassociator_expectations[index],
+                                            direct_activations );
         direct_and_reconstruction_activations.clear();
         direct_and_reconstruction_activations += direct_activations;
         direct_and_reconstruction_activations += reconstruction_activations;
@@ -1234,18 +1336,11 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
 
         layers[ index ]->update(direct_and_reconstruction_activation_gradients);
 
-        if( fraction_of_masked_inputs > 0 )
-            direct_connections[ index ]->bpropUpdate(
-                masked_autoassociator_input,
-                direct_activations,
-                reconstruction_expectation_gradients, // Will be overwritten later
-                direct_and_reconstruction_activation_gradients);
-        else
-            direct_connections[ index ]->bpropUpdate(
-                expectations[ index ],
-                direct_activations,
-                reconstruction_expectation_gradients, // Will be overwritten later
-                direct_and_reconstruction_activation_gradients);
+        direct_connections[ index ]->bpropUpdate(
+            corrupted_autoassociator_expectations[index],
+            direct_activations,
+            reconstruction_expectation_gradients, // Will be overwritten later
+            direct_and_reconstruction_activation_gradients);
 
         reconstruction_connections[ index ]->bpropUpdate(
             expectations[ index + 1],
@@ -1357,18 +1452,11 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
             correlation_activation_gradients [ index ],
             correlation_expectation_gradients [ index ]);
 
-        if( fraction_of_masked_inputs > 0 )
-            connections[ index ]->bpropUpdate(
-                masked_autoassociator_input,
-                correlation_activations[ index ],
-                reconstruction_expectation_gradients, //reused
-                correlation_activation_gradients [ index ]);
-        else
-            connections[ index ]->bpropUpdate(
-                expectations[ index ],
-                correlation_activations[ index ],
-                reconstruction_expectation_gradients, //reused
-                correlation_activation_gradients [ index ]);
+        connections[ index ]->bpropUpdate(
+            corrupted_autoassociator_expectations[index],
+            correlation_activations[ index ],
+            reconstruction_expectation_gradients, //reused
+            correlation_activation_gradients [ index ]);
     }
     else
     {
@@ -1378,18 +1466,11 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                         reconstruction_activation_gradients,
                                         reconstruction_expectation_gradients);
 
-        if( fraction_of_masked_inputs > 0 )
-            connections[ index ]->bpropUpdate(
-                masked_autoassociator_input,
-                activations[ index + 1 ],
-                reconstruction_expectation_gradients, //reused
-                reconstruction_activation_gradients);
-        else
-            connections[ index ]->bpropUpdate(
-                expectations[ index ],
-                activations[ index + 1 ],
-                reconstruction_expectation_gradients, //reused
-                reconstruction_activation_gradients);
+        connections[ index ]->bpropUpdate(
+            corrupted_autoassociator_expectations[index],
+            activations[ index + 1 ],
+            reconstruction_expectation_gradients, //reused
+            reconstruction_activation_gradients);
     }
 
 }
@@ -1410,68 +1491,28 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
 
     if(correlation_connections.length() != 0)
     {
-        if( fraction_of_masked_inputs > 0 )
+        
+        for( int i=0 ; i<n_layers-1; i++ )
         {
-            for( int i=0; i<autoassociator_expectation_indices.length(); i++ )
-                random_gen->shuffleElements(autoassociator_expectation_indices[i]);
-
-            for( int i=0 ; i<n_layers-1; i++ )
-            {
-                masked_autoassociator_expectations[i] << expectations[i];
-                if( !(mask_input_layer_only_in_unsupervised_fine_tuning && i > 0) )
-                    for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
-                        masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0;
-
-                connections[i]->fprop( masked_autoassociator_expectations[i],
-                                       correlation_activations[i] );
-                layers[i+1]->fprop( correlation_activations[i],
-                                    correlation_expectations[i] );
-                correlation_connections[i]->fprop( correlation_expectations[i],
-                                                   activations[i+1] );
-                correlation_layers[i]->fprop( activations[i+1],
-                                              expectations[i+1] );
-            }
-        }
-        else
-        {
-            for( int i=0 ; i<n_layers-1; i++ )
-            {
-                connections[i]->fprop( expectations[i], correlation_activations[i]);
-                layers[i+1]->fprop( correlation_activations[i],
-                                    correlation_expectations[i] );
-                correlation_connections[i]->fprop( correlation_expectations[i],
-                                                   activations[i+1] );
-                correlation_layers[i]->fprop( activations[i+1],
-                                              expectations[i+1] );
-            }
+            corrupt_input( expectations[i], corrupted_autoassociator_expectations[i], i);
+            connections[i]->fprop( corrupted_autoassociator_expectations[i],
+                                   correlation_activations[i] );
+            layers[i+1]->fprop( correlation_activations[i],
+                                correlation_expectations[i] );
+            correlation_connections[i]->fprop( correlation_expectations[i],
+                                               activations[i+1] );
+            correlation_layers[i]->fprop( activations[i+1],
+                                          expectations[i+1] );
         }
     }
     else
     {
-        if( fraction_of_masked_inputs > 0 )
+        for( int i=0 ; i<n_layers-1; i++ )
         {
-            for( int i=0; i<autoassociator_expectation_indices.length(); i++ )
-                random_gen->shuffleElements(autoassociator_expectation_indices[i]);
-
-            for( int i=0 ; i<n_layers-1; i++ )
-            {
-                masked_autoassociator_expectations[i] << expectations[i];
-                if( !(mask_input_layer_only_in_unsupervised_fine_tuning && i > 0) )
-                    for( int j=0 ; j < round(fraction_of_masked_inputs*layers[i]->size) ; j++)
-                        masked_autoassociator_expectations[i][ autoassociator_expectation_indices[i][j] ] = 0;
-
-                connections[i]->fprop( masked_autoassociator_expectations[i],
-                                       activations[i+1] );
-                layers[i+1]->fprop(activations[i+1],expectations[i+1]);
-            }
-        }
-        else
-        {
-            for( int i=0 ; i<n_layers-1; i++ )
-            {
-                connections[i]->fprop( expectations[i], activations[i+1] );
-                layers[i+1]->fprop(activations[i+1],expectations[i+1]);
-            }
+            corrupt_input( expectations[i], corrupted_autoassociator_expectations[i], i);
+            connections[i]->fprop( corrupted_autoassociator_expectations[i],
+                                   activations[i+1] );
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
         }
     }
     fine_tuning_reconstruction_expectations[ n_layers-1 ] <<
@@ -1554,18 +1595,11 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
                 correlation_activation_gradients [ i ],
                 correlation_expectation_gradients [ i ]);
 
-            if( fraction_of_masked_inputs > 0 )
-                connections[ i ]->bpropUpdate(
-                    masked_autoassociator_expectations[ i ],
-                    correlation_activations[ i ],
-                    expectation_gradients[i],
-                    correlation_activation_gradients [ i ]);
-            else
-                connections[ i ]->bpropUpdate(
-                    expectations[ i ],
-                    correlation_activations[ i ],
-                    expectation_gradients[i],
-                    correlation_activation_gradients [ i ]);
+            connections[ i ]->bpropUpdate(
+                corrupted_autoassociator_expectations[ i ],
+                correlation_activations[ i ],
+                expectation_gradients[i],
+                correlation_activation_gradients [ i ]);
         }
         else
         {
@@ -1573,14 +1607,9 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
             layers[i+1]->bpropUpdate(
                 activations[i+1],expectations[i+1],
                 activation_gradients[i+1],expectation_gradients[i+1]);
-            if( fraction_of_masked_inputs > 0 )
-                connections[i]->bpropUpdate(
-                    masked_autoassociator_expectations[i], activations[i+1],
-                    expectation_gradients[i], activation_gradients[i+1] );
-            else
-                connections[i]->bpropUpdate(
-                    expectations[i], activations[i+1],
-                    expectation_gradients[i], activation_gradients[i+1] );
+            connections[i]->bpropUpdate(
+                corrupted_autoassociator_expectations[i], activations[i+1],
+                expectation_gradients[i], activation_gradients[i+1] );
         }
     }
 }

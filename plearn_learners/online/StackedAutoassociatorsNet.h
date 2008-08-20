@@ -147,9 +147,27 @@ public:
     //! reconstruct their hidden layers (inspired from CD1 in an RBM)
     bool reconstruct_hidden;
 
+    //! Type of noise that corrupts the autoassociators input
+    string noise_type;
+
     //! Random fraction of the autoassociators' input components that
     //! masked, i.e. unsused to reconstruct the input.
     real fraction_of_masked_inputs;
+
+    //! Probability of masking each input component. Either this option
+    //! or fraction_of_masked_inputs should be > 0.
+    real probability_of_masked_inputs;
+
+    //! Indication that inputs should be masked with the 
+    //! training set mean of that component
+    bool mask_with_mean;
+
+    //! Standard deviation of Gaussian noise
+    real gaussian_std;
+
+    //! Parameter \tau for corrupted input sampling:
+    //!   \tilde{x}_k ~ B((x_k - 0.5) \tau + 0.5)
+    real binary_sampling_noise_parameter;
 
     //! Number of samples to use for unsupervised fine-tuning
     int unsupervised_nstages;
@@ -373,18 +391,14 @@ protected:
     mutable Vec final_cost_gradient;
     mutable Mat final_cost_gradients;
 
-    //! Input of autoassociator where some of the components
-    //! have been masked (set to 0) randomly.
-    Vec masked_autoassociator_input;
-
     //! Layers randomly masked, for unsupervised fine-tuning.
-    TVec< Vec > masked_autoassociator_expectations;
-
-    //! Indices of the input components
-    TVec<int> autoassociator_input_indices;
+    TVec< Vec > corrupted_autoassociator_expectations;
 
     //! Indices of the expectation components
     TVec< TVec<int> > autoassociator_expectation_indices;
+
+    //! Mean of inputs on the training set
+    Vec input_mean;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
@@ -420,6 +434,8 @@ private:
     Vec remote_computeOutputWithoutCorrelationConnections(const Vec& input) const;
 
     Mat remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const;
+
+    void corrupt_input(const Vec& input, Vec& corrupted_input, int layer);
 
     //! Global storage to save memory allocations.
     mutable Vec tmp_output;
