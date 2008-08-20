@@ -10,12 +10,12 @@ import os
 from libsvm import *
 
 from plearn.pyext import *
+from plearn.utilities.write_results import writeResults
 
-from numpy.numarray import *
-from math import *
+import math
 import numpy
 import random
-import fpconst
+import fpconst # for NaN
 
 class SVMHyperParamOracle__kernel(object):
     """ An oracle that gives values of hyperparameters      
@@ -100,12 +100,12 @@ class SVMHyperParamOracle__kernel(object):
         self.inputsize      = None
         self.verbosity      = 1
 
-    """ To be called when training set change 'a bit'    
-        (same kind of data, but different statistics, 
-        so that we can assume new best parameters are
-        close to previous ones.
-    """
     def semiforget(self):
+        """ To be called when training set change 'a bit'    
+            (same kind of data, but different statistics, 
+            so that we can assume new best parameters are
+            close to previous ones.
+        """
         if self.verbosity > 3:
             print "  (forget called)"
         self.trials_param_list  = []
@@ -151,19 +151,20 @@ class SVMHyperParamOracle__kernel(object):
         self.stats_are_uptodate = True
         return (self.inputsize, self.input_avgstd)
 
-    """ Return a list of values to try for hyperparameter 'C'
-        centered on a specified value 'C_value'.
-        This is an internal function (should not be called outside this class def).
-    """
     def init_C(self, C_value=None):
+        """ Return a list of values to try for hyperparameter 'C'
+            centered on a specified value 'C_value'.
+            This is an internal function (should not be called outside this class def).
+        """
         if C_value==None:
             C_value = self.C_initvalue
         return [ C_value, C_value/10., C_value*10.]
 
-    """ Return <list> of <dict>: which hyperparameter values to try FIRST
-        - 'kernel_param_list': <list> of <dict> kernel hyperparameters name->value """
     def choose_first_C_param(self, kernel_param_list=None,
                                    C_value=None):
+        """ Return <list> of <dict>: which hyperparameter values to try FIRST
+            - 'kernel_param_list': <list> of <dict> kernel hyperparameters name->value.
+        """
         # Input check
         if kernel_param_list==None:
             kernel_param_list=[{}]
@@ -183,14 +184,15 @@ class SVMHyperParamOracle__kernel(object):
                     table.append( pdict.copy() )
         return table
 
-    """ For a given hyperparameter name (default:'C'),
-        return a list of values of this hyperparameter that have been tried
-        (for a given sub-setting for other hyperparameters).
-        Values are SORTED w.r.t to respective costs: the first one gave
-        the best valid performance.
-        - 'param_name': <string> generic name of the hyperparameter.
-        - 'other_param': <dict> hyperparameters name->value. """
     def get_trials_oneparam_list(self, paramname='C', other_param=None):
+        """ For a given hyperparameter name (default:'C'),
+            return a list of values of this hyperparameter that have been tried
+            (for a given sub-setting for other hyperparameters).
+            Values are SORTED w.r.t to respective costs: the first one gave
+            the best valid performance.
+            - 'param_name': <string> generic name of the hyperparameter.
+            - 'other_param': <dict> hyperparameters name->value.
+        """
         # Input check
         if other_param==None:
             other_param={}
@@ -232,18 +234,17 @@ class SVMHyperParamOracle__kernel(object):
             sorted_param_list[j] = param_list[i]
         return sorted_param_list
 
-
-    """ A utility to give new hyperparameter values given the best value among a list
-        when the hyperparameter is multiplicative and positive (so the geometrical mean
-        is more suitable than the arithmetic mean).
-        - 'allow_to_return_already_tried_ones': <bool> Can return already tried values?
-                It is recommended to be True if and only if :
-                1. there are other hyperparams to tune, and
-                2. the hyperoptimization problem is not necessarily convex.
-    """
     def choose_new_param_geom( self,
                                crescentcosts_list,
                                allow_to_return_already_tried_ones = True ):
+        """ A utility to give new hyperparameter values given the best value among a list
+            when the hyperparameter is multiplicative and positive (so the geometrical mean
+            is more suitable than the arithmetic mean).
+            - 'allow_to_return_already_tried_ones': <bool> Can return already tried values?
+                    It is recommended to be True if and only if :
+                    1. there are other hyperparams to tune, and
+                    2. the hyperoptimization problem is not necessarily convex.
+        """
         best_value = crescentcosts_list[0]
         crescentvalues_list = sorted(crescentcosts_list)
 
@@ -296,11 +297,9 @@ class SVMHyperParamOracle__kernel(object):
         return [  geom_mean([crescentvalues_list[i-1],best_value]),
                   geom_mean([crescentvalues_list[i+1],best_value]) ]
 
-
-
-    """ Return <list> of <dict>: which hyperparameter values to try NEXT.
-        - 'kernel_param_list': <list> of <dict> kernel hyperparameters name->value. """
     def choose_new_C_param(self, kernel_param_list=None):
+        """ Return <list> of <dict>: which hyperparameter values to try NEXT.
+            - 'kernel_param_list': <list> of <dict> kernel hyperparameters name->value. """
         # Input check
         if kernel_param_list==None:
             kernel_param_list=[{}]
@@ -330,11 +329,11 @@ class SVMHyperParamOracle__kernel(object):
         return new_param_list
 
 
-    """ Return <bool>: whether or not we should try other 'C' for
-                       a given set of kernel hyperparameters.
-        - 'kernel_param': <dict> kernel parameters name->value.
-    """
     def should_be_tuned_again(self, kernel_param_list=None):
+        """ Return <bool>: whether or not we should try other 'C' for
+                           a given set of kernel hyperparameters.
+            - 'kernel_param': <dict> kernel parameters name->value.
+        """
         if kernel_param_list==None:
             kernel_param_list={}
         trials_C_list = self.get_trials_oneparam_list('C',kernel_param_list)
@@ -343,12 +342,12 @@ class SVMHyperParamOracle__kernel(object):
         best_C = self.best_param['C']
         return ( best_C == min(trials_C_list) or best_C == max(trials_C_list) )
 
-    """ Updates the statistics and internal trials history given new performances,
-        and returns if the trial was the best one.    
-        - 'param' is the <dict> of parameter values.
-        - the 'costs' are <dict> of corresponding performance (with None wherever missing).
-    """
     def update_trials(self, param, cost):
+        """ Updates the statistics and internal trials history given new performances,
+            and returns if the trial was the best one.    
+            - 'param' is the <dict> of parameter values.
+            - the 'costs' are <dict> of corresponding performance (with None wherever missing).
+        """
         if 'C' not in param:
             raise IndexError,"in SVMHyperParamOracle__kernel::update_trials(), " + \
                              "2nd arg (param=%s) must include 'C'" % (param)
@@ -363,7 +362,7 @@ class SVMHyperParamOracle__kernel(object):
 
         if( self.best_cost == None or cost < self.best_cost):
         # TODO: what if cost == bestcost and param <> self.best_param?
-        #       -> best param should be a list...
+        #       -> best param could be a list...
             self.best_param = param
             self.best_cost  = cost
             return True
@@ -378,19 +377,19 @@ class SVMHyperParamOracle__linear(SVMHyperParamOracle__kernel):
         SVMHyperParamOracle__kernel.__init__(self)
         self.kernel_type = 'linear'
 
-    """ Return <list> of <dict>: which hyperparameter values to try FIRST
-        - 'samples': <array>(n_samples,dim) of (train/valid) samples.
-    """
     def choose_first_param(self, samples=None ):
+        """ Return <list> of <dict>: which hyperparameter values to try FIRST
+            - 'samples': <array>(n_samples,dim) of (train/valid) samples.
+        """
         # Invariance w.r.t scaling input
         d, std = self.get_input_stats( samples )
         # Note:  default C=1   [for default std=1.]
         self.C_initvalue = 1./(std*std)
         return self.choose_first_C_param()
 
-    """ Return <list> of <dict>: which hyperparameter values to try NEXT.
-    """
     def choose_new_param(self):
+        """ Return <list> of <dict>: which hyperparameter values to try NEXT.
+        """
         return self.choose_new_C_param()
 
     """ Return <bool>: whether or not we should try other hyperparameter values """
@@ -409,10 +408,10 @@ class SVMHyperParamOracle__rbf(SVMHyperParamOracle__kernel):
     def init_gamma(self, gamma_value=0.5):
         return [ gamma_value, gamma_value/9., gamma_value*9. ]
 
-    """ Return <list> of <dict>: which hyperparameter values to try FIRST.
-        - 'samples': <array>(n_samples,dim) of (train/valid) samples.
-    """
     def choose_first_param(self, samples=None ):
+        """ Return <list> of <dict>: which hyperparameter values to try FIRST.
+            - 'samples': <array>(n_samples,dim) of (train/valid) samples.
+        """
         d, std = self.get_input_stats(samples)
         # Note:  default gamma=1/4   [for default d=2, std=1.]
         gamma0 = 1./(2*self.inputsize*std*std)
@@ -422,9 +421,9 @@ class SVMHyperParamOracle__rbf(SVMHyperParamOracle__kernel):
             kernel_param_list.append({'gamma':g})
         return self.choose_first_C_param( kernel_param_list )
         
-    """ Return <list> of <dict>: which hyperparameter values to try NEXT.
-    """
     def choose_new_param(self):
+        """ Return <list> of <dict>: which hyperparameter values to try NEXT.
+        """
         best_gamma = self.best_param['gamma']
         tried_gamma = self.get_trials_oneparam_list('gamma')
         if best_gamma in tried_gamma:
@@ -440,9 +439,9 @@ class SVMHyperParamOracle__rbf(SVMHyperParamOracle__kernel):
             gamma_list = self.init_gamma(best_gamma)
         return self.choose_new_C_param( [{'gamma':g}  for g in gamma_list] )
 
-    """ Return <bool>: whether or not we should try other hyperparameter values.
-    """
     def should_be_tuned_again(self):
+        """ Return <bool>: whether or not we should try other hyperparameter values.
+        """
         best_gamma = self.best_param['gamma']
         tried_gamma = self.get_trials_oneparam_list('gamma')
         if best_gamma not in tried_gamma:
@@ -472,10 +471,10 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
             coef0 = self.coef0_initvalue
         return [  coef0, coef0/10., coef0*10. ]
 
-    """ Return <list> of <dict>: which hyperparameter values to try FIRST.
-        - 'samples': <array>(n_samples,dim) of (train/valid) samples.
-    """
     def choose_first_param(self, samples=None ):
+        """ Return <list> of <dict>: which hyperparameter values to try FIRST.
+            - 'samples': <array>(n_samples,dim) of (train/valid) samples.
+        """
         degree_list  = self.init_degree()
         if samples <> None:
             d, std = self.get_input_stats(samples)
@@ -490,9 +489,9 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
             return first_param_list
         return self.choose_first_C_param( [ {'degree':d,'coef0':self.coef0_initvalue} for d in degree_list ] )        
 
-    """ Return <list> of <dict>: which hyperparameter values to try NEXT.
-    """
     def choose_new_param(self):
+        """ Return <list> of <dict>: which hyperparameter values to try NEXT.
+        """
         best_degree = self.best_param['degree']
         tried_degrees = self.get_trials_oneparam_list('degree')
         if best_degree in tried_degrees:
@@ -545,9 +544,9 @@ class SVMHyperParamOracle__poly(SVMHyperParamOracle__kernel):
                                     
         return new_param_list
 
-    """ Return <bool>: whether or not we should try other hyperparameter values.
-    """
     def should_be_tuned_again(self):
+        """ Return <bool>: whether or not we should try other hyperparameter values.
+        """
         best_degree = self.best_param['degree']
         tried_degrees = self.get_trials_oneparam_list('degree')
         if( best_degree in tried_degrees
@@ -754,6 +753,7 @@ class SVM(object):
         self.errorcosts      = None
         self.maincost_name   = None
         self.valid_stats     = None
+        self.valid_outputs   = None
         self.test_stats      = None
         self.train_stats     = None
         self.validtype       = 'simple'
@@ -818,6 +818,7 @@ class SVM(object):
         for expert in self.all_experts:
              expert.semiforget()
         self.valid_stats     = None
+        self.valid_outputs   = None
         self.test_stats      = None
         self.train_stats     = None
         self.stats_are_uptodate = False
@@ -844,34 +845,30 @@ class SVM(object):
         return dataspec[ self.trainset_key ]
     def valid_inputspec(self, dataspec):
         assert type(dataspec) == dict
-        if self.validset_key not in dataspec:
-            return None
-        return dataspec[ self.validset_key ]
+        return dataspec.get(self.validset_key)
     def test_inputspec(self, dataspec):
         assert type(dataspec) == dict
-        if self.testset_key not in dataspec:
-            return None
-        return dataspec[ self.testset_key ]
+        return dataspec.get( self.testset_key )
 
-    ## specific to libsvm
-    """ Return samples and targets in the format required
-        by libsvm, i.e. lists of float.
-        This is only a default function, so that the user can
-        define another method for any sophisticated VMatrix
-        (this can be done by changing the attribute:
-                                SVM.get_datalist ).
-        - 'input_vmat': <VMatrix> Must have the function getMat()
-                        that returns the corresponding array,
-                        as well as attributes:
-                        inputsize, targetsize, length.
-                        
-    """
+    ## specific to PLearn and libsvm
     def get_datalist(self, input_vmat ):
+        """ From a VMatrix, return samples and targets in the format required
+            by libsvm, i.e. lists of float.
+            This is only a default function, so that the user can
+            define another method for any sophisticated VMatrix
+            (this can be done by changing the attribute:
+                                    SVM.get_datalist ).
+            - 'input_vmat': <VMatrix> Must have the function getMat()
+                            that returns the corresponding array,
+                            as well as attributes:
+                            inputsize, targetsize, length.
+                            
+        """
         data_array = input_vmat.getMat()
         inputsize = input_vmat.inputsize
         targetsize = input_vmat.targetsize
         nsamples = input_vmat.length
-        assert shape(data_array)[0] == nsamples
+        assert data_array.shape[0] == nsamples
         samples   = [ [ float(x_t_i)    for x_t_i in x_t ]
                                         for x_t in data_array[:,:inputsize] ]
         assert targetsize == 1
@@ -892,10 +889,10 @@ class SVM(object):
         return samples, targets
         
 
-    """ Return a dictionary class label -> class frenquency,
-        where frequencies are estimated from 'targets', a list of class labels
-    """
     def get_class_priors(self, targets ):
+        """ Return a dictionary class label -> class frenquency,
+            where frequencies are estimated from 'targets', a list of class labels
+        """
         class_priors = {}
         for label in targets:
             if label not in class_priors:
@@ -906,9 +903,9 @@ class SVM(object):
             class_priors[ label ] *= 1./nsamples
         return class_priors
            
-    """ Return the input/target dimensions and stats estimated on a VMatrix 'vmat'.
-    """
     def get_data_stats(self, vmat=None):
+        """ Return the input/target dimensions and stats estimated on a VMatrix 'vmat'.
+        """
         if self.stats_are_uptodate:
             return ( self.nclasses, self.class_priors,
                      self.inputsize, self.input_avgstd )
@@ -985,11 +982,11 @@ class SVM(object):
             return None
         return allcosts
 
-    """ Return a svm_parameter in the format for libsvm.
-        - 'param': <dict> parameters name->value.
-    """
     ## specific to libsvm
     def get_libsvm_param(self, param ):
+        """ Return a svm_parameter in the format for libsvm.
+            - 'param': <dict> parameters name->value.
+        """
         param = param.copy()
         for pn in param:
             if param[pn] == None:
@@ -1004,9 +1001,6 @@ class SVM(object):
         return svm_parameter( svm_type = C_SVC, **param )
     
 
-    """ Write given results with corresponding parameters
-        In a PLearn format (.amat).True
-    """
     def write_results(  self, param,
                         valid_stats,
                         test_stats = None,
@@ -1015,6 +1009,9 @@ class SVM(object):
                         nvalid = None,
                         ntest = None,
                         only_stdout= False ):
+        """ Write given results with corresponding parameters
+            In a PLearn format (.amat).True
+        """
         if valid_stats==None and param == self.best_param:
                 valid_stats = self.valid_stats
         if test_stats==None and param == self.best_param:
@@ -1027,9 +1024,6 @@ class SVM(object):
         
         # If no file specified, print on stdout in a readable format
         if self.results_filename == None or self.verbosity > 0:
-            #print "\n -- Trial with parameters"
-            #for pn in param:
-            #    print "    ",pn," = ",param[pn]
             if train_costs <> None:
                 print " -- train costs: ", train_costs
             if valid_costs <> None:
@@ -1038,27 +1032,22 @@ class SVM(object):
                 print " -- test costs: ",  test_costs
             if self.results_filename == None or only_stdout:
                 return
-
-
-        # Format 'results_filename' (NO extension ".amat")
-        if self.results_filename[-5:]=='.amat':
-            self.results_filename = self.results_filename[:-5]
         
         # Format preprocessing option names to obtain one string
-        if type(self.preproc_optionnames)==str:
+        if isinstance(self.preproc_optionnames,str):
+            preproc_optionnames = self.preproc_optionnames.split()
+        elif isinstance(self.preproc_optionnames,list):
             preproc_optionnames = self.preproc_optionnames
-        elif type(self.preproc_optionnames)==list:
-            preproc_optionnames = ' '.join(self.preproc_optionnames)
         else:
-            raise TypeError, "preproc_optionnames must be of type str or list"
+            raise TypeError, "preproc_optionnames (type %s) must be of type str or list" % type(self.preproc_optionnames)
 
         # Format preprocessing option values to obtain one string
-        if type(self.preproc_optionvalues)==str:
+        if isinstance(self.preproc_optionvalues,str):
+            preproc_optionvalues = self.preproc_optionvalues.split()
+        elif isinstance(self.preproc_optionvalues,list):
             preproc_optionvalues = self.preproc_optionvalues
-        elif type(self.preproc_optionvalues)==list:
-            preproc_optionvalues = ' '.join('%s' % v for v in self.preproc_optionvalues)
         else:
-            raise TypeError, "preproc_optionvalues must be of type str or list"
+            raise TypeError, "preproc_optionvalues (type %s) must be of type str or list" % type(self.preproc_optionvalues)
         
         param_names=self.param_names
         param_values=[]
@@ -1070,16 +1059,13 @@ class SVM(object):
             else:
                 param_values.append(None)
         
-        costnames_string = ""
-        costvalues_string = ""
-        
-        all_set_names = ['valid','test']
-        if self.test_on_train:
-            all_set_names = ['train']+all_set_names
+        costnames = []
+        costvalues = []
         
         for cn in self.costnames:
-            for dataset in all_set_names:
+            for dataset in ['train','valid','test']:
                 costs = eval(dataset+'_costs')
+                if costs == None:continue
                 
                 # Special processing for the confusion matrix
                 if cn == 'confusion_matrix':
@@ -1089,48 +1075,36 @@ class SVM(object):
                         confusion_matrix=None
                     for cli in range(self.nclasses):
                         for clj in range(self.nclasses):
-                            costnames_string += "E[%s.E[cm_%d_%d]] " % \
-                                                (dataset, cli, clj)
+                            costnames.append( "E[%s.E[cm_%d_%d]]" % \
+                                                (dataset, cli, clj) )
                             if confusion_matrix <> None:
-                                costvalues_string += "%s " % confusion_matrix[cli,clj]
+                                costvalues.append( confusion_matrix[cli,clj] )
                             else:
-                                costvalues_string += "None "                                
+                                costvalues.append( None )
                     continue
 
-                costnames_string += "E[%s.E[%s]] " % (dataset, cn)
-                if costs <> None and cn in costs:
-                    costvalues_string += "%s " % costs[cn]
-                else:
-                    costvalues_string += "None "
+                costnames.append( "E[%s.E[%s]]" % (dataset, cn) )
+                costvalues.append( costs.get(cn) )
         
         for variable_name in ['ntrain','nvalid','ntest']:
             if eval(variable_name) <> None:
-                preproc_optionnames += ' %s ' % variable_name
-                preproc_optionvalues += ' %s ' % eval(variable_name)
+                preproc_optionnames += ['%s' % variable_name]
+                preproc_optionvalues += ['%s' % eval(variable_name)]
         
         # Write the result in the file specified by 'results_filename'
-        os.system('makeresults  %s %s %s %s;' % \
-                            (self.results_filename,
-                              preproc_optionnames,
-                              ' '.join(param_names),
-                              costnames_string
-                            ) \
-               + 'appendresults %s.amat %s %s %s' % \
-                            (self.results_filename,
-                              preproc_optionvalues,
-                              ' '.join(str(v) for v in param_values),
-                              costvalues_string
-                            )
-                )
+        writeResults(   [ preproc_optionnames + param_names, preproc_optionvalues + param_values ]
+                      , [ costnames, costvalues ]
+                      , self.results_filename)
 
-    """ Updates the statistics and internal trials history given new performances,
-        and returns if the trial was the best one.
-        - 'param' is the <dict> of parameter values
-        - the 'costs' are <dict> of corresponding performance (with None wherever missing) """
     def update_trials(self, param,
                       valid_stats,
                       test_stats = None,
                       train_stats= None):
+        """ Updates the statistics and internal trials history given new performances,
+            and returns if the trial was the best one.
+            - 'param' is the <dict> of parameter values
+            - the 'costs' are <dict> of corresponding performance (with None wherever missing).
+        """
 
         # Check input: enforce to give a valid cost (and not test cost)
         # or else the valid has been done and we try with the best hyperparameters
@@ -1166,13 +1140,13 @@ class SVM(object):
         return False
 
 
-    """ Return a libSVM model trained for a given set
-        of hyperparameters 'param' and some dataset
-    """
     def train( self,
                dataspec,
                param = None
              ):
+        """ Return a libSVM model trained for a given set
+            of hyperparameters 'param' and some dataset
+        """
         if self.verbosity > 3:
             print "SVM::train() called ", dataspec.keys()
         
@@ -1224,17 +1198,17 @@ class SVM(object):
         
         return dataspec
         
-    """ This function can be changed by the user to take another
-        decision than the standard ones, for instance when
-        classifying bags of data (where each bag correspond to a target)
-    """
     def predict_from_outputs(self, outputs, targets, vmat):
+        """ This function can be changed by the user to take another
+            decision than the standard ones, for instance when
+            classifying bags of data (where each bag correspond to a target)
+        """
         assert self.nclasses == len(outputs[0])
         assert type(outputs[0]) == list
         predictions = []
         for o in outputs:
-            predictions.append( array(o).argmax() )
-        return predictions, targets
+            predictions.append( numpy.array(o).argmax() )
+        return predictions, targets, outputs
 
     def get_outputs_targets( self,
                              testset ):
@@ -1304,7 +1278,7 @@ class SVM(object):
             elif self.outputs_type == 'onehot' or self.outputs_type == 'votes':
                 for x in samples:
                     output = [0]*nclasses
-                    svm_outputs = zeros(nclasses)
+                    svm_outputs = numpy.zeros(nclasses)
                     for c in range(nclasses):
                         onevsall_dict = model[c].predict_values(x)
                         svm_outputs[c] = onevsall_dict[(1,-1)]
@@ -1325,16 +1299,16 @@ class SVM(object):
         assert len(outputs) == len(targets)
         return outputs, targets
 
-    """ Return the costs obtained by a libSVM model
-        on a given dataset.
-        If 'return_outputs' is set to True, also returns a numpy array
-        containing outputs.
-    """
     def test( self,
               testset,
               teststats = None,
               return_outputs = False
              ):
+        """ Return the costs obtained by a libSVM model
+            on a given dataset.
+            If 'return_outputs' is set to True, also returns a numpy array
+            containing outputs.
+        """
         nclasses = self.nclasses
         costnames = self.costnames
         # Translation of the cost 'confusion_matrix'
@@ -1352,7 +1326,7 @@ class SVM(object):
             teststats.setFieldNames( costnames )
 
         outputs, targets = self.get_outputs_targets( testset )
-        predictions, targets = self.predict_from_outputs( outputs, targets, testset)
+        predictions, targets, outputs = self.predict_from_outputs( outputs, targets, testset)
 
         # Computing misclassification costs for the default normalized
         # classification error (= class error weighted w.r.t class priors)
@@ -1366,15 +1340,14 @@ class SVM(object):
         cm_weights = [ (class_priors.get(t,0.)!=0. and 1./class_priors.get(t,0.)) or fpconst.NaN for t in range(nclasses) ]
         if 'norm_ce' in self.costnames:
             if self.errorcosts == None:        
-                errorcosts = zeros((nclasses,nclasses))
+                errorcosts = numpy.zeros((nclasses,nclasses))
                 for classe in range(nclasses):
+                    cp= class_priors.get(classe,0.)
                     for prediction in range(classe)+range(classe+1,nclasses):
-                        cp= class_priors.get(classe,0.)
                         if cp != 0.:
                             errorcosts[classe,prediction] = 1./ ( nclasses * cp )
                         else:
-                            errorcosts[classe,prediction] = fpconst.NaN
-                            
+                            errorcosts[classe,prediction] = fpconst.NaN           
             else:
                 errorcosts = self.errorcosts
 
@@ -1405,46 +1378,46 @@ class SVM(object):
             teststats.update(statVec,1.)
 
         if return_outputs:
-            numpy_out = numpy.zeros((len(outputs), len(outputs[0])))
-            for i, out_i in enumerate(outputs):
-                numpy_out[i,:] = out_i
-            return teststats, numpy_out
+            return teststats, numpy.array(outputs)
         else:
             return teststats #, outputs, costs
 
 
     def valid( self,
                dataspec,
-               param= None):
-        if self.validset_key in dataspec:
+               param= None,
+               return_outputs = False):
+        if self.valid_inputspec(dataspec) <> None:
             self.validtype = 'simple'
-            return self.simplevalid(dataspec, param)
+            return self.simplevalid(dataspec, param, return_outputs = return_outputs)
         else:
-            return self.crossvalid(dataspec, param)
+            return self.crossvalid(dataspec, param, return_outputs = return_outputs)
 
-    """ Return the costs obtained by (simple) validation
-        for a given set of hyperparameter.
-    """
     def simplevalid( self,
                      dataspec,
                      param,
                      validstats = None,
-                     verbosity = True ):
-        if self.verbosity > 0 and verbosity:
+                     verbose = True,
+                     return_outputs = False ):
+        """ Return the costs obtained by (simple) validation
+            for a given set of hyperparameter.
+        """
+        if self.verbosity > 0 and verbose:
             print "\n** Simple Validation"
             print "   with param %s" % param
         self.train(dataspec, param)
         validset = self.valid_inputspec(dataspec)
         self.validset = validset
-        return self.test( validset, validstats )
+        return self.test( validset, validstats, return_outputs )
 
 
-    """ Return the costs obtained by cross-validation
-        for a given set of hyperparameter.
-    """
     def crossvalid( self,
                     dataspec,
-                    param ):
+                    param,
+                    return_outputs = False ):
+        """ Return the costs obtained by cross-validation
+            for a given set of hyperparameter.
+        """
         nclasses = self.nclasses
         n_fold = self.n_fold
         self.validtype = '%s-fold' % n_fold
@@ -1468,32 +1441,47 @@ class SVM(object):
             Nlastfold[c] = N[c] - Nfold[c] * (n_fold-1)
         
         validstats = None
+        if return_outputs:
+            validoutputs = numpy.zeros((trainset.length, nclasses))
         sub_trainset_class = [None]*nclasses
         sub_testset_class = [None]*nclasses
         for i in range(n_fold):
+            test_indices = []
             for c in range(nclasses):
                 if i < n_fold-1:
-                    test_indices = range( i*Nfold[c], (i+1)*Nfold[c] )
-                    train_indices = range( 0,i*Nfold[c])+range((i+1)*Nfold[c], N[c] )
+                    test_indices_class = range( i*Nfold[c], (i+1)*Nfold[c] )
+                    train_indices_class = range( 0,i*Nfold[c])+range((i+1)*Nfold[c], N[c] )
                 else:
-                    test_indices = range( i*Nfold[c], N[c] )
-                    train_indices = range( 0, N[c]-Nlastfold[c] )
+                    test_indices_class = range( i*Nfold[c], N[c] )
+                    train_indices_class = range( 0, N[c]-Nlastfold[c] )
                 sub_testset_class[c] = SelectRowsVMatrix(
                                     source = trainset_class[c],
-                                    indices = test_indices,)
+                                    indices = test_indices_class,)
                 sub_trainset_class[c] = SelectRowsVMatrix(
                                     source = trainset_class[c],
-                                    indices = train_indices,)
+                                    indices = train_indices_class,)
+                test_indices += test_indices_class
             sub_testset = ConcatRowsVMatrix( sources = sub_testset_class,
                                              fully_check_mappings = False,)
             sub_trainset = ConcatRowsVMatrix( sources = sub_trainset_class,
                                              fully_check_mappings = False,)
-            validstats = self.simplevalid({self.trainset_key:sub_trainset,
-                                           self.validset_key:sub_testset},
-                                            param,
-                                            validstats, False)
+            if return_outputs:
+                validstats, outputs = self.simplevalid(  {self.trainset_key:sub_trainset,
+                                                self.validset_key:sub_testset},
+                                                param,
+                                                validstats = validstats, verbose = False, return_outputs = True)
+                #validoutputs[test_indices,:] = outputs
+                validoutputs = numpy.array(list(validoutputs)+list(outputs))
+            else:
+                validstats = self.simplevalid(  {self.trainset_key:sub_trainset,
+                                                self.validset_key:sub_testset},
+                                                param,
+                                                validstats = validstats, verbose = False)
 
-        return validstats
+        if return_outputs:
+            return validstats, validoutputs
+        else:
+            return validstats
 
 
     def retrain_and_writeresults(self, dataspec):
@@ -1503,7 +1491,7 @@ class SVM(object):
         # Cross Validation
         if self.validset_key not in dataspec:
             if self.verbosity > 0:
-                print "\n** training model on entire train"
+                print "\n** training model on entire train\n\twith param %s" % self.best_param
             self.train( dataspec )
 
         # Simple Validation
@@ -1533,7 +1521,7 @@ class SVM(object):
                             fully_check_mappings = False,
                         )
                 if self.verbosity > 0:
-                    print "\n** re-training model on { train + valid } "
+                    print "\n** re-training model on { train + valid }\n\twith params %s" % (self.best_param)
                 self.train( {self.trainset_key: tv_set} )
 
             # CAUTION: in the case of simple validation without retraining on {train+valid},
@@ -1561,13 +1549,13 @@ class SVM(object):
                             ntest = (testset <> None and testset.length or 0) )
         return dataspec
 
-    """ THE interesting function of the class.
-        See __main__ below for usage.
-        dataspec is a dictionary which specifies train, valid, test sets.
-        The train set is mandatory, but valid and/or test sets can be missing.
-        cf. train_inputspec(), valid_inputspec(), and test_inputspec().
-    """
-    def run(self, dataspec, param = None, L0 = None):
+    def run(self, dataspec, param = None, L0 = None, save_valid_outputs = False):
+        """ THE interesting function of the class.
+            See __main__ below for usage.
+            dataspec is a dictionary which specifies train, valid, test sets.
+            The train set is mandatory, but valid and/or test sets can be missing.
+            cf. train_inputspec(), valid_inputspec(), and test_inputspec().
+        """
         random.seed(17)
         assert self.testlevel >= 0
         assert self.max_ntrials > 0
@@ -1602,7 +1590,10 @@ class SVM(object):
                 self.validset = None
                 return self.retrain_and_writeresults(dataspec)
             
-            valid_stats = self.valid(dataspec, param)
+            if save_valid_outputs:
+                valid_stats, valid_outputs = self.valid(dataspec, param, return_outputs = True)
+            else:
+                valid_stats = self.valid(dataspec, param, return_outputs = False)
 
             # No improvement measured
             if not self.update_trials( param, valid_stats ):
@@ -1617,8 +1608,11 @@ class SVM(object):
 
             # Better valid cost is obtained!
             else:
+                if save_valid_outputs:
+                    self.valid_outputs = valid_outputs
+            
                 # Simple Validation
-                if self.validset_key in dataspec:
+                if validset <> None:
                     self.best_model = self.model
                     
                 if self.testlevel > 0:
@@ -1639,7 +1633,7 @@ class SVM(object):
         and local_retrain_until_local_optimum_is_found
         and expert.should_be_tuned_again()
         and ( self.max_cost == None or expert.best_cost <= self.max_cost ) ):
-           return self.run( dataspec, None, L0 )
+           return self.run( dataspec, param = None, save_valid_outputs = save_valid_outputs, L0 = L0 )
 
         if self.testlevel == 0:
              return self.retrain_and_writeresults(dataspec)
@@ -1660,7 +1654,7 @@ def mean_std(data):
     stds=[get_std_cmp(data,i) for i in range(len(data[0]))]
     while 0 in stds:
         stds.remove(0)
-    stds=array(stds)
+    stds=numpy.array(stds)
     return stds.mean(), stds.std()
 
 def get_mean_cmp(data,i):
@@ -1685,10 +1679,10 @@ def normalize_data(data, mean=None, std=None):
             data[j][i]=(data[j][i]-mean[i])/std[i]
     return mean, std
 
-""" Geometric mean (useful to deal with multiplicative hyperparameters
-                    such as 'C', 'gamma', ...)
-"""
 def geom_mean(data):
+    """ Return geometric mean (useful to deal with multiplicative hyperparameters
+                        such as 'C', 'gamma', ...)
+    """
     if type(data[0]) == list:
         res=[]
         for coor in range(len(data[0])):
@@ -1700,17 +1694,17 @@ def geom_mean(data):
             prod *= value
         return prod**(1./len(data))
 
-""" Softmax function
-"""
 def softmax(output):
-    expterms = [ exp(o) for o in output ]
+    """ Softmax function
+    """
+    expterms = [ math.exp(o) for o in output ]
     S = sum(expterms)
     return [ e/S for e in expterms ]
 
 """"""
 
 """ Below:
-    Some (API) Functions that can be assigned
+    Some functions that can be assigned
     to a SVM object, to deal with bags of data
     to classify.
 
@@ -1745,16 +1739,18 @@ def predict_from_outputs_onBags(outputs, targets, vmat):
     assert type(outputs[0]) == list
     bag_predictions=[]
     bag_targets=[]
-    votes = zeros(nclasses)
+    bag_outputs=[]
+    sum_outputs = numpy.zeros(nclasses)
     for output, t, b in zip(outputs, targets, baginfo):
         if b in [1,3]: # beginning of a bag
-            votes = zeros(nclasses)
+            sum_outputs = numpy.zeros(nclasses)
         for o, c in zip(output, range(nclasses)):
-            votes[c] += o
+            sum_outputs[c] += o
         if b in [2,3]: # end of a bag
-            bag_predictions.append( votes.argmax() )
+            bag_predictions.append( sum_outputs.argmax() )
             bag_targets.append( t )
-    return bag_predictions, bag_targets
+            bag_outputs.append( sum_outputs )
+    return bag_predictions, bag_targets, numpy.array(bag_outputs)
 
 
 if __name__ == '__main__':
@@ -1774,7 +1770,7 @@ if __name__ == '__main__':
 
     """ <bool> weight the coeff 'C' with the inverse prior proba of each class
                (scaled so as to have average=1 on weights). Useful when classes are unbalanced. """
-    # svm.balanceC = 1
+    # svm.balanceC = True
 
     """ <list> of cost names to compute. """
     # svm.costnames = ['class_error','confusion_matrix']
