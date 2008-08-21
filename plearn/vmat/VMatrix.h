@@ -275,7 +275,7 @@ public:
 
     /// generate an PLERROR iif it don't looks like the same matrix,
     /// i.e. it has same sizes and width.
-    void compatibleSizeError(const VMat& m);
+    void compatibleSizeError(const VMat& m, string extra_msg = "");
 
     /**
      *  This should be called by the build method of every VMatrix that has a

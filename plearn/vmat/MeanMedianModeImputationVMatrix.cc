@@ -383,7 +383,7 @@ void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
     train_set->isUpToDate(file_name,true,true);
 
     mean_median_mode_file = new FileVMatrix(file_name);
-    compatibleSizeError(mean_median_mode_file);
+    compatibleSizeError(mean_median_mode_file, "Bad file "+file_name);
     PLCHECK(mean_median_mode_file->fieldNames()==fieldNames());
     mean_median_mode_file->getRow(0, variable_mean);
     mean_median_mode_file->getRow(1, variable_median);
