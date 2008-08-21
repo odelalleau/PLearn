@@ -65,7 +65,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     online( false ),
     compute_all_test_costs( false ),
     reconstruct_hidden( false ),
-    noise_type( "none" ),
+    noise_type( "masking_noise" ),
     fraction_of_masked_inputs( 0 ),
     probability_of_masked_inputs( 0 ),
     mask_with_mean( false ),
@@ -229,9 +229,10 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Type of noise that corrupts the autoassociators input. "
                   "Choose among:\n"
-                  " - \"masking noise\"\n"
-                  " - \"binary sampling\"\n"
+                  " - \"masking_noise\"\n"
+                  " - \"binary_sampling\"\n"
                   " - \"gaussian\"\n"
+                  " - \"none\"\n"
         );
 
     declareOption(ol, "fraction_of_masked_inputs",
@@ -322,10 +323,10 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "Hidden layers for the correlation connections"
         );
 
-    declareOption(ol, "input_mean",
-                  &StackedAutoassociatorsNet::input_mean,
+    declareOption(ol, "expectation_means",
+                  &StackedAutoassociatorsNet::expectation_means,
                   OptionBase::learntoption,
-                  "Mean of inputs on the training set"
+                  "Mean of layers on the training set for each layer"
         );
 
     // Now call the parent class' declareOptions
@@ -409,21 +410,6 @@ void StackedAutoassociatorsNet::build_()
             PLERROR("StackedAutoassociatorsNet::build_()"
                     " - \n"
                     "masked inputs has not been implemented for online option.\n");
-
-        if( train_set && noise_type == "masking noise" && mask_with_mean )
-        {
-            Vec input(inputsize());
-            Vec target(train_set->targetsize());
-            real weight;
-            input_mean.resize(inputsize());
-            input_mean.clear();
-            for( int l = 0; l<train_set->length(); l++ )
-            {
-                train_set->getExample(l, input, target, weight);
-                input_mean += input;
-            }
-            input_mean /= train_set->length();
-        }
 
         if( !online )
         {
@@ -644,6 +630,22 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
     expectations[n_layers-1].resize( layers[n_layers-1]->size );
     activation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
     expectation_gradients[n_layers-1].resize( layers[n_layers-1]->size );
+
+    // For denoising autoencoders
+    corrupted_autoassociator_expectations.resize( n_layers-1 );
+    if( noise_type == "masking_noise" && fraction_of_masked_inputs > 0 )
+        autoassociator_expectation_indices.resize( n_layers-1 );
+    
+    for( int i=0 ; i<n_layers-1 ; i++ )
+    {
+        corrupted_autoassociator_expectations[i].resize( layers[i]->size );
+        if( noise_type == "masking_noise" && fraction_of_masked_inputs > 0 )
+        {
+            autoassociator_expectation_indices[i].resize( layers[i]->size );
+            for( int j=0 ; j < autoassociator_expectation_indices[i].length() ; j++ )
+                autoassociator_expectation_indices[i][j] = j;
+        }
+    }
 }
 
 void StackedAutoassociatorsNet::build_costs()
@@ -797,7 +799,7 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost_gradients, copies);
     deepCopyField(corrupted_autoassociator_expectations, copies);
     deepCopyField(autoassociator_expectation_indices, copies);
-    deepCopyField(input_mean, copies);
+    deepCopyField(expectation_means, copies);
     deepCopyField(greedy_stages, copies);
 }
 
@@ -914,6 +916,46 @@ void StackedAutoassociatorsNet::train()
             MODULE_LOG << "  stage = " << *this_stage << endl;
             MODULE_LOG << "  end_stage = " << end_stage << endl;
             MODULE_LOG << "  greedy_learning_rate = " << greedy_learning_rate << endl;
+
+            if( *this_stage == 0 && noise_type == "masking_noise" && mask_with_mean )
+            {
+                Vec in(inputsize());
+                Vec tar(train_set->targetsize());
+                real w;
+                expectation_means.resize(n_layers-1);
+                expectation_means[i].resize(expectations[i].length());
+                expectation_means[i].clear();
+                for( int l = 0; l<train_set->length(); l++ )
+                {
+                    train_set->getExample(l, in, tar, w);
+                    // Get representation
+                    expectations[0] << in;
+                    if(correlation_connections.length() != 0)
+                    {
+                        for( int j=0 ; j<i; j++ )
+                        {
+                            connections[j]->fprop( expectations[j], correlation_activations[j] );
+                            layers[j+1]->fprop( correlation_activations[j],
+                                                correlation_expectations[j] );
+                            correlation_connections[j]->fprop( correlation_expectations[j],
+                                                               activations[j+1] );
+                            correlation_layers[j]->fprop( activations[j+1],
+                                                          expectations[j+1] );
+                        }
+                    }
+                    else
+                    {
+                        for( int j=0 ; j<i; j++ )
+                        {
+                            connections[j]->fprop( expectations[j], activations[j+1] );
+                            layers[j+1]->fprop(activations[j+1],expectations[j+1]);
+                        }
+                    }
+                    
+                    expectation_means[i] += expectations[i];
+                }
+                expectation_means[i] /= train_set->length();
+            }
 
             if( report_progress && *this_stage < end_stage )
                 pb = new ProgressBar( "Training layer "+tostring(i)
@@ -1033,20 +1075,6 @@ void StackedAutoassociatorsNet::train()
                     layers[i]->size );
                 fine_tuning_reconstruction_expectation_gradients[i].resize(
                     layers[i]->size );
-            }
-
-            if( noise_type == "masking noise" && fraction_of_masked_inputs > 0 )
-            {
-                corrupted_autoassociator_expectations.resize( n_layers-1 );
-                autoassociator_expectation_indices.resize( n_layers-1 );
-
-                for( int i=0 ; i<n_layers-1 ; i++ )
-                {
-                    corrupted_autoassociator_expectations[i].resize( layers[i]->size );
-                    autoassociator_expectation_indices[i].resize( layers[i]->size );
-                    for( int j=0 ; j < autoassociator_expectation_indices[i].length() ; j++ )
-                        autoassociator_expectation_indices[i][j] = j;
-                }
             }
 
             setLearningRate( unsupervised_fine_tuning_learning_rate );
@@ -1191,27 +1219,16 @@ void StackedAutoassociatorsNet::train()
 void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_input, int layer)
 {
     corrupted_input.resize(input.length());
-    if( noise_type == "masking noise" )
+    if( noise_type == "masking_noise" )
     {
-        if( fraction_of_masked_inputs > 0 )
+        if( probability_of_masked_inputs > 0 )
         {
-            if( probability_of_masked_inputs > 0 )
+            if( fraction_of_masked_inputs > 0 )
                 PLERROR("In StackedAutoassociatorsNet::corrupt_input(): fraction_of_masked_inputs and probability_of_masked_inputs can't be both > 0");
-            random_gen->shuffleElements(autoassociator_expectation_indices[layer]);
-            corrupted_input << input;
-            if( mask_with_mean )
-                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
-                    corrupted_input[ autoassociator_expectation_indices[layer][j] ] = input_mean[autoassociator_expectation_indices[layer][j]];
-            else
-                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
-                    corrupted_input[ autoassociator_expectation_indices[layer][j] ] = 0;
-        }
-        else if( probability_of_masked_inputs > 0 )
-        {
             if( mask_with_mean )
                 for( int j=0 ; j <input.length() ; j++)
                     if( random_gen->uniform_sample() < probability_of_masked_inputs )
-                        corrupted_input[ j ] = input_mean[ j ];
+                        corrupted_input[ j ] = expectation_means[layer][ j ];
                     else
                         corrupted_input[ j ] = input[ j ];
             else
@@ -1223,10 +1240,19 @@ void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_i
                 
         }
         else
-            PLERROR("In StackedAutoassociatorsNet::corrupt_input(): either fraction_of_masked_inputs or probability_of_masked_inputs should be > 0");
+        {
+            random_gen->shuffleElements(autoassociator_expectation_indices[layer]);
+            corrupted_input << input;
+            if( mask_with_mean )
+                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
+                    corrupted_input[ autoassociator_expectation_indices[layer][j] ] = expectation_means[layer][autoassociator_expectation_indices[layer][j]];
+            else
+                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
+                    corrupted_input[ autoassociator_expectation_indices[layer][j] ] = 0;
+        }
 
     }
-    else if( noise_type == "binary sampling" )
+    else if( noise_type == "binary_sampling" )
     {
         for( int i=0; i<corrupted_input.length(); i++ )
             corrupted_input[i] = random_gen->binomial_sample((input[i]-0.5)*binary_sampling_noise_parameter+0.5);

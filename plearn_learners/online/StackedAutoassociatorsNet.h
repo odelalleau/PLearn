@@ -397,8 +397,8 @@ protected:
     //! Indices of the expectation components
     TVec< TVec<int> > autoassociator_expectation_indices;
 
-    //! Mean of inputs on the training set
-    Vec input_mean;
+    //! Mean of layers on the training set for each layer
+    TVec<Vec> expectation_means;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
