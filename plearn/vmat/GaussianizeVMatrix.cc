@@ -192,11 +192,12 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
     VMat the_source = train_source ? train_source : source;
     
     //to save the stats their must be a metadatadir
-    if(!the_source->hasMetaDataDir() && hasMetaDataDir())
+    if(!the_source->hasMetaDataDir() && hasMetaDataDir()){
         if (train_source)
             the_source->setMetaDataDir(getMetaDataDir()+"train_source");
         else
             the_source->setMetaDataDir(getMetaDataDir()+"source");
+    }
 
     if(!the_source->hasMetaDataDir())
         PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
