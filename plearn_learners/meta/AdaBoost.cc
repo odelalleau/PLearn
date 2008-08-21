@@ -231,10 +231,10 @@ void AdaBoost::build_()
         PLERROR("In Adaboost:build_(): conf_rated_adaboost and pseudo_loss_adaboost cannot both be true, a choice must be made");
 
     
-    int n;
+    int n = 0;
     if(weak_learners.size()>0)
         n=weak_learners[0]->outputsize();
-    else
+    else if(weak_learner_template)
         n=weak_learner_template->outputsize();
     weak_learner_output.resize(n);
 }
