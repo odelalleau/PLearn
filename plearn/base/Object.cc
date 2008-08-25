@@ -288,8 +288,8 @@ void Object::readOptionVal(PStream &in, const string &optionname, unsigned int i
 
     // There are bigger problems in the world but still it isn't always funny
     if(optionname.empty())
-        PLERROR("There is no option named \"%s\" in a \"%s\". Meaby we forget an ')'?",
-                optionname.c_str(),classname().c_str());
+        PLERROR("Found an empty option name in a \"%s\". "
+                "Maybe you forgot a ')'?", classname().c_str());
     PLERROR("There is no option named \"%s\" in a \"%s\"",
             optionname.c_str(),classname().c_str());
 }
