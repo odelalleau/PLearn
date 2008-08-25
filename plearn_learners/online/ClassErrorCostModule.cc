@@ -81,18 +81,23 @@ void ClassErrorCostModule::build_()
         PLASSERT(error_costs.length() == input_size);   
 }
 
+///////////
+// build //
+///////////
 void ClassErrorCostModule::build()
 {
     inherited::build();
     build_();
 }
 
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void ClassErrorCostModule::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // deepCopyField(trainvec, copies);
+    deepCopyField(error_costs, copies);
 }
 
 ///////////
@@ -105,6 +110,9 @@ void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
     fprop( input, target, cost[0] );
 }
 
+///////////
+// fprop //
+///////////
 void ClassErrorCostModule::fprop(const Vec& input, const Vec& target,
                                  real& cost) const
 {
