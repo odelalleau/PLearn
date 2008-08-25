@@ -90,7 +90,7 @@ void ReplicateSamplesVMatrix::declareOptions(OptionList& ol)
                   &ReplicateSamplesVMatrix::bag_index,
                   OptionBase::buildoption,
         "Index of the target corresponding to the bag information (useful\n"
-        "only when operate_on_bags is True). -1 means the last element.\n");
+        "only when operate_on_bags is True). -1 means the last element.");
 
     declareOption(ol, "seed", &ReplicateSamplesVMatrix::seed,
                   OptionBase::buildoption,
@@ -131,9 +131,7 @@ void ReplicateSamplesVMatrix::build_()
     updateMtime(indices_vmat);
     updateMtime(source);
 
-    if (bag_index < 0)
-        bag_index = source->targetsize()-1;
-    PLASSERT(bag_index < source->targetsize());
+    PLASSERT(bag_index < 0 || bag_index < source->targetsize());
 
     // Build the vector of indices.
     indices.resize(0);
@@ -142,6 +140,7 @@ void ReplicateSamplesVMatrix::build_()
     TVec< TVec<int>  > class_indices;  // Indices of samples in each class.
     map<int, int> bag_sizes; // Map a source index to the size of its bag.
     int bag_start_idx = -1;
+    int bag_idx = bag_index >= 0 ? bag_index : source->targetsize() - 1;
     for (int i = 0; i < source->length(); i++) {
         source->getExample(i, input, target, weight);
         int c = int(round(target[0]));
@@ -151,7 +150,7 @@ void ReplicateSamplesVMatrix::build_()
                 class_indices.append(TVec<int>());
         }
         
-        if (!operate_on_bags || int(round(target[bag_index])) &
+        if (!operate_on_bags || int(round(target[bag_idx])) &
                                 SumOverBagsVariable::TARGET_COLUMN_FIRST) {
             class_indices[c].append(i);
             indices.append(i);
