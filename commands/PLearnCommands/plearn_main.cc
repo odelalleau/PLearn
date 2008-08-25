@@ -353,7 +353,7 @@ int plearn_main( int argc, char** argv,
 
     if(findpos( command_line, "--profile" )!=-1){
         Profiler::pl_profile_end("Prog");
-        Profiler::pl_profile_disactivate();
+        Profiler::pl_profile_deactivate();
         Profiler::pl_profile_report(cerr);
         Profiler::pl_profile_reportwall(cerr);
     }

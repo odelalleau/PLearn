@@ -134,7 +134,7 @@ public:
     }
 
     //! Disable profiling
-    static void disactivate() { active=false; }
+    static void deactivate() { active=false; }
 
     //! Return activation status
     static bool isActive() { return active; }
@@ -175,11 +175,11 @@ public:
     static inline void pl_profile_activate() {}
 #endif
 
-    //!  call disactivate() if if PL_PROFILE is set
+    //!  call deactivate() if if PL_PROFILE is set
 #if defined(PROFILE) && defined(PL_PROFILE)
-    static void pl_profile_disactivate();
+    static void pl_profile_deactivate();
 #else
-    static inline void pl_profile_disactivate() {}
+    static inline void pl_profile_deactivate() {}
 #endif
 
     //!  call report() if if PL_PROFILE is set
