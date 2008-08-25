@@ -81,9 +81,9 @@ void HelpCommand::helpOverview()
         "                     Option to enable logging for the specified modules,\n"
         "                     specified a comma-separated list of modules (without spaces).\n"
         "                     Special keywords __ALL__ and __NONE__ can be specified to log\n"
-        "                     for all modules or no modules respectively."
+        "                     for all modules or no modules respectively.\n"
         "                 --servers\n"
-        "                 --global-calendars\n"
+        "                 --global-calendars"
          << endl;
 }
 
