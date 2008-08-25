@@ -112,9 +112,10 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
                     // necessary
                     sprintf(buffer, "%8f", currow[j] + 19000000.0);
                 else if((strval=source->getValString(j,currow[j]))!=""){
+                    search_replace(strval, "\"", "\\\"");
+                    strval = "\"" + strval + "\"";
                     if(strval.length()>1000-1)
                         PLERROR("a value is too big!");
-                    strval = "\"" + strval + "\"";
                     strncpy(buffer,strval.c_str(),1000);
                 }else{
                     // Normal processing
@@ -139,6 +140,136 @@ static void save_vmat_as_csv(VMat source, ostream& destination,
             }
             destination << "\n";
         }
+    }
+}
+
+  
+/**
+ * This function converts a VMat to a ARFF (Attribute-Relation File Format) file
+ * with the given name.  One can also specify whether any missing values on a row
+ * cause that row to be skipped during export.
+ * In addition, the number of significant digits after the decimal period can be specified.
+ *
+ * The 'date_columns' option (if not empty) flags the specified columns as a
+ * date.  Also, it converts the date from CYYMMDD to YYYYMMDD (if necessary).
+ */
+static void save_vmat_as_arff(VMat source, ostream& destination, TVec<string>& date_columns,
+                             bool skip_missings, int precision = 12, bool verbose = true)
+{
+    PP<ProgressBar> pb;
+    if (verbose)
+        pb = new ProgressBar(cout, "Saving to ARFF", source.length());
+
+    // First, write the ARFF specific file header
+    destination << "@relation arff-database\n";
+    TVec<string> fields = source->fieldNames();
+    int nb_fields = fields.size();
+    for (int i=0; i<nb_fields; ++i)
+    {
+        string curfield = fields[i];
+        destination << "@attribute " << curfield << " ";
+        map<string,real> string_map = source->getStringToRealMapping(i);
+        if (date_columns.contains(curfield))  // e.g. @attribute start_date date "yyyyMMdd"
+            destination << "date \"yyyyMMdd\"\n";
+        else if (string_map.empty())  // e.g. @attribute Age numeric
+            destination << "numeric\n";
+        else  // e.g. @attribute Country {"Canada", "China", "Columbia"}
+        {
+            int nb_keys = string_map.size();
+            int key_i = 0;
+            destination << "{";
+            map<string,real>::iterator it;
+            for (it = string_map.begin(); it != string_map.end(); ++it)
+            {
+                string key = it->first;
+                search_replace(key, "\"", "\\\"");
+                destination << '"' << key << '"';
+                if (key_i < nb_keys-1)
+                    destination << ", ";
+                key_i++;
+            }
+            destination << "}\n";
+        }
+    }
+    destination << "@data\n";
+
+    // Next, output each line.  Perform missing-value checks if required.
+    const string delimiter = ",";
+    const int buffer_size = 10000;
+    char buffer[buffer_size];
+    for (int i=0, n=source.length(); i<n; ++i) {
+        if (pb)
+            pb->update(i+1);
+
+        // Skip missing values?
+        Vec currow = source(i);
+        if (skip_missings && currow.hasMissing())
+            continue;
+
+        for (int j=0, m=currow.size(); j<m; ++j)
+        {
+            string strval = "";
+            // Date field
+            if (date_columns.contains(fields[j]))
+            {
+                // Date conversion: add 19000000 to convert from CYYMMDD to
+                // YYYYMMDD, and always output without trailing . if not
+                // necessary
+                real curfield = currow[j];
+                if (is_missing(curfield)  ||  curfield==0)  // missing value
+                {
+                    strval = "?";
+                    strncpy(buffer, strval.c_str(), buffer_size);
+                }
+                else
+                {
+                    if (curfield < 10000000)  // CYYMMDD format
+                        curfield += 19000000.0;
+                    sprintf(buffer, "%8d", int(curfield));
+                }
+            }
+            // String mapped field
+            else if ((strval=source->getValString(j,currow[j])) != "")
+            {
+                search_replace(strval, "\"", "\\\"");
+                strval = "\"" + strval + "\"";
+                if (strval.length()>buffer_size-1)
+                    PLERROR("a value is too big!");
+                strncpy(buffer, strval.c_str(), buffer_size);
+            }
+            // Numeric field
+            else
+            {
+                real curfield = currow[j];
+                if (is_missing(curfield))  // missing value
+                {
+                    strval = "?";
+                    strncpy(buffer, strval.c_str(), buffer_size);
+                }
+                else
+                {
+                    // Normal processing
+                    sprintf(buffer, "%#.*f", precision, currow[j]);
+
+                    // strip all trailing zeros and final period
+                    // there is always a period since sprintf includes # modifier
+                    char* period = buffer;
+                    while (*period && *period != '.')
+                        period++;
+                    for (char* last = period + strlen(period) - 1; last >= period && (*last == '0' || *last == '.'); --last)
+                    {
+                        bool should_break = *last == '.';
+                        *last = '\0';
+                        if (should_break)
+                            break;
+                    }
+                }
+            }
+            destination << buffer;
+            if (j < m-1)
+                destination << delimiter;
+        }
+        destination << "\n";
     }
 }
 
@@ -499,12 +630,13 @@ int vmatmain(int argc, char** argv)
     */
     else if(command=="convert")
     {
-        string source = argv[2];
-        string destination = argv[3];
-        bool mat_to_mem=false;
         if(argc<4)
             PLERROR("Usage: vmat convert <source> <destination> "
                     "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR]");
+
+        string source = argv[2];
+        string destination = argv[3];
+        bool mat_to_mem = false;
 
         /**
          * Interpret the following options:
@@ -531,6 +663,7 @@ int vmatmain(int argc, char** argv)
          *           ::object in the metadatadir of the destination
          */
         TVec<string> columns;
+        TVec<string> date_columns;
         bool skip_missings = false;
         int precision = 12;
         string delimiter = ",";
@@ -543,6 +676,10 @@ int vmatmain(int argc, char** argv)
             if (curopt.substr(0,7) == "--cols=") {
                 string columns_str = curopt.substr(7);
                 columns = split(columns_str, ',');
+            }
+            else if (curopt.substr(0,12) == "--date-cols=") {
+                string columns_str = curopt.substr(12);
+                date_columns = split(columns_str, ',');
             }
             else if (curopt == "--skip-missings")
                 skip_missings = true;
@@ -586,14 +723,19 @@ int vmatmain(int argc, char** argv)
         else if(ext == ".csv")
         {
             if (destination == "-.csv")
-                save_vmat_as_csv(vm, cout, skip_missings, precision, delimiter, true /*verbose*/,
-                                 convert_date);
-            else {
+                save_vmat_as_csv(vm, cout, skip_missings, precision, delimiter, true /*verbose*/, convert_date);
+            else
+            {
                 ofstream out(destination.c_str());
-                save_vmat_as_csv(vm, out, skip_missings, precision, delimiter, true /*verbose*/,
-                                 convert_date);
+                save_vmat_as_csv(vm, out, skip_missings, precision, delimiter, true /*verbose*/, convert_date);
             }
-        }else if(ext == ".vmat")
+        }
+        else if(ext == ".arff")
+        {
+            ofstream out(destination.c_str());
+            save_vmat_as_arff(vm, out, date_columns, skip_missings, precision);
+        }
+        else if(ext == ".vmat")
             PLearn::save(destination,vm);
         else
         {
