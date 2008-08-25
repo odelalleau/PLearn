@@ -1375,8 +1375,14 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
         || this->extrasize()  != m->extrasize() );
 }
 
-void VMatrix::compatibleSizeError(const VMat& m, string extra_msg){
-#define MY_PRINT_ERROR_MST(NAME) PLERROR("In VMatrix::compatibleSizeError - in class %s The matrix are not compatible!\n m1."#NAME"=%d and m2."#NAME"=%d. %s", classname().c_str(), this->NAME(), m->NAME(), extra_msg.c_str());
+/////////////////////////
+// compatibleSizeError //
+/////////////////////////
+void VMatrix::compatibleSizeError(const VMat& m, const string& extra_msg) {
+#define MY_PRINT_ERROR_MST(NAME) PLERROR("In VMatrix::compatibleSizeError " \
+        " - in class %s - The matrices are not compatible!\n"               \
+        "m1."#NAME"=%d and m2."#NAME"=%d. %s",                              \
+        classname().c_str(), this->NAME(), m->NAME(), extra_msg.c_str());
 
     if(this->width()      != m->width())
         MY_PRINT_ERROR_MST(width)
