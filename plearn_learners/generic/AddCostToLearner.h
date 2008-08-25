@@ -176,9 +176,13 @@ public:
     virtual void forget();
 
     //! Computes our and from the sub_learner costs from already computed output. 
+    //! If 'add_sub_learner_costs' is true, then the underlying learner will be
+    //! used to compute its own cost on the given input, output and target.
+    //! Otherwise, these costs are not computed (they are assumed to be already
+    //! given in the first part of the 'costs' vector).
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                          const Vec& target, Vec& costs,
-                                         const bool add_sub_learner_costs) const;
+                                         bool add_sub_learner_costs) const;
 
     //! Computes our and from the sub_learner costs from already computed output. 
     void computeCostsFromOutputs(const Vec& input, const Vec& output, 
