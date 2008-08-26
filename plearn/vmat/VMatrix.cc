@@ -159,8 +159,7 @@ void VMatrix::declareOptions(OptionList & ol)
         OptionBase::buildoption|OptionBase::nosave,
         "DO NOT play with this if you don't know the implementation!\n"
         "This add a dependency mtime to the gived value.\n"
-        "Use -1 to set permanently that we do not know the mtime (-1 will be\n"
-        "converted to the maximum value of time_t at runtime).");
+        "Use -1 to set permanently that we do not know the mtime.");
 
     declareOption(
         ol, "fieldinfos", &VMatrix::fieldinfos, OptionBase::buildoption,
