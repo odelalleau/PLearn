@@ -189,6 +189,13 @@ void RBMMixedLayer::getAllActivations( PP<RBMConnection> rbmc, int offset,
     }
 }
 
+void RBMMixedLayer::expectation_is_not_up_to_date()
+{
+    for( int i=0 ; i<n_layers ; i++ )
+        sub_layers[i]->expectation_is_not_up_to_date();
+
+    expectation_is_up_to_date = false;
+}
 
 ////////////////////
 // generateSample //
