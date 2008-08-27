@@ -1,0 +1,13 @@
+SelectRowsVMatrix(
+  source =
+	MemoryVMatrix(
+		data = 2 3 [ 0 0 0 0 0 0 ]
+		inputsize = 2
+		targetsize = 1
+		weightsize = 0
+	) 
+  indices = [ 0 ]
+  inputsize =   1
+  targetsize =  0
+  weightsize =  2
+)
