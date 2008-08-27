@@ -67,6 +67,8 @@ protected:
     bool obtained_weightsize_from_source;
     bool obtained_extrasize_from_source;
 
+    bool warn_if_all_rows_selected;
+
     TVec<int> selected_indices;
 
 public:
@@ -88,10 +90,10 @@ public:
 
     //! Also copies the original fieldinfos upon construction
     //! Here the indices will be shared for efficiency. But you should not modify them afterwards!
-    SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, bool the_rows_to_remove = false);
+    SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, bool the_rows_to_remove = false, bool warn = true);
 
     //! Here the indices will be copied locally into an integer vector
-    SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_rows_to_remove = false);
+    SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_rows_to_remove = false, bool warn = true);
 
     PLEARN_DECLARE_OBJECT(SelectRowsVMatrix);
 

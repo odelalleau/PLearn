@@ -56,14 +56,16 @@ SelectRowsVMatrix::SelectRowsVMatrix()
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
       obtained_extrasize_from_source(false),
+      warn_if_all_rows_selected(true),
       rows_to_remove(false)
 {}
 
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, bool the_rows_to_remove)
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, bool the_rows_to_remove, bool warn)
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
       obtained_extrasize_from_source(false),
+      warn_if_all_rows_selected(warn),
       indices(the_indices),
       rows_to_remove(the_rows_to_remove)
 {
@@ -72,11 +74,12 @@ SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, TVec<int> the_indices, boo
 }
 
 //! Here the indices will be copied locally into an integer vector
-SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_rows_to_remove)
+SelectRowsVMatrix::SelectRowsVMatrix(VMat the_source, Vec the_indices, bool the_rows_to_remove, bool warn)
     : obtained_inputsize_from_source(false),
       obtained_targetsize_from_source(false),
       obtained_weightsize_from_source(false),
       obtained_extrasize_from_source(false),
+      warn_if_all_rows_selected(warn),
       rows_to_remove(the_rows_to_remove)
 {
     source = the_source;
@@ -134,6 +137,9 @@ void SelectRowsVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "obtained_extrasize_from_source", &SelectRowsVMatrix::obtained_extrasize_from_source, OptionBase::learntoption,
                   "Set to 1 if the extrasize was obtained from the source VMat.");
+
+    declareOption(ol, "warn_if_all_rows_selected", &SelectRowsVMatrix::warn_if_all_rows_selected, OptionBase::buildoption,
+                  "If true, we generate a warning if we select all row.");
 
     inherited::declareOptions(ol);
 
@@ -203,8 +209,8 @@ void SelectRowsVMatrix::build_()
         selected_indices.resize(indices.length());
         selected_indices << indices;
     }
-
-    if(selected_indices.length()==source.length() && source.length()>0)
+    //we don't display the warning for SortRowsVMatrix as it always select all row!
+    if(warn_if_all_rows_selected && selected_indices.length()==source.length() && source.length()>0)
         PLWARNING("In SelectRowsVMatrix::build_() - We select all row!");
 
     length_ = selected_indices.length();
