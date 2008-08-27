@@ -180,7 +180,8 @@ void GaussianizeVMatrix::build_()
 
     // Obtain meta information from source.
     setMetaInfoFromSource();
-    
+    if(values.size()==0)
+        setMetaDataDir(getMetaDataDir());
 }
 
 ////////////////////
@@ -188,6 +189,9 @@ void GaussianizeVMatrix::build_()
 ////////////////////
 void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
     inherited::setMetaDataDir(the_metadatadir);
+
+    if(features_to_gaussianize.size()==0)
+        return;
 
     VMat the_source = train_source ? train_source : source;
     
