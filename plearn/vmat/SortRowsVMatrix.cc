@@ -60,7 +60,9 @@ PLEARN_IMPLEMENT_OBJECT(
 SortRowsVMatrix::SortRowsVMatrix():
     ignore_missing_fields(false),
     increasing_order(true)
-{}
+{
+    warn_if_all_rows_selected = false;
+}
 
 ////////////////////
 // declareOptions //

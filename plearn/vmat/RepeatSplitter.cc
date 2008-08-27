@@ -307,7 +307,8 @@ TVec<VMat> RepeatSplitter::getSplit(int k)
         int shuffle_indice = k / child_splits;
         if (shuffle_indice != last_n) {
             // We have to reshuffle the dataset, according to indices.
-            VMat m = new SelectRowsVMatrix(dataset, indices(shuffle_indice));
+            VMat m = new SelectRowsVMatrix(dataset, indices(shuffle_indice),
+                                           false, false);
             to_repeat->setDataSet(m);
             last_n = shuffle_indice;
         }
