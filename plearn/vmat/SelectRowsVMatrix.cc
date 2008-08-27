@@ -204,6 +204,9 @@ void SelectRowsVMatrix::build_()
         selected_indices << indices;
     }
 
+    if(selected_indices.length()==source.length() && source.length()>0)
+        PLWARNING("In SelectRowsVMatrix::build_() - We select all row!");
+
     length_ = selected_indices.length();
     if (source) {
         string error_msg =
