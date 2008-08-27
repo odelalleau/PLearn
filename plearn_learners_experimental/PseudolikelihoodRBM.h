@@ -118,6 +118,9 @@ public:
     //! Number of randomly selected inputs for pseudolikelihood cost
     int n_selected_inputs_pseudolikelihood;
 
+    //! Number of randomly selected inputs for CD in sparse input case
+    int n_selected_inputs_cd;
+
     ////! Indication that inputs for pseudolikelihood cost are selected among the
     ////! k most frequently active inputs
     //int select_among_k_most_frequent;
@@ -315,6 +318,9 @@ protected:
     Mat V_gradients;
     TVec<bool> input_is_active;
     TVec<int> input_indices;
+    TVec<bool> input_is_selected;
+    Vec hidden_act_non_selected;
+    Vec pos_input_sparse;
 
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;

@@ -73,6 +73,7 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     input_is_sparse( false ),
     factorized_connection_rank( -1 ),
     n_selected_inputs_pseudolikelihood( -1 ),
+    n_selected_inputs_cd( -1 ),
     //select_among_k_most_frequent( -1 ),
     compute_input_space_nll( false ),
     pseudolikelihood_context_size ( 0 ),
@@ -182,6 +183,15 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Number of randomly selected inputs for pseudolikelihood cost."
                   "This option is ignored for pseudolikelihood_context_size > 0.\n"
+                  );    
+
+    declareOption(ol, "n_selected_inputs_cd", 
+                  &PseudolikelihoodRBM::n_selected_inputs_cd,
+                  OptionBase::buildoption,
+                  "Number of randomly selected inputs for CD in sparse "
+                  "input case.\n"
+                  "Note that CD for sparse inputs assumes RBMBinomialLayer in "
+                  "input.\n"
                   );    
 
     //declareOption(ol, "select_among_k_most_frequent", 
@@ -465,6 +475,11 @@ void PseudolikelihoodRBM::build_layers_and_connections()
         }
         input_is_active.resize( inputsize() );
         input_is_active.clear();
+        hidden_act_non_selected.resize( hidden_layer->size );
+        // CD option
+        pos_hidden.resize( hidden_layer->size );
+        pos_input_sparse.resize( input_layer->size );
+        pos_input_sparse.clear();
     }
     else
     {
@@ -624,6 +639,9 @@ void PseudolikelihoodRBM::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(V_gradients, copies);
     deepCopyField(input_is_active, copies);
     deepCopyField(input_indices, copies);
+    deepCopyField(input_is_selected, copies);
+    deepCopyField(hidden_act_non_selected, copies);
+    deepCopyField(pos_input_sparse, copies);
     deepCopyField(persistent_gibbs_chain_is_started, copies);
 }
 
@@ -928,6 +946,7 @@ void PseudolikelihoodRBM::train()
                         input_is_active[(int)extra[i]] = true;
                     }
                 }
+                hidden_act += hidden_layer->bias;
             }
             else
             {
@@ -1184,6 +1203,7 @@ void PseudolikelihoodRBM::train()
                 //                    input_is_active[(int)extra[i]] = true;
                 //                }
                 //            }
+                //            hidden_act += hidden_layer->bias;
                 //        }
                 //        else
                 //        {
@@ -1315,6 +1335,7 @@ void PseudolikelihoodRBM::train()
                 //                            input_is_active[(int)extra[i]] = true;
                 //                        }
                 //                    }
+                //                    hidden_act += hidden_layer->bias;
                 //                }
                 //                else
                 //                {
@@ -1447,6 +1468,7 @@ void PseudolikelihoodRBM::train()
                 //                    input_is_active[(int)extra[i]] = true;
                 //                }
                 //            }
+                //            hidden_act += hidden_layer->bias;
                 //        }
                 //        else
                 //        {
@@ -1578,6 +1600,7 @@ void PseudolikelihoodRBM::train()
                 //                            input_is_active[(int)extra[i]] = true;
                 //                        }
                 //                    }
+                //                    hidden_act += hidden_layer->bias;
                 //                }
                 //                else
                 //                {
@@ -1715,6 +1738,7 @@ void PseudolikelihoodRBM::train()
                 //                    input_is_active[(int)extra[i]] = true;
                 //                }
                 //            }
+                //            hidden_act += hidden_layer->bias;
                 //        }
                 //        else
                 //        {
@@ -1846,6 +1870,7 @@ void PseudolikelihoodRBM::train()
                 //                            input_is_active[(int)extra[i]] = true;
                 //                        }
                 //                    }
+                //                    hidden_act += hidden_layer->bias;
                 //                }
                 //                else
                 //                {
@@ -1951,7 +1976,6 @@ void PseudolikelihoodRBM::train()
                 //    }
                 //}
 
-
                 // Compute activations
                 if( input_is_sparse )
                 {
@@ -1977,6 +2001,7 @@ void PseudolikelihoodRBM::train()
                             input_is_active[(int)extra[i]] = true;
                         }
                     }
+                    hidden_act += hidden_layer->bias;
                 }
                 else
                 {
@@ -2741,9 +2766,193 @@ void PseudolikelihoodRBM::train()
             (targetsize() == 0 || generative_learning_weight > 0) )
         {
             if( input_is_sparse )
+            {
                 PLERROR("In PseudolikelihoodRBM::train(): CD is not implemented "
                         "for sparse inputs");
 
+                // Randomly select inputs
+                if( n_selected_inputs_cd > inputsize() &&
+                    n_selected_inputs_cd <= 0 )
+                    PLERROR("In PseudolikelihoodRBM::train(): "
+                            "n_selected_inputs_cd should be > 0 and "
+                            "<= inputsize()" );
+
+                if ( input_indices.length() == 0 )
+                {
+                    input_indices.resize(inputsize());
+                    for( int i=0; i<input_indices.length(); i++ )
+                        input_indices[i] = i;
+                        
+                }
+                 
+                // Randomly selected inputs
+                int tmp;
+                int k;
+                for (int j = 0; j < n_selected_inputs_cd; j++) 
+                {
+                    k = j + 
+                        random_gen->uniform_multinomial_sample(
+                            inputsize() - j);
+                        
+                    tmp = input_indices[j];
+                    input_indices[j] = input_indices[k];
+                    input_indices[k] = tmp;
+                }
+
+                if( factorized_connection_rank > 0 )
+                    PLERROR("In PseudolikelihoodRBM::train(): factorized "
+                            "connection is not implemented for CD and "
+                            "sparse inputs" );
+
+                if( !fast_exact_is_equal(persistent_cd_weight, 0) )
+                    PLERROR("In PseudolikelihoodRBM::train(): persistent CD "
+                            "cannot be used for sparse inputs" );
+
+                if( use_mean_field_cd )
+                    PLERROR("In PseudolikelihoodRBM::train(): MF-CD "
+                            "is not implemented for sparse inputs" );
+
+                if( !fast_exact_is_equal(cd_decrease_ct, 0) )
+                    lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
+                else
+                    lr = cd_learning_rate;
+
+                if( targetsize() > 0 )
+                    lr *= generative_learning_weight;
+
+                setLearningRate(lr);
+
+                // Positive phase
+                if( targetsize() > 0 )
+                    pos_target = target_one_hot;
+
+                Vec hidden_act = hidden_layer->activation;
+                hidden_act.clear();
+                hidden_act_non_selected.clear();
+                train_set->getExtra(stage%nsamples,extra);
+                input_is_selected.resize( extra.length() );
+                input_is_selected.clear();
+                for( int i=0; i<extra.length(); i++ )
+                {
+                    hidden_act += V((int)extra[i]);
+                    if( input_indices.subVec(0,n_selected_inputs_cd).find((int)extra[i]) >= 0 )
+                    {
+                        input_is_selected[i] = true;
+                        pos_input_sparse[(int)extra[i]] = 1;
+                    }
+                    else
+                        hidden_act_non_selected += V((int)extra[i]);                        
+                }
+                hidden_act += hidden_layer->bias;
+                hidden_act_non_selected += hidden_layer->bias;
+
+                if( targetsize() == 1 )
+                    productAcc( hidden_layer->activation,
+                                target_connection->weights,
+                                target_one_hot );
+                else if( targetsize() > 1 )
+                    productAcc( hidden_layer->activation,
+                                target_connection->weights,
+                                target );
+
+                hidden_layer->expectation_is_not_up_to_date();
+                hidden_layer->computeExpectation();
+                //pos_hidden.resize( hidden_layer->size );
+                pos_hidden << hidden_layer->expectation;
+                    
+                // Negative phase
+                real *w;
+                Vec input_act = input_layer->activation;
+                Vec input_sample = input_layer->sample;
+                Vec hidden_sample = hidden_layer->sample;
+                int in;
+                for(int i=0; i<cd_n_gibbs; i++)
+                {
+                    // Down pass
+                    hidden_layer->generateSample();
+                    for (int j = 0; j < n_selected_inputs_cd; j++) 
+                    {
+                        in = input_indices[j];
+                        w = V[in];
+                        input_act[in] = input_layer->bias[in];
+                        for( int k=0; k<hidden_layer->size; k++ )
+                            input_act[in] += w[k] * hidden_sample[k];
+                        
+                        if( input_layer->use_fast_approximations )
+                        {
+                            input_sample[in] = random_gen->binomial_sample(
+                                fastsigmoid( input_act[in] ));
+                        }
+                        else
+                        {
+                            input_sample[in] = random_gen->binomial_sample(
+                                fastsigmoid( input_act[in] ));
+                        }
+                    }
+
+                    // Up pass
+                    hidden_act << hidden_act_non_selected;
+                    for (int j = 0; j < n_selected_inputs_cd; j++) 
+                    {
+                        in = input_indices[j];
+                        if( fast_exact_is_equal(input_sample[in], 1) )
+                            hidden_act += V(in);
+                    }
+
+                    if( targetsize() > 0 )
+                    {
+                        // Down-up pass for target
+                        target_connection->setAsUpInput( 
+                            hidden_layer->sample );
+                        target_layer->getAllActivations( 
+                            (RBMMatrixConnection*) target_connection );
+                        target_layer->computeExpectation();
+                        target_layer->generateSample();
+                        productAcc( hidden_act,
+                                    target_connection->weights,
+                                    target_layer->sample );
+                    }
+                    
+                    hidden_layer->expectation_is_not_up_to_date();
+                    hidden_layer->computeExpectation();
+                }
+
+                neg_hidden = hidden_layer->expectation;
+                    
+                hidden_layer->update(pos_hidden,neg_hidden);
+                if( targetsize() > 0 )
+                {
+                    neg_target = target_layer->sample;
+                    target_layer->update(pos_target,neg_target);
+                    target_connection->update(pos_target,pos_hidden,
+                                              neg_target,neg_hidden);
+                }
+
+                // Selected inputs connection update
+                for (int j = 0; j < n_selected_inputs_cd; j++) 
+                {
+                    in = input_indices[j];
+                    w = V[in];
+                    for( int k=0; k<hidden_layer->size; k++ )
+                        w[k] += lr * (pos_hidden[k] * pos_input_sparse[in] - 
+                                    neg_hidden[k] * input_sample[in]);
+                    input_layer->bias[in] += lr * ( pos_input_sparse[in] - 
+                                                    input_sample[in]);
+                }
+                
+                // Non-selected inputs connection update
+                hidden_activation_gradient << neg_hidden;
+                hidden_activation_gradient -= pos_hidden;
+                hidden_activation_gradient *= -lr;
+                for( int i=0; i<extra.length(); i++ )
+                {
+                    if( input_is_selected[i] = true )
+                        pos_input_sparse[(int)extra[i]] = 0;
+                    else
+                        V((int)extra[i]) += hidden_activation_gradient;
+                }
+            }
+            
             if( !fast_exact_is_equal(persistent_cd_weight, 1.) )
             {
                 if( !fast_exact_is_equal(cd_decrease_ct, 0) )
@@ -3163,7 +3372,8 @@ void PseudolikelihoodRBM::test(VMat testset, PP<VecStatsCollector> test_stats,
                 for( int e=0; e<extra.length(); e++ )
                     hidden_act += V((int)extra[e]);
             }
-            
+            hidden_act += hidden_layer->bias;
+
             for( int i=0 ; i<target_layer->size ; i++ )
             {
                 target_act[i] = target_layer->bias[i];
