@@ -53,7 +53,8 @@ using namespace std;
 
 PStream openFile(const PPath& filepath_, 
                  PStream::mode_t io_formatting,
-                 const string& openmode = "r"); 
+                 const string& openmode = "r",
+                 bool err_if_dont_exist = true); 
 
 } // end of namespace PLearn
 

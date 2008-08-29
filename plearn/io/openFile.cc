@@ -65,9 +65,13 @@ using namespace std;
  *  "r" for opening the file for reading, "w" for writing (overwrites the
  *  file if it exists), or "a" for appending to the file (creating it if
  *  it doesn't exist). The default is to open the file for reading ("r").
+ *
+ *  @param err_if_dont_exist if true, will generate a PLERROR if the file
+ *  don't exist. Else, will return an empty PStream witch st->good() will
+ *  return false.
  */
 PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
-                 const string& openmode)
+                 const string& openmode, bool err_if_dont_exist)
 {
     const PPath filepath = filepath_.absolute();
     
@@ -80,8 +84,10 @@ PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
     if (openmode == "r")
     {
         fd = PR_Open(filepath.c_str(), PR_RDONLY, 0666);
-        if (!fd)
+        if (!fd && err_if_dont_exist)
             PLERROR("openFile(\"%s\",\"%s\") failed.",filepath.c_str(), openmode.c_str());
+        else if(!fd)
+            return new PrPStreamBuf(0, 0);
         st = new PrPStreamBuf(fd, 0, true, false);
     }
     else if (openmode == "w")
