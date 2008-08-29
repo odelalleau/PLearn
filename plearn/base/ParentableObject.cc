@@ -170,12 +170,12 @@ void ParentableObject::setParent(Object* parent)
         
     case UniqueParent:
         if (m_parent)         // Because of test above, m_parent != parent
-            PLERROR("ParentableObject::setParent: for object at 0x%x (%s),\n"
-                    "trying to override existing parent at 0x%x (%s) with\n"
-                    "new parent at 0x%x (%s) -- parenting mode set to UniqueParent.",
-                    this, classname().c_str(),
-                    m_parent, m_parent->classname().c_str(),
-                    parent, (parent? parent->classname().c_str() : "NULL"));
+            PLERROR("ParentableObject::setParent: for object at 0x%p (%s),\n"
+                    "trying to override existing parent at 0x%p (%s) with\n"
+                    "new parent at 0x%p (%s) -- parenting mode set to UniqueParent.",
+                    (void*)this, classname().c_str(),
+                    (void*)m_parent, m_parent->classname().c_str(),
+                    (void*)parent, (parent? parent->classname().c_str() : "NULL"));
         break;
     }
 
