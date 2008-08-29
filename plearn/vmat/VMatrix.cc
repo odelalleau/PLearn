@@ -1439,7 +1439,11 @@ void VMatrix::lockMetaDataDir(time_t max_lock_age, bool verbose) const
     while (isfile(lockfile) && (max_lock_age == 0 || mtime(lockfile) + max_lock_age > time(0))) {
         // There is a lock file, and it is not older than 'max_lock_age'.
         string bywho;
-        try{ bywho = loadFileAsString(lockfile); }
+        try{ 
+            PStream st = openFile(lockfile, PStream::raw_ascii, "r", false);
+            if(st.good())
+                st.read(bywho, streamsize(filesize(lockfile)));
+        }
         catch(const PLearnError& e) {
             PLERROR("In VMatrix::lockMetaDataDir - Catching exceptions is"
                     " dangerous in PLearn (memory"
@@ -1650,9 +1654,13 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
         uptodate = isUpToDate(statsfile);
     }
     try{
-        if (uptodate)
+        if (uptodate){
             PLearn::load(statsfile, stats);
-        else
+            if(stats.length()!=width())
+                PLERROR("In VMatrix::getPrecomputedStatsFromFile() for class %s -"
+                        " bad file %s. Delete it to have it recreated.",
+                        classname().c_str(), statsfile.c_str());
+        } else
         {
             VMat vm = const_cast<VMatrix*>(this);
             stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
