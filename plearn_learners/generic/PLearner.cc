@@ -379,11 +379,11 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("Computed output (will have width outputsize)")));
 
     declareMethod(
-        rmm, "computeOutputs", &PLearner::computeOutputs,
+        rmm, "computeOutputs", &PLearner::remote_computeOutputs,
         (BodyDoc("On a trained learner, this computes the output from the input, one\n"
                  "batch of examples at a time (one example per row of the arg. matrices.\n"),
          ArgDoc ("inputs", "Input matrix (batch_size x inputsize)"),
-         ArgDoc ("outputs", "Resulting output matrix (batch_size x outputsize)")));
+         RetDoc ("Resulting output matrix (batch_size x outputsize)")));
 
     declareMethod(
         rmm, "use", &PLearner::remote_use,
@@ -1326,6 +1326,16 @@ Vec PLearner::remote_computeOutput(const Vec& input) const
     tmp_output.resize(os >= 0 ? os : 0);
     computeOutput(input, tmp_output);
     return tmp_output;
+}
+
+///////////////////////////
+// remote_computeOutputs //
+///////////////////////////
+Mat PLearner::remote_computeOutputs(const Mat& input) const
+{
+    Mat out(input.length(), outputsize() >= 0 ? outputsize() : 0);
+    computeOutputs(input, out);
+    return out;
 }
 
 ///////////////////////////////////

@@ -675,6 +675,7 @@ private:
     // List of methods that are called by Remote Method Invocation.  Our
     // convention is to have them start with the remote_ prefix.
     Vec remote_computeOutput(const Vec& input) const;
+    Mat remote_computeOutputs(const Mat& input) const;
     pair<Mat, Mat> remote_computeOutputsAndCosts(const Mat& input,
                                                  const Mat& target) const;
     void remote_use(VMat inputs, string output_fname) const;
