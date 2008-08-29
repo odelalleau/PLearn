@@ -74,6 +74,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     unsupervised_nstages( 0 ),
     unsupervised_fine_tuning_learning_rate( 0. ),
     unsupervised_fine_tuning_decrease_ct( 0. ),
+    mask_input_layer_only( false ),
     mask_input_layer_only_in_unsupervised_fine_tuning( false ),
     train_stats_window( -1 ),
     n_layers( 0 ),
@@ -286,6 +287,12 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The decrease constant of the learning rate used during\n"
                   "unsupervised fine tuning gradient descent.\n");
+
+    declareOption(ol, "mask_input_layer_only",
+                  &StackedAutoassociatorsNet::mask_input_layer_only,
+                  OptionBase::buildoption,
+                  "Indication that only the input layer should be masked\n"
+                  "during greedy layer-wise learning.\n");
 
     declareOption(ol, "mask_input_layer_only_in_unsupervised_fine_tuning",
                   &StackedAutoassociatorsNet::mask_input_layer_only_in_unsupervised_fine_tuning,
@@ -1219,6 +1226,12 @@ void StackedAutoassociatorsNet::train()
 void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_input, int layer)
 {
     corrupted_input.resize(input.length());
+    if( mask_input_layer_only && layer != 0 )
+    {
+        corrupted_input << input; 
+        return;
+    }
+    
     if( noise_type == "masking_noise" )
     {
         if( probability_of_masked_inputs > 0 )
@@ -1515,6 +1528,9 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
     // fprop
     expectations[0] << input;
 
+    bool old_mask_input_layer_only = mask_input_layer_only;
+    mask_input_layer_only = mask_input_layer_only_in_unsupervised_fine_tuning;
+
     if(correlation_connections.length() != 0)
     {
         
@@ -1638,6 +1654,8 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
                 expectation_gradients[i], activation_gradients[i+1] );
         }
     }
+
+    mask_input_layer_only = old_mask_input_layer_only;
 }
 
 void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Mat& inputs,

@@ -181,6 +181,10 @@ public:
     real unsupervised_fine_tuning_decrease_ct;
 
     //! Indication that only the input layer should be masked
+    //! during greedy layer-wise learning
+    bool mask_input_layer_only;
+
+    //! Indication that only the input layer should be masked
     //! during unsupervised fine-tuning
     bool mask_input_layer_only_in_unsupervised_fine_tuning;
 
