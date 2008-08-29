@@ -2767,11 +2767,8 @@ void PseudolikelihoodRBM::train()
         {
             if( input_is_sparse )
             {
-                PLERROR("In PseudolikelihoodRBM::train(): CD is not implemented "
-                        "for sparse inputs");
-
                 // Randomly select inputs
-                if( n_selected_inputs_cd > inputsize() &&
+                if( n_selected_inputs_cd > inputsize() ||
                     n_selected_inputs_cd <= 0 )
                     PLERROR("In PseudolikelihoodRBM::train(): "
                             "n_selected_inputs_cd should be > 0 and "
@@ -2952,223 +2949,225 @@ void PseudolikelihoodRBM::train()
                         V((int)extra[i]) += hidden_activation_gradient;
                 }
             }
-            
-            if( !fast_exact_is_equal(persistent_cd_weight, 1.) )
+            else
             {
-                if( !fast_exact_is_equal(cd_decrease_ct, 0) )
-                    lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
-                else
-                    lr = cd_learning_rate;
-
-                if( targetsize() > 0 )
-                    lr *= generative_learning_weight;
-                    
-                lr *= (1-persistent_cd_weight);
-
-                setLearningRate(lr);
-
-                // Positive phase
-                pos_input = input;
-                if( targetsize() > 0 )
-                    pos_target = target_one_hot;
-                connection->setAsDownInput( input );
-                hidden_layer->getAllActivations( 
-                    (RBMMatrixConnection*) connection );
-                if( targetsize() == 1 )
-                    productAcc( hidden_layer->activation,
-                                target_connection->weights,
-                                target_one_hot );
-                else if( targetsize() > 1 )
-                    productAcc( hidden_layer->activation,
-                                target_connection->weights,
-                                target );
-                        
-                hidden_layer->computeExpectation();
-                //pos_hidden.resize( hidden_layer->size );
-                pos_hidden << hidden_layer->expectation;
-                    
-                // Negative phase
-                for(int i=0; i<cd_n_gibbs; i++)
+                if( !fast_exact_is_equal(persistent_cd_weight, 1.) )
                 {
-                    if( use_mean_field_cd )
-                    {
-                        connection->setAsUpInput( hidden_layer->expectation );
-                    }
+                    if( !fast_exact_is_equal(cd_decrease_ct, 0) )
+                        lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
                     else
-                    {
-                        hidden_layer->generateSample();
-                        connection->setAsUpInput( hidden_layer->sample );
-                    }
-                    input_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                    input_layer->computeExpectation();
-                    // LATERAL CONNECTIONS CODE HERE!
+                        lr = cd_learning_rate;
 
-                    if( use_mean_field_cd )
-                    {
-                        connection->setAsDownInput( input_layer->expectation );
-                    }
-                    else
-                    {
-                        input_layer->generateSample();
-                        connection->setAsDownInput( input_layer->sample );
-                    }
+                    if( targetsize() > 0 )
+                        lr *= generative_learning_weight;
+                    
+                    lr *= (1-persistent_cd_weight);
 
+                    setLearningRate(lr);
+
+                    // Positive phase
+                    pos_input = input;
+                    if( targetsize() > 0 )
+                        pos_target = target_one_hot;
+                    connection->setAsDownInput( input );
                     hidden_layer->getAllActivations( 
                         (RBMMatrixConnection*) connection );
+                    if( targetsize() == 1 )
+                        productAcc( hidden_layer->activation,
+                                    target_connection->weights,
+                                    target_one_hot );
+                    else if( targetsize() > 1 )
+                        productAcc( hidden_layer->activation,
+                                    target_connection->weights,
+                                    target );
+                        
+                    hidden_layer->computeExpectation();
+                    //pos_hidden.resize( hidden_layer->size );
+                    pos_hidden << hidden_layer->expectation;
+                    
+                    // Negative phase
+                    for(int i=0; i<cd_n_gibbs; i++)
+                    {
+                        if( use_mean_field_cd )
+                        {
+                            connection->setAsUpInput( hidden_layer->expectation );
+                        }
+                        else
+                        {
+                            hidden_layer->generateSample();
+                            connection->setAsUpInput( hidden_layer->sample );
+                        }
+                        input_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        input_layer->computeExpectation();
+                        // LATERAL CONNECTIONS CODE HERE!
 
+                        if( use_mean_field_cd )
+                        {
+                            connection->setAsDownInput( input_layer->expectation );
+                        }
+                        else
+                        {
+                            input_layer->generateSample();
+                            connection->setAsDownInput( input_layer->sample );
+                        }
+
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+
+                        if( targetsize() > 0 )
+                        {
+                            if( use_mean_field_cd )
+                                target_connection->setAsUpInput( 
+                                    hidden_layer->expectation );
+                            else
+                                target_connection->setAsUpInput( 
+                                    hidden_layer->sample );
+                            target_layer->getAllActivations( 
+                                (RBMMatrixConnection*) target_connection );
+                            target_layer->computeExpectation();
+                            if( use_mean_field_cd )
+                                productAcc( hidden_layer->activation,
+                                            target_connection->weights,
+                                            target_layer->expectation );
+                            else
+                            {
+                                target_layer->generateSample();
+                                productAcc( hidden_layer->activation,
+                                            target_connection->weights,
+                                            target_layer->sample );
+                            }   
+                        }
+                        
+                        hidden_layer->computeExpectation();
+                    }
+                    
+                    if( use_mean_field_cd )
+                        neg_input = input_layer->expectation;
+                    else
+                        neg_input = input_layer->sample;
+
+                    neg_hidden = hidden_layer->expectation;
+                    
+                    input_layer->update(pos_input,neg_input);
+                    hidden_layer->update(pos_hidden,neg_hidden);
+                    connection->update(pos_input,pos_hidden,
+                                       neg_input,neg_hidden);
                     if( targetsize() > 0 )
                     {
                         if( use_mean_field_cd )
-                            target_connection->setAsUpInput( 
-                                hidden_layer->expectation );
+                            neg_target = target_layer->expectation;
                         else
-                            target_connection->setAsUpInput( 
-                                hidden_layer->sample );
-                        target_layer->getAllActivations( 
-                            (RBMMatrixConnection*) target_connection );
-                        target_layer->computeExpectation();
-                        if( use_mean_field_cd )
+                            neg_target = target_layer->sample;
+                        target_layer->update(pos_target,neg_target);
+                        target_connection->update(pos_target,pos_hidden,
+                                                  neg_target,neg_hidden);
+                    }
+                }
+
+                if( !fast_exact_is_equal(persistent_cd_weight, 0.) )
+                {
+                    if( use_mean_field_cd )
+                        PLERROR("In PseudolikelihoodRBM::train(): Persistent "
+                                "Contrastive Divergence was not implemented for "
+                                "MF-CD");
+
+                    if( !fast_exact_is_equal(cd_decrease_ct, 0) )
+                        lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
+                    else
+                        lr = cd_learning_rate;
+                    
+                    if( targetsize() > 0 )
+                        lr *= generative_learning_weight;
+
+                    lr *= persistent_cd_weight;
+
+                    setLearningRate(lr);
+
+                    int chain_i = stage % n_gibbs_chains;
+
+                    if( !persistent_gibbs_chain_is_started[chain_i] )
+                    {  
+                        // Start gibbs chain
+                        connection->setAsDownInput( input );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        if( targetsize() == 1 )
                             productAcc( hidden_layer->activation,
                                         target_connection->weights,
-                                        target_layer->expectation );
-                        else
+                                        target_one_hot );
+                        else if( targetsize() > 1 )
+                            productAcc( hidden_layer->activation,
+                                        target_connection->weights,
+                                        target );
+                        
+                        hidden_layer->computeExpectation();
+                        hidden_layer->generateSample();
+                        pers_cd_hidden[chain_i] << hidden_layer->sample;
+                        persistent_gibbs_chain_is_started[chain_i] = true;
+                    }
+
+                    if( fast_exact_is_equal(persistent_cd_weight, 1.) )
+                    {
+                        // Hidden positive sample was not computed previously
+                        connection->setAsDownInput( input );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        if( targetsize() == 1 )
+                            productAcc( hidden_layer->activation,
+                                        target_connection->weights,
+                                        target_one_hot );
+                        else if( targetsize() > 1 )
+                            productAcc( hidden_layer->activation,
+                                        target_connection->weights,
+                                        target );
+                            
+                        hidden_layer->computeExpectation();
+                        pos_hidden << hidden_layer->expectation;
+                    }
+
+                    hidden_layer->sample << pers_cd_hidden[chain_i];
+                    // Prolonged Gibbs chain
+                    for(int i=0; i<cd_n_gibbs; i++)
+                    {
+                        connection->setAsUpInput( hidden_layer->sample );
+                        input_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        input_layer->computeExpectation();
+                        // LATERAL CONNECTIONS CODE HERE!
+                        input_layer->generateSample();
+                        connection->setAsDownInput( input_layer->sample );
+                        hidden_layer->getAllActivations( 
+                            (RBMMatrixConnection*) connection );
+                        if( targetsize() > 0 )
                         {
+                            target_connection->setAsUpInput( hidden_layer->sample );
+                            target_layer->getAllActivations( 
+                                (RBMMatrixConnection*) target_connection );
+                            target_layer->computeExpectation();
                             target_layer->generateSample();
                             productAcc( hidden_layer->activation,
                                         target_connection->weights,
                                         target_layer->sample );
-                        }   
+                        }
+                        hidden_layer->computeExpectation();
+                        hidden_layer->generateSample();
                     }
-                        
-                    hidden_layer->computeExpectation();
-                }
-                    
-                if( use_mean_field_cd )
-                    neg_input = input_layer->expectation;
-                else
-                    neg_input = input_layer->sample;
 
-                neg_hidden = hidden_layer->expectation;
-                    
-                input_layer->update(pos_input,neg_input);
-                hidden_layer->update(pos_hidden,neg_hidden);
-                connection->update(pos_input,pos_hidden,
-                                   neg_input,neg_hidden);
-                if( targetsize() > 0 )
-                {
-                    if( use_mean_field_cd )
-                        neg_target = target_layer->expectation;
-                    else
-                        neg_target = target_layer->sample;
-                    target_layer->update(pos_target,neg_target);
-                    target_connection->update(pos_target,pos_hidden,
-                                              neg_target,neg_hidden);
-                }
-            }
-
-            if( !fast_exact_is_equal(persistent_cd_weight, 0.) )
-            {
-                if( use_mean_field_cd )
-                    PLERROR("In PseudolikelihoodRBM::train(): Persistent "
-                            "Contrastive Divergence was not implemented for "
-                            "MF-CD");
-
-                if( !fast_exact_is_equal(cd_decrease_ct, 0) )
-                    lr = cd_learning_rate / (1.0 + stage * cd_decrease_ct );
-                else
-                    lr = cd_learning_rate;
-                    
-                if( targetsize() > 0 )
-                    lr *= generative_learning_weight;
-
-                lr *= persistent_cd_weight;
-
-                setLearningRate(lr);
-
-                int chain_i = stage % n_gibbs_chains;
-
-                if( !persistent_gibbs_chain_is_started[chain_i] )
-                {  
-                    // Start gibbs chain
-                    connection->setAsDownInput( input );
-                    hidden_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                    if( targetsize() == 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target_one_hot );
-                    else if( targetsize() > 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target );
-                        
-                    hidden_layer->computeExpectation();
-                    hidden_layer->generateSample();
                     pers_cd_hidden[chain_i] << hidden_layer->sample;
-                    persistent_gibbs_chain_is_started[chain_i] = true;
-                }
 
-                if( fast_exact_is_equal(persistent_cd_weight, 1.) )
-                {
-                    // Hidden positive sample was not computed previously
-                    connection->setAsDownInput( input );
-                    hidden_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                    if( targetsize() == 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target_one_hot );
-                    else if( targetsize() > 1 )
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target );
-                            
-                    hidden_layer->computeExpectation();
-                    pos_hidden << hidden_layer->expectation;
-                }
-
-                hidden_layer->sample << pers_cd_hidden[chain_i];
-                // Prolonged Gibbs chain
-                for(int i=0; i<cd_n_gibbs; i++)
-                {
-                    connection->setAsUpInput( hidden_layer->sample );
-                    input_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
-                    input_layer->computeExpectation();
-                    // LATERAL CONNECTIONS CODE HERE!
-                    input_layer->generateSample();
-                    connection->setAsDownInput( input_layer->sample );
-                    hidden_layer->getAllActivations( 
-                        (RBMMatrixConnection*) connection );
+                    input_layer->update(input, input_layer->sample);
+                    hidden_layer->update(pos_hidden,hidden_layer->expectation);
+                    connection->update(input,pos_hidden,
+                                       input_layer->sample,
+                                       hidden_layer->expectation);
                     if( targetsize() > 0 )
                     {
-                        target_connection->setAsUpInput( hidden_layer->sample );
-                        target_layer->getAllActivations( 
-                            (RBMMatrixConnection*) target_connection );
-                        target_layer->computeExpectation();
-                        target_layer->generateSample();
-                        productAcc( hidden_layer->activation,
-                                    target_connection->weights,
-                                    target_layer->sample );
+                        target_layer->update(target_one_hot, target_layer->sample);
+                        target_connection->update(target_one_hot,pos_hidden,
+                                                  target_layer->sample,
+                                                  hidden_layer->expectation);
                     }
-                    hidden_layer->computeExpectation();
-                    hidden_layer->generateSample();
-                }
-
-                pers_cd_hidden[chain_i] << hidden_layer->sample;
-
-                input_layer->update(input, input_layer->sample);
-                hidden_layer->update(pos_hidden,hidden_layer->expectation);
-                connection->update(input,pos_hidden,
-                                   input_layer->sample,
-                                   hidden_layer->expectation);
-                if( targetsize() > 0 )
-                {
-                    target_layer->update(target_one_hot, target_layer->sample);
-                    target_connection->update(target_one_hot,pos_hidden,
-                                              target_layer->sample,
-                                              hidden_layer->expectation);
                 }
             }
         }
