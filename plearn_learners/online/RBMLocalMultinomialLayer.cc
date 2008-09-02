@@ -34,7 +34,7 @@
 
 // Author: Pascal Lamblin
 
-/*! \file RBMPLayer.cc */
+/*! \file RBMLocalMultinomialLayer.cc */
 
 
 
