@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file Molecule.h */
+/*! \file PLearn/plearn_learners_experimental/SurfaceTemplate/Molecule.h */
 
 
 #ifndef Molecule_INC

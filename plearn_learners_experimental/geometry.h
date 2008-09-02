@@ -38,7 +38,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file geometry.h */
+/*! \file PLearn/plearn_learners_experimental/geometry.h */
 
 
 #ifndef geometry_INC

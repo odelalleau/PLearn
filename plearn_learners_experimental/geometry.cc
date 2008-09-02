@@ -38,7 +38,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file geometry.cc */
+/*! \file PLearn/plearn_learners_experimental/geometry.cc */
 
 
 #include "geometry.h"

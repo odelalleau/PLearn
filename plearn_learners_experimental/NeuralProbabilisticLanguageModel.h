@@ -33,7 +33,7 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-/*! \file PLearnLibrary/PLearnAlgo/NeuralProbabilisticLanguageModel.h */
+/*! \file PLearn/plearn_learners_experimental/NeuralProbabilisticLanguageModel.h */
 
 #ifndef NeuralProbabilisticLanguageModel_INC
 #define NeuralProbabilisticLanguageModel_INC

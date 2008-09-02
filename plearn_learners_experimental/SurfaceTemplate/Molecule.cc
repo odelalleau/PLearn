@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file Molecule.cc */
+/*! \file PLearn/plearn_learners_experimental/SurfaceTemplate/Molecule.cc */
 
 
 #include "Molecule.h"

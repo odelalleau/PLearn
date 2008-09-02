@@ -35,7 +35,7 @@
 
 // These functions come from ....
 
-/*! \file geometry.cc */
+/*! \file PLearn/plearn_learners_experimental/SurfaceTemplate/geometry.cc */
 
 
 #include "geometry.h"
