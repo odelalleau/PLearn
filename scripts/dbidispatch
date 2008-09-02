@@ -15,7 +15,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor|--bqtools
                                [--rank=RANK_EXPRESSION] 
                                [--files=file1[,file2...]]
                                [--env=VAR=VALUE[;VAR2=VALUE2]]
-                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1}]
+                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1,sh}]
                                [*--[no_]set_special_env]
     cluster option           : [*--[no_]cwait]  [--[*no_]force]
                                [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
@@ -95,12 +95,13 @@ condor only options:
   The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
   If the CONDOR_HOME environment variable is set, then the HOME variable will
      be set to this value for jobs submitted to condor.
-  The '--tasks_filename={compact,explicit,nb0,nb1}' option will change the filename where the stdout, stderr are redirected. They have this pattern condor.X.{out,error} where X=:
+  The '--tasks_filename={compact,explicit,nb0,nb1,sh}' option will change the filename where the stdout, stderr are redirected. They have this pattern condor.X.{out,error} where X=:
       - default : same as nb0
       - compact : will be a unic string with parameter that change of value between jobs
       - explicit: will be a unic string that represent the full command to execute
       - nb0     : a number from 0 to nb job -1.
       - nb1     : a number from 1 to nb job.
+      - sh      : parse the command for > and 2> redirection command. If one or both of them are missing, they are redirected to /dev/null
   The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
 
 where <command-template> is interpreted as follows: the first argument
@@ -199,7 +200,7 @@ for argv in to_parse:
             dbi_param["micro"]=argv[8:]
     elif argv.startswith("--tasks_filename="):
         part = argv.split('=',1)
-        accepted_value=["compact","explicit","nb0","nb1"]
+        accepted_value=["compact","explicit","nb0","nb1","sh"]
         if part[1] not in accepted_value:
             print "The option '"+argv+"' have an invalid value. possible value are:", accepted_value
             sys.exit(2)
@@ -364,23 +365,52 @@ if FILE == "":
     tmp+='_'+str(datetime.datetime.now()).replace(' ','_')
     dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
-    if tasks_filename == "explicit":
-        dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands]
-    elif tasks_filename == "compact":
-        dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args]
-    elif tasks_filename == "nb0":
-        dbi_param["base_tasks_log_file"]=map(str,range(len(commands)))
-    elif tasks_filename == "nb1":
-        dbi_param["base_tasks_log_file"]=map(str,range(1,len(commands)+1))
-    elif tasks_filename == "":
-        pass
-    else:
-        print "internal ERROR!"
-        sys.exit(2)
 else:
     dbi_param["log_dir"]=os.path.join(LOGDIR,FILE)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
+if tasks_filename == "explicit":
+    dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands]
+elif tasks_filename == "compact":
+    dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args]
+elif tasks_filename == "nb0":
+    dbi_param["base_tasks_log_file"]=map(str,range(len(commands)))
+elif tasks_filename == "nb1":
+    dbi_param["base_tasks_log_file"]=map(str,range(1,len(commands)+1))
+elif tasks_filename == "":
+    pass
+elif tasks_filename == "sh":
+    stdouts=[]
+    stderrs=[]
+    for x in range(len(commands)):
+        sp=commands[x].split()
+        i=0
+        output=""
+        error=""
+        while i < len(sp):
+            if sp[i]=="2>":
+                del sp[i]
+                error=sp[i]
+                del sp[i]
+            elif sp[i]==">":
+                del sp[i]
+                output=sp[i]
+                del sp[i]
+            else:
+                i+=1
+        if stdout_file==stderr_file:
+            print "Condor can't redirect the stdout and stderr to the same file!"
+            sys.exit(1)
+        stdouts.append(output)
+        stderrs.append(error)
+        commands[x]=' '.join(sp)
+
+    dbi_param["stdouts"]=stdouts
+    dbi_param["stderrs"]=stderrs
+else:
+    print "internal error!"
+    sys.exit(2)
+    
 
 SCRIPT=open(os.getenv("HOME")+"/.dbidispatch.launched",'a');
 SCRIPT.write("["+time.ctime()+"] "+str(sys.argv)+"\n")

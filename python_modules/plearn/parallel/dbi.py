@@ -687,6 +687,8 @@ class DBICondor(DBIBase):
         self.redirect_stderr_to_stdout = False
         self.env = ''
         self.os = ''
+        self.stdouts = ''
+        self.stderrs = ''
         self.base_tasks_log_file = []
         self.set_special_env = True
 
@@ -902,6 +904,19 @@ class DBICondor(DBIBase):
                     condor_dat.write("arguments    = %s \n" %argstring)
                     condor_dat.write("output       = %s \n" %stdout_file)
                     condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+            elif self.stdouts and self.stderrs:
+                assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
+                for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
+                    if stdout_file==stderr_file:
+                        print "Condor can't redirect the stdout and stderr to the same file!"
+                        sys.exit(1)
+                    argstring =condor_escape_argument(' ; '.join(task.commands))
+                    condor_dat.write("arguments    = %s \n" %argstring)
+                    condor_dat.write("output       = %s \n" %stdout_file)
+                    condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+            elif self.stdouts or self.stderrs:
+                print "DBICondor should have stdouts and stderrs or none of them"
+                sys.exit(1)
             else:
                 for task in self.tasks:
                     argstring =condor_escape_argument(' ; '.join(task.commands))
