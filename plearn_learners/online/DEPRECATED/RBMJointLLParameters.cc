@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMJointLLParameters.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMJointLLParameters.cc */
 
 
 

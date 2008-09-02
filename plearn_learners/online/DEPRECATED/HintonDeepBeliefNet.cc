@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file HintonDeepBeliefNet.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/HintonDeepBeliefNet.cc */
 
 #define PL_LOG_MODULE_NAME "HintonDeepBeliefNet"
 #include <plearn/io/pl_log.h>

@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMJointLLParameters.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMJointLLParameters.h */
 
 
 #ifndef RBMJointLLParameters_INC

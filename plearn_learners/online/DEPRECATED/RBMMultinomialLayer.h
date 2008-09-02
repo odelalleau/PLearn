@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici & Pascal Lamblin
 
-/*! \file RBMMultinomialLayer.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMMultinomialLayer.h */
 
 
 #ifndef RBMMultinomialLayer_INC

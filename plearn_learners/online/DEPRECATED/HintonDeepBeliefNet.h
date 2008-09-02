@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file HintonDeepBeliefNet.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/HintonDeepBeliefNet.h */
 
 
 #ifndef HintonDeepBeliefNet_INC

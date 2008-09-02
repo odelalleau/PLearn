@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file RBMLQParameters.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMLQParameters.cc */
 
 
 

@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMGenericParameters.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMGenericParameters.cc */
 
 
 

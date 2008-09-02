@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file RBMLQParameters.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMLQParameters.h */
 
 
 #ifndef RBMLQParameters_INC

@@ -39,8 +39,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-
-/*! \file PLearnLibrary/PLearnAlgo/GaussianDistribution.cc */
+/*! \file PLearn/plearn_learners/distributions/GaussianDistribution.cc */
 
 #include "GaussianDistribution.h"
 #include <plearn/vmat/VMat_basic_stats.h>

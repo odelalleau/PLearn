@@ -34,8 +34,7 @@
 
 // Authors: Dan Popovici & Pascal Lamblin
 
-/*! \file RBMBinomialLayer.h */
-
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMBinomialLayer.h */
 
 #ifndef RBMBinomialLayer_INC
 #define RBMBinomialLayer_INC

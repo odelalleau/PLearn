@@ -40,7 +40,7 @@
  * $Id$ 
  ******************************************************* */
 
-/*! \file Distribution.h */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/Distribution.h */
 #ifndef Distribution_INC
 #define Distribution_INC
 

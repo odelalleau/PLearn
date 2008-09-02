@@ -38,7 +38,7 @@
 
 // Authors: Yoshua Bengio & Martin Monperrus
 
-/*! \file GaussianContinuumDistribution.h */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/GaussianContinuumDistribution.h */
 
 
 #ifndef GaussianContinuumDistribution_INC

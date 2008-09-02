@@ -38,7 +38,7 @@
 
 // Authors: Yoshua Bengio
 
-/*! \file ConditionalDensityNet.cc */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/ConditionalDensityNet.cc */
 
 #include <plearn/var/AffineTransformVariable.h>
 #include <plearn/var/AffineTransformWeightPenalty.h>

@@ -36,7 +36,7 @@
  * $Id$ 
  ******************************************************* */
 
-/*! \file LocallyWeightedDistribution.h */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/LocallyWeightedDistribution.h */
 #ifndef LocallyWeightedDistribution_INC
 #define LocallyWeightedDistribution_INC
 

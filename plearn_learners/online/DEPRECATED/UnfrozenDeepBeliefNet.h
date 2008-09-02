@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file UnfrozenDeepBeliefNet.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/UnfrozenDeepBeliefNet.h */
 
 
 #ifndef UnfrozenDeepBeliefNet_INC

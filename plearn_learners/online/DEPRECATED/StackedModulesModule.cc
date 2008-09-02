@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file StackedModulesModule.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/StackedModulesModule.cc */
 
 
 

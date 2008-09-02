@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file GaussPartSupervisedDBN.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/GaussPartSupervisedDBN.cc */
 
 #define PL_LOG_MODULE_NAME "GaussPartSupervisedDBN"
 #include <plearn/io/pl_log.h>

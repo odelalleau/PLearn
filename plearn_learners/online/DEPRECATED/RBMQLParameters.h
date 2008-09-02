@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file RBMQLParameters.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMQLParameters.h */
 
 
 #ifndef RBMQLParameters_INC

@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici & Pascal Lamblin
 
-/*! \file RBMTruncExpLayer.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMTruncExpLayer.h */
 
 
 #ifndef RBMTruncExpLayer_INC

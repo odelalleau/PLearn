@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file StackedModulesLearner.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/StackedModulesLearner.h */
 
 
 #ifndef StackedModulesLearner_INC

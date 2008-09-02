@@ -38,7 +38,7 @@
 
 // Authors: Yoshua Bengio
 
-/*! \file ConditionalDensityNet.h */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/ConditionalDensityNet.h */
 
 
 #ifndef ConditionalDensityNet_INC

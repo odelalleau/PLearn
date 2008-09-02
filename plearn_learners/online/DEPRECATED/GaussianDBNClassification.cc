@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file GaussianDBNClassification.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/GaussianDBNClassification.cc */
 
 #define PL_LOG_MODULE_NAME "GaussianDBNClassification"
 #include <plearn/io/pl_log.h>

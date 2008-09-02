@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file GaussPartSupervisedDBN.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/GaussPartSupervisedDBN.h */
 
 
 #ifndef GaussPartSupervisedDBN_INC

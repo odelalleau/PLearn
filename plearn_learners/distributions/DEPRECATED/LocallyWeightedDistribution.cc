@@ -36,7 +36,8 @@
  * $Id$ 
  ******************************************************* */
 
-/*! \file LocallyWeightedDistribution.cc */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/LocallyWeightedDistribution.cc */
+
 #include "LocallyWeightedDistribution.h"
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 

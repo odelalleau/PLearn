@@ -38,7 +38,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file NLLErrModule.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/NLLErrModule.cc */
 
 
 #include "NLLErrModule.h"

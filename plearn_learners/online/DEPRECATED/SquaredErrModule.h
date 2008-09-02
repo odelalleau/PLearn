@@ -38,7 +38,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file SquaredErrModule.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/SquaredErrModule.h */
 
 
 #ifndef SquaredErrModule_INC

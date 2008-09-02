@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file PartSupervisedDBN.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/PartSupervisedDBN.cc */
 
 #define PL_LOG_MODULE_NAME "PartSupervisedDBN"
 #include <plearn/io/pl_log.h>

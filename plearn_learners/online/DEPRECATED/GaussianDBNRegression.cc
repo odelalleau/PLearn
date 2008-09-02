@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file GaussianDBNRegression.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/GaussianDBNRegression.cc */
 
 #define PL_LOG_MODULE_NAME "GaussianDBNRegression"
 #include <plearn/io/pl_log.h>

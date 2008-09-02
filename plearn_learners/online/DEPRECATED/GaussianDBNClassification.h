@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file GaussianDBNClassification.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/GaussianDBNClassification.h */
 
 
 #ifndef GaussianDBNClassification_INC

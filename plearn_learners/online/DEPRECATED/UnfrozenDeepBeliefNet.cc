@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file UnfrozenDeepBeliefNet.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/UnfrozenDeepBeliefNet.cc */
 
 #define PL_LOG_MODULE_NAME "UnfrozenDeepBeliefNet"
 #include <plearn/io/pl_log.h>

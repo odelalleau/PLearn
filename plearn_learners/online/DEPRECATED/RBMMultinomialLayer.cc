@@ -34,9 +34,7 @@
 
 // Authors: Pascal Lamblin & Dan Popovici
 
-/*! \file RBMPLayer.cc */
-
-
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMMultinomialLayer.cc */
 
 #include "RBMMultinomialLayer.h"
 #include <plearn/math/TMat_maths.h>

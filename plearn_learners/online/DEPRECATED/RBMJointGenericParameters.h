@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMJointGenericParameters.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMJointGenericParameters.h */
 
 
 #ifndef RBMJointGenericParameters_INC

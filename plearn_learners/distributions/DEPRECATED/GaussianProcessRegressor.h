@@ -39,8 +39,8 @@
  * $Id$
  ******************************************************* */
 
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/GaussianProcessRegressor.h */
 
-/*! \file PLearn/plearn_learners/distributions/GaussianProcessRegressor.h */
 
 #ifndef GaussianProcessRegressor_INC
 #define GaussianProcessRegressor_INC

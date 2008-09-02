@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMConv2DLLParameters.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMConv2DLLParameters.cc */
 
 #define PL_LOG_MODULE_NAME "RBMConv2DLLParameters"
 #include <plearn/io/pl_log.h>

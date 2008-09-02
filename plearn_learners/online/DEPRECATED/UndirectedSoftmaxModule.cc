@@ -38,7 +38,7 @@
 
 // Authors: Yoshua Bengio
 
-/*! \file UndirectedSoftmaxModule.cc */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/UndirectedSoftmaxModule.cc */
 
 
 #include "UndirectedSoftmaxModule.h"

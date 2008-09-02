@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMLLParameters.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMLLParameters.h */
 
 
 #ifndef RBMLLParameters_INC

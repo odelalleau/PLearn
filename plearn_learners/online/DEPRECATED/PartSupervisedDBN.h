@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file PartSupervisedDBN.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/PartSupervisedDBN.h */
 
 
 #ifndef PartSupervisedDBN_INC

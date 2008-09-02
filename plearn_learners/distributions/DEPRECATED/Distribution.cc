@@ -40,7 +40,7 @@
  * $Id$ 
  ******************************************************* */
 
-/*! \file Distribution.cc */
+/*! \file PLearn/plearn_learners/distributions/DEPRECATED/Distribution.cc */
 #include "Distribution.h"
 #include <plearn/ker/NegOutputCostFunction.h>
 

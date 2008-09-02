@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin
 
-/*! \file RBMConv2DLLParameters.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMConv2DLLParameters.h */
 
 
 #ifndef RBMConv2DLLParameters_INC

@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file GaussianDBNRegression.h */
+/*! \file PLearn/plearn_learners/online/DEPRECATED/GaussianDBNRegression.h */
 
 
 #ifndef GaussianDBNRegression_INC

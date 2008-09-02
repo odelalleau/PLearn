@@ -34,9 +34,7 @@
 
 // Authors: Pascal Lamblin & Dan Popovici
 
-/*! \file RBMPLayer.cc */
-
-
+/*! \file PLearn/plearn_learners/online/DEPRECATED/RBMLayer.cc */
 
 #include "RBMLayer.h"
 #include <plearn/math/TMat_maths.h>
