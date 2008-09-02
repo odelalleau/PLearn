@@ -736,7 +736,7 @@ using std::endl;
 using std::ws;
 
 //!  returns the next line read from the stream,
-//!  after removing any trailing '\r' and/or '\n'
+//!  after removing any trailing '\\r' and/or '\\n'
 string pgetline(PStream& in);
 
 

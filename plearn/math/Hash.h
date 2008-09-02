@@ -94,7 +94,7 @@ private:
     unsigned int pace;                          //!<  used by the secondary hash function
     unsigned int jumps;                         //!<  number of probes in last operation
 
-    unsigned int hashKey(const KeyType &) const; //!<  computes the primary hash function on the string (length=0 says to look for \0 in bytes to determine length)
+    unsigned int hashKey(const KeyType &) const; //!<  computes the primary hash function on the string (length=0 says to look for \\0 in bytes to determine length)
     void computePace();                         //!<  computes the magic number used by the secondary hash function
     unsigned int pgcd(unsigned int, unsigned int) const;
 

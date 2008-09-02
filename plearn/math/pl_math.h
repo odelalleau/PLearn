@@ -577,8 +577,8 @@ real logadd(real log_a, real log_b);
 //!  compute log(exp(log_a)-exp(log_b)) without losing too much precision
 real logsub(real log_a, real log_b);
 
-//! return the dilogarithm function dilogarithm(x)
-//!   = sum_{i=1}^{\infty} x^i/i^2 = int_{z=x}^0 log(1-z)/z dz
+//! return the dilogarithm function
+//! \f$ dilogarithm(x) = sum_{i=1}^{\infty} x^i/i^2 = int_{z=x}^0 log(1-z)/z dz \f$
 //! It is also useful because -dilogarithm(-exp(x)) is the primitive of 
 //! the softplus function log(1+exp(x)).
 real dilogarithm(real x);

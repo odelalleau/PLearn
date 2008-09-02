@@ -44,7 +44,7 @@ namespace PLearn {
 using namespace std;
 
 //! function gamma returns log(Gamma(z)), where
-//!  Gamma(z) = \int_0^infty t^{z-1}*e^{-t} dt
+//!  \f$ Gamma(z) = \int_0^infty t^{z-1}*e^{-t} dt \f$
 real pl_gammln(real z);
 
 //! d(pl_gammln(z))/dz 

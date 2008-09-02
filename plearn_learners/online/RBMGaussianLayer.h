@@ -143,7 +143,7 @@ public:
     //! compute bias' unit_values + min_quad_coeff.^2' unit_values.^2
     virtual real energy(const Vec& unit_values) const;
 
-    //! Computes -log(\sum_{possible values of h} exp(h' unit_activations))
+    //! Computes \f$ -log(\sum_{possible values of h} exp(h' unit_activations))\f$
     //! This quantity is used for computing the free energy of a sample x in
     //! the OTHER layer of an RBM, from which unit_activations was computed.
     virtual real freeEnergyContribution(const Vec& unit_activations) const;

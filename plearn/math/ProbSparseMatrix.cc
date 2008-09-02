@@ -172,7 +172,8 @@ void ProbSparseMatrix::normalizeCond()
     }
 }
 
-//! Normalize the matrix nXY as a joint probability matrix (\sum_i \sum_j x_{ij} =1)  
+//! Normalize the matrix nXY as a joint probability matrix 
+//! /f$ \sum_i \sum_j x_{ij} =1 /f$
 void ProbSparseMatrix::normalizeJoint(ProbSparseMatrix& nXY, bool clear_nXY)
 {
     clear();

@@ -80,17 +80,17 @@ public:
     //! specifies the range of the values of 'context' (ex: + 'missing' tag)
     int context_cardinality;
 
-    //! minimal value \sigma^2 can have
+    //! minimal value \f$ \sigma^2 \f$ can have 
     real sigma2min;
 
-    //! Discriminant learning (of \mu_u and \Sigma_u) - dl
+    //! Discriminant learning (of \f$ \mu_u \f$ and \f$ \Sigma_u \f$) - dl
     real dl_start_learning_rate;
     real dl_decrease_constant;
 
-    //! Empirical learning (of \mu_u and \Sigma_u) - el
+    //! Empirical learning (of \f$ \mu_u \f$ and \f$ \Sigma_u \f$) - el
     // how much the first example of this word in the trainset should be worth in the sum
-    // relatively to the last. /mu' = (1-/alpha) /mu + /alpha r
-    // Determine (1-/alpha)^n = el_start_discount_factor
+    // relatively to the last. \f$ /mu' = (1-/alpha) /mu + /alpha r \f$
+    // Determine \f$ (1-/alpha)^n = el_start_discount_factor \f$
     real el_start_discount_factor; 
 
 

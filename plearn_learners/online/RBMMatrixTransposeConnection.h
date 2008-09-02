@@ -59,7 +59,7 @@ public:
 
     //#####  Learned Options  #################################################
 
-    //! Matrix containing unit-to-unit weights (output_size \times input_size)
+    //! Matrix containing unit-to-unit weights (\f$output_size \times input_size\f$)
     Mat weights;
 
     //! RBMMatrixConnection from which the weights are taken

@@ -80,13 +80,13 @@ string left(const string& s,   size_t width, char padding=' ');
 string right(const string& s,  size_t width, char padding=' ');
 string center(const string& s, size_t width, char padding=' ');
     
-//!  removes starting and ending blanks '\n','\r',' ','\t'
+//!  removes starting and ending blanks '\\n','\\r',' ','\\t'
 string removeblanks(const string& s);
 
-//!  removes all blanks '\n','\r',' ','\t'
+//!  removes all blanks '\\n','\\r',' ','\\t'
 string removeallblanks(const string& s);
 
-//!  removes any trailing '\n' and/or '\r'
+//!  removes any trailing '\\n' and/or '\\r'
 string removenewline(const string& s);
 
 //!  remove exactly one pair of matching leading and trailing '\'' and '"';
@@ -103,7 +103,7 @@ string lowerstring(const string& s);
 string upperstring(const string& s);
     
 //!  returns the next line read from the stream,
-//!  after removing any trailing '\r' and/or '\n'
+//!  after removing any trailing '\\r' and/or '\\n'
 string pgetline(istream& in=cin);
 
 //! returns true if s is a blank line (containing only space, tab, until end of line or a # comment-character is reached
