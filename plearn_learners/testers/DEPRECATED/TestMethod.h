@@ -39,7 +39,7 @@
  ******************************************************* */
 
 
-/*! \file PLearn/plearn/opt/TestMethod.h */
+/*! \file PLearn/plearn_learners/testers/DEPRECATED/TestMethod.h */
 
 #ifndef TestMethod_INC
 #define TestMethod_INC

@@ -34,7 +34,7 @@
 
 // Authors: Pascal Lamblin & Dan Popovici
 
-/*! \file RBMPLayer.cc */
+/*! \file PLearn/plearn_learners/online/RBMPLayer.cc */
 
 
 

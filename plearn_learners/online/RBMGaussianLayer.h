@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici & Pascal Lamblin
 
-/*! \file RBMGaussianLayer.h */
+/*! \file PLearn/plearn_learners/online/RBMGaussianLayer.h */
 
 
 #ifndef RBMGaussianLayer_INC

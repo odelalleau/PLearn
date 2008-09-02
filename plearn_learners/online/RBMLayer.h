@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici
 
-/*! \file RBMLayer.h */
+/*! \file PLearn/plearn_learners/online/RBMLayer.h */
 
 
 #ifndef RBMLayer_INC

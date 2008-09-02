@@ -34,7 +34,7 @@
 
 // Authors: Dan Popovici & Pascal Lamblin
 
-/*! \file RBMMixedLayer.h */
+/*! \file PLearn/plearn_learners/online/RBMMixedLayer.h */
 
 
 #ifndef RBMMixedLayer_INC
