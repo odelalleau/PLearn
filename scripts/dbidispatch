@@ -343,6 +343,8 @@ if FILE != "":
     choise_args = []
     for line in FD.readlines():
         line = line.rstrip()
+        if not line:
+            continue
         sp = line.split(" ")
         (t1,t2)=generate_commands(sp)
         commands+=t1
