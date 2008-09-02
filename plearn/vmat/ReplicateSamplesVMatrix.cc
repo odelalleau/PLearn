@@ -138,6 +138,8 @@ void ReplicateSamplesVMatrix::build_()
     Vec input, target;
     real weight;
     TVec< TVec<int>  > class_indices;  // Indices of samples in each class.
+    TVec<int> nan_indices(0); // Indices of missing class
+    TVec< TVec<int> > negativeclass_indices;
     map<int, int> bag_sizes; // Map a source index to the size of its bag.
     int bag_start_idx = -1;
     int bag_idx = bag_index >= 0 ? bag_index : source->targetsize() - 1;
@@ -149,10 +151,20 @@ void ReplicateSamplesVMatrix::build_()
             for (int j = 0; j < n_to_add; j++)
                 class_indices.append(TVec<int>());
         }
+        else if ( -c >= negativeclass_indices.length() ) {
+            int n_to_add = -c - negativeclass_indices.length() + 1;
+            for (int j = 0; j < n_to_add; j++)
+                negativeclass_indices.append(TVec<int>());
+        }
         
         if (!operate_on_bags || int(round(target[bag_idx])) &
                                 SumOverBagsVariable::TARGET_COLUMN_FIRST) {
-            class_indices[c].append(i);
+            if( c>= 0 )
+                class_indices[c].append(i);
+            else if( c< 0 )
+                negativeclass_indices[-c].append(i);
+            else if( is_missing(c) )
+                nan_indices.append(i);
             indices.append(i);
             bag_sizes[i] = 0;
             bag_start_idx = i;
@@ -160,6 +172,12 @@ void ReplicateSamplesVMatrix::build_()
         if (operate_on_bags)
             bag_sizes[bag_start_idx]++;
     }
+    if( nan_indices.length() > 0  )
+        class_indices.append( nan_indices );
+    if( negativeclass_indices.length() > 0 )
+        for(int c = 0; c < negativeclass_indices.length(); c ++ )
+            if( negativeclass_indices[c].length() > 0 )
+                class_indices.append( negativeclass_indices[c] );
     int max_n = -1;
     for (int c = 0; c < class_indices.length(); c++) {
         if (class_indices[c].length() > max_n)
