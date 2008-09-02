@@ -38,7 +38,7 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file GaussianProcessRegressor.cc */
+/*! \file PLearn/plearn_learners/regressors/GaussianProcessRegressor.cc */
 
 #define PL_LOG_MODULE_NAME "GaussianProcessRegressor"
 

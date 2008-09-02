@@ -39,7 +39,7 @@
  * This file is part of the PLearn library.                                     *
  ******************************************************************************** */
 
-/*! \file PLearnLibrary/PLearnAlgo/BaseRegressorWrapper.h */
+/*! \file PLearn/plearn_learners/regressors/BaseRegressorWrapper.h */
 
 #ifndef BaseRegressorWrapper_INC
 #define BaseRegressorWrapper_INC

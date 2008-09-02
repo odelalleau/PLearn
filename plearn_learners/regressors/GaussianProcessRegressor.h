@@ -38,7 +38,7 @@
 
 // Authors: Nicolas Chapados
 
-/*! \file GaussianProcessRegressor.h */
+/*! \file PLearn/plearn_learners/regressors/GaussianProcessRegressor.h */
 
 
 #ifndef GaussianProcessRegressor_INC
