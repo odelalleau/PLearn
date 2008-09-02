@@ -374,8 +374,6 @@ else:
 
 n="base_tasks_log_file"
 dbi_param[n]=[""]*len(commands)
-print "dbi_param",dbi_param[n]
-print "tasks_filename",tasks_filename
 
 def merge_pattern(new_list):
     return [x+'.'+y for (x,y) in  zip(dbi_param[n], new_list)]
@@ -411,8 +409,8 @@ for pattern in tasks_filename:
                     del sp[i]
                 else:
                     i+=1
-            if stdout_file==stderr_file:
-                print "Condor can't redirect the stdout and stderr to the same file!"
+            if stdout_file==stderr_file and launch_cmd=="Condor":
+                print "ERROR: Condor can't redirect the stdout and stderr to the same file!"
                 sys.exit(1)
             stdouts.append(output)
             stderrs.append(error)
@@ -426,8 +424,6 @@ for pattern in tasks_filename:
     assert(not (dbi_param.has_key("stdouts") and (dbi_param[n])==0))
 
 #undef merge_pattern
-print "dbi_param",dbi_param[n]
-print "tasks_filename",tasks_filename
 
 SCRIPT=open(os.getenv("HOME")+"/.dbidispatch.launched",'a');
 SCRIPT.write("["+time.ctime()+"] "+str(sys.argv)+"\n")
