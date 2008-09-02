@@ -15,11 +15,12 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor|--bqtools
                                [--rank=RANK_EXPRESSION] 
                                [--files=file1[,file2...]]
                                [--env=VAR=VALUE[;VAR2=VALUE2]]
-                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1,sh}]
+                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1,sh}+]
                                [*--[no_]set_special_env]
     cluster option           : [*--[no_]cwait]  [--[*no_]force]
                                [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
 An * after '[', '{' or ',' signals the default value.
+An + after } tell that we can put one or more of the choise separeted by a comma
 '''
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster, local and ssh. If no system is selected on the command line, we try them in the previous order. ssh is never automaticaly selected.
 
@@ -95,7 +96,7 @@ condor only options:
   The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
   If the CONDOR_HOME environment variable is set, then the HOME variable will
      be set to this value for jobs submitted to condor.
-  The '--tasks_filename={compact,explicit,nb0,nb1,sh}' option will change the filename where the stdout, stderr are redirected. They have this pattern condor.X.{out,error} where X=:
+  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the filename where the stdout, stderr are redirected. We can put many option separated by comma. They will be appended in the filename with a dot. For all format except sh, they have this pattern condor.X.{out,error} where X=:
       - default : same as nb0
       - compact : will be a unic string with parameter that change of value between jobs
       - explicit: will be a unic string that represent the full command to execute
@@ -201,10 +202,12 @@ for argv in to_parse:
     elif argv.startswith("--tasks_filename="):
         part = argv.split('=',1)
         accepted_value=["compact","explicit","nb0","nb1","sh"]
-        if part[1] not in accepted_value:
-            print "The option '"+argv+"' have an invalid value. possible value are:", accepted_value
-            sys.exit(2)
-        tasks_filename = part[1]
+        val=part[1].split(",") 
+        for v in val:
+            if v not in accepted_value:
+                print "The option '"+argv+"' have an invalid value. possible value are:", accepted_value
+                sys.exit(2)
+        tasks_filename = val
     elif argv in  ["--force", "--interruptible", "--long", 
                    "--getenv", "--cwait", "--clean_up" ,"--nice",
                    "--set_special_env"]:
@@ -369,48 +372,62 @@ else:
     dbi_param["log_dir"]=os.path.join(LOGDIR,FILE)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
-if tasks_filename == "explicit":
-    dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands]
-elif tasks_filename == "compact":
-    dbi_param["base_tasks_log_file"]=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args]
-elif tasks_filename == "nb0":
-    dbi_param["base_tasks_log_file"]=map(str,range(len(commands)))
-elif tasks_filename == "nb1":
-    dbi_param["base_tasks_log_file"]=map(str,range(1,len(commands)+1))
-elif tasks_filename == "":
-    pass
-elif tasks_filename == "sh":
-    stdouts=[]
-    stderrs=[]
-    for x in range(len(commands)):
-        sp=commands[x].split()
-        i=0
-        output=""
-        error=""
-        while i < len(sp):
-            if sp[i]=="2>":
-                del sp[i]
-                error=sp[i]
-                del sp[i]
-            elif sp[i]==">":
-                del sp[i]
-                output=sp[i]
-                del sp[i]
-            else:
-                i+=1
-        if stdout_file==stderr_file:
-            print "Condor can't redirect the stdout and stderr to the same file!"
-            sys.exit(1)
-        stdouts.append(output)
-        stderrs.append(error)
-        commands[x]=' '.join(sp)
+n="base_tasks_log_file"
+dbi_param[n]=[""]*len(commands)
+print "dbi_param",dbi_param[n]
+print "tasks_filename",tasks_filename
 
-    dbi_param["stdouts"]=stdouts
-    dbi_param["stderrs"]=stderrs
-else:
-    print "internal error!"
-    sys.exit(2)
-    
+def merge_pattern(new_list):
+    return [x+'.'+y for (x,y) in  zip(dbi_param[n], new_list)]
+
+for pattern in tasks_filename:
+    if pattern == "explicit":
+        dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands])
+    elif pattern == "compact":
+        dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args])
+       
+    elif pattern == "nb0":
+        dbi_param[n]=merge_pattern(map(str,range(len(commands))))
+    elif pattern == "nb1":
+        dbi_param[n]=merge_pattern(map(str,range(1,len(commands)+1)))
+    elif pattern == "":
+        pass
+    elif pattern == "sh":
+        stdouts=[]
+        stderrs=[]
+        for x in range(len(commands)):
+            sp=commands[x].split()
+            i=0
+            output=""
+            error=""
+            while i < len(sp):
+                if sp[i]=="2>":
+                    del sp[i]
+                    error=sp[i]
+                    del sp[i]
+                elif sp[i]==">":
+                    del sp[i]
+                    output=sp[i]
+                    del sp[i]
+                else:
+                    i+=1
+            if stdout_file==stderr_file:
+                print "Condor can't redirect the stdout and stderr to the same file!"
+                sys.exit(1)
+            stdouts.append(output)
+            stderrs.append(error)
+            commands[x]=' '.join(sp)
+            
+        dbi_param["stdouts"]=stdouts
+        dbi_param["stderrs"]=stderrs
+    else:
+        print "internal error!"
+        sys.exit(2)
+    assert(not (dbi_param.has_key("stdouts") and (dbi_param[n])==0))
+
+#undef merge_pattern
+print "dbi_param",dbi_param[n]
+print "tasks_filename",tasks_filename
 
 SCRIPT=open(os.getenv("HOME")+"/.dbidispatch.launched",'a');
 SCRIPT.write("["+time.ctime()+"] "+str(sys.argv)+"\n")

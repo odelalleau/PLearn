@@ -898,8 +898,8 @@ class DBICondor(DBIBase):
             if self.base_tasks_log_file:
                 for (task,task_log) in zip(self.tasks,self.base_tasks_log_file):
                     argstring =condor_escape_argument(' ; '.join(task.commands))
-                    stdout_file=self.log_dir+"/condor."+task_log+".out"
-                    stderr_file=self.log_dir+"/condor."+task_log+".err"
+                    stdout_file=self.log_dir+"/condor"+task_log+".out"
+                    stderr_file=self.log_dir+"/condor"+task_log+".err"
 
                     condor_dat.write("arguments    = %s \n" %argstring)
                     condor_dat.write("output       = %s \n" %stdout_file)
