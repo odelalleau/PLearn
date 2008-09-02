@@ -39,7 +39,7 @@
    * $Id: NeighborhoodImputationVMatrix.h 3658 2005-07-06 20:30:15  Godbout $
    ****************************************************************** */
 
-/*! \file NeignborhoodImputationVMatrix.h */
+/*! \file NeighborhoodImputationVMatrix.h */
 
 #ifndef NeighborhoodImputationVMatrix_INC
 #define NeighborhoodImputationVMatrix_INC

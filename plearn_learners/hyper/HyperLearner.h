@@ -38,8 +38,7 @@
  ******************************************************* */
 // Author: Pascal Vincent
 
-
-/*! \file PLearn/plearn_learners/generic/HyperLearner.h */
+/*! \file PLearn/plearn_learners/hyper/HyperLearner.h */
 
 #ifndef HyperLearner_INC
 #define HyperLearner_INC

@@ -38,7 +38,7 @@
  * $Id$
  ******************************************************* */
 
-/*! \file PLearn/plearn_learners/classifiers/NeighborhoodSmoothnessNNet.h */
+/*! \file PLearn/plearn_learners/generic/NeighborhoodSmoothnessNNet.cc */
 
 #ifndef NeighborhoodSmoothnessNNet_INC
 #define NeighborhoodSmoothnessNNet_INC
