@@ -691,6 +691,7 @@ class DBICondor(DBIBase):
         self.stderrs = ''
         self.base_tasks_log_file = []
         self.set_special_env = True
+        self.nb_proc = 0 # 0 mean unlimited
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
@@ -802,6 +803,200 @@ class DBICondor(DBIBase):
                                    self.args))
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
+    def run_dag(self):
+        if len(self.tasks)==0:
+            return #no task to run
+
+        #set special environment variable
+        if self.set_special_env:
+            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) "'
+
+
+        condor_file = os.path.join(self.log_dir, "dag.condor")
+        self.temp_files.append(condor_file)
+        condor_dat = open( condor_file, 'w' )
+
+        if self.req:
+            req = self.req
+        else:
+            req = "True"
+        if self.targetcondorplatform == 'BOTH':
+            req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
+        else :
+            req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
+
+        if self.os:
+            req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
+                       self.os.split(','),
+                       req+'&&(False ')+")"
+
+        source_file=os.getenv("CONDOR_LOCAL_SOURCE")
+        condor_home = os.getenv('CONDOR_HOME')
+        if source_file and source_file.endswith(".cshrc"):
+            launch_file = os.path.join(self.log_dir, 'launch.csh')
+        else:
+            launch_file = os.path.join(self.log_dir, 'launch.sh')
+
+        if self.mem<=0:
+            try:
+                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
+            except:
+                pass
+
+        self.log_file = os.path.join("/tmp/bastienf/dbidispatch",self.log_dir)
+        os.system('mkdir -p ' + self.log_file)
+        self.log_file = os.path.join(self.log_file,"condor.log")
+
+        condor_dat.write( dedent('''\
+                executable     = %s
+                universe       = vanilla
+                requirements   = %s
+                output         = $(stdout)
+                error          = $(stderr)
+                log            = %s
+                getenv         = %s
+                nice_user      = %s
+                arguments      = $(args)
+                ''' % (launch_file,req,
+                       self.log_file,str(self.getenv),str(self.nice))))
+        if self.mem>0:
+            #condor need value in Kb
+            condor_dat.write('ImageSize      = %d\n'%(self.mem))
+
+        if self.files: #ON_EXIT_OR_EVICT
+            condor_dat.write( dedent('''\
+                when_to_transfer_output = ON_EXIT
+                should_transfer_files   = Yes
+                transfer_input_files    = %s
+                '''%(self.files+','+launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
+        if self.env:
+            condor_dat.write('environment    = '+self.env+'\n')
+        if self.raw:
+            condor_dat.write( self.raw+'\n')
+        if self.rank:
+            condor_dat.write( dedent('''\
+                rank = %s
+                ''' %(self.rank)))
+
+        condor_dat.write("\nqueue\n")
+        condor_dat.close()
+
+        condor_file_dag = condor_file+".dag"
+        condor_dag = open( condor_file_dag, 'w' )
+        for i in range(len(self.tasks)):
+            task=self.tasks[i]
+            argstring =condor_escape_argument(' ; '.join(task.commands))
+            argstring =' ; '.join(task.commands)
+            condor_dag.write("JOB %d %s\n"%(i,condor_file))
+            condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
+            s=os.path.join(self.log_dir,"condor"+self.base_tasks_log_file[i])
+            condor_dag.write('VARS %d stdout="%s"\n'%(i,s+".out"))
+            condor_dag.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
+        condor_dag.close()
+
+        dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
+        overwrite_launch_file=False
+        if not os.path.exists(dbi_file):
+            print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+launch_file+'" is not up to date!'
+        else:
+            if os.path.exists(launch_file):
+                mtimed=os.stat(dbi_file)[8]
+                mtimel=os.stat(launch_file)[8]
+                if mtimed>mtimel:
+                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your needs!'
+                    overwrite_launch_file=True
+
+        if self.copy_local_source_file:
+            source_file_dest = os.path.join(self.log_dir,
+                                            os.path.basename(source_file))
+            shutil.copy( source_file, source_file_dest)
+            self.temp_files.append(source_file_dest)
+            os.chmod(source_file_dest, 0755)
+            source_file=source_file_dest
+
+        if not os.path.exists(launch_file) or overwrite_launch_file:
+            self.temp_files.append(launch_file)
+            launch_dat = open(launch_file,'w')
+            if source_file and not source_file.endswith(".cshrc"):
+                launch_dat.write(dedent('''\
+                    #!/bin/sh
+                    '''))
+                if condor_home:
+                    launch_dat.write('export HOME=%s\n' % condor_home)
+                if source_file:
+                    launch_dat.write('source ' + source_file + '\n')
+
+                launch_dat.write(dedent('''\
+                    echo "Executing on " `/bin/hostname` 1>&2
+                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
+                    echo "PATH: $PATH" 1>&2
+                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
+                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
+                    #which python 1>&2
+                    #echo -n python version: 1>&2
+                    #python -V 1>&2
+                    #echo -n /usr/bin/python version: 1>&2
+                    #/usr/bin/python -V 1>&2
+                    echo "Running: command: sh -c \\"$@\\"" 1>&2
+                    sh -c "$@"
+                    '''))
+            else:
+                launch_dat.write(dedent('''\
+                    #! /bin/tcsh
+                    \n'''))
+                if condor_home:
+                    launch_dat.write('setenv HOME %s\n' % condor_home)
+                if source_file:
+                    launch_dat.write('source ' + source_file + '\n')
+                launch_dat.write(dedent('''\
+                    echo "Executing on " `/bin/hostname`
+                    echo "HOSTNAME: ${HOSTNAME}"
+                    echo "PATH: $PATH"
+                    echo "PYTHONPATH: $PYTHONPATH"
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+                    #which python
+                    #echo -n python version:
+                    #python -V
+                    #echo -n /usr/bin/python version:
+                    #/usr/bin/python -V
+                    #echo ${PROGRAM} $@
+                    #${PROGRAM} "$@"
+                    echo "Running command: $argv"
+                    $argv
+                    '''))
+            launch_dat.close()
+            os.chmod(launch_file, 0755)
+
+        utils_file = os.path.join(self.tmp_dir, 'utils.py')
+        if not os.path.exists(utils_file):
+            shutil.copy( get_plearndir()+
+                         '/python_modules/plearn/parallel/utils.py', utils_file)
+            self.temp_files.append(utils_file)
+            os.chmod(utils_file, 0755)
+
+        configobj_file = os.path.join(self.tmp_dir, 'configobj.py')
+        if not os.path.exists('configobj.py'):
+            shutil.copy( get_plearndir()+
+                         '/python_modules/plearn/parallel/configobj.py',  configobj_file)
+            self.temp_files.append(configobj_file)
+            os.chmod(configobj_file, 0755)
+
+        # Launch condor
+        condor_cmd = 'condor_submit_dag -maxjobs %s %s'%(str(self.nb_proc), condor_file_dag)
+        if self.test == False:
+            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
+            print "[DBI] Executing: " + condor_cmd
+            for task in self.tasks:
+                task.set_scheduled_time()
+            self.p = Popen( condor_cmd, shell=True)
+            self.p.wait()
+            if self.p.returncode != 0:
+                print "[DBI] condor_submit_dag failed! We can't stard the jobs"
+        else:
+            print "[DBI] In test mode we don't launch the jobs. To to it, you need to execute '"+condor_cmd+"'"
+            if self.dolog:
+                print "[DBI] The scheduling time will not be logged when you will submit the condor file"
 
     def run_all_job(self):
         if len(self.tasks)==0:
@@ -855,6 +1050,8 @@ class DBICondor(DBIBase):
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
 
+        self.log_file= os.path.join(self.log_dir,"condog.log")
+
         if self.mem<=0:
             try:
                 self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
@@ -866,13 +1063,13 @@ class DBICondor(DBIBase):
                 requirements   = %s
                 output         = %s/condor.$(Process).out
                 error          = %s/condor.$(Process).error
-                log            = %s/condor.log
+                log            = %s
                 getenv         = %s
                 nice_user      = %s
                 ''' % (launch_file,req,
                        self.log_dir,
                        self.log_dir,
-                       self.log_dir,str(self.getenv),str(self.nice))))
+                       self.log_file,str(self.getenv),str(self.nice))))
         if self.mem>0:
             #condor need value in Kb
             condor_dat.write('ImageSize      = %d\n'%(self.mem))
@@ -1041,13 +1238,15 @@ class DBICondor(DBIBase):
         print "[DBI] The Log file are under %s"%self.log_dir
 
         self.exec_pre_batch()
-
-        self.run_all_job()
+        if self.nb_proc != 0:
+            self.run_dag()
+        else:
+            self.run_all_job()
 
         self.exec_post_batch()
 
     def wait(self):
-        print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s/condor.log'"%(self.log_dir)
+        print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s'"%(self.log_file)
 
     def clean(self):
         pass
