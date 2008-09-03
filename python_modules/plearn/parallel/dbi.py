@@ -883,15 +883,36 @@ class DBICondor(DBIBase):
 
         condor_file_dag = condor_file+".dag"
         condor_dag = open( condor_file_dag, 'w' )
-        for i in range(len(self.tasks)):
-            task=self.tasks[i]
-            argstring =condor_escape_argument(' ; '.join(task.commands))
-            argstring =' ; '.join(task.commands)
-            condor_dag.write("JOB %d %s\n"%(i,condor_file))
-            condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
-            s=os.path.join(self.log_dir,"condor"+self.base_tasks_log_file[i])
-            condor_dag.write('VARS %d stdout="%s"\n'%(i,s+".out"))
-            condor_dag.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
+        if self.base_tasks_log_file:
+            for i in range(len(self.tasks)):
+                task=self.tasks[i]
+                argstring =' ; '.join(task.commands)
+                condor_dag.write("JOB %d %s\n"%(i,condor_file))
+                condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
+                s=os.path.join(self.log_dir,"condor"+self.base_tasks_log_file[i])
+                condor_dag.write('VARS %d stdout="%s"\n'%(i,s+".out"))
+                condor_dag.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
+        elif self.stdouts and self.stderrs:
+            assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
+            for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
+                if stdout_file==stderr_file:
+                    print "Condor can't redirect the stdout and stderr to the same file!"
+                    sys.exit(1)
+                argstring =' ; '.join(task.commands)
+                condor_dag.write("JOB %d %s\n"%(i,condor_file))
+                condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
+                s=os.path.join(self.log_dir,"condor"+self.base_tasks_log_file[i])
+                condor_dag.write('VARS %d stdout="%s"\n'%(i,stdout_file))
+                condor_dag.write('VARS %d stderr="%s"\n\n'%(i,stderr_file))
+
+
+        elif self.stdouts or self.stderrs:
+            print "DBICondor should have stdouts and stderrs or none of them"
+            sys.exit(1)
+        else:
+            #should not happen
+            raise NotImplementedError()
+                
         condor_dag.close()
 
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
