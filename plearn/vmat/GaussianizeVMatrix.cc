@@ -180,7 +180,7 @@ void GaussianizeVMatrix::build_()
 
     // Obtain meta information from source.
     setMetaInfoFromSource();
-    if(values.size()==0)
+    if(hasMetaDataDir() && values.size()==0)
         setMetaDataDir(getMetaDataDir());
 }
 
