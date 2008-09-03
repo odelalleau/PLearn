@@ -3,12 +3,11 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] <back-end parameter> {--file=FILEPATH | <command-template>}
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] <back-end parameter> {--file=FILEPATH | <command-template>}
 
 <back-end parameter>:
     bqtools, cluster option  :[--duree=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
-    all except condor options:[--[*no_]nb_proc=N]
     cluster, condor options  : [--32|--64|--3264] [--os=X] [--mem=N]
     condor option            : [--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
                                [--[*no_]getenv] [*--[no_]prefserver] 
@@ -29,20 +28,18 @@ LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtool
 common options:
   The -h, --help print the long help(this)
   The --condor, --bqtools, --cluster, --local or --ssh option specify on which system the jobs will be sent. If not present, we will use the first available in the previously given order. ssh is never automaticaly selected.
-  The --dbilog (--no_dbilog) tells dbi to generate (or not) an additional log
+  The '--[no_]dbilog' tells dbi to generate (or not) an additional log
   The '--[no_]test' option makes dbidispatch generate the file %(ScriptName)s, without executing it. That way you can see what dbidispatch generates. Also, this file calls dbi in test mode, so dbi executes everything in the script except the experiment in %(ScriptName)s (so you can check the script).
   The '--testdbi' set only dbi in test mode. Not dbidispatch
-  The --file=FILEPATH specifies a file containing the jobs to execute, one per line. This is instead of specifying only one job on the command line.
-
-dbidispatch --test --file=tests
-
-
-bqtools, cluster, local and ssh options:
-  --nb_proc=nb_proc, specifies the maximum number of concurrent jobs running. The value -1 will try to execute all jobs concurently. Use with care as some back-end or configuration do not handle this correctly. (work for condor, bqtools, cluster with --cwait)
+  The '--file=FILEPATH' specifies a file containing the jobs to execute, one per line. This is instead of specifying one job[s] on the command line.
+  The '--nb_proc=nb_proc', specifies the maximum number of concurrent jobs running. The value -1 will try to execute all jobs concurently. Use with care as some back-end or configuration do not handle this correctly. (work for condor, bqtools, cluster with --cwait)
     --local=N is the same as --local --nb_proc=N
     --cluster=N is the same as --cluster --nb_proc=N
     --bqtools=N is the same as --bqtools --nb_proc=N
     --ssh=N is the same as --ssh --nb_proc=N
+    --condor=N  is the same as --condor --nb_proc=N
+  The '--[*no_]clean_up' set the DBI option clean_up to true(false)
+
 
 bqtools and cluster option:
   The '--duree' option specifies the maximum duration of the jobs. The syntax depends on where the job is dispatched. For the cluster syntax, see 'cluster --help'. For bqtools, the syntax is '--duree=12:13:15', giving 12 hours, 13 minutes and 15 seconds.
@@ -107,23 +104,22 @@ condor only options:
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
-The arguments may contain segments of the form {{a,b,c,d}}, which trigger
-parallel dispatch: a separate 'cluster --execute' command is issued for
-the rest of the command template, the first time with value a, the second
-time with value b, etc.  For example, the command (NOTE: THERE MUST NOT
+The arguments may contain one or many segments of the form {{a,b,c,d}}, which generate multiple jobs to execute. Each segement will be replaced by one of the vlue in the segment separated by comma. The first will have the a value, the second the b value, etc. If their is many segment, it will generate the cross-product of possible value between the segment. The jobs will be executed serially or in parallel depending of the backend and the nb_proc option.
+
+  For example, the command (NOTE: THERE MUST NOT
 BE ANY SPACES WITHIN THE 'numhidden={{5,10,25}}' part and the quotes are
 important to avoid shell misinterpretation) :
 
   dbidispatch aplearn myscript.plearn 'numhidden={{5,10,25}}'
 
-is equivalent to launching three jobs in parallel on the cluster:
+is equivalent to launching three jobs:
 
   aplearn myscript.plearn numhidden=5
   aplearn myscript.plearn numhidden=10
   aplearn myscript.plearn numhidden=25
 
 If several arguments contain {{ }} forms, all combinations of arguments
-are taken, and the jobs are all launched in parallel.  For instance
+are taken. For instance
 
   dbidispatch aplearn myscript.plearn 'numhidden={{10,25}}' 'wd={{0.01,0.001}}'
 
@@ -135,8 +131,6 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.001
 
 In the file of the option --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
-
-The '--[*no_]clean_up' set the DBI option clean_up to true(false)
 
 The environnement variable DBIDISPATCH_DEFAULT_OPTION can contain default option that you always want to pass to dbidispatch. You can override them on the command line.
 The environnement variable DBIDISPATCH_LOGDIR set the name of the directory where all the individual logs directory will be put. If not present default to LOGS.
@@ -274,19 +268,15 @@ if len(command_argv) == 0 and FILE == "":
     print ShortHelp
     sys.exit(1)
 
-valid_dbi_param=["clean_up", "test", "dolog"]
-if launch_cmd=="Ssh":
-    valid_dbi_param+=["nb_proc"]
-elif launch_cmd=="Cluster":
-    valid_dbi_param +=["cwait","force","nb_proc","arch","interruptible",
+valid_dbi_param=["clean_up", "test", "dolog","nb_proc"]
+if launch_cmd=="Cluster":
+    valid_dbi_param +=["cwait","force","arch","interruptible",
                        "duree","cpu","mem","os"]
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
                        "raw", "os", "set_special_env"]
 elif launch_cmd=="Bqtools":
-    valid_dbi_param +=["micro", "long","nb_proc","duree"]
-elif launch_cmd=="Local":
-    valid_dbi_param +=["nb_proc"]
+    valid_dbi_param +=["micro", "long", "duree"]
 
 from socket import gethostname
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
