@@ -669,6 +669,14 @@ def condor_escape_argument(argstring):
     # then surrount everything by a pair of double quotes
     return "\"'" + argstring.replace("'", "''").replace('"','""') + "'\""
 
+def condor_dag_escape_argument(argstring):
+    # escape the double quote so that dagman handle it corretly
+    # DAGMAN don't handle single quote!!!
+    if "'" in argstring:
+        print "[DBI] ERROR: the condor back-end with dagman don't support using the ' symbol in the command line"
+        sys.exit(1)
+    return argstring.replace('"',r'\\\"')
+
 class DBICondor(DBIBase):
 
     def __init__( self, commands, **args ):
@@ -886,10 +894,11 @@ class DBICondor(DBIBase):
         if self.base_tasks_log_file:
             for i in range(len(self.tasks)):
                 task=self.tasks[i]
-                argstring =' ; '.join(task.commands)
+                argstring =condor_dag_escape_argument(' ; '.join(task.commands))
                 condor_dag.write("JOB %d %s\n"%(i,condor_file))
                 condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
-                s=os.path.join(self.log_dir,"condor"+self.base_tasks_log_file[i])
+                s=os.path.join(self.log_dir,
+                               "condor"+self.base_tasks_log_file[i])
                 condor_dag.write('VARS %d stdout="%s"\n'%(i,s+".out"))
                 condor_dag.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
         elif self.stdouts and self.stderrs:
@@ -898,10 +907,9 @@ class DBICondor(DBIBase):
                 if stdout_file==stderr_file:
                     print "Condor can't redirect the stdout and stderr to the same file!"
                     sys.exit(1)
-                argstring =' ; '.join(task.commands)
+                argstring =condor_dag_escape_argument(' ; '.join(task.commands))
                 condor_dag.write("JOB %d %s\n"%(i,condor_file))
                 condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
-                s=os.path.join(self.log_dir,"condor"+self.base_tasks_log_file[i])
                 condor_dag.write('VARS %d stdout="%s"\n'%(i,stdout_file))
                 condor_dag.write('VARS %d stderr="%s"\n\n'%(i,stderr_file))
 
@@ -960,7 +968,7 @@ class DBICondor(DBIBase):
                     #echo -n /usr/bin/python version: 1>&2
                     #/usr/bin/python -V 1>&2
                     echo "Running: command: sh -c \\"$@\\"" 1>&2
-                    sh -c "$@"
+                    $@
                     '''))
             else:
                 launch_dat.write(dedent('''\
