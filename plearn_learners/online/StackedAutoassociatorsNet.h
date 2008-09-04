@@ -165,8 +165,8 @@ public:
     //! Standard deviation of Gaussian noise
     real gaussian_std;
 
-    //! Parameter \tau for corrupted input sampling:
-    //!   \tilde{x}_k ~ B((x_k - 0.5) \tau + 0.5)
+    //! Parameter \f$ \tau \f$ for corrupted input sampling:
+    //! \f$ \tilde{x}_k ~ B((x_k - 0.5) \tau + 0.5) \f$
     real binary_sampling_noise_parameter;
 
     //! Number of samples to use for unsupervised fine-tuning

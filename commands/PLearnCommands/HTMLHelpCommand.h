@@ -146,11 +146,11 @@ public:
     string html_index_document;
     
     //! Filename containing the "top" of the HTML document (including an
-    //! opening <body> tag)
+    //! opening \<body\> tag)
     string html_prolog_document;
 
     //! Filename containing the "bottom" of the HTML document (including the
-    //! closing </body> tag)
+    //! closing \</body\> tag)
     string html_epilog_document;
 
 
