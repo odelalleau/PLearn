@@ -392,13 +392,13 @@ dbi_param[n]=[""]*len(commands)
 
 def merge_pattern(new_list):
     return [x+'.'+y for (x,y) in  zip(dbi_param[n], new_list)]
-
 for pattern in tasks_filename:
     if pattern == "explicit":
         dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands])
     elif pattern == "compact":
-        dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args])
-       
+        l=[re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in choise_args]
+        if l:
+            dbi_param[n]=merge_pattern(l)
     elif pattern == "nb0":
         dbi_param[n]=merge_pattern(map(str,range(len(commands))))
     elif pattern == "nb1":
