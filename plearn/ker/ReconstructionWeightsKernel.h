@@ -185,7 +185,7 @@ public:
     virtual real evaluate_sum_k_i_k_j(int i, int j) const;
 
     //! Fill 'lle_mat', which must be of size (n x n), with entries (i,j) equal to
-    //! W_{ij} + W_{ji} - \sum_k W_{ki} W_{kj}
+    //! \f$ W_{ij} + W_{ji} - \sum_k W_{ki} W_{kj} \f$
     //! (this is used in LLE to compute the kernel Gram matrix).
     virtual void computeLLEMatrix(const Mat& lle_mat) const;
 

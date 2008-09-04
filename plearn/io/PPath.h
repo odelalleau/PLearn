@@ -90,7 +90,7 @@ metaprocol. For instance,
 HOME:foo/bar
 
 maps to /home/dorionc/foo/bar for me, while it could map to
-/u/bengioy/foo/bar for Yoshua and to R:\foo\bar for some Windows
+/u/bengioy/foo/bar for Yoshua and to R:\\foo\\bar for some Windows
 user. Note that the canonical form of a path ALWAYS USES slash chars ('/')
 while the absolute() representation uses the appropriate slash ('/') or
 backslash ('\'). Hence, you should never care for windows' ugly '\' and always use

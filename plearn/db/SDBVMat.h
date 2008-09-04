@@ -854,8 +854,8 @@ protected:
 //	x1*(5*2) + x2*2 + x3
 //!  In general, if there are N fields, x_1...x_N, and each can take y_i
 //!  values, then the discrete value is:
-//	\sum_{i=1}^N x_i \product_{j=i+1}^N y_j
-/*!   where \product_{j=N+1}^N is defined to be 1.
+//	/f$ \sum_{i=1}^N x_i \product_{j=i+1}^N y_j /f$
+/*!   where /f$ \product_{j=N+1}^N /f$ is defined to be 1.
   
 For convenience, this class inherites from SDBVMFieldDiscrete, but
 does not use the inherited source_ member.

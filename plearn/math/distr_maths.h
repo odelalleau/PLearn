@@ -89,7 +89,7 @@ real logOfCompactGaussian(const Vec& x, const Vec& mu,
 
 //! Returns the density of a proportion x under a Beta(alpha,beta) distribution,
 //! equal to 
-//!    x^{alpha-1} (1-x}^{beta-1} / Beta(a,b)
+//!  /f$  x^{alpha-1} (1-x}^{beta-1} / Beta(a,b) /f$
 //! where
 //!    Beta(a,b) = Gamma(a)Gamma(b)/Gamma(a+b)
 real beta_density(real x, real alpha, real beta);

@@ -646,7 +646,7 @@ void solveLinearSystem(const Mat& A, const Mat& Y, Mat& X);
 void solveTransposeLinearSystem(const Mat& A, const Mat& Y, Mat& X);
 
 /*!   Returns w that minimizes ||X.w - Y||^2 + lambda.||w||^2
-  under constraint \sum w_i = 1
+  under constraint \f$ \sum w_i = 1 \f$
   Xt is the transposed of the input matrix X; Y is the target vector.
   This doesn't include any bias term.
 */

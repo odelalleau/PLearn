@@ -385,7 +385,7 @@ void loadAscii(const PPath& filename, TMat<T>& mat, TVec<string>& fieldnames, in
 //! with 'long_binary_dscriptor' being of the form '001100101011',
 //! each character being an entry of the matrix.
 //! (entry_name is ignored).
-//! Header must be: #size: length width
+//! Header must be: \#size: length width
 template<class T>
 void loadAsciiSingleBinaryDescriptor(const PPath& filename, TMat<T>& mat)
 {

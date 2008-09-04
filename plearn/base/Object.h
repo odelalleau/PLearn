@@ -706,6 +706,8 @@ public:
      *
      *  @param in          PStream from which to read the new option value
      *  @param optionname  Name of the option to read from the stream
+     *  @param id          The plearn pointer of the current object.
+     *                     Usefull for better error message.
      */
     void readOptionVal(PStream &in, const string &optionname, unsigned int id = UINT_MAX);
     
@@ -860,6 +862,8 @@ public:
      *  @endcode
      *
      *  @param in  Stream from which read the object
+     *  @param id  The plearn pointer of the current object.
+     *             Usefull for better error message.
      */
     void newread(PStream& in, unsigned int id = UINT_MAX);
 
@@ -1090,7 +1094,7 @@ protected:
      *  mechanism can only distinguish methods based on their string name and
      *  number of arguments, but not on the types of the arguments.
      *
-     *  @param ol  RemoteMethodMap to be constructed for the current class.
+     *  @param rmm  RemoteMethodMap to be constructed for the current class.
      */
     static void declareMethods(RemoteMethodMap& rmm);
 

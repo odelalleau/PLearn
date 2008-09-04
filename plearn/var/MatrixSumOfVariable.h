@@ -69,7 +69,7 @@ public:
 public:
     //!  protected default constructor for persistence
     MatrixSumOfVariable() : distr(), f(), nsamples(), input_size(), curpos() {}
-    //!  Sum_{inputs \in distr} f(inputs)
+    //! \f$ Sum_{inputs \in distr} f(inputs)\f$
     MatrixSumOfVariable(VMat the_distr, Func the_f, int the_nsamples=-1, int the_input_size=-1);
     
     PLEARN_DECLARE_OBJECT(MatrixSumOfVariable);

@@ -53,13 +53,13 @@ using namespace std;
   depend on the option fields. It is defined simply by
   giving a mapping file, where each row has the form:
   
-  OPTION_1 ... OPTION_M[\tab]TAG_1 TAG_2 TAG_3 ...
+  OPTION_1 ... OPTION_M[\\tab]TAG_1 TAG_2 TAG_3 ...
 
-  where [\tab] is the tabulation character. For
+  where [\\tab] is the tabulation character. For
   instance, a Part Of Speech Dictionary could be
   defined using lines like:
 
-  pet[\tab]NN VB VBD
+  pet[\\tab]NN VB VBD
 
   When the option fields are not found in the mapping,
   then the possible values are simply the set of

@@ -94,7 +94,7 @@ protected:
     // * protected options *
     // *********************
 
-    //! Number of attributes in the input text file (\t separated)
+    //! Number of attributes in the input text file (\\t separated)
     int n_attributes;
 
     //! Python code snippet

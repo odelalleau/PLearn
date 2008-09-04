@@ -662,8 +662,8 @@ public:
      * @param target The VMat we compare against
      * @param stderror_threshold The threshold allowed for the standard error
      * @param missing_threshold The threshold allowed for the % of missing
-     * @param sumdiff_stderr The sum of all variable differences of stderr
-     * @param sumdiff_missing The sum of all variable differences of missing
+     * @param stderror A measure of difference 
+     * @param missing A measure of difference 
      * @return The number of differences that were found
      */
     void compareStats(VMat target,

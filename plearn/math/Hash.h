@@ -39,7 +39,7 @@
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! DEPRECATED!!!  Use <hash_map> instead.  */
+/*! DEPRECATED!!!  Use \<hash_map\> instead.  */
 
 /*! \file PLearn/plearn/math/Hash.h */
 

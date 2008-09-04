@@ -64,7 +64,7 @@ using namespace std;
  * Internet: www.web-reg.de
  * 
  * Solves the problem Ax=b when A is pentadiagonal and strongly nonsingular. 
- * This is much faster than x=A\y for large matrices.  
+ * This is much faster than \f$ x=A\y \f$ for large matrices.  
  * 
  * Reference: Späth, Helmuth "Numerik: Eine Einführung für Mathematiker und
  * Informatiker" S. 110 . Vieweg-Verlag Braunschweig/Wiesbaden (1994)

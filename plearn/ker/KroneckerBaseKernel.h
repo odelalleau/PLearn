@@ -53,7 +53,7 @@ namespace PLearn {
  *  but is not currently done for performance reasons).  With these terms, the
  *  kernel function takes the form:
  *
- *    k(x,y) = \product_i delta_x[kr(i)],y[kr(i)]
+ *  \f$  k(x,y) = \product_i delta_x[kr(i)],y[kr(i)] \f$
  *
  *  where kr(i) is the i-th element of 'kronecker_indexes' (representing an
  *  index into the input vectors).  Derived classes can either integrate these

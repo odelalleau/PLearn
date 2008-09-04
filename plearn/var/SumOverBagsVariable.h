@@ -80,7 +80,7 @@ public:
 public:
     //!  protected default constructor for persistence
     SumOverBagsVariable();
-    //! Sum_{bags \in vmat} f(inputs and targets in bag)
+    //! \f$ Sum_{bags \in vmat} f(inputs and targets in bag)\f$
     //! By convention a bag is a sequence of rows of the vmat in which the last column of the target
     //! indicates whether the row is the first one (and/or) the last one, with its two least significant bits:
     //!   last_column_of_target == 1 ==> first row

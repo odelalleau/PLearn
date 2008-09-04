@@ -189,8 +189,8 @@ public:
 };
 
 //*!< *****************************************************
-/*!   Convert <word_sequences> filename into a FilesIntStream stream.
-  This file must contain one line per <word_sequence> filename,
+/*!   Convert \<word_sequences\> filename into a FilesIntStream stream.
+  This file must contain one line per \<word_sequence\> filename,
   and each of these filenames must represent binary integers files
   that can be associated to an IntStream.
 */
