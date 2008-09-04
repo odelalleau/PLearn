@@ -1,6 +1,6 @@
 import time, random, os
 
-def writeResults(argdict, costdict, results_amat):
+def writeResults(argdict, costdict, results_amat, need_lock = True):
     """ Write the results of an experiment in a amat file,
         managing the fact that several scripts can try yo write
         at the same time in the amat.
@@ -20,14 +20,17 @@ def writeResults(argdict, costdict, results_amat):
 
     # Create .amat if it does not exist.
     if not os.path.exists(results_amat):
-        lockFile(results_amat)
+        if need_lock:
+            lockFile(results_amat)
         f = open(results_amat, "w")
         f.write('TO_CREATE')
         f.close()
-        unlockFile(results_amat)
+        if need_lock:
+            unlockFile(results_amat)
 
     # Fill data in the .amat file.
-    lockFile(results_amat)
+    if need_lock:
+        lockFile(results_amat)
     f = open(results_amat, 'r+')
     if f.readline() == 'TO_CREATE':
         # Need to write the header.
@@ -38,19 +41,20 @@ def writeResults(argdict, costdict, results_amat):
     f.seek(0, 2)   # End of file.
     f.write('%s\n' % ' '.join( str(x) for x in argvals + cost_vals ) )
     f.close()
-    unlockFile(results_amat)
+    if need_lock:
+        unlockFile(results_amat)
 
 def getSortedValues(names_and_vals):
-    if type(names_and_vals) == dict:
+    if isinstance(names_and_vals,dict):
         keys = names_and_vals.keys()
         keys.sort()
         return keys, [names_and_vals[key] for key in keys]
-    elif type(names_and_vals) == list:
+    elif isinstance(names_and_vals,list):
         assert len(names_and_vals) == 2
         assert type(names_and_vals[0]) in [list,str]
-        if type(names_and_vals[0]) == str:
+        if isinstance(names_and_vals[0],str):
             names_and_vals[0] = names_and_vals[0].split()
-        assert type(names_and_vals[1]) == list
+        assert isinstance(names_and_vals[1],list)
         assert len(names_and_vals[0]) == len(names_and_vals[1])
         return names_and_vals[0], names_and_vals[1]
     else:
