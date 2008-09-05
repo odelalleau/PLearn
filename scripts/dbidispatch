@@ -338,8 +338,8 @@ def generate_combination(repl):
 def generate_commands(sp):
 ### Find replacement lists in the arguments
     repl = []
+    p = re.compile('\{\{\S*\}\}')
     for arg in sp:
-        p = re.compile('\{\{\S*\}\}')
         reg = p.search(arg)
         if reg:
             curargs = reg.group()[2:-2].split(",")# if arg =~ /{{(.*)}}/
