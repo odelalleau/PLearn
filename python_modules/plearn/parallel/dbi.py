@@ -891,6 +891,12 @@ class DBICondor(DBIBase):
 
         condor_file_dag = condor_file+".dag"
         condor_dag = open( condor_file_dag, 'w' )
+        for task in self.tasks:
+            for c in task.commands:
+                if ";" in c:
+                    print "[DBI] ERROR the option --condor=N don't support the symbol ';' in the command to execute!"
+                    sys.exit(1)
+
         if self.base_tasks_log_file:
             for i in range(len(self.tasks)):
                 task=self.tasks[i]
@@ -967,7 +973,7 @@ class DBICondor(DBIBase):
                     #python -V 1>&2
                     #echo -n /usr/bin/python version: 1>&2
                     #/usr/bin/python -V 1>&2
-                    echo "Running: command: sh -c \\"$@\\"" 1>&2
+                    echo "Running: command: \\"$@\\"" 1>&2
                     $@
                     '''))
             else:
@@ -1181,6 +1187,7 @@ class DBICondor(DBIBase):
                 if source_file:
                     launch_dat.write('source ' + source_file + '\n')
 
+                #the sh -c "$@" was done to allow running many small jobs in a macro jobs like: "ls ;env"
                 launch_dat.write(dedent('''\
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
