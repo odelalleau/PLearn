@@ -252,13 +252,27 @@ void MemoryVMatrix::putSubRow(int i, int j, Vec v)
 #endif
     if (v.length() > 0)
         v.copyTo(memory_data[i]+j);
+
+    // Every method that writes data has the following two lines, because:
+    // (1) The correct implementation when using a source VMat should be to
+    // write in this source VMat as well, but it is not currently implemented,
+    // so we just throw an error if we try to do this.
+    // (2) We need to ensure that 'data' points to 'memory_data', in case this
+    // VMat was initially created without any 'data' build option. Otherwise
+    // the data will not be saved.
+    PLASSERT(!source);
+    data = memory_data;
 }
 
 //////////
 // fill //
 //////////
 void MemoryVMatrix::fill(real value)
-{ memory_data.fill(value); }
+{
+    memory_data.fill(value);
+    PLASSERT(!source);
+    data = memory_data;
+}
 
 
 ////////////
@@ -268,13 +282,19 @@ void MemoryVMatrix::putRow(int i, Vec v)
 {
     if (v.length() > 0)
         v.copyTo(memory_data[i]);
+    PLASSERT(!source);
+    data = memory_data;
 }
 
 ////////////
 // putMat //
 ////////////
 void MemoryVMatrix::putMat(int i, int j, Mat m)
-{ memory_data.subMat(i,j,m.length(),m.width()) << m; }
+{
+    memory_data.subMat(i,j,m.length(),m.width()) << m;
+    PLASSERT(!source);
+    data = memory_data;
+}
 
 ///////////////
 // appendRow //
@@ -283,6 +303,8 @@ void MemoryVMatrix::appendRow(Vec v)
 {
     memory_data.appendRow(v);
     length_++;
+    PLASSERT(!source);
+    data = memory_data;
 }
 
 ///////////
