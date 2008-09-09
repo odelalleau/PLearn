@@ -43,7 +43,7 @@
 #define RegressionTreeLeave_INC
 
 #include <plearn/base/Object.h>
-#include <RegressionTreeRegisters.h>
+#include "RegressionTreeRegisters.h"
 namespace PLearn {
 using namespace std;
 
