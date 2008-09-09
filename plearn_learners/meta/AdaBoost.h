@@ -200,6 +200,8 @@ public:
     //! Returns the names of the objective costs that the train method computes and 
     //! for which it updates the VecStatsCollector train_stats
     virtual TVec<string> getTrainCostNames() const;
+    virtual void         setTrainingSet(VMat training_set, bool call_forget=true);
+
 
 };
 

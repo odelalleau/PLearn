@@ -232,11 +232,16 @@ void AdaBoost::build_()
 
     
     int n = 0;
+//why we don't always use weak_learner_template?
     if(weak_learners.size()>0)
         n=weak_learners[0]->outputsize();
     else if(weak_learner_template)
         n=weak_learner_template->outputsize();
     weak_learner_output.resize(n);
+    
+    //for RegressionTreeNode
+    if(getTrainingSet())
+        setTrainingSet(getTrainingSet(),false);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -284,7 +289,9 @@ void AdaBoost::forget()
 void AdaBoost::train()
 {
 
-    if (nstages < stage){        //!< Asking to revert to previous stage
+    if(nstages==stage)
+        return;
+    else if (nstages < stage){        //!< Asking to revert to previous stage
         PLCHECK(nstages>0); // should use forget
         cout<<"In AdaBoost::train() - reverting from stage "<<stage
             <<" to stage "<<nstages<<endl;
@@ -681,7 +688,7 @@ void AdaBoost::train()
 void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     PLASSERT(weak_learners.size()>0);
-    PLASSERT(weak_learner_output.size()==weak_learners[0]->outputsize());
+    PLASSERT(weak_learner_output.size()==weak_learner_template->outputsize());
     PLASSERT(output.size()==1);
     real sum_out=0;
     if(!pseudo_loss_adaboost && !conf_rated_adaboost)
@@ -734,8 +741,8 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
         costs[3]=costs[4]=MISSING_VALUE;
 
     if(forward_sub_learner_test_costs){
-        Vec weighted_costs(weak_learners[0]->nTestCosts());
-        Vec sum_weighted_costs(weak_learners[0]->nTestCosts());
+        Vec weighted_costs(weak_learner_template->nTestCosts());
+        Vec sum_weighted_costs(weak_learner_template->nTestCosts());
         sum_weighted_costs.clear();
         for(int i=0;i<weak_learners.size();i++){
             weak_learners[i]->computeCostsOnly(input, target, weighted_costs);
@@ -826,6 +833,19 @@ void AdaBoost::computeTrainingError(Vec input, Vec target)
                  << train_stats->getMean() << endl;
      
     }
+}
+
+void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
+{ 
+    PLCHECK(weak_learner_template);
+    inherited::setTrainingSet(training_set, call_forget);
+
+    //we do this as RegressionTreeNode need a train_set for getTestCostNames
+    if(!weak_learner_template->getTrainingSet())
+        weak_learner_template->setTrainingSet(training_set,call_forget);
+    for(int i=0;i<weak_learners.length();i++)
+        if(!weak_learners[i]->getTrainingSet())
+            weak_learners[i]->setTrainingSet(training_set,call_forget);
 }
 
 } // end of namespace PLearn

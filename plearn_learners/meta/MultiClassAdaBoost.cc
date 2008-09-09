@@ -38,6 +38,7 @@
 
 
 #include "MultiClassAdaBoost.h"
+#include <plearn/vmat/ProcessingVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -48,7 +49,6 @@ PLEARN_IMPLEMENT_OBJECT(
     "MULTI-LINE \nHELP");
 
 MultiClassAdaBoost::MultiClassAdaBoost():
-    nb_stage_to_use(-1),
     forward_sub_learner_test_costs(false)
 /* ### Initialize all fields to their default value here */
 {
@@ -81,12 +81,6 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
-    declareOption(ol, "nb_stage_to_use",
-                  &MultiClassAdaBoost::nb_stage_to_use,
-                  OptionBase::buildoption,
-                  "The number of stage to use when testing."
-                  " Can be lower then the number of trained stage,"
-                  " but can't be higher!");
     declareOption(ol, "learner1", &MultiClassAdaBoost::learner1,
                   OptionBase::buildoption,
                   "The sub learner to use.");
@@ -115,10 +109,12 @@ void MultiClassAdaBoost::build_()
     sub_target_tmp.resize(2);
     for(int i=0;i<sub_target_tmp.size();i++)
         sub_target_tmp[i].resize(1);
-
-    output1.resize(learner1->outputsize());
-    output2.resize(learner2->outputsize());
-
+    if(learner1)
+        output1.resize(learner1->outputsize());
+    if(learner2)
+        output2.resize(learner2->outputsize());
+    if(!train_stats)
+        train_stats=new VecStatsCollector();
 }
 
 // ### Nothing to add here, simply calls build_
@@ -167,59 +163,27 @@ void MultiClassAdaBoost::forget()
     inherited::forget();
 
     stage = 0;
-    
-    PLWARNING("In MultiClassAdaBoost::forget() - not implemented, training not implemented");
+    train_stats->forget();
+    learner1->forget();
+    learner2->forget();
 }
 
 void MultiClassAdaBoost::train()
 {
-    // The role of the train method is to bring the learner up to
-    // stage==nstages, updating train_stats with training costs measured
-    // on-line in the process.
+    learner1->nstages = nstages;
+    learner1->train();
+    learner2->nstages = nstages;
+    learner2->train();
+    stage=max(learner1->stage,learner2->stage);
 
-    /* TYPICAL CODE:
+    train_stats->stats.resize(0);
+    PP<VecStatsCollector> v;
 
-    static Vec input;  // static so we don't reallocate memory each time...
-    static Vec target; // (but be careful that static means shared!)
-    input.resize(inputsize());    // the train_set's inputsize()
-    target.resize(targetsize());  // the train_set's targetsize()
-    real weight;
-
-    // This generic PLearner method does a number of standard stuff useful for
-    // (almost) any learner, and return 'false' if no training should take
-    // place. See PLearner.h for more details.
-    if (!initTrain())
-        return;
-
-    while(stage<nstages)
-    {
-        // clear statistics of previous epoch
-        train_stats->forget();
-
-        //... train for 1 stage, and update train_stats,
-        // using train_set->getExample(input, target, weight)
-        // and train_stats->update(train_costs)
-
-        ++stage;
-        train_stats->finalize(); // finalize statistics for this epoch
-    }
-    */
-    PLWARNING("In MultiClassAdaBoost::train() - not implemented, should be already trained");
-    int stage1=learner1->stage;
-    int stage2=learner2->stage;
-
-    if(stage1>0 && stage1<nb_stage_to_use)
-        PLERROR("In  MultiClassAdaBoost::train() - asked to use more stage then already trained for learner1");
-    if(stage2>0 && stage2<nb_stage_to_use)
-        PLERROR("In  MultiClassAdaBoost::train() - asked to use more stage then already trained for learner1");
-    if(nb_stage_to_use>0){
-        learner1->nstages=nb_stage_to_use;
-        learner1->train();
-    }
-    if(nb_stage_to_use>0){
-        learner2->nstages=nb_stage_to_use;
-        learner2->train();
-    }
+    //we do it this way in case the learner don't have train_stats
+    if(v=learner1->getTrainStatsCollector())
+        train_stats->append(*(v),"sublearner1.");
+    if(v=learner2->getTrainStatsCollector())
+        train_stats->append(*(v),"sublearner2.");
 }
 
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
@@ -407,6 +371,29 @@ void MultiClassAdaBoost::getSubLearnerTarget(Vec target,
     }else
         PLERROR("In MultiClassAdaBoost::getSubLearnerTarget - "
                   "We only support target 0/1/2. We got %f.", target[0]); 
+}
+
+void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
+{ 
+    PLCHECK(learner1 && learner2);
+    inherited::setTrainingSet(training_set, call_forget);
+    string targetname = training_set->fieldName(training_set->inputsize());
+    string input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
+    string target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
+    string target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
+    string weight_prg = "1 :weight";
+
+    VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
+                                       target_prg1,  weight_prg);
+    VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
+                                       target_prg2,  weight_prg);
+
+    //We don't give it if the script give them one explicitly.
+    //This can be usefull for optimization
+    if(!learner1->getTrainingSet())
+        learner1->setTrainingSet(vmat1, call_forget);
+    if(!learner2->getTrainingSet())
+        learner2->setTrainingSet(vmat2, call_forget);
 }
 
 } // end of namespace PLearn

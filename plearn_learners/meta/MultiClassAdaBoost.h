@@ -70,9 +70,6 @@ public:
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
 
-    //! The number of stage that will be used
-    int nb_stage_to_use;
-
     //! Did we add the learner1 and learner2 costs to our costs
     bool forward_sub_learner_test_costs;
 
@@ -161,7 +158,7 @@ public:
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
 
-//    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
 
 protected:
     //#####  Protected Options  ###############################################

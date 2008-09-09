@@ -15,6 +15,9 @@ class AdaBoostMultiClasses:
 #        weakLearner should be a function that take the class number for the one vs other
 #                and should return a new weak learner
 #        """
+
+#        print "AdaBoostMultiClasses is deprecated! It is only a wrapper on the MultiClassAdaBoost of plearn. It will be removed in the futur. So use MultiClassAdaBoost directly."
+        
         self.trainSet1=trainSet1
         self.trainSet2=trainSet2
 
@@ -33,6 +36,7 @@ class AdaBoostMultiClasses:
             self.learner2.setTrainingSet(trainSet2,True)
             self.multi_class_adaboost.learner1=self.learner1
             self.multi_class_adaboost.learner2=self.learner2
+            self.multi_class_adaboost.build()
 
         self.nstages = 0
         self.stage = 0
@@ -56,9 +60,19 @@ class AdaBoostMultiClasses:
         tmp=VecStatsCollector()
         tmp.setFieldNames(l.getTrainCostNames())
         l.setTrainStatsCollector(tmp)
+        l.build()
         return l
 
     def train(self):
+        t1=time.time()
+        self.multi_class_adaboost.nstages = self.nstages
+        self.multi_class_adaboost.train()
+        self.train_stats = self.multi_class_adaboost.getTrainStatsCollector()
+        t2=time.time()
+        self.train_time+=t2-t1
+        self.stage=self.multi_class_adaboost.stage
+        return
+
         t1=time.time()
         self.learner1.nstages = self.nstages
         self.learner1.train()
