@@ -178,7 +178,7 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
     getOutputAndError(outputv,errorv);
 }
 
-void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)
+void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)const
 {
 #ifdef BOUNDCHECK
     if(multiclass_outputs.length()<=0)
