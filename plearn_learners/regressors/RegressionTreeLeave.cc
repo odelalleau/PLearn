@@ -155,8 +155,7 @@ void RegressionTreeLeave::addRow(int row, Vec outputv, Vec errorv)
     addRow(row);
     getOutputAndError(outputv,errorv);
 }
-
-void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
+void RegressionTreeLeave::removeRow(int row, Vec output, Vec error)
 {
     real weight = train_set->getWeight(row);
     real target = train_set->getTarget(row);
@@ -166,10 +165,10 @@ void RegressionTreeLeave::removeRow(int row, Vec outputv, Vec errorv)
     real squared_target = pow(target, 2);
     weighted_targets_sum -= weight * target;
     weighted_squared_targets_sum -= weight * squared_target; 
-    getOutputAndError(outputv,errorv);
+    getOutputAndError(output, error);
 }
 
-void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)
+void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
 {
     if(length==0){        
         output.clear();
@@ -195,21 +194,6 @@ void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)
         if (error[0] > weights_sum * loss_function_factor) error[2] = weights_sum * loss_function_factor;
         else error[2] = error[0];
     }
-}
-
-void RegressionTreeLeave::registerRow(int row)
-{
-    train_set->registerLeave(id, row);
-}
-
-int RegressionTreeLeave::getId()
-{
-    return id;
-}
-
-int RegressionTreeLeave::getLength()
-{
-    return length;
 }
 
 void RegressionTreeLeave::printStats()

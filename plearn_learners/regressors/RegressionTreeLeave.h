@@ -43,10 +43,9 @@
 #define RegressionTreeLeave_INC
 
 #include <plearn/base/Object.h>
-
+#include <RegressionTreeRegisters.h>
 namespace PLearn {
 using namespace std;
-class RegressionTreeRegisters;
 
 class RegressionTreeLeave: public Object
 {
@@ -89,13 +88,14 @@ public:
     virtual void         build();
     void         initLeave(PP<RegressionTreeRegisters> the_train_set);
     virtual void         initStats();
-    virtual void         addRow(int row, Vec outputv, Vec errorv);
     virtual void         addRow(int row);
+    virtual void         addRow(int row, Vec outputv, Vec errorv);
     virtual void         removeRow(int row, Vec outputv, Vec errorv);
-    void         registerRow(int row);
-    int          getId();
-    int          getLength();
-    virtual void         getOutputAndError(Vec& output, Vec& error);
+    inline void          registerRow(int row)
+    {train_set->registerLeave(id, row);}
+    inline int           getId()const{return id;}
+    inline int           getLength()const{return length;}
+    virtual void         getOutputAndError(Vec& output, Vec& error)const;
     virtual void         printStats();
   
 private:
