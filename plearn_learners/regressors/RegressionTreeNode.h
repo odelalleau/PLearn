@@ -99,22 +99,32 @@ public:
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
-    void         initNode(PP<RegressionTreeRegisters> train_set, PP<RegressionTreeLeave> leave, PP<RegressionTreeLeave> leave_template);
+    void         initNode(PP<RegressionTreeRegisters> train_set,
+                          PP<RegressionTreeLeave> leave,
+                          PP<RegressionTreeLeave> leave_template);
     void         lookForBestSplit();
-    void         compareSplit(int col, real left_leave_last_feature, real right_leave_first_feature,
-                              Vec left_error, Vec right_error, Vec missing_error);
+    inline void  compareSplit(int col, real left_leave_last_feature,
+                              real right_leave_first_feature,
+                              Vec left_error, Vec right_error,
+                              Vec missing_error);
     int          expandNode();
-    int          getSplitBalance()const;
-    real         getErrorImprovment()const;
-    int          getSplitCol() const;
-    real         getSplitValue() const;
-    TVec< PP<RegressionTreeNode> >  getNodes();
-    void         computeOutputAndNodes(const Vec& inputv, Vec& outputv, TVec<PP<RegressionTreeNode> >* nodes=0);
-    void         computeOutput(const Vec& inputv, Vec& outputv)
-    {
-        computeOutputAndNodes(inputv,outputv);
+    inline int   getSplitBalance()const{
+        if (split_col < 0) return train_set->length();
+        return split_balance;}
+    inline real  getErrorImprovment()const{
+        if (split_col < 0) return -1.0;
+        real err=leave_error[0] + leave_error[1] - after_split_error;
+        PLASSERT(is_equal(err,0)||err>0);
+        return err;
     }
-    bool         haveChildrenNode(){return left_node;}
+    inline int          getSplitCol() const{return split_col;}
+    inline real         getSplitValue() const{return split_feature_value;}
+    TVec< PP<RegressionTreeNode> >  getNodes();
+    void         computeOutputAndNodes(const Vec& inputv, Vec& outputv,
+                                       TVec<PP<RegressionTreeNode> >* nodes=0);
+    inline void         computeOutput(const Vec& inputv, Vec& outputv)
+    {computeOutputAndNodes(inputv,outputv);}
+    inline bool         haveChildrenNode(){return left_node;}
     
 private:
     void         build_();
