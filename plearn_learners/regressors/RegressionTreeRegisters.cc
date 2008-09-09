@@ -147,49 +147,6 @@ void RegressionTreeRegisters::reinitRegisters()
     sortRows();
 }
 
-void RegressionTreeRegisters::registerLeave(RTR_type leave_id, int row)
-{
-    leave_register[row] = leave_id;
-}
-
-real RegressionTreeRegisters::get(int i, int j) const
-{
-    return tsource->get(j,i);
-}
-
-real RegressionTreeRegisters::getTarget(int row)
-{
-    return tsource->get(inputsize(), row);
-}
-
-real RegressionTreeRegisters::getWeight(int row)
-{
-    if (weightsize() <= 0) return 1.0 / length();
-    else return tsource->get(inputsize() + targetsize(), row );
-}
-
-void RegressionTreeRegisters::setWeight(int row, real val)
-{
-    PLASSERT(inputsize()>0&&targetsize()>0);
-    PLASSERT(weightsize() > 0);
-    tsource->put( inputsize() + targetsize(), row, val );
-}
-
-void RegressionTreeRegisters::put(int i, int j, real value)
-{
-    PLASSERT(inputsize()>0&&targetsize()>0);
-    if(j!=inputsize()+targetsize())
-        PLERROR("In RegressionTreeRegisters::put - implemented the put of "
-                "the weightsize only");
-    setWeight(i,value);
-}
-
-RTR_type RegressionTreeRegisters::getNextId()
-{
-    next_id += 1;
-    return next_id;
-}
-
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg)
 {
     for(int i=0;i<length();i++)

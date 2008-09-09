@@ -91,18 +91,33 @@ public:
     virtual void         build();
     void         initRegisters(VMat train_set);
     void         reinitRegisters();
-    void         registerLeave(RTR_type leave_id, int row);
-    virtual real get(int row, int col) const;
-    real         getTarget(int row);
-    real         getWeight(int row);
-    void         setWeight(int row,real val);
-    RTR_type     getNextId();
+    inline void         registerLeave(RTR_type leave_id, int row)
+    { leave_register[row] = leave_id;    }
+    inline virtual real get(int i, int j) const{return tsource->get(j,i);}
+    inline real         getTarget(int row)const
+    {return tsource->get(inputsize(), row);}
+    inline real         getWeight(int row)const{
+        if (weightsize() <= 0) return 1.0 / length();
+        else return tsource->get(inputsize() + targetsize(), row );
+    }
+    inline void         setWeight(int row,real val){
+        PLASSERT(inputsize()>0&&targetsize()>0);
+        PLASSERT(weightsize() > 0);
+        tsource->put( inputsize() + targetsize(), row, val );
+    }
+    inline RTR_type     getNextId(){next_id += 1;return next_id;}
     void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg);
     void         sortRows();
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
-    virtual void put(int i, int j, real value);
-//    virtual void getNewRow(int i, const Vec& v) const;
+    inline virtual void put(int i, int j, real value)
+    {
+        PLASSERT(inputsize()>0&&targetsize()>0);
+        if(j!=inputsize()+targetsize())
+            PLERROR("In RegressionTreeRegisters::put - implemented the put of "
+                    "the weightsize only");
+        setWeight(i,value);
+    }
     VMat source;
 
 private:
