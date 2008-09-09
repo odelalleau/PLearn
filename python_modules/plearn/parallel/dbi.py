@@ -1085,7 +1085,7 @@ class DBICondor(DBIBase):
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
 
-        self.log_file= os.path.join(self.log_dir,"condog.log")
+        self.log_file= os.path.join(self.log_dir,"condor.log")
 
         if self.mem<=0:
             try:
