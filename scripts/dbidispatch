@@ -321,33 +321,45 @@ for i in dbi_param:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end"
 print "With the command to be expanded:"," ".join(command_argv),"\n\n"
 
-def generate_combination(repl):
+def generate_combination(repl,sep=" "):
     if repl == []:
         return []
     else:
         res = []
         x = repl[0]
-        res1 = generate_combination(repl[1:])
+        res1 = generate_combination(repl[1:],sep)
         for y in x:
             if res1 == []:
                 res.append(y)
             else:
-                res.extend([y+" "+r for r in res1])
+                res.extend([y+sep+r for r in res1])
         return res
 
 def generate_commands(sp):
 ### Find replacement lists in the arguments
     repl = []
-    p = re.compile('\{\{\S*\}\}')
+    p = re.compile('\{\{\S*?\}\}')
     for arg in sp:
-        reg = p.search(arg)
-        if reg:
-            curargs = reg.group()[2:-2].split(",")# if arg =~ /{{(.*)}}/
+        reg = p.findall(arg)
+        if len(reg)==1:
+            reg = p.search(arg)
+            curargs = reg.group()[2:-2].split(",")
             newcurargs = []
             for curarg in curargs:
                 new = p.sub(curarg,arg)
                 newcurargs.append(new)
             repl.append(newcurargs)
+        elif len(reg)>1:
+            s=p.split(arg)
+            tmp=[]
+            for i in range(len(reg)):
+                if s[i]:
+                    tmp.append(s[i])
+                tmp.append(reg[i][2:-2].split(","))
+            i+=1
+            if s[i]:
+                tmp.append(s[i])
+            repl.append(generate_combination(tmp,''))
         else:
             repl.append([arg])
     argscombination = generate_combination(repl)
