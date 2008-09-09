@@ -49,7 +49,7 @@
 
 //!used to limit the memory used by limiting the length of the dataset.
 //!work with unsigned int, uint16_t, but fail with uint8_t???
-#define RTR_type uint32_t 
+#define RTR_type uint32_t
 
 namespace PLearn {
 using namespace std;
