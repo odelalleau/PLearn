@@ -100,7 +100,7 @@ protected:
     //! opens the files in append mode for writing the test results
     void openTestResultsStreams();
 
-    //! Returns the stream corresponding to testset #k (as specified by setTestDuringTrain)
+    //! Returns the stream corresponding to testset \#k (as specified by setTestDuringTrain)
     //! The stream is opened by calling opentestResultsStreams if it wasn's already.
     ostream& getTestResultsStream(int k);
     
