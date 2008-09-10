@@ -171,9 +171,18 @@ void MultiClassAdaBoost::forget()
 void MultiClassAdaBoost::train()
 {
     learner1->nstages = nstages;
-    learner1->train();
     learner2->nstages = nstages;
+
+//if you use the parallel version, you must disable all verbose, verbosity and report progress int he learner1 and learner2.
+//Otherwise this will cause crash due to the parallel printing to stdout stderr.
+#pragma omp parallel sections
+{
+#pragma omp section 
+    learner1->train();
+#pragma omp section 
     learner2->train();
+}
+
     stage=max(learner1->stage,learner2->stage);
 
     train_stats->stats.resize(0);

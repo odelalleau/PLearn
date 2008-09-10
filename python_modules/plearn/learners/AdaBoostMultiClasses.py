@@ -7,7 +7,8 @@ from numpy import array
 ## The C version is much faster for all compute* and the test function.
 ##
 class AdaBoostMultiClasses:
-    def __init__(self,trainSet1,trainSet2,weakLearner,confusion_target=1):
+    def __init__(self,trainSet1,trainSet2,weakLearner,confusion_target=1,
+                 report_progress = 0, verbose = 0):
 #        """
 #        Initialize a AdaBoost for 3 classes learner
 #        trainSet1 is used for the first sub AdaBoost learner,
@@ -21,11 +22,21 @@ class AdaBoostMultiClasses:
         self.trainSet1=trainSet1
         self.trainSet2=trainSet2
 
-        self.multi_class_adaboost = pl.MultiClassAdaBoost(forward_sub_learner_test_costs=True,
-                                                          report_progress=1,
-                                                          verbosity=1,
-                                                          nb_stage_to_use=-1
-                                                          )
+        self.nstages = 0
+        self.stage = 0
+        self.train_time = 0
+        self.test_time = 0
+        self.test_sub_time = 0
+        self.confusion_target=confusion_target
+        self.report_progress = report_progress
+        self.verbose = verbose
+
+        self.multi_class_adaboost = pl.MultiClassAdaBoost(
+            forward_sub_learner_test_costs=True,
+            report_progress=report_progress,
+            verbosity=verbose,
+            nb_stage_to_use=-1)
+
         if weakLearner:
             self.learner1 = self.myAdaBoostLearner(weakLearner(0),trainSet1)
             self.learner1.setExperimentDirectory(plargs.expdirr+"/learner1")
@@ -38,13 +49,6 @@ class AdaBoostMultiClasses:
             self.multi_class_adaboost.learner2=self.learner2
             self.multi_class_adaboost.build()
 
-        self.nstages = 0
-        self.stage = 0
-        self.train_time = 0
-        self.test_time = 0
-        self.test_sub_time = 0
-        self.confusion_target=confusion_target
-        
     def myAdaBoostLearner(self,sublearner,trainSet):
         l = pl.AdaBoost()
         l.weak_learner_template=sublearner
@@ -60,6 +64,8 @@ class AdaBoostMultiClasses:
         tmp=VecStatsCollector()
         tmp.setFieldNames(l.getTrainCostNames())
         l.setTrainStatsCollector(tmp)
+        l.report_progress = self.report_progress
+        l.verbose = self.verbose 
         l.build()
         return l
 
