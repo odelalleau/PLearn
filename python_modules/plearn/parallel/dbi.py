@@ -813,33 +813,9 @@ class DBICondor(DBIBase):
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
     def run_dag(self):
-        if len(self.tasks)==0:
-            return #no task to run
-
-        #set special environment variable
-        if self.set_special_env:
-            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) "'
-
-
         condor_file = os.path.join(self.log_dir, "dag.condor")
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
-
-        if self.req:
-            req = self.req
-        else:
-            req = "True"
-        if self.targetcondorplatform == 'BOTH':
-            req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
-        else :
-            req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
-        if self.cpu>0:
-            req+='&&(target.CPUS=='+self.cpu+')'
-
-        if self.os:
-            req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
-                       self.os.split(','),
-                       req+'&&(False ')+")"
 
         source_file=os.getenv("CONDOR_LOCAL_SOURCE")
         condor_home = os.getenv('CONDOR_HOME')
@@ -847,12 +823,6 @@ class DBICondor(DBIBase):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
-
-        if self.mem<=0:
-            try:
-                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
-            except:
-                pass
 
         self.log_file = os.path.join("/tmp/bastienf/dbidispatch",self.log_dir)
         os.system('mkdir -p ' + self.log_file)
@@ -868,7 +838,7 @@ class DBICondor(DBIBase):
                 getenv         = %s
                 nice_user      = %s
                 arguments      = $(args)
-                ''' % (launch_file,req,
+                ''' % (launch_file,self.req,
                        self.log_file,str(self.getenv),str(self.nice))))
         if self.mem>0:
             #condor need value in Kb
@@ -1006,45 +976,10 @@ class DBICondor(DBIBase):
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
-        utils_file = os.path.join(self.tmp_dir, 'utils.py')
-        if not os.path.exists(utils_file):
-            shutil.copy( get_plearndir()+
-                         '/python_modules/plearn/parallel/utils.py', utils_file)
-            self.temp_files.append(utils_file)
-            os.chmod(utils_file, 0755)
-
-        configobj_file = os.path.join(self.tmp_dir, 'configobj.py')
-        if not os.path.exists('configobj.py'):
-            shutil.copy( get_plearndir()+
-                         '/python_modules/plearn/parallel/configobj.py',  configobj_file)
-            self.temp_files.append(configobj_file)
-            os.chmod(configobj_file, 0755)
-
-        # Launch condor
         condor_cmd = 'condor_submit_dag -maxjobs %s %s'%(str(self.nb_proc), condor_file_dag)
-        if self.test == False:
-            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
-            print "[DBI] Executing: " + condor_cmd
-            for task in self.tasks:
-                task.set_scheduled_time()
-            self.p = Popen( condor_cmd, shell=True)
-            self.p.wait()
-            if self.p.returncode != 0:
-                print "[DBI] condor_submit_dag failed! We can't stard the jobs"
-        else:
-            print "[DBI] In test mode we don't launch the jobs. To to it, you need to execute '"+condor_cmd+"'"
-            if self.dolog:
-                print "[DBI] The scheduling time will not be logged when you will submit the condor file"
+        return condor_cmd
 
-    def run_all_job(self):
-        if len(self.tasks)==0:
-            return #no task to run
-
-        #set special environment variable
-        if self.set_special_env:
-            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) "'
-
-
+    def run_non_dag(self):
         # create the bqsubmit.dat, with
         condor_datas = []
 
@@ -1067,22 +1002,6 @@ class DBICondor(DBIBase):
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
 
-        if self.req:
-            req = self.req
-        else:
-            req = "True"
-        if self.targetcondorplatform == 'BOTH':
-            req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
-        else :
-            req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
-        if self.cpu>0:
-            req+='&&(target.CPUS=='+self.cpu+')'
-
-        if self.os:
-            req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
-                       self.os.split(','),
-                       req+'&&(False ')+")"
-
         source_file=os.getenv("CONDOR_LOCAL_SOURCE")
         condor_home = os.getenv('CONDOR_HOME')
         if source_file and source_file.endswith(".cshrc"):
@@ -1092,11 +1011,6 @@ class DBICondor(DBIBase):
 
         self.log_file= os.path.join(self.log_dir,"condor.log")
 
-        if self.mem<=0:
-            try:
-                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
-            except:
-                pass
         condor_dat.write( dedent('''\
                 executable     = %s
                 universe       = vanilla
@@ -1106,7 +1020,7 @@ class DBICondor(DBIBase):
                 log            = %s
                 getenv         = %s
                 nice_user      = %s
-                ''' % (launch_file,req,
+                ''' % (launch_file,self.req,
                        self.log_dir,
                        self.log_dir,
                        self.log_file,str(self.getenv),str(self.nice))))
@@ -1235,34 +1149,7 @@ class DBICondor(DBIBase):
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
-        utils_file = os.path.join(self.tmp_dir, 'utils.py')
-        if not os.path.exists(utils_file):
-            shutil.copy( get_plearndir()+
-                         '/python_modules/plearn/parallel/utils.py', utils_file)
-            self.temp_files.append(utils_file)
-            os.chmod(utils_file, 0755)
-
-        configobj_file = os.path.join(self.tmp_dir, 'configobj.py')
-        if not os.path.exists('configobj.py'):
-            shutil.copy( get_plearndir()+
-                         '/python_modules/plearn/parallel/configobj.py',  configobj_file)
-            self.temp_files.append(configobj_file)
-            os.chmod(configobj_file, 0755)
-
-        # Launch condor
-        if self.test == False:
-            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
-            print "[DBI] Executing: condor_submit " + condor_file
-            for task in self.tasks:
-                task.set_scheduled_time()
-            self.p = Popen( 'condor_submit '+ condor_file, shell=True)
-            self.p.wait()
-            if self.p.returncode != 0:
-                print "[DBI] condor_submit failed! We can't stard the jobs"
-        else:
-            print "[DBI] Created condor file: " + condor_file
-            if self.dolog:
-                print "[DBI] The scheduling time will not be logged when you will submit the condor file"
+        return "condor_submit " + condor_file
 
     def clean(self):
         if len(self.temp_files)>0:
@@ -1279,10 +1166,73 @@ class DBICondor(DBIBase):
         print "[DBI] The Log file are under %s"%self.log_dir
 
         self.exec_pre_batch()
+
+        #set special environment variable
+        if len(self.tasks)==0:
+            return #no task to run
+
+        if self.set_special_env:
+            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) "'
+
+        if not self.req:
+            self.req = "True"
+        if self.targetcondorplatform == 'BOTH':
+            self.req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
+        else :
+            self.req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
+        if self.cpu>0:
+            self.req+='&&(target.CPUS=='+self.cpu+')'
+
+        if self.os:
+            self.req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
+                            self.os.split(','),
+                            self.req+'&&(False ')+")"
+
+        #if no mem requirement added, use the executable size.
+        #todo: if they are not the same executable, take the biggest
+        if self.mem<=0:
+            try:
+                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
+            except:
+                pass
+
+        #exec dependent code
         if self.nb_proc != 0:
-            self.run_dag()
+            cmd=self.run_dag()
         else:
-            self.run_all_job()
+            cmd=self.run_non_dag()
+
+        #add file if needed?
+        #why are they needed?
+        utils_file = os.path.join(self.tmp_dir, 'utils.py')
+        if not os.path.exists(utils_file):
+            shutil.copy( get_plearndir()+
+                         '/python_modules/plearn/parallel/utils.py', utils_file)
+            self.temp_files.append(utils_file)
+            os.chmod(utils_file, 0755)
+
+        configobj_file = os.path.join(self.tmp_dir, 'configobj.py')
+        if not os.path.exists('configobj.py'):
+            shutil.copy( get_plearndir()+
+                         '/python_modules/plearn/parallel/configobj.py',  configobj_file)
+            self.temp_files.append(configobj_file)
+            os.chmod(configobj_file, 0755)
+
+            
+        #launch the jobs
+        if self.test == False:
+            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
+            print "[DBI] Executing: " + cmd
+            for task in self.tasks:
+                task.set_scheduled_time()
+            self.p = Popen( cmd, shell=True)
+            self.p.wait()
+            if self.p.returncode != 0:
+                print "[DBI] submission failed! We can't stard the jobs"
+        else:
+            print "[DBI] In test mode we don't launch the jobs. To to it, you need to execute '"+cmd+"'"
+            if self.dolog:
+                print "[DBI] The scheduling time will not be logged when you will submit the condor file"
 
         self.exec_post_batch()
 
