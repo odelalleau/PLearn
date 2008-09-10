@@ -9,6 +9,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     bqtools, cluster option  :[--duree=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
     cluster, condor options  : [--32|--64|--3264] [--os=X] [--mem=N]
+                               [--cpu=nb_cpu_per_node]
     condor option            : [--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
                                [--[*no_]getenv] [*--[no_]prefserver] 
                                [--rank=RANK_EXPRESSION] 
@@ -17,7 +18,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                                [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1,sh}+]
                                [*--[no_]set_special_env]
     cluster option           : [*--[no_]cwait]  [--[*no_]force]
-                               [--[*no_]interruptible] [--cpu=nb_cpu_per_node]
+                               [--[*no_]interruptible]
 An * after '[', '{' or ',' signals the default value.
 An + after } tell that we can put one or more of the choise separeted by a comma
 '''
@@ -77,6 +78,8 @@ cluster and condor options:
     Cluster default: fc7. Cluster accepted value fc4, fc7 and fc9.
     Condor default to the same as the submit host and --os=FC7,FC9 
     tell to use FC7 or FC9 hosts.
+  The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
+    will be reserved for each job.
 
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. 
@@ -84,7 +87,6 @@ cluster only options:
     when there are no nodes available, the launch of that command fails.
   The '--force' option is passed to cluster
   The '--interruptible' option is passed to cluster
-  The '--cpu=nb_cpu_per_node' option is passed to cluster
 
 condor only options:
   If the CONDOR_HOME environment variable is set, then the HOME variable will
@@ -299,7 +301,7 @@ if launch_cmd=="Cluster":
                        "duree","cpu","mem","os"]
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
-                       "raw", "os", "set_special_env"]
+                       "raw", "os", "set_special_env", "mem", "cpu"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["micro", "long", "duree"]
 

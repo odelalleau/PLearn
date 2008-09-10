@@ -685,6 +685,7 @@ class DBICondor(DBIBase):
         # in Meg for initialization for consistency with cluster
         # then in kilo as that is what is needed by condor
         self.mem = 0
+        self.cpu = 0
         self.req = ''
         self.raw = ''
         self.rank = ''
@@ -832,6 +833,8 @@ class DBICondor(DBIBase):
             req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         else :
             req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
+        if self.cpu>0:
+            req+='&&(target.CPUS=='+self.cpu+')'
 
         if self.os:
             req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
@@ -1072,6 +1075,8 @@ class DBICondor(DBIBase):
             req+="&&((Arch == \"INTEL\")||(Arch == \"X86_64\"))"
         else :
             req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
+        if self.cpu>0:
+            req+='&&(target.CPUS=='+self.cpu+')'
 
         if self.os:
             req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
