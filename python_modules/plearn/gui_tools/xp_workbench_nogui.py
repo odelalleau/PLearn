@@ -47,7 +47,6 @@ if not os.environ.has_key("DISPLAY"):
     import matplotlib
     matplotlib.use('Agg')
 
-
 #####  ExperimentContext  ###################################################
 
 class ExperimentContext(HasTraits):
@@ -85,7 +84,6 @@ class ExperimentContext(HasTraits):
     def _display_expdir(self):
         """Shortened version of expdir suitable for display."""
         return os.path.basename(self.expdir)
-
 
 class _ConsoleOutput(HasTraits):
     title    = "Output"
@@ -258,7 +256,7 @@ class ExperimentWorkbench(HasTraits) :
             if trait_name in ["trait_added", "trait_modified"] or trait_name.startswith('_'):
                 continue
             elif isinstance(trait_value, HasTraits):
-                ExperimentWorkbench.print_all_traits(trait_value, out, trait_name+".")
+                ExperimentWorkbench.print_all_traits(trait_value, out, prefix+trait_name+".")
             else:
                 print >>out, ("%-40s" % (prefix+trait_name)) + " = " + str(trait_value)
 

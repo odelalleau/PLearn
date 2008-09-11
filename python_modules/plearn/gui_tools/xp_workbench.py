@@ -412,7 +412,7 @@ class ExperimentWorkbench(HasTraits) :
             if trait_name in ["trait_added", "trait_modified"] or trait_name.startswith('_'):
                 continue
             elif isinstance(trait_value, HasTraits):
-                ExperimentWorkbench.print_all_traits(trait_value, out, trait_name+".")
+                ExperimentWorkbench.print_all_traits(trait_value, out, prefix+trait_name+".")
             else:
                 print >>out, ("%-40s" % (prefix+trait_name)) + " = " + str(trait_value)
 
