@@ -244,7 +244,7 @@ void OneHotVMatrix::updateNClassesAndWidth()
         if (val > max)
             max = val;
     }
-    nclasses = int(round(max));
+    nclasses = int(round(max)) + 1;
     width_ += nclasses;
 }
 
