@@ -50,32 +50,19 @@
 namespace PLearn {
 using namespace std;
 
-
-/*!
-  Sampling from this VMat will return the corresponding sample
-  from the source VMat with last element ('target_classnum')
-  replaced by a vector of target_values of size nclasses in which only
-  target_values[target_classnum] is set to hot_value, and all the
-  others are set to cold_value.
-  In the special case where the VMat is built with nclasses==1, then
-  it is assumed that we have a 2 class classification problem but
-  we are using a single valued target.  For this special case only
-  the_cold_value is used as target for classnum 0 and the_hot_value is
-  used for classnum 1.
-*/
-
 class OneHotVMatrix: public SourceVMatrix
 {
     typedef SourceVMatrix inherited;
 
-protected:
-//    VMat underlying_distr; // DEPRECATED - use 'source' instead
+public:
+
     int nclasses;
     real cold_value;
     real hot_value;
     int index;
 
 public:
+
     // ******************
     // *  Constructors  *
     // ******************
@@ -94,6 +81,12 @@ protected:
 
     virtual void getNewRow(int i, const Vec& samplevec) const;
     static void declareOptions(OptionList &ol);
+
+    //! If 'nclasses' is greater than zero, do nothing.
+    //! Otherwise, obtain 'nclasses' by finding the maximum value of the
+    //! source's 'index' column. Then update the width of this VMat
+    //! accordingly.
+    void updateNClassesAndWidth();
 
 public:
 

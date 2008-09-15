@@ -47,8 +47,23 @@ using namespace std;
 
 /** OneHotVMatrix **/
 
-PLEARN_IMPLEMENT_OBJECT(OneHotVMatrix, "ONE LINE DESC", "NO HELP");
+PLEARN_IMPLEMENT_OBJECT(OneHotVMatrix,
+        "Transform an index into a one-hot vector.",
+        "Sampling from this VMat will return the corresponding sample from\n"
+        "the source VMat with last element ('target_classnum') replaced by\n"
+        "a vector of target_values of size nclasses in which only\n"
+        "target_values[target_classnum] is set to hot_value, and all the\n"
+        "others are set to cold_value.\n"
+        "In the special case where the VMat is built with nclasses==1, then\n"
+        "it is assumed that we have a 2 class classification problem but\n"
+        "we are using a single valued target.  For this special case only\n"
+        "the_cold_value is used as target for classnum 0 and the_hot_value\n"
+        "is used for classnum 1.\n"
+);
 
+///////////////////
+// OneHotVMatrix //
+///////////////////
 OneHotVMatrix::OneHotVMatrix(bool call_build_)
     : inherited(call_build_),
       nclasses(0), cold_value(0.0), hot_value(1.0), index(-1)
@@ -73,12 +88,18 @@ OneHotVMatrix::OneHotVMatrix(VMat the_source, int the_nclasses,
         build_();
 }
 
+///////////
+// build //
+///////////
 void OneHotVMatrix::build()
 {
     inherited::build();
     build_();
 }
 
+////////////
+// build_ //
+////////////
 void OneHotVMatrix::build_()
 {
     int source_inputsize = source->inputsize();
@@ -90,13 +111,13 @@ void OneHotVMatrix::build_()
     length_ = source_length;
     width_ = source_width + nclasses - 1;
 
-
     if(source_inputsize+source_targetsize+source_weightsize != source_width
        || source_targetsize != 1 ) // source->sizes are inconsistent
     {
         if( index < 0 )
         {
             index = source_width - 1;
+            updateNClassesAndWidth();
         }
         if( inputsize_ + targetsize_ + weightsize_ != width() )
         {
@@ -111,6 +132,7 @@ void OneHotVMatrix::build_()
         if( index < 0 )
         {
             index = source_inputsize;
+            updateNClassesAndWidth();
         }
         if( inputsize_ + targetsize_ + weightsize_ != width() )
         {
@@ -142,27 +164,40 @@ void OneHotVMatrix::build_()
     setMetaInfoFromSource();
 }
 
+////////////////////
+// declareOptions //
+////////////////////
 void OneHotVMatrix::declareOptions(OptionList &ol)
 {
     declareOption(ol, "underlying_distr", &OneHotVMatrix::source,
                   (OptionBase::learntoption | OptionBase::nosave),
                   "DEPRECATED - use 'source' instead.");
+
     declareOption(ol, "nclasses", &OneHotVMatrix::nclasses,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption,
+        "Number of classes. If set to zero, then this number will be\n"
+        "automatically found from the source VMat.");
+
     declareOption(ol, "cold_value", &OneHotVMatrix::cold_value,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption,
+        "Value used for non active elements in the one-hot vector.");
+
     declareOption(ol, "hot_value", &OneHotVMatrix::hot_value,
-                  OptionBase::buildoption, "");
+                  OptionBase::buildoption,
+        "Value used for the active element in the one-hot vector.");
+
     declareOption(ol, "index", &OneHotVMatrix::index,
                   OptionBase::buildoption,
-                  "(optional) index of the column on which we apply 'one_hot'."
-                  "\n"
-                  "By default, if targetsize==1 we take corresponding column,"
-                  "\n"
-                  "else the last column.\n");
+        "Index of the column on which we apply the one-hot transformation.\n"
+        "By default, if targetsize==1 we take the target column, otherwise\n"
+        "we take the last column.");
+    
     inherited::declareOptions(ol);
 }
 
+///////////////
+// getNewRow //
+///////////////
 void OneHotVMatrix::getNewRow(int i, const Vec& samplevec) const
 {
 #ifdef BOUNDCHECK
@@ -176,11 +211,14 @@ void OneHotVMatrix::getNewRow(int i, const Vec& samplevec) const
     Vec modified = samplevec.subVec(index, nclasses);
     Vec right = samplevec.subVec(index+nclasses, width()-index-nclasses);
     source->getSubRow(i, 0, left);
-    int classnum = int(source->get(i, index));
+    int classnum = int(round(source->get(i, index)));
     fill_one_hot(modified, classnum, cold_value, hot_value);
     source->getSubRow(i, index+1, right);
 }
 
+/////////
+// dot //
+/////////
 real OneHotVMatrix::dot(int i1, int i2, int inputsize) const
 {
     return source->dot(i1, i2, inputsize);
@@ -189,6 +227,25 @@ real OneHotVMatrix::dot(int i1, int i2, int inputsize) const
 real OneHotVMatrix::dot(int i, const Vec& v) const
 {
     return source->dot(i, v);
+}
+
+
+////////////////////////////
+// updateNClassesAndWidth //
+////////////////////////////
+void OneHotVMatrix::updateNClassesAndWidth()
+{
+    if (nclasses > 0)
+        return;
+    PLASSERT( nclasses == 0 && index >= 0 );
+    real max = -1;
+    for (int i = 0; i < source->length(); i++) {
+        real val = source->get(i, index);
+        if (val > max)
+            max = val;
+    }
+    nclasses = int(round(max));
+    width_ += nclasses;
 }
 
 } // end of namespace PLearn
