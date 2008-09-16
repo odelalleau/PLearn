@@ -627,7 +627,7 @@ def getOptions(options_choices,optionargs):
     return options
 
 ###  Processing of the list of hosts used for compilation
-# (will soon be removed in favor of an external batch launcher)
+# (will soon be removed in favor of an external batch launcher)... NOT
 
 def _process_distcc_hosts(host_list):
     """Processes a distcc-style string describing hosts used for
@@ -637,9 +637,6 @@ def _process_distcc_hosts(host_list):
     # Remove trailing \n
     if host_list[-1] == '\n':
         host_list = host_list[:-1]
-
-    # Smallest '/num' found in the distcc file.
-    smallest_num = 10
 
     # Split into lines, filter comments.
     for l in host_list.split('\n'):
@@ -665,13 +662,11 @@ def _process_distcc_hosts(host_list):
 
             # Add num times the host to the list of hosts for compilation.
             hosts.extend([host] * num)
-            smallest_num = min(smallest_num, num)
 
-    # For distcc, localhost is usually not added when the list of hosts is
-    # long because localhost is busy doing the preprocessing. This does not
-    # hold for pymake, so add localhost if it is not present.
-    if 'localhost' not in hosts and myhostname not in hosts:
-        hosts.extend(['localhost'] * smallest_num)
+    # For distcc, localhost is given a lesser load because it is busy doing
+    # the preprocessing. This does not hold for pymake, so add some more localhost
+    # back.
+    hosts.extend(['localhost'] * 2)
 
     return hosts
 
