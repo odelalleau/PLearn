@@ -57,7 +57,13 @@ RegressionTreeQueue::RegressionTreeQueue()
 {
     build();
 }
-
+RegressionTreeQueue::RegressionTreeQueue(int verbosity_,
+                                         int maximum_number_of_nodes_)
+    : verbosity(verbosity_),
+      maximum_number_of_nodes(maximum_number_of_nodes_)
+{
+    build();
+}
 RegressionTreeQueue::~RegressionTreeQueue()
 {
 }
@@ -92,10 +98,6 @@ void RegressionTreeQueue::build()
 }
 
 void RegressionTreeQueue::build_()
-{
-}
-
-void RegressionTreeQueue::initHeap()
 {
     next_available_node = 0;
     nodes.resize(maximum_number_of_nodes);

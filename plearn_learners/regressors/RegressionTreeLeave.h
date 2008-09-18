@@ -52,8 +52,14 @@ class RegressionTreeLeave: public Object
     typedef Object inherited;
  
     friend class RegressionTreeNode;
+    friend class RegressionTree;
 
     Vec dummy_vec;
+
+public:
+    bool missing_leave;
+    real loss_function_weight;
+    static int  verbosity;
 
 protected:
 
@@ -62,9 +68,6 @@ protected:
 */
 
     int  id;
-    bool  missing_leave;
-    real loss_function_weight;
-    static int  verbosity;
     PP<RegressionTreeRegisters> train_set;
  
 /*

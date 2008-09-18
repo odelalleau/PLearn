@@ -54,9 +54,9 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeLeave,
 int RegressionTreeLeave::verbosity = 0;
 
 RegressionTreeLeave::RegressionTreeLeave():
-    id(-1),
     missing_leave(false),
     loss_function_weight(0),
+    id(-1),
     length(0),
     weights_sum(0),
     targets_sum(0),

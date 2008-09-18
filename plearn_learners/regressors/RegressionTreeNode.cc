@@ -65,6 +65,19 @@ RegressionTreeNode::RegressionTreeNode():
 {
     build();
 }
+RegressionTreeNode::RegressionTreeNode(int missing_is_valid_,
+                                       real loss_function_weight_,
+                                       int verbosity_):
+    missing_is_valid(missing_is_valid_),
+    loss_function_weight(loss_function_weight_),
+    verbosity(verbosity_),
+    split_col(-1),
+    split_balance(INT_MAX),
+    split_feature_value(REAL_MAX),
+    after_split_error(REAL_MAX)
+{
+    build();
+}
 
 RegressionTreeNode::~RegressionTreeNode()
 {

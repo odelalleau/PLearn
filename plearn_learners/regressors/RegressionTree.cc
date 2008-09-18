@@ -295,13 +295,13 @@ void RegressionTree::initialiseTree()
     }
     //Set value common value of all leave
     // for optimisation, by default they aren't missing leave
-    leave_template->setOption("missing_leave", "0");
-    leave_template->setOption("loss_function_weight", tostring(loss_function_weight));
-    leave_template->setOption("verbosity", tostring(verbosity));
+    leave_template->missing_leave = 0;
+    leave_template->loss_function_weight = loss_function_weight;
+    leave_template->verbosity = verbosity;
     leave_template->initStats();
 
     first_leave = ::PLearn::deepCopy(leave_template);
-    first_leave->setOption("id", tostring(sorted_train_set->getNextId()));
+    first_leave->id=sorted_train_set->getNextId();
     first_leave->initLeave(sorted_train_set);
 
     for (int train_sample_index = 0; train_sample_index < length;
@@ -310,17 +310,13 @@ void RegressionTree::initialiseTree()
         first_leave->addRow(train_sample_index);
         first_leave->registerRow(train_sample_index);
     }
-    root = new RegressionTreeNode();
-    root->setOption("missing_is_valid", tostring(missing_is_valid));
-    root->setOption("loss_function_weight", tostring(loss_function_weight));
-    root->setOption("verbosity", tostring(verbosity));
+    root = new RegressionTreeNode(missing_is_valid,loss_function_weight,
+                                  verbosity);
     root->initNode(sorted_train_set, first_leave, leave_template);
     root->lookForBestSplit();
+
     if (maximum_number_of_nodes < nstages) maximum_number_of_nodes = nstages;
-    priority_queue = new RegressionTreeQueue();
-    priority_queue->setOption("verbosity", tostring(verbosity));
-    priority_queue->setOption("maximum_number_of_nodes", tostring(maximum_number_of_nodes));
-    priority_queue->initHeap();
+    priority_queue = new RegressionTreeQueue(verbosity,maximum_number_of_nodes);
     priority_queue->addHeap(root);
 }
 

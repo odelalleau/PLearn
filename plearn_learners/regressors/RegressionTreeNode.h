@@ -67,6 +67,7 @@ private:
     int  missing_is_valid;
     real loss_function_weight;
     int verbosity; 
+
     PP<RegressionTreeLeave> leave_template; 
     PP<RegressionTreeRegisters> train_set;
     PP<RegressionTreeLeave> leave;
@@ -92,6 +93,8 @@ private:
     Vec tmp_vec;
 public:  
     RegressionTreeNode();
+    RegressionTreeNode(int missing_is_valid, real loss_function_weight,
+                       int verbosity);
     virtual              ~RegressionTreeNode();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeNode);

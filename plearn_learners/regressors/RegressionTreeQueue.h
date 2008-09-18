@@ -71,13 +71,14 @@ private:
 public:
   
     RegressionTreeQueue();
+    RegressionTreeQueue(int verbosity, int maximum_number_of_nodes);
+
     virtual              ~RegressionTreeQueue();
     PLEARN_DECLARE_OBJECT(RegressionTreeQueue);
 
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
-    void         initHeap();
     void         addHeap(PP<RegressionTreeNode> new_node);
     PP<RegressionTreeNode>   popHeap();
     PP<RegressionTreeNode>   upHeap(PP<RegressionTreeNode> new_node, int node_ind);
