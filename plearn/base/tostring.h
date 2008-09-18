@@ -71,9 +71,14 @@ template<class T>
 string tostring(const T& x, 
                 PStream::mode_t io_formatting = PStream::raw_ascii)
 {
-    _tostring_static_pstream_(true, io_formatting) << x;
-    return static_cast<StringPStreamBuf*>(
-        (PStreamBuf*)_tostring_static_pstream_(false))->getString();
+    string str;
+#pragma omp critical (tostring)
+    {
+        _tostring_static_pstream_(true, io_formatting) << x;
+        str = static_cast<StringPStreamBuf*>(
+            (PStreamBuf*)_tostring_static_pstream_(false))->getString();
+    }
+    return str;
 }
 
 } // end of namespace PLearn

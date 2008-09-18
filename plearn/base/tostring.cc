@@ -88,14 +88,20 @@ PStream& _tostring_static_pstream_(bool lock,
 
 string tostring(const double& x, PStream::mode_t io_formatting)
 {
-    PStream& out = _tostring_static_pstream_(true, io_formatting);
-    int ix = int(x);
-    if (io_formatting==PStream::raw_ascii && fast_exact_is_equal(ix, x))
-        out << ix;
-    else
-        out << x;
-    return static_cast<StringPStreamBuf*>(
-        (PStreamBuf*)_tostring_static_pstream_(false))->getString();
+    string str;
+#pragma omp critical (tostring)
+    {
+        PStream& out = _tostring_static_pstream_(true, io_formatting);
+        int ix = int(x);
+        if (io_formatting==PStream::raw_ascii && fast_exact_is_equal(ix, x))
+            out << ix;
+        else
+            out << x;
+        str = static_cast<StringPStreamBuf*>(
+            (PStreamBuf*)_tostring_static_pstream_(false))->getString();
+    }
+    return str;
+
 }
 
 } // end of namespace PLearn
