@@ -175,6 +175,18 @@ void MultiClassAdaBoost::train()
 
 //if you use the parallel version, you must disable all verbose, verbosity and report progress int he learner1 and learner2.
 //Otherwise this will cause crash due to the parallel printing to stdout stderr.
+#ifdef OPENMP__
+    //the AdaBoost and the weak learner should not print anything as this will cause race condition on the printing
+    PLCHECK(learner1->verbosity==0);
+    PLCHECK(learner2->verbosity==0);
+    PLCHECK(learner1->report_progress==false);
+    PLCHECK(learner2->report_progress==false);
+
+    PLCHECK(learner1->weak_learner_template->verbosity==0);
+    PLCHECK(learner2->weak_learner_template->verbosity==0);
+    PLCHECK(learner1->weak_learner_template->report_progress==false);
+    PLCHECK(learner2->weak_learner_template->report_progress==false);
+
 #pragma omp parallel sections
 {
 #pragma omp section 
@@ -182,6 +194,10 @@ void MultiClassAdaBoost::train()
 #pragma omp section 
     learner2->train();
 }
+#else
+    learner1->train();
+    learner2->train();
+#endif
 
     stage=max(learner1->stage,learner2->stage);
 
@@ -198,6 +214,8 @@ void MultiClassAdaBoost::train()
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     PLASSERT(output.size()==outputsize());
+    PLASSERT(output1.size()==learner1->outputsize());
+    PLASSERT(output2.size()==learner2->outputsize());
 
     learner1->computeOutput(input, output1);
     learner2->computeOutput(input, output2);
