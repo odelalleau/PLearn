@@ -257,7 +257,7 @@ options_choices = [
     'purify', 'quantify', 'vc++', 'condor' ],
   
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
-    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg', 'vecgcc', 'openmpgcc' ],
+    'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg', 'vecgcc' ],
   
   [ 'double', 'float' ],
   
@@ -277,6 +277,8 @@ options_choices = [
   [ '', 'Wno-uninitialized' ],
   [ '', 'march=native'],
   [ '', 'cygwin-fgets-bugfix'],
+  [ '', 'openmpgcc'],
+  
 ]
 
 ### Using Python code snippets in C++ code
@@ -668,7 +670,7 @@ pymakeOption( name = 'vecgcc',
 
 pymakeOption( name = 'openmpgcc',
               description = 'vectorized with gcc compiler in opt mode',
-              compileroptions = '-Wall -O3 -fopenmp -msse2',
+              compileroptions = '-fopenmp',
               linkeroptions = '-fopenmp',
               cpp_definitions = ['NDEBUG'] )
 
