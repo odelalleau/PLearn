@@ -220,7 +220,7 @@ void AdaBoost::declareOptions(OptionList& ol)
 
     declareOption(ol, "train_set",
                   &AdaBoost::train_set,
-                  OptionBase::learntoption||OptionBase::nosave,
+                  OptionBase::learntoption|OptionBase::nosave,
                   "The training set, so we can reload it.\n");
 
 }
