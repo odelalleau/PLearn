@@ -65,7 +65,7 @@ class AdaBoostMultiClasses:
         tmp.setFieldNames(l.getTrainCostNames())
         l.setTrainStatsCollector(tmp)
         l.report_progress = self.report_progress
-        l.verbose = self.verbose 
+        l.verbosity = self.verbose 
         l.build()
         return l
 
