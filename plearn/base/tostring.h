@@ -72,7 +72,7 @@ string tostring(const T& x,
                 PStream::mode_t io_formatting = PStream::raw_ascii)
 {
     string str;
-#ifdef OPENMP__
+#ifdef _OPENMP
 #pragma omp critical (tostring)
 #endif
     {

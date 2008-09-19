@@ -89,7 +89,7 @@ PStream& _tostring_static_pstream_(bool lock,
 string tostring(const double& x, PStream::mode_t io_formatting)
 {
     string str;
-#ifdef OPENMP__
+#ifdef _OPENMP
 #pragma omp critical (tostring)
 #endif
     {
