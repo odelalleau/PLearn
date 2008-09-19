@@ -328,6 +328,8 @@ class AdaBoostMultiClasses:
         self.learner2.setTrainStatsCollector(VecStatsCollector())
         self.multi_class_adaboost.learner1=self.learner1
         self.multi_class_adaboost.learner2=self.learner2
+        self.multi_class_adaboost.build()
+        
         for (learner,trainSet) in [(self.learner1,trainSet1), (self.learner2,trainSet2)]:
             for weak in learner.weak_learners:
                 weak.setTrainingSet(trainSet,False)
