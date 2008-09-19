@@ -175,7 +175,7 @@ void MultiClassAdaBoost::train()
 
 //if you use the parallel version, you must disable all verbose, verbosity and report progress int he learner1 and learner2.
 //Otherwise this will cause crash due to the parallel printing to stdout stderr.
-#ifdef OPENMP__
+#ifdef _OPENMP
     //the AdaBoost and the weak learner should not print anything as this will cause race condition on the printing
     PLCHECK(learner1->verbosity==0);
     PLCHECK(learner2->verbosity==0);
@@ -421,6 +421,15 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         learner1->setTrainingSet(vmat1, call_forget);
     if(!learner2->getTrainingSet())
         learner2->setTrainingSet(vmat2, call_forget);
+}
+
+void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
+                              VMat testoutputs, VMat testcosts) const
+{
+    Profiler::pl_profile_start("MultiClassAdaBoost::test");
+    inherited::test(testset,test_stats,testoutputs,testcosts);
+
+    Profiler::pl_profile_end("MultiClassAdaBoost::test");
 }
 
 } // end of namespace PLearn
