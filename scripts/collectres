@@ -254,6 +254,7 @@ def collectres(outputfile,speclist,filenames,printcommand=True):
     for file in filenames:
       f.write(file+" ")
   f.write("\n")
+  f.write("# "+speclist + "\n")
   outputres(f,mode,specs[1:],getres(specs[1:],filenames))
   f.flush()
   f.close()
