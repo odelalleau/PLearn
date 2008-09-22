@@ -210,8 +210,10 @@ void SelectRowsVMatrix::build_()
         selected_indices << indices;
     }
     //we don't display the warning for SortRowsVMatrix as it always select all row!
-    if(warn_if_all_rows_selected && selected_indices.length()==source.length() && source.length()>0)
-        PLWARNING("In SelectRowsVMatrix::build_() - We select all row!");
+    if(warn_if_all_rows_selected && selected_indices.length()==source.length()
+            && source.length()>0)
+        PLWARNING("In SelectRowsVMatrix::build_() - "
+                  "All rows have been selected!");
 
     length_ = selected_indices.length();
     if (source) {
