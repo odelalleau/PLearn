@@ -50,9 +50,12 @@ PLEARN_IMPLEMENT_OBJECT(
     "the first 'n-n_j' samples of class j (having n_j samples) will be\n"
     "replicated so that each class also has n samples. If required, samples\n"
     "will be replicated more than once.\n"
-    "The class index is assumed to be the first element of the target. When\n"
-    "the 'operate_on_bags' option is set to true, the bag information must\n"
-    "be stored in the last element of the target.\n"
+    "The class index is assumed to be the first element of the target. It\n"
+    "can be either an integer (negative class indices are also allowed) or\n"
+    "a missing value (all examples with missing values are considered as\n"
+    "belonging to the same class).\n"
+    "When the 'operate_on_bags' option is set to true, the bag information\n"
+    "must be stored in the last element of the target.\n"
     "All samples are also shuffled so as to mix classes together."
 );
 
@@ -138,33 +141,38 @@ void ReplicateSamplesVMatrix::build_()
     Vec input, target;
     real weight;
     TVec< TVec<int>  > class_indices;  // Indices of samples in each class.
-    TVec<int> nan_indices(0); // Indices of missing class
+    TVec<int> nan_indices; // Indices of missing class
     TVec< TVec<int> > negativeclass_indices;
     map<int, int> bag_sizes; // Map a source index to the size of its bag.
     int bag_start_idx = -1;
     int bag_idx = bag_index >= 0 ? bag_index : source->targetsize() - 1;
     for (int i = 0; i < source->length(); i++) {
         source->getExample(i, input, target, weight);
-        int c = int(round(target[0]));
-        if (c >= class_indices.length()) {
-            int n_to_add = c - class_indices.length() + 1;
-            for (int j = 0; j < n_to_add; j++)
-                class_indices.append(TVec<int>());
-        }
-        else if ( -c >= negativeclass_indices.length() ) {
-            int n_to_add = -c - negativeclass_indices.length() + 1;
-            for (int j = 0; j < n_to_add; j++)
-                negativeclass_indices.append(TVec<int>());
+        real c_real = target[0];
+        int c = int(round(c_real));
+        if (!is_missing(c_real)) {
+            if (c >= class_indices.length()) {
+                int n_to_add = c - class_indices.length() + 1;
+                for (int j = 0; j < n_to_add; j++)
+                    class_indices.append(TVec<int>());
+            }
+            else if ( -c >= negativeclass_indices.length() ) {
+                int n_to_add = -c - negativeclass_indices.length() + 1;
+                for (int j = 0; j < n_to_add; j++)
+                    negativeclass_indices.append(TVec<int>());
+            }
         }
         
         if (!operate_on_bags || int(round(target[bag_idx])) &
                                 SumOverBagsVariable::TARGET_COLUMN_FIRST) {
-            if( c>= 0 )
+            if( is_missing(c_real) )
+                nan_indices.append(i);
+            else if( c>= 0 )
                 class_indices[c].append(i);
             else if( c< 0 )
                 negativeclass_indices[-c].append(i);
-            else if( is_missing(c) )
-                nan_indices.append(i);
+            else
+                PLERROR("In ReplicateSamplesVMatrix::build_ - Invalid class");
             indices.append(i);
             bag_sizes[i] = 0;
             bag_start_idx = i;
