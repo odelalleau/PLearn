@@ -701,6 +701,10 @@ class DBICondor(DBIBase):
         self.base_tasks_log_file = []
         self.set_special_env = True
         self.nb_proc = 0 # 0 mean unlimited
+        self.source_file = ''
+        self.source_file = os.getenv("CONDOR_LOCAL_SOURCE")
+        self.condor_home = os.getenv('CONDOR_HOME')
+
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
@@ -812,14 +816,88 @@ class DBICondor(DBIBase):
                                    self.args))
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
+
+    def make_wrapper_script(self,launch_file, bash_exec):
+        dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
+        overwrite_launch_file=False
+        if not os.path.exists(dbi_file):
+            print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+launch_file+'" is not up to date!'
+        else:
+            if os.path.exists(launch_file):
+                mtimed=os.stat(dbi_file)[8]
+                mtimel=os.stat(launch_file)[8]
+                if mtimed>mtimel:
+                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your needs!'
+                    overwrite_launch_file=True
+
+        if self.copy_local_source_file:
+            source_file_dest = os.path.join(self.log_dir,
+                                            os.path.basename(self.source_file))
+            shutil.copy( self.source_file, source_file_dest)
+            self.temp_files.append(source_file_dest)
+            os.chmod(source_file_dest, 0755)
+            self.source_file=source_file_dest
+
+        if not os.path.exists(launch_file) or overwrite_launch_file:
+            self.temp_files.append(launch_file)
+            launch_dat = open(launch_file,'w')
+            if self.source_file and not self.source_file.endswith(".cshrc"):
+                launch_dat.write(dedent('''\
+                    #!/bin/sh
+                    '''))
+                if self.condor_home:
+                    launch_dat.write('export HOME=%s\n' % self.condor_home)
+                if self.source_file:
+                    launch_dat.write('source ' + self.source_file + '\n')
+
+                launch_dat.write(dedent('''\
+                    echo "Executing on " `/bin/hostname` 1>&2
+                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
+                    echo "PATH: $PATH" 1>&2
+                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
+                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
+                    #which python 1>&2
+                    #echo -n python version: 1>&2
+                    #python -V 1>&2
+                    #echo -n /usr/bin/python version: 1>&2
+                    #/usr/bin/python -V 1>&2
+                    echo "Running: command: \\"$@\\"" 1>&2
+                    %s
+                    '''%(bash_exec)))
+            else:
+                launch_dat.write(dedent('''\
+                    #! /bin/tcsh
+                    \n'''))
+                if self.condor_home:
+                    launch_dat.write('setenv HOME %s\n' % self.condor_home)
+                if self.source_file:
+                    launch_dat.write('source ' + self.source_file + '\n')
+                launch_dat.write(dedent('''\
+                    echo "Executing on " `/bin/hostname`
+                    echo "HOSTNAME: ${HOSTNAME}"
+                    echo "PATH: $PATH"
+                    echo "PYTHONPATH: $PYTHONPATH"
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+                    #which python
+                    #echo -n python version:
+                    #python -V
+                    #echo -n /usr/bin/python version:
+                    #/usr/bin/python -V
+                    #echo ${PROGRAM} $@
+                    #${PROGRAM} "$@"
+                    echo "Running command: $argv"
+                    $argv
+                    '''))
+            launch_dat.close()
+            os.chmod(launch_file, 0755)
+
     def run_dag(self):
         condor_file = os.path.join(self.log_dir, "dag.condor")
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
 
-        source_file=os.getenv("CONDOR_LOCAL_SOURCE")
-        condor_home = os.getenv('CONDOR_HOME')
-        if source_file and source_file.endswith(".cshrc"):
+        if self.source_file and self.source_file.endswith(".cshrc"):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
@@ -902,79 +980,7 @@ class DBICondor(DBIBase):
                 
         condor_dag.close()
 
-        dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
-        overwrite_launch_file=False
-        if not os.path.exists(dbi_file):
-            print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+launch_file+'" is not up to date!'
-        else:
-            if os.path.exists(launch_file):
-                mtimed=os.stat(dbi_file)[8]
-                mtimel=os.stat(launch_file)[8]
-                if mtimed>mtimel:
-                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your needs!'
-                    overwrite_launch_file=True
-
-        if self.copy_local_source_file:
-            source_file_dest = os.path.join(self.log_dir,
-                                            os.path.basename(source_file))
-            shutil.copy( source_file, source_file_dest)
-            self.temp_files.append(source_file_dest)
-            os.chmod(source_file_dest, 0755)
-            source_file=source_file_dest
-
-        if not os.path.exists(launch_file) or overwrite_launch_file:
-            self.temp_files.append(launch_file)
-            launch_dat = open(launch_file,'w')
-            if source_file and not source_file.endswith(".cshrc"):
-                launch_dat.write(dedent('''\
-                    #!/bin/sh
-                    '''))
-                if condor_home:
-                    launch_dat.write('export HOME=%s\n' % condor_home)
-                if source_file:
-                    launch_dat.write('source ' + source_file + '\n')
-
-                launch_dat.write(dedent('''\
-                    echo "Executing on " `/bin/hostname` 1>&2
-                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
-                    echo "PATH: $PATH" 1>&2
-                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
-                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
-                    #which python 1>&2
-                    #echo -n python version: 1>&2
-                    #python -V 1>&2
-                    #echo -n /usr/bin/python version: 1>&2
-                    #/usr/bin/python -V 1>&2
-                    echo "Running: command: \\"$@\\"" 1>&2
-                    $@
-                    '''))
-            else:
-                launch_dat.write(dedent('''\
-                    #! /bin/tcsh
-                    \n'''))
-                if condor_home:
-                    launch_dat.write('setenv HOME %s\n' % condor_home)
-                if source_file:
-                    launch_dat.write('source ' + source_file + '\n')
-                launch_dat.write(dedent('''\
-                    echo "Executing on " `/bin/hostname`
-                    echo "HOSTNAME: ${HOSTNAME}"
-                    echo "PATH: $PATH"
-                    echo "PYTHONPATH: $PYTHONPATH"
-                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-                    #which python
-                    #echo -n python version:
-                    #python -V
-                    #echo -n /usr/bin/python version:
-                    #/usr/bin/python -V
-                    #echo ${PROGRAM} $@
-                    #${PROGRAM} "$@"
-                    echo "Running command: $argv"
-                    $argv
-                    '''))
-            launch_dat.close()
-            os.chmod(launch_file, 0755)
+        self.make_wrapper_script(launch_file, '$@')
 
         condor_cmd = 'condor_submit_dag -maxjobs %s %s'%(str(self.nb_proc), condor_file_dag)
         return condor_cmd
@@ -1002,9 +1008,7 @@ class DBICondor(DBIBase):
         self.temp_files.append(condor_file)
         condor_dat = open( condor_file, 'w' )
 
-        source_file=os.getenv("CONDOR_LOCAL_SOURCE")
-        condor_home = os.getenv('CONDOR_HOME')
-        if source_file and source_file.endswith(".cshrc"):
+        if self.source_file and self.source_file.endswith(".cshrc"):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
         else:
             launch_file = os.path.join(self.log_dir, 'launch.sh')
@@ -1074,80 +1078,8 @@ class DBICondor(DBIBase):
                     condor_dat.write("arguments      = %s \nqueue\n" %argstring)
         condor_dat.close()
 
-        dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
-        overwrite_launch_file=False
-        if not os.path.exists(dbi_file):
-            print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+launch_file+'" is not up to date!'
-        else:
-            if os.path.exists(launch_file):
-                mtimed=os.stat(dbi_file)[8]
-                mtimel=os.stat(launch_file)[8]
-                if mtimed>mtimel:
-                    print '[DBI] WARNING: We overwrite the file "'+launch_file+'" with a new version. Update it to your needs!'
-                    overwrite_launch_file=True
 
-        if self.copy_local_source_file:
-            source_file_dest = os.path.join(self.log_dir,
-                                            os.path.basename(source_file))
-            shutil.copy( source_file, source_file_dest)
-            self.temp_files.append(source_file_dest)
-            os.chmod(source_file_dest, 0755)
-            source_file=source_file_dest
-
-        if not os.path.exists(launch_file) or overwrite_launch_file:
-            self.temp_files.append(launch_file)
-            launch_dat = open(launch_file,'w')
-            if source_file and not source_file.endswith(".cshrc"):
-                launch_dat.write(dedent('''\
-                    #!/bin/sh
-                    '''))
-                if condor_home:
-                    launch_dat.write('export HOME=%s\n' % condor_home)
-                if source_file:
-                    launch_dat.write('source ' + source_file + '\n')
-
-                #the sh -c "$@" was done to allow running many small jobs in a macro jobs like: "ls ;env"
-                launch_dat.write(dedent('''\
-                    echo "Executing on " `/bin/hostname` 1>&2
-                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
-                    echo "PATH: $PATH" 1>&2
-                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
-                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
-                    #which python 1>&2
-                    #echo -n python version: 1>&2
-                    #python -V 1>&2
-                    #echo -n /usr/bin/python version: 1>&2
-                    #/usr/bin/python -V 1>&2
-                    echo "Running command: sh -c \\"$@\\"" 1>&2
-                    sh -c "$@"
-                    '''))
-            else:
-                launch_dat.write(dedent('''\
-                    #! /bin/tcsh
-                    \n'''))
-                if condor_home:
-                    launch_dat.write('setenv HOME %s\n' % condor_home)
-                if source_file:
-                    launch_dat.write('source ' + source_file + '\n')
-                launch_dat.write(dedent('''\
-                    echo "Executing on " `/bin/hostname`
-                    echo "HOSTNAME: ${HOSTNAME}"
-                    echo "PATH: $PATH"
-                    echo "PYTHONPATH: $PYTHONPATH"
-                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-                    #which python
-                    #echo -n python version:
-                    #python -V
-                    #echo -n /usr/bin/python version:
-                    #/usr/bin/python -V
-                    #echo ${PROGRAM} $@
-                    #${PROGRAM} "$@"
-                    echo "Running command: $argv"
-                    $argv
-                    '''))
-            launch_dat.close()
-            os.chmod(launch_file, 0755)
+        self.make_wrapper_script(launch_file,'sh -c "$@"')
 
         return "condor_submit " + condor_file
 
