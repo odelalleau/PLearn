@@ -1,4 +1,4 @@
- WARNING: In SelectRowsVMatrix::build_() - We select all row!
+ WARNING: In SelectRowsVMatrix::build_() - All rows have been selected!
 2 x 3
 inputsize: 1
 targetsize: 0
