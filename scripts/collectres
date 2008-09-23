@@ -65,7 +65,7 @@ def get_col_index(fieldnames,colspec):
     index=int(colspec)
   return index
 
-def selectres(loc_specs,a,fieldnames):
+def selectres(loc_specs,a,fieldnames,verbose=1):
   res = []
   loc_mode = loc_specs[0]
   if loc_mode=="pos":
@@ -84,7 +84,8 @@ def selectres(loc_specs,a,fieldnames):
   elif loc_mode=="mincol":
     mcol = get_col_index(fieldnames,loc_specs[1])
     mrow = argmin(a[:,mcol])
-    print "found min row = ",mrow," for col ",mcol,", with value=",a[mrow,mcol]
+    if verbose>0:
+      print "found min row = ",mrow," for col ",mcol,", with value=",a[mrow,mcol]
     i=1
     while len(loc_specs[i:])>0:
       if loc_specs[i]=="all":
@@ -124,12 +125,12 @@ def selectres(loc_specs,a,fieldnames):
     raise ValueError("Invalid <location-spec> mode, expected 'pos', 'mincol', or 'col', got "+loc_mode)    
   return res
 
-def getres(loc_specs,filenames):
+def getres(loc_specs,filenames,verbose=1):
   all_results = []
   for filename in filenames:
     try:
       file_res = selectres(loc_specs,
-                           *smartReadMat(filename))
+                           *smartReadMat(filename), **{'verbose':verbose})
       all_results.append([file_res,filename])
     except ValueError,v:
       print >>sys.stderr, "caught ValueError exception in", filename
@@ -245,7 +246,7 @@ def outputres(f,mode,speclist,results):
   else:
     raise ValueError("Invalid <spec> mode, expected 'min', 'sort', or 'plot', got "+mode)
 
-def collectres(outputfile,speclist,filenames,printcommand=True):
+def collectres(outputfile,speclist,filenames,printcommand=True,verbose=1):
   specs= string.split(speclist)
   mode = specs[0]
   f=open(outputfile,"w")
@@ -255,14 +256,14 @@ def collectres(outputfile,speclist,filenames,printcommand=True):
       f.write(file+" ")
   f.write("\n")
   f.write("# "+speclist + "\n")
-  outputres(f,mode,specs[1:],getres(specs[1:],filenames))
+  outputres(f,mode,specs[1:],getres(specs[1:],filenames,verbose))
   f.flush()
   f.close()
   
 if __name__=='__main__':
   args = sys.argv[:]
   if len(args)<=3:
-    print "Usage: collectres <outputfile> <spec> <file1.pmat> <file2.pmat> ..."
+    print "Usage: collectres [--no_printcommand] [--verbose={0,1}] [--separator=X] <outputfile> <spec> <file1.pmat> <file2.pmat> ..."
     print 
     print "File formats pmat, amat and csv are supported."
     print "The <spec> can be the following (note how the <spec> has to be surrounded by quotes):"
@@ -289,7 +290,14 @@ if __name__=='__main__':
     print '                          keeping track at the same time of the <coli> values at the min-selected row.'
     sys.exit(1)
   printcommand=True
-  if args[1]=="--printcommand":
+  verbose=1
+  if args[1]=="--no_printcommand":
     printcommand=False
     del args[1]
-  collectres(args[1],args[2],args[3:],printcommand)
+  if args[1].startswith("--verbose="):
+    verbose=int(args[1].split("=",1)[1])
+    del args[1]
+  if args[1].startswith("--separator="):
+    separator=args[1].split("=",1)[1]
+    del args[1]
+  collectres(args[1],args[2],args[3:],printcommand,verbose)
