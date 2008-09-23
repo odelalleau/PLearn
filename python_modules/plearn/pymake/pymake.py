@@ -109,6 +109,8 @@ Options that will not affect the final compiled file:
                  N.B. you can set the local_ofiles_base_path global
                  variable in your config file to use another path
                  than /tmp/.pymake/local_ofiles/.
+  -l32_64: when compiling with option '-pyso', add '-32' or '64' at the end
+           of the '.so' symbolic link (.so -> .so-32 or .so-64)
   -ssh: run compilation commands on remote hosts with ssh instead of rsh
         (default).
   -symlinkobjs: at link time, will create links to the used object files
@@ -1113,7 +1115,14 @@ def sequential_link(executables_to_link, linkname):
                 link_exit_code = new_link_exit_code
             if create_so or create_pyso:
                 so_filename = os.path.basename(ccfile.corresponding_output)
-                ccfile.make_symbolic_link(so_filename, so_filename)
+                link_so_filename = so_filename
+                # Add machine-dependent info ('-32' or '-64') if necessary
+                if create_pyso and link_32_64:
+                    if platform.startswith('linux-x86_64') or platform.startswith('linux-ia64'):
+                        link_so_filename += '-64'
+                    else:
+                        link_so_filename += '-32'
+                ccfile.make_symbolic_link(link_so_filename, so_filename)
             else:
                 ccfile.make_symbolic_link(linkname)
     return link_exit_code
@@ -1975,7 +1984,13 @@ class FileInfo:
             if create_so:
                 linkbase = 'lib%s.so' % linkbase
             elif create_pyso:
-                linkbase = '%s.so' % linkbase
+                suffix = ''
+                if link_32_64:
+                    if platform.startswith('linux-x86_64') or platform.startswith('linux-ia64'):
+                        suffix = '-64'
+                    else:
+                        suffix = '-32'
+                linkbase = '%s.so%s' % (linkbase, suffix)
             symlink_from = join(self.filedir, linkbase)
         else:
             symlink_from = linkname
@@ -2500,7 +2515,7 @@ def main( args ):
     # Variables that can be useful to have read access to in the config file
     global optionargs, otherargs, linkname, link_target_override, \
             create_dll, relocatable_dll, no_cygwin, force_32bits, create_so, \
-            create_pyso, \
+            create_pyso, link_32_64, \
             static_linking, force_recompilation, force_link, \
             local_compilation, symlinkobjs, temp_objs, distribute, vcproj, \
             local_ofiles, local_ofiles_base_path
@@ -2658,6 +2673,13 @@ def main( args ):
         optionargs.remove('pyso')
     else:
         create_pyso = 0
+
+    # add machine-dependent info to link file
+    if 'l32_64' in optionargs:
+        link_32_64 = 1
+        optionargs.remove('l32_64')
+    else:
+        link_32_64 = 0
 
     # do we want to create a statically linked executable
     if 'static' in optionargs:
