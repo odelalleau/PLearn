@@ -533,7 +533,7 @@ class DBICluster(DBIBase):
 class DBIBqtools(DBIBase):
 
     def __init__( self, commands, **args ):
-        self.nb_proc = 1
+        self.nb_proc = -1
         self.clean_up = True
         self.micro = 1
         self.queue = "qwork@ms"
@@ -631,10 +631,12 @@ class DBIBqtools(DBIBase):
                 submitOptions = -q %s -l walltime=%s
                 param1 = (task, logfile) = load tasks, logfiles
                 linkFiles = launcher
-                concurrentJobs = %d
                 preBatch = rm -f _*.BQ
                 microJobs = %d
-                '''%(self.unique_id[1:12],self.queue,self.duree,self.nb_proc,self.micro)) )
+                '''%(self.unique_id[1:12],self.queue,self.duree,self.micro)) )
+        if self.nb_proc>0:
+            bqsubmit_dat.write('''\nconcurrentJobs = %d\n'''%(self.nb_proc))
+
         print self.unique_id
         if self.clean_up:
             bqsubmit_dat.write('postBatch = rm -rf dbi_batch*.BQ ; rm -f logfiles tasks launcher bqsubmit.dat ;')
@@ -700,7 +702,7 @@ class DBICondor(DBIBase):
         self.stderrs = ''
         self.base_tasks_log_file = []
         self.set_special_env = True
-        self.nb_proc = 0 # 0 mean unlimited
+        self.nb_proc = -1 # < 0   mean unlimited
         self.source_file = ''
         self.source_file = os.getenv("CONDOR_LOCAL_SOURCE")
         self.condor_home = os.getenv('CONDOR_HOME')
@@ -1129,7 +1131,7 @@ class DBICondor(DBIBase):
                 pass
 
         #exec dependent code
-        if self.nb_proc != 0:
+        if self.nb_proc > 0:
             cmd=self.run_dag()
         else:
             cmd=self.run_non_dag()
