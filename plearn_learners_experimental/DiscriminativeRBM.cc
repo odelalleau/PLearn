@@ -643,7 +643,7 @@ void DiscriminativeRBM::train()
         if( targetsize() == 1 )
         {
             target_one_hot.clear();
-            if( !is_missing(target[0]) )
+            if( !is_missing(target[0]) && (target[0] >= 0) )
             {
                 target_index = (int)round( target[0] );
                 target_one_hot[ target_index ] = 1;
@@ -659,7 +659,7 @@ void DiscriminativeRBM::train()
         // ... for discriminative learning
         if( !do_not_use_discriminative_learning && 
             !use_exact_disc_gradient && 
-            ( !is_missing(target[0]) || targetsize() > 1 ) )
+            ( ( !is_missing(target[0]) && (target[0] >= 0) ) || targetsize() > 1 ) )
         {
             // Positive phase
 
@@ -696,7 +696,7 @@ void DiscriminativeRBM::train()
         // ... for generative learning
         if( (stage + offset) % gen_learning_every_n_samples == 0 )
         {            
-            if( ( !is_missing(target[0]) || targetsize() > 1 ) && 
+            if( ( ( !is_missing(target[0]) && (target[0] >= 0) ) || targetsize() > 1 ) && 
                 gen_learning_weight > 0 )
             {
                 // Positive phase
@@ -767,7 +767,7 @@ void DiscriminativeRBM::train()
             PLERROR("DiscriminativeRBM::train(): semi-supervised learning "
                 "is not implemented yet for multi-task learning.");
 
-        if( is_missing(target[0]) && semi_sup_learning_weight > 0 )
+        if( ( is_missing(target[0]) || target[0] < 0 ) && semi_sup_learning_weight > 0 )
         {
             // Positive phase
 
@@ -822,7 +822,7 @@ void DiscriminativeRBM::train()
 
         if( !do_not_use_discriminative_learning && 
             use_exact_disc_gradient && 
-            ( !is_missing(target[0]) || targetsize() > 1 ) )
+            ( ( !is_missing(target[0]) && (target[0] >= 0)  ) || targetsize() > 1 ) )
         {
             if( targetsize() == 1)
             {
@@ -901,7 +901,7 @@ void DiscriminativeRBM::train()
 
         // CD Updates
         if( !do_not_use_discriminative_learning && 
-            !use_exact_disc_gradient && !is_missing(target[0]) )
+            !use_exact_disc_gradient && ( !is_missing(target[0]) && (target[0] >= 0) ) )
         {
             joint_layer->update( disc_pos_down_val, disc_neg_down_val );
             hidden_layer->update( disc_pos_up_val, disc_neg_up_val );
@@ -911,7 +911,7 @@ void DiscriminativeRBM::train()
 
         if( (stage + offset) % gen_learning_every_n_samples == 0 )
         { 
-            if( !is_missing(target[0]) && gen_learning_weight > 0 )
+            if( ( !is_missing(target[0]) && (target[0] >= 0) ) && gen_learning_weight > 0 )
             {
                 setLearningRate( gen_learning_every_n_samples * gen_learning_weight * disc_learning_rate / 
                                  (1. + disc_decrease_ct * stage ));
@@ -922,7 +922,7 @@ void DiscriminativeRBM::train()
             }
         }            
 
-        if( is_missing(target[0]) && semi_sup_learning_weight > 0 )
+        if( ( is_missing(target[0]) || (target[0] < 0)  ) && semi_sup_learning_weight > 0 )
         {
             setLearningRate( semi_sup_learning_weight * disc_learning_rate / 
                              (1. + disc_decrease_ct * stage ));
@@ -976,7 +976,7 @@ void DiscriminativeRBM::computeCostsFromOutputs(const Vec& input, const Vec& out
 
     if( targetsize() == 1 )
     {
-        if( !is_missing(target[0]) )
+        if( !is_missing(target[0]) && (target[0] >= 0) )
         {
             //classification_cost->fprop( output, target, costs[nll_cost_index] );
             //classification_cost->CostModule::fprop( output, target, costs[nll_cost_index] );
