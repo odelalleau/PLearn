@@ -318,6 +318,10 @@ void RBMClassificationModule::forget()
     if( !(joint_connection->random_gen) )
         joint_connection->random_gen = random_gen;
     joint_connection->forget();
+    if( !(target_layer->random_gen) )
+        target_layer->random_gen = random_gen;
+    target_layer->forget();
+
 }
 
 /* THIS METHOD IS OPTIONAL
