@@ -311,7 +311,7 @@ if not 'nopython' in optionargs:
     numpy_includedirs = []
 
     if domain_name.endswith('apstat.com'):
-        python_version = '2.4'
+        python_version = '2.5'
         optionargs += [ 'python%s' % python_version.replace('.', '') ]
         python_lib_root = '/usr/lib'
         numpy_site_packages = '-L/usr/lib/python' + python_version + '/site-packages/numarray'
