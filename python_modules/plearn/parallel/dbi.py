@@ -706,7 +706,8 @@ class DBICondor(DBIBase):
         self.source_file = ''
         self.source_file = os.getenv("CONDOR_LOCAL_SOURCE")
         self.condor_home = os.getenv('CONDOR_HOME')
-
+        self.condor_submit_exec = "condor_submit"
+        self.condor_submit_dag_exec = "condor_submit_dag"
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
@@ -716,6 +717,7 @@ class DBICondor(DBIBase):
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
         self.args = args
+
         self.add_commands(commands)
 
     def add_commands(self,commands):
@@ -984,7 +986,7 @@ class DBICondor(DBIBase):
 
         self.make_wrapper_script(launch_file, '$@')
 
-        condor_cmd = 'condor_submit_dag -maxjobs %s %s'%(str(self.nb_proc), condor_file_dag)
+        condor_cmd = self.condor_submit_dag_exec+' -maxjobs %s %s'%(str(self.nb_proc), condor_file_dag)
         return condor_cmd
 
     def run_non_dag(self):
@@ -1083,7 +1085,7 @@ class DBICondor(DBIBase):
 
         self.make_wrapper_script(launch_file,'sh -c "$@"')
 
-        return "condor_submit " + condor_file
+        return self.condor_submit_exec + " " + condor_file
 
     def clean(self):
         if len(self.temp_files)>0:
