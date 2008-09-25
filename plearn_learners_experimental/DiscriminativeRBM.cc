@@ -576,6 +576,7 @@ void DiscriminativeRBM::forget()
 
     input_layer->forget();
     hidden_layer->forget();
+    target_layer->forget();
     connection->forget();
     if( targetsize() > 1 )
     {
