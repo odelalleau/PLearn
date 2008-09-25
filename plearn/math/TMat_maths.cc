@@ -1,8 +1,7 @@
 // -*- C++ -*-
 
 // PLearn (A C++ Machine Learning Library)
-// Copyright (C) 1998 Pascal Vincent
-// Copyright (C) 1999-2002 Pascal Vincent, Yoshua Bengio and University of Montreal
+// Copyright (C) 2008 University of Montreal
 //
 
 // Redistribution and use in source and binary forms, with or without
@@ -34,31 +33,48 @@
 // library, go to the PLearn Web site at www.plearn.org
 
 
- 
-
 /* *******************************************************      
- * $Id$
- * AUTHORS: Pascal Vincent & Yoshua Bengio
+ * $Id: TMat_maths.cc 8235 2007-11-07 21:32:01Z nouiz $
+ * AUTHORS: Olivier Delalleau
  * This file is part of the PLearn library.
  ******************************************************* */
 
-/*! \file PLearn/plearn/math/TMat_maths.h */
+/*! \file PLearn/plearn/math/TMat_maths.cc */
 
-#ifndef TMat_maths_INC
-#define TMat_maths_INC
-
-#include "TMat.h"
-#include "TMat_maths_impl.h"
-#include "TMat_maths_specialisation.h"
+#include <plearn/base/RemoteDeclareMethod.h>
+#include <plearn/math/TMat_maths.h>
 
 namespace PLearn {
 
-//! Remote method for 'solveLinearSystemByCholesky'.
-Mat remote_solveLinearSystemByCholesky(const Mat& A, const Mat& B);
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+
+    declareFunction("solveLinearSystemByCholesky",
+                    &remote_solveLinearSystemByCholesky,
+        (BodyDoc("Solve a linear regression problem using Cholesky "
+                 "decomposition."),
+         ArgDoc("XtX", 
+             "Result of X'X, where X is the input data matrix, with samples "
+             "as rows. A constant input can be added to compute a bias term."
+             "Weight decay can be added on the diagonal terms (that do not "
+             "correspond to the constant input when a bias is computed)."),
+         ArgDoc("XtY", 
+             "Result of X'Y, where Y is the target data matrix, with samples "
+             " as rows."),
+         RetDoc ("The weights W of the linear regression, s.t. XW ~= Y")));
+
+END_DECLARE_REMOTE_FUNCTIONS
+
+////////////////////////////////////////
+// remote_solveLinearSystemByCholesky //
+////////////////////////////////////////
+Mat remote_solveLinearSystemByCholesky(const Mat& A, const Mat& B)
+{
+    Mat weights(A.length(), B.width());
+    solveLinearSystemByCholesky(A, B, weights);
+    return weights;
+}
  
 } // end of namespace PLearn
-
-#endif
 
 
 /*
