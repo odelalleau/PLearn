@@ -1092,7 +1092,7 @@ def sequential_link(executables_to_link, linkname):
         failures =  ccfile.failed_ccfiles_to_link()
         if failures:
             print '[ Executable target',ccfile.filebase,'not remade because of previous compilation errors. ]'
-            print '   Errors were while compiling files:'
+            print '   Errors were while compiling',len(failures),'file(s):'
             print '   '+string.join(failures,'\n   ')
             if link_exit_code == 0:
                 link_exit_code = 1
@@ -2172,6 +2172,10 @@ class FileInfo:
                     # It happens sometimes when logging multiple times onto the
                     # same machine. No need to remove it from the list, we will
                     # try again.
+                    self.retry_compilation = True
+                elif warningmsgs[0].startswith('Could not chdir to home directory '):
+                    #this happen when the /tmp folder is full
+                    self.remove_hostname = True
                     self.retry_compilation = True
                 else:
                     # Warning messages were uninformative, abort
