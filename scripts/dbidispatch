@@ -401,8 +401,18 @@ if FILE == "":
     tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
     ### We need to remove the symbols "," as this cause trouble with bqtools
     tmp=re.sub( ',', '-', tmp )
-    tmp=tmp[:200]
-    tmp+='_'+str(datetime.datetime.now()).replace(' ','_')
+    date_str=str(datetime.datetime.now())
+    if launch_cmd == "Bqtools":
+        #bqtools have a limit. It must have a abspath size < max_file_size -16
+        #(255 on ext3)
+        l=len(os.path.abspath(tmp))
+        l=255-16-len(date_str)-(l-len(tmp))-21 #-21 for dbi.py #-16 for bqtools itself
+        assert(l>0)
+        tmp=tmp[:l]
+    else:
+        tmp=tmp[:200]
+
+    tmp+='_'+date_str.replace(' ','_')
     dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
     dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 else:
