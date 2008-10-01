@@ -289,26 +289,23 @@ class list(PyTestMode):
 class locate(list):
     """Locates the named test.
 
-    Usage: pytest locate <test_name>
-    (Equivalent to 'pytest list --all -n <test_name>')
+    Usage: pytest locate <test_name> ...
+    (Equivalent to 'pytest list --all -n <test_name>...')
     """
     def __init__(self, targets, options):
         cached_test_map = core.getCachedTestMap()
-        if len(targets) != 1:
-            logging.critical("Usage: pytest locate <test_name>")
-
-        elif targets[0] in cached_test_map:
-            test_dir = cached_test_map[targets[0]]
-            self._listed = test_dir, targets[0]
-            logging.warning("In %s\n    %s"%self._listed)
-            
-        else:
-            options.all = True
-            options.test_name = targets[0]        
-            try:
-                super(locate, self).__init__(targets, options)
-            except KeyError:
-                logging.critical("No test named %s found."%options.test_name)
+	for target in targets:
+	    if target in cached_test_map:
+                test_dir = cached_test_map[target]
+                self._listed = test_dir, target
+                logging.warning("In %s\n    %s"%self._listed)
+            else:
+                options.all = True
+                options.test_name = target        
+                try:
+                    super(locate, self).__init__([target], options)
+                except KeyError:
+                    logging.critical("No test named %s found."%options.test_name)
 
 class diff(locate):
     """Starts kdiff3 to compare the expected/run results directory trees.
