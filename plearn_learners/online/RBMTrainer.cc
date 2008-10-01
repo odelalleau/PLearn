@@ -280,38 +280,41 @@ void RBMTrainer::build_()
     rbm->build();
 
     // data
-    PP<AutoVMatrix> data_ = new AutoVMatrix();
-    data_->filename = data_filename;
-    data_->defineSizes(n_visible, 1);
-    data_->build();
-    data = get_pointer(data_);
+    if (!data_filename.isEmpty())
+    {
+        PP<AutoVMatrix> data_ = new AutoVMatrix();
+        data_->filename = data_filename;
+        data_->defineSizes(n_visible, 1);
+        data_->build();
+        data = get_pointer(data_);
 
-    // train_input
-    train_input = new SubVMatrix(data,      // source
-                                 0,         // istart
-                                 0,         // jstart
-                                 n_train,   // length
-                                 n_visible, // width
-                                 true       // call_build
-                                 );
+        // train_input
+        train_input = new SubVMatrix(data,      // source
+                                     0,         // istart
+                                     0,         // jstart
+                                     n_train,   // length
+                                     n_visible, // width
+                                     true       // call_build
+                                     );
 
-    // valid_input
-    valid_input = new SubVMatrix(data,
-                                 n_train,
-                                 0,
-                                 n_valid,
-                                 n_visible,
-                                 true
-                                 );
+        // valid_input
+        valid_input = new SubVMatrix(data,
+                                     n_train,
+                                     0,
+                                     n_valid,
+                                     n_visible,
+                                     true
+                                     );
 
-    // valid_input
-    test_input = new SubVMatrix(data,
-                                n_train + n_valid,
-                                0,
-                                n_test,
-                                n_visible,
-                                true
-                                );
+        // valid_input
+        test_input = new SubVMatrix(data,
+                                    n_train + n_valid,
+                                    0,
+                                    n_test,
+                                    n_visible,
+                                    true
+                                    );
+    }
 
     // ports
     ports = rbm->getPorts();
@@ -410,20 +413,24 @@ void RBMTrainer::CD1(const Mat& examples)
     hidden->generateSamples();
 
     h0_a = hidden->activations;
-    h0_e.resize(n_examples, n_hidden);
-    h0_e << hidden->getExpectations();
     h0_s.resize(n_examples, n_hidden);
     h0_s << hidden->samples.copy();
 
     if (update_with_h0_sample)
+    {
         h0 = h0_s;
+    }
     else
+    {
+        h0_e.resize(n_examples, n_hidden);
+        h0_e << hidden->getExpectations();
         h0 = h0_e;
+    }
 
     if (print_debug)
     {
         pout << "h0_a = " << endl << h0_a << endl;
-        pout << "h0_e = " << endl << h0_e << endl;
+        pout << "h0_e = " << endl << hidden->getExpectations() << endl;
         pout << "h0_s = " << endl << h0_s << endl;
     }
 
