@@ -1259,6 +1259,37 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         }
         else // sample unconditionally: Gibbs sample after k steps
         {
+            // Find out how many samples we want.
+            // TODO: check if this code is OK.
+            int n_samples = -1;
+            if (visible_sample_is_output)
+            {
+                // Not exactly sure of where to pick the sizes from
+                visible_sample->resize(visible_layer->samples.length(),
+                                       visible_layer->samples.width());
+                n_samples = visible_sample->length();
+            }
+            if (visible_expectation_is_output)
+            {
+                // Not exactly sure of where to pick the sizes from
+                visible_expectation->resize(visible_layer->samples.length(),
+                                            visible_layer->samples.width());
+                PLASSERT( n_samples == -1 ||
+                          n_samples == visible_expectation->length() );
+                n_samples = visible_expectation->length();
+            }
+            if (hidden_sample_is_output)
+            {
+                // Not exactly sure of where to pick the sizes from
+                hidden_sample->resize(hidden_layer->samples.length(),
+                                      hidden_layer->samples.width());
+
+                PLASSERT( n_samples == -1 ||
+                          n_samples == hidden_sample->length() );
+                n_samples = hidden_sample->length();
+            }
+            PLCHECK( n_samples > 0 );
+
             // the visible_layer->expectations contain the "state" from which we
             // start or continue the chain
             if (visible_layer->samples.isEmpty())
@@ -1315,6 +1346,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             visible_sample->resize(visible_layer->samples.length(),
                                    visible_layer->samples.width());
+            PLASSERT( visible_sample->length() ==
+                      visible_layer->samples.length() );
             *visible_sample << visible_layer->samples;
         }
         if (hidden_sample && hidden_sample_is_output)
@@ -1322,6 +1355,8 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
         {
             hidden_sample->resize(hidden_layer->samples.length(),
                                   hidden_layer->samples.width());
+            PLASSERT( hidden_sample->length() ==
+                      hidden_layer->samples.length() );
             *hidden_sample << hidden_layer->samples;
         }
         if (visible_expectation && visible_expectation_is_output)
@@ -1330,18 +1365,23 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
             const Mat& to_store = visible_layer->getExpectations();
             visible_expectation->resize(to_store.length(),
                                         to_store.width());
+            PLASSERT( visible_expectation->length() == to_store.length() );
             *visible_expectation << to_store;
         }
         if (hidden && hidden_is_output)
         {
             hidden->resize(hidden_layer->getExpectations().length(),
                            hidden_layer->getExpectations().width());
+            PLASSERT( hidden->length() ==
+                      hidden_layer->getExpectations().length() );
             *hidden << hidden_layer->getExpectations();
         }
         if (hidden_act && hidden_act_is_output)
         {
             hidden_act->resize(hidden_layer->activations.length(),
                                hidden_layer->activations.width());
+            PLASSERT( hidden_act->length() ==
+                      hidden_layer->activations.length() );
             *hidden_act << hidden_layer->activations;
         }
         found_a_valid_configuration = true;
