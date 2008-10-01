@@ -39,7 +39,7 @@ def writeResults(argdict, costdict, results_amat, need_lock = True):
         f.write('#: %s %s\n' % \
                 (' '.join(argnames), ' '.join(cost_names)))
     f.seek(0, 2)   # End of file.
-    f.write('%s\n' % ' '.join( str(x) for x in argvals + cost_vals ) )
+    f.write('%s\n' % ' '.join( str(x).replace(" ","") for x in argvals + cost_vals ) )
     f.close()
     if need_lock:
         unlockFile(results_amat)
@@ -79,6 +79,7 @@ def lockFile(file, timeout = 30, min_wait = 1, max_wait = 5, verbosity = 0):
                                         for i in range(10) ]))
     no_display = verbosity == 0
     while True:
+      try:
         last_owner = 'no_owner'
         time_start = time.time()
         while os.path.isfile(lock_file):
@@ -112,7 +113,8 @@ def lockFile(file, timeout = 30, min_wait = 1, max_wait = 5, verbosity = 0):
         else:
             # We got the lock!
             return
-
+      except:
+        continue
 
 def unlockFile(file):
     """Remove current lock on file."""
