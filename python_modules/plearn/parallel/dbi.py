@@ -553,10 +553,10 @@ class DBIBqtools(DBIBase):
             sys.exit(1)
 
         # create directory in which all the temp files will be created
-        self.temp_dir = 'bqtools_tmp_' + os.path.split(self.log_dir)[1]
-        print "[DBI] All bqtools file will be in ",self.temp_dir
-        os.mkdir(self.temp_dir)
-        os.chdir(self.temp_dir)
+        self.tmp_dir = 'bqtools_tmp_' + os.path.split(self.log_dir)[1]
+        print "[DBI] All bqtools file will be in ",self.tmp_dir
+        os.mkdir(self.tmp_dir)
+        os.chdir(self.tmp_dir)
 
         if self.long:
             self.queue = "qlong@ms"
@@ -568,7 +568,7 @@ class DBIBqtools(DBIBase):
                 self.duree = "1200:00:00" #50 days
 
         # create the information about the tasks
-        args['temp_dir'] = self.temp_dir
+        args['temp_dir'] = self.tmp_dir
         self.args=args
         self.add_commands(commands)
 
