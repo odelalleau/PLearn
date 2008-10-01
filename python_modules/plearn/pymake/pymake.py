@@ -332,7 +332,7 @@ def local_filepath(filepath):
     return os.path.normpath(local_ofiles_base_path + '/' + filepath)
 
 def copyfile_verbose(src, dst):
-    if verbose>=2:
+    if verbose>=3:
         print ("[ COPYING\t" + src + "\n  -->\t\t" + dst + " ]")
     shutil.copy2(src, dst)
 
