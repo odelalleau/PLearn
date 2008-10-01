@@ -568,7 +568,7 @@ class DBIBqtools(DBIBase):
                 self.duree = "1200:00:00" #50 days
 
         # create the information about the tasks
-        args['temp_dir'] = self.tmp_dir
+        args['tmp_dir'] = self.tmp_dir
         self.args=args
         self.add_commands(commands)
 
