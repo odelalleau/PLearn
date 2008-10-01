@@ -11,13 +11,14 @@ inputsize = 4 ;
 targetsize = 2 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y.pmat.metadata/" ;
+fieldinfos = 6 [ "0" 0 "1" 0 "2" 0 "3" 0 "4" 0 "5" 0 ]  )
 ;
 istart = 0 ;
 jstart = 0 ;
 fistart = -1 ;
 flength = -1 ;
-source = *2  ;
+fieldinfos = 5 [ "0" 0 "1" 0 "2" 0 "3" 0 "4" 0 ] ;
 deep_copy_source = 1 ;
 writable = 0 ;
 length = 200 ;
@@ -26,7 +27,8 @@ inputsize = 4 ;
 targetsize = 1 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = ""  )
+metadatadir = "" ;
+source = *2   )
 ;
 splitter = *3 ->FractionSplitter(
 round_to_closest = 0 ;
@@ -68,19 +70,13 @@ id = -1 ;
 missing_leave = 0 ;
 loss_function_weight = 0 ;
 verbosity = 0 ;
-train_set = *0 ;
 length = 0 ;
 weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1 ;
-output = []
+loss_function_factor = 1  )
 ;
-error = []
- )
-;
-sorted_train_set = *0 ;
 root = *0 ;
 priority_queue = *0 ;
 first_leave = *0 ;
@@ -173,6 +169,7 @@ learner = *7  ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;
 forward_nstages = 0 ;
+forward_settrainningset = 1 ;
 random_gen = *0 ;
 stage = 0 ;
 n_examples = -1 ;

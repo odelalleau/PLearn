@@ -376,7 +376,7 @@ TVec<string> RegressionTree::getTestCostNames() const
 
     PLCHECK_MSG(the_train_set,"In RegressionTree::getTestCostNames() - "
                 "a train set is needed!");
-    for(int i=0;i<the_train_set->width();i++)
+    for(int i=0;i<the_train_set->inputsize();i++)
     {
         costs.append("SPLIT_VAR_"+the_train_set->fieldName(i));
     }

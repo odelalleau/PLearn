@@ -11,7 +11,8 @@ inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat.metadata/" ;
+fieldinfos = 3 [ "x1" 0 "y2" 0 "class" 0 ]  )
 *3 ->AutoVMatrix(
 filename = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat" ;
 load_in_memory = 0 ;
@@ -22,7 +23,8 @@ inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat.metadata/"  )
+metadatadir = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat.metadata/" ;
+fieldinfos = 3 [ "x1" 0 "x2" 0 "class" 0 ]  )
 ] ;
 fill_missing = 0 ;
 fully_check_mappings = 0 ;
@@ -34,7 +36,8 @@ inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = ""  )
+metadatadir = "" ;
+fieldinfos = 3 [ "x1" 0 "y2" 0 "class" 0 ]  )
 ;
 splitter = *4 ->FractionSplitter(
 round_to_closest = 0 ;
@@ -82,19 +85,13 @@ id = -1 ;
 missing_leave = 0 ;
 loss_function_weight = 0 ;
 verbosity = 0 ;
-train_set = *0 ;
 length = 0 ;
 weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1 ;
-output = []
+loss_function_factor = 1  )
 ;
-error = []
- )
-;
-sorted_train_set = *0 ;
 root = *0 ;
 priority_queue = *0 ;
 first_leave = *0 ;
@@ -187,6 +184,7 @@ learner = *8  ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;
 forward_nstages = 0 ;
+forward_settrainningset = 1 ;
 random_gen = *0 ;
 stage = 0 ;
 n_examples = -1 ;
