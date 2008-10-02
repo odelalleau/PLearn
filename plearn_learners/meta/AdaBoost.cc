@@ -48,6 +48,7 @@
 #include <plearn/math/random.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/base/stringutils.h>
+#include <plearn_learners/regressors/RegressionTreeRegisters.h>
 
 namespace PLearn {
 using namespace std;
@@ -838,14 +839,33 @@ void AdaBoost::computeTrainingError(Vec input, Vec target)
 void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 { 
     PLCHECK(weak_learner_template);
-    inherited::setTrainingSet(training_set, call_forget);
+    
+    if(weak_learner_template->classname()=="RegressionTree"){
+        //we do this for optimization. Otherwise we will creat a RegressionTreeRegister
+        //for each weak_learner. This is time consuming as it sort the dataset
+        if(training_set->classname()!="RegressionTreeRegisters"){
+            PP<RegressionTreeRegisters> sorted_train_set = new RegressionTreeRegisters();
+            sorted_train_set->setOption("report_progress", tostring(report_progress));
+            sorted_train_set->setOption("verbosity", tostring(verbosity));
+            sorted_train_set->initRegisters(training_set);
+            training_set = VMat(sorted_train_set);
+        }
 
-    //we do this as RegressionTreeNode need a train_set for getTestCostNames
-    if(!weak_learner_template->getTrainingSet())
-        weak_learner_template->setTrainingSet(training_set,call_forget);
-    for(int i=0;i<weak_learners.length();i++)
-        if(!weak_learners[i]->getTrainingSet())
-            weak_learners[i]->setTrainingSet(training_set,call_forget);
+        //we need to change the weight of the trainning set to reuse the RegressionTreeRegister
+        if(!modif_train_set_weights)
+            if(training_set->weightsize()==1)
+                modif_train_set_weights=1;
+
+        //we do this as RegressionTreeNode need a train_set for getTestCostNames
+        if(!weak_learner_template->getTrainingSet())
+            weak_learner_template->setTrainingSet(training_set,call_forget);
+        for(int i=0;i<weak_learners.length();i++)
+            if(!weak_learners[i]->getTrainingSet())
+                weak_learners[i]->setTrainingSet(training_set,call_forget);
+        
+    }
+
+    inherited::setTrainingSet(training_set, call_forget);
 }
 
 } // end of namespace PLearn
