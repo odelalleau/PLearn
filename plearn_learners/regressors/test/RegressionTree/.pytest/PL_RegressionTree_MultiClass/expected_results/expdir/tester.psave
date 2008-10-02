@@ -184,7 +184,6 @@ learner = *8  ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;
 forward_nstages = 0 ;
-forward_settrainningset = 1 ;
 random_gen = *0 ;
 stage = 0 ;
 n_examples = -1 ;
