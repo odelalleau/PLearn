@@ -187,14 +187,13 @@ void HyperLearner::setLearnerOptions(const TVec<string>& option_names,
 void HyperLearner::setTrainingSet(VMat training_set, bool call_forget)
 {
 
-    //train_set = training_set;
+    //will set the training set to the sub learner
     inherited::setTrainingSet(training_set, call_forget);
-    tester->dataset= training_set;
+
+    tester->dataset = training_set;
     if(tester->splitter)
         tester->splitter->setDataSet(training_set);
 
-    // no need to forget a second time
-    learner_->setTrainingSet(training_set,false); // just to make sure the underlying learner knows the targetsize
     if (call_forget)
     {
         build();
