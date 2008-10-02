@@ -2933,7 +2933,7 @@ def main( args ):
                 objsdir = objsdir + '_' + opt
 
         print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
-        print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o, options))
+        print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o if o else '', options))
         print '++++ Computing dependencies of '+target
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link, executables_to_link, linkname)
         print '++++ Dependencies computed'
