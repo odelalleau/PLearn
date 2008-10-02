@@ -59,6 +59,9 @@
 #include <plearn/sys/PLMPI.h>
 #endif
 
+#ifndef WIN32                                                            
+#include <signal.h>                                                      
+#endif
 
 namespace PLearn {
 using namespace std;
@@ -71,6 +74,20 @@ namespace
     int plearn_fixlevel;
 }
 
+void handler_of_interrup_signal (int sig){                               
+    PLERROR("We received an interrup signal!");                          
+}
+//catch INTERRUP signal and throw an PLERROR.
+//We do this as some code catch PLERROR to do some cleanup.
+void catch_interrupt_signal(){                                           
+#ifndef WIN32                                                            
+    struct sigaction my_action;                                          
+    my_action.sa_handler = handler_of_interrup_signal;                   
+    my_action.sa_flags = SA_RESTART;                                     
+    sigaction (SIGINT, &my_action, NULL);                                
+#endif                                                                   
+}                                                                        
+             
 static bool is_command( string& possible_command )
 {
     if(PLearnCommandRegistry::is_registered(possible_command))
@@ -304,6 +321,9 @@ int plearn_main( int argc, char** argv,
     // double-fault.
     set_terminate(plearn_terminate_handler);
 
+    //catch interrup signal and throw an PLERROR                         
+    catch_interrupt_signal();                                            
+                                                                         
     vector<string> command_line;
     vector<string> command_line_orig;
     
