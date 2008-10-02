@@ -553,7 +553,9 @@ class DBIBqtools(DBIBase):
             sys.exit(1)
 
         # create directory in which all the temp files will be created
-        self.tmp_dir = 'bqtools_tmp_' + os.path.split(self.log_dir)[1]
+        if not os.path.exists(self.tmp_dir):
+            os.mkdir(self.tmp_dir)
+        self.tmp_dir = os.path.join(self.tmp_dir,os.path.split(self.log_dir)[1])
         print "[DBI] All bqtools file will be in ",self.tmp_dir
         os.mkdir(self.tmp_dir)
         os.chdir(self.tmp_dir)
@@ -601,7 +603,7 @@ class DBIBqtools(DBIBase):
                 HOME=%s
                 export HOME
 
-                cd ../../../
+                cd ../../../../
                 (%s '~~task~~')'''
                 % (bq_cluster_home, bq_shell_cmd)
                 ) )

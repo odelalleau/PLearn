@@ -406,7 +406,7 @@ if FILE == "":
         #bqtools have a limit. It must have a abspath size < max_file_size -16
         #(255 on ext3)
         l=len(os.path.abspath(tmp))
-        l=255-16-len(date_str)-(l-len(tmp))-21 #-21 for dbi.py #-16 for bqtools itself
+        l=255-16-len(date_str)-(l-len(tmp))-10 #-10 for dbi.py #-16 for bqtools itself
         assert(l>0)
         tmp=tmp[:l]
     else:
