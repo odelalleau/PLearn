@@ -66,6 +66,8 @@ ReplicateSamplesVMatrix::ReplicateSamplesVMatrix():
     operate_on_bags(false),
     bag_index(-1),
     seed(1827),
+    replicate_missing_targets(true),
+    replicate_negative_targets(true),
     random_gen(new PRandom())
 {}
 
@@ -98,6 +100,14 @@ void ReplicateSamplesVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "seed", &ReplicateSamplesVMatrix::seed,
                   OptionBase::buildoption,
         "Seed for the random number generator (to shuffle data).");
+
+    declareOption(ol, "replicate_missing_targets", &ReplicateSamplesVMatrix::replicate_missing_targets,
+                  OptionBase::buildoption,
+        "Indication that samples with missing (NaN) targets should be replicated.");
+
+    declareOption(ol, "replicate_negative_targets", &ReplicateSamplesVMatrix::replicate_negative_targets,
+                  OptionBase::buildoption,
+        "Indication that samples with negative targets should be replicated.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -180,9 +190,9 @@ void ReplicateSamplesVMatrix::build_()
         if (operate_on_bags)
             bag_sizes[bag_start_idx]++;
     }
-    if( nan_indices.length() > 0  )
+    if( replicate_missing_targets && nan_indices.length() > 0  )
         class_indices.append( nan_indices );
-    if( negativeclass_indices.length() > 0 )
+    if( replicate_negative_targets && negativeclass_indices.length() > 0 )
         for(int c = 0; c < negativeclass_indices.length(); c ++ )
             if( negativeclass_indices[c].length() > 0 )
                 class_indices.append( negativeclass_indices[c] );
@@ -201,6 +211,14 @@ void ReplicateSamplesVMatrix::build_()
             indices.append(class_indices[c][i % class_indices[c].length()]);
         }
     }
+
+    if( !replicate_missing_targets && nan_indices.length() > 0  )
+        indices.append( nan_indices );
+    if( !replicate_negative_targets && negativeclass_indices.length() > 0 )
+        for(int c = 0; c < negativeclass_indices.length(); c ++ )
+            if( negativeclass_indices[c].length() > 0 )
+                indices.append( negativeclass_indices[c] );
+
 
     // Shuffle data.
     random_gen->manual_seed(seed);

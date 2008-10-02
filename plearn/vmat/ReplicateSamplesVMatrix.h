@@ -65,6 +65,8 @@ public:
     bool operate_on_bags;
     int bag_index;
     int32_t seed;
+    bool replicate_missing_targets;
+    bool replicate_negative_targets;
 
 public:
     //#####  Public Member Functions  #########################################
