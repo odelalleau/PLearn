@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 2008 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -63,7 +64,10 @@ protected:
     bool freshnewfile;
     bool old_format; // is thisfile in the old deprecated format?
     bool swap_endians; // was this file written in the opposite endian order
+    mutable bool last_op_was_append; //<! true if the last I/O operation performed was an append; if so, we don't need to seek to the end of file before writing again.
 public:
+    static const int NO_LENGTH_SENTINEL= -42; // written in header instead of actual length
+    static const int HEADER_OFFSET_LENGTH= 4; // offset to length in header
 
     // Build options
     PPath dirname;

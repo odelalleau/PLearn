@@ -4,6 +4,7 @@
 // Copyright (C) 1998 Pascal Vincent
 // Copyright (C) 1999-2001 Pascal Vincent, Yoshua Bengio, Rejean Ducharme and University of Montreal
 // Copyright (C) 2002 Pascal Vincent, Julien Keable, Xavier Saint-Mleux
+// Copyright (C) 2008 Xavier Saint-Mleux, ApSTAT Technologies inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -71,7 +72,16 @@ All other raw-binary data (whether in the indexfile or the data files)
 is written in the specified endianness (and swapping will be performed if
 reading it on a machine with a different endianness).
 
-Following the 4-byte header are two 4-byte ints: length and width of the matrix
+Following the 4-byte header are two 4-byte ints: length and width of the matrix.  
+
+N.B. As of October 2008, the length is not always stored in the indexfile's
+header; instead, while the matrix is opened for writing,
+DiskVMatrix::NO_LENGTH_SENTINEL (=-42) is used to indicate that the actual
+matrix length should be calculated some other way.  The sentinel is replaced by
+the actual length when the VMat is closed.  It is an error to open a
+DiskVMatrix for writing while its header indicates a length of
+DiskVMatrix::NO_LENGTH_SENTINEL *but this is not a safe locking mechanism, so
+you still have to be careful!*
 
 Following are 5 bytes for each row of the matrix.
 The first of those 5 bytes is an unsigned byte indicating the number (0-255) of
@@ -92,11 +102,17 @@ PLEARN_IMPLEMENT_OBJECT(
     ""
 );
 
+// DiskVMatrix::NO_LENGTH_SENTINEL= -42; written in header 
+// instead of actual length while the file is opened for writing
+const int DiskVMatrix::NO_LENGTH_SENTINEL;
+const int DiskVMatrix::HEADER_OFFSET_LENGTH;
+
 DiskVMatrix::DiskVMatrix():
     indexf      (0),
     freshnewfile(false),
     old_format  (false),
     swap_endians(false),
+    last_op_was_append(false),
     tolerance   (1e-6)
 {
     writable = false;
@@ -108,6 +124,7 @@ DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite):
     freshnewfile(false),
     old_format  (false),
     swap_endians(false),
+    last_op_was_append(false),
     dirname     (the_dirname),
     tolerance   (1e-6)
 {
@@ -123,6 +140,7 @@ DiskVMatrix::DiskVMatrix(const PPath& the_dirname, int the_width,
     freshnewfile(true),
     old_format  (false),
     swap_endians(false),
+    last_op_was_append(false),
     dirname     (the_dirname),
     tolerance   (1e-6)
 {
@@ -188,6 +206,41 @@ void DiskVMatrix::build_()
             endianswap(&length_);
             endianswap(&width_);
         }
+
+        // Calc. length of VMat from indexfile length
+        fseek(indexf, 0, SEEK_END);
+        int pos= ftell(indexf);
+        // pos less 12 header bytes s/b a multiple of 5 since each index 
+        // entry is 5-byte long i.e. pos%5==2
+        PLASSERT_MSG(pos%5 == 2,
+                     "Length of DiskVMatrix is absent from header and length"
+                     " of index file is " + tostring(pos) + ", not \\eqv 2 (mod 5)" );
+        int calculated_length= (pos-12) / 5; //nb. lines in matrix
+
+        if(length_ == NO_LENGTH_SENTINEL) // check after endianswap
+        {
+            PLASSERT_MSG(!writable, // already open for writing? not good...
+                         "Trying to open a DiskVMatrix for writing but length in header is "
+                         "NO_LENGTH_SENTINEL (="+tostring(NO_LENGTH_SENTINEL)+"); "
+                         "Is it already being written to by another process? "
+                         "dirname='" + dirname + "'.");
+            length_= calculated_length;
+        }
+        else
+        {
+            PLASSERT_MSG(length_ == calculated_length, //length mismatch? not good...
+                         "Length in DiskVMatrix's header does not match the indexfile's length "
+                         "and is not NO_LENGTH_SENTINEL (="+tostring(NO_LENGTH_SENTINEL)+"); "
+                         "indexfile='" + indexfname + "', "
+                         "header len=" + tostring(length_) + ", "
+                         "calc. len=" + tostring(calculated_length) + ".");
+            if(writable)
+            {// put NO_LENGTH_SENTINEL in header to indicate that we are appending to this file.
+                fseek(indexf, HEADER_OFFSET_LENGTH, SEEK_SET);
+                fwrite(&NO_LENGTH_SENTINEL, 4, 1, indexf);
+                // will seek to end before end of build_
+            }
+        }
         int k=0;
         string fname = dirname/tostring(k)+".data";
         while(isfile(fname))
@@ -233,7 +286,8 @@ void DiskVMatrix::build_()
         header[2] = ' ';
         header[3] = ' ';
         fwrite(header,1,4,indexf);
-        fwrite((char*)&length_,sizeof(int),1,indexf);
+        //no more length in header while opened [was fwrite((char*)&length_,sizeof(int),1,indexf);]
+        fwrite(&NO_LENGTH_SENTINEL, sizeof(int), 1, indexf);
         fwrite((char*)&width_,sizeof(int),1,indexf);
 
         string fname = dirname/"0.data";
@@ -242,6 +296,7 @@ void DiskVMatrix::build_()
     }
     freshnewfile=false;
     loadAllStringMappings();//make sure string mappings are loaded after width is set
+    last_op_was_append= false;
 }
 
 void DiskVMatrix::declareOptions(OptionList &ol)
@@ -263,10 +318,19 @@ void DiskVMatrix::closeCurrentFiles()
         }
 
     dataf.resize(0);
+    
     if (indexf) {
+        // write final length to indexfile before closing
+        fseek(indexf, HEADER_OFFSET_LENGTH, SEEK_SET); // it is and will always be 4 bytes
+        int le= length_;
+        if(swap_endians)
+            endianswap(&le);
+        fwrite(&le,sizeof(int),1,indexf);
+
         fclose(indexf);
         indexf = 0;
     }
+    last_op_was_append= false;
 }
 
 ///////////////
@@ -295,6 +359,7 @@ void DiskVMatrix::getNewRow(int i, const Vec& v) const
         binread_compressed(f,v.data(),v.length());
     else
         new_read_compressed(f, v.data(), v.length(), swap_endians);
+    last_op_was_append= false;
 }
 
 void DiskVMatrix::putRow(int i, Vec v)
@@ -312,7 +377,8 @@ void DiskVMatrix::appendRow(Vec v)
 
     int filenum = dataf.size()-1;
     FILE* f = dataf[filenum];
-    fseek(f,0,SEEK_END);
+    if(!last_op_was_append) //otherwise, we are already at end
+        fseek(f,0,SEEK_END);
     unsigned int position = (unsigned int)ftell(f);
     if(position>500000000L)
     {
@@ -328,15 +394,19 @@ void DiskVMatrix::appendRow(Vec v)
     else
         new_write_compressed(f, v.data(),v.length(), tolerance, swap_endians);
 
-    fseek(indexf,0,SEEK_END);
+    if(!last_op_was_append) //otherwise, we are already at end
+        fseek(indexf,0,SEEK_END);
     fputc(filenum,indexf);
     fwrite((char*)&position,sizeof(unsigned int),1,indexf);
     length_++;
+    /* DO NOT write length in header; wait 'till file is closed
     fseek(indexf,sizeof(int),SEEK_SET);
     int le = length_;
     if(swap_endians)
         endianswap(&le);
     fwrite(&le,sizeof(int),1,indexf);
+    */
+    last_op_was_append= true;
 }
 
 ///////////
@@ -348,6 +418,7 @@ void DiskVMatrix::flush()
     FILE* f = dataf[filenum];
     fflush(f);
     fflush(indexf);
+    last_op_was_append= false;
 }
 
 /////////////////////////////////
