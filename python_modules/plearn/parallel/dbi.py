@@ -702,6 +702,7 @@ class DBICondor(DBIBase):
         self.os = ''
         self.stdouts = ''
         self.stderrs = ''
+        self.abs_path = True
         self.base_tasks_log_file = []
         self.set_special_env = True
         self.nb_proc = -1 # < 0   mean unlimited
@@ -749,7 +750,7 @@ class DBICondor(DBIBase):
             authorized_shell_commands=[ "touch", "echo", "cd" ]
             if c[0] in shell_special_chars or c in authorized_shell_commands:
                 shellcommand=True
-            elif not self.files:
+            elif not self.files and self.abs_path:
                 # Transform path to get an absolute path.
                 c_abs = os.path.abspath(c)
                 if os.path.isfile(c_abs):
@@ -812,7 +813,8 @@ class DBICondor(DBIBase):
             if shellcommand:
                 pass
             elif not os.path.exists(c):
-                raise Exception("The command '"+c+"' does not exist!")
+                if not os.path.abspath(c):
+                    raise Exception("The command '"+c+"' does not exist!")
             elif not os.access(c, os.X_OK):
                 raise Exception("The command '"+c+"' does not have execution permission!")
 

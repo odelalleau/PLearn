@@ -8,17 +8,19 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
 <back-end parameter>:
     bqtools, cluster option  :[--duree=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
-    cluster, condor options  : [--32|--64|--3264] [--os=X] [--mem=N]
-                               [--cpu=nb_cpu_per_node]
-    condor option            : [--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
-                               [--[*no_]getenv] [*--[no_]prefserver] 
-                               [--rank=RANK_EXPRESSION] 
-                               [--files=file1[,file2...]]
-                               [--env=VAR=VALUE[;VAR2=VALUE2]]
-                               [--raw=CONDOR_EXPRESSION] [--tasks_filename={compact,explicit,*nb0,nb1,sh}+]
-                               [*--[no_]set_special_env]
-    cluster option           : [*--[no_]cwait]  [--[*no_]force]
-                               [--[*no_]interruptible]
+    cluster, condor options  :[--32|--64|--3264] [--os=X] [--mem=N]
+                              [--cpu=nb_cpu_per_node]
+    condor option            :[--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
+                              [--[*no_]getenv] [*--[no_]prefserver] 
+                              [--rank=RANK_EXPRESSION] 
+                              [--files=file1[,file2...]]
+                              [--env=VAR=VALUE[;VAR2=VALUE2]]
+                              [--raw=CONDOR_EXPRESSION]
+                              [--tasks_filename={compact,explicit,*nb0,nb1,sh}+]
+                              [*--[no_]abs_path]
+                              [*--[no_]set_special_env]
+    cluster option           :[*--[no_]cwait]  [--[*no_]force]
+                              [--[*no_]interruptible]
 An * after '[', '{' or ',' signals the default value.
 An + after } tell that we can put one or more of the choise separeted by a comma
 '''
@@ -92,6 +94,8 @@ cluster only options:
 condor only options:
   If the CONDOR_HOME environment variable is set, then the HOME variable will
      be set to this value for jobs submitted to condor.
+  If the CONDOR_LOCAL_SOURCE environment variable is set, we will source this 
+    file before executing the jobs.
   The '--[no_]getenv' option is forwarded to condor. If True, the current 
     environnement variable will be forwarded to the execution node.
   The '--req=\"CONDOR_REQUIREMENT\"' add requirement for condor. 
@@ -129,6 +133,8 @@ condor only options:
       - nb0     : a number from 0 to nb job -1.
       - nb1     : a number from 1 to nb job.
       - sh      : parse the command for > and 2> redirection command. If one or both of them are missing, they are redirected to /dev/null
+  The '--[no_]abs_path' option will tell condor to change the path to the 
+    executable to the absolute path or not. Default True.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -232,11 +238,11 @@ for argv in to_parse:
         tasks_filename = val
     elif argv in  ["--force", "--interruptible", "--long", 
                    "--getenv", "--cwait", "--clean_up" ,"--nice",
-                   "--set_special_env"]:
+                   "--set_special_env", "--abs_path"]:
         dbi_param[argv[2:]]=True
     elif argv in ["--no_force", "--no_interruptible", "--no_long",
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice",
-                  "--no_set_special_env"]:
+                  "--no_set_special_env", "--no_abs_path"]:
         dbi_param[argv[5:]]=False
     elif argv=="--pkdilly":
         dbi_param["condor_submit_exec"]="pkdilly"
@@ -316,7 +322,7 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     p = os.path.abspath(os.path.curdir)
     if any([p.startswith(x) for x in ["/home/fringant1/","/home/fringant2/","/cluster/"]]) or dbi_param.get('files'):
         pass
-    elif dbi_param.get("pkdilly")==True:
+    elif dbi_param.get("condor_submit_exec")=="pkdilly":
         pass
     else:
         raise Exception("You must be in a subfolder of /home/fringant2/")
