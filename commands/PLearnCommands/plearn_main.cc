@@ -305,6 +305,8 @@ int plearn_main( int argc, char** argv,
     set_terminate(plearn_terminate_handler);
 
     vector<string> command_line;
+    vector<string> command_line_orig;
+    
     int EXIT_CODE = 0;
     try {
 
@@ -318,6 +320,7 @@ int plearn_main( int argc, char** argv,
         prgname(argv[0]);
 
         command_line = stringvector(argc-1, argv+1);
+        command_line_orig = command_line;
         string command = global_options(command_line);
 
         if ( command == "" )
@@ -351,7 +354,7 @@ int plearn_main( int argc, char** argv,
         EXIT_CODE = 2;
     }
 
-    if(findpos( command_line, "--profile" )!=-1){
+    if(findpos( command_line_orig, "--profile" )!=-1){
         Profiler::pl_profile_end("Prog");
         Profiler::pl_profile_deactivate();
         Profiler::pl_profile_report(cerr);
