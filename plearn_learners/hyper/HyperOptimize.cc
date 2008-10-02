@@ -224,7 +224,9 @@ void HyperOptimize::declareOptions(OptionList& ol)
 // build_ //
 ////////////
 void HyperOptimize::build_()
-{}
+{
+    Profiler::pl_profile_activate();
+}
 
 ///////////
 // build //
@@ -441,7 +443,10 @@ Vec HyperOptimize::optimize()
             best_results = results;
             CopiesMap copies;
             best_learner = NULL;
+            Profiler::pl_profile_start("HyperOptimizer::optimize::deepCopy");
             best_learner = hlearner->getLearner()->deepCopy(copies);
+            Profiler::pl_profile_end("HyperOptimizer::optimize::deepCopy");
+
             if (save_best_learner && !expdir.isEmpty()) {
                 PLearn::save(expdir / "current_best_learner.psave",
                              best_learner);
