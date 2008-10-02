@@ -38,6 +38,8 @@
  * $Id: RegressionTreeNode.cc, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout    *
  * This file is part of the PLearn library.                                     *
  ******************************************************************************** */
+#define PL_LOG_MODULE_NAME "RegressionTreeNode"
+#include <plearn/io/pl_log.h>
 
 #include "RegressionTreeNode.h"
 #include "RegressionTreeRegisters.h"
@@ -305,15 +307,9 @@ void RegressionTreeNode::lookForBestSplit()
         split_balance = get<2>(ret);
 #endif
     }
-#ifdef RCMP
-    pout<<"error after split: "<<after_split_error<<endl;
-    pout<<"split value: "<<split_feature_value<<endl;
-    pout<<"split_col: "<<split_col<<" "<<train_set->fieldName(split_col)<<endl;
-    pout<<"col 27 ("<<train_set->fieldName(27)<<") split error "
-        <<row_split_err[27]<<endl;
-    pout<<"col 27 ("<<train_set->fieldName(27)<<") split value "
-        <<row_split_value[27]<<endl;
-#endif
+    MODULE_LOG<<"error after split: "<<after_split_error<<endl;
+    MODULE_LOG<<"split value: "<<split_feature_value<<endl;
+    MODULE_LOG<<"split_col: "<<split_col<<" "<<train_set->fieldName(split_col)<<endl;
 }
 
 tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
