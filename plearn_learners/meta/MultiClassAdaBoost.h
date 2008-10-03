@@ -76,6 +76,7 @@ public:
     //! The learner1 and learner2 must be trained!
     PP<AdaBoost> learner1;
     PP<AdaBoost> learner2;
+    PP<AdaBoost> learner_template;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -184,6 +185,12 @@ private:
 private:
     //#####  Private Data Members  ############################################
     TVec<Vec> sub_target_tmp;
+
+    string targetname;
+    string input_prg;
+    string target_prg1;
+    string target_prg2;
+    string weight_prg;
 };
 
 // Declares a few other classes and functions related to this class

@@ -39,14 +39,18 @@
 
 #include "MultiClassAdaBoost.h"
 #include <plearn/vmat/ProcessingVMatrix.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     MultiClassAdaBoost,
-    "ONE LINE DESCRIPTION",
-    "MULTI-LINE \nHELP");
+    "Implementation of a 3 class AdaBoost learning algorithm.",
+    "It divide the work in 2 sub learner AdaBoost, class 0 vs other"
+    " and 2 vs other.");
 
 MultiClassAdaBoost::MultiClassAdaBoost():
     forward_sub_learner_test_costs(false)
@@ -82,15 +86,19 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
     declareOption(ol, "learner1", &MultiClassAdaBoost::learner1,
-                  OptionBase::buildoption,
+                  OptionBase::learntoption,
                   "The sub learner to use.");
     declareOption(ol, "learner2", &MultiClassAdaBoost::learner2,
-                  OptionBase::buildoption,
+                  OptionBase::learntoption,
                   "The sub learner to use.");
     declareOption(ol, "forward_sub_learner_test_costs", 
                   &MultiClassAdaBoost::forward_sub_learner_test_costs,
                   OptionBase::buildoption,
                   "Did we add the learner1 and learner2 costs to our costs.\n");
+    declareOption(ol, "learner_template", 
+                  &MultiClassAdaBoost::learner_template,
+                  OptionBase::buildoption,
+                  "The template to use for learner1 and learner2.\n");
 
 }
 
@@ -109,12 +117,25 @@ void MultiClassAdaBoost::build_()
     sub_target_tmp.resize(2);
     for(int i=0;i<sub_target_tmp.size();i++)
         sub_target_tmp[i].resize(1);
+    
+    if(learner_template){
+        learner1= ::PLearn::deepCopy(learner_template);
+        learner2= ::PLearn::deepCopy(learner_template);
+    }
     if(learner1)
         output1.resize(learner1->outputsize());
     if(learner2)
         output2.resize(learner2->outputsize());
     if(!train_stats)
         train_stats=new VecStatsCollector();
+
+    if(train_set){
+        targetname = train_set->fieldName(train_set->inputsize());
+        input_prg  = "[%0:%"+tostring(train_set->inputsize()-1)+"]";
+        target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
+        target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
+        weight_prg = "1 :weight";
+    }
 }
 
 // ### Nothing to add here, simply calls build_
@@ -129,14 +150,14 @@ void MultiClassAdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    // ### Call deepCopyField on all "pointer-like" fields
-    // ### that you wish to be deepCopied rather than
-    // ### shallow-copied.
-    // ### ex:
-    // deepCopyField(trainvec, copies);
-
-    // ### Remove this line when you have fully implemented this method.
-    PLERROR("MultiClassAdaBoost::makeDeepCopyFromShallowCopy not fully (correctly) implemented yet!");
+    deepCopyField(output1,           copies);
+    deepCopyField(output2,           copies);
+    deepCopyField(subcosts1,         copies);
+    deepCopyField(subcosts2,         copies);
+    deepCopyField(learner1,          copies);
+    deepCopyField(learner2,          copies);
+    //not needed as we only read it.
+    //deepCopyField(learner_template,  copies);
 }
 
 
@@ -177,17 +198,18 @@ void MultiClassAdaBoost::train()
 //Otherwise this will cause crash due to the parallel printing to stdout stderr.
 #ifdef _OPENMP
     //the AdaBoost and the weak learner should not print anything as this will cause race condition on the printing
-    PLCHECK(learner1->verbosity==0);
-    PLCHECK(learner2->verbosity==0);
-    PLCHECK(learner1->report_progress==false);
-    PLCHECK(learner2->report_progress==false);
-
-    PLCHECK(learner1->weak_learner_template->verbosity==0);
-    PLCHECK(learner2->weak_learner_template->verbosity==0);
-    PLCHECK(learner1->weak_learner_template->report_progress==false);
-    PLCHECK(learner2->weak_learner_template->report_progress==false);
-
-#pragma omp parallel sections
+    if(omp_get_max_threads()>1){
+        PLCHECK(learner1->verbosity==0);
+        PLCHECK(learner2->verbosity==0);
+        PLCHECK(learner1->report_progress==false);
+        PLCHECK(learner2->report_progress==false);
+        
+        PLCHECK(learner1->weak_learner_template->verbosity==0);
+        PLCHECK(learner2->weak_learner_template->verbosity==0);
+        PLCHECK(learner1->weak_learner_template->report_progress==false);
+        PLCHECK(learner2->weak_learner_template->report_progress==false);
+    }
+#pragma omp parallel sections default(none)
 {
 #pragma omp section 
     learner1->train();
@@ -404,11 +426,11 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 { 
     PLCHECK(learner1 && learner2);
     inherited::setTrainingSet(training_set, call_forget);
-    string targetname = training_set->fieldName(training_set->inputsize());
-    string input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
-    string target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
-    string target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
-    string weight_prg = "1 :weight";
+
+    targetname = training_set->fieldName(training_set->inputsize());
+    input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
+    target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
+    target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
 
     VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
                                        target_prg1,  weight_prg);
@@ -428,7 +450,6 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
 {
     Profiler::pl_profile_start("MultiClassAdaBoost::test");
     inherited::test(testset,test_stats,testoutputs,testcosts);
-
     Profiler::pl_profile_end("MultiClassAdaBoost::test");
 }
 
