@@ -110,7 +110,7 @@ static bool is_command( string& possible_command )
 
 static void output_version()
 {
-    cerr << version_string();
+    perr << version_string();
 }
 
 string version_string()
@@ -164,7 +164,7 @@ static void set_global_calendars(string command_line_option)
         Vec dates_vec = dates_vmat.getColumn(0);
         Calendar::setGlobalCalendar(calname,
                                     Calendar::makeCalendar(dates_vec));
-        cerr << "Set global calendar \"" << calname << "\" from file \"" << filename << '"' << endl;
+        perr << "Set global calendar \"" << calname << "\" from file \"" << filename << '"' << endl;
     }
 }
 
@@ -301,7 +301,7 @@ static string global_options( vector<string>& command_line)
         ProgressBar::setPlugin(new NullProgressBarPlugin);
 
     if (enabled_modules_pos != -1)
-        cerr << "Logging enabled for modules: "
+        perr << "Logging enabled for modules: "
              << join(PL_Log::instance().namedLogging(), ", ")
              << endl;
     
@@ -310,7 +310,7 @@ static string global_options( vector<string>& command_line)
 
 void plearn_terminate_handler()
 {
-    cerr << "PLEARN UNUSUAL TERMINATION: plearn_terminate_handler called, probably due \n"
+    perr << "PLEARN UNUSUAL TERMINATION: plearn_terminate_handler called, probably due \n"
          << "to second exception thrown while unwinding stack following a first \n"
          << "exception. ABORTING!" << endl;
     abort();
@@ -352,7 +352,7 @@ int plearn_main( int argc, char** argv,
 
         if ( command == "" )
         {
-            cerr << "Type '" << prgname() << " help' for help" << endl;
+            perr << "Type '" << prgname() << " help' for help" << endl;
             return 0;
         }
 
@@ -366,17 +366,17 @@ int plearn_main( int argc, char** argv,
     } // end of try
     catch(const PLearnError& e)
     {
-        cerr << "FATAL ERROR: " << e.message() << endl;
+        perr << "FATAL ERROR: " << e.message() << endl;
         EXIT_CODE = 1;
     }
     catch (std::exception& e)
     {
-        cerr << "FATAL ERROR thrown by STL : " << e.what() << endl;
+        perr << "FATAL ERROR thrown by STL : " << e.what() << endl;
         EXIT_CODE = 2;
     }
     catch (...) 
     {
-        cerr << "FATAL ERROR: uncaught unknown exception "
+        perr << "FATAL ERROR: uncaught unknown exception "
              << "(ex: out-of-memory when allocating a matrix)" << endl;
         EXIT_CODE = 2;
     }
@@ -384,8 +384,8 @@ int plearn_main( int argc, char** argv,
     if(findpos( command_line_orig, "--profile" )!=-1){
         Profiler::pl_profile_end("Prog");
         Profiler::pl_profile_deactivate();
-        Profiler::pl_profile_report(cerr);
-        Profiler::pl_profile_reportwall(cerr);
+        Profiler::pl_profile_report(perr);
+        Profiler::pl_profile_reportwall(perr);
     }
     return EXIT_CODE;
 }
