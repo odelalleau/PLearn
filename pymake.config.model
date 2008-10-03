@@ -310,7 +310,14 @@ if not 'nopython' in optionargs:
     python_includedirs=[]
     numpy_includedirs = []
 
-    if domain_name.endswith('apstat.com'):
+    if platform=='darwin':
+        python_version = sys.version[0:3]
+        optionargs += [ 'python'+python_version[0]+python_version[2] ]
+        # numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
+        python_lib_root = '/sw/lib'
+        numpy_site_packages = '/sw/lib/python'+python_version+'/site-packages/numarray' 
+        numpy_includedirs   = [ '/sw/include/python'+python_version]
+    elif domain_name.endswith('apstat.com'):
         python_version = '2.5'
         optionargs += [ 'python%s' % python_version.replace('.', '') ]
         python_lib_root = '/usr/lib'
@@ -346,13 +353,6 @@ if not 'nopython' in optionargs:
         python_version = '2.4'
         python_lib_root = '/usr/network.ALTIX/python-2.4.1/lib'
         linkeroptions_tail += '-lcprts -lifcore -lcxa' # -lunwind -lguide' # -lguide_stats -lifcoremt -lifport -limf -lipr'
-    elif platform=='darwin':
-        python_version = sys.version[0:3]
-        optionargs += [ 'python'+python_version[0]+python_version[2] ]
-        # numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
-        python_lib_root = '/sw/lib'
-        numpy_site_packages = '/sw/lib/python'+python_version+'/site-packages/numarray' 
-        numpy_includedirs   = [ '/sw/include/python'+python_version]
     else:
         if 'python23' in optionargs:
             python_version = '2.3'
@@ -401,8 +401,9 @@ if not 'nopython' in optionargs:
               os.popen('python' + python_version + ' ' 
                        + os.path.join( plearndir,'scripts','get_numpy_includes.py'),
                        'r').read().splitlines()
+            # (comment by Pascal) This does not seem to work on the latest fink for OS X 10.5 at least
             numpy_site_packages= numpy_numarray_include
-            numpy_includedirs= [numpy_site_packages+'/numpy', numpy_core_include] \
+            numpy_includedirs= [numpy_numarray_include+'/numpy', numpy_core_include] \
                                + python_includedirs
         except ValueError:
             print 'Cannot find numpy include dirs for python'+python_version+'.',
