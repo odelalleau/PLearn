@@ -59,6 +59,10 @@
 #include <plearn/sys/PLMPI.h>
 #endif
 
+#ifdef _OPENMP
+#include<omp.h>
+#endif
+
 #ifndef WIN32                                                            
 #include <signal.h>                                                      
 #endif
@@ -334,6 +338,9 @@ int plearn_main( int argc, char** argv,
         PLMPI::init(&argc, &argv);
 #endif
 
+#ifdef _OPENMP
+        pout<<"Using OPENMP with "+tostring(omp_get_max_threads())+" threads."<<endl;
+#endif
         seed();
 
         // set program name
