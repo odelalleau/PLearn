@@ -39,6 +39,11 @@
 
 #include "Profiler.h"
 #include <time.h>
+#ifdef _OPENMP
+#include<omp.h>
+#include<plearn/base/tostring.h>
+#endif
+
 namespace PLearn {
 using namespace std;
 
@@ -49,10 +54,21 @@ struct tms Profiler::t;
 #endif
 bool Profiler::active  = false;
 
+
+string Profiler::get_omp_save_name(const string name_of_piece_of_code){
+#ifdef _OPENMP
+    return name_of_piece_of_code+tostring(omp_get_thread_num());
+#else
+    return name_of_piece_of_code;
+#endif
+}
+
 #ifdef PROFILE
 // start recording time for named piece of code
-void Profiler::start(const string& name_of_piece_of_code, const int max_nb_going)
+void Profiler::start(const string& name_of_piece_of_code_, const int max_nb_going)
 {
+    string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
+#pragma omp critical (codes_statistics)
     if (active)
     {
         map<string,Profiler::Stats>::iterator it = 
@@ -85,8 +101,11 @@ void Profiler::start(const string& name_of_piece_of_code, const int max_nb_going
   
 // end recording time for named piece of code, and increment
 // frequency of occurence and total duration of this piece of code.
-void Profiler::end(const string& name_of_piece_of_code)
+void Profiler::end(const string& name_of_piece_of_code_)
 {
+    string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
+
+#pragma omp critical (codes_statistics)
     if (active)
     {
         clock_t end_time = times(&t);
@@ -142,21 +161,30 @@ void Profiler::pl_profile_reportwall(ostream& out){
 
 //! Return the statistics related to a piece of code.  This is useful
 //! for aggregators that collect and report a number of statistics
-const Profiler::Stats& Profiler::getStats(const string& name_of_piece_of_code)
+const Profiler::Stats& Profiler::getStats(const string& name_of_piece_of_code_)
+{
+    string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
+    Stats* s;
+#pragma omp critical (codes_statistics)
 {
     map<string,Stats>::iterator it = codes_statistics.find(name_of_piece_of_code);
     if (it == codes_statistics.end())
         PLERROR("Profiler::getStats: cannot find statistics for '%s'. the active variable is at: %d",
                 name_of_piece_of_code.c_str(),active);
-    return it->second;
+    s = &(it->second);
+}
+return *s;
 }
 
 
 //! Reset the statistics associated with a piece of code.  The piece of
 //! code may not yet exist, this is fine.
-void Profiler::reset(const string& name_of_piece_of_code)
+void Profiler::reset(const string& name_of_piece_of_code_)
 {
+    string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
+
     Stats empty;
+#pragma omp critical (codes_statistics)
     codes_statistics[name_of_piece_of_code] = empty;
 }
 
@@ -164,6 +192,8 @@ void Profiler::reset(const string& name_of_piece_of_code)
 // output a report on the output stream, giving
 // the statistics recorded for each of the named pieces of codes.
 void Profiler::report(ostream& out)
+{
+#pragma omp critical (codes_statistics)
 {
     map<string,Profiler::Stats>::iterator it =  
         codes_statistics.begin(), end =  codes_statistics.end();
@@ -187,10 +217,13 @@ void Profiler::report(ostream& out)
             << "Average system duration  = " << avg_sys  << endl;
     }
 }
+}
 
 // output a report on the output stream, giving
 // the wall time statistics recorded for each of the named pieces of code
 void Profiler::reportwall(ostream& out)
+{
+#pragma omp critical (codes_statistics)
 {
     map<string,Profiler::Stats>::iterator it =  
         codes_statistics.begin(), end =  codes_statistics.end();
@@ -207,6 +240,7 @@ void Profiler::reportwall(ostream& out)
         double avg_wall = (double)stats.wall_duration/stats.frequency_of_occurence;
         out << "Average wall   duration  = " << avg_wall << endl;
     }
+}
 }
 
 } // end of namespace PLearn

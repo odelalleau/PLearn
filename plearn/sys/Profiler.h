@@ -224,6 +224,8 @@ protected:
     static map<string,Stats> codes_statistics;
     static struct tms t;
     static bool active;
+    //return a thread save name. usefull for openmp code.
+    static string get_omp_save_name(const string name_of_piece_of_code);
 };
 
 } // end of namespace PLearn
