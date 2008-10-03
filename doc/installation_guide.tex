@@ -361,18 +361,18 @@ To have more information on pymake do: \verb!pymake help!
 To clean all the file generated during the compilation do \verb!pymake -clean [dir]!. The dir parameter is optinal and if it is not there, the current directory will be used.
 
 (Not sure this is cross-platform, tested on linux)
-If PLearn is on NFS(or others non local directory), you can speed up the
-recompilation when you modified somes files, with the \verb!-tmp! or the
+If PLearn is on NFS(or other non local directory), you can speed up the
+recompilation+liniking, with the \verb!-tmp! or the
 \verb!-local_ofiles! options. Both will put the objects files in the
-local directory \verb!/tmp/.pymake! to speed up the linking instead of in the
-PLearn directory. 
+local directory \verb!/tmp/.pymake! instead of in the
+PLearn directory. This can considerably speed up the linking phase. 
 The \verb!-tmp! options will compile all the objects files only with the local host.
 When it is executed for the first
-time on a computer, it will compile all files. The next time, it will reuse the one
-previously compiled if it didn't change. This is usefull is you have
-limited space on the PLearn directory on the NFS, as their won't be
+time on a computer, it will compile all files. The next time, it will not recompile the 
+previously compiled files if not needed. This is usefull is you have
+limited space on the PLearn directory on NFS, as there won't be
 any objects
-file in it, but if you change of local computer, you must recompile
+file in it, but if you move to another local computer, you must recompile
 everything.
 
 The \verb!-local_ofiles! option will distribute the compilation on many computer(see
@@ -469,13 +469,41 @@ If it does work, you can try with more dependencies to have more fonctionality w
 
 \section{Installation on Mac OS X}
 
-\subsection{External dependencies}
+\subsection{External dependencies (Mac OS X 10.5 ``Leopard'')}
+
+The easiest way to install external dependencies is through fink.
+You should install {\bf fink} ( \url{http://fink.sourceforge.net} )
+And its GUI {\bf Fink Commander} ( \url{http://finkcommander.sourceforge.net/} ).
+To gain access to the most up-to-date packages, enable the {\em use of unstable package} (e.g. in {\tt Menu Fink
+Commander / Preferences.../ Fink} ).
+% \item In a shell, run {\tt fink selfupdate -m cvs}
+To be able to compile and link the core of plearn, you should install the
+following packages through fink:
+\begin{itemize}
+\item {\tt python25}
+\item {\tt boost1.33}
+\item {\tt nspr} and {\tt nspr-shlibs} (for NSPR)
+\item {\tt scipy-core-py25} (for numpy, which somehow creeped in the dependencies of pymake, and shouldn't have...)
+\item {\tt ncurses}  (useful for viewing dataset tables)
+\end{itemize}
+
+Optional libraries also easily installable from fink:
+\begin{itemize}
+\item {\tt matplotlib-py25} for 2D graphics
+\item {\tt mayavi-py25} for 3D interactive graphics
+\item {\tt pygtk2-py25} if you want to play with the
+  python GUI tools and demo.
+\end{itemize}
+
+
+
+\subsection{External dependencies (older version of Mac OS X)}
 If you want to see graphical displays, you should also install X11 (apple
 has a version on its system install CDS shipped with the computers as part
 of XCode: look for packages {\bf X11 User} and {\bf X11 SDK}.
 
 You should then install {\bf fink} ( \url{http://fink.sourceforge.net} )
-and its GUI {\bf Fink Commander} ( \url{http://finkcommander.sourceforge.net/} ).
+And its GUI {\bf Fink Commander} ( \url{http://finkcommander.sourceforge.net/} ).
 We recommend you also enable the {\em use of unstable package} (in {\tt Menu Fink
 Commander / Preferences.../ Fink} ) to gain access to the latest packages.
 
