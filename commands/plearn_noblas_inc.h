@@ -56,6 +56,7 @@
 #include <plearn/math/ManualBinner.h>
 #include <plearn/math/SoftHistogramBinner.h>
 #include <plearn/misc/ShellScript.h>
+#include <plearn/misc/Redirect.h>
 #include <plearn/misc/RunObject.h>
 #include <plearn_learners/misc/Grapher.h>
 #include <plearn_learners/misc/VariableSelectionWithDirectedGradientDescent.h>
