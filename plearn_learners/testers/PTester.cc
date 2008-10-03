@@ -92,6 +92,7 @@ PTester::PTester():
        save_initial_tester(true),
        save_learners(true),
        save_stat_collectors(true),
+       save_split_stats(true),
        save_test_costs(false),
        save_test_outputs(false),
        save_test_names(true),
@@ -176,7 +177,7 @@ void PTester::declareOptions(OptionList& ol)
     declareOption(
         ol, "report_stats", &PTester::report_stats, OptionBase::buildoption,
         "If true, the computed global statistics specified in statnames will be saved in global_stats.pmat \n"
-        "and the corresponding per-split statistics will be saved in split_stats.pmat \n"
+        "and the corresponding per-split statistics will be saved in split_stats.pmat(see save_split_stats) \n"
         "For reference, all cost names can be saved with the option save_test_names.");
 
     declareOption(
@@ -187,6 +188,10 @@ void PTester::declareOptions(OptionList& ol)
     declareOption(
         ol, "save_stat_collectors", &PTester::save_stat_collectors, OptionBase::buildoption,
         "If true, stat collectors for split#k will be saved in Split#k/train_stats.psave and Split#k/test#i_stats.psave");
+
+    declareOption(
+        ol, "save_split_stats", &PTester::save_split_stats, OptionBase::buildoption,
+        "If true, will generate the file split_stats.pmat that contain stats about each stragerie.");
 
     declareOption(
         ol, "save_learners", &PTester::save_learners, OptionBase::buildoption,
@@ -745,12 +750,14 @@ Vec PTester::perform(bool call_forget)
             global_stats_vm->declareField(k, statspecs[k].statName());
         global_stats_vm->saveFieldInfos();
 
-        split_stats_vm = new FileVMatrix(expdir / "split_stats.pmat",
-                                         nsplits, 1 + nstats);
-        split_stats_vm->declareField(0, "splitnum");
-        for (int k = 0; k < nstats; k++)
-            split_stats_vm->declareField(k+1, statspecs[k].setname + "." + statspecs[k].intstatname);
-        split_stats_vm->saveFieldInfos();
+        if(save_split_stats){
+            split_stats_vm = new FileVMatrix(expdir / "split_stats.pmat",
+                                             nsplits, 1 + nstats);
+            split_stats_vm->declareField(0, "splitnum");
+            for (int k = 0; k < nstats; k++)
+                split_stats_vm->declareField(k+1, statspecs[k].setname + "." + statspecs[k].intstatname);
+            split_stats_vm->saveFieldInfos();
+        }
     }
 
     PLearnService& service(PLearnService::instance());

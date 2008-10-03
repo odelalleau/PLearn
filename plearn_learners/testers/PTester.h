@@ -94,9 +94,11 @@ public:
     bool save_initial_tester;
     bool save_learners;
     bool save_stat_collectors;
+    bool save_split_stats;
     bool save_test_costs;
     bool save_test_outputs;
     bool save_test_names;
+
     bool call_forget_in_run;
     PP<Splitter> splitter;
     TVec<TVec<string> > statmask;
