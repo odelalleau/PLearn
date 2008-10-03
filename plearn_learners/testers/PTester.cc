@@ -41,6 +41,7 @@
 #include "PTester.h"
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/openString.h>
+#include <plearn/io/openFile.h>
 #include <plearn/math/VecStatsCollector.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
@@ -101,6 +102,8 @@ PTester::PTester():
        should_train(true),
        should_test(true),
        enforce_clean_expdir(true),
+       redirect_stdout(false),
+       redirect_stderr(false),
        parallelize_here(true)
 {}
 
@@ -276,6 +279,14 @@ void PTester::declareOptions(OptionList& ol)
         "some precomputed results that are being generated as the model is\n"
         "loaded, so it is not empty.  In those contexts, it makes sense to allow\n"
         "this option to be false.\n");
+
+    declareOption(
+        ol, "redirect_stdout", &PTester::redirect_stdout, OptionBase::buildoption,
+        "If true will redirect the stdout to expdir/stdout.");
+
+    declareOption(
+        ol, "redirect_stderr", &PTester::redirect_stderr, OptionBase::buildoption,
+        "If true will redirect the stderr to expdir/stderr.");
 
     declareOption(
         ol, "parallelize_here", &PTester::parallelize_here, OptionBase::buildoption | OptionBase::nosave,
@@ -702,6 +713,15 @@ Vec PTester::perform(bool call_forget)
         // Save this tester description in the expdir
         if (save_initial_tester)
             PLearn::save(expdir / "tester.psave", *this);
+    }
+
+    if(redirect_stdout && ! expdir.isEmpty()){
+        pout.flush();
+        pout=openFile(expdir/"stdout",PStream::raw_ascii,"w");
+    }
+    if(redirect_stderr && ! expdir.isEmpty()){
+        perr.flush();
+        perr=openFile(expdir/"stderr",PStream::raw_ascii,"w");
     }
 
     splitter->setDataSet(dataset);

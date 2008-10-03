@@ -132,6 +132,9 @@ public:
      */
     bool enforce_clean_expdir;
      
+    bool redirect_stdout;
+    bool redirect_stderr;
+    
     bool parallelize_here;
     // ****************
     // * Constructors *
