@@ -39,6 +39,7 @@
 
 #include "Profiler.h"
 #include <time.h>
+
 #ifdef _OPENMP
 #include<omp.h>
 #include<plearn/base/tostring.h>
@@ -152,8 +153,12 @@ void Profiler::pl_profile_deactivate(){
 // call Profiler::report if PL_PROFILE is set
 void Profiler::pl_profile_report(ostream& out){
     Profiler::report(out);}
+void Profiler::pl_profile_report(PStream out){
+    Profiler::report(out);}
 // call Profiler::reportwall if PL_PROFILE is set
 void Profiler::pl_profile_reportwall(ostream& out){
+    Profiler::reportwall(out);}
+void Profiler::pl_profile_reportwall(PStream out){
     Profiler::reportwall(out);}
 #endif
 
@@ -193,6 +198,10 @@ void Profiler::reset(const string& name_of_piece_of_code_)
 // the statistics recorded for each of the named pieces of codes.
 void Profiler::report(ostream& out)
 {
+    report(PStream(&out));
+}
+void Profiler::report(PStream out)
+{
 #pragma omp critical (codes_statistics)
 {
     map<string,Profiler::Stats>::iterator it =  
@@ -222,6 +231,10 @@ void Profiler::report(ostream& out)
 // output a report on the output stream, giving
 // the wall time statistics recorded for each of the named pieces of code
 void Profiler::reportwall(ostream& out)
+{
+    reportwall(PStream(&out));
+}
+void Profiler::reportwall(PStream out)
 {
 #pragma omp critical (codes_statistics)
 {

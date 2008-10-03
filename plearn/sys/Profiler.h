@@ -51,6 +51,7 @@
 #include <plearn/base/general.h>
 #include <plearn/base/plerror.h>
 #include <plearn/base/stringutils.h>
+#include <plearn/io/PStream.h>
 
 namespace PLearn {
 using namespace std;
@@ -185,15 +186,19 @@ public:
     //!  call report() if if PL_PROFILE is set
 #if defined(PROFILE) && defined(PL_PROFILE)
     static void pl_profile_report(ostream& out);
+    static void pl_profile_report(PStream out);
 #else
     static inline void pl_profile_report(ostream& out) {}
+    static inline void pl_profile_report(PStream out) {}
 #endif
 
     //!  call reportwall() if if PL_PROFILE is set
 #if defined(PROFILE) && defined(PL_PROFILE)
     static void pl_profile_reportwall(ostream& out);
+    static void pl_profile_reportwall(PStream out);
 #else
     static inline void pl_profile_reportwall(ostream& out) {}
+    static inline void pl_profile_reportwall(PStream out) {}
 #endif
 
     //! Return the number of clock ticks per second on this computer.
@@ -215,10 +220,12 @@ public:
     //!  Output a report on the output stream, giving
     //!  the statistics recorded for each of the named pieces of codes.
     static void report(ostream& out);
+    static void report(PStream out);
 
     //!  Output a report on the output stream, giving the
     //!  wall time statistics recorded for each of the named pieces of codes.
     static void reportwall(ostream& out);
+    static void reportwall(PStream out);
 
 protected:
     static map<string,Stats> codes_statistics;
