@@ -54,7 +54,8 @@ using namespace std;
 PStream openFile(const PPath& filepath_, 
                  PStream::mode_t io_formatting,
                  const string& openmode = "r",
-                 bool err_if_dont_exist = true); 
+                 bool err_if_dont_exist = true,
+                 bool make_dirs = false); 
 
 } // end of namespace PLearn
 

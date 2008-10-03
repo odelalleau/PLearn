@@ -67,14 +67,19 @@ using namespace std;
  *  it doesn't exist). The default is to open the file for reading ("r").
  *
  *  @param err_if_dont_exist if true, will generate a PLERROR if the file
- *  don't exist. Else, will return an empty PStream witch st->good() will
- *  return false.
+ *  don't exist when opened in read mode. Else, will return an empty 
+ *  PStream witch st->good() will return false.
+ *  
+ *  @param make_dirs it true, will make the directory in filepath_
  */
 PStream openFile(const PPath& filepath_, PStream::mode_t io_formatting,
-                 const string& openmode, bool err_if_dont_exist)
+                 const string& openmode, bool err_if_dont_exist, bool make_dirs)
 {
     const PPath filepath = filepath_.absolute();
     
+    if(make_dirs)
+        force_mkdir(filepath.dirname());
+
     PStream st;
     PRFileDesc* fd;
     if ((openmode == "r" || openmode == "a") && isdir(filepath))
