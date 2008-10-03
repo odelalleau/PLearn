@@ -60,13 +60,15 @@ using namespace std;
 // Define 'real' constants.
 // NB: the max is not really the max, but it's large enough for most applications.
 #if defined(USEDOUBLE)
-#define real double
+//#define real double
+typedef double real;
 #define REAL_MAX DBL_MAX
 #define REAL_EPSILON DBL_EPSILON
 #define ABSOLUTE_TOLERANCE 1e-8
 #define RELATIVE_TOLERANCE ABSOLUTE_TOLERANCE
 #elif defined(USEFLOAT)
-#define real float
+//#define real float
+typedef float real;
 #define REAL_MAX FLT_MAX
 #define REAL_EPSILON FLT_EPSILON
 #define ABSOLUTE_TOLERANCE 1e-6
