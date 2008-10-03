@@ -229,12 +229,9 @@ void DiscriminativeRBM::build_costs()
     build_classification_cost();
 
     int current_index = 0;
-    if( targetsize() > 1 )
-    {
-        cost_names.append("NLL");
-        nll_cost_index = current_index;
-        current_index++;
-    }
+    cost_names.append("NLL");
+    nll_cost_index = current_index;
+    current_index++;
     
     cost_names.append("class_error");
     class_cost_index = current_index;
@@ -603,7 +600,7 @@ void DiscriminativeRBM::train()
     Vec input( inputsize() );
     Vec target( targetsize() );
     int target_index;
-    real weight; // unused
+    real weight; 
 
     real nll_cost; 
     real class_error;
@@ -816,8 +813,10 @@ void DiscriminativeRBM::train()
             semi_sup_neg_up_val << hidden_layer->expectation;
         }
 
-        setLearningRate( disc_learning_rate / (1. + disc_decrease_ct * stage ));
-
+        if( train_set->weightsize() == 0 )
+            setLearningRate( disc_learning_rate / (1. + disc_decrease_ct * stage ));
+        else
+            setLearningRate( weight * disc_learning_rate / (1. + disc_decrease_ct * stage ));
         // Get gradient and update
 
         if( !do_not_use_discriminative_learning && 
@@ -833,7 +832,7 @@ void DiscriminativeRBM::train()
                                                         nll_cost );
                 
                 class_error =  ( argmax(class_output) == target_index ) ? 0: 1;  
-                //train_costs[nll_cost_index] = nll_cost;
+                train_costs[nll_cost_index] = nll_cost;
                 train_costs[class_cost_index] = class_error;
                 
                 classification_cost->bpropUpdate( class_output, target, nll_cost,
@@ -913,8 +912,13 @@ void DiscriminativeRBM::train()
         { 
             if( ( !is_missing(target[0]) && (target[0] >= 0) ) && gen_learning_weight > 0 )
             {
-                setLearningRate( gen_learning_every_n_samples * gen_learning_weight * disc_learning_rate / 
-                                 (1. + disc_decrease_ct * stage ));
+                if( train_set->weightsize() == 0 )
+                    setLearningRate( gen_learning_every_n_samples * gen_learning_weight * disc_learning_rate / 
+                                     (1. + disc_decrease_ct * stage ));
+                else
+                    setLearningRate( weight * gen_learning_every_n_samples * gen_learning_weight * disc_learning_rate / 
+                                     (1. + disc_decrease_ct * stage ));
+                    
                 joint_layer->update( gen_pos_down_val, gen_neg_down_val );
                 hidden_layer->update( gen_pos_up_val, gen_neg_up_val );
                 joint_connection->update( gen_pos_down_val, gen_pos_up_val,
@@ -924,8 +928,13 @@ void DiscriminativeRBM::train()
 
         if( ( is_missing(target[0]) || (target[0] < 0)  ) && semi_sup_learning_weight > 0 )
         {
-            setLearningRate( semi_sup_learning_weight * disc_learning_rate / 
-                             (1. + disc_decrease_ct * stage ));
+            if( train_set->weightsize() == 0 )
+                setLearningRate( semi_sup_learning_weight * disc_learning_rate / 
+                                 (1. + disc_decrease_ct * stage ));
+            else
+                setLearningRate( weight * semi_sup_learning_weight * disc_learning_rate / 
+                                 (1. + disc_decrease_ct * stage ));
+                
             joint_layer->update( semi_sup_pos_down_val, semi_sup_neg_down_val );
             hidden_layer->update( semi_sup_pos_up_val, semi_sup_neg_up_val );
             joint_connection->update( semi_sup_pos_down_val, semi_sup_pos_up_val,
@@ -980,6 +989,7 @@ void DiscriminativeRBM::computeCostsFromOutputs(const Vec& input, const Vec& out
         {
             //classification_cost->fprop( output, target, costs[nll_cost_index] );
             //classification_cost->CostModule::fprop( output, target, costs[nll_cost_index] );
+            costs[nll_cost_index] = -pl_log(output[(int) round(target[0])]);
             costs[class_cost_index] =
                 (argmax(output) == (int) round(target[0]))? 0 : 1;
         }
