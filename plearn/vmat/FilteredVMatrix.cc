@@ -237,11 +237,12 @@ void FilteredVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "repeat_count_field_name", &FilteredVMatrix::repeat_count_field_name, OptionBase::buildoption,
                   "Field name for the number of repetitions (n).  No field is added if empty.");
 
-    declareOption(ol, "warn_no_metadatadir", &FilteredVMatrix::warn_no_metadatadir,
+    declareOption(ol, "warn_no_metadatadir",
+                  &FilteredVMatrix::warn_no_metadatadir,
                   OptionBase::buildoption,
-                  "Did we generate a warning if their is no metadatadir."
-                  " This can be usefull as if their is no metadatadir we"
-                  " will recompute everything each time.");
+        "If True, generate a warning when there is no metadatadir.\n"
+        "This can be useful as if there is no metadatadir we will recompute\n"
+        "filtered indices every time.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -289,8 +290,8 @@ void FilteredVMatrix::build_()
         else {
             // Compute selected indices in memory only.
             if(warn_no_metadatadir)
-                PLWARNING("In FilteredVMatrix::build_() - their is no metadatadir."
-                          " We will do the filtering each time.");
+                PLWARNING("In FilteredVMatrix::build_() - there is no "
+                        "metadatadir: recomputing filtered indices");
             computeFilteredIndices();
         }
 
