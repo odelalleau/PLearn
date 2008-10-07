@@ -26,10 +26,6 @@ function calls leading up to the error, in the order they occurred.
  <string> in get_value()
 
 NameError: global name 'buf' is not defined
-    __class__ = NameError
-    __delattr__ = <method-wrapper '__delattr__' of exceptions.NameError object at 0x[memory_address]>
-    __dict__ = {}
-        message = "global name 'buf' is not defined"
 
 The above is a description of an error in a Python program.  Here is
 the original traceback:

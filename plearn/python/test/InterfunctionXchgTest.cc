@@ -199,8 +199,9 @@ void InterfunctionXchgTest::perform()
             regex_replace(msg_without_sys_dependent_data, except_display,
                     "\\1");
 
-        boost::regex extra_info("__doc__(.)*args = \\([^\\)]*\\)$\\n",
-                                boost::regex::perl|boost::regex::icase);
+        boost::regex extra_info("__class__(.)*message = [^\\n]+$\\n",
+                boost::regex::perl|boost::regex::icase);
+
         msg_without_sys_dependent_data =
             regex_replace(msg_without_sys_dependent_data, extra_info, "");
 
