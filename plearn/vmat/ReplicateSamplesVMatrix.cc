@@ -190,6 +190,7 @@ void ReplicateSamplesVMatrix::build_()
         if (operate_on_bags)
             bag_sizes[bag_start_idx]++;
     }
+
     if( replicate_missing_targets && nan_indices.length() > 0  )
         class_indices.append( nan_indices );
     if( replicate_negative_targets && negativeclass_indices.length() > 0 )
@@ -211,14 +212,6 @@ void ReplicateSamplesVMatrix::build_()
             indices.append(class_indices[c][i % class_indices[c].length()]);
         }
     }
-
-    if( !replicate_missing_targets && nan_indices.length() > 0  )
-        indices.append( nan_indices );
-    if( !replicate_negative_targets && negativeclass_indices.length() > 0 )
-        for(int c = 0; c < negativeclass_indices.length(); c ++ )
-            if( negativeclass_indices[c].length() > 0 )
-                indices.append( negativeclass_indices[c] );
-
 
     // Shuffle data.
     random_gen->manual_seed(seed);
