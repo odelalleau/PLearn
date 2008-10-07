@@ -599,7 +599,7 @@ void DiscriminativeRBM::train()
 
     Vec input( inputsize() );
     Vec target( targetsize() );
-    int target_index;
+    int target_index = -1;
     real weight; 
 
     real nll_cost; 
@@ -825,6 +825,7 @@ void DiscriminativeRBM::train()
         {
             if( targetsize() == 1)
             {
+                PLASSERT( target_index >= 0 );
                 classification_module->fprop( input, class_output );
                 // This doesn't work. gcc bug?
                 //classification_cost->fprop( class_output, target, nll_cost );
