@@ -453,6 +453,12 @@ Vec HyperOptimize::optimize()
             }
         }
         ++trialnum;
+        if(verbosity>1) {
+            perr << "In HyperOptimize::optimize() - cost=" << which_cost
+                 << " nb of trials="<<trialnum
+                 << " Current value=" << objective << " Best value= "
+                 << best_objective << endl;
+        }
 
         auto_save_timer->stopTimer("auto_save");
         if (auto_save > 0 &&
