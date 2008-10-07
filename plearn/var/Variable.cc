@@ -292,6 +292,11 @@ void Variable::declareMethods(RemoteMethodMap& rmm)
              ArgDoc ("jstart", "Column where 'submat' is inserted")));
 
     declareMethod(
+            rmm, "setMinValue", &Variable::setMinValue,
+            (BodyDoc("Set box constraint (minimum bound) on this Variable."),
+             ArgDoc ("val", "Minimum value it can take")));
+
+    declareMethod(
             rmm, "fprop", &Variable::fprop,
             (BodyDoc("Update value of this Var")));
 
