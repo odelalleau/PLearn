@@ -133,7 +133,18 @@ double pl_strtod(const char* nptr, char** endptr)
 ///////////////
 float pl_strtof(const char* nptr, char** endptr)
 {
-#ifdef WIN32
+#ifdef WARN_STRTOF_ROUND
+    //We do it this way to detect if we have enought precision to store it in a float.
+    //Their is no error generated if the string is "84672690528" event if 84672692224f is returned.
+    float f;
+    double d = pl_strtod(nptr, endptr);
+    f = float(d);
+    if(d!=f && !is_missing(f))
+        PLWARNING("In pl_strtof() - float don't have enought precission to"
+                  " store %s. It is stored as %f. Float have 24 binary digit"
+                  " of precision (6 decimal digit of precision)", nptr, f);
+    return f;
+#elif defined(WIN32)
     return float(pl_strtod(nptr, endptr));
 #else
     return strtof(nptr, endptr);
