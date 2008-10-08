@@ -42,7 +42,30 @@ try:
 except ImportError:
     pyplearn_import_failed = True
     
-                             
+def pmat2libsvm(pmat, libsvm_file_name):
+    """
+    Reads a pmat containing in each row inputsize input fields followed by a scalar target field
+    and writes it in libsvm format.
+    """
+
+    libsvm_file = open(libsvm_file_name,'w')
+    
+    if type(pmat) is str:
+        pmat = PMat(pmat)
+
+    width = len(pmat[0])
+    inputsize = width-1
+       
+    for row in pmat:
+        str_row = str(int(row[inputsize]))
+        for i in range(inputsize):
+            str_row  = str_row + ' ' + str(i+1)+':'+str(row[i])
+        
+        str_row = str_row + '\n'
+        libsvm_file.write(str_row)
+
+    libsvm_file.close()
+
 
 def array_columns( a, cols ):
     indices = None
