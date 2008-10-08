@@ -83,13 +83,18 @@ Options specifying the type of compiled file to produce:
                  Note: SAS does not seem to like the -g option in
                  g++, thus one should use -opt if the dll is meant
                  to be used in SAS.
-  -m32: force compilation in 32bits mode.
-        Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also
-        on ia64. Allows to compile on .pymake/linux-x86_64.hosts,
-        linux-ia64.hosts and linux-i386.hosts.
-  -so:  create a shared object (.so) instead of an executable file.
-  -pyso: same as -so, but for python extension modules (does not add
-         'lib' before the .so name.)
+  -m32:  force compilation in 32bits mode.
+         Works on AMD64 (linux-x86_64) and linux-i386 machines, probably also
+         on ia64. Allows to compile on .pymake/linux-x86_64.hosts,
+         linux-ia64.hosts and linux-i386.hosts.
+  -so:   On linux this will create a shared object (libxxx.so) instead of an executable file.
+         On Mac OS X darwin this will create a libxxx.dylib (using the -dylib option
+         to produce a mach-o shared library that has file type MH_DYLIB)
+  -pyso: Similar to -so, but for python extension modules
+         This will create a .so (both on linux and Mac OS X darwin) but without
+         preprending 'lib' to the .so name.
+         On Mac OS X darwin it uses options -bundle -flat_namespace options
+         to produce a mach-o bundle that has file type MH_BUNDLE         
   -static: produce a statically linked executable.
 
 Options that will not affect the final compiled file:
@@ -1142,6 +1147,25 @@ def sequential_dll(target_file_info):
         target_file_info.launch_dll_wrapping()
 
 
+def get_so_options():
+    """Returns the linker options related to shared libraries"""
+    so_options = ""    
+    if create_so:
+        if platform=='darwin':
+            so_options = " -dylib -flat_namespace "            
+        else:
+            so_options = " -shared "
+    elif create_pyso:
+        if platform=='darwin':
+            so_options = " -bundle -flat_namespace "            
+        else:
+            so_options = " -shared "
+    elif static_linking:                
+        so_options = " -static "
+
+    return so_options
+
+
 ###  Special calling options, that don't actually compile anything
 
 ## this function takes a target, and extract all the sources necessary
@@ -1162,11 +1186,9 @@ def distribute_source(target, ccfiles_to_compile, executables_to_link, linkname)
 
     linker = default_linker
     linkeroptions = ""
-    so_options = ""
+    so_options = get_so_options()
     if force_32bits:
         linkeroptions = linkeroptions + ' -m32'
-    if create_so or create_pyso:
-        so_options = " -shared "
     for opt in options:
         optdef = pymake_options_defs[opt]
         if optdef.linkeroptions:
@@ -1729,8 +1751,11 @@ class FileInfo:
                 self.corresponding_def_file = join(self.filedir, self.filebase+'.def')
 
             elif create_so:
-                self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
-                
+                if platform=='darwin':
+                    self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.dylib')
+                else:
+                    self.corresponding_output = join(self.filedir, objsdir, 'lib'+self.filebase+'.so')
+                    
             elif create_pyso:
                 self.corresponding_output = join(self.filedir, objsdir, self.filebase+'.so')
 
@@ -2330,13 +2355,9 @@ digraph G
             self.objsfilelist= map(local_filepath, self.objsfilelist)
         linker = default_linker
         linkeroptions = ""
-        so_options = ""
+        so_options = get_so_options()
         if force_32bits:
             linkeroptions = linkeroptions + ' -m32'
-        if create_so or create_pyso:
-            so_options = " -shared "
-        elif static_linking:
-            so_options = " -static "
         for opt in options:
             optdef = pymake_options_defs[opt]
             if optdef.linkeroptions:

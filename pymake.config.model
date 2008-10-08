@@ -419,7 +419,7 @@ if not 'nopython' in optionargs:
         optionalLibrary( name = 'python',
                      triggers = '[Pp]ython*',
                      includedirs = numpy_includedirs,
-                     linkeroptions = ( '-L%s -lnumarray ' % numpy_site_packages + 
+                     linkeroptions = ( # '-L%s -lnumarray ' % numpy_site_packages + 
                                        '-L%s/python%s/config -lpython%s ' % (python_lib_root, python_version, python_version) +
                                        '' )
                      )
