@@ -1090,6 +1090,7 @@ class DBICondor(DBIBase):
             condor_dat.write(dedent("""
             stream_error = True
             stream_output = True
+            transfer_executable = True
             """))
         if self.mem>0:
             #condor need value in Kb
