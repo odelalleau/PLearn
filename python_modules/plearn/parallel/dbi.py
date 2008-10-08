@@ -1091,6 +1091,7 @@ class DBICondor(DBIBase):
             stream_error = True
             stream_output = True
             transfer_executable = True
+            when_to_transfer_output = ON_EXIT
             """))
         if self.mem>0:
             #condor need value in Kb
