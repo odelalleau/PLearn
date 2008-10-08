@@ -825,7 +825,7 @@ class DBICondor(DBIBase):
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
 
-    def make_wrapper_script(self,launch_file, bash_exec):
+    def make_wrapper_script(self,launch_file, bash_exec, condor_file):
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
         if not os.path.exists(dbi_file):
@@ -857,8 +857,59 @@ class DBICondor(DBIBase):
                     launch_dat.write('export HOME=%s\n' % self.condor_home)
                 if self.source_file:
                     launch_dat.write('source ' + self.source_file + '\n')
+                if self.condor_submit_exec=="pkdilly":
+                    cmd=self.condor_submit_exec+" -S "+condor_file
+                    self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
+                    self.p.wait()
+                    assert self.p.stdout.readline()==""
+                    err = self.p.stderr.readline()
+#example de sortie de pkdilly
+#La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
+                    assert err.startswith('La tache a soumettre est dans: ')
+                    pkdilly_file = err.split()[-1]
+                    print pkdilly_file
+                    pkdilly_fd = open( pkdilly_file, 'r' )
+                    lines = pkdilly_fd.readlines()
+                    get=[]
+                    for line in lines:
+                        if get and line.rfind('"')>=0:
+                            tmp= line.split('"')[0].strip()
+                            if tmp:
+                                get.append(tmp)
+                            del get[0]
+                            break#we got all the env variable...
+                        elif get:
+                            get.append(line.strip()[:-1])
+                        elif line.startswith("environment"):
+                            get.append(line.strip()[:-1])
+                    get=[x for x in get if x.startswith("KRV")]
+                    get=[x for x in get if not x.startswith("KRVEXECUTE=")]
+                    launch_dat.write(dedent('''\
+                    echo "Executing on " `/bin/hostname` 1>&2
+                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
+                    echo "PATH: $PATH" 1>&2
+                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
+                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
+                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
+                    #which python 1>&2
+                    #echo -n python version: 1>&2
+                    #python -V 1>&2
+                    #echo -n /usr/bin/python version: 1>&2
+                    #/usr/bin/python -V 1>&2
+                    '''))
 
-                launch_dat.write(dedent('''\
+                    for g in get:
+                        launch_dat.write("export "+g+"\n")
+                    launch_dat.write(dedent('''
+                    declare -a Array=($*)
+                    export KRVEXECUTE=${Array[0]}
+                    echo "COMMAND=${Array[0]}" 1>&2
+                    echo "ARGS=${Array[*]:1}" 1>&2
+                    /usr/sbin/circus ${Array[*]:1}
+                    '''))
+                    self.condor_submit_exec="condor_submit"
+                else:
+                    launch_dat.write(dedent('''\
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
@@ -872,7 +923,7 @@ class DBICondor(DBIBase):
                     #/usr/bin/python -V 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
                     %s
-                    '''%(bash_exec)))
+                    '''%(bash_exec))) 
             else:
                 launch_dat.write(dedent('''\
                     #! /bin/tcsh
@@ -1058,25 +1109,24 @@ class DBICondor(DBIBase):
             for i in condor_datas:
                 condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
         else:
+            def print_task(task, stdout_file, stderr_file):
+                argstring = condor_escape_argument(' ; '.join(task.commands))
+                condor_dat.write("arguments    = %s \n" %argstring)
+                condor_dat.write("output       = %s \n" %stdout_file)
+                condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+
             if self.base_tasks_log_file:
                 for (task,task_log) in zip(self.tasks,self.base_tasks_log_file):
-                    argstring =condor_escape_argument(' ; '.join(task.commands))
                     stdout_file=self.log_dir+"/condor"+task_log+".out"
                     stderr_file=self.log_dir+"/condor"+task_log+".err"
-
-                    condor_dat.write("arguments    = %s \n" %argstring)
-                    condor_dat.write("output       = %s \n" %stdout_file)
-                    condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+                    print_task(task,stdout_file,stderr_file)
             elif self.stdouts and self.stderrs:
                 assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
                 for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
                     if stdout_file==stderr_file:
                         print "Condor can't redirect the stdout and stderr to the same file!"
                         sys.exit(1)
-                    argstring =condor_escape_argument(' ; '.join(task.commands))
-                    condor_dat.write("arguments    = %s \n" %argstring)
-                    condor_dat.write("output       = %s \n" %stdout_file)
-                    condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+                    print_task(task,stdout_file,stderr_file)
             elif self.stdouts or self.stderrs:
                 print "DBICondor should have stdouts and stderrs or none of them"
                 sys.exit(1)
@@ -1087,7 +1137,7 @@ class DBICondor(DBIBase):
         condor_dat.close()
 
 
-        self.make_wrapper_script(launch_file,'sh -c "$@"')
+        self.make_wrapper_script(launch_file,'sh -c "$@"',condor_file)
 
         return self.condor_submit_exec + " " + condor_file
 
@@ -1103,6 +1153,9 @@ class DBICondor(DBIBase):
 
 
     def run(self):
+        if (self.condor_submit_exec=="pkdilly" and self.nb_proc > 0):
+            print "curently pkdilly with nb_proc >0 is not supported!"
+
         print "[DBI] The Log file are under %s"%self.log_dir
 
         self.exec_pre_batch()
