@@ -867,7 +867,6 @@ class DBICondor(DBIBase):
 #La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
                     assert err.startswith('La tache a soumettre est dans: ')
                     pkdilly_file = err.split()[-1]
-                    print pkdilly_file
                     pkdilly_fd = open( pkdilly_file, 'r' )
                     lines = pkdilly_fd.readlines()
                     get=[]
@@ -1087,6 +1086,11 @@ class DBICondor(DBIBase):
                        self.log_dir,
                        self.log_dir,
                        self.log_file,str(self.getenv),str(self.nice))))
+        if self.condor_submit_exec=="pkdilly":
+            condor_dat.write(dedent("""
+            stream_error = True
+            stream_output = True
+            """))
         if self.mem>0:
             #condor need value in Kb
             condor_dat.write('ImageSize      = %d\n'%(self.mem))
