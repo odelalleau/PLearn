@@ -906,9 +906,10 @@ class DBICondor(DBIBase):
                     launch_dat.write(dedent('''
                     declare -a Array=($*)
                     export KRVEXECUTE=${Array[0]}
-                    echo "COMMAND=${Array[0]}" 1>&2
-                    echo "ARGS=${Array[*]:1}" 1>&2
-                    /usr/sbin/circus ${Array[*]:1}
+                    export ARGS=${Array[*]:1}
+                    echo "COMMAND=$KRVEXECUTE" 1>&2
+                    echo "ARGS=$ARGS" 1>&2
+                    /usr/sbin/circus $ARGS
                     '''))
                     self.condor_submit_exec="condor_submit"
                 else:
@@ -944,10 +945,11 @@ class DBICondor(DBIBase):
                         sg = g.split("=",1)
                         launch_dat.write("setenv "+sg[0]+" "+sg[1]+"\n")
                     launch_dat.write(dedent('''
-                    setenv KRVEXECUTE $1
-                    echo "COMMAND=$1"
-                    echo "ARGS=$argv[2-]"
-                    /usr/sbin/circus $argv[2-]
+                    setenv KRVEXECUTE `echo $string |cut -d' ' -f1`
+                    setenv ARGS `echo $string |cut -d' ' -f2-`
+                    echo "COMMAND=$KRVEXECUTE"
+                    echo "ARGS=$ARGS"
+                    /usr/sbin/circus $ARGS
                     '''))
                     self.condor_submit_exec="condor_submit"
                 else:
