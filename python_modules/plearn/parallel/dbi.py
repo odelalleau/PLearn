@@ -945,8 +945,8 @@ class DBICondor(DBIBase):
                         sg = g.split("=",1)
                         launch_dat.write("setenv "+sg[0]+" "+sg[1]+"\n")
                     launch_dat.write(dedent('''
-                    setenv KRVEXECUTE `echo $string |cut -d' ' -f1`
-                    setenv ARGS `echo $string |cut -d' ' -f2-`
+                    setenv KRVEXECUTE `echo $argv |cut -d' ' -f1`
+                    setenv ARGS `echo $argv |cut -d' ' -f2-`
                     echo "COMMAND=$KRVEXECUTE"
                     echo "ARGS=$ARGS"
                     /usr/sbin/circus $ARGS
