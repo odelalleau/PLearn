@@ -918,7 +918,7 @@ class DBICondor(DBIBase):
                     '''%(bash_exec))) 
             else:
                 launch_dat.write(dedent('''\
-                    #! /bin/tcsh
+                    #!/bin/tcsh
                     \n'''))
                 if self.condor_home:
                     launch_dat.write('setenv HOME %s\n' % self.condor_home)
@@ -944,8 +944,6 @@ class DBICondor(DBIBase):
                         sg = g.split("=",1)
                         launch_dat.write("setenv "+sg[0]+" "+sg[1]+"\n")
                     launch_dat.write(dedent('''
-                    
-                    declare -a Array=($*)
                     setenv KRVEXECUTE $1
                     echo "COMMAND=$1"
                     echo "ARGS=$argv[2-]"
