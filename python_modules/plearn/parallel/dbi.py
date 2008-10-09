@@ -711,6 +711,7 @@ class DBICondor(DBIBase):
         self.condor_home = os.getenv('CONDOR_HOME')
         self.condor_submit_exec = "condor_submit"
         self.condor_submit_dag_exec = "condor_submit_dag"
+        self.pkdilly = False
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
@@ -826,7 +827,7 @@ class DBICondor(DBIBase):
             #keeps a list of the temporary files created, so that they can be deleted at will
 
     def get_pkdilly_var(self, condor_submit_file):
-        cmd=self.condor_submit_exec+" -S "+condor_submit_file
+        cmd="pkdilly -S "+condor_submit_file
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
         assert self.p.stdout.readline()==""
@@ -855,6 +856,46 @@ class DBICondor(DBIBase):
         get=[x for x in get if x.startswith("KRV")]
         get=[x for x in get if not x.startswith("KRVEXECUTE=")]
         return get
+
+    def renew_launch_file(self,launch_file, renew_out_file,
+                          condor_submit_file, bash_exec, seconds=3600):
+        pid=os.fork()
+        if pid==0:#in the childreen
+            #renew each hour
+            out=open(renew_out_file+".out","w")
+            err=open(renew_out_file+".err","w")
+            sys.stdout = out
+            sys.stderr = err
+            cmd="condor_wait -wait "+str(seconds)+" "+self.log_file
+            launch_tmp_file=launch_file+".tmp"
+            while True:
+                p = Popen( cmd, shell=True, stdout=out, stderr=err)
+                ret = p.wait()
+                out.write("[DBICondor] "+str(datetime.datetime.now())+
+                          " condor_wait return code "+
+                          str(ret)+"\n")
+                if ret==0:
+                    out.write("[DBICondor] "+str(datetime.datetime.now())+
+                              " all condor jobs finished. Exiting\n")
+                    break
+                elif ret!=1:
+                    #condor_wait should return only 0 or 1
+                    out.write("[DBICondor] "+str(datetime.datetime.now())+
+                              " expected a return code of 0 or 1." +
+                              " Exiting\n")
+                    break
+                #we write in a temp file then move it to be sure no jobs will 
+                # read a partially writed file
+                out.write("[DBICondor] "+str(datetime.datetime.now())+
+                          "renew the launch file "+launch_file+"\n")
+                self.make_launch_script(launch_tmp_file, bash_exec,
+                                        condor_submit_file)
+                os.rename(launch_tmp_file, launch_file)
+            out.close()
+            err.close()
+        else:
+            #pkboost of the childreen...
+            os.system("pkboost +d "+str(pid))
 
     def make_launch_script(self, launch_file, bash_exec, condor_submit_file):
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
@@ -901,7 +942,7 @@ class DBICondor(DBIBase):
                     #echo -n /usr/bin/python version: 1>&2
                     #/usr/bin/python -V 1>&2
                     '''))
-                if self.condor_submit_exec=="pkdilly":
+                if self.pkdilly:
                     get=self.get_pkdilly_var(condor_submit_file)
 
                     for g in get:
@@ -914,7 +955,6 @@ class DBICondor(DBIBase):
                     echo "ARGS=$ARGS" 1>&2
                     /usr/sbin/circus $ARGS
                     '''))
-                    self.condor_submit_exec="condor_submit"
                 else:
                     launch_fd.write(dedent('''\
                     echo "Running: command: \\"$@\\"" 1>&2
@@ -942,7 +982,7 @@ class DBICondor(DBIBase):
                     #echo ${PROGRAM} $@
                     #${PROGRAM} "$@"
                     '''))
-                if self.condor_submit_exec=="pkdilly":
+                if self.pkdilly:
                     get=self.get_pkdilly_var(condor_submit_file)
                     for g in get:
                         sg = g.split("=",1)
@@ -954,7 +994,6 @@ class DBICondor(DBIBase):
                     echo "ARGS=$ARGS"
                     /usr/sbin/circus $ARGS
                     '''))
-                    self.condor_submit_exec="condor_submit"
                 else:
                     launch_fd.write(dedent('''\
                     echo "Running command: $argv"
@@ -964,6 +1003,10 @@ class DBICondor(DBIBase):
 
             launch_fd.close()
             os.chmod(launch_file, 0755)
+            if self.pkdilly:
+                self.renew_launch_file(launch_file,
+                                       os.path.join(self.log_dir,"renew.outerr")
+                                       , condor_submit_file, bash_exec)
 
     def run_dag(self):
         condor_submit_file = os.path.join(self.log_dir, "dag.condor")
@@ -1101,7 +1144,7 @@ class DBICondor(DBIBase):
                        self.log_dir,
                        self.log_dir,
                        self.log_file,str(self.getenv),str(self.nice))))
-        if self.condor_submit_exec=="pkdilly":
+        if self.pkdilly:
             condor_submit_fd.write(dedent("""
             stream_error = True
             stream_output = True
@@ -1174,7 +1217,7 @@ class DBICondor(DBIBase):
 
 
     def run(self):
-        if (self.condor_submit_exec=="pkdilly" and self.nb_proc > 0):
+        if (self.pkdilly and self.nb_proc > 0):
             print "curently pkdilly with nb_proc >0 is not supported!"
 
         print "[DBI] The Log file are under %s"%self.log_dir
