@@ -825,8 +825,8 @@ class DBICondor(DBIBase):
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
 
-    def get_pkdilly_var(self, condor_file):
-        cmd=self.condor_submit_exec+" -S "+condor_file
+    def get_pkdilly_var(self, condor_submit_file):
+        cmd=self.condor_submit_exec+" -S "+condor_submit_file
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
         assert self.p.stdout.readline()==""
@@ -837,6 +837,9 @@ class DBICondor(DBIBase):
         pkdilly_file = err.split()[-1]
         pkdilly_fd = open( pkdilly_file, 'r' )
         lines = pkdilly_fd.readlines()
+        pkdilly_fd.close()
+        self.temp_files.append(pkdilly_file)
+
         get=[]
         for line in lines:
             if get and line.rfind('"')>=0:
@@ -853,7 +856,7 @@ class DBICondor(DBIBase):
         get=[x for x in get if not x.startswith("KRVEXECUTE=")]
         return get
 
-    def make_wrapper_script(self,launch_file, bash_exec, condor_file):
+    def make_launch_script(self, launch_file, bash_exec, condor_submit_file):
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
         if not os.path.exists(dbi_file):
@@ -876,16 +879,16 @@ class DBICondor(DBIBase):
 
         if not os.path.exists(launch_file) or overwrite_launch_file:
             self.temp_files.append(launch_file)
-            launch_dat = open(launch_file,'w')
+            launch_fd = open(launch_file,'w')
             if not self.source_file or not self.source_file.endswith(".cshrc"):
-                launch_dat.write(dedent('''\
+                launch_fd.write(dedent('''\
                     #!/bin/sh
                     '''))
                 if self.condor_home:
-                    launch_dat.write('export HOME=%s\n' % self.condor_home)
+                    launch_fd.write('export HOME=%s\n' % self.condor_home)
                 if self.source_file:
-                    launch_dat.write('source ' + self.source_file + '\n')
-                launch_dat.write(dedent('''\
+                    launch_fd.write('source ' + self.source_file + '\n')
+                launch_fd.write(dedent('''\
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
@@ -899,11 +902,11 @@ class DBICondor(DBIBase):
                     #/usr/bin/python -V 1>&2
                     '''))
                 if self.condor_submit_exec=="pkdilly":
-                    get=self.get_pkdilly_var(condor_file)
+                    get=self.get_pkdilly_var(condor_submit_file)
 
                     for g in get:
-                        launch_dat.write("export "+g+"\n")
-                    launch_dat.write(dedent('''
+                        launch_fd.write("export "+g+"\n")
+                    launch_fd.write(dedent('''
                     declare -a Array=($*)
                     export KRVEXECUTE=${Array[0]}
                     export ARGS=${Array[*]:1}
@@ -913,19 +916,19 @@ class DBICondor(DBIBase):
                     '''))
                     self.condor_submit_exec="condor_submit"
                 else:
-                    launch_dat.write(dedent('''\
+                    launch_fd.write(dedent('''\
                     echo "Running: command: \\"$@\\"" 1>&2
                     %s
                     '''%(bash_exec))) 
             else:
-                launch_dat.write(dedent('''\
+                launch_fd.write(dedent('''\
                     #!/bin/tcsh
                     \n'''))
                 if self.condor_home:
-                    launch_dat.write('setenv HOME %s\n' % self.condor_home)
+                    launch_fd.write('setenv HOME %s\n' % self.condor_home)
                 if self.source_file:
-                    launch_dat.write('source ' + self.source_file + '\n')
-                launch_dat.write(dedent('''\
+                    launch_fd.write('source ' + self.source_file + '\n')
+                launch_fd.write(dedent('''\
                     echo "Executing on " `/bin/hostname`
                     echo "HOSTNAME: ${HOSTNAME}"
                     echo "PATH: $PATH"
@@ -940,11 +943,11 @@ class DBICondor(DBIBase):
                     #${PROGRAM} "$@"
                     '''))
                 if self.condor_submit_exec=="pkdilly":
-                    get=self.get_pkdilly_var(condor_file)
+                    get=self.get_pkdilly_var(condor_submit_file)
                     for g in get:
                         sg = g.split("=",1)
-                        launch_dat.write("setenv "+sg[0]+" "+sg[1]+"\n")
-                    launch_dat.write(dedent('''
+                        launch_fd.write("setenv "+sg[0]+" "+sg[1]+"\n")
+                    launch_fd.write(dedent('''
                     setenv KRVEXECUTE `echo $argv |cut -d' ' -f1`
                     setenv ARGS `echo $argv |cut -d' ' -f2-`
                     echo "COMMAND=$KRVEXECUTE"
@@ -953,19 +956,19 @@ class DBICondor(DBIBase):
                     '''))
                     self.condor_submit_exec="condor_submit"
                 else:
-                    launch_dat.write(dedent('''\
+                    launch_fd.write(dedent('''\
                     echo "Running command: $argv"
                     $argv
                     '''%(bash_exec))) 
 
 
-            launch_dat.close()
+            launch_fd.close()
             os.chmod(launch_file, 0755)
 
     def run_dag(self):
-        condor_file = os.path.join(self.log_dir, "dag.condor")
-        self.temp_files.append(condor_file)
-        condor_dat = open( condor_file, 'w' )
+        condor_submit_file = os.path.join(self.log_dir, "dag.condor")
+        self.temp_files.append(condor_submit_file)
+        condor_dag_fd = open( condor_submit_file, 'w' )
 
         if self.source_file and self.source_file.endswith(".cshrc"):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
@@ -976,7 +979,7 @@ class DBICondor(DBIBase):
         os.system('mkdir -p ' + self.log_file)
         self.log_file = os.path.join(self.log_file,"condor.log")
 
-        condor_dat.write( dedent('''\
+        condor_dag_fd.write( dedent('''\
                 executable     = %s
                 universe       = vanilla
                 requirements   = %s
@@ -990,28 +993,28 @@ class DBICondor(DBIBase):
                        self.log_file,str(self.getenv),str(self.nice))))
         if self.mem>0:
             #condor need value in Kb
-            condor_dat.write('ImageSize      = %d\n'%(self.mem))
+            condor_dag_fd.write('ImageSize      = %d\n'%(self.mem))
 
         if self.files: #ON_EXIT_OR_EVICT
-            condor_dat.write( dedent('''\
+            condor_dag_fd.write( dedent('''\
                 when_to_transfer_output = ON_EXIT
                 should_transfer_files   = Yes
                 transfer_input_files    = %s
                 '''%(self.files+','+launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
         if self.env:
-            condor_dat.write('environment    = '+self.env+'\n')
+            condor_dag_fd.write('environment    = '+self.env+'\n')
         if self.raw:
-            condor_dat.write( self.raw+'\n')
+            condor_dag_fd.write( self.raw+'\n')
         if self.rank:
-            condor_dat.write( dedent('''\
+            condor_dag_fd.write( dedent('''\
                 rank = %s
                 ''' %(self.rank)))
 
-        condor_dat.write("\nqueue\n")
-        condor_dat.close()
+        condor_dag_fd.write("\nqueue\n")
+        condor_dag_fd.close()
 
-        condor_file_dag = condor_file+".dag"
-        condor_dag = open( condor_file_dag, 'w' )
+        condor_dag_file = condor_submit_file+".dag"
+        condor_dag_fd = open( condor_dag_file, 'w' )
         for task in self.tasks:
             for c in task.commands:
                 if ";" in c:
@@ -1022,12 +1025,12 @@ class DBICondor(DBIBase):
             for i in range(len(self.tasks)):
                 task=self.tasks[i]
                 argstring =condor_dag_escape_argument(' ; '.join(task.commands))
-                condor_dag.write("JOB %d %s\n"%(i,condor_file))
-                condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
+                condor_dag_fd.write("JOB %d %s\n"%(i,condor_submit_file))
+                condor_dag_fd.write('VARS %d args="%s"\n'%(i,argstring))
                 s=os.path.join(self.log_dir,
                                "condor"+self.base_tasks_log_file[i])
-                condor_dag.write('VARS %d stdout="%s"\n'%(i,s+".out"))
-                condor_dag.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
+                condor_dag_fd.write('VARS %d stdout="%s"\n'%(i,s+".out"))
+                condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
         elif self.stdouts and self.stderrs:
             assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
             for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
@@ -1035,10 +1038,10 @@ class DBICondor(DBIBase):
                     print "Condor can't redirect the stdout and stderr to the same file!"
                     sys.exit(1)
                 argstring =condor_dag_escape_argument(' ; '.join(task.commands))
-                condor_dag.write("JOB %d %s\n"%(i,condor_file))
-                condor_dag.write('VARS %d args="%s"\n'%(i,argstring))
-                condor_dag.write('VARS %d stdout="%s"\n'%(i,stdout_file))
-                condor_dag.write('VARS %d stderr="%s"\n\n'%(i,stderr_file))
+                condor_dag_fd.write("JOB %d %s\n"%(i,condor_submit_file))
+                condor_dag_fd.write('VARS %d args="%s"\n'%(i,argstring))
+                condor_dag_fd.write('VARS %d stdout="%s"\n'%(i,stdout_file))
+                condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(i,stderr_file))
 
 
         elif self.stdouts or self.stderrs:
@@ -1048,11 +1051,11 @@ class DBICondor(DBIBase):
             #should not happen
             raise NotImplementedError()
                 
-        condor_dag.close()
+        condor_dag_fd.close()
 
-        self.make_wrapper_script(launch_file, '$@')
+        self.make_launch_script(launch_file, '$@')
 
-        condor_cmd = self.condor_submit_dag_exec+' -maxjobs %s %s'%(str(self.nb_proc), condor_file_dag)
+        condor_cmd = self.condor_submit_dag_exec+' -maxjobs %s %s'%(str(self.nb_proc), condor_dag_file)
         return condor_cmd
 
     def run_non_dag(self):
@@ -1074,9 +1077,9 @@ class DBICondor(DBIBase):
                 param_dat.close()
 
 
-        condor_file = os.path.join(self.log_dir, "submit_file.condor")
-        self.temp_files.append(condor_file)
-        condor_dat = open( condor_file, 'w' )
+        condor_submit_file = os.path.join(self.log_dir, "submit_file.condor")
+        self.temp_files.append(condor_submit_file)
+        condor_submit_fd = open( condor_submit_file, 'w' )
 
         if self.source_file and self.source_file.endswith(".cshrc"):
             launch_file = os.path.join(self.log_dir, 'launch.csh')
@@ -1085,7 +1088,7 @@ class DBICondor(DBIBase):
 
         self.log_file= os.path.join(self.log_dir,"condor.log")
 
-        condor_dat.write( dedent('''\
+        condor_submit_fd.write( dedent('''\
                 executable     = %s
                 universe       = vanilla
                 requirements   = %s
@@ -1099,7 +1102,7 @@ class DBICondor(DBIBase):
                        self.log_dir,
                        self.log_file,str(self.getenv),str(self.nice))))
         if self.condor_submit_exec=="pkdilly":
-            condor_dat.write(dedent("""
+            condor_submit_fd.write(dedent("""
             stream_error = True
             stream_output = True
             transfer_executable = True
@@ -1107,31 +1110,31 @@ class DBICondor(DBIBase):
             """))
         if self.mem>0:
             #condor need value in Kb
-            condor_dat.write('ImageSize      = %d\n'%(self.mem))
+            condor_submit_fd.write('ImageSize      = %d\n'%(self.mem))
 
         if self.files: #ON_EXIT_OR_EVICT
-            condor_dat.write( dedent('''\
+            condor_submit_fd.write( dedent('''\
                 when_to_transfer_output = ON_EXIT
                 should_transfer_files   = Yes
                 transfer_input_files    = %s
                 '''%(self.files+','+launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
         if self.env:
-            condor_dat.write('environment    = '+self.env+'\n')
+            condor_submit_fd.write('environment    = '+self.env+'\n')
         if self.raw:
-            condor_dat.write( self.raw+'\n')
+            condor_submit_fd.write( self.raw+'\n')
         if self.rank:
-            condor_dat.write( dedent('''\
+            condor_submit_fd.write( dedent('''\
                 rank = %s
                 ''' %(self.rank)))
         if len(condor_datas)!=0:
             for i in condor_datas:
-                condor_dat.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
+                condor_submit_fd.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
         else:
             def print_task(task, stdout_file, stderr_file):
                 argstring = condor_escape_argument(' ; '.join(task.commands))
-                condor_dat.write("arguments    = %s \n" %argstring)
-                condor_dat.write("output       = %s \n" %stdout_file)
-                condor_dat.write("error        = %s \nqueue\n" %stderr_file)
+                condor_submit_fd.write("arguments    = %s \n" %argstring)
+                condor_submit_fd.write("output       = %s \n" %stdout_file)
+                condor_submit_fd.write("error        = %s \nqueue\n" %stderr_file)
 
             if self.base_tasks_log_file:
                 for (task,task_log) in zip(self.tasks,self.base_tasks_log_file):
@@ -1151,13 +1154,13 @@ class DBICondor(DBIBase):
             else:
                 for task in self.tasks:
                     argstring =condor_escape_argument(' ; '.join(task.commands))
-                    condor_dat.write("arguments      = %s \nqueue\n" %argstring)
-        condor_dat.close()
+                    condor_submit_fd.write("arguments      = %s \nqueue\n" %argstring)
+        condor_submit_fd.close()
 
 
-        self.make_wrapper_script(launch_file,'sh -c "$@"',condor_file)
+        self.make_launch_script(launch_file,'sh -c "$@"',condor_submit_file)
 
-        return self.condor_submit_exec + " " + condor_file
+        return self.condor_submit_exec + " " + condor_submit_file
 
     def clean(self):
         if len(self.temp_files)>0:
