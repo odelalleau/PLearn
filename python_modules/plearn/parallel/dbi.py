@@ -825,6 +825,34 @@ class DBICondor(DBIBase):
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
 
+    def get_pkdilly_var(self, condor_file):
+        cmd=self.condor_submit_exec+" -S "+condor_file
+        self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
+        self.p.wait()
+        assert self.p.stdout.readline()==""
+        err = self.p.stderr.readline()
+#example de sortie de pkdilly
+#La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
+        assert err.startswith('La tache a soumettre est dans: ')
+        pkdilly_file = err.split()[-1]
+        pkdilly_fd = open( pkdilly_file, 'r' )
+        lines = pkdilly_fd.readlines()
+        get=[]
+        for line in lines:
+            if get and line.rfind('"')>=0:
+                tmp= line.split('"')[0].strip()
+                if tmp:
+                    get.append(tmp)
+                del get[0]
+                break#we got all the env variable...
+            elif get:
+                get.append(line.strip()[:-1])
+            elif line.startswith("environment"):
+                get.append(line.strip()[:-1])
+        get=[x for x in get if x.startswith("KRV")]
+        get=[x for x in get if not x.startswith("KRVEXECUTE=")]
+        return get
+
     def make_wrapper_script(self,launch_file, bash_exec, condor_file):
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
@@ -849,7 +877,7 @@ class DBICondor(DBIBase):
         if not os.path.exists(launch_file) or overwrite_launch_file:
             self.temp_files.append(launch_file)
             launch_dat = open(launch_file,'w')
-            if self.source_file and not self.source_file.endswith(".cshrc"):
+            if not self.source_file or not self.source_file.endswith(".cshrc"):
                 launch_dat.write(dedent('''\
                     #!/bin/sh
                     '''))
@@ -857,33 +885,7 @@ class DBICondor(DBIBase):
                     launch_dat.write('export HOME=%s\n' % self.condor_home)
                 if self.source_file:
                     launch_dat.write('source ' + self.source_file + '\n')
-                if self.condor_submit_exec=="pkdilly":
-                    cmd=self.condor_submit_exec+" -S "+condor_file
-                    self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
-                    self.p.wait()
-                    assert self.p.stdout.readline()==""
-                    err = self.p.stderr.readline()
-#example de sortie de pkdilly
-#La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
-                    assert err.startswith('La tache a soumettre est dans: ')
-                    pkdilly_file = err.split()[-1]
-                    pkdilly_fd = open( pkdilly_file, 'r' )
-                    lines = pkdilly_fd.readlines()
-                    get=[]
-                    for line in lines:
-                        if get and line.rfind('"')>=0:
-                            tmp= line.split('"')[0].strip()
-                            if tmp:
-                                get.append(tmp)
-                            del get[0]
-                            break#we got all the env variable...
-                        elif get:
-                            get.append(line.strip()[:-1])
-                        elif line.startswith("environment"):
-                            get.append(line.strip()[:-1])
-                    get=[x for x in get if x.startswith("KRV")]
-                    get=[x for x in get if not x.startswith("KRVEXECUTE=")]
-                    launch_dat.write(dedent('''\
+                launch_dat.write(dedent('''\
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
@@ -896,6 +898,8 @@ class DBICondor(DBIBase):
                     #echo -n /usr/bin/python version: 1>&2
                     #/usr/bin/python -V 1>&2
                     '''))
+                if self.condor_submit_exec=="pkdilly":
+                    get=self.get_pkdilly_var(condor_file)
 
                     for g in get:
                         launch_dat.write("export "+g+"\n")
@@ -909,17 +913,6 @@ class DBICondor(DBIBase):
                     self.condor_submit_exec="condor_submit"
                 else:
                     launch_dat.write(dedent('''\
-                    echo "Executing on " `/bin/hostname` 1>&2
-                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
-                    echo "PATH: $PATH" 1>&2
-                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
-                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
-                    #which python 1>&2
-                    #echo -n python version: 1>&2
-                    #python -V 1>&2
-                    #echo -n /usr/bin/python version: 1>&2
-                    #/usr/bin/python -V 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
                     %s
                     '''%(bash_exec))) 
@@ -944,9 +937,28 @@ class DBICondor(DBIBase):
                     #/usr/bin/python -V
                     #echo ${PROGRAM} $@
                     #${PROGRAM} "$@"
+                    '''))
+                if self.condor_submit_exec=="pkdilly":
+                    get=self.get_pkdilly_var(condor_file)
+                    for g in get:
+                        sg = g.split("=",1)
+                        launch_dat.write("setenv "+sg[0]+" "+sg[1]+"\n")
+                    launch_dat.write(dedent('''
+                    
+                    declare -a Array=($*)
+                    setenv KRVEXECUTE $1
+                    echo "COMMAND=$1"
+                    echo "ARGS=$argv[2-]"
+                    /usr/sbin/circus $argv[2-]
+                    '''))
+                    self.condor_submit_exec="condor_submit"
+                else:
+                    launch_dat.write(dedent('''\
                     echo "Running command: $argv"
                     $argv
-                    '''))
+                    '''%(bash_exec))) 
+
+
             launch_dat.close()
             os.chmod(launch_file, 0755)
 
