@@ -17,7 +17,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [--env=VAR=VALUE[;VAR2=VALUE2]]
                               [--raw=CONDOR_EXPRESSION]
                               [--tasks_filename={compact,explicit,*nb0,nb1,sh}+]
-                              [*--[no_]abs_path]
+                              [*--[no_]abs_path] [--[*no_]pkdilly]
                               [*--[no_]set_special_env]
     cluster option           :[*--[no_]cwait]  [--[*no_]force]
                               [--[*no_]interruptible]
@@ -53,6 +53,10 @@ common options:
     --condor=N  is the same as --condor --nb_proc=N
     condor and bqtools default -1. Cluster default 50.  local and ssh default 1
   The '--[*no_]clean_up' set the DBI option clean_up to true or false
+  The 'DBIDISPATCH_DEFAULT_OPTION' environnement variable can contain default
+    option for dbidispatch. They can be overrided on the command line.
+  The 'DBIDISPATCH_LOGDIR' environnement variable set the name of the directory
+    where all the individual logs directory will be put. Default to LOGS.
 
 bqtools and cluster option:
   The '--duree' option specifies the maximum duration of the jobs. The syntax 
@@ -88,14 +92,14 @@ cluster only options:
   The '--[no_]cwait' is transfered to cluster. 
     This must be enabled if there is not nb_proc available nodes. Otherwise 
     when there are no nodes available, the launch of that command fails.
-  The '--force' option is passed to cluster
+  The '--force' option is transfered to cluster
   The '--interruptible' option is passed to cluster
 
 condor only options:
-  If the CONDOR_HOME environment variable is set, then the HOME variable will
-     be set to this value for jobs submitted to condor.
-  If the CONDOR_LOCAL_SOURCE environment variable is set, we will source this 
-    file before executing the jobs.
+  The 'CONDOR_HOME' environment variable will change value of the HOME variable
+    in the environment of the submitted jobs.
+  The 'CONDOR_LOCAL_SOURCE' environment variable define a file that will be
+    sourced before the jobs execute.
   The '--[no_]getenv' option is forwarded to condor. If True, the current 
     environnement variable will be forwarded to the execution node.
   The '--req=\"CONDOR_REQUIREMENT\"' add requirement for condor. 
@@ -123,22 +127,41 @@ condor only options:
      dbidispatch '--req=regexp("computer0*", target.Machine)'
   The '--[no_]nice' option set the nice_user option to condor. 
     If nice, the job(s) will have the lowest possible priority.
-  The '--env=VAR=VALUE' option will set in the environment of the executing jobs the variable VAR with value VALUE. To pass many variable you can 1) use one --env option and separ the value by ';'(don't forget to quote) or 2) you can pass many time the --env parameter.
-  The '--raw=STRING1[\nSTRING2...]' option add all the STRINGX parameter to the submit file of condor.
-  The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
-  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the filename where the stdout, stderr are redirected. We can put many option separated by comma. They will be appended in the filename with a dot. For all format except sh, they have this pattern condor.X.{out,error} where X=:
+  The '--env=VAR=VALUE' option will set in the environment of the executing
+    jobs the variable VAR with value VALUE. To pass many variable you can:
+      1) use one --env option and separ the pair by ';'(don't forget to quote)
+      2) you can pass many time the --env parameter.
+  The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the condor submit file.
+  The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
+    MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
+  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
+    filename where the stdout, stderr are redirected. We can put many option 
+    separated by comma. They will apper in the filename in order separated by a 
+    dot. For all except sh, they have this pattern condor.X.{out,error} where X=:
       - default : same as nb0
       - compact : a unic string with parameter that change of value between jobs
       - explicit: a unic string that represent the full command to execute
       - nb0     : a number from 0 to nb job -1.
       - nb1     : a number from 1 to nb job.
-      - sh      : parse the command for > and 2> redirection command. If one or both of them are missing, they are redirected to /dev/null
+      - sh      : parse the command for > and 2> redirection command.
+                  If one or both of them are missing, they are redirected
+                  to /dev/null
   The '--[no_]abs_path' option will tell condor to change the path to the 
     executable to the absolute path or not. Default True.
+  The '--[no_]pkdilly': will use the pkdilly tool to make condor more 
+      kerberos friendly. How ever the file in CONDOR_LOCAL_SOURCE 
+      SHOULD not be protected by kerberos as it is read before the ticket
+      is generated.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
-The arguments may contain one or many segments of the form {{a,b,c,d}}, which generate multiple jobs to execute. Each segement will be replaced by one of the vlue in the segment separated by comma. The first will have the a value, the second the b value, etc. If their is many segment, it will generate the cross-product of possible value between the segment. The jobs will be executed serially or in parallel depending of the backend and the nb_proc option.
+The arguments may contain one or many segments of the form {{a,b,c,d}},
+which generate multiple jobs to execute. Each segement will be replaced 
+by one value in the segment separated by comma. The first will have the 
+a value, the second the b value, etc. If their is many segment, it will 
+generate the cross-product of possible value between the segment. The 
+jobs will be executed serially or in parallel depending of the backend 
+and the nb_proc option.
 
   For example, the command (NOTE: THERE MUST NOT
 BE ANY SPACES WITHIN THE 'numhidden={{5,10,25}}' part and the quotes are
@@ -164,10 +187,11 @@ is equivalent to:
   aplearn myscript.plearn numhidden=25 wd=0.01
   aplearn myscript.plearn numhidden=25 wd=0.001
 
-In the file of the option --file=FILEPATH, there must not be double quotes around the {{}} as they are for the shell and if the command is in the file, they are not interpreted by the shell.
+In the file of the option --file=FILEPATH, there must not be double 
+quotes around the {{}} as they are for the shell and if the command is 
+in the file, it is not interpreted by the shell.
 
-The environnement variable DBIDISPATCH_DEFAULT_OPTION can contain default option that you always want to pass to dbidispatch. You can override them on the command line.
-The environnement variable DBIDISPATCH_LOGDIR set the name of the directory where all the individual logs directory will be put. If not present default to LOGS.
+
 """%{'ShortHelp':ShortHelp,'ScriptName':ScriptName}
 
 if len(sys.argv) == 1:
