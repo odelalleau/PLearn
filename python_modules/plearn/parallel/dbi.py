@@ -910,7 +910,9 @@ class DBICondor(DBIBase):
                 if mtimed>mtimel:
                     print '[DBI] WARNING: We overwrite the file "'+self.launch_file+'" with a new version. Update it to your needs!'
                     overwrite_launch_file=True
-
+        if self.pkdilly:
+            overwrite_launch_file = True
+                    
         if self.copy_local_source_file:
             source_file_dest = os.path.join(self.log_dir,
                                             os.path.basename(self.source_file))
@@ -918,6 +920,8 @@ class DBICondor(DBIBase):
             self.temp_files.append(source_file_dest)
             os.chmod(source_file_dest, 0755)
             self.source_file=source_file_dest
+            #so that new call don't copy it again.
+            self.copy_local_source_file = False
 
         launch_tmp_file=self.launch_file+".tmp"
         if not os.path.exists(self.launch_file) or overwrite_launch_file:
