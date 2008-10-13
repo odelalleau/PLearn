@@ -1207,14 +1207,45 @@ void RBMWoodsLayer::freeEnergyContributionGradient(
 
 int RBMWoodsLayer::getConfigurationCount()
 {
-    PLWARNING( "RBMWoodsLayer::getConfigurationCount(): getConfiguration() not "
-               " implemented yet, so outputs INFINITE_CONFIGURATIONS");
-    return INFINITE_CONFIGURATIONS;
+    return n_trees * ipow(2,tree_depth);
 }
 
 void RBMWoodsLayer::getConfiguration(int conf_index, Vec& output)
 {
-    PLERROR( "RBMWoodsLayer::getConfigurationCount(): not implemeted yet" );
+    PLASSERT( output.length() == size );
+    PLASSERT( conf_index >= 0 && conf_index < getConfigurationCount() );
+
+    int n_conf_per_tree = ipow(2,tree_depth); 
+    int conf_i = conf_index;
+    int begin = 0;
+    int current_node, sub_tree_size, tree_conf_i;
+    output.clear();
+    Vec output_i;
+    for ( int i = 0; i < n_trees; ++i ) {
+        output_i = output.subVec( begin, n_conf_per_tree-1 );
+        tree_conf_i = conf_i % n_conf_per_tree;
+        // Get current tree's configuration
+        output_i.clear();
+        current_node = (n_conf_per_tree-1)/2;
+        sub_tree_size = current_node;
+        for( int j=0; j < tree_depth; j++)
+        {
+            if( tree_conf_i < current_node + 1 )
+            {
+                output_i[current_node] = 1;
+                sub_tree_size /= 2;
+                current_node -= sub_tree_size+1;
+            }
+            else
+            {
+                output_i[current_node] = 0;
+                sub_tree_size /= 2;
+                current_node += sub_tree_size+1;
+            }
+        }
+        conf_i /= n_conf_per_tree;
+        begin += n_conf_per_tree-1;
+    }
 }
 
 } // end of namespace PLearn
