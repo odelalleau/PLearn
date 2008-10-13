@@ -109,7 +109,6 @@ void RBMClassificationModule::build_()
            " not set" << endl;
         return;
     }
-
     //! Check (and set) sizes
     input_size = previous_to_last->down_size;
     last_size = last_layer->size;
@@ -130,7 +129,6 @@ void RBMClassificationModule::build_()
     joint_connection->sub_connections(0,0) = previous_to_last;
     joint_connection->sub_connections(0,1) = last_to_target;
     joint_connection->build();
-
     // If we have a random_gen, share it with the ones who do not
     if( random_gen )
     {
@@ -155,10 +153,7 @@ void RBMClassificationModule::build_()
             target_layer->forget();
         }
         if( !(joint_connection->random_gen) )
-        {
-            joint_connection->random_gen = random_gen;
-            joint_connection->forget();
-        }
+            joint_connection->random_gen = previous_to_last->random_gen;
     }
 }
 

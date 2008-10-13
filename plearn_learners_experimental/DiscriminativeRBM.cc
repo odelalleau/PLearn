@@ -429,7 +429,6 @@ void DiscriminativeRBM::build_classification_cost()
             sub_connection->down_size = n_classes_at_test_time;
             sub_connection->random_gen = random_gen;
             sub_connection->build();
-
             test_time_classification_module = new RBMClassificationModule();
             test_time_classification_module->previous_to_last = connection;
             test_time_classification_module->last_layer = hidden_layer;
@@ -437,6 +436,10 @@ void DiscriminativeRBM::build_classification_cost()
             test_time_classification_module->target_layer = sub_layer;
             test_time_classification_module->random_gen = random_gen;
             test_time_classification_module->build();
+        }
+        else
+        {
+            test_time_classification_module = 0;
         }
     }
     else
@@ -633,7 +636,6 @@ void DiscriminativeRBM::train()
     for( ; stage<nstages ; stage++ )
     {
         train_set->getExample(stage%nsamples, input, target, weight);
-
         if( pb )
             pb->update( stage - init_stage + 1 );
 
