@@ -1207,7 +1207,7 @@ void RBMWoodsLayer::freeEnergyContributionGradient(
 
 int RBMWoodsLayer::getConfigurationCount()
 {
-    return n_trees * ipow(2,tree_depth);
+    return ipow(ipow(2,tree_depth),n_trees);
 }
 
 void RBMWoodsLayer::getConfiguration(int conf_index, Vec& output)
@@ -1238,7 +1238,6 @@ void RBMWoodsLayer::getConfiguration(int conf_index, Vec& output)
             }
             else
             {
-                output_i[current_node] = 0;
                 sub_tree_size /= 2;
                 current_node += sub_tree_size+1;
             }
