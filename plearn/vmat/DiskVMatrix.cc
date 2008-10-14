@@ -289,6 +289,7 @@ void DiskVMatrix::build_()
         //no more length in header while opened [was fwrite((char*)&length_,sizeof(int),1,indexf);]
         fwrite(&NO_LENGTH_SENTINEL, sizeof(int), 1, indexf);
         fwrite((char*)&width_,sizeof(int),1,indexf);
+        length_= 0;
 
         string fname = dirname/"0.data";
         FILE* f = fopen(fname.c_str(), "w+b");
