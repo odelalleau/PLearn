@@ -886,6 +886,7 @@ class DBICondor(DBIBase):
                     out.write(line_header()+
                               "renew the launch file "+self.launch_file+"\n")
                     self.make_launch_script(bash_exec)
+                out.flush()
             out.close()
             sys.exit()
         else:
