@@ -12,6 +12,7 @@ up_down_nstages = 0 ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *1 ->RBMBinomialLayer(
+use_signed_samples = 0 ;
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
@@ -34,6 +35,7 @@ fixed_seed = 0  )
 ;
 verbosity = 1  )
 *3 ->RBMBinomialLayer(
+use_signed_samples = 0 ;
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
@@ -43,7 +45,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00419880748139610759 0.0029152184514807198 ] ;
+bias = 2 [ -0.0041988074813960885 0.00291521845148070419 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
@@ -57,7 +59,7 @@ i_output_layer = 1 ;
 connections = 1 [ *4 ->RBMMatrixConnection(
 weights = 2  2  [ 
 -0.222066209664342068 	0.582925561708350082 	
-0.516883916989072434 	-0.316272804129796303 	
+0.516883916989072545 	-0.316272804129796303 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -89,8 +91,8 @@ previous_to_last = *4  ;
 last_layer = *3  ;
 last_to_target = *6 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.603392333131359537 	0.370787384786479657 	
-0.0970862565219703239 	-0.668099599496062679 	
+-0.603392333131359426 	0.370787384786479657 	
+0.09708625652197031 	-0.668099599496062679 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -127,7 +129,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00487910443291655199 0.00487910443291657281 ] ;
+bias = 2 [ -0.00487910443291659449 0.00487910443291660317 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMMultinomialLayer" ;

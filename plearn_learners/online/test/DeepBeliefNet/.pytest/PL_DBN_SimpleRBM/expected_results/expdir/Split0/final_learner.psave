@@ -7,7 +7,7 @@ data = 2  3  [
 0 	1 	1 	
 ]
 ;
-source = *0 ;
+fieldinfos = 0 [ ] ;
 fieldnames = []
 ;
 deep_copy_memory_data = 1 ;
@@ -18,7 +18,8 @@ inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = ""  )
+metadatadir = "" ;
+source = *0  )
 ;
 splitter = *4 ->FractionSplitter(
 round_to_closest = 0 ;
@@ -45,6 +46,7 @@ up_down_nstages = 0 ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *6 ->RBMBinomialLayer(
+use_signed_samples = 0 ;
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
@@ -67,6 +69,7 @@ fixed_seed = 0  )
 ;
 verbosity = 1  )
 *8 ->RBMBinomialLayer(
+use_signed_samples = 0 ;
 size = 2 ;
 learning_rate = 0.100000000000000006 ;
 momentum = 0 ;
@@ -76,7 +79,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00419880748139610759 0.0029152184514807198 ] ;
+bias = 2 [ -0.0041988074813960885 0.00291521845148070419 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
@@ -90,7 +93,7 @@ i_output_layer = 1 ;
 connections = 1 [ *9 ->RBMMatrixConnection(
 weights = 2  2  [ 
 -0.222066209664342068 	0.582925561708350082 	
-0.516883916989072434 	-0.316272804129796303 	
+0.516883916989072545 	-0.316272804129796303 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -122,8 +125,8 @@ previous_to_last = *9  ;
 last_layer = *8  ;
 last_to_target = *11 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.603392333131359537 	0.370787384786479657 	
-0.0970862565219703239 	-0.668099599496062679 	
+-0.603392333131359426 	0.370787384786479657 	
+0.09708625652197031 	-0.668099599496062679 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -160,7 +163,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00487910443291655199 0.00487910443291657281 ] ;
+bias = 2 [ -0.00487910443291659449 0.00487910443291660317 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMMultinomialLayer" ;
@@ -241,6 +244,7 @@ perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
+save_split_stats = 1 ;
 save_learners = 1 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
@@ -256,7 +260,9 @@ global_template_stats_collector = *0 ;
 final_commands = []
 ;
 save_test_confidence = 0 ;
-enforce_clean_expdir = 1  )
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )
 ;
 option_fields = 1 [ "nstages" ] ;
 dont_restart_upon_change = 1 [ "nstages" ] ;
@@ -277,7 +283,7 @@ relative_min_improvement = -1 ;
 max_degraded_steps = 31 ;
 min_n_steps = 0 ;
 nreturned = 16 ;
-best_objective = 0.614096318051678636 ;
+best_objective = 0.614096318051678525 ;
 best_step = 16 ;
 met_early_stopping = 0  )
 ;
@@ -288,8 +294,11 @@ rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
 save_best_learner = 0 ;
 splitter = *0 ;
-best_objective = 0.614096318051678636 ;
-best_results = 4 [ 0.651261219307483818 0.5 0.614096318051678636 0 ] ;
+auto_save = 0 ;
+auto_save_diff_time = 10800 ;
+auto_save_test = 0 ;
+best_objective = 0.614096318051678525 ;
+best_results = 4 [ 0.651261219307483818 0.5 0.614096318051678525 0 ] ;
 best_learner = *5  ;
 trialnum = 16 ;
 option_vals = []

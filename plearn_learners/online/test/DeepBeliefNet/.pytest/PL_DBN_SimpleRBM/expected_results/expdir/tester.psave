@@ -6,7 +6,7 @@ data = 2  3  [
 0 	1 	1 	
 ]
 ;
-source = *0 ;
+fieldinfos = 0 [ ] ;
 fieldnames = []
 ;
 deep_copy_memory_data = 1 ;
@@ -17,7 +17,8 @@ inputsize = 2 ;
 targetsize = 1 ;
 weightsize = 0 ;
 extrasize = 0 ;
-metadatadir = ""  )
+metadatadir = "" ;
+source = *0  )
 ;
 splitter = *2 ->NoSplitSplitter(
  )
@@ -54,6 +55,7 @@ up_down_nstages = 0 ;
 use_classification_cost = 1 ;
 reconstruct_layerwise = 0 ;
 layers = 2 [ *7 ->RBMBinomialLayer(
+use_signed_samples = 0 ;
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
@@ -76,6 +78,7 @@ fixed_seed = 0  )
 ;
 verbosity = 1  )
 *9 ->RBMBinomialLayer(
+use_signed_samples = 0 ;
 size = 2 ;
 learning_rate = 0 ;
 momentum = 0 ;
@@ -98,8 +101,8 @@ verbosity = 1  )
 i_output_layer = 1 ;
 connections = 1 [ *10 ->RBMMatrixConnection(
 weights = 2  2  [ 
-0.211616747512905712 	0.215664750468485322 	
-0.59211590021607885 	0.667132771633056509 	
+-0.560455637071321955 	0.444593612352269352 	
+0.660992724240852536 	-0.608576095398922656 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -131,8 +134,8 @@ previous_to_last = *10  ;
 last_layer = *9  ;
 last_to_target = *12 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.166376995329432731 	0.522222782976989097 	
-0.449826313170107572 	-0.266489754613600693 	
+-0.585660771216213738 	0.00133253715303369722 	
+-0.342792729210354141 	-0.0547933521911874305 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -250,6 +253,7 @@ perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
+save_split_stats = 1 ;
 save_learners = 1 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
@@ -265,7 +269,9 @@ global_template_stats_collector = *0 ;
 final_commands = []
 ;
 save_test_confidence = 0 ;
-enforce_clean_expdir = 1  )
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )
 ;
 option_fields = 1 [ "nstages" ] ;
 dont_restart_upon_change = 1 [ "nstages" ] ;
@@ -297,6 +303,9 @@ rerun_after_sub = 0 ;
 provide_sub_expdir = 1 ;
 save_best_learner = 0 ;
 splitter = *0 ;
+auto_save = 0 ;
+auto_save_diff_time = 10800 ;
+auto_save_test = 0 ;
 best_objective = 1.79769313486231571e+308 ;
 best_results = []
 ;
@@ -331,6 +340,7 @@ perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
+save_split_stats = 1 ;
 save_learners = 1 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
@@ -346,4 +356,6 @@ global_template_stats_collector = *0 ;
 final_commands = []
 ;
 save_test_confidence = 0 ;
-enforce_clean_expdir = 1  )
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )
