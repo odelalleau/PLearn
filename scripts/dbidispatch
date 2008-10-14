@@ -151,7 +151,9 @@ condor only options:
   The '--[no_]pkdilly': will use the pkdilly tool to make condor more 
       kerberos friendly. How ever the file in CONDOR_LOCAL_SOURCE 
       SHOULD not be protected by kerberos as it is read before the ticket
-      is generated.
+      is generated. If the CONDOR_LOCAL_SOURCE is protected by kerberos
+      and the current directory is not, we will copy it and use the
+      copied version.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
