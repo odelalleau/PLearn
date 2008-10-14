@@ -2835,7 +2835,7 @@ def main( args ):
         #remove some option that are save to have.
         #some people can put those option in their PYMAKE_OPTIONS and 
         #we want them to be able to do pymake -clean .
-        allowed_options=['local_ofiles','logging=dbg','logging=dbg-profile']
+        allowed_options=['local_ofiles','logging=dbg','logging=dbg-profile', 'goto']
         for i in allowed_options:
             if i in optionargs: optionargs.remove(i)
 
