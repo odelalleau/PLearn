@@ -885,7 +885,7 @@ class DBICondor(DBIBase):
                 else:
                     out.write(line_header()+
                               "renew the launch file "+self.launch_file+"\n")
-                    self.make_launch_script(bash_exec)
+                    self.make_launch_script(bash_exec, True)
                 out.flush()
             out.close()
             sys.exit()
@@ -895,16 +895,16 @@ class DBICondor(DBIBase):
             
             os.system("pkboost +d "+str(pid))
 
-    def make_launch_script(self, bash_exec):
+    def make_launch_script(self, bash_exec, renew=False):
             
         #we write in a temp file then move it to be sure no jobs will 
         # read a partially writed file when we renew the file.
 
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
-        if not os.path.exists(dbi_file):
+        if not os.path.exists(dbi_file) and not renew:
             print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+self.launch_file+'" is not up to date!'
-        else:
+        elif not renew:
             if os.path.exists(self.launch_file):
                 mtimed=os.stat(dbi_file)[8]
                 mtimel=os.stat(self.launch_file)[8]
@@ -914,15 +914,13 @@ class DBICondor(DBIBase):
         if self.pkdilly:
             overwrite_launch_file = True
                     
-        if self.copy_local_source_file:
+        if self.copy_local_source_file and not renew:
             source_file_dest = os.path.join(self.log_dir,
                                             os.path.basename(self.source_file))
             shutil.copy( self.source_file, source_file_dest)
             self.temp_files.append(source_file_dest)
             os.chmod(source_file_dest, 0755)
             self.source_file=source_file_dest
-            #so that new call don't copy it again.
-            self.copy_local_source_file = False
 
         launch_tmp_file=self.launch_file+".tmp"
         if not os.path.exists(self.launch_file) or overwrite_launch_file:
