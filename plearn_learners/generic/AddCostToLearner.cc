@@ -85,6 +85,9 @@ PLEARN_IMPLEMENT_OBJECT(AddCostToLearner,
 AddCostToLearner::AddCostToLearner()
     : bag_size(0),
       train_time(0),
+      total_train_time(0),
+      test_time(0),
+      total_test_time(0),
       check_output_consistency(1),
       combine_bag_outputs_method(1),
       compute_costs_on_bags(0),
@@ -145,7 +148,10 @@ void AddCostToLearner::declareOptions(OptionList& ol)
         " - 'NLL': -log(o[t])\n"
         " - 'mse': the mean squared error (o - t)^2\n"
         " - 'squared_norm_reconstruction_error': | ||i||^2 - ||o||^2 |\n"
-        " - 'train_time': the time spend in the train() function\n"
+        " - 'train_time': the time spend in the last call to the train() function\n"
+        " - 'total_train_time': the total time spend in the train() function\n"
+        " - 'test_time': the time spend in test() fct the between the last two call to train()\n"
+        " - 'total_test_time': the sum of test_time\n"
         " - 'type1_err': SUM[type1_err] will return the number of type 1 error(false positive).\n"
         "                E[type1_err], will return the false positive rate: # false positive/# of positive\n" 
         " - 'type2_err': idem as type1_err but for the type 2 error(false negative)\n" 
@@ -194,7 +200,19 @@ void AddCostToLearner::declareOptions(OptionList& ol)
 
     declareOption(ol, "train_time",
                   &AddCostToLearner::train_time, OptionBase::learntoption,
-                  "The time it took to train in second.");
+                  "The time spent in the last call to train() in second.");
+
+    declareOption(ol, "total_train_time",
+                  &AddCostToLearner::train_time, OptionBase::learntoption,
+                  "The total time spent in the train() function in second.");
+
+    declareOption(ol, "test_time",
+                  &AddCostToLearner::test_time, OptionBase::learntoption,
+                  "The time spent in the last call to test() in second.");
+
+    declareOption(ol, "total_test_time",
+                  &AddCostToLearner::test_time, OptionBase::learntoption,
+                  "The total time spent in the test() function in second.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -266,6 +284,13 @@ void AddCostToLearner::build_()
         } else if (c == "class_error") {
         } else if (c == "binary_class_error") {
         } else if (c == "train_time") {
+            activ_profiler=true;
+        } else if (c == "total_train_time") {
+            activ_profiler=true;
+        } else if (c == "test_time") {
+            activ_profiler=true;
+            Profiler::reset("AddCostToLearner::test");
+        } else if (c == "total_test_time") {
             activ_profiler=true;
         } else if (c == "linear_class_error") {
         } else if (c == "square_class_error") {
@@ -620,6 +645,12 @@ void AddCostToLearner::computeCostsFromOutputs(const Vec& input, const Vec& outp
             costs[ind_cost] = abs(pownorm(input, 2) - pownorm(sub_learner_output, 2));
         } else if (c == "train_time") {
             costs[ind_cost] = train_time;
+        } else if (c == "total_train_time") {
+            costs[ind_cost] = total_train_time;
+        } else if (c == "test_time") {
+            costs[ind_cost] = test_time;
+        } else if (c == "total_test_time") {
+            costs[ind_cost] = total_test_time;
         } else if (c == "type1_err") {
             //false positive error
             //faux negatif/(faux negatif+vrai positif)
@@ -767,7 +798,27 @@ void AddCostToLearner::train()
     if(Profiler::isActive()){
         const Profiler::Stats& stats = Profiler::getStats("AddCostToLearner::train");
         train_time=stats.wall_duration/Profiler::ticksPerSecond();
+        total_train_time+=train_time;
+        Profiler::reset("AddCostToLearner::train");
+
+        //we get the test_time here as we want the test time for all dataset.
+        //if we put it in the test function, we would have it for one dataset.
+        const Profiler::Stats& stats_test = Profiler::getStats("AddCostToLearner::test");
+        test_time=stats_test.wall_duration/Profiler::ticksPerSecond();
+        total_test_time+=test_time;
+        Profiler::reset("AddCostToLearner::test");
     }
+}
+
+//////////
+// test //
+//////////
+void AddCostToLearner::test(VMat testset, PP<VecStatsCollector> test_stats,
+                            VMat testoutputs, VMat testcosts) const
+{
+    Profiler::start("AddCostToLearner::test");
+    inherited::test(testset, test_stats, testoutputs, testcosts);
+    Profiler::end("AddCostToLearner::test");
 }
 
 ///////////////////////////
@@ -788,7 +839,8 @@ void AddCostToLearner::computeOutputAndCosts(const Vec& input, const Vec& target
 // computeOutputsAndCosts //
 ///////////////////////////
 void AddCostToLearner::computeOutputsAndCosts(const Mat& input, const Mat& target,
-                                             Mat& output, Mat& costs) const {
+                                             Mat& output, Mat& costs) const
+{
     PLASSERT( learner_ );
     //done this way to use a possibly optimizer version 
     //of computeOutputsAndCosts from the sub learner as with NatGradNNet

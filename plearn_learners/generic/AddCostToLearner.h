@@ -107,8 +107,16 @@ protected:
     //! The threshold between class
     Vec class_threshold;
 
-    //! The total time passed in training
+    //! The time it took for the last execution of the train() function
     real train_time;
+    //! The total time passed in training
+    real total_train_time;
+
+    //! The time it took for the last execution of the test() function
+    real test_time;
+    //! The total time passed in test()
+    real total_test_time;
+
 public:
 
     // ************************
@@ -170,6 +178,9 @@ public:
     // **************************
 
     virtual void train();
+
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+                      VMat testoutputs=0, VMat testcosts=0) const;
 
     //! (Re-)initializes the PLearner in its fresh state (that state may depend on the 'seed' option)
     //! And sets 'stage' back to 0   (this is the stage of a fresh learner!).
