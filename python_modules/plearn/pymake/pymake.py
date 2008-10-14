@@ -2835,10 +2835,12 @@ def main( args ):
         #remove some option that are save to have.
         #some people can put those option in their PYMAKE_OPTIONS and 
         #we want them to be able to do pymake -clean .
-        if 'local_ofiles' in optionargs: optionargs.remove('local_ofiles')
-        if 'logging=dbg' in optionargs: optionargs.remove('logging=dbg')
+        allowed_options=['local_ofiles','logging=dbg','logging=dbg-profile']
+        for i in allowed_options:
+            if i in optionargs: optionargs.remove(i)
+
         if len(optionargs)!=1 or len(otherargs)==0:
-            print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option'
+            print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option:', optionargs
             sys.exit(100)
         else:
             print '>> Removing the following OBJS directories: '
