@@ -1005,7 +1005,7 @@ class DBICondor(DBIBase):
                     launch_fd.write(dedent('''\
                     echo "Running command: $argv"
                     $argv
-                    '''%(bash_exec))) 
+                    ''')) 
 
 
             launch_fd.close()
