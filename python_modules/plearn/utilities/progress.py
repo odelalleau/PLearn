@@ -39,8 +39,8 @@ class StdoutProgressBar(ProgressBar):
     def update(self, pos):
         if not self.closed:
             npoints = StdoutProgressBar.npoints
-            oldcharpos = min(npoints, int(self.pos*npoints/(self.n-1)))
-            newcharpos = min(npoints, int(pos*npoints/(self.n-1)))
+            oldcharpos = min(npoints, int(self.pos*npoints/max(1, self.n-1)))
+            newcharpos = min(npoints, int(pos*npoints/max(1, self.n-1)))
             nchars = newcharpos-oldcharpos
             if nchars>0:
                 StdoutProgressBar.write('.'*nchars)
