@@ -163,7 +163,7 @@ void DiskVMatrix::build_()
     if(!freshnewfile)
     {
         if(!isdir(dirname))
-            PLERROR("In DiskVMatrix constructor, directory %s could not be found",dirname.c_str());
+            PLERROR("In DiskVMatrix constructor, directory '%s' could not be found",dirname.c_str());
         setMetaDataDir(dirname + ".metadata");
         updateMtime( dirname/"indexfile" );
         string omode;
