@@ -40,6 +40,7 @@
 #include <plearn/base/general.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
+#include <plearn/vmat/SortRowsVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/db/getDataSet.h>
 
@@ -850,6 +851,19 @@ void viewVMat(const VMat& vm, PPath filename)
             }
             break;
             ///////////////////////////////////////////////////////////////
+            case (int)'<': case (int)'>':
+                // Sort by increasing or decreasing order.
+            {
+                PP<SortRowsVMatrix> new_vm = new SortRowsVMatrix();
+                new_vm->source = vm_showed;
+                new_vm->sort_columns = TVec<int>(1, curj);
+                if (key == (int)'>')
+                    new_vm->increasing_order = false;
+                new_vm->build();
+                vm_showed = get_pointer(new_vm);
+            }
+            break;
+            ///////////////////////////////////////////////////////////////
             case (int)'a': case (int)'A':
                 vm_showed = vm;
                 break;
@@ -945,6 +959,7 @@ void viewVMat(const VMat& vm, PPath filename)
                 mvprintw(vStartHelp++,10," - '.'       : toggle displaying of ... for values that do not change (exact match)");
                 mvprintw(vStartHelp++,10," - ','       : toggle displaying of ... for values that do not change (approximate match)");
                 mvprintw(vStartHelp++,10," - '/'       : search for a value of the current field");
+                mvprintw(vStartHelp++,10," - '<' or '>': sort column by increasing or decreasing order");
                 mvprintw(vStartHelp++,10," - 'h' or 'H': display this screen");
                 mvprintw(vStartHelp++,10," - 'q' or 'Q': quit program");
                 mvprintw(vStartHelp++,COLS/2-13,"(press any key to continue)");
