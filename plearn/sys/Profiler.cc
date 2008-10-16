@@ -105,8 +105,9 @@ void Profiler::start(const string& name_of_piece_of_code_, const int max_nb_goin
 void Profiler::end(const string& name_of_piece_of_code_)
 {
     string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
-
+#ifdef _OPENMP
 #pragma omp critical (codes_statistics)
+#endif
     if (active)
     {
         clock_t end_time = times(&t);
@@ -170,7 +171,9 @@ const Profiler::Stats& Profiler::getStats(const string& name_of_piece_of_code_)
 {
     string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
     Stats* s;
+#ifdef _OPENMP
 #pragma omp critical (codes_statistics)
+#endif
 {
     map<string,Stats>::iterator it = codes_statistics.find(name_of_piece_of_code);
     if (it == codes_statistics.end())
@@ -189,7 +192,9 @@ void Profiler::reset(const string& name_of_piece_of_code_)
     string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
 
     Stats empty;
+#ifdef _OPENMP
 #pragma omp critical (codes_statistics)
+#endif
     codes_statistics[name_of_piece_of_code] = empty;
 }
 
@@ -202,7 +207,9 @@ void Profiler::report(ostream& out)
 }
 void Profiler::report(PStream out)
 {
+#ifdef _OPENMP
 #pragma omp critical (codes_statistics)
+#endif
 {
     map<string,Profiler::Stats>::iterator it =  
         codes_statistics.begin(), end =  codes_statistics.end();
@@ -236,7 +243,9 @@ void Profiler::reportwall(ostream& out)
 }
 void Profiler::reportwall(PStream out)
 {
+#ifdef _OPENMP
 #pragma omp critical (codes_statistics)
+#endif
 {
     map<string,Profiler::Stats>::iterator it =  
         codes_statistics.begin(), end =  codes_statistics.end();
