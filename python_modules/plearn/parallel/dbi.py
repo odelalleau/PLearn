@@ -887,6 +887,10 @@ class DBICondor(DBIBase):
                               "renew the launch file "+self.launch_file+"\n")
                     self.make_launch_script(bash_exec, True)
                 out.flush()
+                #we do this as in some case(with dagman) the log file can 
+                #take a few second to be created. So we don't loop too fast
+                #for no good reason.
+                time.sleep(5)
             out.close()
             sys.exit()
         else:
