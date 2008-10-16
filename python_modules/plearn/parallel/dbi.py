@@ -984,8 +984,8 @@ class DBICondor(DBIBase):
                     #!/bin/tcsh
                     \n'''))
                     get=self.get_pkdilly_var()
-
-                   for g in get:
+                    
+                    for g in get:
                         sg = g.split("=",1)
                         fd.write("setenv "+sg[0]+" "+sg[1]+"\n")
                     fd.write(dedent('''
