@@ -137,7 +137,6 @@ public:
     // this phase *also* uses dynamic_gradient_scale_factor;
     double noisy_recurrent_lr;    
     double dynamic_gradient_scale_factor;
-    double dynamic_input_reconstruction_lr;
     
     // Phase recurrent no noise (supervised fine tuning)
     double recurrent_lr;
@@ -149,6 +148,11 @@ public:
     // learnt bias for input reconstruction
     Vec input_reconstruction_bias;
     
+    double prediction_cost_weight;
+    double input_reconstruction_cost_weight;
+    double hidden_reconstruction_cost_weight;
+
+
     //#####  Not Options  #####################################################
 
 
@@ -215,6 +219,7 @@ public:
     virtual void train();
 
     //! Sets the learning of all layers and connections
+    //! Remembers it by copying value to current_learning_rate
     void setLearningRate( real the_learning_rate );
 
     //! Computes the output from the input.
@@ -296,7 +301,7 @@ public:
 
 protected:
     //#####  Not Options  #####################################################
-
+    mutable double current_learning_rate;
 
     //! Store external data;
     AutoVMatrix*  data;
@@ -372,7 +377,7 @@ private:
     void build_();
 
 
-    void performGreedyDenoisingPhase();
+    void performGreedyDenoisingPhase(Vec train_costs, Vec train_n_items);
 
     void applyMultipleSoftmaxToInputWindow(Vec input_reconstruction_activation, Vec input_reconstruction_prob);
 
@@ -400,8 +405,21 @@ private:
     //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
     //! then backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
     //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
-    void fpropUpdateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
-                                                  Vec clean_input, Vec hidden_gradient, double input_reconstruction_lr);
+    //! Also computes neg log cost and returns it
+    
+    double fpropUpdateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
+                                                Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
+
+    
+    //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
+    //! Also computes neg log cost and returns it
+    double fpropInputReconstructionFromHidden(Vec hidden, Mat reconstruction_weights, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
+                                              Vec clean_input);
+
+    //! Backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
+    //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
+    void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
+                                             Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
 
 
