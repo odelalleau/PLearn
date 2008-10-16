@@ -1022,7 +1022,7 @@ class DBICondor(DBIBase):
                     #echo ${PROGRAM} $@
                     #${PROGRAM} "$@"
                     '''%(os.path.abspath("."))))
-                    launch_fd.write(dedent('''\
+                    fd.write(dedent('''\
                     echo "Running command: $argv"
                     $argv
                     ''')) 
