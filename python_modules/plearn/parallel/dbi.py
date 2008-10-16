@@ -927,58 +927,93 @@ class DBICondor(DBIBase):
             self.temp_files.append(self.launch_file)
             launch_fd = open(launch_tmp_file,'w')
             if not self.source_file or not self.source_file.endswith(".cshrc"):
-                launch_fd.write(dedent('''\
-                    #!/bin/sh
-                    '''))
-                if self.condor_home:
-                    launch_fd.write('export HOME=%s\n' % self.condor_home)
-                if self.source_file:
-                    launch_fd.write('source ' + self.source_file + '\n')
-                launch_fd.write(dedent('''\
-                    echo "Executing on " `/bin/hostname` 1>&2
-                    echo "HOSTNAME: ${HOSTNAME}" 1>&2
-                    echo "PATH: $PATH" 1>&2
-                    echo "PYTHONPATH: $PYTHONPATH" 1>&2
-                    echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
-                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
-                    #which python 1>&2
-                    #echo -n python version: 1>&2
-                    #python -V 1>&2
-                    #echo -n /usr/bin/python version: 1>&2
-                    #/usr/bin/python -V 1>&2
-                    '''))
+                fd=launch_fd
                 if self.pkdilly:
+                    fd.write(dedent('''\
+                        #!/bin/sh
+                        '''))
                     get=self.get_pkdilly_var()
 
                     for g in get:
                         launch_fd.write("export "+g+"\n")
                     launch_fd.write(dedent('''
                     declare -a Array=($*)
-                    export KRVEXECUTE=${Array[0]}
+                    export KRVEXECUTE=%s
                     export ARGS=${Array[*]:1}
-                    echo "COMMAND=$KRVEXECUTE" 1>&2
-                    echo "ARGS=$ARGS" 1>&2
-                    /usr/sbin/circus $ARGS
-                    '''))
-                else:
-                    launch_fd.write(dedent('''\
-                    echo "Running: command: \\"$@\\"" 1>&2
-                    %s
-                    '''%(bash_exec))) 
+                    /usr/sbin/circus $@
+                    '''%(os.path.abspath(self.launch_file+"2"))))#("${Array[0]}")))#
+                    fd=open(self.launch_file+"2",'w')
+
+                if not renew:
+                    fd.write(dedent('''\
+                        #!/bin/sh
+                        '''))
+                    if self.condor_home:
+                        fd.write('export HOME=%s\n' % self.condor_home)
+                    if self.source_file:
+                        fd.write('source ' + self.source_file + '\n')
+                    fd.write(dedent('''\
+                        echo "Executing on " `/bin/hostname` 1>&2
+                        echo "HOSTNAME: ${HOSTNAME}" 1>&2
+                        echo "PATH: $PATH" 1>&2
+                        echo "PYTHONPATH: $PYTHONPATH" 1>&2
+                        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
+                        echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
+                        echo "ARGS: $ARGS" 1>&2
+                        cd %s
+                        pwd 1>&2
+                        #which python 1>&2
+                        #echo -n python version: 1>&2
+                        #python -V 1>&2
+                        #echo -n /usr/bin/python version: 1>&2
+                        #/usr/bin/python -V 1>&2
+                        '''%(os.path.abspath("."))))
+                    if self.pkdilly:
+                        bash_exec="$@"
+                    fd.write(dedent('''\
+                        echo "Running: command: \\"$@\\"" 1>&2
+                        %s
+                        '''%(bash_exec)))
+                    if self.pkdilly:
+                        fd.close()
+                        os.chmod(self.launch_file+"2", 0755)
             else:
-                launch_fd.write(dedent('''\
+                fd=launch_fd
+                if self.pkdilly:
+                    fd.write(dedent('''\
                     #!/bin/tcsh
                     \n'''))
-                if self.condor_home:
-                    launch_fd.write('setenv HOME %s\n' % self.condor_home)
-                if self.source_file:
-                    launch_fd.write('source ' + self.source_file + '\n')
-                launch_fd.write(dedent('''\
+                    get=self.get_pkdilly_var()
+
+                   for g in get:
+                        sg = g.split("=",1)
+                        fd.write("setenv "+sg[0]+" "+sg[1]+"\n")
+                    fd.write(dedent('''
+                    setenv KRVEXECUTE `echo $argv |cut -d' ' -f1`
+                    setenv ARGS `echo $argv |cut -d' ' -f2-`
+                    /usr/sbin/circus $ARGS
+                    '''%(os.path.abspath(self.launch_file+"2"))))#("${Array[0]}")))#
+                    fd=open(self.launch_file+"2",'w')
+
+                if not renew:
+                    fd.write(dedent('''\
+                        #!/bin/tcsh
+                        '''))
+                    if self.condor_home:
+                        fd.write('setenv HOME %s\n' % self.condor_home)
+                    if self.source_file:
+                        fd.write('source ' + self.source_file + '\n')
+ 
+                    fd.write(dedent('''\
                     echo "Executing on " `/bin/hostname`
                     echo "HOSTNAME: ${HOSTNAME}"
                     echo "PATH: $PATH"
                     echo "PYTHONPATH: $PYTHONPATH"
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+                    echo "OMP_NUM_THREADS: $OMP_NUM_THREADS"
+                    echo "ARGS: $ARGS"
+                    cd %s
+                    pwd
                     #which python
                     #echo -n python version:
                     #python -V
@@ -986,25 +1021,14 @@ class DBICondor(DBIBase):
                     #/usr/bin/python -V
                     #echo ${PROGRAM} $@
                     #${PROGRAM} "$@"
-                    '''))
-                if self.pkdilly:
-                    get=self.get_pkdilly_var()
-                    for g in get:
-                        sg = g.split("=",1)
-                        launch_fd.write("setenv "+sg[0]+" "+sg[1]+"\n")
-                    launch_fd.write(dedent('''
-                    setenv KRVEXECUTE `echo $argv |cut -d' ' -f1`
-                    setenv ARGS `echo $argv |cut -d' ' -f2-`
-                    echo "COMMAND=$KRVEXECUTE"
-                    echo "ARGS=$ARGS"
-                    /usr/sbin/circus $ARGS
-                    '''))
-                else:
+                    '''%(os.path.abspath("."))))
                     launch_fd.write(dedent('''\
                     echo "Running command: $argv"
                     $argv
                     ''')) 
-
+                    if self.pkdilly:
+                        fd.close()
+                        os.chmod(self.launch_file+"2", 0755)
 
             launch_fd.close()
             os.chmod(launch_tmp_file, 0755)
