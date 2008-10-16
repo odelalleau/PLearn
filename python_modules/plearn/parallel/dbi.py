@@ -989,7 +989,7 @@ class DBICondor(DBIBase):
                         sg = g.split("=",1)
                         fd.write("setenv "+sg[0]+" "+sg[1]+"\n")
                     fd.write(dedent('''
-                    setenv KRVEXECUTE `echo $argv |cut -d' ' -f1`
+                    setenv KRVEXECUTE %s
                     setenv ARGS `echo $argv |cut -d' ' -f2-`
                     /usr/sbin/circus $ARGS
                     '''%(os.path.abspath(self.launch_file+"2"))))#("${Array[0]}")))#
