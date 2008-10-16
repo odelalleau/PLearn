@@ -355,8 +355,7 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
         source_with_kerb=not any([source.startswith(x) for x in nokerb_path])
         if source_with_kerb:
             dbi_param['copy_local_source_file']=True
-        if dbi_param.get("pkdilly") and source_with_kerb and dir_with_kerb:
-            raise Exception("The option --pkdilly don't support that the current directory and the file pointed by CONDOR_LOCAL_SOURCE are both in kerberos protected directory.")
+
 print "\n\nThe jobs will be launched on the system:", launch_cmd
 print "With options: ",dbi_param
 for i in dbi_param:
