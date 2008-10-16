@@ -926,8 +926,8 @@ class DBICondor(DBIBase):
         if not os.path.exists(self.launch_file) or overwrite_launch_file:
             self.temp_files.append(self.launch_file)
             launch_fd = open(launch_tmp_file,'w')
+            fd=launch_fd
             if not self.source_file or not self.source_file.endswith(".cshrc"):
-                fd=launch_fd
                 if self.pkdilly:
                     fd.write(dedent('''\
                         #!/bin/sh
@@ -937,11 +937,9 @@ class DBICondor(DBIBase):
                     for g in get:
                         launch_fd.write("export "+g+"\n")
                     launch_fd.write(dedent('''
-                    declare -a Array=($*)
                     export KRVEXECUTE=%s
-                    export ARGS=${Array[*]:1}
                     /usr/sbin/circus $@
-                    '''%(os.path.abspath(self.launch_file+"2"))))#("${Array[0]}")))#
+                    '''%(os.path.abspath(self.launch_file+"2"))))
                     fd=open(self.launch_file+"2",'w')
 
                 if not renew:
@@ -952,6 +950,8 @@ class DBICondor(DBIBase):
                         fd.write('export HOME=%s\n' % self.condor_home)
                     if self.source_file:
                         fd.write('source ' + self.source_file + '\n')
+                    if self.pkdilly:
+                        bash_exec="$@"
                     fd.write(dedent('''\
                         echo "Executing on " `/bin/hostname` 1>&2
                         echo "HOSTNAME: ${HOSTNAME}" 1>&2
@@ -959,26 +959,12 @@ class DBICondor(DBIBase):
                         echo "PYTHONPATH: $PYTHONPATH" 1>&2
                         echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
                         echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
-                        echo "ARGS: $ARGS" 1>&2
                         cd %s
                         pwd 1>&2
-                        #which python 1>&2
-                        #echo -n python version: 1>&2
-                        #python -V 1>&2
-                        #echo -n /usr/bin/python version: 1>&2
-                        #/usr/bin/python -V 1>&2
-                        '''%(os.path.abspath("."))))
-                    if self.pkdilly:
-                        bash_exec="$@"
-                    fd.write(dedent('''\
                         echo "Running: command: \\"$@\\"" 1>&2
                         %s
-                        '''%(bash_exec)))
-                    if self.pkdilly:
-                        fd.close()
-                        os.chmod(self.launch_file+"2", 0755)
+                        '''%(os.path.abspath("."),bash_exec)))
             else:
-                fd=launch_fd
                 if self.pkdilly:
                     fd.write(dedent('''\
                     #!/bin/tcsh
@@ -990,9 +976,8 @@ class DBICondor(DBIBase):
                         fd.write("setenv "+sg[0]+" "+sg[1]+"\n")
                     fd.write(dedent('''
                     setenv KRVEXECUTE %s
-                    setenv ARGS `echo $argv |cut -d' ' -f2-`
                     /usr/sbin/circus $argv
-                    '''%(os.path.abspath(self.launch_file+"2"))))#("${Array[0]}")))#
+                    '''%(os.path.abspath(self.launch_file+"2"))))
                     fd=open(self.launch_file+"2",'w')
 
                 if not renew:
@@ -1011,24 +996,14 @@ class DBICondor(DBIBase):
                     echo "PYTHONPATH: $PYTHONPATH"
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
                     echo "OMP_NUM_THREADS: $OMP_NUM_THREADS"
-                    echo "ARGS: $ARGS"
                     cd %s
                     pwd
-                    #which python
-                    #echo -n python version:
-                    #python -V
-                    #echo -n /usr/bin/python version:
-                    #/usr/bin/python -V
-                    #echo ${PROGRAM} $@
-                    #${PROGRAM} "$@"
-                    '''%(os.path.abspath("."))))
-                    fd.write(dedent('''\
                     echo "Running command: $argv"
                     $argv
-                    ''')) 
-                    if self.pkdilly:
-                        fd.close()
-                        os.chmod(self.launch_file+"2", 0755)
+                    '''%(os.path.abspath("."))))
+                if self.pkdilly:
+                    fd.close()
+                    os.chmod(self.launch_file+"2", 0755)
 
             launch_fd.close()
             os.chmod(launch_tmp_file, 0755)
