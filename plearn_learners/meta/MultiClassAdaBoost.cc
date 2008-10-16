@@ -439,6 +439,7 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
+    //can't be parallized as the training_set is meaby not thread save...
     if(!learner1->getTrainingSet())
         learner1->setTrainingSet(vmat1, call_forget);
     if(!learner2->getTrainingSet())
