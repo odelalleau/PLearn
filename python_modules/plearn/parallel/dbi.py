@@ -991,7 +991,7 @@ class DBICondor(DBIBase):
                     fd.write(dedent('''
                     setenv KRVEXECUTE %s
                     setenv ARGS `echo $argv |cut -d' ' -f2-`
-                    /usr/sbin/circus $@
+                    /usr/sbin/circus $argv
                     '''%(os.path.abspath(self.launch_file+"2"))))#("${Array[0]}")))#
                     fd=open(self.launch_file+"2",'w')
 
