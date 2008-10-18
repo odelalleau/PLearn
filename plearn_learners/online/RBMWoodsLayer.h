@@ -56,13 +56,14 @@ class RBMWoodsLayer: public RBMLayer
 public:
     //#####  Public Build Options  ############################################
 
-    // Number of trees in the woods
+    //! Number of trees in the woods
     int n_trees;
 
-    // Depth of the trees in the woods (1 gives the ordinary RBMBinomialLayer)
+    //! Depth of the trees in the woods (1 gives the ordinary RBMBinomialLayer)
     int tree_depth;
 
-    // Indication that samples should be in {-1,1}, not {0,1}
+    //! Indication that samples should be in {-1,1}, not {0,1}, at nodes where a
+    //! left/right decision is made. Other nodes are set to 0.
     bool use_signed_samples;
 
 public:

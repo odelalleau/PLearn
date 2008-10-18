@@ -69,10 +69,7 @@ void RBMWoodsLayer::generateSample()
     PLCHECK_MSG(expectation_is_up_to_date, "Expectation should be computed "
             "before calling generateSample()");
 
-    if(use_signed_samples)
-        sample.fill(-1);
-    else
-        sample.clear();
+    sample.clear();
 
     int n_nodes_per_tree = size / n_trees;
     int node, depth, node_sample, sub_tree_size;
@@ -85,6 +82,9 @@ void RBMWoodsLayer::generateSample()
         sub_tree_size = node;
         while( depth < tree_depth )
         {
+            // HUGO: Note that local_node_expectation is really
+            // used as a probability, even for signed samples.
+            // Sorry for the misleading choice of variable name...
             node_sample = random_gen->binomial_sample(
                 local_node_expectation[ node + offset ] );
             if( use_signed_samples )
@@ -151,6 +151,10 @@ void RBMWoodsLayer::computeExpectation()
     real grand_parent_prob;
 
     // Get local expectations at every node
+
+    // HUGO: Note that local_node_expectation is really
+    // used as a probability, even for signed samples.
+    // Sorry for the misleading choice of variable name...
 
     // Divide and conquer computation of local (conditional) free energies
     for( int t=0; t<n_trees; t++ )
@@ -296,6 +300,10 @@ void RBMWoodsLayer::computeExpectation()
         }
         offset += n_nodes_per_tree;
     }
+
+    if( use_signed_samples )
+        for( int i=0; i<expectation.length(); i++ )
+            expectation[i] = expectation[i] - off_expectation[i];
 
     expectation_is_up_to_date = true;
 }
@@ -471,6 +479,10 @@ void RBMWoodsLayer::fprop( const Vec& input, Vec& output ) const
         }
         offset += n_nodes_per_tree;
     }
+
+    if( use_signed_samples )
+        for( int i=0; i<output.length(); i++ )
+            output[i] = output[i] - off_expectation[i];
 }
 
 void RBMWoodsLayer::fprop( const Mat& inputs, Mat& outputs )
@@ -546,7 +558,10 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
                 if( left_of_grand_parent )
                 {
                     grand_parent = n + offset + 3*sub_tree_size + 3;
-                    grand_parent_prob = output[ grand_parent ];
+                    if( use_signed_samples )
+                        grand_parent_prob = output[ grand_parent ] + off_expectation[grand_parent];
+                    else
+                        grand_parent_prob = output[ grand_parent ];
                     // Gradient for rest of the tree
                     on_tree_gradient[ grand_parent ] +=
                         ( out_grad * node_exp
@@ -591,7 +606,10 @@ void RBMWoodsLayer::bpropUpdate(const Vec& input, const Vec& output,
                 if( left_of_grand_parent )
                 {
                     grand_parent = n + offset + sub_tree_size + 1;
-                    grand_parent_prob = output[ grand_parent ];
+                    if( use_signed_samples )
+                        grand_parent_prob = output[ grand_parent ] + off_expectation[ grand_parent ];
+                    else
+                        grand_parent_prob = output[ grand_parent ];
                     // Gradient for rest of the tree
                     on_tree_gradient[ grand_parent ] +=
                         ( out_grad * node_exp
@@ -967,7 +985,8 @@ void RBMWoodsLayer::declareOptions(OptionList& ol)
 
     declareOption(ol, "use_signed_samples", &RBMWoodsLayer::use_signed_samples,
                   OptionBase::buildoption,
-                  "Indication that samples should be in {-1,1}, not {0,1}.");
+                  "Indication that samples should be in {-1,1}, not {0,1}, at nodes where a\n"
+                  "left/right decision is made. Other nodes are set to 0.\n");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -1242,6 +1261,8 @@ void RBMWoodsLayer::getConfiguration(int conf_index, Vec& output)
             }
             else
             {
+                if( use_signed_samples )
+                    output_i[current_node] = -1;
                 sub_tree_size /= 2;
                 current_node += sub_tree_size+1;
             }
