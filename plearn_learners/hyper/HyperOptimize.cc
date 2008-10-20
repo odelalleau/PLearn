@@ -436,6 +436,7 @@ Vec HyperOptimize::optimize()
         }
         option_vals = oracle->generateNextTrial(option_vals,objective);
 
+        ++trialnum;
         if(!is_missing(objective) &&
            (objective < best_objective || best_results.length()==0) && (trialnum>=min_n_trials || !option_vals))
         {
@@ -452,7 +453,7 @@ Vec HyperOptimize::optimize()
                              best_learner);
             }
         }
-        ++trialnum;
+
         if(verbosity>1) {
             perr << "In HyperOptimize::optimize() - cost=" << which_cost
                  << " nb of trials="<<trialnum
