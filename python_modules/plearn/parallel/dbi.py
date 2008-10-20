@@ -955,6 +955,9 @@ class DBICondor(DBIBase):
                     '''))
                 if self.condor_home:
                     fd.write('export HOME=%s\n' % self.condor_home)
+                fd.write('''
+                    cd %s
+                    '''%(os.path.abspath(".")))
                 if self.source_file:
                     fd.write('source ' + self.source_file + '\n')
 
@@ -965,18 +968,20 @@ class DBICondor(DBIBase):
                     echo "PYTHONPATH: $PYTHONPATH" 1>&2
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
                     echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
-                    cd %s
                     pwd 1>&2
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
                     %s
-                    '''%(os.path.abspath("."),bash_exec)))
+                    '''%(bash_exec)))
             elif not renew:
                 fd.write(dedent('''\
                     #!/bin/tcsh
                     '''))
                 if self.condor_home:
                     fd.write('setenv HOME %s\n' % self.condor_home)
+                fd.write('''
+                    cd %s
+                    '''%(os.path.abspath(".")))
                 if self.source_file:
                     fd.write('source ' + self.source_file + '\n')
 
@@ -987,11 +992,10 @@ class DBICondor(DBIBase):
                 echo "PYTHONPATH: $PYTHONPATH"
                 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
                 echo "OMP_NUM_THREADS: $OMP_NUM_THREADS"
-                cd %s
                 pwd
                 echo "Running command: $argv"
                 $argv
-                '''%(os.path.abspath("."))))
+                '''))
             if self.pkdilly and not renew:
                 fd.close()
                 os.chmod(second_lauch_file, 0755)

@@ -150,11 +150,7 @@ condor only options:
   The '--[no_]abs_path' option will tell condor to change the path to the 
     executable to the absolute path or not. Default True.
   The '--[no_]pkdilly': will use the pkdilly tool to make condor more 
-      kerberos friendly. How ever the file in CONDOR_LOCAL_SOURCE 
-      SHOULD not be protected by kerberos as it is read before the ticket
-      is generated. If the CONDOR_LOCAL_SOURCE is protected by kerberos
-      and the current directory is not, we will copy it and use the
-      copied version.
+      kerberos friendly.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -346,15 +342,16 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
 
     p = os.path.abspath(os.path.curdir)
     nokerb_path=["/home/fringant1/","/home/fringant2/","/cluster/"]
+    pkdilly=False
     dir_with_kerb=not any([p.startswith(x) for x in nokerb_path])
     if not dir_with_kerb or dbi_param.get('files'):
         pass
     elif dbi_param.get("pkdilly")==True:
-        pass
+        pkdilly = True
     else:
         raise Exception("You must be in a subfolder of /home/fringant2/")
     source=os.getenv("CONDOR_LOCAL_SOURCE")
-    if source:
+    if source and not pkdilly:
         source=os.path.realpath(source)
         source_with_kerb=not any([source.startswith(x) for x in nokerb_path])
         if source_with_kerb:
