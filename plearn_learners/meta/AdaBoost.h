@@ -54,7 +54,8 @@ class AdaBoost: public PLearner
 
     //! Global storage to save memory allocations.
     mutable Vec tmp_output2;
-    
+    mutable Vec weighted_costs;
+    mutable Vec sum_weighted_costs;
 protected:
     // average weighted error of each learner
     Vec learners_error;

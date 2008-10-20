@@ -742,8 +742,8 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
         costs[3]=costs[4]=MISSING_VALUE;
 
     if(forward_sub_learner_test_costs){
-        Vec weighted_costs(weak_learner_template->nTestCosts());
-        Vec sum_weighted_costs(weak_learner_template->nTestCosts());
+        weighted_costs.resize(weak_learner_template->nTestCosts());
+        sum_weighted_costs.resize(weak_learner_template->nTestCosts());
         sum_weighted_costs.clear();
         for(int i=0;i<weak_learners.size();i++){
             weak_learners[i]->computeCostsOnly(input, target, weighted_costs);
