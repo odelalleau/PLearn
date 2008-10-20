@@ -326,6 +326,7 @@
 #include <plearn/vmat/KNNImputationVMatrix.h>
 // Commented out because triggers WordNet, which does not work really fine yet.
 //#include <plearn/vmat/LemmatizeVMatrix.h>
+#include <plearn/vmat/LIBSVMSparseVMatrix.h>
 #include <plearn/vmat/LocalNeighborsDifferencesVMatrix.h>
 #include <plearn/vmat/LocallyPrecomputedVMatrix.h>
 #include <plearn/vmat/MeanImputationVMatrix.h>

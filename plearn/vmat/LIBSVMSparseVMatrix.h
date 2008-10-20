@@ -60,6 +60,10 @@ public:
     //! File name of libsvm data
     PPath libsvm_file;
 
+    //! Indication that a coarse (i.e. fixed length, filled with 0's) representation
+    //! of the data in the .libsvm file should be used.
+    bool use_coarse_representation;
+
     //! Input data
     TVec< Vec > libsvm_input_data;
 

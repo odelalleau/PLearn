@@ -48,16 +48,35 @@ using namespace std;
 PLEARN_IMPLEMENT_OBJECT(
     LIBSVMSparseVMatrix,
     "VMatrix containing data from a libsvm format file",
-    ""
+    "The libsvm format file is particularly useful for sparse inputs.\n"
+    "The sparsity information (i.e. indices of non-zero inputs) is provided\n"
+    "via the extra fields, and the input given by getExample() only contains\n"
+    "the values for non-zero inputs. Since the sparsity can change from one example to\n"
+    "another, getExtra() (and getExample()) will adapt the size of the extra (input)\n"
+    "fields vector accordingly. However, since it only works for fixed length inputs,\n"
+    "getRow() returns an error when called in sparse mode.\n"
+    "This class can also be used in \"coarse\" mode (i.e. use_coarse_representation=true),\n"
+    "where getRow() and getExample() will then provide inputs in a fixed vector form, with\n"
+    "no-zero fields taking their given values and other fields are set explicitely to 0.\n"
+    "However, in coarse mode, no extra information is given (i.e. extrasize() is 0), since\n"
+    "it is implicitly incorporated in the input vector."
     );
 
-LIBSVMSparseVMatrix::LIBSVMSparseVMatrix()
+LIBSVMSparseVMatrix::LIBSVMSparseVMatrix(): use_coarse_representation(false)
 {
 }
 
 void LIBSVMSparseVMatrix::getNewRow(int i, const Vec& v) const
 {
-    PLERROR("In LIBSVMSparseVMatrix::getNewRow(): not implemented yet."); 
+    if( !use_coarse_representation )
+        PLERROR("In LIBSVMSparseVMatrix::getNewRow(): not compatible with sparse representations. Use use_coarse_representation=true.");
+    real* in = libsvm_input_data[i].data();
+    real* ex = libsvm_extra_data[i].data();
+    v.clear();
+    for( int j=0; j<libsvm_input_data[i].length(); j++ )
+        v[(int)round(ex[j])] = in[j];
+
+    v[inputsize_] = libsvm_target_data[i];
 }
 
 void LIBSVMSparseVMatrix::declareOptions(OptionList& ol)
@@ -69,6 +88,11 @@ void LIBSVMSparseVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "libsvm_file", &LIBSVMSparseVMatrix::libsvm_file,
                   OptionBase::buildoption,
                   "File name of libsvm data.\n");
+
+    declareOption(ol, "use_coarse_representation", &LIBSVMSparseVMatrix::use_coarse_representation,
+                  OptionBase::buildoption,
+                  "Indication that a coarse (i.e. fixed length, filled with 0's) representation\n"
+                  "of the data in the .libsvm file should be used.\n");
 
     //declareOption(ol, "libsvm_input_data", 
     //              &LIBSVMSparseVMatrix::libsvm_input_data,
@@ -146,7 +170,11 @@ void LIBSVMSparseVMatrix::build_()
     if( inputsize_ < 0 ) inputsize_ = largest_input_index+1;
     if( targetsize_ < 0 ) targetsize_ = 1;
     if( weightsize_ < 0 ) weightsize_ = 0;
-    if( extrasize_ < 0 ) extrasize_ = largest_input_index+1;
+    if( use_coarse_representation )
+        extrasize_ = 0;
+    else
+        extrasize_ = largest_input_index+1;
+    if( width_ < 0 ) width_ = inputsize_ + targetsize_ + weightsize_;
 }
  
 
@@ -170,14 +198,19 @@ void LIBSVMSparseVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 void LIBSVMSparseVMatrix::getExample(int i, Vec& input, Vec& target, real& weight)
 {
-    if( i>= length_ || i < 0 )
-        PLERROR("In LIBSVMSparseVMatrix::getExample(): row index should "
-                "be between 0 and length_-1");
-    input.resize(libsvm_input_data[i].length());
-    input << libsvm_input_data[i];
-    target.resize(targetsize_);
-    target[0] = libsvm_target_data[i];
-    weight = 1;
+    if( use_coarse_representation )
+        inherited::getExample(i,input,target,weight);
+    else
+    {
+        if( i>= length_ || i < 0 )
+            PLERROR("In LIBSVMSparseVMatrix::getExample(): row index should "
+                    "be between 0 and length_-1");
+        input.resize(libsvm_input_data[i].length());
+        input << libsvm_input_data[i];
+        target.resize(targetsize_);
+        target[0] = libsvm_target_data[i];
+        weight = 1;
+    }
 }
 
 void LIBSVMSparseVMatrix::getExamples(int i_start, int length, Mat& inputs, Mat& targets,
@@ -189,11 +222,16 @@ void LIBSVMSparseVMatrix::getExamples(int i_start, int length, Mat& inputs, Mat&
 
 void LIBSVMSparseVMatrix::getExtra(int i, Vec& extra)
 {
-    if( i>= length_ || i < 0 )
-        PLERROR("In LIBSVMSparseVMatrix::getExample(): row index should "
-                "be between 0 and length_-1");
-    extra.resize(libsvm_extra_data[i].length());
-    extra << libsvm_extra_data[i];
+    if( use_coarse_representation )
+        extra.resize(0);
+    else
+    {
+        if( i>= length_ || i < 0 )
+            PLERROR("In LIBSVMSparseVMatrix::getExample(): row index should "
+                    "be between 0 and length_-1");
+        extra.resize(libsvm_extra_data[i].length());
+        extra << libsvm_extra_data[i];
+    }
 }
 
 } // end of namespace PLearn
