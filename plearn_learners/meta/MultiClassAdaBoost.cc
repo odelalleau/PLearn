@@ -104,16 +104,7 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
 
 void MultiClassAdaBoost::build_()
 {
-    // ### This method should do the real building of the object,
-    // ### according to set 'options', in *any* situation.
-    // ### Typical situations include:
-    // ###  - Initial building of an object from a few user-specified options
-    // ###  - Building of a "reloaded" object: i.e. from the complete set of
-    // ###    all serialised options.
-    // ###  - Updating or "re-building" of an object after a few "tuning"
-    // ###    options have been modified.
-    // ### You should assume that the parent class' build_() has already been
-    // ### called.
+    //reuse object to same allocation time
     sub_target_tmp.resize(2);
     for(int i=0;i<sub_target_tmp.size();i++)
         sub_target_tmp[i].resize(1);
@@ -238,9 +229,19 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
     PLASSERT(output.size()==outputsize());
     PLASSERT(output1.size()==learner1->outputsize());
     PLASSERT(output2.size()==learner2->outputsize());
+#ifdef _OPENMP
+#pragma omp parallel sections default(none)
+{
+#pragma omp section 
+    learner1->computeOutput(input, output1);
+#pragma omp section 
+    learner2->computeOutput(input, output2);
+}
 
+#else
     learner1->computeOutput(input, output1);
     learner2->computeOutput(input, output2);
+#endif
     int ind1=int(round(output1[0]));
     int ind2=int(round(output2[0]));
 
@@ -271,11 +272,23 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
     subcosts2.resize(learner1->nTestCosts());
 
     getSubLearnerTarget(target, sub_target_tmp);
-
+#ifdef _OPENMP
+#pragma omp parallel sections default(none)
+{
+#pragma omp section 
     learner1->computeOutputAndCosts(input, sub_target_tmp[0],
-                                   output1, subcosts1);
+                                    output1, subcosts1);
+#pragma omp section 
     learner2->computeOutputAndCosts(input, sub_target_tmp[1],
-                                   output2, subcosts2);
+                                    output2, subcosts2);
+}
+
+#else
+    learner1->computeOutputAndCosts(input, sub_target_tmp[0],
+                                    output1, subcosts1);
+    learner2->computeOutputAndCosts(input, sub_target_tmp[1],
+                                    output2, subcosts2);
+#endif
 
     int ind1=int(round(output1[0]));
     int ind2=int(round(output2[0]));
@@ -345,8 +358,11 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
         subcosts2.resize(learner1->nTestCosts());
         getSubLearnerTarget(target, sub_target_tmp);
 
+//not paralized as this to add more overhead then the time saved.
+//meaby not true for all weak_learner.
         learner1->computeCostsOnly(input,sub_target_tmp[0],subcosts1);
         learner2->computeCostsOnly(input,sub_target_tmp[1],subcosts2);
+
         subcosts1+=subcosts2;
         costs.append(subcosts1);
     }
