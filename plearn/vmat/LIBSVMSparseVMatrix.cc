@@ -57,7 +57,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "getRow() returns an error when called in sparse mode.\n"
     "This class can also be used in \"coarse\" mode (i.e. use_coarse_representation=true),\n"
     "where getRow() and getExample() will then provide inputs in a fixed vector form, with\n"
-    "no-zero fields taking their given values and other fields are set explicitely to 0.\n"
+    "non-zero fields taking their given values and other fields set explicitely to 0.\n"
     "However, in coarse mode, no extra information is given (i.e. extrasize() is 0), since\n"
     "it is implicitly incorporated in the input vector."
     );
