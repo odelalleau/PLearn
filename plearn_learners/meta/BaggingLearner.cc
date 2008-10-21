@@ -348,7 +348,7 @@ void BaggingLearner::computeCostsFromOutputs(const Vec& input, const Vec& output
                                              const Vec& target, Vec& costs) const
 {
     //if(input != last_test_input)
-    if (!input.is_equal(last_test_input, true))
+    if (!input.isEqual(last_test_input, true))
         PLERROR("BaggingLearner::computeCostsFromOutputs has to be called "
                 "right after computeOutput, with the same input.");
     

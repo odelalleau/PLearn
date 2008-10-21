@@ -738,7 +738,7 @@ public:
     bool operator!=(const TVec<T>& value) const { return !((*this)==value); }
 
     //!  same as operator== but dealing with NaN and Inf
-    bool is_equal(const TVec<T>& value, bool ignore_missing=false) const
+    bool isEqual(const TVec<T>& value, bool ignore_missing=false) const
     {
         if (value.isEmpty() && isEmpty()) return true;
         if (value.length() != length())   return false;
