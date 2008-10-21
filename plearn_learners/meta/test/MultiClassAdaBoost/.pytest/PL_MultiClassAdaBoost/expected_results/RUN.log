@@ -1,0 +1,121 @@
+HyperLearner: starting the optimization
+split_cols: 2 2 2 
+split_values: 0.00125079586853901747 0.000357032461916012567 0.000981625552665510437 
+weak learner at stage 0 has average loss = 0.02
+split_cols: 2 1 2 
+split_values: 0.991025168386145405 0.482293993618237549 0.891579732096156263 
+weak learner at stage 0 has average loss = 0.08
+split_cols: 4 3 2 
+split_values: 3.23307269844974599e-10 0.698651129400676418 0.000537488498421501149 
+weak learner at stage 1 has average loss = 0.0306122
+split_cols: 4 1 1 
+split_values: 1.54709578481515564e-13 0.588552410435003615 0.568316236782665074 
+weak learner at stage 1 has average loss = 0.13587
+split_cols: 2 0 3 
+split_values: 0.000528285193333644099 0.624507340564582236 0.406995257960652612 
+weak learner at stage 2 has average loss = 0.136257
+split_cols: 1 3 2 
+split_values: 0.526575453102100632 0.924226804347039965 0.995245802370935517 
+weak learner at stage 2 has average loss = 0.204444
+split_cols: 2 3 1 
+split_values: 0.000528285193333644099 0.406995257960652612 0.399391565505198165 
+weak learner at stage 3 has average loss = 0.119855
+split_cols: 2 0 3 
+split_values: 0.997650553369808346 0.441781515973124872 0.310957185430505323 
+weak learner at stage 3 has average loss = 0.179198
+split_cols: 2 1 2 
+split_values: 0.196634593877310471 0.36967671457248541 0.00125079586853901747 
+weak learner at stage 4 has average loss = 0.103659
+split_cols: 3 3 2 
+split_values: 0.141930657011306749 0.0564509465831030677 0.997650553369808346 
+weak learner at stage 4 has average loss = 0.27129
+split_cols: 0 3 1 
+split_values: 0.624507340564582236 0.698651129400676418 0.370088477642079638 
+weak learner at stage 5 has average loss = 0.0730531
+split_cols: 2 4 4 
+split_values: 0.00363231682035125569 0.999999964757892545 0.999999999538717876 
+weak learner at stage 5 has average loss = 0.217388
+split_cols: 2 0 3 
+split_values: 0.00125079586853901747 0.624507340564582236 0.763338630405507312 
+weak learner at stage 6 has average loss = 0.140932
+split_cols: 1 1 1 
+split_values: 0.564858493389006289 0.479480044756096346 0.379258691801199865 
+weak learner at stage 6 has average loss = 0.262423
+split_cols: 2 3 1 
+split_values: 0.000357032461916012567 0.130712305658957473 0.399391565505198165 
+weak learner at stage 7 has average loss = 0.214419
+split_cols: 4 1 0 
+split_values: 0.999999999999999334 0.569140400436275673 0.318872618050356049 
+weak learner at stage 7 has average loss = 0.26615
+split_cols: 1 3 1 
+split_values: 0.401581050193795197 0.360834998492078562 0.370088477642079638 
+weak learner at stage 8 has average loss = 0.135994
+split_cols: 2 1 1 
+split_values: 0.0696715340410815898 0.502718698860307178 0.526575453102100632 
+weak learner at stage 8 has average loss = 0.270747
+split_cols: 2 0 1 
+split_values: 0.00125079586853901747 0.624507340564582236 0.370088477642079638 
+weak learner at stage 9 has average loss = 0.154551
+split_cols: 1 1 1 
+split_values: 0.502718698860307178 0.479480044756096346 0.6805672568090122 
+weak learner at stage 9 has average loss = 0.210479
+split_cols: 2 2 2 
+split_values: 0.000357032461916012567 0.000981625552665510437 0.00125079586853901747 
+weak learner at stage 10 has average loss = 0.108164
+split_cols: 1 1 2 
+split_values: 0.662011169718969006 0.6805672568090122 0.122353510242232788 
+weak learner at stage 10 has average loss = 0.272979
+split_cols: 1 1 1 
+split_values: 0.401581050193795197 0.332158208341527428 0.272305619535323673 
+weak learner at stage 11 has average loss = 0.132455
+split_cols: 3 0 1 
+split_values: 0.141930657011306749 0.40739065223433224 0.574273867344056166 
+weak learner at stage 11 has average loss = 0.315862
+split_cols: 4 1 3 
+split_values: 7.04158953368505536e-14 0.384853138944362905 0.662373884583906003 
+weak learner at stage 12 has average loss = 0.110589
+split_cols: 1 1 2 
+split_values: 0.662011169718969006 0.6805672568090122 0.00363231682035125569 
+weak learner at stage 12 has average loss = 0.327692
+split_cols: 3 2 0 
+split_values: 0.357489402445920146 0.0015353418386078177 0.624507340564582236 
+weak learner at stage 13 has average loss = 0.181377
+split_cols: 1 4 1 
+split_values: 0.379258691801199865 8.80684414283905426e-14 0.479480044756096346 
+weak learner at stage 13 has average loss = 0.350098
+split_cols: 2 2 2 
+split_values: 0.000981625552665510437 0.000357032461916012567 0.196634593877310471 
+weak learner at stage 14 has average loss = 0.12825
+split_cols: 1 4 4 
+split_values: 0.564858493389006289 0.999999999999999334 0.999999991749624728 
+weak learner at stage 14 has average loss = 0.30729
+split_cols: 2 3 0 
+split_values: 0.000528285193333644099 0.406995257960652612 0.624507340564582236 
+weak learner at stage 15 has average loss = 0.207133
+split_cols: 1 1 1 
+split_values: 0.526575453102100632 0.544178240629241028 0.502718698860307178 
+weak learner at stage 15 has average loss = 0.329174
+split_cols: 2 2 2 
+split_values: 0.00125079586853901747 0.000981625552665510437 0.000528285193333644099 
+weak learner at stage 16 has average loss = 0.151516
+split_cols: 2 2 2 
+split_values: 0.995010648391392527 0.991025168386145405 0.977100614750671781 
+weak learner at stage 16 has average loss = 0.306159
+split_cols: 1 3 2 
+split_values: 0.36967671457248541 0.406995257960652612 0.000254178900377460826 
+weak learner at stage 17 has average loss = 0.179798
+split_cols: 2 2 1 
+split_values: 0.885239426681956321 0.627448174543832948 0.482293993618237549 
+weak learner at stage 17 has average loss = 0.348588
+split_cols: 0 3 1 
+split_values: 0.624507340564582236 0.698651129400676418 0.370088477642079638 
+weak learner at stage 18 has average loss = 0.126962
+split_cols: 2 4 3 
+split_values: 0.997650553369808346 0.999999999999998335 0.782913532932723921 
+weak learner at stage 18 has average loss = 0.283838
+split_cols: 2 2 2 
+split_values: 0.00125079586853901747 0.000981625552665510437 0.000528285193333644099 
+weak learner at stage 19 has average loss = 0.174564
+split_cols: 1 1 1 
+split_values: 0.662011169718969006 0.6805672568090122 0.502718698860307178 
+weak learner at stage 19 has average loss = 0.34564

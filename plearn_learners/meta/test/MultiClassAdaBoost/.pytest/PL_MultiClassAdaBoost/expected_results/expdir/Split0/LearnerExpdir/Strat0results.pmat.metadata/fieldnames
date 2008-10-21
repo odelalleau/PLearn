@@ -1,0 +1,11 @@
+_trial_	0
+_objective_	0
+nstages	0
+E[test1.E[class_error]]	0
+E[test1.E[linear_class_error]]	0
+E[test1.E[square_class_error]]	0
+E[test1.E[conflict]]	0
+E[test2.E[class_error]]	0
+E[test2.E[linear_class_error]]	0
+E[test2.E[square_class_error]]	0
+E[test2.E[conflict]]	0

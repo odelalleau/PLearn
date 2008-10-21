@@ -1,0 +1,103 @@
+import os.path
+from plearn.pyplearn import *
+plarg_defaults.conf    = False
+plarg_defaults.pseudo  = False
+plarg_defaults.tms     = 1
+
+learner=pl.MultiClassAdaBoost( 
+    forward_sub_learner_test_costs=1,
+    test_minibatch_size=plargs.tms,
+    learner_template = pl.AdaBoost(
+        weak_learner_template=pl.RegressionTree(
+            nstages = 4,
+            loss_function_weight = 1,
+            missing_is_valid = 0,
+            multiclass_outputs = [0, 1, 2],
+            maximum_number_of_nodes = 3,
+            compute_train_stats = 0,
+            complexity_penalty_factor = 0.0,
+            verbosity = 2,
+            report_progress = 1,
+            forget_when_training_set_changes = 1,
+            leave_template = pl.RegressionTreeLeave( )
+            ),
+        test_minibatch_size=plargs.tms,
+        weight_by_resampling=0,
+        #modif_train_set_weights=plargs.modif_train_set_weights;
+        early_stopping=False,
+        compute_training_error=False,
+        forward_sub_learner_test_costs=True,
+        provide_learner_expdir=True,
+        report_progress = 1,
+        verbosity = 2
+        )
+)
+
+learner=learner = pl.HyperLearner(
+    option_fields = [ "nstages" ],
+    dont_restart_upon_change = [ "nstages" ] ,
+    provide_strategy_expdir = 1 ,
+    save_final_learner = 0 ,
+    provide_learner_expdir = 1 ,
+    forget_when_training_set_changes = 0 ,
+    nstages = 1 ,
+    report_progress = 1 ,
+    verbosity = 1 ,
+    learner = learner,
+    tester = pl.PTester(
+        splitter = pl.FractionSplitter(splits = TMat(1,3,[ (0,0.75), (0,.75), (0.75,1) ])),
+        statnames = [
+            'E[test1.E[class_error]]',  'E[test1.E[linear_class_error]]',  'E[test1.E[square_class_error]]',  'E[test1.E[conflict]]',
+            'E[test2.E[class_error]]',  'E[test2.E[linear_class_error]]',  'E[test2.E[square_class_error]]',  'E[test2.E[conflict]]' ],
+        save_test_outputs = 0 ,
+        report_stats = 1  ,
+        save_initial_tester = 0 ,
+        save_learners = 0 ,
+        save_initial_learners = 0  ,
+        save_data_sets = 0  ,
+        save_test_costs = 0  ,
+        provide_learner_expdir = 1  ,
+        save_test_confidence = 0  ,
+        save_test_names = 0,
+        ),
+    strategy = [
+
+    pl.HyperOptimize(
+            which_cost = "E[test2.E[class_error]]" ,
+            provide_tester_expdir = 0 ,
+            oracle = pl.EarlyStoppingOracle(
+                option = "nstages" ,
+                range = [ 1, 21, 1 ],
+                min_value = -3.40282e+38 ,
+                max_value = 3.40282e+38 ,
+                max_degradation = 3.40282e+38 ,
+                relative_max_degradation = -1 ,
+                min_improvement = -3.40282e+38 ,
+                relative_min_improvement = -1 ,
+                max_degraded_steps = 120 ,
+                min_n_steps = 2 
+                )  # end of EarlyStoppingOracle
+            )  # end of sub_strategy.HyperOptimize
+    ]  # end of HyperLearner strategy
+    )
+splitter = pl.FractionSplitter(
+    splits = TMat(1,3, [ (0,1), (0,0.75), (0.75,1) ])
+    )
+tester = pl.PTester(
+    expdir = plargs.expdir,
+    dataset = pl.AutoVMatrix(filename="PLEARNDIR:examples/data/test_suite/linear_4x_2y_multi_class_3.vmat"),
+    splitter = splitter,
+    learner = learner,
+    statnames = [
+        'E[test1.E[class_error]]',  'E[test1.E[linear_class_error]]',  'E[test1.E[square_class_error]]',  'E[test1.E[conflict]]',
+        'E[test2.E[class_error]]',  'E[test2.E[linear_class_error]]',  'E[test2.E[square_class_error]]',  'E[test2.E[conflict]]' ],
+    provide_learner_expdir = 1,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    save_test_confidence = 0,
+    save_learners = 1,
+    save_split_stats = 0#not need as their is only one split
+    )
+
+def main():
+    return tester

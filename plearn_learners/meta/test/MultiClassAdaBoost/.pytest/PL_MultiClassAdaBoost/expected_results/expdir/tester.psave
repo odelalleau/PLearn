@@ -1,0 +1,418 @@
+PTester(
+expdir = "PYTEST__PL_MultiClassAdaBoost__RESULTS:expdir/" ;
+dataset = *1 ->AutoVMatrix(
+filename = "PLEARNDIR:examples/data/test_suite/linear_4x_2y_multi_class_3.vmat" ;
+load_in_memory = 0 ;
+writable = 0 ;
+length = 200 ;
+width = 6 ;
+inputsize = 5 ;
+targetsize = 1 ;
+weightsize = 0 ;
+extrasize = 0 ;
+metadatadir = "PLEARNDIR:examples/data/test_suite/linear_4x_2y_multi_class_3.vmat.metadata/" ;
+fieldinfos = 6 [ "x1" 0 "x2" 0 "x3" 0 "x4" 0 "y1" 0 "target" 0 ]  )
+;
+splitter = *2 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  3  [ 
+(0 , 1 )	(0 , 0.75 )	(0.75 , 1 )	
+]
+;
+one_is_absolute = 0  )
+;
+statnames = 8 [ "E[test1.E[class_error]]" "E[test1.E[linear_class_error]]" "E[test1.E[square_class_error]]" "E[test1.E[conflict]]" "E[test2.E[class_error]]" "E[test2.E[linear_class_error]]" "E[test2.E[square_class_error]]" "E[test2.E[conflict]]" ] ;
+statmask = []
+;
+learner = *3 ->HyperLearner(
+tester = *4 ->PTester(
+expdir = "" ;
+dataset = *0 ;
+splitter = *5 ->FractionSplitter(
+round_to_closest = 0 ;
+splits = 1  3  [ 
+(0 , 0.75 )	(0 , 0.75 )	(0.75 , 1 )	
+]
+;
+one_is_absolute = 0  )
+;
+statnames = 8 [ "E[test1.E[class_error]]" "E[test1.E[linear_class_error]]" "E[test1.E[square_class_error]]" "E[test1.E[conflict]]" "E[test2.E[class_error]]" "E[test2.E[linear_class_error]]" "E[test2.E[square_class_error]]" "E[test2.E[conflict]]" ] ;
+statmask = []
+;
+learner = *6 ->MultiClassAdaBoost(
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827 ;
+learner1 = *7 ->AdaBoost(
+weak_learners = []
+;
+voting_weights = []
+;
+sum_voting_weights = 0 ;
+initial_sum_weights = 0 ;
+example_weights = []
+;
+learners_error = []
+;
+weak_learner_template = *8 ->RegressionTree(
+missing_is_valid = 0 ;
+loss_function_weight = 1 ;
+maximum_number_of_nodes = 3 ;
+compute_train_stats = 0 ;
+complexity_penalty_factor = 0 ;
+output_confidence_target = 0 ;
+multiclass_outputs = 3 [ 0 1 2 ] ;
+leave_template = *9 ->RegressionTreeLeave(
+id = -1 ;
+missing_leave = 0 ;
+loss_function_weight = 0 ;
+verbosity = 0 ;
+length = 0 ;
+weights_sum = 0 ;
+targets_sum = 0 ;
+weighted_targets_sum = 0 ;
+weighted_squared_targets_sum = 0 ;
+loss_function_factor = 1  )
+;
+root = *0 ;
+priority_queue = *0 ;
+first_leave = *0 ;
+split_cols = []
+;
+split_values = []
+;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 1 ;
+nstages = 4 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+target_error = 0.5 ;
+pseudo_loss_adaboost = 1 ;
+conf_rated_adaboost = 0 ;
+weight_by_resampling = 0 ;
+output_threshold = 0.5 ;
+provide_learner_expdir = 1 ;
+early_stopping = 0 ;
+save_often = 0 ;
+compute_training_error = 0 ;
+forward_sub_learner_test_costs = 1 ;
+modif_train_set_weights = 0 ;
+found_zero_error_weak_learner = 0 ;
+reuse_test_results = 1 ;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+learner2 = *10 ->AdaBoost(
+weak_learners = []
+;
+voting_weights = []
+;
+sum_voting_weights = 0 ;
+initial_sum_weights = 0 ;
+example_weights = []
+;
+learners_error = []
+;
+weak_learner_template = *11 ->RegressionTree(
+missing_is_valid = 0 ;
+loss_function_weight = 1 ;
+maximum_number_of_nodes = 3 ;
+compute_train_stats = 0 ;
+complexity_penalty_factor = 0 ;
+output_confidence_target = 0 ;
+multiclass_outputs = 3 [ 0 1 2 ] ;
+leave_template = *12 ->RegressionTreeLeave(
+id = -1 ;
+missing_leave = 0 ;
+loss_function_weight = 0 ;
+verbosity = 0 ;
+length = 0 ;
+weights_sum = 0 ;
+targets_sum = 0 ;
+weighted_targets_sum = 0 ;
+weighted_squared_targets_sum = 0 ;
+loss_function_factor = 1  )
+;
+root = *0 ;
+priority_queue = *0 ;
+first_leave = *0 ;
+split_cols = []
+;
+split_values = []
+;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 1 ;
+nstages = 4 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+target_error = 0.5 ;
+pseudo_loss_adaboost = 1 ;
+conf_rated_adaboost = 0 ;
+weight_by_resampling = 0 ;
+output_threshold = 0.5 ;
+provide_learner_expdir = 1 ;
+early_stopping = 0 ;
+save_often = 0 ;
+compute_training_error = 0 ;
+forward_sub_learner_test_costs = 1 ;
+modif_train_set_weights = 0 ;
+found_zero_error_weak_learner = 0 ;
+reuse_test_results = 1 ;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+forward_sub_learner_test_costs = 1 ;
+learner_template = *13 ->AdaBoost(
+weak_learners = []
+;
+voting_weights = []
+;
+sum_voting_weights = 0 ;
+initial_sum_weights = 0 ;
+example_weights = []
+;
+learners_error = []
+;
+weak_learner_template = *14 ->RegressionTree(
+missing_is_valid = 0 ;
+loss_function_weight = 1 ;
+maximum_number_of_nodes = 3 ;
+compute_train_stats = 0 ;
+complexity_penalty_factor = 0 ;
+output_confidence_target = 0 ;
+multiclass_outputs = 3 [ 0 1 2 ] ;
+leave_template = *15 ->RegressionTreeLeave(
+id = -1 ;
+missing_leave = 0 ;
+loss_function_weight = 0 ;
+verbosity = 0 ;
+length = 0 ;
+weights_sum = 0 ;
+targets_sum = 0 ;
+weighted_targets_sum = 0 ;
+weighted_squared_targets_sum = 0 ;
+loss_function_factor = 1  )
+;
+root = *0 ;
+priority_queue = *0 ;
+first_leave = *0 ;
+split_cols = []
+;
+split_values = []
+;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 1 ;
+nstages = 4 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+target_error = 0.5 ;
+pseudo_loss_adaboost = 1 ;
+conf_rated_adaboost = 0 ;
+weight_by_resampling = 0 ;
+output_threshold = 0.5 ;
+provide_learner_expdir = 1 ;
+early_stopping = 0 ;
+save_often = 0 ;
+compute_training_error = 0 ;
+forward_sub_learner_test_costs = 1 ;
+modif_train_set_weights = 0 ;
+found_zero_error_weak_learner = 0 ;
+reuse_test_results = 1 ;
+random_gen = *0 ;
+seed = 1827 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 2 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+ )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 0 ;
+save_stat_collectors = 1 ;
+save_split_stats = 1 ;
+save_learners = 0 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 0 ;
+call_forget_in_run = 1 ;
+save_test_costs = 0 ;
+save_test_names = 0 ;
+provide_learner_expdir = 1 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = []
+;
+save_test_confidence = 0 ;
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )
+;
+option_fields = 1 [ "nstages" ] ;
+dont_restart_upon_change = 1 [ "nstages" ] ;
+strategy = 1 [ *16 ->HyperOptimize(
+which_cost = "E[test2.E[class_error]]" ;
+min_n_trials = 0 ;
+oracle = *17 ->EarlyStoppingOracle(
+option = "nstages" ;
+values = []
+;
+range = 3 [ 1 21 1 ] ;
+min_value = -3.40282000000000014e+38 ;
+max_value = 3.40282000000000014e+38 ;
+max_degradation = 3.40282000000000014e+38 ;
+relative_max_degradation = -1 ;
+min_improvement = -3.40282000000000014e+38 ;
+relative_min_improvement = -1 ;
+max_degraded_steps = 120 ;
+min_n_steps = 2 ;
+nreturned = 0 ;
+best_objective = 1.79769313486231571e+308 ;
+best_step = -1 ;
+met_early_stopping = 0  )
+;
+provide_tester_expdir = 0 ;
+sub_strategy = []
+;
+rerun_after_sub = 0 ;
+provide_sub_expdir = 1 ;
+save_best_learner = 0 ;
+splitter = *0 ;
+auto_save = 0 ;
+auto_save_diff_time = 10800 ;
+auto_save_test = 0 ;
+best_objective = 1.79769313486231571e+308 ;
+best_results = []
+;
+best_learner = *0 ;
+trialnum = 0 ;
+option_vals = []
+;
+verbosity = 0  )
+] ;
+provide_strategy_expdir = 1 ;
+save_final_learner = 0 ;
+learner = *6  ;
+provide_learner_expdir = 1 ;
+expdir_append = "" ;
+forward_nstages = 0 ;
+random_gen = *0 ;
+stage = 0 ;
+n_examples = -1 ;
+inputsize = -1 ;
+targetsize = -1 ;
+weightsize = -1 ;
+forget_when_training_set_changes = 0 ;
+nstages = 1 ;
+report_progress = 1 ;
+verbosity = 1 ;
+nservers = 0 ;
+save_trainingset_prefix = "" ;
+test_minibatch_size = 1 ;
+use_a_separate_random_generator_for_testing = 1827  )
+;
+perf_evaluators = {};
+report_stats = 1 ;
+save_initial_tester = 1 ;
+save_stat_collectors = 1 ;
+save_split_stats = 0 ;
+save_learners = 1 ;
+save_initial_learners = 0 ;
+save_data_sets = 0 ;
+save_test_outputs = 1 ;
+call_forget_in_run = 1 ;
+save_test_costs = 1 ;
+save_test_names = 1 ;
+provide_learner_expdir = 1 ;
+should_train = 1 ;
+should_test = 1 ;
+template_stats_collector = *0 ;
+global_template_stats_collector = *0 ;
+final_commands = []
+;
+save_test_confidence = 0 ;
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )
