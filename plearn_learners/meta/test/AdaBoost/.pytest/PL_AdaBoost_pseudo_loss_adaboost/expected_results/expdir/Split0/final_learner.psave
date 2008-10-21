@@ -2867,7 +2867,6 @@ compute_training_error = 1 ;
 forward_sub_learner_test_costs = 1 ;
 modif_train_set_weights = 0 ;
 found_zero_error_weak_learner = 0 ;
-reuse_test_results = 1 ;
 random_gen = *0 ;
 seed = 1827 ;
 stage = 5 ;
