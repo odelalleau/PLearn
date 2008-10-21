@@ -189,6 +189,8 @@ public:
 
     //! Computes the output from the input
     virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
+                                       Vec& output, Vec& costs) const;
 
     //! Computes the costs from already computed output. 
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output, 

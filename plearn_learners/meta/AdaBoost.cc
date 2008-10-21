@@ -690,7 +690,7 @@ void AdaBoost::computeOutput(const Vec& input, Vec& output) const
 {
     PLASSERT(weak_learners.size()>0);
     PLASSERT(weak_learner_output.size()==weak_learner_template->outputsize());
-    PLASSERT(output.size()==1);
+    PLASSERT(output.size()==outputsize());
     real sum_out=0;
     if(!pseudo_loss_adaboost && !conf_rated_adaboost)
         for (int i=0;i<weak_learners.size();i++){
@@ -742,6 +742,9 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
         costs[3]=costs[4]=MISSING_VALUE;
 
     if(forward_sub_learner_test_costs){
+        //slow as we already have calculated the output
+        //we should haved called computeOutputAndCosts.
+        PLWARNING("AdaBoost::computeCostsFromOutputs called with forward_sub_learner_test_costs true. This should be optimized!");
         weighted_costs.resize(weak_learner_template->nTestCosts());
         sum_weighted_costs.resize(weak_learner_template->nTestCosts());
         sum_weighted_costs.clear();
@@ -755,6 +758,93 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
     PLASSERT(costs.size()==nTrainCosts()||costs.size()==nTestCosts());
 }
+
+void AdaBoost::computeOutputAndCosts(const Vec& input, const Vec& target,
+                                     Vec& output, Vec& costs) const
+{
+    PLASSERT(weak_learners.size()>0);
+    PLASSERT(weak_learner_output.size()==weak_learner_template->outputsize());
+    PLASSERT(output.size()==outputsize());
+    real sum_out=0;
+    
+    if(forward_sub_learner_test_costs){
+        weighted_costs.resize(weak_learner_template->nTestCosts());
+        sum_weighted_costs.resize(weak_learner_template->nTestCosts());
+        sum_weighted_costs.clear();
+        if(!pseudo_loss_adaboost && !conf_rated_adaboost){
+            for (int i=0;i<weak_learners.size();i++){
+                weak_learners[i]->computeOutputAndCosts(input,target,
+                                                        weak_learner_output,
+                                                        weighted_costs);
+                sum_out += (weak_learner_output[0] < output_threshold ? 0 : 1) 
+                    *voting_weights[i];
+                weighted_costs*=voting_weights[i];
+                sum_weighted_costs+=weighted_costs;
+            }
+        }else{
+            for (int i=0;i<weak_learners.size();i++){
+                weak_learners[i]->computeOutputAndCosts(input,target,
+                                                        weak_learner_output,
+                                                        weighted_costs);
+                sum_out += weak_learner_output[0]*voting_weights[i];
+                weighted_costs*=voting_weights[i];
+                sum_weighted_costs+=weighted_costs;
+            }
+        }
+    }else{
+        if(!pseudo_loss_adaboost && !conf_rated_adaboost)
+            for (int i=0;i<weak_learners.size();i++){
+                weak_learners[i]->computeOutput(input,weak_learner_output);
+                sum_out += (weak_learner_output[0] < output_threshold ? 0 : 1) 
+                    *voting_weights[i];
+            }
+        else
+            for (int i=0;i<weak_learners.size();i++){
+                weak_learners[i]->computeOutput(input,weak_learner_output);
+                sum_out += weak_learner_output[0]*voting_weights[i];
+            }
+    }
+
+    output[0] = sum_out/sum_voting_weights;
+
+    //when computing train stats, costs==nTrainCosts() 
+    //  and forward_sub_learner_test_costs==false
+    if(forward_sub_learner_test_costs)
+        PLASSERT(costs.size()==nTestCosts());
+    else
+        PLASSERT(costs.size()==nTrainCosts()||costs.size()==nTestCosts());
+    costs.resize(5);
+    costs.clear();
+
+    // First cost is negative log-likelihood...  output[0] is the likelihood
+    // of the first class
+    if (target.size() > 1)
+        PLERROR("AdaBoost::computeCostsFromOutputs: target must contain "
+                "one element only: the 0/1 class");
+    if (fast_exact_is_equal(target[0], 0)) {
+        costs[0] = output[0] >= output_threshold; 
+    }
+    else if (fast_exact_is_equal(target[0], 1)) {
+        costs[0] = output[0] < output_threshold; 
+    }
+    else PLERROR("AdaBoost::computeCostsFromOutputs: target must be "
+                 "either 0 or 1; current target=%f", target[0]);
+    costs[1] = exp(-1.0*sum_voting_weights*(2*output[0]-1)*(2*target[0]-1));
+    costs[2] = costs[0];
+    if(train_stats){
+        costs[3] = train_stats->getStat("E[avg_weight_class_0]");
+        costs[4] = train_stats->getStat("E[avg_weight_class_1]");
+    }
+    else
+        costs[3]=costs[4]=MISSING_VALUE;
+
+    if(forward_sub_learner_test_costs){
+        costs.append(sum_weighted_costs);
+    }
+
+    PLASSERT(costs.size()==nTrainCosts()||costs.size()==nTestCosts());
+}
+
 
 TVec<string> AdaBoost::getTestCostNames() const
 {
