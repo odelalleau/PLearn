@@ -1,0 +1,15 @@
+binary_class_error	0
+exp_neg_margin	0
+class_error	0
+avg_weight_class_0	0
+avg_weight_class_1	0
+weighted_weak_learner.mse	0
+weighted_weak_learner.base_confidence	0
+weighted_weak_learner.base_reward_l2	0
+weighted_weak_learner.base_reward_l1	0
+weighted_weak_learner.class_error	0
+weighted_weak_learner.SPLIT_VAR_x1	0
+weighted_weak_learner.SPLIT_VAR_x2	0
+weighted_weak_learner.SPLIT_VAR_x3	0
+weighted_weak_learner.SPLIT_VAR_x4	0
+weighted_weak_learner.SPLIT_VAR_y1	0
