@@ -99,6 +99,7 @@
         ),
     provide_learner_expdir = 1,
     save_learners = 1,
+    save_split_stats = 0,
     save_test_confidence = 0,
     save_test_costs = 1,
     save_test_outputs = 1,

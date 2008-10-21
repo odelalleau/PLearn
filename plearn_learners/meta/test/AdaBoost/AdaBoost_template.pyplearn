@@ -132,7 +132,8 @@ tester = pl.PTester(
     save_test_costs = 1,
     save_test_outputs = 1,
     save_test_confidence = 0,
-    save_learners = 1
+    save_learners = 1,
+    save_split_stats = 0#not need as their is only one split
     )
 
 def main():
