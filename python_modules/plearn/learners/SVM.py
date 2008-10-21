@@ -7,7 +7,8 @@
 
 import os
 
-from libsvm import *
+from plearn.learners import get_libsvm_module
+exec 'from %s import *' % get_libsvm_module()
 
 from plearn.pyext import *
 from plearn.utilities.write_results import writeResults
