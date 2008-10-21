@@ -300,16 +300,23 @@ void RegressionTreeNode::lookForBestSplit()
         if (fast_is_more(get<0>(ret), after_split_error)) continue;
         else if (fast_is_equal(get<0>(ret), after_split_error) &&
                  fast_is_more(get<2>(ret), split_balance)) continue;
+        else if (fast_is_equal(get<0>(ret), REAL_MAX)) continue;
 
         split_col = col;
         after_split_error = get<0>(ret);
         split_feature_value = get<1>(ret);
         split_balance = get<2>(ret);
+        PLASSERT(fast_is_less(after_split_error,REAL_MAX)||split_col==-1);
 #endif
     }
+    PLASSERT(fast_is_less(after_split_error,REAL_MAX)||split_col==-1);
+
     MODULE_LOG<<"error after split: "<<after_split_error<<endl;
     MODULE_LOG<<"split value: "<<split_feature_value<<endl;
-    MODULE_LOG<<"split_col: "<<split_col<<" "<<train_set->fieldName(split_col)<<endl;
+    MODULE_LOG<<"split_col: "<<split_col;
+    if(split_col>=0)
+        MODULE_LOG<<" "<<train_set->fieldName(split_col);
+    MODULE_LOG<<endl;
 }
 
 tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
