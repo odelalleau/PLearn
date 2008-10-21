@@ -1,0 +1,6 @@
+E[test1.E[binary_class_error]]
+E[test1.E[exp_neg_margin]]
+E[test1.E[class_error]]
+E[test2.E[binary_class_error]]
+E[test2.E[exp_neg_margin]]
+E[test2.E[class_error]]

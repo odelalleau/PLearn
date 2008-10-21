@@ -1,0 +1,3 @@
+__REVISION__ = "PL9555"
+conf                                          = False
+pseudo                                        = True
