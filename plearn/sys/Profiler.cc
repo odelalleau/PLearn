@@ -69,7 +69,9 @@ string Profiler::get_omp_save_name(const string name_of_piece_of_code){
 void Profiler::start(const string& name_of_piece_of_code_, const int max_nb_going)
 {
     string name_of_piece_of_code=get_omp_save_name(name_of_piece_of_code_);
+#ifdef _OPENMP
 #pragma omp critical (codes_statistics)
+#endif
     if (active)
     {
         map<string,Profiler::Stats>::iterator it = 
