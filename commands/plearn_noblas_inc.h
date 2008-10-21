@@ -176,6 +176,7 @@
 
 // Meta
 #include <plearn_learners/meta/AdaBoost.h>
+#include <plearn_learners/meta/MultiClassAdaBoost.h>
 #include <plearn_learners/meta/BaggingLearner.h>
 
 // Regressors
