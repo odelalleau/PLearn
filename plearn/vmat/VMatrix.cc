@@ -1816,7 +1816,7 @@ void VMatrix::fill(real value)
 ///////////////
 void VMatrix::appendRow(Vec v)
 {
-    PLERROR("This method (appendRow) not implemented by VMatrix subclass!");
+    PLERROR("This method (appendRow) not implemented by VMatrix subclass '%s'!",classname().c_str());
 }
 
 ///////////////
