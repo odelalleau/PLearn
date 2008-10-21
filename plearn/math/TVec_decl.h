@@ -737,6 +737,45 @@ public:
     }
     bool operator!=(const TVec<T>& value) const { return !((*this)==value); }
 
+    //!  same as operator== but dealing with NaN and Inf
+    bool is_equal(const TVec<T>& value, bool ignore_missing=false) const
+    {
+        if (value.isEmpty() && isEmpty()) return true;
+        if (value.length() != length())   return false;
+        if (!ignore_missing) return ((*this)==value);
+
+        T* x = data();
+        T* y = value.data();
+        for (int i=0;  i<length();  i++)
+        {
+            real x_i = x[i];
+            real y_i = y[i];
+
+            // For NaN values
+            if (isnan(x_i))
+            {
+                if (isnan(y_i))
+                    continue;
+                else
+                    return false;
+            }
+            else if (isnan(x_i)) return false;
+
+            // For Inf values
+            if (isinf(x_i))
+            {
+                if (isinf(y_i))
+                    continue;
+                else
+                    return false;
+            }
+            else if (isinf(x_i)) return false;
+
+            if (x_i != y_i) return false;
+        }
+        return true;
+    }
+
     //! Return true if 'element' is in the TVec and false otherwise.
     bool contains(const T& element) const
     {
