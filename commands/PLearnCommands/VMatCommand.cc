@@ -66,7 +66,7 @@ VMatCommand::VMatCommand():
         "       To display the dataset \n"
         "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
         "       To output in <dataset.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
-        "   or: vmat view <dataset>\n"
+        "   or: vmat view <dataset>...\n"
         "       Interactive display to browse on the data. \n"
         "       ( will work only if your executable includes commands/PLearnCommands/VMatViewCommand.h )\n"
         "   or: vmat stats <dataset> \n"
