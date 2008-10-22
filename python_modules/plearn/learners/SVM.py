@@ -665,6 +665,10 @@ class SVM(object):
 
         'verbosity': <int> Level of verbosity.
 
+        'additional_libsvm_params': <dict> any additional parameters you would like to pass to libsvm when
+                                    calling svm_model. This allow to use locally modified versions of libsvm.
+                                    e.g: dict(max_iter= 10000) for the libsvm version installed at ApStat.
+
     learnt options:
 
         'best_model':
@@ -743,7 +747,9 @@ class SVM(object):
                         'input_avgstd',
                         \
                         'param_names',
-                        'stats_are_uptodate'
+                        'stats_are_uptodate',
+                        \
+                        'additional_libsvm_params', 
                      ]
      
     def __init__(self):
@@ -814,6 +820,8 @@ class SVM(object):
         self.testset_key  = 'testset'
 
         self.outputs_type = 'votes'
+        
+        self.additional_libsvm_params = {}
 
     def semiforget(self):
         for expert in self.all_experts:
@@ -1175,7 +1183,9 @@ class SVM(object):
                               'weight_label':self.labels})
             train_problem = svm_problem( train_targets ,
                                          train_samples )
-            model = svm_model(train_problem, self.get_libsvm_param( param ) )
+            hyperparam= copy.deepcopy(param)
+            hyperparam.update(self.additional_libsvm_params)
+            model = svm_model(train_problem, self.get_libsvm_param( hyperparam ) )
         elif self.multiclass_strategy == 'onevsall':
             model = []
             for c in range(self.nclasses):
@@ -1188,7 +1198,9 @@ class SVM(object):
                 onevsall_targets = [ int(t)==c and 1 or -1 for t in train_targets ]
                 train_problem = svm_problem( onevsall_targets ,
                                              train_samples )
-                model.append( svm_model(train_problem, self.get_libsvm_param( param ) ) )
+                hyperparam= copy.deepcopy(param)
+                hyperparam.update(self.additional_libsvm_params)
+                model.append( svm_model(train_problem, self.get_libsvm_param( hyperparam ) ) )
         else:
             raise ValueError, "Unknown value %s for option 'multiclass_strategy'" % self.multiclass_strategy
         
