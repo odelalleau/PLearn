@@ -985,38 +985,48 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="cat")
     {
-        if(argc!=4 && argc!=3)
-            PLERROR("'vmat cat' must be used that way : vmat cat FILE [vplFilteringCode]");
-        string dbname = argv[2];
+        if(argc < 3)
+            PLERROR("'vmat cat' must be used that way : vmat cat FILE... [vplFilteringCode]");
         string code;
-        VMat vm = getVMat(dbname, indexf);
-        Vec tmp(vm.width());
-        if(argc==4) 
-
+        int nb_file=argc-2;
+        if(argc>=4)
         {
-            code=argv[3];
-         
-            VMatLanguage vpl(vm);
-            vector<string> fn; 
-            for(int i=0;i<vm->width();i++)
-                fn.push_back(vm->fieldName(i));
-            vpl.compileString(code,fn);
-            Vec answer(1);
-            for(int i=0;i<vm.length();i++)
-            {
-                vpl.run(i,answer);
-                if(!fast_exact_is_equal(answer[0], 0)) {
-                    vm->getRow(i, tmp);
-                    pout<<tmp<<endl;
-                }
+            if(!isfile(argv[argc-1])){
+                code=argv[argc-1];
+                nb_file--;
             }
         }
-        else
-            for(int i=0;i<vm.length();i++)
-            {
-                vm->getRow(i,tmp);      
-                pout<<tmp<<endl;
+        for(int file=0;file<nb_file;file++)
+        {
+            string dbname=argv[file+2];
+            if(nb_file>1)
+                pout<<dbname<<endl;
+            VMat vm = getVMat(dbname, indexf);
+            Vec tmp(vm.width());
+            if(code.length()>0){
+                VMatLanguage vpl(vm);
+                vector<string> fn; 
+                for(int i=0;i<vm->width();i++)
+                    fn.push_back(vm->fieldName(i));
+                vpl.compileString(code,fn);
+                Vec answer(1);
+                for(int i=0;i<vm.length();i++)
+                {
+                    vpl.run(i,answer);
+                    if(!fast_exact_is_equal(answer[0], 0)) {
+                        vm->getRow(i, tmp);
+                        pout<<tmp<<endl;
+                    }
+                }
+
             }
+            else
+                for(int i=0;i<vm.length();i++)
+                {
+                    vm->getRow(i,tmp);      
+                    pout<<tmp<<endl;
+                }
+        }
     }
     else if(command=="catstr")
     {

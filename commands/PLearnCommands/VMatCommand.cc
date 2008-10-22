@@ -62,7 +62,7 @@ VMatCommand::VMatCommand():
         "       To display statistics for that field \n"
         "   or: vmat bbox <dataset> [<extra_percent>] \n"
         "       To display the data bounding box (i.e., for each field, its min and max, possibly extended by +-extra_percent ex: 0.10 for +-10% of the data range )\n"
-        "   or: vmat cat <dataset> [<optional_vpl_filtering_code>]\n"
+        "   or: vmat cat <dataset>... [<optional_vpl_filtering_code>]\n"
         "       To display the dataset \n"
         "   or: vmat sascat <dataset.vmat> <dataset.txt>\n"
         "       To output in <dataset.txt> the dataset in SAS-like tab-separated format with field names on the first line\n"
