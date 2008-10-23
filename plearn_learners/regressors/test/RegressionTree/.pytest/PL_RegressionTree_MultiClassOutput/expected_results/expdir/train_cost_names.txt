@@ -1,0 +1,8 @@
+E[test1.E[class_error]]
+E[test1.E[base_confidence]]
+E[test1.E[base_reward_l2]]
+E[test1.E[base_reward_l1]]
+E[test2.E[class_error]]
+E[test2.E[base_confidence]]
+E[test2.E[base_reward_l2]]
+E[test2.E[base_reward_l1]]
