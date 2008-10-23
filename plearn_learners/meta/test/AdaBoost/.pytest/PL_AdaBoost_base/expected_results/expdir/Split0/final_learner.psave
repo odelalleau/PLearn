@@ -268,7 +268,8 @@ weighted_squared_targets_sum = 0.622641509433962237 ;
 loss_function_factor = 2  )
 ;
 leave = *9  ;
-leave_output = 2 [ 0.622641509433962348 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.469918120327518563 0 0.469918120327518563 ] ;
 split_col = 2 ;
 split_balance = 29 ;
@@ -304,7 +305,8 @@ weighted_squared_targets_sum = 0.0628930817610062892 ;
 loss_function_factor = 2  )
 ;
 leave = *12  ;
-leave_output = 2 [ 0.153846153846153855 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.106434446057087573 0 0.106434446057087573 ] ;
 split_col = 4 ;
 split_balance = 17 ;
@@ -340,6 +342,7 @@ weighted_squared_targets_sum = 0 ;
 loss_function_factor = 2  )
 ;
 leave = *15  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 3 ;
@@ -404,7 +407,8 @@ weighted_squared_targets_sum = 0.0628930817610062892 ;
 loss_function_factor = 2  )
 ;
 leave = *20  ;
-leave_output = 2 [ 0.416666666666666685 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.0733752620545073397 0 0.0733752620545073397 ] ;
 split_col = 4 ;
 split_balance = 16 ;
@@ -440,6 +444,7 @@ weighted_squared_targets_sum = 0.0251572327044025171 ;
 loss_function_factor = 2  )
 ;
 leave = *23  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 4 ;
@@ -504,7 +509,8 @@ weighted_squared_targets_sum = 0.0377358490566037721 ;
 loss_function_factor = 2  )
 ;
 leave = *28  ;
-leave_output = 2 [ 0.299999999999999989 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.0528301886792452852 0 0.0528301886792452852 ] ;
 split_col = 2 ;
 split_balance = 10 ;
@@ -572,7 +578,8 @@ weighted_squared_targets_sum = 0.559748427672955962 ;
 loss_function_factor = 2  )
 ;
 leave = *33  ;
-leave_output = 2 [ 0.946808510638297851 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.0595477050715911282 0 0.0595477050715911282 ] ;
 split_col = 3 ;
 split_balance = 88 ;
@@ -608,7 +615,8 @@ weighted_squared_targets_sum = 0.00628930817610062927 ;
 loss_function_factor = 2  )
 ;
 leave = *36  ;
-leave_output = 2 [ 0.333333333333333315 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.00838574423480083903 0 0.00838574423480083903 ] ;
 split_col = 3 ;
 split_balance = 1 ;
@@ -672,7 +680,8 @@ weighted_squared_targets_sum = 0.553459119496855334 ;
 loss_function_factor = 2  )
 ;
 leave = *41  ;
-leave_output = 2 [ 0.967032967032967039 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.0364918100767157583 0 0.0364918100767157583 ] ;
 split_col = 1 ;
 split_balance = 41 ;
@@ -783,7 +792,8 @@ weighted_squared_targets_sum = 0.624161073825502677 ;
 loss_function_factor = 2  )
 ;
 leave = *49  ;
-leave_output = 2 [ 0.624161073825503454 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.469168055492995228 0 0.469168055492995228 ] ;
 split_col = 1 ;
 split_balance = 59 ;
@@ -819,7 +829,8 @@ weighted_squared_targets_sum = 0.0402684563758389236 ;
 loss_function_factor = 2  )
 ;
 leave = *52  ;
-leave_output = 2 [ 0.133333333333333415 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.069798657718120799 0 0.069798657718120799 ] ;
 split_col = 2 ;
 split_balance = 35 ;
@@ -855,7 +866,8 @@ weighted_squared_targets_sum = 0.00671140939597315422 ;
 loss_function_factor = 2  )
 ;
 leave = *55  ;
-leave_output = 2 [ 0.0250000000000000153 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.0130872483221476498 0 0.0130872483221476498 ] ;
 split_col = 1 ;
 split_balance = 20 ;
@@ -919,6 +931,7 @@ weighted_squared_targets_sum = 0.033557046979865772 ;
 loss_function_factor = 2  )
 ;
 leave = *60  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 4 ;
@@ -985,7 +998,8 @@ weighted_squared_targets_sum = 0.583892617449663809 ;
 loss_function_factor = 2  )
 ;
 leave = *65  ;
-leave_output = 2 [ 0.836538461538461564 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.190887971089313102 0 0.190887971089313102 ] ;
 split_col = 4 ;
 split_balance = 30 ;
@@ -1021,7 +1035,8 @@ weighted_squared_targets_sum = 0.147651006711409377 ;
 loss_function_factor = 2  )
 ;
 leave = *68  ;
-leave_output = 2 [ 0.594594594594594961 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.119717032468710211 0 0.119717032468710211 ] ;
 split_col = 4 ;
 split_balance = 1 ;
@@ -1057,6 +1072,7 @@ weighted_squared_targets_sum = 0.127516778523489943 ;
 loss_function_factor = 2  )
 ;
 leave = *71  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 4 ;
@@ -1121,7 +1137,8 @@ weighted_squared_targets_sum = 0.0201342281879194618 ;
 loss_function_factor = 2  )
 ;
 leave = *76  ;
-leave_output = 2 [ 0.16666666666666663 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.033557046979865772 0 0.033557046979865772 ] ;
 split_col = 4 ;
 split_balance = 10 ;
@@ -1187,7 +1204,8 @@ weighted_squared_targets_sum = 0.436241610738254626 ;
 loss_function_factor = 2  )
 ;
 leave = *81  ;
-leave_output = 2 [ 0.970149253731343308 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.0260442752679554967 0 0.0260442752679554967 ] ;
 split_col = 3 ;
 split_balance = 65 ;
@@ -1298,7 +1316,8 @@ weighted_squared_targets_sum = 0.526011560693641633 ;
 loss_function_factor = 2  )
 ;
 leave = *89  ;
-leave_output = 2 [ 0.526011560693639413 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.498646797420564281 0 0.498646797420564281 ] ;
 split_col = 2 ;
 split_balance = 99 ;
@@ -1334,7 +1353,8 @@ weighted_squared_targets_sum = 0.312138728323699322 ;
 loss_function_factor = 2  )
 ;
 leave = *92  ;
-leave_output = 2 [ 0.39705882352941041 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.376402584155050013 0 0.376402584155050013 ] ;
 split_col = 2 ;
 split_balance = 82 ;
@@ -1370,7 +1390,8 @@ weighted_squared_targets_sum = 0.312138728323699322 ;
 loss_function_factor = 2  )
 ;
 leave = *95  ;
-leave_output = 2 [ 0.495412844036696332 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.31500238638171546 0 0.31500238638171546 ] ;
 split_col = 4 ;
 split_balance = 69 ;
@@ -1406,6 +1427,7 @@ weighted_squared_targets_sum = 0 ;
 loss_function_factor = 2  )
 ;
 leave = *98  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 3 ;
@@ -1470,7 +1492,8 @@ weighted_squared_targets_sum = 0.312138728323699322 ;
 loss_function_factor = 2  )
 ;
 leave = *103  ;
-leave_output = 2 [ 0.606741573033707793 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.24550237059167368 0 0.24550237059167368 ] ;
 split_col = 0 ;
 split_balance = 59 ;
@@ -1506,7 +1529,8 @@ weighted_squared_targets_sum = 0.0115606936416184965 ;
 loss_function_factor = 2  )
 ;
 leave = *106  ;
-leave_output = 2 [ 0.133333333333333359 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.0200385356454720609 0 0.0200385356454720609 ] ;
 split_col = 1 ;
 split_balance = 13 ;
@@ -1570,7 +1594,8 @@ weighted_squared_targets_sum = 0.30057803468208083 ;
 loss_function_factor = 2  )
 ;
 leave = *111  ;
-leave_output = 2 [ 0.702702702702702742 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.178722074675831843 0 0.178722074675831843 ] ;
 split_col = 2 ;
 split_balance = 52 ;
@@ -1638,6 +1663,7 @@ weighted_squared_targets_sum = 0 ;
 loss_function_factor = 2  )
 ;
 leave = *116  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = -1 ;
@@ -1704,6 +1730,7 @@ weighted_squared_targets_sum = 0.213872832369942117 ;
 loss_function_factor = 2  )
 ;
 leave = *121  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 3 ;
@@ -1813,7 +1840,8 @@ weighted_squared_targets_sum = 0.389261744966442613 ;
 loss_function_factor = 2  )
 ;
 leave = *129  ;
-leave_output = 2 [ 0.389261744966443113 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.475474077744245216 0 0.475474077744245216 ] ;
 split_col = 1 ;
 split_balance = 67 ;
@@ -1849,7 +1877,8 @@ weighted_squared_targets_sum = 0.147651006711409377 ;
 loss_function_factor = 2  )
 ;
 leave = *132  ;
-leave_output = 2 [ 0.203703703703703914 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.235147899577429681 0 0.235147899577429681 ] ;
 split_col = 3 ;
 split_balance = 96 ;
@@ -1885,7 +1914,8 @@ weighted_squared_targets_sum = 0.107382550335570481 ;
 loss_function_factor = 2  )
 ;
 leave = *135  ;
-leave_output = 2 [ 0.156862745098039408 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.181076457428609006 0 0.181076457428609006 ] ;
 split_col = 0 ;
 split_balance = 6 ;
@@ -1921,7 +1951,8 @@ weighted_squared_targets_sum = 0.0939597315436241642 ;
 loss_function_factor = 2  )
 ;
 leave = *138  ;
-leave_output = 2 [ 0.291666666666666907 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.133109619686800851 0 0.133109619686800851 ] ;
 split_col = 3 ;
 split_balance = 12 ;
@@ -1985,7 +2016,8 @@ weighted_squared_targets_sum = 0.0134228187919463084 ;
 loss_function_factor = 2  )
 ;
 leave = *143  ;
-leave_output = 2 [ 0.0370370370370370697 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0.0258513547104151122 0 0.0258513547104151122 ] ;
 split_col = 1 ;
 split_balance = 52 ;
@@ -2051,6 +2083,7 @@ weighted_squared_targets_sum = 0.0402684563758389236 ;
 loss_function_factor = 2  )
 ;
 leave = *148  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 4 ;
@@ -2117,7 +2150,8 @@ weighted_squared_targets_sum = 0.241610738255033403 ;
 loss_function_factor = 2  )
 ;
 leave = *153  ;
-leave_output = 2 [ 0.878048780487804881 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.0589294483548861714 0 0.0589294483548861714 ] ;
 split_col = 3 ;
 split_balance = 33 ;
@@ -2153,6 +2187,7 @@ weighted_squared_targets_sum = 0 ;
 loss_function_factor = 2  )
 ;
 leave = *156  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = -1 ;
@@ -2217,7 +2252,8 @@ weighted_squared_targets_sum = 0.241610738255033403 ;
 loss_function_factor = 2  )
 ;
 leave = *161  ;
-leave_output = 2 [ 0.972972972972973027 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.0130600399056774452 0 0.0130600399056774452 ] ;
 split_col = 1 ;
 split_balance = 13 ;
@@ -2328,7 +2364,8 @@ weighted_squared_targets_sum = 0.641891891891891997 ;
 loss_function_factor = 2  )
 ;
 leave = *169  ;
-leave_output = 2 [ 0.641891891891890554 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.459733382030681148 0 0.459733382030681148 ] ;
 split_col = 2 ;
 split_balance = 138 ;
@@ -2364,6 +2401,7 @@ weighted_squared_targets_sum = 0 ;
 loss_function_factor = 2  )
 ;
 leave = *172  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 3 ;
@@ -2428,7 +2466,8 @@ weighted_squared_targets_sum = 0.641891891891891997 ;
 loss_function_factor = 2  )
 ;
 leave = *177  ;
-leave_output = 2 [ 0.664335664335662934 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.430920430920432751 0 0.430920430920432751 ] ;
 split_col = 2 ;
 split_balance = 95 ;
@@ -2464,6 +2503,7 @@ weighted_squared_targets_sum = 0.162162162162162116 ;
 loss_function_factor = 2  )
 ;
 leave = *180  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 3 ;
@@ -2528,7 +2568,8 @@ weighted_squared_targets_sum = 0.479729729729729049 ;
 loss_function_factor = 2  )
 ;
 leave = *185  ;
-leave_output = 2 [ 0.596638655462183198 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.387008857597093914 0 0.387008857597093914 ] ;
 split_col = 2 ;
 split_balance = 105 ;
@@ -2564,6 +2605,7 @@ weighted_squared_targets_sum = 0 ;
 loss_function_factor = 2  )
 ;
 leave = *188  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 0 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 4 ;
@@ -2628,7 +2670,8 @@ weighted_squared_targets_sum = 0.479729729729729049 ;
 loss_function_factor = 2  )
 ;
 leave = *193  ;
-leave_output = 2 [ 0.633928571428569843 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.351230694980696034 0 0.351230694980696034 ] ;
 split_col = 3 ;
 split_balance = 78 ;
@@ -2664,6 +2707,7 @@ weighted_squared_targets_sum = 0.114864864864864871 ;
 loss_function_factor = 2  )
 ;
 leave = *196  ;
+multiclass_outputs = 2 [ 0 1 ] ;
 leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0 0 0 ] ;
 split_col = 2 ;
@@ -2728,7 +2772,8 @@ weighted_squared_targets_sum = 0.364864864864864413 ;
 loss_function_factor = 2  )
 ;
 leave = *201  ;
-leave_output = 2 [ 0.568421052631578161 1 ] ;
+multiclass_outputs = 2 [ 0 1 ] ;
+leave_output = 2 [ 1 1 ] ;
 leave_error = 3 [ 0.314935988620199336 0 0.314935988620199336 ] ;
 split_col = 3 ;
 split_balance = 69 ;
