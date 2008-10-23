@@ -39,16 +39,37 @@ import sys
 import threading
 from   datetime import datetime
 
+_HAS_DISPLAY_ = os.environ.has_key("DISPLAY")
+
 ## Traits
 from enthought.traits.api          import *
-from enthought.traits.ui.api       import *
-from enthought.traits.ui.menu      import NoButtons
-from enthought.pyface.api          import confirm, YES
+if _HAS_DISPLAY_:
+    from enthought.traits.ui.api       import *
+    from enthought.traits.ui.menu      import NoButtons
+    from enthought.pyface.api          import confirm, YES
+    from console_logger import ConsoleLogger
+else:
+    ## Dummy definitions for some Traits UI stuff
+    def Button(*args, **kwargs): pass
+    def Group (*args, **kwargs): pass
+    def HSplit(*args, **kwargs): pass
+    def Item  (*args, **kwargs): pass
+    def VSplit(*args, **kwargs): pass
+    def View  (*args, **kwargs): pass
+    def ListEditor (*args, **kwargs): pass
+    def ValueEditor(*args, **kwargs): pass
+    NoButtons = None
+    confirm   = None
+    YES       = None
+    Directory = Str
 
-from console_logger    import ConsoleLogger
+    class ConsoleLogger(object): pass
+    class Handler(object): pass
+    
+
 
 ## If there is no display, set the matplotlib backend to Agg
-if not os.environ.has_key("DISPLAY"):
+if not _HAS_DISPLAY_:
     import matplotlib
     matplotlib.use('Agg')
 
@@ -208,25 +229,28 @@ class _WorkerThread(threading.Thread):
 
 #####  Custom Handlers  #####################################################
 
-class WorkbenchHandler(Handler):
-    """Some custom UI code for the main window.
-    """
-    def close(self, info, is_ok):
-        """If user is trying to close the main window, look at whether an
-        experiment is currently running.  If so, pop a dialog to ask
-        whether it's really OK to close the thing.
+if _HAS_DISPLAY_:
+    class WorkbenchHandler(Handler):
+        """Some custom UI code for the main window.
         """
-        #workbench = info.ui.context['object']
-        workbench = info.object
-        if workbench.curworker is not None:
-            msg = "An experiment is currently running.\n" \
-                  "Do you really want to interrupt it and\n" \
-                  "close the workbench window?"
-            parent = info.ui.control
-            return confirm(parent, msg) == YES
-        else:
-            return True
-
+        def close(self, info, is_ok):
+            """If user is trying to close the main window, look at whether an
+            experiment is currently running.  If so, pop a dialog to ask
+            whether it's really OK to close the thing.
+            """
+            #workbench = info.ui.context['object']
+            workbench = info.object
+            if workbench.curworker is not None:
+                msg = "An experiment is currently running.\n" \
+                      "Do you really want to interrupt it and\n" \
+                      "close the workbench window?"
+                parent = info.ui.control
+                return confirm(parent, msg) == YES
+            else:
+                return True
+else:
+    class WorkbenchHandler(object):
+        pass
 
 #####  ExperimentWorkbench  #################################################
 
@@ -337,7 +361,7 @@ class ExperimentWorkbench(HasTraits) :
 
         ## Determine whether a GUI should be used
         if gui == "__AUTO__":
-            if "--no-gui" in sys.argv:
+            if "--no-gui" in sys.argv or not _HAS_DISPLAY_:
                 gui = False
             else:
                 gui = True
@@ -473,7 +497,6 @@ def _async_raise(tid, exctype):
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
 
-
 #####  Test Case  ###########################################################
 
 if __name__ == "__main__":
@@ -523,4 +546,5 @@ if __name__ == "__main__":
             print "Done."
 
     ExperimentWorkbench().run(AllOpt, f)
-    
+
+# vim: filetype=python:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
