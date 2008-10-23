@@ -69,10 +69,12 @@ RegressionTreeNode::RegressionTreeNode():
 }
 RegressionTreeNode::RegressionTreeNode(int missing_is_valid_,
                                        real loss_function_weight_,
-                                       int verbosity_):
+                                       int verbosity_,
+                                       Vec multiclass_outputs_):
     missing_is_valid(missing_is_valid_),
     loss_function_weight(loss_function_weight_),
     verbosity(verbosity_),
+    multiclass_outputs(multiclass_outputs_),
     split_col(-1),
     split_balance(INT_MAX),
     split_feature_value(REAL_MAX),
@@ -100,7 +102,10 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
                   "The matrix with the sorted train set\n");
     declareOption(ol, "leave", &RegressionTreeNode::leave, OptionBase::buildoption,
                   "The leave of all the  belonging rows when this node is a leave\n");
-      
+    declareOption(ol, "multiclass_outputs", &RegressionTreeNode::multiclass_outputs, OptionBase::buildoption,
+                  "A vector of possible output values when solving a multiclass problem.\n"
+                  "When making a prediction, the tree will adjust the output value of each leave to the closest value provided in this vector.");
+
     declareOption(ol, "leave_output", &RegressionTreeNode::leave_output, OptionBase::learntoption,
                   "The leave output vector\n");
     declareOption(ol, "leave_error", &RegressionTreeNode::leave_error, OptionBase::learntoption,
@@ -200,7 +205,9 @@ void RegressionTreeNode::build_()
 {
 }
 
-void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<RegressionTreeLeave> the_leave, PP<RegressionTreeLeave> the_leave_template)
+void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set,
+                                  PP<RegressionTreeLeave> the_leave,
+                                  PP<RegressionTreeLeave> the_leave_template)
 {
     train_set = the_train_set;
     leave = the_leave;
@@ -226,6 +233,20 @@ void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set, PP<
     leave_error.resize(3);
 
     leave->getOutputAndError(leave_output,leave_error);
+
+    if (multiclass_outputs.length() <= 0) return;
+    real closest_value=multiclass_outputs[0];
+    real margin_to_closest_value=abs(leave_output[0] - multiclass_outputs[0]);
+    for (int value_ind = 1; value_ind < multiclass_outputs.length(); value_ind++)
+    {
+        real v=abs(leave_output[0] - multiclass_outputs[value_ind]);
+        if (v < margin_to_closest_value)
+        {
+            closest_value = multiclass_outputs[value_ind];
+            margin_to_closest_value = v;
+        }
+    }
+    leave_output[0] = closest_value;
 }
 
 #define BY_ROW
@@ -434,23 +455,20 @@ int RegressionTreeNode::expandNode()
 //  right_leave->printStats();
     if (missing_is_valid > 0)
     {
-        missing_node = new RegressionTreeNode();
-        missing_node->missing_is_valid=missing_is_valid;
-        missing_node->loss_function_weight=loss_function_weight;
-        missing_node->verbosity=verbosity;
+        missing_node = new RegressionTreeNode(missing_is_valid,
+                                              loss_function_weight,
+                                              verbosity, multiclass_outputs);
         missing_node->initNode(train_set, missing_leave, leave_template);
         missing_node->lookForBestSplit();
     }
-    left_node = new RegressionTreeNode();
-    left_node->missing_is_valid=missing_is_valid;
-    left_node->loss_function_weight=loss_function_weight;
-    left_node->verbosity=verbosity;
+    left_node = new RegressionTreeNode(missing_is_valid,
+                                       loss_function_weight,
+                                       verbosity, multiclass_outputs );
     left_node->initNode(train_set, left_leave, leave_template);
     left_node->lookForBestSplit();
-    right_node = new RegressionTreeNode();
-    right_node->missing_is_valid=missing_is_valid;
-    right_node->loss_function_weight=loss_function_weight;
-    right_node->verbosity=verbosity;
+    right_node = new RegressionTreeNode(missing_is_valid,
+                                        loss_function_weight,
+                                        verbosity, multiclass_outputs);
     right_node->initNode(train_set, right_leave, leave_template);
     right_node->lookForBestSplit();
     return split_col;

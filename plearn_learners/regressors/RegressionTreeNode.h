@@ -67,12 +67,13 @@ private:
 
     int  missing_is_valid;
     real loss_function_weight;
-    int verbosity; 
+    int verbosity;
 
     PP<RegressionTreeLeave> leave_template; 
     PP<RegressionTreeRegisters> train_set;
     PP<RegressionTreeLeave> leave;
- 
+    Vec multiclass_outputs;
+    
 /*
   Learnt options: they are sized and initialized if need be, in initNode(...)
 */
@@ -95,7 +96,7 @@ private:
 public:  
     RegressionTreeNode();
     RegressionTreeNode(int missing_is_valid, real loss_function_weight,
-                       int verbosity);
+                       int verbosity, Vec multiclass_outputs);
     virtual              ~RegressionTreeNode();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeNode);
