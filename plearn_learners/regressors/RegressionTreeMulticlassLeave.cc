@@ -135,6 +135,8 @@ void RegressionTreeMulticlassLeave::addRow(int row)
     length += 1;
     weights_sum += weight;
     int multiclass_found = 0;
+    //if target are 0,1,2,... it can be optimized by multiclass_weights_sum[target]
+    //for the general case: by using a table with index being the target and the value the needed index
     for (int mc_ind = 0; mc_ind < multiclass_outputs.length(); mc_ind++)
     {
         if (target == multiclass_outputs[mc_ind])
@@ -165,6 +167,7 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
     PLASSERT(weights_sum>=0);
     PLASSERT(length>0 || weights_sum==0);
     bool found=false;
+    //can be optimized: see addRow
     for (int mc_ind = 0; mc_ind < multiclass_outputs.length(); mc_ind++)
     {
         if (target == multiclass_outputs[mc_ind])
@@ -192,6 +195,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
         return;
     }
     int mc_winer = 0;
+    //index of the max. Is their an optimized version?
     for (int mc_ind = 1; mc_ind < multiclass_outputs.length(); mc_ind++)
     {
         if (multiclass_weights_sum[mc_ind] > multiclass_weights_sum[mc_winer])
