@@ -341,10 +341,10 @@ PP<RegressionTreeNode> RegressionTree::expandTree()
         verbose("RegressionTree: expand is negative?", 3);
         return NULL;
     }
-    TVec< PP<RegressionTreeNode> > subnode = node->getNodes();
-    priority_queue->addHeap(subnode[0]); 
-    priority_queue->addHeap(subnode[1]);
-    if (missing_is_valid) priority_queue->addHeap(subnode[2]);
+
+    priority_queue->addHeap(node->left_node); 
+    priority_queue->addHeap(node->right_node);
+    if (missing_is_valid) priority_queue->addHeap(node->missing_node);
     return node; 
 }
 

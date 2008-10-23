@@ -456,23 +456,6 @@ int RegressionTreeNode::expandNode()
     return split_col;
 }
 
-TVec< PP<RegressionTreeNode> > RegressionTreeNode::getNodes()
-{
-    TVec< PP<RegressionTreeNode> > return_value;
-    if (missing_is_valid > 0)
-    {
-        return_value.resize(3);
-        return_value[2] = missing_node;
-    }
-    else
-    {
-        return_value.resize(2);
-    }
-    return_value[0] = left_node;
-    return_value[1] = right_node;
-    return return_value;
-}
-
 void RegressionTreeNode::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
                                        TVec<PP<RegressionTreeNode> >* nodes)
 {

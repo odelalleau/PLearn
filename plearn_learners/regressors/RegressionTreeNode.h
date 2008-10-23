@@ -56,6 +56,7 @@ class RegressionTreeNode;
 
 class RegressionTreeNode: public Object
 {
+    friend class RegressionTree;
     typedef Object inherited;
   
 private:
