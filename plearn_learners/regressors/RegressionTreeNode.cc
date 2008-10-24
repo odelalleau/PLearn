@@ -263,7 +263,26 @@ void RegressionTreeNode::lookForBestSplit()
         PLASSERT(registered_row.size()>0);
         PLASSERT(candidate.size()==0);
 
-        for(int row_idx = 0;row_idx<registered_row.size();row_idx++)
+        //we do this optimization in case their is many row with the same value
+        //at the end as with binary variable.
+        int row_idx_end = registered_row.size() - 1;
+        int prev_row=registered_row[row_idx_end];
+        real prev_val=train_set->get(prev_row,col);
+        for( ;row_idx_end>0;row_idx_end--)
+        {
+            int row=prev_row;
+            real val=prev_val;
+            prev_row = registered_row[row_idx_end - 1];
+            prev_val = train_set->get(prev_row, col);
+            if (is_missing(val))
+                missing_leave->addRow(row);
+            else if(val==prev_val)
+                right_leave->addRow(row);
+            else
+                break;
+        }
+
+        for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
         {
             int row=registered_row[row_idx];
             if (is_missing(train_set->get(row, col)))
@@ -273,6 +292,7 @@ void RegressionTreeNode::lookForBestSplit()
                 candidate.append(row);
             }
         }
+
         missing_leave->getOutputAndError(tmp_vec, missing_error);
 
 #ifndef BY_ROW
@@ -343,6 +363,8 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
 //    real row_value = train_set->get(row, col);
     Vec tmp(3);
 
+    real missing_errors = missing_error[0] + missing_error[1];
+
     while (candidates.size()>0)
     {
         int next_row = candidates.pop();
@@ -358,7 +380,7 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
 //        row_value = next_feature;
 
         if (next_feature >= row_feature) continue;
-        real work_error = missing_error[0] + missing_error[1] + left_error[0]
+        real work_error = missing_errors + left_error[0]
             + left_error[1] + right_error[0] + right_error[1];
         int work_balance = abs(left_leave->getLength() -
                                right_leave->getLength());
