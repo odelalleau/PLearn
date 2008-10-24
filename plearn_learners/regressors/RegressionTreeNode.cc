@@ -58,8 +58,6 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeNode,
 int RegressionTreeNode::dummy_int = 0;
 RegressionTreeNode::RegressionTreeNode():
     missing_is_valid(0),
-    loss_function_weight(1),
-    verbosity(0),
     split_col(-1),
     split_balance(INT_MAX),
     split_feature_value(REAL_MAX),
@@ -67,14 +65,8 @@ RegressionTreeNode::RegressionTreeNode():
 {
     build();
 }
-RegressionTreeNode::RegressionTreeNode(int missing_is_valid_,
-                                       real loss_function_weight_,
-                                       int verbosity_,
-                                       Vec multiclass_outputs_):
+RegressionTreeNode::RegressionTreeNode(int missing_is_valid_):
     missing_is_valid(missing_is_valid_),
-    loss_function_weight(loss_function_weight_),
-    verbosity(verbosity_),
-    multiclass_outputs(multiclass_outputs_),
     split_col(-1),
     split_balance(INT_MAX),
     split_feature_value(REAL_MAX),
@@ -91,20 +83,8 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
 { 
     declareOption(ol, "missing_is_valid", &RegressionTreeNode::missing_is_valid, OptionBase::buildoption,
                   "If set to 1, missing values will be treated as valid, and missing nodes will be potential for splits.\n");
-    declareOption(ol, "loss_function_weight", &RegressionTreeNode::loss_function_weight, OptionBase::buildoption,
-                  "The hyper parameter to balance the error and the confidence factor\n");
-    declareOption(ol, "verbosity", &RegressionTreeNode::verbosity, OptionBase::buildoption,
-                  "The desired level of verbosity\n");
-    declareOption(ol, "leave_template", &RegressionTreeNode::leave, OptionBase::buildoption,
-                  "The template for the leave objects to create.\n");
-    declareOption(ol, "train_set", &RegressionTreeNode::train_set,
-                  OptionBase::buildoption | OptionBase::nosave,
-                  "The matrix with the sorted train set\n");
     declareOption(ol, "leave", &RegressionTreeNode::leave, OptionBase::buildoption,
                   "The leave of all the  belonging rows when this node is a leave\n");
-    declareOption(ol, "multiclass_outputs", &RegressionTreeNode::multiclass_outputs, OptionBase::buildoption,
-                  "A vector of possible output values when solving a multiclass problem.\n"
-                  "When making a prediction, the tree will adjust the output value of each leave to the closest value provided in this vector.");
 
     declareOption(ol, "leave_output", &RegressionTreeNode::leave_output, OptionBase::learntoption,
                   "The leave output vector\n");
@@ -175,18 +155,12 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
 void RegressionTreeNode::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(missing_is_valid, copies);
-    deepCopyField(loss_function_weight, copies);
-    deepCopyField(verbosity, copies);
-    deepCopyField(leave_template, copies);
-    deepCopyField(train_set, copies);
+    
+    //not done as the template don't change
     deepCopyField(leave, copies);
     deepCopyField(leave_output, copies);
     deepCopyField(leave_error, copies);
-    deepCopyField(split_col, copies);
-    deepCopyField(split_balance, copies);
-    deepCopyField(split_feature_value, copies);
-    deepCopyField(after_split_error, copies);
+
     deepCopyField(missing_node, copies);
     deepCopyField(missing_leave, copies);
     deepCopyField(left_node, copies);
@@ -205,35 +179,40 @@ void RegressionTreeNode::build_()
 {
 }
 
-void RegressionTreeNode::initNode(PP<RegressionTreeRegisters> the_train_set,
-                                  PP<RegressionTreeLeave> the_leave,
-                                  PP<RegressionTreeLeave> the_leave_template)
+void RegressionTreeNode::initNode(PP<RegressionTree> the_tree,
+                                  PP<RegressionTreeLeave> the_leave)
 {
-    train_set = the_train_set;
-    leave = the_leave;
-    leave_template = the_leave_template;
-    int missing_leave_id = train_set->getNextId();
-    int left_leave_id =  train_set->getNextId();
-    int right_leave_id =  train_set->getNextId();
+    tree=the_tree;
+    leave=the_leave;
+    PP<RegressionTreeRegisters> the_train_set = tree->getSortedTrainingSet();
+    PP<RegressionTreeLeave> leave_template = tree->leave_template;
+    int missing_leave_id = the_train_set->getNextId();
+    int left_leave_id =  the_train_set->getNextId();
+    int right_leave_id =  the_train_set->getNextId();
 
     missing_leave = ::PLearn::deepCopy(leave_template);
     missing_leave->id=missing_leave_id;
     missing_leave->missing_leave=missing_is_valid;
-    missing_leave->initLeave(train_set);
+    missing_leave->initLeave(the_train_set);
 
     left_leave = ::PLearn::deepCopy(leave_template);
     left_leave->id=left_leave_id;
-    left_leave->initLeave(train_set);
+    left_leave->initLeave(the_train_set);
 
     right_leave = ::PLearn::deepCopy(leave_template);
     right_leave->id=right_leave_id;
-    right_leave->initLeave(train_set);
+    right_leave->initLeave(the_train_set);
 
     leave_output.resize(2);
     leave_error.resize(3);
 
     leave->getOutputAndError(leave_output,leave_error);
 
+    //we do it here as an optimization
+    //this don't change the leave_error.
+    //If you want the leave_error to include this rounding, 
+    // use the RegressionTreeMultiVlassLeave
+    Vec multiclass_outputs = tree->multiclass_outputs;
     if (multiclass_outputs.length() <= 0) return;
     real closest_value=multiclass_outputs[0];
     real margin_to_closest_value=abs(leave_output[0] - multiclass_outputs[0]);
@@ -262,6 +241,8 @@ void RegressionTreeNode::lookForBestSplit()
     Vec right_error(3);
     Vec missing_error(3);
     missing_error.clear();
+    PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
+
     int inputsize = train_set->inputsize();
 #ifdef RCMP
     Vec row_split_err(inputsize);
@@ -281,6 +262,7 @@ void RegressionTreeNode::lookForBestSplit()
         train_set->getAllRegisteredRow(leave_id,col,registered_row);
         PLASSERT(registered_row.size()>0);
         PLASSERT(candidate.size()==0);
+
         for(int row_idx = 0;row_idx<registered_row.size();row_idx++)
         {
             int row=registered_row[row_idx];
@@ -421,6 +403,7 @@ int RegressionTreeNode::expandNode()
     left_leave->initStats();
     right_leave->initStats();
     TVec<RTR_type>registered_row;
+    PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
     train_set->getAllRegisteredRow(leave->id,split_col,registered_row);
 
     for (int row_index = 0;row_index<registered_row.size();row_index++)
@@ -455,21 +438,15 @@ int RegressionTreeNode::expandNode()
 //  right_leave->printStats();
     if (missing_is_valid > 0)
     {
-        missing_node = new RegressionTreeNode(missing_is_valid,
-                                              loss_function_weight,
-                                              verbosity, multiclass_outputs);
-        missing_node->initNode(train_set, missing_leave, leave_template);
+        missing_node = new RegressionTreeNode(missing_is_valid);
+        missing_node->initNode(tree, missing_leave);
         missing_node->lookForBestSplit();
     }
-    left_node = new RegressionTreeNode(missing_is_valid,
-                                       loss_function_weight,
-                                       verbosity, multiclass_outputs );
-    left_node->initNode(train_set, left_leave, leave_template);
+    left_node = new RegressionTreeNode(missing_is_valid);
+    left_node->initNode(tree, left_leave);
     left_node->lookForBestSplit();
-    right_node = new RegressionTreeNode(missing_is_valid,
-                                        loss_function_weight,
-                                        verbosity, multiclass_outputs);
-    right_node->initNode(train_set, right_leave, leave_template);
+    right_node = new RegressionTreeNode(missing_is_valid);
+    right_node->initNode(tree, right_leave);
     right_node->lookForBestSplit();
     return split_col;
 }
@@ -512,7 +489,7 @@ void RegressionTreeNode::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
 
 void RegressionTreeNode::verbose(string the_msg, int the_level)
 {
-    if (verbosity >= the_level)
+    if (tree->verbosity >= the_level)
         cout << the_msg << endl;
 }
 

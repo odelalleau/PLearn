@@ -45,16 +45,16 @@
 #define RegressionTree_INC
 
 #include <plearn_learners/generic/PLearner.h>
-
+#include "RegressionTreeRegisters.h"
 namespace PLearn {
 using namespace std;
 class RegressionTreeQueue;
 class RegressionTreeLeave;
-class RegressionTreeRegisters;
 class RegressionTreeNode;
 
 class RegressionTree: public PLearner
 {
+    friend class RegressionTreeNode;
     typedef PLearner inherited;
   
 private:
@@ -109,6 +109,7 @@ public:
     virtual int          outputsize() const;
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
+    PP<RegressionTreeRegisters> getSortedTrainingSet() const;
     virtual void         computeOutput(const Vec& input, Vec& output) const;
     virtual void         computeOutputAndCosts(const Vec& input,
                                                const Vec& target,

@@ -47,6 +47,7 @@
 #include <plearn/math/TVec.h>
 #include <boost/tuple/tuple.hpp>
 #include "RegressionTreeRegisters.h"
+#include "RegressionTree.h"
 
 namespace PLearn {
 using namespace std;
@@ -66,13 +67,9 @@ private:
 */
 
     int  missing_is_valid;
-    real loss_function_weight;
-    int verbosity;
 
-    PP<RegressionTreeLeave> leave_template; 
-    PP<RegressionTreeRegisters> train_set;
+    PP<RegressionTree> tree;
     PP<RegressionTreeLeave> leave;
-    Vec multiclass_outputs;
     
 /*
   Learnt options: they are sized and initialized if need be, in initNode(...)
@@ -95,8 +92,7 @@ private:
     Vec tmp_vec;
 public:  
     RegressionTreeNode();
-    RegressionTreeNode(int missing_is_valid, real loss_function_weight,
-                       int verbosity, Vec multiclass_outputs);
+    RegressionTreeNode(int missing_is_valid);
     virtual              ~RegressionTreeNode();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeNode);
@@ -104,9 +100,8 @@ public:
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
-    void         initNode(PP<RegressionTreeRegisters> train_set,
-                          PP<RegressionTreeLeave> leave,
-                          PP<RegressionTreeLeave> leave_template);
+    void         initNode(PP<RegressionTree> tree,
+                          PP<RegressionTreeLeave> leave);
     void         lookForBestSplit();
     inline void  compareSplit(int col, real left_leave_last_feature,
                               real right_leave_first_feature,
@@ -114,7 +109,7 @@ public:
                               Vec missing_error);
     int          expandNode();
     inline int   getSplitBalance()const{
-        if (split_col < 0) return train_set->length();
+        if (split_col < 0) return tree->getSortedTrainingSet()->length();
         return split_balance;}
     inline real  getErrorImprovment()const{
         if (split_col < 0) return -1.0;

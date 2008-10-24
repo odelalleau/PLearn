@@ -310,9 +310,8 @@ void RegressionTree::initialiseTree()
         first_leave->addRow(train_sample_index);
         first_leave->registerRow(train_sample_index);
     }
-    root = new RegressionTreeNode(missing_is_valid,loss_function_weight,
-                                  verbosity, multiclass_outputs);
-    root->initNode(sorted_train_set, first_leave, leave_template);
+    root = new RegressionTreeNode(missing_is_valid);
+    root->initNode(this, first_leave);
     root->lookForBestSplit();
 
     if (maximum_number_of_nodes < nstages) maximum_number_of_nodes = nstages;
@@ -382,7 +381,10 @@ TVec<string> RegressionTree::getTestCostNames() const
     }
     return costs;
 }
-
+PP<RegressionTreeRegisters> RegressionTree::getSortedTrainingSet() const
+{
+    return sorted_train_set;
+}
 void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
     if(!output_confidence_target){
