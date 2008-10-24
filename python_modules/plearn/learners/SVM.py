@@ -620,7 +620,8 @@ class SVM(object):
                         may depend the predictions).
                         - 'onehot' is a simple onehot of the prediction.
                         - 'votes' is the vote counts (one-against-one strategy for multi-class).
-                        - 'dist' is the usual output for a SVM (distance to the boundary). For one-vs-one, it is the sum of distances (not recommended).
+                        - 'dist' is the usual output for a SVM (distance to the boundary). For one-vs-one, it is the sum of distances.
+                        - 'softvotes' is the same as 'dist' with a softmax of the output after (does not change the decision, except if you process bags of outputs).
                         - 'proba' is the posterior emperical probability (using sigmoids of SVM standard outputs).
                         Note: with the one-vs-all strategy, 'votes' and 'onehot' give the same outputs.
                                      
@@ -1276,6 +1277,14 @@ class SVM(object):
                         if onevsone_dict[cl1cl2] > 0:
                             output[cl1cl2[0]] += onevsone_dict[cl1cl2]
                     outputs.append( output )
+            elif self.outputs_type == 'softvotes':
+                for x in samples:
+                    output = [0]*nclasses
+                    onevsone_dict = model.predict_values(x)
+                    for cl1cl2 in onevsone_dict:
+                        if onevsone_dict[cl1cl2] > 0:
+                            output[cl1cl2[0]] += softvalue( onevsone_dict[cl1cl2] )
+                    outputs.append( output )
             else:
                 raise ValueError, "Unknown value %s for option 'outputs_type'" % self.outputs_type
         elif self.multiclass_strategy == 'onevsall':
@@ -1303,6 +1312,13 @@ class SVM(object):
                     for c in range(nclasses):
                         onevsall_dict = model[c].predict_values(x)
                         output[c] = onevsall_dict[(1,-1)]
+                    outputs.append( output )
+            elif self.outputs_type == 'softvotes':
+                for x in samples:
+                    output = [0]*nclasses
+                    for c in range(nclasses):
+                        onevsall_dict = model[c].predict_values(x)
+                        output[c] = softvalue( onevsall_dict[(1,-1)] )
                     outputs.append( output )
             else:
                 raise ValueError, "Unknown value %s for option 'outputs_type'" % self.outputs_type
@@ -1710,9 +1726,16 @@ def geom_mean(data):
 def softmax(output):
     """ Softmax function
     """
-    expterms = [ math.exp(o) for o in output ]
+    try:
+        expterms = [ math.exp(o) for o in output ]
+    except OverflowError:
+        MAX= max(output)
+        expterms = [ int(o==MAX) for o in output ]
     S = sum(expterms)
     return [ e/S for e in expterms ]
+
+def softvalue(value):
+    return softmax([ value, - value ])[0]
 
 """"""
 
