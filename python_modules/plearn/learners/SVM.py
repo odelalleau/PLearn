@@ -905,12 +905,10 @@ class SVM(object):
         """
         class_priors = {}
         for label in targets:
-            if label not in class_priors:
-                class_priors[label] = 0.
-            class_priors[ label ] += 1.
+            class_priors[label] = class_priors.get(label, 0.) + 1.
         nsamples = sum( class_priors.values() )
         for label in class_priors:
-            class_priors[ label ] *= 1./nsamples
+            class_priors[label] /= nsamples
         return class_priors
            
     def get_data_stats(self, vmat=None):
@@ -1174,7 +1172,7 @@ class SVM(object):
         
         trainset = self.train_inputspec(dataspec)
         self.get_data_stats( trainset )
-        
+
         train_samples, train_targets = self.get_svminputlist( trainset, True )
         # one-against-one strategy is the only one implemented in libsvm
         if self.multiclass_strategy == 'onevsone':
