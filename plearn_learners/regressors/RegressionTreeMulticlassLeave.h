@@ -77,9 +77,12 @@ public:
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
     void         initStats();
-    void         addRow(int row, Vec outputv, Vec errorv);
     void         addRow(int row);
+    void         addRow(int row, real target, real weight);
+    void         addRow(int row, Vec outputv, Vec errorv);
+    void         addRow(int row, real target, real weight, Vec outputv, Vec errorv);
     void         removeRow(int row, Vec outputv, Vec errorv);
+    void         removeRow(int row, real target, real weight, Vec outputv, Vec errorv);
     void         getOutputAndError(Vec& output, Vec& error)const;
     void         printStats();
   

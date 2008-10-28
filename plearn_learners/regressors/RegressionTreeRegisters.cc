@@ -146,8 +146,34 @@ void RegressionTreeRegisters::reinitRegisters()
     //in case we don't save the sorted data
     sortRows();
 }
-
-void RegressionTreeRegisters::getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg)
+void RegressionTreeRegisters::getAllRegisteredRow(RTR_type leave_id, int col,
+                                                  TVec<RTR_type> &reg,
+                                                  Vec &target,
+                                                  Vec &weight, Vec &value) const
+{
+    getAllRegisteredRow(leave_id,col,reg);
+    target.resize(reg.length());
+    weight.resize(reg.length());
+    value.resize(reg.length());
+    int idx_target=inputsize();
+    int idx_weight=inputsize() + targetsize();
+    if(weightsize() <= 0){
+        weight.fill(1.0 / length());
+        for(int i=0;i<reg.length();i++){            
+            target[i] = tsource->get(idx_target, reg[i]);
+            value[i]  = tsource->get(col, reg[i]);
+        }
+    } else {
+        //Is it better to do multiple pass?
+        for(int i=0;i<reg.length();i++){
+            target[i] = tsource->get(idx_target, reg[i]);
+            weight[i] = tsource->get(idx_weight, reg[i]);
+            value[i]  = tsource->get(col, reg[i]);
+        }
+    }
+}
+void RegressionTreeRegisters::getAllRegisteredRow(RTR_type leave_id, int col,
+                                                  TVec<RTR_type> &reg) const
 {
     for(int i=0;i<length();i++)
     {

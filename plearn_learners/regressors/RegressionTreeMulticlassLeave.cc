@@ -132,6 +132,18 @@ void RegressionTreeMulticlassLeave::addRow(int row)
 {
     real weight = train_set->getWeight(row);
     real target = train_set->getTarget(row);
+    addRow(row, target, weight);
+}
+
+void RegressionTreeMulticlassLeave::addRow(int row, real target, real weight,
+                                 Vec outputv, Vec errorv)
+{
+    addRow(row, target, weight);
+    getOutputAndError(outputv,errorv);
+}
+
+void RegressionTreeMulticlassLeave::addRow(int row, real target, real weight)
+{
     length += 1;
     weights_sum += weight;
     int multiclass_found = 0;
@@ -161,6 +173,11 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
 {
     real weight = train_set->getWeight(row);
     real target = train_set->getTarget(row);
+    removeRow(row,target,weight,outputv,errorv);
+}
+
+void RegressionTreeMulticlassLeave::removeRow(int row, real target, real weight,
+                                 Vec outputv, Vec errorv){
     length -= 1;
     weights_sum -= weight;
     PLASSERT(length>=0);

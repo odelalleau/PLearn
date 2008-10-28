@@ -106,8 +106,9 @@ public:
         tsource->put( inputsize() + targetsize(), row, val );
     }
     inline RTR_type     getNextId(){next_id += 1;return next_id;}
-    void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg);
-    void         sortRows();
+    void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg)const;
+    void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg,
+                                     Vec &target, Vec &weight, Vec &value)const;
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
     inline virtual void put(int i, int j, real value)
@@ -122,6 +123,7 @@ public:
 
 private:
     void         build_();
+    void         sortRows();
     void         sortEachDim(int dim);
     void         sortSmallSubArray(int start_index, int end_index, int dim);
     void         swapIndex(int index_i, int index_j, int dim);

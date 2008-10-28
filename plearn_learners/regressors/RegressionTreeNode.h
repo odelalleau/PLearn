@@ -130,9 +130,12 @@ private:
     void         build_();
     void         verbose(string msg, int level); 
     static tuple<real,real,int> bestSplitInRow(int col, TVec<RTR_type>& candidates,
-        Vec left_error, Vec right_error, const Vec missing_error,
-        PP<RegressionTreeLeave> right_leave, PP<RegressionTreeLeave> left_leave,
-        PP<RegressionTreeRegisters> train_set                                
+                                               Vec left_error, Vec right_error,
+                                               const Vec missing_error,
+                                               PP<RegressionTreeLeave> right_leave,
+                                               PP<RegressionTreeLeave> left_leave,
+                                               PP<RegressionTreeRegisters> train_set,
+                                               Vec values, Vec targets, Vec weights
         );
 };
 
