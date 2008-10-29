@@ -384,8 +384,8 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
         left_leave->removeRow(row, targets[i+1], weights[i+1], tmp, left_error);
         right_leave->addRow(row, targets[i+1], weights[i+1], tmp, right_error);
 
-        real next_feature=train_set->get(next_row, col);
-        real row_feature=train_set->get(row, col);
+        real next_feature=values[i];
+        real row_feature=values[i+1];
         PLASSERT(train_set->get(next_row, col)==values[i]);
         PLASSERT(train_set->get(row, col)==values[i+1]);
         PLASSERT(next_feature<=row_feature);
