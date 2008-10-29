@@ -835,7 +835,9 @@ class DBICondor(DBIBase):
         err = self.p.stderr.readline()
 #example de sortie de pkdilly
 #La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
-        assert err.startswith('La tache a soumettre est dans: ')
+        if not err.startswith('La tache a soumettre est dans: '):
+            print "[DBI] ERROR: pkdilly returned a bad string:\n", err
+            sys.exit(1)
         pkdilly_file = err.split()[-1]
         pkdilly_fd = open( pkdilly_file, 'r' )
         lines = pkdilly_fd.readlines()
