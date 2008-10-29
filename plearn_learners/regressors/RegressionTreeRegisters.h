@@ -50,7 +50,7 @@
 //!used to limit the memory used by limiting the length of the dataset.
 //!work with unsigned int, uint16_t, but fail with uint8_t???
 #define RTR_type uint32_t
-
+#define RTR_type_id uint16_t
 namespace PLearn {
 using namespace std;
 
@@ -76,7 +76,7 @@ private:
     //TMat<int> sorted_row;
 
     TMat<RTR_type> tsorted_row;
-    TVec<RTR_type> leave_register;
+    TVec<RTR_type_id> leave_register;
     VMat tsource;
  
 public:
@@ -91,7 +91,7 @@ public:
     virtual void         build();
     void         initRegisters(VMat train_set);
     void         reinitRegisters();
-    inline void         registerLeave(RTR_type leave_id, int row)
+    inline void         registerLeave(RTR_type_id leave_id, int row)
     { leave_register[row] = leave_id;    }
     inline virtual real get(int i, int j) const{return tsource->get(j,i);}
     inline real         getTarget(int row)const
@@ -105,9 +105,11 @@ public:
         PLASSERT(weightsize() > 0);
         tsource->put( inputsize() + targetsize(), row, val );
     }
-    inline RTR_type     getNextId(){next_id += 1;return next_id;}
-    void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg)const;
-    void         getAllRegisteredRow(RTR_type leave_id, int col, TVec<RTR_type> &reg,
+    inline RTR_type_id     getNextId(){
+        PLCHECK(next_id<std::numeric_limits<RTR_type_id>::max());
+        next_id += 1;return next_id;}
+    void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg)const;
+    void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
                                      Vec &target, Vec &weight, Vec &value)const;
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);

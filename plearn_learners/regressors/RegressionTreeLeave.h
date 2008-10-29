@@ -67,7 +67,7 @@ protected:
   Build options: they have to be set before building
 */
 
-    int  id;
+    RTR_type_id  id;
     PP<RegressionTreeRegisters> train_set;
  
 /*
