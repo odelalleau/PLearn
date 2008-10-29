@@ -203,7 +203,7 @@ void AddCostToLearner::declareOptions(OptionList& ol)
                   "The time spent in the last call to train() in second.");
 
     declareOption(ol, "total_train_time",
-                  &AddCostToLearner::train_time, OptionBase::learntoption,
+                  &AddCostToLearner::total_train_time, OptionBase::learntoption,
                   "The total time spent in the train() function in second.");
 
     declareOption(ol, "test_time",
@@ -211,7 +211,7 @@ void AddCostToLearner::declareOptions(OptionList& ol)
                   "The time spent in the last call to test() in second.");
 
     declareOption(ol, "total_test_time",
-                  &AddCostToLearner::test_time, OptionBase::learntoption,
+                  &AddCostToLearner::total_test_time, OptionBase::learntoption,
                   "The total time spent in the test() function in second.");
 
     // Now call the parent class' declareOptions
