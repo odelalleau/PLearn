@@ -165,6 +165,8 @@ void RegressionTree::build()
 
 void RegressionTree::build_()
 {
+    PLCHECK(maximum_number_of_nodes<=std::numeric_limits<RTR_type_id>::max());
+
     PP<VMatrix> the_train_set;
     if(sorted_train_set)
     {
