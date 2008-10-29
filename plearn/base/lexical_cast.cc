@@ -140,9 +140,9 @@ float pl_strtof(const char* nptr, char** endptr)
     double d = pl_strtod(nptr, endptr);
     f = float(d);
     if(d!=f && !is_missing(f))
-        PLWARNING("In pl_strtof() - float don't have enought precission to"
-                  " store %s. It is stored as %f. Float have 24 binary digit"
-                  " of precision (6 decimal digit of precision)", nptr, f);
+        PLWARNING("In pl_strtof() - float does not have enough precision to"
+                  " store %s. It is stored as %f. Float has 24 binary digits"
+                  " of precision (6 decimal digits of precision)", nptr, f);
     return f;
 #elif defined(WIN32)
     return float(pl_strtod(nptr, endptr));
