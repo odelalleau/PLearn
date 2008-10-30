@@ -81,6 +81,7 @@ bqtools only options:
 
 cluster and condor options:
   The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
+    Default the same as the submit host.
   The '--mem=X' speficify the number of ram in meg the program need to execute.
   The '--os=X' speficify the os of the server. 
     Cluster default: fc7. Cluster accepted value fc4, fc7 and fc9.
