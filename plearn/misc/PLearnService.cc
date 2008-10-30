@@ -102,6 +102,7 @@ void PLearnService::connectToServers(PPath serversfile)
 }
 
 void PLearnService::connectToServers(TVec< pair<string,int> > hostname_and_port)
+
 {
 
     DBG_LOG << "PLearnService::connectToServers(" << hostname_and_port << ')' << endl;
@@ -440,6 +441,18 @@ void PLearnService::progress_callback(PP<RemotePLearnServer> server, unsigned in
         break;
     }
 }
+
+// Connect the global PLearnService instance to the listed servers.
+void globalConnectToServers(TVec< pair<string,int> > hostname_and_port)
+{
+    PLearnService::instance().connectToServers(hostname_and_port);
+}
+
+BEGIN_DECLARE_REMOTE_FUNCTIONS
+    declareFunction("globalConnectToServers", &globalConnectToServers,
+                    (BodyDoc("Connect the PLearnService instance to the listed servers."),
+                     ArgDoc ("hostname_and_port", "List of ('hostname', port#) pairs")));
+END_DECLARE_REMOTE_FUNCTIONS
 
 
 } // end of namespace PLearn

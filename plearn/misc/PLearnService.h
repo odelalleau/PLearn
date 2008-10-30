@@ -138,6 +138,12 @@ public:
     ~PLearnService();
 };
 
+
+/* global function exported to python:
+   Connect the global PLearnService instance to the listed servers.
+ */
+void globalConnectToServers(TVec< pair<string,int> > hostname_and_port);
+
 } // end of namespace PLearn
 
 #endif
