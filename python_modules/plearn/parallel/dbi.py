@@ -1186,6 +1186,8 @@ class DBICondor(DBIBase):
 
         self.make_launch_script('sh -c "$@"')
 
+        time.sleep(5)#we do this in hope that the error 'launch.sh2.sh is not executable'
+
         return self.condor_submit_exec + " " + self.condor_submit_file
 
     def clean(self):
