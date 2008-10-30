@@ -392,7 +392,7 @@ class DBICluster(DBIBase):
         self.cpu=1
         self.threads=[]
         self.started=0
-        self.nb_proc=50
+        self.nb_proc=32
         self.mt=None
         self.args=args
         self.mem=None

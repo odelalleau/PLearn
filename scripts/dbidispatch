@@ -52,7 +52,7 @@ common options:
     --bqtools=N is the same as --bqtools --nb_proc=N
     --ssh=N is the same as --ssh --nb_proc=N
     --condor=N  is the same as --condor --nb_proc=N
-    condor and bqtools default -1. Cluster default 50.  local and ssh default 1
+    condor and bqtools default -1. Cluster default 32.  local and ssh default 1
   The '--[*no_]clean_up' set the DBI option clean_up to true or false
   The 'DBIDISPATCH_DEFAULT_OPTION' environnement variable can contain default
     option for dbidispatch. They can be overrided on the command line.
