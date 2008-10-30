@@ -446,6 +446,8 @@ class DBICluster(DBIBase):
             #by default the cluster send to 32 bits computers
             #we want that by default we use the same arch as the submit computer!
             command += " --typecpu 64bits"
+        elif os.uname()[4] in ["i686", "i386"]:
+            command += " --typecpu 32bits"
         if self.duree:
             command += " --duree "+self.duree
         if self.cwait:
