@@ -340,9 +340,13 @@ void SelectColumnsVMatrix::getIndicesFromFields(){
                     ok = true;
                     indices.append(the_index);
                 }
-                if (!ok)
+                if (!ok && !inverse_fields_selection)
                     PLERROR("In SelectColumnsVMatrix::build_ - Unknown field \"%s\" in source VMat;\n"
                             "    (you may want to use the 'extend_with_missing' option)", the_field.c_str());
+                else if(!ok)
+                    PLWARNING("In SelectColumnsVMatrix::build_ - Unknown field \"%s\" in source VMat;\n"
+                              " as we want to ignore this field, we ignore this error.", the_field.c_str());
+                    
             } else
                 indices.append(the_index);
             if(extend_with_missing && the_index == -1)
