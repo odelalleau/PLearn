@@ -52,7 +52,8 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 DichotomizeVMatrix::DichotomizeVMatrix():
-    verbose(3)
+    verbose(3),
+    missing_field_error(true)
 /* ### Initialize all fields to their default value */
 {
     // ...
@@ -126,7 +127,12 @@ void DichotomizeVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "instruction_index", &DichotomizeVMatrix::instruction_index,
                   OptionBase::learntoption,
                   "An array that point each columns of the source matrix to its instruction.");
-//instruction_index
+
+    declareOption(ol, "missing_field_error", &DichotomizeVMatrix::missing_field_error,
+                  OptionBase::buildoption,
+                  "If true we will generate an error is a field is"
+                  " in the instruction but not in the source."
+                  " Otherwise will generate a warning.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -162,10 +168,16 @@ void DichotomizeVMatrix::build_()
         {
             if (discrete_variable_instructions[ins_col].first == source_names[source_col]) break;
         }
-        if (source_col >= source->width()) 
-            PLERROR("In DichotomizeVMatrix::build_() -  "
-                    "no field with this name in the source data set: %s",
-                    (discrete_variable_instructions[ins_col].first).c_str());
+        if (source_col >= source->width()){
+            if(missing_field_error)
+                PLERROR("In DichotomizeVMatrix::build_() -  "
+                        "no field with this name in the source data set: %s",
+                        (discrete_variable_instructions[ins_col].first).c_str());
+            else
+                PLWARNING("In DichotomizeVMatrix::build_() -  "
+                        "no field with this name in the source data set: %s",
+                        (discrete_variable_instructions[ins_col].first).c_str());
+        }
         else instruction_index[source_col] = ins_col;
     }
 

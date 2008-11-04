@@ -66,7 +66,7 @@ public:
     TVec< pair<string, TVec< pair<real, real> > > > discrete_variable_instructions;
     
     int verbose;
-
+    bool missing_field_error;
 public:
     //#####  Public Member Functions  #########################################
 
