@@ -72,6 +72,10 @@ public:
     //! this instruction. Will warn about field with empty instruction then stop.
     string default_instruction;
 
+    //! If true will generate an error if some field have field without instruction
+    bool missing_instruction_error;
+    //! If true will generate an error if some instruction reference missing field
+    bool missing_field_error;
 public:
     //#####  Public Member Functions  #########################################
 

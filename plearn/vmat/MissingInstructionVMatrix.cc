@@ -50,7 +50,9 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 MissingInstructionVMatrix::MissingInstructionVMatrix():
-    default_instruction("")
+    default_instruction(""),
+    missing_instruction_error(true),
+    missing_field_error(true)
 /* ### Initialize all fields to their default value */
 {
     // ...
@@ -120,6 +122,14 @@ void MissingInstructionVMatrix::declareOptions(OptionList& ol)
                   "If some field in the source matrix have no instruction," 
                   " we will use this instruction. We will warn about field"
                   " with empty instruction then will stop.");
+   declareOption(ol, "missing_instruction_error",
+                  &MissingInstructionVMatrix::missing_instruction_error,
+                  OptionBase::buildoption,
+                 "If true will generate an error if some field have field without instruction" );
+   declareOption(ol, "missing_field_error",
+                  &MissingInstructionVMatrix::missing_field_error ,
+                  OptionBase::buildoption,
+                 "If true will generate an error if some instruction reference missing field" );
 }
 
 void MissingInstructionVMatrix::build_()
@@ -223,9 +233,9 @@ void MissingInstructionVMatrix::build_()
             missing_instruction++;
         }   
     }
-    if(missing_instruction)
+    if(missing_instruction && missing_instruction_error)
         PLERROR("In MissingInstructionVMatrix::build_ - Their have been %d field in the source matrix that have no instruction",missing_instruction);
-    if(missing_field)
+    if(missing_field && missing_field_error)
         PLERROR("In MissingInstructionVMatrix::build_ - Their have been %d instruction that have no correcponding field in the source matrix",missing_field);
 
     // Copy the appropriate VMFields
