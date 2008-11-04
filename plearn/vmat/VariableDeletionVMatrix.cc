@@ -42,6 +42,8 @@
 #include "VariableDeletionVMatrix.h"
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/VMat_computeStats.h>
+#include <plearn/io/fileutils.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -122,6 +124,13 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
         "samples will be used.\n"
         "If greater than or equal to 1, the integer portion will be\n"
         "interpreted as the number of samples to use.");
+
+    declareOption(ol, "save_deleted_columns",
+                  &VariableDeletionVMatrix::save_deleted_columns,
+                  OptionBase::buildoption,
+                  "If not empty will save the deleted culumns in this file."
+                  "If present, will verify that it have the same content then"
+                  " the calculated data.");
 
     declareOption(ol, "complete_dataset",
                   &VariableDeletionVMatrix::complete_dataset,
@@ -327,6 +336,19 @@ void VariableDeletionVMatrix::build_()
     // We have modified the selected columns, so the parent class must be
     // re-built.
     inherited::build();
+
+    if(!save_deleted_columns.empty()){
+        if(isfile(save_deleted_columns)){
+            TVec<int> indices2;
+            PLearn::load(save_deleted_columns, indices2);
+            if(indices!=indices2)
+                PLERROR("In VariableDeletionVMatrix::build_() - the calculated"
+                        " indices(%d) differ from the saved indices(%d) in file '%s'! ",
+                        indices2.length(), indices.length(), save_deleted_columns.c_str());
+        }else{
+            PLearn::save(save_deleted_columns,indices);
+        }
+    }
 }
 
 } // end of namespace PLearn

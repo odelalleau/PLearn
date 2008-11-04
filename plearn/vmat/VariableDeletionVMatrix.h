@@ -59,12 +59,12 @@ public:
     real    max_constant_threshold;
     int     number_of_train_samples;
     VMat    train_set;
+    string  save_deleted_columns;
 
     // Deprecated.
     VMat       complete_dataset;
     real       deletion_threshold;
     int        remove_columns_with_constant_value;
-
 public:
 
     VariableDeletionVMatrix();
