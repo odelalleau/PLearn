@@ -51,7 +51,6 @@ PLEARN_IMPLEMENT_OBJECT(
 
 MissingInstructionVMatrix::MissingInstructionVMatrix():
     default_instruction(""),
-    missing_instruction_error(true),
     missing_field_error(true)
 /* ### Initialize all fields to their default value */
 {
@@ -122,10 +121,6 @@ void MissingInstructionVMatrix::declareOptions(OptionList& ol)
                   "If some field in the source matrix have no instruction," 
                   " we will use this instruction. We will warn about field"
                   " with empty instruction then will stop.");
-   declareOption(ol, "missing_instruction_error",
-                  &MissingInstructionVMatrix::missing_instruction_error,
-                  OptionBase::buildoption,
-                 "If true will generate an error if some field have field without instruction" );
    declareOption(ol, "missing_field_error",
                   &MissingInstructionVMatrix::missing_field_error ,
                   OptionBase::buildoption,
@@ -188,7 +183,8 @@ void MissingInstructionVMatrix::build_()
         {
             if(missing_instructions[ins_col].second!="skip"){
                 //if the instruction is skip, we don't care that it is missing in the source!
-                PLWARNING("In MissingInstructionVMatrix::build_() - missing_instructions '%d': no field with this name: '%s'."
+                PLWARNING("In MissingInstructionVMatrix::build_() -"
+                          " missing_instructions '%d': no field with this name: '%s'."
                           " It have '%s' as spec"
                           ,ins_col,(missing_instructions[ins_col].first).c_str(),
                           (missing_instructions[ins_col].second).c_str());
@@ -207,8 +203,13 @@ void MissingInstructionVMatrix::build_()
         else if (missing_instructions[ins_col].second == "present")
             ins[source_col] = "present";
         else if (missing_instructions[ins_col].second.empty())
-            PLWARNING("In MergeDond2Files::build_() - merge instruction empty for field '%s', we keep the previous instruction who could be the default_instruction",(missing_instructions[source_col].first).c_str());
-        else PLERROR("In MergeDond2Files::build_() - unsupported merge instruction: '%s'", 
+            PLWARNING("In MissingInstructionVMatrix::build_() -"
+                      " merge instruction empty for field '%s',"
+                      " we keep the previous instruction who could be"
+                      " the default_instruction",
+                      (missing_instructions[source_col].first).c_str());
+        else PLERROR("In MissingInstructionVMatrix::build_() -"
+                     " unsupported merge instruction: '%s'", 
                      (missing_instructions[ins_col].second).c_str());
         if (ins[source_col] == "skip"){
             if(source_col<source->inputsize())
@@ -226,17 +227,23 @@ void MissingInstructionVMatrix::build_()
     int missing_instruction = 0;
     for (int col = 0; col < source->width(); col++)
     {
-        if(ins[col] == "")
+        if(ins[col].empty())
         {
-            PLWARNING("In MissingInstructionVMatrix::build_ - their is no instruction for the field '%s'",
+            PLWARNING("In MissingInstructionVMatrix::build_ -"
+                      " their is no instruction for the field '%s'",
                     source_names[col].c_str());
             missing_instruction++;
         }   
     }
-    if(missing_instruction && missing_instruction_error)
-        PLERROR("In MissingInstructionVMatrix::build_ - Their have been %d field in the source matrix that have no instruction",missing_instruction);
+    if(missing_instruction)
+        PLERROR("In MissingInstructionVMatrix::build_ -"
+                " Their have been %d field in the source"
+                " matrix that have no instruction. Do you want"
+                " to set the default_instruction option?",missing_instruction);
     if(missing_field && missing_field_error)
-        PLERROR("In MissingInstructionVMatrix::build_ - Their have been %d instruction that have no correcponding field in the source matrix",missing_field);
+        PLERROR("In MissingInstructionVMatrix::build_ - Their have been %d"
+                " instruction that have no correcponding field in the"
+                " source matrix",missing_field);
 
     // Copy the appropriate VMFields
     fieldinfos.resize(width());
