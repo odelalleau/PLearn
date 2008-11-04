@@ -163,7 +163,7 @@ void DichotomizeVMatrix::build_()
             if (discrete_variable_instructions[ins_col].first == source_names[source_col]) break;
         }
         if (source_col >= source->width()) 
-            PLERROR("In DichotomizeDond2DiscreteVariables::build_() -  "
+            PLERROR("In DichotomizeVMatrix::build_() -  "
                     "no field with this name in the source data set: %s",
                     (discrete_variable_instructions[ins_col].first).c_str());
         else instruction_index[source_col] = ins_col;
@@ -227,7 +227,7 @@ void DichotomizeVMatrix::build_()
                discrete_variable_instructions[instruction_index[source_col]].second;
            if (instruction_ptr.size() == 0) 
            {
-               PLWARNING("In DichotomizeDond2DiscreteVariables::build_() -"
+               PLWARNING("In DichotomizeVMatrix::build_() -"
                          "instruction for field %s have no range!",
                          discrete_variable_instructions[instruction_index[source_col]].first.c_str());
                continue;
