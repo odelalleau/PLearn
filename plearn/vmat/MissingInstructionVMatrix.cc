@@ -176,9 +176,14 @@ void MissingInstructionVMatrix::build_()
             continue;
         } else if (source_col >= source->width()) 
         {
-            PLWARNING("In MissingInstructionVMatrix::build_() - missing_instructions '%d': no field with this name: '%s'" 
-                    ,ins_col,(missing_instructions[ins_col].first).c_str());
-            missing_field++;
+            if(missing_instructions[ins_col].second!="skip"){
+                //if the instruction is skip, we don't care that it is missing in the source!
+                PLWARNING("In MissingInstructionVMatrix::build_() - missing_instructions '%d': no field with this name: '%s'."
+                          " It have '%s' as spec"
+                          ,ins_col,(missing_instructions[ins_col].first).c_str(),
+                          (missing_instructions[ins_col].second).c_str());
+                missing_field++;
+            }
             continue;
         }
         if (missing_instructions[ins_col].second == "skip")
