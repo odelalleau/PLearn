@@ -686,6 +686,8 @@ real TextFilesVMatrix::getPostalEncoding(const string& strval, bool display_warn
         val = 160 + second_digit;
     else if(first_char=='X')
         val = 170 + second_digit;
+    else if(first_char=='Y')
+        val = 180 + second_digit;
     else if(first_char=='0' || first_char=='1' || first_char=='2' || first_char=='3' ||
             first_char=='4' || first_char=='5' || first_char=='6' || first_char=='7' ||
             first_char=='8' || first_char=='9') {
@@ -694,8 +696,18 @@ real TextFilesVMatrix::getPostalEncoding(const string& strval, bool display_warn
         val = 260 + first_digit * 10 + second_digit;
     }
     else {
+        //http://en.wikipedia.org/wiki/Canadian_postal_code
+        //No postal code includes the letters D, F, I, O, Q, or U,
+        //as the OCR equipment used in automated sorting could easily
+        //confuse them with other letters and digits, 
         if (display_warning) {
-            string errmsg = "Currently only some postal codes are supported: ";
+            string errmsg;
+            if(first_char=='D' ||first_char=='F' ||first_char=='I' ||
+               first_char=='O' ||first_char=='Q' ||first_char=='U')
+                errmsg = "Postal code don't use letters D, F, I, O, Q, or U: ";
+            else
+                errmsg = "Currently only some postal codes are supported: ";
+
             errmsg += "can't process " + strval + ", value will be set to 0.";
             PLWARNING(errmsg.c_str());
         }
