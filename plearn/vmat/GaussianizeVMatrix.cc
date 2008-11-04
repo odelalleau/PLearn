@@ -39,6 +39,7 @@
 
 #include "GaussianizeVMatrix.h"
 #include <plearn/math/pl_erf.h>
+#include "VMat_computeStats.h"
 
 namespace PLearn {
 using namespace std;
@@ -80,7 +81,8 @@ GaussianizeVMatrix::GaussianizeVMatrix():
     gaussianize_weight(false),
     gaussianize_extra(false),
     gaussianize_binary(false),
-    threshold_ratio(10)
+    threshold_ratio(10),
+    save_and_reuse_stats(true)
 {}
 
 ////////////////////
@@ -112,6 +114,11 @@ void GaussianizeVMatrix::declareOptions(OptionList& ol)
                   &GaussianizeVMatrix::gaussianize_extra,
                   OptionBase::buildoption,
         "Whether or not to Gaussianize the extra part.");
+
+    declareOption(ol, "save_and_reuse_stats",
+                  &GaussianizeVMatrix::save_and_reuse_stats,
+                  OptionBase::buildoption,
+        "If true, will save and reuse the stats of the source.");
 
     declareOption(ol, "gaussianize_binary",
                   &GaussianizeVMatrix::gaussianize_binary,
@@ -207,8 +214,12 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
         PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
                 " train_source, source or this VMatrix should have a metadata directory!");
     
-    TVec<StatsCollector> stats = the_source->
-        getPrecomputedStatsFromFile("stats_gaussianizeVMatrix.psave", -1, true);
+    TVec<StatsCollector> stats;
+    if(save_and_reuse_stats)
+        stats = the_source->
+            getPrecomputedStatsFromFile("stats_gaussianizeVMatrix.psave", -1, true);
+    else
+        stats = PLearn::computeStats(the_source, -1, true);
 
     // See which dimensions violate the Gaussian assumption and will be
     // actually Gaussianized, and store the corresponding list of values.

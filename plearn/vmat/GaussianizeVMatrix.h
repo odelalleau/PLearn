@@ -70,6 +70,7 @@ public:
     bool gaussianize_extra;
     bool gaussianize_binary;
     real threshold_ratio;
+    bool save_and_reuse_stats;
     VMat train_source;
 
 public:
