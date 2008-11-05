@@ -64,6 +64,15 @@ class MultiClassAdaBoost : public PLearner
     mutable Vec subcosts1;
     mutable Vec subcosts2;
 
+    //! The time it took for the last execution of the train() function
+    real train_time;
+    //! The total time passed in training
+    real total_train_time;
+
+    //! The time it took for the last execution of the test() function
+    real test_time;
+    //! The total time passed in test()
+    real total_test_time;
 public:
     //#####  Public Build Options  ############################################
 

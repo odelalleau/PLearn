@@ -39,6 +39,8 @@
 
 #include "MultiClassAdaBoost.h"
 #include <plearn/vmat/ProcessingVMatrix.h>
+#include <plearn/vmat/SubVMatrix.h>
+#include <plearn/vmat/MemoryVMatrix.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -53,6 +55,10 @@ PLEARN_IMPLEMENT_OBJECT(
     " and 2 vs other.");
 
 MultiClassAdaBoost::MultiClassAdaBoost():
+    train_time(0),
+    total_train_time(0),
+    test_time(0),
+    total_test_time(0),
     forward_sub_learner_test_costs(false)
 /* ### Initialize all fields to their default value here */
 {
@@ -104,7 +110,6 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
 
 void MultiClassAdaBoost::build_()
 {
-    //reuse object to same allocation time
     sub_target_tmp.resize(2);
     for(int i=0;i<sub_target_tmp.size();i++)
         sub_target_tmp[i].resize(1);
@@ -126,7 +131,14 @@ void MultiClassAdaBoost::build_()
         target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
         target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
         weight_prg = "1 :weight";
+        if(learner1->getTrainingSet()){
+            subcosts2.resize(learner2->nTestCosts());
+            subcosts1.resize(learner1->nTestCosts());
+        }
     }
+
+    Profiler::activate();
+    Profiler::reset("MultiClassAdaBoost::test");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -182,6 +194,8 @@ void MultiClassAdaBoost::forget()
 
 void MultiClassAdaBoost::train()
 {
+    Profiler::start("MultiClassAdaBoost::train");
+
     learner1->nstages = nstages;
     learner2->nstages = nstages;
 
@@ -190,15 +204,15 @@ void MultiClassAdaBoost::train()
 #ifdef _OPENMP
     //the AdaBoost and the weak learner should not print anything as this will cause race condition on the printing
     if(omp_get_max_threads()>1){
-        PLCHECK(learner1->verbosity==0);
-        PLCHECK(learner2->verbosity==0);
-        PLCHECK(learner1->report_progress==false);
-        PLCHECK(learner2->report_progress==false);
-        
-        PLCHECK(learner1->weak_learner_template->verbosity==0);
-        PLCHECK(learner2->weak_learner_template->verbosity==0);
-        PLCHECK(learner1->weak_learner_template->report_progress==false);
-        PLCHECK(learner2->weak_learner_template->report_progress==false);
+      PLCHECK(learner1->verbosity==0);
+      PLCHECK(learner2->verbosity==0);
+      PLCHECK(learner1->report_progress==false);
+      PLCHECK(learner2->report_progress==false);
+      
+      PLCHECK(learner1->weak_learner_template->verbosity==0);
+      PLCHECK(learner2->weak_learner_template->verbosity==0);
+      PLCHECK(learner1->weak_learner_template->report_progress==false);
+      PLCHECK(learner2->weak_learner_template->report_progress==false);
     }
 #pragma omp parallel sections default(none)
 {
@@ -222,6 +236,19 @@ void MultiClassAdaBoost::train()
         train_stats->append(*(v),"sublearner1.");
     if(v=learner2->getTrainStatsCollector())
         train_stats->append(*(v),"sublearner2.");
+
+    Profiler::end("MultiClassAdaBoost::train");
+    const Profiler::Stats& stats = Profiler::getStats("MultiClassAdaBoost::train");
+    real tmp=stats.wall_duration/Profiler::ticksPerSecond();
+    train_time=tmp - total_train_time;
+    total_train_time=tmp;
+
+    //we get the test_time here as we want the test time for all dataset.
+    //if we put it in the test function, we would have it for one dataset.
+    const Profiler::Stats& stats_test = Profiler::getStats("MultiClassAdaBoost::test");
+    tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
+    test_time=tmp-total_test_time;
+    total_test_time=tmp;  
 }
 
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
@@ -232,9 +259,9 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
 #ifdef _OPENMP
 #pragma omp parallel sections default(none)
 {
-#pragma omp section 
+#pragma omp section
     learner1->computeOutput(input, output1);
-#pragma omp section 
+#pragma omp section
     learner2->computeOutput(input, output2);
 }
 
@@ -266,19 +293,15 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
     PLASSERT_MSG(output.length()==outputsize(),
                  "In MultiClassAdaBoost::computeOutputAndCosts -"
                  " output don't have the good length!");
-    output.resize(outputsize());
-
-    subcosts1.resize(learner1->nTestCosts());
-    subcosts2.resize(learner1->nTestCosts());
 
     getSubLearnerTarget(target, sub_target_tmp);
 #ifdef _OPENMP
 #pragma omp parallel sections default(none)
 {
-#pragma omp section 
+#pragma omp section
     learner1->computeOutputAndCosts(input, sub_target_tmp[0],
                                     output1, subcosts1);
-#pragma omp section 
+#pragma omp section
     learner2->computeOutputAndCosts(input, sub_target_tmp[1],
                                     output2, subcosts2);
 }
@@ -320,9 +343,12 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
 
     costs[4]=costs[5]=costs[6]=0;
     costs[out+4]=1;
-
+    costs[7]=train_time;
+    costs[8]=total_train_time;
+    costs[9]=test_time;
+    costs[10]=total_test_time;
     if(forward_sub_learner_test_costs){
-        costs.resize(7);
+        costs.resize(7+4);
         subcosts1+=subcosts2;
         costs.append(subcosts1);
     }
@@ -351,6 +377,10 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
 
     costs[4]=costs[5]=costs[6]=0;
     costs[out+4]=1;
+    costs[7]=train_time;
+    costs[8]=total_train_time;
+    costs[9]=test_time;
+    costs[10]=total_test_time;
 
     if(forward_sub_learner_test_costs){
         costs.resize(7);
@@ -393,6 +423,10 @@ TVec<string> MultiClassAdaBoost::getTestCostNames() const
     names.append("class0");
     names.append("class1");
     names.append("class2");
+    names.append("train_time");
+    names.append("total_train_time");
+    names.append("test_time");
+    names.append("total_test_time");
     if(forward_sub_learner_test_costs){
         TVec<string> subcosts=learner1->getTestCostNames();
         for(int i=0;i<subcosts.length();i++){
@@ -455,11 +489,13 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
-    //can't be parallized as the training_set is meaby not thread save...
     if(!learner1->getTrainingSet())
         learner1->setTrainingSet(vmat1, call_forget);
     if(!learner2->getTrainingSet())
         learner2->setTrainingSet(vmat2, call_forget);
+    subcosts2.resize(learner2->nTestCosts());
+    subcosts1.resize(learner1->nTestCosts());
+
 }
 
 void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
