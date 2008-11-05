@@ -5,6 +5,10 @@ conflict
 class0
 class1
 class2
+train_time
+total_train_time
+test_time
+total_test_time
 sum_sublearner.binary_class_error
 sum_sublearner.exp_neg_margin
 sum_sublearner.class_error

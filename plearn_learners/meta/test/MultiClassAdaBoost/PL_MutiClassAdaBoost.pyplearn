@@ -59,6 +59,7 @@ learner=learner = pl.HyperLearner(
         provide_learner_expdir = 1  ,
         save_test_confidence = 0  ,
         save_test_names = 0,
+        save_split_stats = 1
         ),
     strategy = [
 
@@ -96,7 +97,8 @@ tester = pl.PTester(
     save_test_outputs = 1,
     save_test_confidence = 0,
     save_learners = 1,
-    save_split_stats = 0#not need as their is only one split
+    save_split_stats = 0,#not need as their is only one split
+    save_stat_collectors = 0
     )
 
 def main():
