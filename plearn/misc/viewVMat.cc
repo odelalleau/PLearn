@@ -854,13 +854,25 @@ void viewVMat(const VMat& vm, PPath filename)
             case (int)'<': case (int)'>':
                 // Sort by increasing or decreasing order.
             {
-                PP<SortRowsVMatrix> new_vm = new SortRowsVMatrix();
-                new_vm->source = vm_showed;
+                PP<SortRowsVMatrix> new_vm;
+                if(vm_showed->classname()!="SortRowsVMatrix" 
+                   || ((PP<SortRowsVMatrix>)vm_showed)->sort_columns[0]!=curj){
+                //if it is a SortRowsVMatrix and we sort on a new column
+                // we can't reuse the last SortRowsVMatrix as it don't suport 
+                // different order on each row.
+                    new_vm = new SortRowsVMatrix();
+                    new_vm->source = vm_showed;
+                    vm_showed = get_pointer(new_vm);
+                } else 
+                    //in the case where we sort multiple time on the same column
+                    //we reuse the last VMatrix.
+                    new_vm= (PP<SortRowsVMatrix>)vm_showed;
                 new_vm->sort_columns = TVec<int>(1, curj);
                 if (key == (int)'>')
                     new_vm->increasing_order = false;
+                else                    
+                    new_vm->increasing_order = true;
                 new_vm->build();
-                vm_showed = get_pointer(new_vm);
             }
             break;
             ///////////////////////////////////////////////////////////////
