@@ -330,18 +330,23 @@ void MeanMedianModeImputationVMatrix::build_()
     imputation_spec = save_imputation_spec;
 
     if(nofields.length()>0 && missing_field_error)
-      PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
+      PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d"
+	      " fields in the imputation_spec that are not in train set:"
+	      " %s",nofields.length(),
 	      tostring(nofields).c_str());
     else if(nofields.length()>0)
-      PLWARNING("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
+      PLWARNING("In MeanMedianModeImputationVMatrix::build_() Their is %d"
+		" fields in the imputation_spec that are not in train set:"
+		" %s",nofields.length(),
 		tostring(nofields).c_str());
     TVec<string> no_instruction;
     for(int i = 0;i<variable_imputation_instruction.size();i++)
       if(variable_imputation_instruction[i]==0)
 	no_instruction.append(train_field_names[i]);
     if(no_instruction.size()>0)
-      PLWARNING("In MeanMedianModeImputationVMatrix::build_() In the source VMatrix their is %d field(s) that do not have instruction: '%s'.",
-		no_instruction.size(),tostring(no_instruction).c_str());
+      PLERROR("In MeanMedianModeImputationVMatrix::build_() In the source"
+	      " VMatrix their is %d field(s) that do not have instruction: '%s'.",
+	      no_instruction.size(),tostring(no_instruction).c_str());
 
 }
 void MeanMedianModeImputationVMatrix::setMetaDataDir(const PPath& the_metadatadir)
