@@ -88,6 +88,7 @@ public:
     bool precompute_features;
     int n_threads;
     int thread_subtrain_length;
+    bool use_all_basis;
 
     //#####  Public Learnt Options  ############################################
     TVec<RealFunc> selected_functions;
