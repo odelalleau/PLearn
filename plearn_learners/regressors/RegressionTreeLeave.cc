@@ -187,29 +187,33 @@ void RegressionTreeLeave::removeRow(int row, real target, real weight,
 
 void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
 {
-    if(length==0){        
-        output.clear();
+    if(length>0){
+        output[0] = weighted_targets_sum / weights_sum;
+        if (missing_leave != true)
+        {
+            //we put the most frequent case first as an optimisation
+            output[1] = 1.0;
+            error[0] = ((weights_sum * output[0] * output[0]) - 
+                        (2.0 * weighted_targets_sum * output[0]) + weighted_squared_targets_sum)
+                * loss_function_factor;
+            if (error[0] < 1E-10) {error[0] = 0.0;} //PLWARNING("E[0] <1e-10: %f",error[0]);}
+            error[1] = 0.0;
+            real weights_sum_factor  = weights_sum * loss_function_factor;
+            if (error[0] > weights_sum_factor) error[2] = weights_sum_factor;
+            else error[2] = error[0];
+        }
+        else
+        {
+            output[1] = 0.0;
+            error[0] = 0.0;
+            error[1] = weights_sum;
+            error[2] = 0.0;
+        }
+    }else{
         output[0]=MISSING_VALUE;
+        output[1] = 0.0;
         error.clear();
         return;
-    }
-        
-    output[0] = weighted_targets_sum / weights_sum;
-    if (missing_leave == true)
-    {
-        output[1] = 0.0;
-        error[0] = 0.0;
-        error[1] = weights_sum;
-        error[2] = 0.0;
-    }
-    else
-    {
-        output[1] = 1.0;
-        error[0] = ((weights_sum * output[0] * output[0]) - (2.0 * weighted_targets_sum * output[0]) + weighted_squared_targets_sum) * loss_function_factor;
-        if (error[0] < 1E-10) error[0] = 0.0;
-        error[1] = 0.0;
-        if (error[0] > weights_sum * loss_function_factor) error[2] = weights_sum * loss_function_factor;
-        else error[2] = error[0];
     }
 }
 
