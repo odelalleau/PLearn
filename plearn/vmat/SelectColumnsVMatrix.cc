@@ -239,8 +239,8 @@ void SelectColumnsVMatrix::build_()
             for(int i=0;i<source.width();i++)
             {
                 bool found=false;
-                for(int j=0;j<indices.size();j++)
-                    if(indices[j]==i){
+                for(int j=0;j<sel_indices.size();j++)
+                    if(sel_indices[j]==i){
                         found=true;
                         break;
                     }
