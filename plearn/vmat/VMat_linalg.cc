@@ -319,7 +319,7 @@ real weightedLinearRegression(
             externalProductScaleAcc(XtY, x,y,gamma_i);
             sum_squared_Y += gamma_i * dot(y,y);
             sum_gammas += gamma_i;
-            y *= y;                                //!< element-wise square
+            y *= gamma_i*y;                                //!< element-wise square
             outputwise_sum_squared_Y += y;
         }
     }
