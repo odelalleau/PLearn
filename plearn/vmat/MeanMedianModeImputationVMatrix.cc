@@ -56,7 +56,8 @@ PLEARN_IMPLEMENT_OBJECT(
   );
 
 MeanMedianModeImputationVMatrix::MeanMedianModeImputationVMatrix()
-: number_of_train_samples_to_use(0.0)
+  : number_of_train_samples_to_use(0.0),
+    missing_field_error(true)
 {
 }
 
@@ -85,6 +86,12 @@ void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
 		" -none  : let the missing value in this field\n"
 		" -err   : make it an error to have a missing value in this field"
 		);
+
+  declareOption(ol, "missing_field_error", &MeanMedianModeImputationVMatrix::missing_field_error,
+		OptionBase::buildoption, 
+                "If True, will generate an error if some field in the"
+		" imputation_spec are present but not in the source. Otherwise"
+		" will generate a warning..");
 
   declareOption(ol, "variable_mean", &MeanMedianModeImputationVMatrix::variable_mean, OptionBase::learntoption, 
                 "The vector of variable means observed from the train set.");
@@ -322,9 +329,12 @@ void MeanMedianModeImputationVMatrix::build_()
     }
     imputation_spec = save_imputation_spec;
 
-    if(nofields.length()>0)
+    if(nofields.length()>0 && missing_field_error)
       PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
 	      tostring(nofields).c_str());
+    else if(nofields.length()>0)
+      PLWARNING("In MeanMedianModeImputationVMatrix::build_() Their is %d fields in the imputation_spec that are not in train set: %s",nofields.length(),
+		tostring(nofields).c_str());
     TVec<string> no_instruction;
     for(int i = 0;i<variable_imputation_instruction.size();i++)
       if(variable_imputation_instruction[i]==0)

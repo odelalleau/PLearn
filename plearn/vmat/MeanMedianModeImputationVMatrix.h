@@ -72,7 +72,12 @@ public:
   
   //! Pairs of instruction of the form field_name : mean | median | mode | none.
   TVec< pair<string, string> >  imputation_spec;
-  
+
+  //!if true will generate an error if the imputation_spec reference a
+  //! field not in the source. Otherwise generate a warning.
+  bool                          missing_field_error;
+
+
                         MeanMedianModeImputationVMatrix();
   virtual               ~MeanMedianModeImputationVMatrix();
 
