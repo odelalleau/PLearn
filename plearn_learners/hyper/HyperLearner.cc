@@ -196,6 +196,11 @@ void HyperLearner::setTrainingSet(VMat training_set, bool call_forget)
 
     if (call_forget)
     {
+        if(reloaded)
+            PLWARNING("In HyperLearner::setTrainingSet() - we where asked to"
+                      " forget after having reloaded a previous version."
+                      " To don't do this, in the PTester that include this"
+                      " HyperLearner set call_forget_in_run = 0.");
         build();
         forget();
     }
