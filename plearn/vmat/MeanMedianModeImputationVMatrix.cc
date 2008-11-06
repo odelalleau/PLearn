@@ -93,6 +93,11 @@ void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
 		" imputation_spec are present but not in the source. Otherwise"
 		" will generate a warning..");
 
+  declareOption(ol, "default_instruction", &MeanMedianModeImputationVMatrix::default_instruction,
+		OptionBase::buildoption, 
+                "The default instruction to use. If empty(default), will generate"
+		" an error is some source variable don't have an one in imputation_spec.");
+
   declareOption(ol, "variable_mean", &MeanMedianModeImputationVMatrix::variable_mean, OptionBase::learntoption, 
                 "The vector of variable means observed from the train set.");
 
@@ -275,7 +280,18 @@ void MeanMedianModeImputationVMatrix::build_()
     variable_median.resize(train_width);
     variable_mode.resize(train_width);
     variable_imputation_instruction.resize(train_width);
-    variable_imputation_instruction.clear();
+
+    if(default_instruction.empty()) variable_imputation_instruction.clear();
+    else if (default_instruction == "mean") variable_imputation_instruction.fill(1);
+    else if (default_instruction == "median") variable_imputation_instruction.fill(2);
+    else if (default_instruction == "mode") variable_imputation_instruction.fill(3);
+    else if (default_instruction == "none") variable_imputation_instruction.fill(4);
+    else if (default_instruction == "err") variable_imputation_instruction.fill(5);
+    else
+      PLERROR("In MeanMedianModeImputationVMatrix: unsupported default_imputation instruction: %s ",
+	      default_instruction.c_str());
+
+
     TVec<string> nofields;
     
     //We sho

@@ -76,7 +76,7 @@ public:
   //!if true will generate an error if the imputation_spec reference a
   //! field not in the source. Otherwise generate a warning.
   bool                          missing_field_error;
-
+  string                        default_instruction;
 
                         MeanMedianModeImputationVMatrix();
   virtual               ~MeanMedianModeImputationVMatrix();
