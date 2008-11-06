@@ -110,8 +110,12 @@ void sortRows(TMat<T>& mat, const TVec<int>& key_columns, bool increasing_order=
 
 //! Sorts the elements of vec in place
 template<class T>
-inline void sortElements(const TVec<T>& vec) 
-{ sort(vec.begin(),vec.end()); }
+inline void sortElements(const TVec<T>& vec, bool reverse_elems=false)
+{
+    sort(vec.begin(), vec.end());
+    if (reverse_elems)
+        reverse(vec.begin(), vec.end());
+}
 
 
 //! Uses partial_sort.
