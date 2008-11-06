@@ -341,10 +341,13 @@ void VariableDeletionVMatrix::build_()
         if(isfile(save_deleted_columns)){
             TVec<int> indices2;
             PLearn::load(save_deleted_columns, indices2);
-            if(indices!=indices2)
-                PLERROR("In VariableDeletionVMatrix::build_() - the calculated"
-                        " indices(%d) differ from the saved indices(%d) in file '%s'! ",
+            if(indices!=indices2){
+                PLWARNING("In VariableDeletionVMatrix::build_() - the calculated"
+                          " indices(%d) differ from the saved indices(%d) in file '%s'."
+                          " We overwrite it.",
                         indices2.length(), indices.length(), save_deleted_columns.c_str());
+                PLearn::save(save_deleted_columns,indices);
+            }
         }else{
             PLearn::save(save_deleted_columns,indices);
         }
