@@ -524,7 +524,14 @@ public:
                         for(int j=0; j<width_; j++)
                         {
                             in.skipBlanksAndCommentsAndSeparators();
-                            in >> ptr[j];
+                            try{
+                                in >> ptr[j];
+                            }
+                            catch(const PLearnError& e) {
+                                PLERROR("In TMat::read() - Error while reading a serialised TMat<T>."
+                                        " Did you set correctly the mat size?\n"
+                                        "%s",e.message().c_str());
+                            }
                         }
                     in.skipBlanksAndCommentsAndSeparators();
                     c = in.get();
