@@ -115,8 +115,10 @@ void MultiClassAdaBoost::build_()
         sub_target_tmp[i].resize(1);
     
     if(learner_template){
-        learner1= ::PLearn::deepCopy(learner_template);
-        learner2= ::PLearn::deepCopy(learner_template);
+        if(!learner1)
+            learner1 = ::PLearn::deepCopy(learner_template);
+        if(!learner2)
+            learner2 = ::PLearn::deepCopy(learner_template);
     }
     if(learner1)
         output1.resize(learner1->outputsize());
