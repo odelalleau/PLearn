@@ -797,16 +797,16 @@ void AddCostToLearner::train()
     Profiler::end("AddCostToLearner::train");
     if(Profiler::isActive()){
         const Profiler::Stats& stats = Profiler::getStats("AddCostToLearner::train");
-        train_time=stats.wall_duration/Profiler::ticksPerSecond();
-        total_train_time+=train_time;
-        Profiler::reset("AddCostToLearner::train");
+        real tmp=stats.wall_duration/Profiler::ticksPerSecond();
+        train_time=tmp - total_train_time;
+        total_train_time=tmp;
 
         //we get the test_time here as we want the test time for all dataset.
         //if we put it in the test function, we would have it for one dataset.
         const Profiler::Stats& stats_test = Profiler::getStats("AddCostToLearner::test");
-        test_time=stats_test.wall_duration/Profiler::ticksPerSecond();
-        total_test_time+=test_time;
-        Profiler::reset("AddCostToLearner::test");
+        tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
+        test_time=tmp-total_test_time;
+        total_test_time=tmp;  
     }
 }
 
