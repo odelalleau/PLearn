@@ -128,15 +128,12 @@ void MultiClassAdaBoost::build_()
         train_stats=new VecStatsCollector();
 
     if(train_set){
-        targetname = train_set->fieldName(train_set->inputsize());
-        input_prg  = "[%0:%"+tostring(train_set->inputsize()-1)+"]";
-        target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
-        target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
-        weight_prg = "1 :weight";
-        if(learner1->getTrainingSet()){
-            subcosts2.resize(learner2->nTestCosts());
-            subcosts1.resize(learner1->nTestCosts());
-        }
+        if(learner1 && learner2)
+            if(! learner1->getTrainingSet()
+               || ! learner2->getTrainingSet()
+               || targetname.empty()
+                )
+                setTrainingSet(train_set);
     }
 
     Profiler::activate();
@@ -385,7 +382,7 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
     costs[10]=total_test_time;
 
     if(forward_sub_learner_test_costs){
-        costs.resize(7);
+        costs.resize(7+4);
         subcosts1.resize(learner1->nTestCosts());
         subcosts2.resize(learner1->nTestCosts());
         getSubLearnerTarget(target, sub_target_tmp);
@@ -477,7 +474,6 @@ void MultiClassAdaBoost::getSubLearnerTarget(Vec target,
 void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 { 
     PLCHECK(learner1 && learner2);
-    inherited::setTrainingSet(training_set, call_forget);
 
     targetname = training_set->fieldName(training_set->inputsize());
     input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
@@ -498,12 +494,15 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     subcosts2.resize(learner2->nTestCosts());
     subcosts1.resize(learner1->nTestCosts());
 
+    inherited::setTrainingSet(training_set, call_forget);
 }
 
 void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
                               VMat testoutputs, VMat testcosts) const
 {
     Profiler::pl_profile_start("MultiClassAdaBoost::test");
+    subcosts1.resize(learner1->nTestCosts());
+    subcosts2.resize(learner2->nTestCosts());
     inherited::test(testset,test_stats,testoutputs,testcosts);
     Profiler::pl_profile_end("MultiClassAdaBoost::test");
 }
