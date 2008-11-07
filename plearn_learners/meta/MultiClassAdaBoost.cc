@@ -475,22 +475,28 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 { 
     PLCHECK(learner1 && learner2);
 
+    bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
+
     targetname = training_set->fieldName(training_set->inputsize());
     input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
     target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
     target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
-
-    VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
-                                       target_prg1,  weight_prg);
-    VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
-                                       target_prg2,  weight_prg);
-
+    
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
-    if(!learner1->getTrainingSet())
+    if(training_set_has_changed || !learner1->getTrainingSet()){
+        VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
+                                           target_prg1,  weight_prg);
         learner1->setTrainingSet(vmat1, call_forget);
-    if(!learner2->getTrainingSet())
+    }
+    if(training_set_has_changed || !learner2->getTrainingSet()){
+        VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
+                                           target_prg2,  weight_prg);
         learner2->setTrainingSet(vmat2, call_forget);
+    }
+
+    //we do it here as RegressionTree need a trainingSet to know
+    // the number of test.
     subcosts2.resize(learner2->nTestCosts());
     subcosts1.resize(learner1->nTestCosts());
 
@@ -501,8 +507,11 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
                               VMat testoutputs, VMat testcosts) const
 {
     Profiler::pl_profile_start("MultiClassAdaBoost::test");
+
+    //we need this in case we reload the learner without training it.
     subcosts1.resize(learner1->nTestCosts());
     subcosts2.resize(learner2->nTestCosts());
+
     inherited::test(testset,test_stats,testoutputs,testcosts);
     Profiler::pl_profile_end("MultiClassAdaBoost::test");
 }
