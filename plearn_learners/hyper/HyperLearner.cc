@@ -40,6 +40,7 @@
 
 #include "HyperLearner.h"
 #include <plearn/base/stringutils.h>
+#include <plearn/base/PLearnDiff.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/vmat/FileVMatrix.h>
 
@@ -346,6 +347,13 @@ void HyperLearner::auto_save()
         perr << "In HyperLearner::auto_save() - We save the hlearner"
              << endl;
     PLearn::save(tmp, this);
+
+#ifdef BOUNDCHECK
+    HyperLearner n;
+    PLearn::load(tmp,n);
+    PLCHECK(PLearn::diff(&n,this));
+#endif
+
     mvforce(tmp,f);
 }
 
