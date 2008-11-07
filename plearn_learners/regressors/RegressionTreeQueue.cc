@@ -53,14 +53,16 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeQueue,
 
 RegressionTreeQueue::RegressionTreeQueue()    
     : verbosity(0),
-      maximum_number_of_nodes(400)
+      maximum_number_of_nodes(400),
+      next_available_node(0)
 {
     build();
 }
 RegressionTreeQueue::RegressionTreeQueue(int verbosity_,
                                          int maximum_number_of_nodes_)
     : verbosity(verbosity_),
-      maximum_number_of_nodes(maximum_number_of_nodes_)
+      maximum_number_of_nodes(maximum_number_of_nodes_),
+      next_available_node(0)
 {
     build();
 }
@@ -99,7 +101,6 @@ void RegressionTreeQueue::build()
 
 void RegressionTreeQueue::build_()
 {
-    next_available_node = 0;
     nodes.resize(maximum_number_of_nodes);
 }
 
