@@ -106,7 +106,23 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The template to use for learner1 and learner2.\n");
 
-}
+    declareOption(ol, "train_time",
+                  &MultiClassAdaBoost::train_time, OptionBase::learntoption,
+                  "The time spent in the last call to train() in second.");
+
+    declareOption(ol, "total_train_time",
+                  &MultiClassAdaBoost::total_train_time, OptionBase::learntoption,
+                  "The total time spent in the train() function in second.");
+
+    declareOption(ol, "test_time",
+                  &MultiClassAdaBoost::test_time, OptionBase::learntoption,
+                  "The time spent in the last call to test() in second.");
+
+    declareOption(ol, "total_test_time",
+                  &MultiClassAdaBoost::total_test_time, OptionBase::learntoption,
+                  "The total time spent in the test() function in second.");
+
+ }
 
 void MultiClassAdaBoost::build_()
 {
