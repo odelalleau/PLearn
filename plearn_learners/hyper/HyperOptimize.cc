@@ -358,8 +358,13 @@ Vec HyperOptimize::optimize()
 {
 //in the case when auto_save is true. This function can be called even
 //if the optimisation is finished. We must not redo it in this case.
-    if(trialnum>0&&!option_vals&&resultsmat.length()==trialnum+1)
+    if(trialnum>0&&!option_vals&&resultsmat.length()==trialnum+1){
+        hlearner->setLearner(best_learner);
+        if (!best_results.isEmpty() && resultsmat->get(resultsmat.length()-1,0)!=-1)
+            reportResult(-1,best_results);
+
         return best_results;
+    }
     TVec<string> option_names;
     option_names = oracle->getOptionNames();
 
