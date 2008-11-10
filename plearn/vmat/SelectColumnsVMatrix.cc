@@ -40,6 +40,7 @@
  ******************************************************* */
 
 #include "SelectColumnsVMatrix.h"
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -151,6 +152,12 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
     declareOption(ol, "fields", &SelectColumnsVMatrix::fields, OptionBase::buildoption,
                   "The names of the fields to extract (will override 'indices' if provided). Can\n"
                   "be a range of the form Field_1-Field_n, if 'extend_with_missing' is false.");
+
+    declareOption(ol, "save_fields", &SelectColumnsVMatrix::save_fields,
+                  OptionBase::buildoption,
+                  "The filename where to save the filename of this VMatrix."
+        );
+
 
     declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
                   "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
@@ -305,6 +312,9 @@ void SelectColumnsVMatrix::build_()
 
         sinput.resize(width());
         sinput.fill(MISSING_VALUE);
+
+        if(!save_fields.empty())
+            PLearn::save(save_fields,fieldNames());
     }
 }
 
