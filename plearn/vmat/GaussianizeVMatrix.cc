@@ -152,7 +152,10 @@ void GaussianizeVMatrix::build_()
         return;
 
     if (train_source) {
-        source->compatibleSizeError(train_source);
+        source->compatibleSizeError(train_source,
+                                    "In GaussianizeVMatrix::build_ -"
+                                    " The source and the train_source"
+                                    " option are not compatible.");
     }
 
     VMat the_source = train_source ? train_source : source;

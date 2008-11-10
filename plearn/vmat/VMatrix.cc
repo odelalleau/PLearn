@@ -1380,7 +1380,7 @@ bool VMatrix::looksTheSameAs(const VMat& m) {
 void VMatrix::compatibleSizeError(const VMat& m, const string& extra_msg) {
 #define MY_PRINT_ERROR_MST(NAME) PLERROR("In VMatrix::compatibleSizeError " \
         " - in class %s - The matrices are not compatible!\n"               \
-        "m1."#NAME"=%d and m2."#NAME"=%d. %s",                              \
+        "m1."#NAME"=%d and m2."#NAME"=%d. \n%s",                            \
         classname().c_str(), this->NAME(), m->NAME(), extra_msg.c_str());
 
     if(this->width()      != m->width())
