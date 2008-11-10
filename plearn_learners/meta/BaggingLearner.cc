@@ -460,6 +460,25 @@ TVec<string> BaggingLearner::getOutputNames() const
     return outputnames;
 }
 
+////////////////////////////
+// setTrainStatsCollector //
+////////////////////////////
+void BaggingLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
+{
+    //train_stats = statscol;
+    template_learner->setTrainStatsCollector(statscol);
+}
+
+
+////////////////////////////
+// setExperimentDirectory //
+////////////////////////////
+void BaggingLearner::setExperimentDirectory(const PPath& the_expdir)
+{
+    inherited::setExperimentDirectory(the_expdir);
+    template_learner->setExperimentDirectory(the_expdir / "BaggingSubLearner");
+}
+
 
 
 } // end of namespace PLearn

@@ -100,12 +100,16 @@ public:
 
     virtual TVec<string> getOutputNames() const;
 
+    virtual void setTrainStatsCollector(PP<VecStatsCollector> statscol);
+
     //#####  PLearn::Object Protocol  #########################################
     PLEARN_DECLARE_OBJECT(BaggingLearner);
 
     virtual void build();
 
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+    virtual void setExperimentDirectory(const PPath& the_expdir);
 
 protected:
     //#####  Protected Options  ###############################################
