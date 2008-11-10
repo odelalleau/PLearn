@@ -42,6 +42,7 @@
 
 #include "MissingIndicatorVMatrix.h"
 #include <plearn/math/TMat_maths.h>
+#include <plearn/io/load_and_save.h>
 
 namespace PLearn {
 using namespace std;
@@ -88,6 +89,13 @@ void MissingIndicatorVMatrix::declareOptions(OptionList &ol)
 
   declareOption(ol, "fields", &MissingIndicatorVMatrix::fields, OptionBase::buildoption,
 		"The names of the fields to extract if the train_set is not provided.");
+
+  declareOption(ol, "save_fields_with_missing",
+		&MissingIndicatorVMatrix::save_fields_with_missing,
+		OptionBase::buildoption,
+		"The file name where we save the name of the fields that we"
+		" add an indicator. It can be reused with the options fields"
+		" to redo the same processing.");
 
   inherited::declareOptions(ol);
 }
@@ -236,6 +244,7 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
     TVec<string> new_field_names(width_);
     source_field_names = source->fieldNames();
     int new_col = 0;
+    TVec<string> miss;
     for (int source_col = 0; source_col < source_inputsize; source_col++)
     {
       new_field_names[new_col] = source_field_names[source_col];
@@ -246,8 +255,10 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
           new_field_names[new_col] = source_field_names[source_col] + "_MI";
           source_rel_pos[new_col] = -1;
           new_col += 1;
+	  miss->append(source->fieldName(source_col));
       }
     }
+    PLCHECK(miss->size()==added_colomns);
     for (int source_col = source_inputsize; source_col < source_width; source_col++)
     {
       new_field_names[new_col] = source_field_names[source_col];
@@ -260,6 +271,10 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
     weightsize_ = source->weightsize();
     source_input.resize(source_inputsize);
     declareFieldNames(new_field_names);
+
+    if(!save_fields_with_missing.empty())
+      PLearn::save(save_fields_with_missing,miss);
+      
 }
 
 } // end of namespcae PLearn

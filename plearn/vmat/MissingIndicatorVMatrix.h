@@ -70,6 +70,7 @@ public:
 
   //!
   TVec<string> fields; 
+  string       save_fields_with_missing;
 
                         MissingIndicatorVMatrix();
                         MissingIndicatorVMatrix(VMat the_source, VMat the_train_set, real the_number_of_train_samples_to_use);
