@@ -43,7 +43,10 @@ TASK_TYPE_MAP    = { 'apstat.com':            'SshTask',
 # Used only for clusters of type 'ssh'. Do not enter the same machine more
 # than once: use the MAX_LOADAVG map to allow for higher maximum load
 # average than the default of 2.
-SSH_MACHINES_MAP = { 'apstat.com': [ 'embla',
+SSH_MACHINES_MAP = { 'apstat.com': [ 'lodur',
+                                     'garm',
+                                     'mimir',
+                                     'embla',
                                      'valhalla',
                                      'inari', 
                                      'kamado',
@@ -62,8 +65,13 @@ SSH_MACHINES_MAP = { 'apstat.com': [ 'embla',
                      }
 
 # To override the default of 1
-MAX_LOADAVG = { 'inari'     : 4 ,
-                'kamado'    : 4 }
+MAX_LOADAVG = { 'inari'     : 4,
+                'kamado'    : 4,
+                'lodur'     : 4,
+                'mimir'     : 4,
+                'garm'      : 4,
+                'nai'       : 8
+              }
 
 # Do not perform a new query for the loadavg until recently launched
 # processes are likely to have started. 
