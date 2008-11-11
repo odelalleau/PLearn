@@ -317,8 +317,10 @@ void KS_test(const VMat& m1, const VMat& m2, const int conv, Vec& Ds, Vec& p_val
     {
         row1->resize(m1->length());
         row2->resize(m2->length());
-        m1->getColumn(col,row1);
-        m2->getColumn(col,row2);
+#pragma omp critical
+        m1->getColumn(col,row1);//not threadsafe!
+#pragma omp critical
+        m2->getColumn(col,row2);//not threadsafe!
         remove_missing_inplace(row1);
         remove_missing_inplace(row2);
         real D;
