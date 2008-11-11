@@ -72,6 +72,7 @@ public:
     real threshold_ratio;
     bool save_and_reuse_stats;
     VMat train_source;
+    string stats_file_to_use;
 
 public:
     //#####  Public Member Functions  #########################################

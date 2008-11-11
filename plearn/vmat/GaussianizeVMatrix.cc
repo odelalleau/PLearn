@@ -40,6 +40,8 @@
 #include "GaussianizeVMatrix.h"
 #include <plearn/math/pl_erf.h>
 #include "VMat_computeStats.h"
+#include <plearn/io/load_and_save.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -130,6 +132,12 @@ void GaussianizeVMatrix::declareOptions(OptionList& ol)
         "An optional VMat that will be used instead of 'source' to compute\n"
         "the transformation parameters from the distribution statistics.");
 
+    declareOption(ol, "stats_file_to_use",
+                  &GaussianizeVMatrix::stats_file_to_use,
+                  OptionBase::buildoption,
+                  "The filename of the statistics to use instead of the"
+                  " train_source.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -213,12 +221,18 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
             the_source->setMetaDataDir(getMetaDataDir()+"source");
     }
 
-    if(!the_source->hasMetaDataDir())
+    if(!the_source->hasMetaDataDir() && stats_file_to_use.empty())
         PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
                 " train_source, source or this VMatrix should have a metadata directory!");
     
     TVec<StatsCollector> stats;
-    if(save_and_reuse_stats)
+    if(!stats_file_to_use.empty()){
+        if(!isfile(stats_file_to_use))
+            PLERROR("In GaussianizeVMatrix::setMetaDataDir() - "
+                    "stats_file_to_use = '%s' is not a file.",
+                    stats_file_to_use.c_str());
+         PLearn::load(stats_file_to_use, stats);
+    } else if(save_and_reuse_stats)
         stats = the_source->
             getPrecomputedStatsFromFile("stats_gaussianizeVMatrix.psave", -1, true);
     else
