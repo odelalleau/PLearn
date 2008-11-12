@@ -69,6 +69,7 @@ VariableDeletionVMatrix::VariableDeletionVMatrix():
     min_non_missing_threshold(0),
     max_constant_threshold(0),
     number_of_train_samples(0),
+    warn_removed_var(false),
     deletion_threshold(-1),
     remove_columns_with_constant_value(-1)
 {}
@@ -124,6 +125,11 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
         "samples will be used.\n"
         "If greater than or equal to 1, the integer portion will be\n"
         "interpreted as the number of samples to use.");
+
+    declareOption(ol, "warn_removed_var",
+                  &VariableDeletionVMatrix::warn_removed_var,
+                  OptionBase::buildoption,
+                  "If true, will print a warning about variable that are removed");
 
     declareOption(ol, "save_deleted_columns",
                   &VariableDeletionVMatrix::save_deleted_columns,
@@ -282,6 +288,11 @@ void VariableDeletionVMatrix::build_()
             if (stats[i].nnonmissing() >= min_non_missing 
                 && stats[i].nnonmissing() > 0)
                 indices.append(i);
+            else if (warn_removed_var)
+                PLWARNING("In VariableDeletionVMatrix::build_() var '%s'"
+                          " have too many missing value: %f/%f",
+                          source->fieldName(i).c_str(), stats[i].nmissing(),
+                          stats[i].n());
     } else
         for (int i = 0; i < is; i++)
             indices.append(i);
@@ -293,6 +304,10 @@ void VariableDeletionVMatrix::build_()
             StatsCollector stat = stats[i];
             if(!(stat.min()==stat.max() && stat.nnonmissing()>0))
                 final_indices.append(i);
+            else if (warn_removed_var)
+                PLWARNING("In VariableDeletionVMatrix::build_() var '%s'"
+                          " is constant with value: %f",
+                          source->fieldName(i).c_str(), stat.min());
         }
         indices.resize(final_indices.length());
         indices << final_indices; 
@@ -304,13 +319,19 @@ void VariableDeletionVMatrix::build_()
             map<real, StatsCollectorCounts>* counts = stats[i].getCounts();
             map<real, StatsCollectorCounts>::const_iterator it;
             bool ok = true;
+            int n;
             for (it = counts->begin(); ok && it != counts->end(); it++) {
-                int n = int(round(it->second.n));
+                n = int(round(it->second.n));
                 if (n >= max_constant_absolute)
                     ok = false;
             }
             if (ok)
                 final_indices.append(i);
+            else if (warn_removed_var)
+                PLWARNING("In VariableDeletionVMatrix::build_() var '%s'"
+                          " is too constant. Value %f happen %d/%f",
+                          source->fieldName(i).c_str(), it->first, 
+                          n, stats[i].nnonmissing());
         }
         indices.resize(final_indices.length());
         indices << final_indices;
