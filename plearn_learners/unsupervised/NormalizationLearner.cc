@@ -80,7 +80,7 @@ void NormalizationLearner::declareOptions(OptionList& ol)
                   "Components of the input that are missing more than that given fraction of times will be excluded from the output\n"
                   "The default 1 means no component will be excluded for being missing.\n"
                   "At the other extreme 0 means any component that was missing at east once wil be excluded\n"
-                  "0.75 would exclude components that are missing more than 75\% of the time\n");
+                  "0.75 would exclude components that are missing more than 75 percent of the time\n");
 
     declareOption(ol, "do_normalize", &NormalizationLearner::do_normalize,
                   OptionBase::buildoption,
