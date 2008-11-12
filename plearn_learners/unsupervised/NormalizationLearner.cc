@@ -49,7 +49,7 @@ PLEARN_IMPLEMENT_OBJECT(
     "NormalizationLearner produces as output a possibly normalized version of its input\n"
     "obtained by subtracting the mean and dividing by the standard deviation.\n"
     "It can also exclude input components whose standard deviation is below a specified value,\n"
-    "or whose missing values exceed a certain proportion of times.",
+    "or whose missing values exceed a certain proportion of times."
     "It also has a simple policy switch for deciding to keep missing values as is or replace them by 0.\n"
     "It is typically used as an early preprocessing step in a ChainedLearner \n"
     "NOTE: you may also consider using PCA(normalize=1), if you wan to obtain \n"
@@ -204,16 +204,15 @@ void NormalizationLearner::train()
         st.finalize();
 
         st.getMean(meanvec);
-        Vec stddev = st.getStdDev();
         inv_stddev.resize(n);
         kept_components.resize(n);
         kept_components.resize(0);
         for(int k=0; k<n; k++)
         {
-            const StatsCollector& stk = st.stat[k];
+            const StatsCollector& stk = st.stats[k];
             real sd = stk.stddev();
             inv_stddev[k] = 1/max(min_allowed_stddev,sd);
-            double missing_proportion = (double)st.nmissing()/(double)l;
+            double missing_proportion = (double)stk.nmissing()/(double)l;
             if( (missing_proportion<=remove_components_whose_missing_proportion_exceeds)
                 && (sd>=remove_components_with_stddev_smaller_than) )
                 kept_components.append(k);

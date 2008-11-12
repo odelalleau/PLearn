@@ -134,6 +134,10 @@
 //  * PLearner *
 //  ************/
 
+// // Unsupervised preprocessing
+// #include <plearn_learners/unsupervised/UniformizeLearner.h>
+#include <plearn_learners/unsupervised/NormalizationLearner.h>
+
 // // Classifiers
 // #include <plearn_learners/classifiers/BinaryStump.h>
 // #include <plearn_learners/classifiers/ClassifierFromConditionalPDistribution.h>
@@ -171,8 +175,6 @@
 // #include <plearn_learners/regressors/KNNRegressor.h>
 // #include <plearn_learners/regressors/RankLearner.h>
 // #include <plearn_learners/regressors/RegressorFromDistribution.h>
-// // Unsupervised
-// #include <plearn_learners/unsupervised/UniformizeLearner.h>
 
 // // PDistribution
 // #include <plearn_learners/distributions/SpiralDistribution.h>
