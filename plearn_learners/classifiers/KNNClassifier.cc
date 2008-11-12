@@ -200,6 +200,9 @@ void KNNClassifier::setTrainingSet(VMat training_set, bool call_forget)
     knn->copy_target = true;
     knn->copy_weight = true;
     knn->copy_index  = false;
+    // we call train on the knn->distance_kernel. We do it here in KNNClassifier::setTrainingSet (rather than in KNNClassifier::train)
+    // in case the knn->setTrainingSet that is invoked just afterwards calls distance_kernel computations already.
+    knn->distance_kernel->train(training_set);
     knn->setTrainingSet(training_set,call_forget);
     knn_costs.resize(num_neighbors); // Changed for compatibility with HyperLearner
     //knn_costs.resize(knn->nTestCosts());
