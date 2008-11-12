@@ -66,12 +66,16 @@ public:
 
     // Build options
     real min_allowed_stddev;
+    double remove_components_with_stddev_smaller_than;
+    double remove_components_whose_missing_proportion_exceeds;
     bool set_missing_to_zero;
+    bool do_normalize;
 
     // Learnt option
     Vec meanvec;
     Vec inv_stddev;
     TVec<string> inputnames;
+    TVec<int> kept_components;
 
 public:
     //#####  Public Member Functions  #########################################

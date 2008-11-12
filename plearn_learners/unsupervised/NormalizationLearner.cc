@@ -44,17 +44,23 @@ using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     NormalizationLearner,
-    "This learner performs normalization of its input (subtracting the mean and dividing by stddev)",
-    "NormalizationLearner produces as output a normalized version of its input\n"
+    "This learner can perform normalization of its input (subtracting the mean and dividing by stddev) "
+    "and can also exclude input components that have too low standard deviation, or too many missing values.",
+    "NormalizationLearner produces as output a possibly normalized version of its input\n"
     "obtained by subtracting the mean and dividing by the standard deviation.\n"
-    "It also has a simple policy switch for the handling of missing values.\n"
+    "It can also exclude input components whose standard deviation is below a specified value,\n"
+    "or whose missing values exceed a certain proportion of times.",
+    "It also has a simple policy switch for deciding to keep missing values as is or replace them by 0.\n"
     "It is typically used as an early preprocessing step in a ChainedLearner \n"
     "NOTE: you may also consider using PCA(normalize=1), if you wan to obtain \n"
     "decorrelated 'sphered' data." );
 
 NormalizationLearner::NormalizationLearner()
     :min_allowed_stddev(1e-6),
-     set_missing_to_zero(true)
+     remove_components_with_stddev_smaller_than(-1),
+     remove_components_whose_missing_proportion_exceeds(1),
+     set_missing_to_zero(true),
+     do_normalize(true)
 {
 }
 
@@ -65,11 +71,28 @@ void NormalizationLearner::declareOptions(OptionList& ol)
                   "If the empirical standard deviation is lower than this, we'll use this value to \n"
                   "compute inv_stddev (this is to prevent getting too large or even infinite values for inv_stddev");
 
+    declareOption(ol, "remove_components_with_stddev_smaller_than", &NormalizationLearner::remove_components_with_stddev_smaller_than,
+                  OptionBase::buildoption,
+                  "Components of the input whose stddev is strictly below that value will be excluded from the output\n");
+
+    declareOption(ol, "remove_components_whose_missing_proportion_exceeds", &NormalizationLearner::remove_components_whose_missing_proportion_exceeds,
+                  OptionBase::buildoption,
+                  "Components of the input that are missing more than that given fraction of times will be excluded from the output\n"
+                  "The default 1 means no component will be excluded for being missing.\n"
+                  "At the other extreme 0 means any component that was missing at east once wil be excluded\n"
+                  "0.75 would exclude components that are missing more than 75\% of the time\n");
+
+    declareOption(ol, "do_normalize", &NormalizationLearner::do_normalize,
+                  OptionBase::buildoption,
+                  "If true (the default) then subtract mean and divide by stddev.\n"
+                  "It can be useful to set this to false if all you want to do is remove components with small\n"
+                  "stddev (see option remove_components with_small_stddev) but leave the others untouched.");
+
     declareOption(ol, "set_missing_to_zero", &NormalizationLearner::set_missing_to_zero,
                   OptionBase::buildoption,
                   "How to handle missing values: \n"
-                  "  If true (the default), missing values will be replaced by \n"
-                  "  the post-normalization mean, which is 0. \n"
+                  "  If true (the default), missing values will be replaced by 0\n"
+                  "  (this corresponds to post-normalization mean if indeed we d_normakize) \n"
                   "  If false missing values will be left as missing values. \n");
 
     declareOption(ol, "meanvec", &NormalizationLearner::meanvec,
@@ -80,9 +103,15 @@ void NormalizationLearner::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "The vector of factors by which to multiply (input-meanvec)\n");
 
+    declareOption(ol, "kept_components", &NormalizationLearner::kept_components,
+                  OptionBase::learntoption,
+                  "The indices of the input components kept in the final output\n");
+
     declareOption(ol, "inputnames", &NormalizationLearner::inputnames,
                   OptionBase::learntoption,
                   "We store the inputnames, which are also the outputnames\n");
+
+
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -100,6 +129,14 @@ void NormalizationLearner::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
+
+    int d = meanvec.length();
+    if(d>0 && kept_components.length()==0) // fill uninitialized kept_components
+    {
+        kept_components.resize(d);
+        for(int k=0; k<d; k++)
+            kept_components[k] = k;
+    }
 }
 
 // ### Nothing to add here, simply calls build_
@@ -127,7 +164,7 @@ void NormalizationLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int NormalizationLearner::outputsize() const
 {
-    return meanvec.length();
+    return kept_components.length();
 }
 
 void NormalizationLearner::forget()
@@ -169,8 +206,18 @@ void NormalizationLearner::train()
         st.getMean(meanvec);
         Vec stddev = st.getStdDev();
         inv_stddev.resize(n);
+        kept_components.resize(n);
+        kept_components.resize(0);
         for(int k=0; k<n; k++)
-            inv_stddev[k] = 1.0/max(min_allowed_stddev, stddev[k]);
+        {
+            const StatsCollector& stk = st.stat[k];
+            real sd = stk.stddev();
+            inv_stddev[k] = 1/max(min_allowed_stddev,sd);
+            double missing_proportion = (double)st.nmissing()/(double)l;
+            if( (missing_proportion<=remove_components_whose_missing_proportion_exceeds)
+                && (sd>=remove_components_with_stddev_smaller_than) )
+                kept_components.append(k);
+        }
         ++stage;
         train_stats->finalize(); 
     }
@@ -182,19 +229,22 @@ void NormalizationLearner::computeOutput(const Vec& input, Vec& output) const
     int n = meanvec.length();
     if(input.length()!=n)
         PLERROR("length of input differs from length of meanvec!");
-    output.resize(n);
+    int n2 = kept_components.length();
+    output.resize(n2);
     real* p_input = input.data();
     real* p_output = output.data();
     real* p_meanvec = meanvec.data();
     real* p_inv_stddev = inv_stddev.data();
+    int*  p_kept_components = kept_components.data();
 
-    for(int k=0; k<n; k++)
+    for(int k=0; k<n2; k++)
     {
-        real val = p_input[k];
+        int pos = p_kept_components[k];
+        real val = p_input[pos];
         if(is_missing(val))
             p_output[k] = set_missing_to_zero?0.:val;
-        else
-            p_output[k] = p_inv_stddev[k]*(val - p_meanvec[k]);
+        else if(do_normalize)
+            p_output[k] = p_inv_stddev[pos]*(val - p_meanvec[pos]);
     }
 }
 
@@ -216,8 +266,19 @@ TVec<string> NormalizationLearner::getTrainCostNames() const
 
 TVec<string> NormalizationLearner::getOutputNames() const
 {
-    return inputnames;
+    TVec<string> outnames;
+    if(kept_components.length()==inputnames.length())
+        outnames = inputnames;
+    else
+    {
+        int n2 = kept_components.length();
+        outnames.resize(n2);
+        for(int k=0; k<n2; k++)
+            outnames[k] = inputnames[kept_components[k]];
+    }
+    return outnames;
 }
+
 
 } // end of namespace PLearn
 
