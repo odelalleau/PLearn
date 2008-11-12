@@ -150,7 +150,7 @@
 // //#include <plearn_learners/generic/DistRepNNet.h>
 // #include <plearn_learners/generic/NNet.h>
 // #include <plearn_learners/generic/SelectInputSubsetLearner.h>
-// #include <plearn_learners/generic/ChainedLearners.h>
+#include <plearn_learners/generic/ChainedLearners.h>
 // #include <plearn_learners/generic/StackedLearner.h>
 // #include <plearn_learners/generic/TestingLearner.h>
 // #include <plearn_learners/generic/VPLPreprocessedLearner.h>
@@ -357,7 +357,7 @@
 #include <plearn_learners/generic/EXPERIMENTAL/NatGradNNet.h>
 
 
-// Stuff used for DeepReconstrctorNet experiments
+// Stuff used for DeepReconstructorNet experiments
 #include <plearn/var/Variable.h>
 #include <plearn/var/SquareVariable.h>
 #include <plearn/math/TVec_impl.h>
@@ -391,12 +391,13 @@
 // Stuff used for transformationLearner experiments
 #include <plearn_learners/distributions/EXPERIMENTAL/TransformationLearner.h>
 
-// Stuff used for local Gaussian classifier
+// Stuff used for local Gaussian classifier and for knn with PartsDistanceKernel
 #include <plearn_learners/classifiers/KNNClassifier.h>
+#include <plearn/ker/EXPERIMENTAL/PartsDistanceKernel.h>
 #include <plearn_learners/classifiers/EXPERIMENTAL/LocalGaussianClassifier.h>
 
 // Stuff used for DiverseComponentAnalysis
-#include <plearn_learners/unsupervised/EXPERIMENTAL/DiverseComponentAnalysis.h>
+// #include <plearn_learners/unsupervised/EXPERIMENTAL/DiverseComponentAnalysis.h>
 
 
 using namespace PLearn;
