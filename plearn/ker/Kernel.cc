@@ -167,6 +167,12 @@ void Kernel::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 }
 
 ////////////////////////////
+// train                  //
+////////////////////////////
+void Kernel::train(VMat data)
+{}
+
+////////////////////////////
 // setDataForKernelMatrix //
 ////////////////////////////
 void Kernel::setDataForKernelMatrix(VMat the_data)

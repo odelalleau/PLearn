@@ -94,6 +94,12 @@ public:
     //!  ** Subclasses must override this method **
     virtual real evaluate(const Vec& x1, const Vec& x2) const = 0; //!<  returns K(x1,x2) 
 
+    /** Subclasses may override this method for kernels that can be trained
+     *  on a dataset prior to being used (e.g. a Mahalanobis distance which could learn the empirical covariance)
+     * Note: in general only the input and weight part of the vmat are used 
+     */
+    virtual void train(VMat data);
+
     //!  ** Subclasses may override these methods to provide efficient kernel matrix access **
 
     /**    
