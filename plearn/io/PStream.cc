@@ -386,7 +386,12 @@ int PStream::smartReadUntilNext(const string& stoppingsymbols, string& character
                 break;
             case '"':
                 smartReadUntilNext("\"", characters_read, ignore_brackets, false);
-                characters_read+= '"';
+                characters_read+= '"';          
+                break; 
+            case '\\':   // we consider backslash an escape character, 
+                c=get(); // thus the next character is read and appended without being interpreted
+                if(c!=EOF)
+                    characters_read += static_cast<char>(c);
                 break;
             }
         }
