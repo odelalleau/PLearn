@@ -283,7 +283,7 @@ void FileVMatrix::build_()
         if(info.size!=expectedsize)
             PLWARNING("In FileVMatrix::build_() - The file '%s' have a size"
                       " of %ld, expected %ld",
-                      filename_.c_str(), info.size, expectedsize);
+                      filename_.c_str(), (long int)info.size, (long int)expectedsize);
 #endif
         
     }
