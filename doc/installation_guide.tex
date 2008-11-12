@@ -580,10 +580,11 @@ pymake -noblas plearn_noblas.cc
 If it doesn't work, you may have to adapt the configuration file to your system
 (PLearn/.pymake/config)
 
-If it does work, you can try with more dependencies to have more fonctionality \
+You can try with more dependencies to have more fonctionality \
 with the commands \verb!pymake plearn_lapack.cc!, \verb!pymake plearn_curses.cc!\
- or even \verb!pymake plearn_python.cc!
+ or even \verb!pymake plearn_python.cc! or \verb!pymake plearn_full.cc!
 
+To compile the plearn python extension module, do \verb!make_plearn_python_ext!
 
 \section{Installation on Windows with cygwin}
 \label{sec:windows}
