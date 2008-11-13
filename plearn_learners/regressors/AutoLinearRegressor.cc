@@ -176,10 +176,6 @@ void AutoLinearRegressor::train()
         int ninputs = train_set->inputsize();
         int ntargets = train_set->targetsize();
         int nweights = train_set->weightsize();
-        
-        // extended inputs
-        int insize = ninputs; 
-
 
         Mat tset = train_set->toMatCopy();
         int l = tset.length();
@@ -202,6 +198,7 @@ void AutoLinearRegressor::train()
             columnMean(Y, mean_target);
         Y -= mean_target;
 
+        int insize = ninputs + (include_bias ? 1 : 0); 
         //weights.resize(insize, ntargets);
         weights.resize(ntargets, insize);
         real best_GCV;
