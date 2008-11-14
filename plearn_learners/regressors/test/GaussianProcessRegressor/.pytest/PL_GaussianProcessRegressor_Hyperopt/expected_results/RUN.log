@@ -87,6 +87,7 @@ training_inputs = 5  1  [
 20 	
 ]
 ;
+expdir = "" ;
 random_gen = *0 ;
 seed = 1827 ;
 stage = 10 ;
