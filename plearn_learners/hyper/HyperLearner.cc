@@ -43,6 +43,7 @@
 #include <plearn/base/PLearnDiff.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/vmat/FileVMatrix.h>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 
@@ -337,6 +338,7 @@ void HyperLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ///////////////
 void HyperLearner::auto_save()
 {
+    Profiler::pl_profile_start("HyperLearner::auto_save");
     if(expdir.isEmpty())
         PLERROR("In HyperLearner::auto_save - we can't auto_save as"
                 " we don't have any expdir");
@@ -355,6 +357,7 @@ void HyperLearner::auto_save()
 #endif
 
     mvforce(tmp,f);
+    Profiler::pl_profile_end("HyperLearner::auto_save");
 }
 
 ///////////////
@@ -374,12 +377,14 @@ void HyperLearner::auto_load()
     PPath f = expdir/"hyper_learner_auto_save.psave";
     bool isf=isfile(f);
     if(stage==0 && !reloading && !reloaded && isf){
+        Profiler::pl_profile_start("HyperLearner::auto_load");
         if(verbosity>0)
             PLWARNING("In HyperLearner::auto_load() - reloading from file %s",f.c_str());
         reloading = true;
         PLearn::load(f,*this);
         reloading = false;
         reloaded = true;
+        Profiler::pl_profile_end("HyperLearner::auto_load");
     }
     else if(!isf && verbosity>1)
         PLWARNING("In HyperLearner::auto_load() - no file to reload.");
