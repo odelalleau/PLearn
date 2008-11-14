@@ -1308,7 +1308,7 @@ TVec<string> BasisSelectionRegressor::getTestCostNames() const
 
 void BasisSelectionRegressor::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 { 
-    train_stats = statscol;
+    inherited::setTrainStatsCollector(statscol);
     template_learner->setTrainStatsCollector(statscol);
 }
 

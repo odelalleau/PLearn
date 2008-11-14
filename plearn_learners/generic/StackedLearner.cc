@@ -152,7 +152,7 @@ void StackedLearner::declareOptions(OptionList& ol)
 
 void StackedLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 {
-    train_stats = statscol;
+    inherited::setTrainStatsCollector(statscol);
     if (combiner)
         combiner->setTrainStatsCollector(statscol);
 }

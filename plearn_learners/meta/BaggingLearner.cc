@@ -465,7 +465,7 @@ TVec<string> BaggingLearner::getOutputNames() const
 ////////////////////////////
 void BaggingLearner::setTrainStatsCollector(PP<VecStatsCollector> statscol)
 {
-    //train_stats = statscol;
+    inherited::setTrainStatsCollector(statscol);
     template_learner->setTrainStatsCollector(statscol);
 }
 

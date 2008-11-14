@@ -129,7 +129,7 @@ void PLearner::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 void PLearner::declareOptions(OptionList& ol)
 {
     declareOption(
-        ol, "expdir", &PLearner::expdir, OptionBase::buildoption | OptionBase::nosave, 
+        ol, "expdir", &PLearner::expdir, OptionBase::buildoption | OptionBase::nosave | OptionBase::remotetransmit, 
         "Path of the directory associated with this learner, in which\n"
         "it should save any file it wishes to create. \n"
         "The directory will be created if it does not already exist.\n"
@@ -1242,8 +1242,8 @@ bool PLearner::initTrain()
     if (!train_stats)
         train_stats = new VecStatsCollector();
 
-    // Set names of train_stats costs
-    train_stats->setFieldNames(getTrainCostNames());
+    // Meta learners may need to set the stats_collector of their sub-learners
+    setTrainStatsCollector(train_stats);
 
     // Everything is fine.
     return true;
