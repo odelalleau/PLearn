@@ -722,8 +722,15 @@ class DBICondor(DBIBase):
         self.condor_submit_dag_exec = "condor_submit_dag"
         self.pkdilly = False
         self.launch_file = None
+        self.universe = "vanilla"
 
         DBIBase.__init__(self, commands, **args)
+
+        valid_universe = ["standard", "vanilla", "grid", "java", "scheduler", "local", "parallel", "vm"]
+        if not self.universe in valid_universe:
+            print "[DBI] ERROR: the universe option have an invalid value",self.universe,". Valid values are:",valid_universe
+
+        #transform from meg to kilo
         self.mem=int(self.mem)*1024
 
         self.os = self.os.upper()
@@ -1027,7 +1034,7 @@ class DBICondor(DBIBase):
 
         condor_submit_fd.write( dedent('''\
                 executable     = %s
-                universe       = vanilla
+                universe       = %s
                 requirements   = %s
                 output         = $(stdout)
                 error          = $(stderr)
@@ -1035,7 +1042,7 @@ class DBICondor(DBIBase):
                 getenv         = %s
                 nice_user      = %s
                 arguments      = $(args)
-                ''' % (self.launch_file,self.req,
+                ''' % (self.launch_file, self.universe, self.req,
                        self.log_file,str(self.getenv),str(self.nice))))
         if self.mem>0:
             #condor need value in Kb
@@ -1129,14 +1136,14 @@ class DBICondor(DBIBase):
 
         condor_submit_fd.write( dedent('''\
                 executable     = %s
-                universe       = vanilla
+                universe       = %s
                 requirements   = %s
                 output         = %s/condor.$(Process).out
                 error          = %s/condor.$(Process).error
                 log            = %s
                 getenv         = %s
                 nice_user      = %s
-                ''' % (self.launch_file,self.req,
+                ''' % (self.launch_file, self.universe, self.req,
                        self.log_dir,
                        self.log_dir,
                        self.log_file,str(self.getenv),str(self.nice))))
