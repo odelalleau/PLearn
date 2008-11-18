@@ -729,6 +729,12 @@ class DBICondor(DBIBase):
         valid_universe = ["standard", "vanilla", "grid", "java", "scheduler", "local", "parallel", "vm"]
         if not self.universe in valid_universe:
             print "[DBI] ERROR: the universe option have an invalid value",self.universe,". Valid values are:",valid_universe
+            sys.exit(1)
+        if self.universe=="local":
+            n=subprocess.Popen("cat /proc/cpuinfo |grep processor|wc -l", shell = True, stdout=PIPE).stdout.readline()
+            if len(commands)>int(n):
+                print "[DBI] ERROR we refuse to start more jobs on the local universe then the total number of core. Start less jobs or use another universe."
+                sys.exit(1)
 
         #transform from meg to kilo
         self.mem=int(self.mem)*1024
