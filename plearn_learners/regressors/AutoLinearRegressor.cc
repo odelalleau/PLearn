@@ -184,6 +184,12 @@ void AutoLinearRegressor::train()
         Mat Y = tset.subMatColumns(ninputs, ntargets);
         Vec gamma; // the weights
 
+        if (include_bias)
+        {
+            Mat col_ones = Mat(l, 1, 1.0);
+            X = hconcat(col_ones, X);
+        }
+
         mean_target.resize(ntargets);
         mean_target.fill(0);
 
