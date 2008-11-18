@@ -131,12 +131,6 @@ void PruningLinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(input_indices, copies);
 }
 
-void PruningLinearRegressor::forget()
-{
-    inherited::forget();
-    t_ratio.resize(0);
-}
-
 void PruningLinearRegressor::setTrainingSet(VMat training_set, bool call_forget)
 {
     inherited::setTrainingSet(training_set, call_forget);

@@ -78,11 +78,6 @@ public:
 
     //#####  PLearner Member Functions  #######################################
 
-    //! (Re-)initializes the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
-    //! a fresh learner!).
-    virtual void forget();
-
     //! The role of the train method is to bring the learner up to
     //! stage==nstages, updating the train_stats collector with training costs
     //! measured on-line in the process.
