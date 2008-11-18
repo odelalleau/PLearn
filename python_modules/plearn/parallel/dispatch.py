@@ -40,21 +40,26 @@ TASK_TYPE_MAP    = { 'apstat.com':            'SshTask',
                      '## UNKNOWN DOMAINE ##': 'OnHostTask'
                      }
 
+# Figure out if we are running on a 32bit or 64 bit machine.
+if sys.maxint > 2147483647:
+    apstat_machines = [ 'nai' ]
+else:
+    apstat_machines = [ 'lodur',
+                        'garm',
+                        'mimir',
+                        'embla',
+                        'valhalla',
+                        'inari', 
+                        'kamado',
+                        'loki',
+                        'odin',
+                        'midgard',
+                        'vili' ]
+
 # Used only for clusters of type 'ssh'. Do not enter the same machine more
 # than once: use the MAX_LOADAVG map to allow for higher maximum load
-# average than the default of 2.
-SSH_MACHINES_MAP = { 'apstat.com': [ 'lodur',
-                                     'garm',
-                                     'mimir',
-                                     'embla',
-                                     'valhalla',
-                                     'inari', 
-                                     'kamado',
-                                     'loki',
-                                     'odin',
-                                     'midgard',
-                                     'vili'
-                                     ],
+# average than the default of 1.
+SSH_MACHINES_MAP = { 'apstat.com': apstat_machines,
 
                      'iro.umontreal.ca' : [ 'lhmm',    'lknn',    'lmfa',      'lmlp',
                                             'lsom',    'lsvm',    'currie',    'dirac',
@@ -181,7 +186,7 @@ class TaskType:
         """Returns the number of machines currently available for cluster job dispatch."""
         avail = 0
         for am in cls.listAvailableMachines():
-            avail += 1
+            avail += int(MAX_LOADAVG.get(am, 1.) - cls.getMachineLoad(am))
         return avail
     availableMachinesCount = classmethod(availableMachinesCount)
 
@@ -352,14 +357,18 @@ class SshTask( TaskType ):
             #print "Saved %f at %s (now %s)"%(loadavg, t, cur_t)
             if cur_t < t+LOADAVG_DELAY:
                 return loadavg
+        return cls.getMachineLoad(machine)
+    getLoadAvg = classmethod(getLoadAvg)
 
+    def getMachineLoad(cls, machine, command = lambda host: 'ssh -x %s cat /proc/loadavg' % host):
         # Query for the load average
         #print "NEW QUERY!"
         p = os.popen( command(machine) )
         line = p.readline()
         return float(line.split()[0]) # Take the last minute average
-    getLoadAvg = classmethod(getLoadAvg)
+    getMachineLoad = classmethod(getMachineLoad)
     
+
     def listAvailableMachines(cls):
         for m in cls._machines:
             try:
@@ -668,3 +677,6 @@ class Dispatch( PyPLearnObject ):
 if __name__ == "__main__":
     dispatch = Dispatch( program = "time", logdir=None )
     dispatch.start({ "_constant_args_" : "ls -lah" }) 
+
+
+# vim: filetype=python:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
