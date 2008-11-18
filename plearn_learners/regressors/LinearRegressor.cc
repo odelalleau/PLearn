@@ -179,9 +179,6 @@ void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### that you wish to be deepCopied rather than 
     // ### shallow-copied.
     // ### ex:
-    deepCopyField(extendedinput, copies);
-    deepCopyField(input, copies);
-    deepCopyField(target, copies);
     deepCopyField(train_costs, copies);
     deepCopyField(XtX, copies);
     deepCopyField(XtY, copies);
@@ -221,26 +218,18 @@ void LinearRegressor::forget()
     resid_variance.resize(0);
 }
 
-
 void LinearRegressor::train()
 {
     if(targetsize()<=0)
         PLERROR("In LinearRegressor::train() -  Targetsize (%d) must be "
                 "positive", targetsize());
+
     // Preparatory buffer allocation
     bool recompute_XXXY = (XtX.length()==0);
-    extendedinput.resize(effective_inputsize());
-    input = extendedinput;
-    if (include_bias) {
-        input = extendedinput.subVec(1,inputsize());
-        extendedinput[0]=1.0;
-    }
-    target.resize(targetsize());  // the train_set's targetsize()
-    weights.resize(extendedinput.length(),target.length());
     if (recompute_XXXY)
     {
-        XtX.resize(extendedinput.length(),extendedinput.length());
-        XtY.resize(extendedinput.length(),target.length());
+        XtX.resize(effective_inputsize(), effective_inputsize());
+        XtY.resize(effective_inputsize(), targetsize());
     }
     if(!train_stats)  // make a default stats collector, in case there's none
         train_stats = new VecStatsCollector();
@@ -251,12 +240,13 @@ void LinearRegressor::train()
     // Compute training inputs and targets; take into account optional bias
     real squared_error=0;
     Vec outputwise_sum_squared_Y;
-    VMat trainset_inputs  = train_set.subMatColumns(0,inputsize());
+    VMat trainset_inputs  = train_set.subMatColumns(0, inputsize());
     VMat trainset_targets = train_set.subMatColumns(inputsize(), targetsize());
     if (include_bias)                          // prepend a first column of ones
         trainset_inputs = new ExtendedVMatrix(trainset_inputs,0,0,1,0,1.0);
 
     // Choose proper function depending on whether the dataset is weighted
+    weights.resize(effective_inputsize(), targetsize());
     if (train_set->weightsize()<=0)
     {
         squared_error =
@@ -312,18 +302,14 @@ void LinearRegressor::computeOutput(const Vec& actual_input, Vec& output) const
     }
   
     // Compute the output from the input
-    int nout = outputsize();
-    output.resize(nout);
-    if (input.length()==0) 
-    {
-        extendedinput.resize(effective_inputsize());
-        input = extendedinput;
-        if (include_bias) {
-            input = extendedinput.subVec(1,inputsize());
-            extendedinput[0] = 1.0;
-        }
+    extendedinput.resize(effective_inputsize());
+    input = extendedinput;
+    if (include_bias) {
+        input = extendedinput.subVec(1,inputsize());
+        extendedinput[0] = 1.0;
     }
     input << actual_input;
+    output.resize(outputsize());
     transposeProduct(output,weights,extendedinput);
 }
 

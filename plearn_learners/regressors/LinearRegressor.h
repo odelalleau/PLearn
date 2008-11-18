@@ -52,7 +52,6 @@ class LinearRegressor: public PLearner
     // Global storage used to save memory allocations.
     mutable Vec extendedinput; //!<  length 1+inputsize(), first element is 1.0 (used by the use method)
     mutable Vec input; //!<  extendedinput.subVec(1,inputsize())
-    Vec target;
     Vec train_costs;
 
 protected:
