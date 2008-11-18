@@ -398,6 +398,9 @@ class DBICluster(DBIBase):
         self.mem=None
         self.os=None
         DBIBase.__init__(self, commands, **args)
+
+        self.os = self.os.lower()
+
         self.pre_tasks=["echo '[DBI] executing on host' $HOSTNAME"]+self.pre_tasks
         self.post_tasks=["echo '[DBI] exit status' $?"]+self.post_tasks
         self.add_commands(commands)
@@ -722,6 +725,8 @@ class DBICondor(DBIBase):
 
         DBIBase.__init__(self, commands, **args)
         self.mem=int(self.mem)*1024
+
+        self.os = self.os.upper()
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
 
@@ -893,6 +898,7 @@ class DBICondor(DBIBase):
                 else:
                     out.write(line_header()+
                               "renew the launch file "+self.launch_file+"\n")
+                    out.flush()
                     self.make_launch_script(bash_exec, True)
                 out.flush()
                 #we do this as in some case(with dagman) the log file can 
