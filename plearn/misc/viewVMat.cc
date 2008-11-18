@@ -179,6 +179,9 @@ void viewVMat(const VMat& vm, PPath filename)
     int hide_sameval = 0;
     bool transposed = false;
 
+    //! if true we will display the filename at the bottom of the screan instead
+    //! of the normal other information.
+    bool display_filename = false;
     int namewidth = 0;
     for(int j=0; j<vm->width(); j++)
         namewidth = max(namewidth, (int) vm->fieldName(j).size());
@@ -210,6 +213,8 @@ void viewVMat(const VMat& vm, PPath filename)
 
             int nj = transposed ? LINES-3 : (COLS-leftcolwidth)/valwidth;
             int ni = transposed ? (COLS-leftcolwidth)/valwidth : LINES-4;
+            if(display_filename && filename.length()>(size_t)COLS)
+                ni -= filename.length()/COLS;
 
             int endj = min(vm_showed->width(), startj+nj);
             int endi = min(vm_showed->length(), starti+ni);
@@ -314,10 +319,14 @@ void viewVMat(const VMat& vm, PPath filename)
 
             string strval = vm_showed->getString(curi, curj);
             mvprintw(0,0,"Cols[%d-%d]", 0, vm_showed.width()-1);
-            mvprintw(LINES-1,0," %dx%d   line= %d   col= %d     %s = %s (%f)",
-                     vm_showed->length(), vm_showed->width(),
-                     curi, curj, vm_showed->fieldName(curj).c_str(),
-                     strval.c_str(), vm_showed(curi,curj));
+            if(display_filename){
+                mvprintw(LINES-filename.length()/COLS-1,0,"%s",filename.c_str());
+            }else
+                mvprintw(LINES-1,0,
+                         " %dx%d   line= %d   col= %d     %s = %s (%f)",
+                         vm_showed->length(), vm_showed->width(),
+                         curi, curj, vm_showed->fieldName(curj).c_str(),
+                         strval.c_str(), vm_showed(curi,curj));
 
             refresh();
             if (!onError)
@@ -960,6 +969,7 @@ void viewVMat(const VMat& vm, PPath filename)
                 mvprintw(vStartHelp++,10," - 'r' or 'R': show only a range or a set of columns");
                 mvprintw(vStartHelp++,10," - 'x' or 'X': hide the currently selected column");
                 mvprintw(vStartHelp++,10," - 'a' or 'A': show the original VMat");
+                mvprintw(vStartHelp++,10," - 'f' or 'F': toggle the display of the filename");
                 mvprintw(vStartHelp++,10," - 'i' or 'I': insert a new column with default value");
                 mvprintw(vStartHelp++,10," - 'l' or 'L': prompt for a line number and go to that line");
                 mvprintw(vStartHelp++,10," - 'c' or 'C': prompt for a column number and go to that column");
@@ -980,6 +990,9 @@ void viewVMat(const VMat& vm, PPath filename)
                 getch();
 
                 break;
+
+            case (int)'f': case (int)'F':
+                display_filename = !display_filename;
 
             case (int)'q': case (int)'Q':
                 break;
