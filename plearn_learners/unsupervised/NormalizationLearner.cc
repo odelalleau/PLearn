@@ -241,9 +241,14 @@ void NormalizationLearner::computeOutput(const Vec& input, Vec& output) const
         int pos = p_kept_components[k];
         real val = p_input[pos];
         if(is_missing(val))
-            p_output[k] = set_missing_to_zero?0.:val;
+        {
+            if(set_missing_to_zero)
+                val = 0;
+        }
         else if(do_normalize)
-            p_output[k] = p_inv_stddev[pos]*(val - p_meanvec[pos]);
+            val = p_inv_stddev[pos]*(val - p_meanvec[pos]);
+
+        p_output[k] = val;
     }
 }
 

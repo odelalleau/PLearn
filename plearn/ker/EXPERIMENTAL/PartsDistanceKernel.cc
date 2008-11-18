@@ -99,16 +99,20 @@ void PartsDistanceKernel::declareOptions(OptionList& ol)
 
 void PartsDistanceKernel::train(VMat data)
 {    
-    Vec meanvec;
-    Vec stddev;
-    computeInputMeanAndStddev(data, meanvec, stddev, 0.0);
-    int l = stddev.length();
-    for(int i=0; i<l; i++)
+    if(standardize)
     {
-        if(stddev[i]<min_stddev)
-            inv_stddev[i] = FLT_MAX;
-        else
-            inv_stddev[i] = 1/stddev[i]; 
+        Vec meanvec;
+        Vec stddev;    
+        computeInputMeanAndStddev(data, meanvec, stddev, 0.0);
+        int l = stddev.length();
+        inv_stddev.resize(l);
+        for(int i=0; i<l; i++)
+        {
+            if(stddev[i]<min_stddev)
+                inv_stddev[i] = FLT_MAX;
+            else
+                inv_stddev[i] = 1/stddev[i]; 
+        }
     }
 }
 
@@ -125,7 +129,7 @@ real PartsDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
         PLERROR("In PartsDistanceKernel::evaluate, size of vectors (%d) does not match size of inv_stddev (%d). Make sure you called train on the kernel with appropriate dataset",l,inv_stddev.length());
         
     elementdist.resize(l);
-    for(int i; i<l; i++)
+    for(int i=0; i<l; i++)
     {
         real d = FLT_MAX;
         if( !(standardize && inv_stddev[i]>=FLT_MAX) )
@@ -143,7 +147,9 @@ real PartsDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
     }
     
     sortElements(elementdist);
-    int ps = (partsize>=1 ? (int)partsize :(int)(partsize*l));
+    int ps = (partsize>=1 ? (int)partsize :(int)(partsize*l+0.5));
+    if(ps>l)
+        ps = l;
     real res = 0;
     for(int i=0; i<ps; i++)
     {
