@@ -103,6 +103,8 @@ condor only options:
     in the environment of the submitted jobs.
   The 'CONDOR_LOCAL_SOURCE' environment variable define a file that will be
     sourced before the jobs execute.
+  The 'CONDOR_JOB_LOGDIR' for each jobs the environment variable is set to 
+    the condor log directory. 
   The '--[no_]getenv' option is forwarded to condor. If True, the current 
     environnement variable will be forwarded to the execution node.
   The '--req=\"CONDOR_REQUIREMENT\"' add requirement for condor. 

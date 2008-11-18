@@ -995,6 +995,7 @@ class DBICondor(DBIBase):
                     echo "PYTHONPATH: $PYTHONPATH" 1>&2
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
                     echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
+                    echo "CONDOR_JOB_LOGDIR: $CONDOR_JOB_LOGDIR" 1>&2
                     pwd 1>&2
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
@@ -1019,6 +1020,7 @@ class DBICondor(DBIBase):
                 echo "PYTHONPATH: $PYTHONPATH"
                 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
                 echo "OMP_NUM_THREADS: $OMP_NUM_THREADS"
+                echo "CONDOR_JOB_LOGDIR: $CONDOR_JOB_LOGDIR"
                 pwd
                 echo "Running command: $argv"
                 $argv
@@ -1243,7 +1245,9 @@ class DBICondor(DBIBase):
             return #no task to run
 
         if self.set_special_env:
-            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) "'
+            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+        else:
+            self.env+='" CONDOR_JOB_LOGDIR=%s"'%self.log_dir
 
         if not self.req:
             self.req = "True"
