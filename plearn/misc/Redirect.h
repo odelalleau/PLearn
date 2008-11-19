@@ -72,7 +72,7 @@ public:
 
     PPath filename;
     string what;
-    
+    bool active;
 
     // ****************
     // * Constructors *

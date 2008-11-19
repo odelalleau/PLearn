@@ -46,7 +46,8 @@
 namespace PLearn {
 using namespace std;
 
-Redirect::Redirect()
+Redirect::Redirect():
+    active(true)
     /* ### Initialize all fields to their default value */
 {
     // ...
@@ -66,6 +67,9 @@ void Redirect::declareOptions(OptionList& ol)
     // ### one of OptionBase::buildoption, OptionBase::learntoption or 
     // ### OptionBase::tuningoption. Another possible flag to be combined with
     // ### is OptionBase::nosave
+
+    declareOption(ol, "active", &Redirect::active, OptionBase::buildoption,
+                  "Will do the redirect only if true. Else do nothing.");
 
     declareOption(ol, "what", &Redirect::what, OptionBase::buildoption,
                   "The string perr or pout. Indicated what will be redirected.");
@@ -107,6 +111,8 @@ void Redirect::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 /////////
 void Redirect::run() {
     //do the redirection
+    if(!active)
+        return;
     if(what=="perr"){
         //the old is closed automatically
         perr=openFile(filename,PStream::raw_ascii,"w",false,true);
