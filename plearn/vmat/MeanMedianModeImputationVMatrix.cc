@@ -91,7 +91,7 @@ void MeanMedianModeImputationVMatrix::declareOptions(OptionList &ol)
 		OptionBase::buildoption, 
                 "If True, will generate an error if some field in the"
 		" imputation_spec are present but not in the source. Otherwise"
-		" will generate a warning..");
+		" will generate a warning. This also applies for regex spec.");
 
   declareOption(ol, "default_instruction", &MeanMedianModeImputationVMatrix::default_instruction,
 		OptionBase::buildoption, 
@@ -327,10 +327,12 @@ void MeanMedianModeImputationVMatrix::build_()
 	      expended = true;
 	    }
 	  }
-	  if(!expended)
-	    PLERROR("In MeanMedianModeImputationVMatrix::build_() - "
-		    "Don't have find any partial match to %s",
-		    imputation_spec[spec_col].first.c_str());
+	  if(!expended){
+	    PLWARN_ERR(!missing_field_error,
+		       "In MeanMedianModeImputationVMatrix::build_() - "
+		       "Didn't found partial match for '%s'",
+		       imputation_spec[spec_col].first.c_str());
+	  }
 	  continue;
 	}
 	
@@ -345,16 +347,13 @@ void MeanMedianModeImputationVMatrix::build_()
     }
     imputation_spec = save_imputation_spec;
 
-    if(nofields.length()>0 && missing_field_error)
-      PLERROR("In MeanMedianModeImputationVMatrix::build_() Their is %d"
-	      " fields in the imputation_spec that are not in train set:"
-	      " %s",nofields.length(),
-	      tostring(nofields).c_str());
-    else if(nofields.length()>0)
-      PLWARNING("In MeanMedianModeImputationVMatrix::build_() Their is %d"
-		" fields in the imputation_spec that are not in train set:"
-		" %s",nofields.length(),
-		tostring(nofields).c_str());
+    if(nofields.length()>0)
+      PLWARN_ERR(!missing_field_error,
+		 "In MeanMedianModeImputationVMatrix::build_() Their is %d"
+		 " fields in the imputation_spec that are not in train set:"
+		 " '%s'",nofields.length(),
+		 tostring(nofields).c_str());
+
     TVec<string> no_instruction;
     for(int i = 0;i<variable_imputation_instruction.size();i++)
       if(variable_imputation_instruction[i]==0)
