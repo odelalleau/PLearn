@@ -1,4 +1,4 @@
-FATAL ERROR: In file: "plerror.cc" at line 189
+FATAL ERROR: In file: "plerror.cc" at line 220
 Check failed: ein == stein
 Function: void PLearn::PLCheckTest::perform()
     File: PLCheckTest.cc
