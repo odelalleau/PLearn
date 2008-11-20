@@ -176,6 +176,8 @@ class DBIBase:
         self.dolog = False
         self.temp_files = []
         self.arch = 0 # TODO, we should put the local arch: 32,64 or 3264 bits
+        self.base_tasks_log_file = []
+
         for key in args.keys():
             self.__dict__[key] = args[key]
 
@@ -627,13 +629,18 @@ class DBIBqtools(DBIBase):
         # and another one containing the log_file name associated
         tasks_file = open( 'tasks', 'w' )
         logfiles_file = open( 'logfiles', 'w' )
-        for task in self.tasks:
-            tasks_file.write( ';'.join(task.commands) + '\n' )
-            logfiles_file.write( task.log_file + '\n' )
+        if self.base_tasks_log_file:
+            for task,base in zip(self.tasks,self.base_tasks_log_file):
+                tasks_file.write( ';'.join(task.commands) + '\n' )
+                logfiles_file.write( os.path.join(self.log_dir,base) + '\n' )
+        else:
+            for task in self.tasks:
+                tasks_file.write( ';'.join(task.commands) + '\n' )
+                logfiles_file.write( task.log_file + '\n' )
         tasks_file.close()
         logfiles_file.close()
 
-        # create the bqsubmit.dat, with
+        # Create the bqsubmit.dat, with
         bqsubmit_dat = open( 'bqsubmit.dat', 'w' )
         bqsubmit_dat.write( dedent('''\
                 batchName = dbi_%s
@@ -712,7 +719,6 @@ class DBICondor(DBIBase):
         self.stdouts = ''
         self.stderrs = ''
         self.abs_path = True
-        self.base_tasks_log_file = []
         self.set_special_env = True
         self.nb_proc = -1 # < 0   mean unlimited
         self.source_file = ''
@@ -1089,7 +1095,7 @@ class DBICondor(DBIBase):
                 condor_dag_fd.write("JOB %d %s\n"%(i,self.condor_submit_file))
                 condor_dag_fd.write('VARS %d args="%s"\n'%(i,argstring))
                 s=os.path.join(self.log_dir,
-                               "condor"+self.base_tasks_log_file[i])
+                               "condor."+self.base_tasks_log_file[i])
                 condor_dag_fd.write('VARS %d stdout="%s"\n'%(i,s+".out"))
                 condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
         elif self.stdouts and self.stderrs:

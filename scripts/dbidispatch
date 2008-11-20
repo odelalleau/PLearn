@@ -11,6 +11,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
     cluster, condor options  :[--32|--64|--3264] [--os=X] [--mem=N]
                               [--cpu=nb_cpu_per_node]
+    bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,sh(condor only)}+]
     condor option            :[--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
                               [--[*no_]getenv] [*--[no_]prefserver] 
                               [--rank=RANK_EXPRESSION] 
@@ -91,6 +92,19 @@ cluster and condor options:
   The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
     will be reserved for each job.
 
+bqtools and condor options:
+  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
+    filename where the stdout, stderr are redirected. We can put many option 
+    separated by comma. They will apper in the filename in order separated by a 
+    dot. For all except sh, they have this pattern condor.X.{out,error} where X=:
+      - default : same as nb0
+      - compact : a unic string with parameter that change of value between jobs
+      - explicit: a unic string that represent the full command to execute
+      - nb0     : a number from 0 to nb job -1.
+      - nb1     : a number from 1 to nb job.
+      - sh      : (condor only)parse the command for > and 2> redirection command.
+                  If one or both of them are missing, they are redirected
+                  to /dev/null
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. 
     This must be enabled if there is not nb_proc available nodes. Otherwise 
@@ -139,18 +153,6 @@ condor only options:
   The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the condor submit file.
   The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
     MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
-  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
-    filename where the stdout, stderr are redirected. We can put many option 
-    separated by comma. They will apper in the filename in order separated by a 
-    dot. For all except sh, they have this pattern condor.X.{out,error} where X=:
-      - default : same as nb0
-      - compact : a unic string with parameter that change of value between jobs
-      - explicit: a unic string that represent the full command to execute
-      - nb0     : a number from 0 to nb job -1.
-      - nb1     : a number from 1 to nb job.
-      - sh      : parse the command for > and 2> redirection command.
-                  If one or both of them are missing, they are redirected
-                  to /dev/null
   The '--[no_]abs_path' option will tell condor to change the path to the 
     executable to the absolute path or not. Default True.
   The '--[no_]pkdilly': will use the pkdilly tool to make condor more 
@@ -208,7 +210,7 @@ if len(sys.argv) == 1:
 FILE = ""
 dbi_param={}
 testmode=False
-tasks_filename = ["nb0"]
+tasks_filename = []
 
 PATH=os.getenv('PATH')
 if search_file('condor_submit',PATH):
@@ -368,11 +370,19 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
         if source_with_kerb:
             dbi_param['copy_local_source_file']=True
 
+if launch_cmd=="Bqtools" and not tasks_filename:
+    tasks_filename = ["explicit"]
+elif launch_cmd=="Condor" and not tasks_filename:
+    tasks_filename = ["nb0"]
+elif tasks_filename:
+    print "WARNING: The parameter --tasks_filename={} is only supported by condor and bqtools.",
+    print "It will be ignored"
+    
 print "\n\nThe jobs will be launched on the system:", launch_cmd
 print "With options: ",dbi_param
 for i in dbi_param:
     if i not in valid_dbi_param:
-        print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end"
+        print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end. It will be ignored."
 print "With the command to be expanded:"," ".join(command_argv),"\n\n"
 
 def generate_combination(repl,sep=" "):
@@ -467,7 +477,7 @@ n="base_tasks_log_file"
 dbi_param[n]=[""]*len(commands)
 
 def merge_pattern(new_list):
-    return [x+'.'+y for (x,y) in  zip(dbi_param[n], new_list)]
+    return [x+'.'+y if x else y for (x,y) in  zip(dbi_param[n], new_list)]
 for pattern in tasks_filename:
     if pattern == "explicit":
         dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands])
