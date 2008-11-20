@@ -116,11 +116,12 @@ void PartsDistanceKernel::train(VMat data)
     }
 }
 
-
 //////////////
 // evaluate //
 //////////////
-real PartsDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
+
+real PartsDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const 
+{
     int l = x1.length();
     if(x2.length() != l)
         PLERROR("vectors x1 and x2 must have the same size");
@@ -129,28 +130,53 @@ real PartsDistanceKernel::evaluate(const Vec& x1, const Vec& x2) const {
         PLERROR("In PartsDistanceKernel::evaluate, size of vectors (%d) does not match size of inv_stddev (%d). Make sure you called train on the kernel with appropriate dataset",l,inv_stddev.length());
         
     elementdist.resize(l);
+
+    const real* px1 = x1.data();
+    const real* px2 = x2.data();
+    real* pelementdist = elementdist.data();
+    real* pinv_stddev = 0;
+    if(standardize)
+        pinv_stddev = inv_stddev.data();
+
+    char specialn = 0;
+    if(n==2)
+        specialn = 2;
+    else if(n==1)
+        specialn = 1;
+        
     for(int i=0; i<l; i++)
     {
-        real d = FLT_MAX;
-        if( !(standardize && inv_stddev[i]>=FLT_MAX) )
+        real d;
+        if(standardize && pinv_stddev[i]>=FLT_MAX )
+            d = FLT_MAX;
+        else
         {
-            d = abs(x1[i]-x2[i])+epsilon;
+            d = fabs(px1[i]-px2[i])+epsilon;                
             if(standardize)
-                d *= inv_stddev[i];
+                d *= pinv_stddev[i];
             
-            if(fast_exact_is_equal(n,2))
+            switch(specialn)
+            {
+            case 2:
                 d *= d;
-            else if(!fast_exact_is_equal(n,1))
+                break;
+            case 1:
+                break;
+            default:
                 d = mypow(d,n);
+            }
         }
-        elementdist[i] = d;     
+        pelementdist[i] = d;
     }
     
-    sortElements(elementdist);
     int ps = (partsize>=1 ? (int)partsize :(int)(partsize*l+0.5));
-    if(ps>l)
+    if(ps<l)
+        sortElements(elementdist);
+    else
         ps = l;
+
     real res = 0;
+
     for(int i=0; i<ps; i++)
     {
         real d = elementdist[i];
