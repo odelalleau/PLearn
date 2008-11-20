@@ -104,6 +104,17 @@ protected:
 
     //! Internal use: temporary buffer for cumulating class weights
     mutable Vec class_weights;
+
+    //! Internal use: this is used when a multi_k option is provided 
+    //! to temporarily store the outputs the classifier would give for 
+    //! all values of k given in multi_k.
+    //! These outputs are computed by the computeOutput method, for
+    //! consumption by the computeCostsFromOutputs method (whuch must be 
+    //! called right after). 
+    mutable Mat multi_k_output;
+
+    //! Internal use to remember the input used in computeOutput when using multi_k option.
+    mutable Vec multi_k_input;
   
 public:
     //#####  Public Build Options  ############################################
@@ -139,6 +150,11 @@ public:
     //! (default), and the 'use_knn_costs_as_weights' is false, the
     //! rectangular kernel is used.
     Ker kernel;
+    
+    //! This can be used if you wish to simultaneously compute the costs for several
+    //! values of k, efficiently, while doing neighbors search a single time.
+    //! (see corresponding declareOption in .cc for more detailed info).
+    TVec<int> multi_k;
 
 public:
     //#####  Object Methods  ##################################################

@@ -142,6 +142,25 @@ void KNNClassifier::declareOptions(OptionList& ol)
         "(default), and the 'use_knn_costs_as_weights' is false, the\n"
         "rectangular kernel is used.");
   
+    declareOption(
+        ol, "multi_k", &KNNClassifier::multi_k, OptionBase::buildoption,
+        "This can be used if you wish to simultaneously compute the costs for\n"
+        "several values of k, efficiently, while doing neighbors search a\n"
+        "single time. Specify in increasing order, the values of k (number \n"
+        "the number of neighbors) you are interested in. This will result \n"
+        "in computing and making available extra costs in addition to \n"
+        "class_error and neglogprob. For each such specified k, \n"
+        "there will be a class_error_k and neglogprob_k.\n"
+        "Note that these will however only be computed correctly for values\n"
+        "of k that are less or equal to the global K determined by the other\n"
+        "options. So if you specify a multi_k list, you should probably set \n"
+        "kmin to the last and largest k of the list.\n"
+        "On a technical note, these costs will be computed correctly \n"
+        "only if the call to computeCostsFromOutputs follows the \n"
+        "computeOutput corresponding to the same input (this is usually\n"
+        "the case, and a warning is issued if it isn't).");
+
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -156,6 +175,10 @@ void KNNClassifier::build_()
 
     if (kmin <= 0)
         PLERROR("KNNClassifier::build_: the 'kmin' option must be strictly positive");
+
+    for(int k=0; k<multi_k.length()-1; k++)
+        if(multi_k[k]>multi_k[k+1])
+            PLERROR("values in option multi_k *must* be in increaisng order");
 
 }
 
@@ -229,11 +252,23 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
     knn->computeOutputAndCosts(input, knn_targets, knn_output, knn_costs);
     real* output_data = knn_output.data();
   
+    int n_multi_k = multi_k.length();
+    if(n_multi_k>0)
+    {
+        // First remember the input so we can verify computeCostsFromOutputs is called on the same
+        multi_k_input.resize(input.length());
+        multi_k_input << input; 
+        // Then initialize the multi_k_output matrix.
+        multi_k_output.resize(n_multi_k, outputsize());
+        multi_k_output.fill(0);
+        // TODO: need to sort the knn output ?...
+    }
+
     // Cumulate the class weights.  Compute the kernel if it's required.
     class_weights.resize(nclasses);
     class_weights.fill(0.0);
     real total_weight = 0.0;
-    for (int i=0, n=knn->num_neighbors ; i<n ; ++i) {
+    for (int i=0, n=knn->num_neighbors, multi_pos=0 ; i<n ; ++i) {
         real w = -1.0;                           //!< safety net
         if (kernel) {
             Vec cur_input(inputsize, output_data);
@@ -252,6 +287,16 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
         PLASSERT( w >= 0.0 );
         class_weights[nn_class] += w;
         total_weight += w;
+        if(multi_pos<n_multi_k && multi_k[multi_pos]==i+1) // we want to keep the output for k==i+1
+        {
+            if (total_weight >= 1e-6)
+            {
+                Vec output_k = multi_k_output(multi_pos);
+                output_k << class_weights;
+                output_k *= 1/total_weight;
+            }
+            ++multi_pos;
+        }
     }
 
     // If the total weight is too small, output zero probability for all classes
@@ -271,17 +316,40 @@ void KNNClassifier::computeOutput(const Vec& input, Vec& output) const
 void KNNClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output, 
                                             const Vec& target, Vec& costs) const
 {
-    costs.resize(nTestCosts());
+    int n_multi_k = multi_k.length();
+    costs.resize(2*(1+n_multi_k));
+    int t = int(target[0]);
     int sel_class = argmax(output);
-    costs[0] = sel_class != int(target[0]);
-    costs[1] = -pl_log(1e-10+output[int(target[0])]);
+    costs[0] = sel_class != t; 
+    costs[1] = -pl_log(1e-10+output[t]);
+
+    if(n_multi_k>0 && input!=multi_k_input)
+        PLWARNING("In computeCostsFromOutputs: input appears different from multi_k_input. "
+                  "This probably means that computeOutput was called on a different input "
+                  "before calling computeCostsFromOutputs. As a consequence, the extra costs "
+                  "requested through the multi_k option will be incorrect");
+        
+    for(int k=0; k<n_multi_k; k++)
+    {
+        Vec output_k = multi_k_output(k);
+        int sel_class = argmax(output_k);
+        costs[2+2*k] = sel_class != t; 
+        costs[3+2*k] = -pl_log(1e-10+output_k[t]);
+    }
 }
 
 TVec<string> KNNClassifier::getTestCostNames() const
 {
-    static TVec<string> costs(2);
+    int n_multi_k = multi_k.length();
+    static TVec<string> costs(2*(1+n_multi_k));
     costs[0] = "class_error";
     costs[1] = "neglogprob";
+    for(int k=0; k<n_multi_k; k++)
+    {
+        string kstr = tostring(multi_k[k]);
+        costs[2+2*k] = "class_error_"+kstr;
+        costs[3+2*k] = "neglogprob_"+kstr;
+    }
     return costs;
 }
 
