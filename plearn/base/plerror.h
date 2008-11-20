@@ -68,6 +68,8 @@ extern ostream* error_stream;
 #define PLERROR(...)   errormsg2(__FILE__,__LINE__,__VA_ARGS__)
 #define PLWARNING warningmsg
 #define PLDEPRECATED deprecationmsg
+//#define PLWARN_ERR warn_err //Use if the compiler don't like variadic macros
+#define PLWARN_ERR(...) warn_err2(__FILE__,__LINE__,__VA_ARGS__)
 
 void errormsg2(const char* filename, const int linenumber, const char* msg, ...)
     __attribute__((noreturn))
@@ -81,6 +83,12 @@ void verrormsg(const char* msg, va_list args)
     __attribute__((noreturn));
 void warningmsg(const char* msg, ...)
     __attribute__((format(printf, 1, 2)));
+//vwarningmsg: internal warningmsg that takes a single va_list
+void vwarningmsg(const char* msg, va_list args);
+void warn_err(bool warn, const char* msg, ...)
+    __attribute__((format(printf, 2, 3)));    
+void warn_err2(const char* filename, const int linenumber, bool warn, const char* msg,...)
+    __attribute__((format(printf, 4, 5)));    
 void deprecationmsg(const char* msg, ...)
     __attribute__((format(printf, 1, 2)));
 void exitmsg(const char* msg, ...)

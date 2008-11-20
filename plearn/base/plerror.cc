@@ -107,10 +107,16 @@ void verrormsg(const char* msg, va_list args)
 #endif
 
 
-void  warningmsg(const char* msg, ...)
+void warningmsg(const char* msg, ...)
 {
     va_list args;
     va_start(args,msg);
+    vwarningmsg(msg, args);
+    va_end(args);
+}
+
+void vwarningmsg(const char* msg, va_list args)
+{
     char message[ERROR_MSG_SIZE];
 
 #if !defined(ULTRIX) && !defined(_MINGW_) && !defined(WIN32)
@@ -119,10 +125,35 @@ void  warningmsg(const char* msg, ...)
     vsprintf(message,msg,args);
 #endif
 
-    va_end(args);
-
     // *error_stream <<" WARNING: "<<message<<endl;
     NORMAL_LOG << " WARNING: " << message << endl;
+}
+
+void warn_err(bool warn, const char* msg, ...)
+{
+    va_list args;
+    va_start(args,msg);
+    if(warn) vwarningmsg(msg,args);
+    else verrormsg(msg, args);
+    va_end(args);
+}
+
+void warn_err2(const char* filename, const int linenumber, bool warn, const char* msg,...)
+{
+    va_list args;
+    va_start(args,msg);
+
+    if(warn) vwarningmsg(msg,args);
+    else{
+        char message[ERROR_MSG_SIZE];
+    
+        snprintf(message, ERROR_MSG_SIZE, "In file: \"%s\" at line %d\n",
+                 PPath(filename).basename().c_str(), linenumber);
+        PLASSERT(ERROR_MSG_SIZE>=strlen(message)+strlen(msg));
+        strncat(message,msg,ERROR_MSG_SIZE);
+        verrormsg(message, args);
+    }
+    va_end(args);
 }
 
 void  deprecationmsg(const char* msg, ...)
