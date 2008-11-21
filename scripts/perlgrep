@@ -129,7 +129,7 @@ usage: perlgrep regexp <list of files and directories>
 
 Will perform the specified grep operation on every file in the
 list and recursively in directories.  (only certain kinds of files are
-considered when recursing in directories, .c .cc .h .txt .plearn .pyplearn .py .vmat .pymat Makefile makefile)
+considered when recursing in directories, .c .cc .cpp .CC .h .hpp .txt .plearn .pyplearn .psave .py .vmat .pymat Makefile makefile readme Readme README)
 
 Ex: perlgrep '\\bVMatrix\\b' .
 ";
