@@ -77,6 +77,7 @@
 #include <commands/PLearnCommands/LearnerCommand.h>
 #include <commands/PLearnCommands/PairwiseDiffsCommand.h>
 #include <commands/PLearnCommands/ReadAndWriteCommand.h>
+#include <commands/PLearnCommands/ReadModifWriteCommand.h>
 #include <commands/PLearnCommands/RunCommand.h>
 #include <commands/PLearnCommands/ServerCommand.h>
 #include <commands/PLearnCommands/TestDependenciesCommand.h>
