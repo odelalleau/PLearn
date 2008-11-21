@@ -68,7 +68,7 @@ LearnerCommand::LearnerCommand():
                   "     trained_learner.psave. If the optional keyword argument 'no_forget' is provided, then the learner will\n"
                   "     not be reset by calling forget before training.\n"
                   "\n"
-                  "learner test <trained_learner.psave> <testset.vmat> <cost.stats> [<outputs.pmat>] [<costs.pmat>]\n"
+                  "learner test <trained_learner.psave> <testset.vmat> <cost.stats> [<outputs.pmat> [<costs.pmat>]] [--set_testset_as_trainingset]\n"
                   "  -  Tests the specified learner on the testset. Will produce a cost.stats file (viewable with the plearn stats\n"
                   "     command) and optionally saves individual outputs and costs\n"
                   "\n"
@@ -128,7 +128,7 @@ void LearnerCommand::train(const PPath& learner_spec_file,
 //////////
 // test //
 //////////
-void LearnerCommand::test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file)
+void LearnerCommand::test(const string& trained_learner_file, const string& testset_spec, const string& stats_file, const string& outputs_file, const string& costs_file, const bool set_testset_as_trainingset)
 {
     PP<PLearner> learner =
         (PLearner*) smartLoadObject(trained_learner_file);
@@ -138,6 +138,8 @@ void LearnerCommand::test(const string& trained_learner_file, const string& test
     if(outputs_file!="")
         testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
     VMat testcosts;
+    if(set_testset_as_trainingset)
+        learner->setTrainingSet(testset);
     if(costs_file!="")
         testcosts = new FileVMatrix(costs_file,l,learner->getTestCostNames());
 
@@ -362,12 +364,26 @@ void LearnerCommand::run(const vector<string>& args)
             string testset_spec = args[2];
             string stats_basename = args[3];
             string outputs_file;
-            if(args.size()>4)
-                outputs_file = args[4];
+            bool set_testset_as_trainingset = false;
+            if(args.size()>4){
+                if(args[4]=="--set_testset_as_trainingset")
+                    set_testset_as_trainingset = true;
+                else
+                    outputs_file = args[4];
+            }
             string costs_file;
-            if(args.size()>5)
-                costs_file = args[5];
-            test(trained_learner_file, testset_spec, stats_basename, outputs_file, costs_file);
+            if(args.size()>5){
+                if(args[5]=="--set_testset_as_trainingset")
+                    set_testset_as_trainingset = true;
+                else
+                    costs_file = args[5];
+            }
+            if(args.size()>6){
+                PLCHECK(args[6]=="--set_testset_as_trainingset");
+                set_testset_as_trainingset = true;
+            }
+            test(trained_learner_file, testset_spec, stats_basename, outputs_file, costs_file,
+                 set_testset_as_trainingset);
         }
         else
             PLERROR("LearnerCommand::run you must provide at least 'plearn learner test <trained_learner.psave> <testset.vmat> <cost.stats>'");
