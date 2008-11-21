@@ -57,6 +57,7 @@
 #include <commands/PLearnCommands/LearnerCommand.h>
 //#include <commands/PLearnCommands/PairwiseDiffsCommand.h>
 #include <commands/PLearnCommands/ReadAndWriteCommand.h>
+#include <commands/PLearnCommands/ReadModifWriteCommand.h>
 #include <commands/PLearnCommands/RunCommand.h>
 //#include <commands/PLearnCommands/ServerCommand.h>
 //#include <commands/PLearnCommands/TestDependenciesCommand.h>
@@ -70,6 +71,9 @@
 #endif
 #include <plearn_learners/regressors/RegressionTree.h>
 #include <plearn_learners/meta/MultiClassAdaBoost.h>
+#include <plearn_learners/hyper/HyperLearner.h>
+#include <plearn_learners/hyper/HyperOptimize.h>
+#include <plearn_learners/hyper/EarlyStoppingOracle.h>
 
 /************
  * Splitter *
@@ -82,6 +86,7 @@
  ***********/
 #include <plearn/vmat/AddMissingVMatrix.h>
 #include <plearn/vmat/AutoVMatrix.h>
+#include <plearn/vmat/AutoVMatrixSaveSource.h>
 #include <plearn/vmat/BootstrapVMatrix.h>
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/DichotomizeVMatrix.h>
