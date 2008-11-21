@@ -56,24 +56,26 @@ ReadAndWriteCommand::ReadAndWriteCommand():
                 
                   "Used to check (debug) the serialization system",
                 
-                  "read_and_write <sourcefile> <destfile> \n"
+                  "read_and_write <sourcefile> <destfile> [modification string] ...\n"
                   "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
                   "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
                   "Otherwise (ex: .plearn .vmat) it will. \n"
+                  "If their is modification string in format option=value, the modification will be made to the object before saving\n"
         )
 {}
 
 //! The actual implementation of the 'ReadAndWriteCommand' command 
 void ReadAndWriteCommand::run(const vector<string>& args)
 {
-    if(args.size()!=2)
-        PLERROR("read_and_write takes 2 arguments");
+    if(args.size()<2)
+        PLERROR("read_and_write takes 2 or more arguments: <sourcefile> <destfile> [modification string] ...");
     string source = args[0];
     string dest = args[1];
 
     string ext = extract_extension(source);
     PP<Object> o;
 
+    //read the file
     if(ext==".psave") // may be binay. Don't macro-process
     {
         PLearn::load(source,o);
@@ -86,6 +88,16 @@ void ReadAndWriteCommand::run(const vector<string>& args)
         o = readObject(in);
     }
 
+    //modif the object
+    string left;
+    string right;
+    for(uint i=2; i<args.size();i++){
+        split_on_first(args[i], "=", left, right);
+        cout <<left<<endl<<right<<endl;
+        o->setOption(left, right);
+    }
+
+    //write the file
     PStream out = openFile(dest,PStream::plearn_ascii,"w");
     if(!out)
         PLERROR("Could not open file %s for writing",dest.c_str());
