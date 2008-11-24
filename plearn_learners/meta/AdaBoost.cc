@@ -245,19 +245,25 @@ void AdaBoost::build_()
         setTrainingSet(getTrainingSet(),false);
 }
 
-// ### Nothing to add here, simply calls build_
+///////////
+// build //
+///////////
 void AdaBoost::build()
 {
     inherited::build();
     build_();
 }
 
-
+/////////////////////////////////
+// makeDeepCopyFromShallowCopy //
+/////////////////////////////////
 void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField(tmp_output2,              copies);
+    deepCopyField(weighted_costs,           copies);
+    deepCopyField(sum_weighted_costs,       copies);
     deepCopyField(learners_error,           copies);
     deepCopyField(example_weights,          copies);
     deepCopyField(weak_learner_output,      copies);
@@ -266,7 +272,9 @@ void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(weak_learner_template,    copies);
 }
 
-
+////////////////
+// outputsize //
+////////////////
 int AdaBoost::outputsize() const
 {
     // Outputsize is always 1, since this is a 0-1 classifier
