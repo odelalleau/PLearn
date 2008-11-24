@@ -131,9 +131,9 @@ HyperLearner::declareOptions(OptionList &ol)
 
     declareOption(ol, "reloaded", &HyperLearner::reloaded,
                   OptionBase::learntoption|OptionBase::nosave,
-                  "Used internally to don't reload a file many as the build function\n"
-                  " can be called many time after the expdir is set. In particular\n"
-                  " PLearn::HyperLearner::setTrainingSet.");
+        "Used internally to avoid reloading a file, since the build function\n"
+        "may be called many times after the expdir is set,in particular in\n"
+        "PLearn::HyperLearner::setTrainingSet.");
 
     inherited::declareOptions(ol);
 
@@ -199,10 +199,10 @@ void HyperLearner::setTrainingSet(VMat training_set, bool call_forget)
     if (call_forget)
     {
         if(reloaded)
-            PLWARNING("In HyperLearner::setTrainingSet() - we where asked to"
+            PLWARNING("In HyperLearner::setTrainingSet() - we were asked to"
                       " forget after having reloaded a previous version."
-                      " To don't do this, in the PTester that include this"
-                      " HyperLearner set call_forget_in_run = 0.");
+                      " To avoid doing this, in the PTester that includes this"
+                      " HyperLearner, set call_forget_in_run = 0.");
         build();
         forget();
     }
