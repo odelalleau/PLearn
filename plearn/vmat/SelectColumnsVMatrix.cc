@@ -155,9 +155,7 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "save_fields", &SelectColumnsVMatrix::save_fields,
                   OptionBase::buildoption,
-                  "The filename where to save the filename of this VMatrix."
-        );
-
+        "Optional file where the fieldnames of this VMatrix should be saved.");
 
     declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
                   "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
@@ -313,8 +311,8 @@ void SelectColumnsVMatrix::build_()
         sinput.resize(width());
         sinput.fill(MISSING_VALUE);
 
-        if(!save_fields.empty())
-            PLearn::save(save_fields,fieldNames());
+        if(!save_fields.isEmpty())
+            PLearn::save(save_fields, fieldNames());
     }
 }
 

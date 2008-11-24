@@ -70,7 +70,7 @@ public:
     bool extend_with_missing;
     TVec<int> indices;
     TVec<string> fields;
-    string save_fields;
+    PPath save_fields;
     bool fields_partial_match;
     bool inverse_fields_selection;
     bool warn_non_selected_field;
