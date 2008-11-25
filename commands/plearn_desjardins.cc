@@ -61,6 +61,7 @@
 //#include <commands/PLearnCommands/ServerCommand.h>
 //#include <commands/PLearnCommands/TestDependenciesCommand.h>
 //#include <commands/PLearnCommands/TestDependencyCommand.h>
+#include <commands/PLearnCommands/StatsCommand.h>
 
 /************
  * PLearner *
