@@ -195,8 +195,11 @@ void KNNClassifier::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(knn_output,    copies);
     deepCopyField(knn_costs,     copies);
     deepCopyField(class_weights, copies);
+    deepCopyField(multi_k_output,copies);
+    deepCopyField(multi_k_input, copies);
     deepCopyField(knn,           copies);
     deepCopyField(kernel,        copies);
+    deepCopyField(multi_k,       copies);
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
@@ -341,7 +344,7 @@ void KNNClassifier::computeCostsFromOutputs(const Vec& input, const Vec& output,
 TVec<string> KNNClassifier::getTestCostNames() const
 {
     int n_multi_k = multi_k.length();
-    static TVec<string> costs(2*(1+n_multi_k));
+    TVec<string> costs(2*(1+n_multi_k));
     costs[0] = "class_error";
     costs[1] = "neglogprob";
     for(int k=0; k<n_multi_k; k++)
