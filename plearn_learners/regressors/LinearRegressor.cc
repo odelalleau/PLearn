@@ -179,6 +179,8 @@ void LinearRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     // ### that you wish to be deepCopied rather than 
     // ### shallow-copied.
     // ### ex:
+    deepCopyField(extendedinput, copies);
+    deepCopyField(input, copies);
     deepCopyField(train_costs, copies);
     deepCopyField(XtX, copies);
     deepCopyField(XtY, copies);
