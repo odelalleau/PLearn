@@ -4,7 +4,7 @@ from plearn.utilities.toolkit import search_file
 from socket import gethostname
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] <back-end parameter> {--file=FILEPATH | <command-template>}
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] <back-end parameter> {--file=FILEPATH | <command-template>}
 
 <back-end parameter>:
     bqtools, cluster option  :[--duree=X]
@@ -55,6 +55,9 @@ common options:
     --ssh=N is the same as --ssh --nb_proc=N
     --condor=N  is the same as --condor --nb_proc=N
     condor and bqtools default -1. Cluster default 32.  local and ssh default 1
+  The '--exp_dir=dir' specifies the name of the temporary directory
+    relative to LOGDIR, instead of one generated automatically based
+    upon the command line and the time.
   The '--[*no_]clean_up' set the DBI option clean_up to true or false
   The 'DBIDISPATCH_DEFAULT_OPTION' environnement variable can contain default
     option for dbidispatch. They can be overrided on the command line.
@@ -290,7 +293,7 @@ for argv in to_parse:
         testmode=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
-                                "--universe"]:
+                                "--universe", "--exp_dir"]:
         param=argv.split('=')[0][2:]
         if param in ["req", "files", "rank"]:
             #param that we happend to if defined more then one time
@@ -337,7 +340,7 @@ if len(command_argv) == 0 and FILE == "":
     print ShortHelp
     sys.exit(1)
 
-valid_dbi_param=["clean_up", "test", "dolog","nb_proc"]
+valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir"]
 if launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","arch","interruptible",
                        "duree","cpu","mem","os"]
@@ -448,7 +451,9 @@ if FILE != "":
 else:
     (commands,choise_args)=generate_commands(command_argv)
 
-if FILE == "":
+if dbi_param.has_key("exp_dir"):
+    dbi_param["log_dir"]=os.path.join(LOGDIR,dbi_param["exp_dir"])
+elif FILE == "":
     t = [x for x in sys.argv[1:] if not x[:2]=="--"]
     t[0]=os.path.split(t[0])[1]
     tmp="_".join(t)
@@ -468,10 +473,9 @@ if FILE == "":
 
     tmp+='_'+date_str.replace(' ','_')
     dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
-    dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 else:
     dbi_param["log_dir"]=os.path.join(LOGDIR,FILE)
-    dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
+dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
 n="base_tasks_log_file"
 dbi_param[n]=[""]*len(commands)
