@@ -211,6 +211,7 @@ void PruningLinearRegressor::newDatasetIndices()
 
     // Sort all t-ratios
     int nb_weights = weights.length();
+    PLASSERT(nb_weights == t_ratio.length());
     Vec t_ratio_sort = t_ratio.copy();
     sortElements(t_ratio_sort, true);
 
@@ -219,7 +220,8 @@ void PruningLinearRegressor::newDatasetIndices()
     if (pruning_method == "max_number")
     {
         int keep_n_weights = min(max_number, nb_weights);
-        if (include_bias)
+        // Add one coefficient if max is not yet reached
+        if (include_bias  &&  keep_n_weights<nb_weights)
             ++keep_n_weights;
         t_ratio_threshold = t_ratio_sort[keep_n_weights-1];
     }
