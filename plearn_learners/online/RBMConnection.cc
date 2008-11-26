@@ -37,11 +37,10 @@
 /*! \file RBMConnection.cc */
 
 
-
 #include "RBMConnection.h"
 #include <plearn/math/TMat_maths.h>
 #include <plearn/base/stringutils.h>
-//#include "RBMLayer.h"
+#include <plearn/base/RemoteMethodMap.h>
 
 namespace PLearn {
 using namespace std;
@@ -111,6 +110,22 @@ void RBMConnection::declareOptions(OptionList& ol)
     redeclareOption(ol, "output_size", &RBMConnection::output_size,
                     OptionBase::learntoption,
                     "Equals to up_size");
+}
+
+void RBMConnection::declareMethods(RemoteMethodMap& rmm)
+{
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(rmm, "setAsDownInput", &RBMConnection::setAsDownInput,
+                  (BodyDoc("Sets 'input_vec' to 'input', and 'going_up' to true. \n"
+                           "Note that no data copy is made, so 'input' should not be modified \n"
+                           "afterwards."),
+                   ArgDoc("const Vec& input", "The input vector")));
+    declareMethod(rmm, "setAsUpInput", &RBMConnection::setAsUpInput,
+                  (BodyDoc("Sets 'input_vec' to 'input', and 'going_up' to false. \n"
+                           "Note that no data copy is made, so 'input' should not be modified \n"
+                           "afterwards."),
+                   ArgDoc("const Vec& input", "The input vector")));
 }
 
 ////////////

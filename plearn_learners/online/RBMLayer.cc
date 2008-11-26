@@ -161,8 +161,18 @@ void RBMLayer::declareMethods(RemoteMethodMap& rmm)
 
     declareMethod(rmm, "setAllBias", &RBMLayer::setAllBias,
                   (BodyDoc("Set the biases values"),
-                   ArgDoc ("bias", "the vector of biases")
-                  ));
+                   ArgDoc ("bias", "the vector of biases")));
+
+    declareMethod(rmm, "generateSample", &RBMLayer::generateSample,
+                  (BodyDoc("Generate a sample, and update the sample field")));
+    declareMethod(rmm, "getAllActivations", &RBMLayer::getAllActivations,
+                  (BodyDoc("Uses 'rbmc' to obtain the activations of all units in this layer. \n"
+                           "Unit 0 of this layer corresponds to unit 'offset' of 'rbmc'."),
+                   ArgDoc("PP<RBMConnection> rbmc", "RBM Connection"),
+                   ArgDoc("int offset", "Offset"),
+                   ArgDoc("bool minibatch", "Use minibatch")));
+    declareMethod(rmm, "computeExpectation", &RBMLayer::computeExpectation,
+                  (BodyDoc("Compute expectation.")));
 }
 
 ////////////

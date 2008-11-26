@@ -272,6 +272,9 @@ protected:
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
 
+    //! Declares the methods that are remote-callable.
+    static void declareMethods(RemoteMethodMap& rmm);
+
 private:
     //#####  Private Member Functions  ########################################
 
