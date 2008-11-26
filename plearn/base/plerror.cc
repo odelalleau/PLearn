@@ -200,7 +200,7 @@ string get_error_message(const char* type, const char* expr,
     // Allocate buffer.
     size_t size = strlen(type) + strlen(expr) + strlen(function) + strlen(file)
                     + message.size() + 150;
-    char msg[size];
+    char* msg = (char*) malloc(size * sizeof(char));
     // Format string.
     snprintf(msg, size, 
             "%s failed: %s\n"
