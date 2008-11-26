@@ -192,32 +192,47 @@ void exitmsg(const char* msg, ...)
     exit(1);
 }
 
+//! Return a typical error message.
+string get_error_message(const char* type, const char* expr,
+        const char* function, const char* file, unsigned line,
+        const string& message)
+{
+    // Allocate buffer.
+    size_t size = strlen(type) + strlen(expr) + strlen(function) + strlen(file)
+                    + message.size() + 150;
+    char msg[size];
+    // Format string.
+    snprintf(msg, size, 
+            "%s failed: %s\n"
+            "Function: %s\n"
+            "    File: %s\n"
+            "    Line: %u"
+            "%s%s",
+            type, expr, function, file, line,
+            (!message.empty()? "\n Message: " : ""),
+            message.c_str());
+    // Return as an STL string.
+    return string(msg);
+}
 
 void pl_assert_fail(const char* expr, const char* file, unsigned line,
                     const char* function, const string& message)
 {
-    PLERROR("Assertion failed: %s\n"
-            "Function: %s\n"
-            "    File: %s\n"
-            "    Line: %d"
-            "%s%s",
-            expr, function, file, line,
-            (!message.empty()? "\n Message: " : ""),
-            message.c_str());
+    // Note that in this function, just like in 'pl_check_fail' below, it is
+    // important that the PLERROR statement fits on a single line. This is
+    // because otherwise some tests may fail on some compilers, as the line
+    // number of a multi-line statement may be ambiguous.
+    string msg = get_error_message("Assertion",
+            expr, function, file, line, message);
+    PLERROR(msg.c_str());
 }
 
-
 void pl_check_fail(const char* expr, const char* file, unsigned line,
-                   const char* function, const string& message)
+        const char* function, const string& message)
 {
-    PLERROR("Check failed: %s\n"
-            "Function: %s\n"
-            "    File: %s\n"
-            "    Line: %d"
-            "%s%s",
-            expr, function, file, line,
-            (!message.empty()? "\n Message: " : ""),
-            message.c_str());
+    string msg = get_error_message("Check",
+            expr, function, file, line, message);
+    PLERROR(msg.c_str());
 }
 
 } // end of namespace PLearn

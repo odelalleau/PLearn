@@ -603,10 +603,11 @@ void PPath::resolveDoubleDots() {
             size_t pos_previous_slash = pos_sdd == 0 ? npos
                 : rfind(_slash_char(), pos_sdd - 1);
             if (pos_previous_slash == npos) {
-                // We need to make sure we are not trying to go up on a root directory.
+                // We need to make sure we are not trying to go up on a root
+                // directory.
                 if (PPath(substr(0, pos_sdd + 1)).isRoot())
-                    PLERROR("In PPath::resolveDots - '%s' is invalid",
-                            errorDisplay().c_str());
+                    // Long single-line error message to ensure tests pass.
+                    PLERROR("In PPath::resolveDots - '%s' is invalid", errorDisplay().c_str());
                 if (   (pos_sdd == 2 && substr(0,2) == "..")
                        || (pos_sdd == 1 && operator[](0) == '.'))
                     // We are in the case "../.." or "./.."
@@ -847,8 +848,8 @@ PPath PPath::addProtocol()  const
 {
     if ( _protocol.empty()) {
         if (!isAbsPath())
-            PLERROR("In PPath::addProtocol - A protocol can only be added to an "
-                    "absolute path, and '%s' is relative", errorDisplay().c_str());
+            // Ugly single-line error message to ensure tests pass.
+            PLERROR("In PPath::addProtocol - A protocol can only be added to an absolute path, and '%s' is relative", errorDisplay().c_str());
         return ( PPath(string(FILE_PROTOCOL) + ':' + string(*this)) );
     }
     return PPath( *this );
@@ -927,8 +928,11 @@ bool PPath::operator==(const PPath& other) const
 PPath PPath::up() const
 {
     if (isEmpty() || isRoot())
-        PLERROR("In PPath::up - Cannot go up on directory '%s'",
-                errorDisplay().c_str());
+        // Note that the following line has more than 80 characters, but it is
+        // the simplest way to avoid issues in tests, as the line number of
+        // this error is displayed, and it may be ambiguous if it spans
+        // multiple lines.
+        PLERROR("In PPath::up - Cannot go up on directory '%s'", errorDisplay().c_str());
     return *this / "..";
 }
 
