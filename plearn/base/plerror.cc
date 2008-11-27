@@ -200,7 +200,7 @@ string get_error_message(const char* type, const char* expr,
     // Allocate buffer.
     size_t size = strlen(type) + strlen(expr) + strlen(function) + strlen(file)
                     + message.size() + 150;
-    char* msg = (char*) malloc(size * sizeof(char));
+    char* msg = new char[size];
     // Format string.
     snprintf(msg, size, 
             "%s failed: %s\n"
@@ -212,7 +212,9 @@ string get_error_message(const char* type, const char* expr,
             (!message.empty()? "\n Message: " : ""),
             message.c_str());
     // Return as an STL string.
-    return string(msg);
+    string result(msg);
+    delete[] msg;
+    return result;
 }
 
 void pl_assert_fail(const char* expr, const char* file, unsigned line,
