@@ -44,6 +44,8 @@
 #include <plearn/vmat/VMat_computeStats.h>
 #include <plearn/io/fileutils.h>
 #include <plearn/io/load_and_save.h>
+#define PL_LOG_MODULE_NAME "VariableDeletionVMatrix"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -70,6 +72,7 @@ VariableDeletionVMatrix::VariableDeletionVMatrix():
     max_constant_threshold(0),
     number_of_train_samples(0),
     warn_removed_var(false),
+    info_var_with_missing(false),
     deletion_threshold(-1),
     remove_columns_with_constant_value(-1)
 {}
@@ -130,6 +133,12 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
                   &VariableDeletionVMatrix::warn_removed_var,
                   OptionBase::buildoption,
                   "If true, will print a warning about variable that are removed");
+
+    declareOption(ol, "info_var_with_missing",
+                  &VariableDeletionVMatrix::info_var_with_missing,
+                  OptionBase::buildoption,
+                  "If true, will print the variable that have some missing"
+                  " that we keep.");
 
     declareOption(ol, "save_deleted_columns",
                   &VariableDeletionVMatrix::save_deleted_columns,
@@ -284,15 +293,24 @@ void VariableDeletionVMatrix::build_()
     if (min_non_missing_threshold > 0){
         int min_non_missing =
             int(round(min_non_missing_threshold * the_train_source->length()));
-        for (int i = 0; i < is; i++)
+        for (int i = 0; i < is; i++){
             if (stats[i].nnonmissing() >= min_non_missing 
                 && stats[i].nnonmissing() > 0)
                 indices.append(i);
             else if (warn_removed_var)
                 PLWARNING("In VariableDeletionVMatrix::build_() var '%s'"
-                          " have too many missing value: %f/%f",
-                          source->fieldName(i).c_str(), stats[i].nmissing(),
-                          stats[i].n());
+                          " have too many missing (%d/%d). We remove it.",
+                          source->fieldName(i).c_str(),
+                          int(stats[i].nmissing()),
+                          int(stats[i].n()));
+            if (info_var_with_missing && stats[i].nmissing() > 0)
+                MODULE_LOG<<"INFO: In build_() var '"
+                          <<source->fieldName(i).c_str()
+                          <<"' have missing value: "
+                          <<stats[i].nmissing()
+                          <<"/"<< stats[i].n()<<"."<<endl;
+        }
+                
     } else
         for (int i = 0; i < is; i++)
             indices.append(i);
@@ -306,7 +324,7 @@ void VariableDeletionVMatrix::build_()
                 final_indices.append(i);
             else if (warn_removed_var)
                 PLWARNING("In VariableDeletionVMatrix::build_() var '%s'"
-                          " is constant with value: %f",
+                          " is constant with value: %f. We remove it.",
                           source->fieldName(i).c_str(), stat.min());
         }
         indices.resize(final_indices.length());

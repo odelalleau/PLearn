@@ -59,6 +59,8 @@ public:
     real    max_constant_threshold;
     int     number_of_train_samples;
     bool    warn_removed_var;
+    bool    info_var_with_missing;
+
     VMat    train_set;
     string  save_deleted_columns;
 
