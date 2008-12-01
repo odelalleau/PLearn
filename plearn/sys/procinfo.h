@@ -46,6 +46,11 @@ size_t getSystemTotalMemory();
 //! Return the total data memory used by the current process in bytes
 size_t getProcessDataMemory();
 
+//! Return the processus id
+int getPid();
+
+string getUser();
+
 } // end of namespace PLearn
 
 #endif

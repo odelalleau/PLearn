@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <nspr/prenv.h>
 
 #if defined(WIN32) && defined(_MSC_VER)
 // unistd.h is not available under Microsoft Visual Studio, and some function
@@ -58,6 +59,32 @@ size_t getProcessDataMemory()
         }
     }
     return memory_size;
+}
+
+////////////
+// getPid //
+////////////
+int getPid()
+{
+#if _POSIX_VERSION >= 200112L
+#include <unistd.h>
+    return getpid();
+#else
+    return -999;
+#endif
+}
+
+/////////////
+// getUser //
+/////////////
+string getUser()
+{
+    const char* h = PR_GetEnv("USER");
+    if (!h)
+        h = PR_GetEnv("LOGNAME");
+    if (!h)
+        return "USERNAME_NOT_FOUND";
+    return tostring(h);
 }
 
 BEGIN_DECLARE_REMOTE_FUNCTIONS

@@ -52,6 +52,7 @@
 #include <plearn/base/RemoteDeclareMethod.h>
 #include <nspr/prenv.h>
 #include <plearn/math/TMat_maths.h> //!< for dot, powdistance externalProductAcc
+#include <plearn/sys/procinfo.h> //!< for getPid, getUser
 
 namespace PLearn {
 using namespace std;
@@ -1394,29 +1395,6 @@ void VMatrix::compatibleSizeError(const VMat& m, const string& extra_msg) {
     else if(this->extrasize()  != m->extrasize() )
         MY_PRINT_ERROR_MST(extrasize)
 #undef MY_PRINT_ERROR_MST
-}
-
-
-////////////
-// getPid //
-////////////
-int getPid()
-{
-    return -999;
-}
-
-/////////////
-// getUser //
-/////////////
-string getUser()
-{
-    const char* h = PR_GetEnv("USER");
-    if (!h)
-        h = PR_GetEnv("LOGNAME");
-    if (!h)
-        return "USERNAME_NOT_FOUND";
-    return tostring(h);
-        
 }
 
 /////////////////////
