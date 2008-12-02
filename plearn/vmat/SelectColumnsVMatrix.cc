@@ -384,21 +384,19 @@ void SelectColumnsVMatrix::getIndicesFromFields(){
             string f = fields[j];
             if(f[f.size()-1]=='*'){
                 f.resize(f.size()-1);//remove the last caracter (*)
-                for (int i = 0; i < source_fields.length(); i++){
+                for (int i = 0; i < source_fields.length(); i++)
                     if (string_begins_with(source_fields[i],f)) {
                         // We want to add this field.
                         indices.append(i);
                         DBG_MODULE_LOG<<fields[j]<<" matched "<<source_fields[i]<<endl;
                     }
-                }
             }else{
-                for (int i = 0; i < source_fields.length(); i++){
+                for (int i = 0; i < source_fields.length(); i++)
                     if(source_fields[i]==f){
                         indices.append(i);
+                        //their should be only one fields with a given name
+                        break;
                     }
-                }
-
-
             }
         }
     } else {
