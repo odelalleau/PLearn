@@ -929,8 +929,14 @@ inline PStream& operator>>(PStream& in, pair<S, T> &x)
     {
         in >> x.first;
         in.skipBlanksAndComments();
-        if(in.get()!=':')
+        if(in.get()!=':'){
+            //we can't use NORMAL_LOG as can't include pl_log.h
+            // can't include pl_log.h as it include PStream.h 
+            // and PStream.h would include pl_log.h(recursive include)
+            //idem for tostring.h
+            perr<<"For the following error, the first half of the pair is '"<<x.first<<"'"<<endl;
             PLERROR("In operator>>(PStream& in, pair<S, T> &x) expected ':' to separate the 2 halves of the pair");
+        }
         in.skipBlanksAndComments();
         in >> x.second;
     }
