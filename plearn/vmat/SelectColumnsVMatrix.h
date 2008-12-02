@@ -72,8 +72,10 @@ public:
     TVec<string> fields;
     PPath save_fields;
     bool fields_partial_match;
+    bool fields_regex;
     bool inverse_fields_selection;
     bool warn_non_selected_field;
+
 public:
 
     //! Default constructor.

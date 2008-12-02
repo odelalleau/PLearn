@@ -41,6 +41,9 @@
 
 #include "SelectColumnsVMatrix.h"
 #include <plearn/io/load_and_save.h>
+#define PL_LOG_MODULE_NAME "SelectColumnsVMatrix"
+#include <plearn/io/pl_log.h>
+
 
 namespace PLearn {
 using namespace std;
@@ -60,6 +63,7 @@ PLEARN_IMPLEMENT_OBJECT(SelectColumnsVMatrix,
 SelectColumnsVMatrix::SelectColumnsVMatrix()
     : extend_with_missing(false),
       fields_partial_match(false),
+      fields_regex(false),
       inverse_fields_selection(false),
       warn_non_selected_field(false)
 {}
@@ -72,6 +76,7 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
     extend_with_missing(the_extend_with_missing),
     fields(the_fields),
     fields_partial_match(false),
+    fields_regex(false),
     inverse_fields_selection(false),
     warn_non_selected_field(false)
 {
@@ -86,6 +91,7 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
     extend_with_missing(false),
     indices(the_indices),
     fields_partial_match(false),
+    fields_regex(false),
     inverse_fields_selection(false),
     warn_non_selected_field(false)
 {
@@ -96,6 +102,7 @@ SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source,
 SelectColumnsVMatrix::SelectColumnsVMatrix(VMat the_source, Vec the_indices)
     : extend_with_missing(false),
       fields_partial_match(false),
+      fields_regex(false),
       inverse_fields_selection(false),
       warn_non_selected_field(false)
 {
@@ -159,6 +166,9 @@ void SelectColumnsVMatrix::declareOptions(OptionList &ol)
 
     declareOption(ol, "fields_partial_match", &SelectColumnsVMatrix::fields_partial_match, OptionBase::buildoption,
                   "If set to 1, then a field will be kept iff it contains one of the strings from 'fields'.");
+
+    declareOption(ol, "fields_regex", &SelectColumnsVMatrix::fields_regex, OptionBase::buildoption,
+                  "If set to 1, then a field will be kept iff it match one of the strings from 'fields'. A match is when the two string is equal or when fields end with a *, we allow any end.");
 
     declareOption(ol, "indices", &SelectColumnsVMatrix::indices, OptionBase::buildoption,
                   "The array of column indices to extract.");
@@ -319,7 +329,7 @@ void SelectColumnsVMatrix::build_()
 void SelectColumnsVMatrix::getIndicesFromFields(){
             // Find out the indices from the fields.
     indices.resize(0);
-    if (!fields_partial_match) {
+    if (!fields_partial_match && ! fields_regex) {
         TVec<string> missing_field;
         for (int i = 0; i < fields.length(); i++) {
             string the_field = fields[i];
@@ -366,6 +376,31 @@ void SelectColumnsVMatrix::getIndicesFromFields(){
                       " The columns names are: %s",missing_field.size(),
                       tostring(missing_field).c_str());
         }
+
+    } else if(fields_regex) {
+        // We need to check whether or not we should add each field.
+        TVec<string> source_fields = source->fieldNames();
+        for (int j = 0; j < fields.length(); j++){
+            string f = fields[j];
+            if(f[f.size()-1]=='*'){
+                f.resize(f.size()-1);//remove the last caracter (*)
+                for (int i = 0; i < source_fields.length(); i++){
+                    if (string_begins_with(source_fields[i],f)) {
+                        // We want to add this field.
+                        indices.append(i);
+                        DBG_MODULE_LOG<<fields[j]<<" matched "<<source_fields[i]<<endl;
+                    }
+                }
+            }else{
+                for (int i = 0; i < source_fields.length(); i++){
+                    if(source_fields[i]==f){
+                        indices.append(i);
+                    }
+                }
+
+
+            }
+        }
     } else {
         // We need to check whether or not we should add each field.
         TVec<string> source_fields = source->fieldNames();
@@ -374,6 +409,7 @@ void SelectColumnsVMatrix::getIndicesFromFields(){
                 if (source_fields[i].find(fields[j]) != string::npos) {
                     // We want to add this field.
                     indices.append(i);
+                    DBG_MODULE_LOG<<fields[j]<<" matched "<<source_fields[i]<<endl;
                     break;
                 }
     }
