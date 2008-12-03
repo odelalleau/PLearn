@@ -35,6 +35,8 @@
 
 // Authors: Pascal Vincent & Yoshua Bengio
 
+#define PL_LOG_MODULE_NAME "plerror"
+
 #include <cstdarg>
 //#include <cstdlib>
 #include <iostream>
@@ -90,7 +92,8 @@ void verrormsg(const char* msg, va_list args)
 #else
     vsprintf(message,msg,args);
 #endif
-
+    //output to module log: can be useful when throwing exceptions
+    DBG_MODULE_LOG << endl << "-------------- PLERROR:" << message << endl << "--------------" << endl;
 #ifndef USE_EXCEPTIONS
 #if USING_MPI
     *error_stream <<" ERROR from rank=" << PLMPI::rank << ": " <<message<<endl;
