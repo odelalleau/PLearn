@@ -266,7 +266,8 @@ public:
     //! Updates both the RBM parameters and the 
     //! dynamic connections in the recurrent tuning phase,
     //! after the visible units have been clamped
-    void recurrentUpdate(bool input_is_corrupted);
+    void recurrentUpdate(real input_reconstruction_weight,
+                         real temporal_gradient_contribution = 1);
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
@@ -376,8 +377,6 @@ private:
     //! This does the actual building.
     void build_();
 
-
-    void performGreedyDenoisingPhase(Vec train_costs, Vec train_n_items);
 
     void applyMultipleSoftmaxToInputWindow(Vec input_reconstruction_activation, Vec input_reconstruction_prob);
 

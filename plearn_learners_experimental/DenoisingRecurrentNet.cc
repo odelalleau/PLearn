@@ -71,9 +71,6 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 DenoisingRecurrentNet::DenoisingRecurrentNet() :
-    prediction_cost_weight(1),
-    input_reconstruction_cost_weight(0),
-    hidden_reconstruction_cost_weight(0),
     use_target_layers_masks( false ),
     end_of_sequence_symbol( -1000 ),
     encoding("note_octav_duration"),
@@ -87,6 +84,9 @@ DenoisingRecurrentNet::DenoisingRecurrentNet() :
     noisy_recurrent_lr( 0.000001),
     dynamic_gradient_scale_factor( 1.0 ),
     recurrent_lr( 0.00001 ),
+    prediction_cost_weight(1),
+    input_reconstruction_cost_weight(0),
+    hidden_reconstruction_cost_weight(0),
     current_learning_rate(0)
 {
     random_gen = new PRandom();
@@ -672,30 +672,29 @@ void DenoisingRecurrentNet::train()
                 if(corrupt_input)  // WARNING: encoded_sequence will be dirty!!!!
                     inject_zero_forcing_noise(encoded_seq, input_noise_prob);
                 
-                recurrentFprop(train_costs, train_n_items);
-
                 // greedy phase
                 if(input_reconstruction_lr!=0 || hidden_reconstruction_lr!=0){
                     setLearningRate( input_reconstruction_lr );
-                    performGreedyDenoisingPhase(train_costs, train_n_items);
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate(input_reconstruction_cost_weight, 0);
                 }
 
                 // recurrent noisy phase
                 if(noisy_recurrent_lr!=0)
                 {
                     setLearningRate( noisy_recurrent_lr );
-                    //recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(true);
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate(input_reconstruction_cost_weight, 1);
                 }
 
                 // recurrent no noise phase
                 if(recurrent_lr!=0)
                 {
-                    if(corrupt_input) // need to recover the clean sequence
-                        encoded_seq << clean_encoded_seq;                    
-                    setLearningRate( recurrent_lr );
+                    if(corrupt_input) // need to recover the clean sequence                        
+                        encoded_seq << clean_encoded_seq;                  
+                    setLearningRate( recurrent_lr );                    
                     recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(false);
+                    recurrentUpdate(0,1);
                 }
             }
 
@@ -738,49 +737,6 @@ void DenoisingRecurrentNet::train()
     }
 
     train_stats->finalize();        
-}
-
-
-void DenoisingRecurrentNet::performGreedyDenoisingPhase(Vec train_costs, Vec train_n_items)
-{
-    hidden_temporal_gradient.resize(hidden_layer->size);
-    hidden_gradient.resize(hidden_layer->size);
-    
-    double cost = 0;
-    Mat reconstruction_weights = getInputConnectionsWeightMatrix();
-    for(int i=hidden_list.length()-1; i>=0; i--){ 
-        // Add contribution of input reconstruction cost in hidden_gradient
-        if(input_reconstruction_cost_weight!=0)
-        {
-            hidden_temporal_gradient.clear();
-            hidden_gradient.clear();
-
-            Vec clean_input = clean_encoded_seq.subMatRows(i, input_window_size).toVec();
-            
-            train_costs[train_costs.length()-2] += fpropUpdateInputReconstructionFromHidden(hidden_list(i), reconstruction_weights, input_reconstruction_bias, input_reconstruction_prob, 
-                                                                    clean_input, hidden_gradient, input_reconstruction_cost_weight, input_reconstruction_lr);
-            train_n_items[train_n_items.length()-2]++;
-
-            if(i!=0 && dynamic_connections )
-            {
-                hidden_layer->bpropUpdate(
-                    hidden_act_no_bias_list(i), hidden_list(i),
-                    hidden_temporal_gradient, hidden_gradient);
-                
-                dynamic_connections->bpropUpdate(
-                    hidden_list(i-1),
-                    hidden_act_no_bias_list(i), // Here, it should be dynamic_act_no_bias_contribution, but doesn't matter because a RBMMatrixConnection::bpropUpdate doesn't use its second argument
-                    hidden_gradient, hidden_temporal_gradient);
-            }
-            else{
-                hidden_layer->bpropUpdate(
-                    hidden_act_no_bias_list(i), hidden_list(i),
-                    hidden_temporal_gradient, hidden_gradient); // Not really temporal gradient, but this is the final iteration...
-            }
-        }
-    }
-
-    
 }
 
 
@@ -852,8 +808,9 @@ void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq) const
         masks_list[k] = mask_part.subMatColumns(startcol, targsize);
         startcol += targsize;
     }
-    encoded_seq.resize(seq.length(), seq.width());
-    encoded_seq << seq;
+
+    encoded_seq.resize(input_part.length(), input_part.width());
+    encoded_seq << input_part;
 }
 
 
@@ -1051,14 +1008,27 @@ double DenoisingRecurrentNet::fpropInputReconstructionFromHidden(Vec hidden, Mat
     // predict (denoised) input_reconstruction 
     transposeProduct(input_reconstruction_activation, reconstruction_weights, hidden); 
     input_reconstruction_activation += input_reconstruction_bias;
-    applyMultipleSoftmaxToInputWindow(input_reconstruction_activation, input_reconstruction_prob);
-    
-    double neg_log_cost = 0; // neg log softmax
-    for(int k=0; k<input_reconstruction_prob.length(); k++)
-        if(clean_input[k]!=0)
-            neg_log_cost -= clean_input[k]*safelog(input_reconstruction_prob[k]);
 
-    return neg_log_cost;
+    double result_cost = 0;
+    if(encoding=="raw_masked_supervised") // complicated input format... consider it's squared error
+    {
+        real r;
+        input_reconstruction_prob << input_reconstruction_activation;
+        for(int i=0; i<input_reconstruction_activation.length(); i++)
+            r += input_reconstruction_activation[i] - clean_input[i];
+        result_cost = r*r;
+    }
+    else // suppose it's a multiple softmax
+    {
+        applyMultipleSoftmaxToInputWindow(input_reconstruction_activation, input_reconstruction_prob);
+    
+        double neg_log_cost = 0; // neg log softmax
+        for(int k=0; k<input_reconstruction_prob.length(); k++)
+            if(clean_input[k]!=0)
+                neg_log_cost -= clean_input[k]*safelog(input_reconstruction_prob[k]);
+        result_cost = neg_log_cost;
+    }
+    return result_cost;
 }
 
 //! Backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
@@ -1076,8 +1046,10 @@ void DenoisingRecurrentNet::updateInputReconstructionFromHidden(Vec hidden, Mat&
     multiplyAcc(input_reconstruction_bias, input_reconstruction_activation_grad, -lr);
 
     // update weight
-    // productTransposeAcc(reconstruction_weights, hidden, input_reconstruction_activation_grad);
-    externalProductScaleAcc(reconstruction_weights, hidden, input_reconstruction_activation_grad, -lr);
+    // THIS IS COMMENTED OUT BECAUSE THE reconstruction_weights ARE tied (same) TO THE input_connection weights, 
+    // WHICH GET UPDATED LATER IN recurrentUpdate SO IF WE UPDATE THEM HERE THEY WOULD GET UPDATED TWICE.
+    // WARNING: THIS WOULD NO LONGER BE THE CASE IF THEY WERE NOT TIED!
+    // externalProductScaleAcc(reconstruction_weights, hidden, input_reconstruction_activation_grad, -lr);
 
     // accumulate in hidden_gradient
     productAcc(hidden_gradient, reconstruction_weights, input_reconstruction_activation_grad);
@@ -1099,7 +1071,8 @@ target_prediction_act_no_bias_list
 nll_list
 */
 
-void DenoisingRecurrentNet::recurrentUpdate(bool input_is_corrupted)
+void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
+                                            real temporal_gradient_contribution)
 {
     hidden_temporal_gradient.resize(hidden_layer->size);
     hidden_temporal_gradient.clear();
@@ -1110,7 +1083,6 @@ void DenoisingRecurrentNet::recurrentUpdate(bool input_is_corrupted)
         else
             hidden_gradient.resize(hidden_layer->size);
         hidden_gradient.clear();
-        int tar = 0;
         if( prediction_cost_weight!=0 )
         {
             for( int tar=0; tar<target_layers.length(); tar++)
@@ -1133,34 +1105,38 @@ void DenoisingRecurrentNet::recurrentUpdate(bool input_is_corrupted)
                                                              hidden_gradient, bias_gradient,true);
                 }
             }
-        }
-        if (hidden_layer2)
-        {
-            hidden_layer2->bpropUpdate(
-                hidden2_act_no_bias_list(i), hidden2_list(i),
-                bias_gradient, hidden_gradient);
+
+            if (hidden_layer2)
+            {
+                hidden_layer2->bpropUpdate(
+                    hidden2_act_no_bias_list(i), hidden2_list(i),
+                    bias_gradient, hidden_gradient);
                 
-            hidden_connections->bpropUpdate(
-                hidden_list(i),
-                hidden2_act_no_bias_list(i), 
-                hidden_gradient, bias_gradient);
+                hidden_connections->bpropUpdate(
+                    hidden_list(i),
+                    hidden2_act_no_bias_list(i), 
+                    hidden_gradient, bias_gradient);
+            }
         }
             
         // Add contribution of input reconstruction cost in hidden_gradient
-        /*   if(input_is_corrupted && input_reconstruction_cost_weight!=0)
+        if(input_reconstruction_weight!=0)
         {
             Mat reconstruction_weights = getInputConnectionsWeightMatrix();
             Vec clean_input = clean_encoded_seq.subMatRows(i, input_window_size).toVec();
 
             fpropUpdateInputReconstructionFromHidden(hidden_list(i), reconstruction_weights, input_reconstruction_bias, input_reconstruction_prob, 
-                                                     clean_input, hidden_gradient, input_reconstruction_cost_weight, current_learning_rate);
-                                                     }*/
+                                                     clean_input, hidden_gradient, input_reconstruction_weight, current_learning_rate);
+        }
 
         if(i!=0 && dynamic_connections )
         {   
             // add contribution to gradient of next time step hidden layer
-            hidden_gradient += hidden_temporal_gradient;
-                
+            if(temporal_gradient_contribution>0)
+            { // add weighted contribution of hidden_temporal gradient to hidden_gradient
+                // It does this: hidden_gradient += temporal_gradient_contribution*hidden_temporal_gradient;
+                multiplyAcc(hidden_gradient, hidden_temporal_gradient, temporal_gradient_contribution);
+            }
             hidden_layer->bpropUpdate(
                 hidden_act_no_bias_list(i), hidden_list(i),
                 hidden_temporal_gradient, hidden_gradient);
