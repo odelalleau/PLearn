@@ -327,7 +327,7 @@ void DenoisingRecurrentNet::build_()
 
         target_layers_n_of_target_elements.resize( targetsize() );
         target_layers_n_of_target_elements.clear();
-
+        tar_layer = 0;
         for( int tar=0; tar<targetsize(); tar++)
         {
             if( tar_layer > target_layers.length() )
@@ -650,7 +650,7 @@ void DenoisingRecurrentNet::train()
             pb = new ProgressBar( "Recurrent training phase of "+classname(),
                                   end_stage - init_stage );
 
-        int nCost = 2;
+        int nCost = 0;
         train_costs.resize(train_costs.length() + nCost);
         train_n_items.resize(train_n_items.length() + nCost);
         while(stage < end_stage)
@@ -702,24 +702,25 @@ void DenoisingRecurrentNet::train()
             if( pb )
                 pb->update( stage + 1 - init_stage);
             
-            double totalCosts = 0;
+            //double totalCosts = 0;
             for(int i=0; i<train_costs.length(); i++)
             {
                 if (i < target_layers_weights.length()){
                     if( !fast_exact_is_equal(target_layers_weights[i],0) ){
                         train_costs[i] /= train_n_items[i];
-                        totalCosts += train_costs[i]*target_layers_weights[i];
+                        //totalCosts += train_costs[i]*target_layers_weights[i];
                     }
                     else
                         train_costs[i] = MISSING_VALUE;
                 }
-                
+                /*
                 if (i == train_costs.length()-nCost ){
                     train_costs[i] /= train_n_items[i];
                     totalCosts += train_costs[i]*input_reconstruction_cost_weight;
                 }
                 else if (i == train_costs.length()-1)
                     train_costs[i] = totalCosts;
+                */
             }
 
             if(verbosity>0)
@@ -851,6 +852,8 @@ void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq) const
         masks_list[k] = mask_part.subMatColumns(startcol, targsize);
         startcol += targsize;
     }
+    encoded_seq.resize(seq.length(), seq.width());
+    encoded_seq << seq;
 }
 
 
@@ -1110,20 +1113,26 @@ void DenoisingRecurrentNet::recurrentUpdate(bool input_is_corrupted)
         int tar = 0;
         if( prediction_cost_weight!=0 )
         {
-            target_layers[tar]->activation << target_prediction_act_no_bias_list[tar](i);
-            target_layers[tar]->activation += target_layers[tar]->bias;
-            target_layers[tar]->setExpectation(target_prediction_list[tar](i));
-            target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
-            bias_gradient *= prediction_cost_weight;
-            //if(use_target_layers_masks)
-            //    bias_gradient *= masks_list[tar](i);
-            target_layers[tar]->update(bias_gradient);
-            if( hidden_layer2 )
-                target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
-                                                     hidden_gradient, bias_gradient,true);
-            else
-                target_connections[tar]->bpropUpdate(hidden_list(i),target_prediction_act_no_bias_list[tar](i),
-                                                     hidden_gradient, bias_gradient,true);
+            for( int tar=0; tar<target_layers.length(); tar++)
+            {
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                {
+                    target_layers[tar]->activation << target_prediction_act_no_bias_list[tar](i);
+                    target_layers[tar]->activation += target_layers[tar]->bias;
+                    target_layers[tar]->setExpectation(target_prediction_list[tar](i));
+                    target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
+                    bias_gradient *= prediction_cost_weight;
+                    if(use_target_layers_masks)
+                        bias_gradient *= masks_list[tar](i);
+                    target_layers[tar]->update(bias_gradient);
+                    if( hidden_layer2 )
+                        target_connections[tar]->bpropUpdate(hidden2_list(i),target_prediction_act_no_bias_list[tar](i),
+                                                             hidden_gradient, bias_gradient,true);
+                    else
+                        target_connections[tar]->bpropUpdate(hidden_list(i),target_prediction_act_no_bias_list[tar](i),
+                                                             hidden_gradient, bias_gradient,true);
+                }
+            }
         }
         if (hidden_layer2)
         {
