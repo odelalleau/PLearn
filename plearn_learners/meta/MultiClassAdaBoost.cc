@@ -41,6 +41,9 @@
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
+#include <plearn_learners/regressors/RegressionTreeRegisters.h>
+#define PL_LOG_MODULE_NAME "MultiClassAdaBoost"
+#include <plearn/io/pl_log.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -511,6 +514,14 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         learner2->setTrainingSet(vmat2, call_forget);
     }
 
+    if(learner1->getTrainingSet()->classname()=="RegressionTreeRegisters"
+       && learner2->getTrainingSet()->classname()=="RegressionTreeRegisters")
+    {
+        TMat<RTR_type> t =  ((PP<RegressionTreeRegisters>)(learner2->getTrainingSet()))->getTSortedRow();
+        DBG_MODULE_LOG<<"removing duplicate tsorted_row in RegressionTreeRegisters to save memory"<<endl;
+        ((PP<RegressionTreeRegisters>)(learner1->getTrainingSet()))->setTSortedRow(t);
+    }
+       
     //we do it here as RegressionTree need a trainingSet to know
     // the number of test.
     subcosts2.resize(learner2->nTestCosts());

@@ -51,8 +51,9 @@
 //!work with unsigned int, uint16_t, but fail with uint8_t???
 #define RTR_type uint32_t
 //!The type for the leave id
+#ifndef RTR_type_id
 #define RTR_type_id int16_t
-
+#endif
 namespace PLearn {
 using namespace std;
 
@@ -80,7 +81,8 @@ private:
     TMat<RTR_type> tsorted_row;
     TVec<RTR_type_id> leave_register;
     VMat tsource;
- 
+    VMat source;
+
 public:
 
     RegressionTreeRegisters();
@@ -123,7 +125,8 @@ public:
                     "the weightsize only");
         setWeight(i,value);
     }
-    VMat source;
+    void         setTSortedRow(TMat<RTR_type> t){tsorted_row = t;}
+    TMat<RTR_type> getTSortedRow(){return tsorted_row;}
 
 private:
     void         build_();
