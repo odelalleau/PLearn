@@ -156,8 +156,8 @@ instead perform various operations. These special options are:
   -getoptions: print the specific options for the target
   -vcproj: a Visual Studio project file (.vcproj) for the target will be
            created.
-  -o filename: the name of the output file (a symlic to the real file)
-  -link-target filename: The name of the real output file (not a symlic as -o)
+  -o filename: the name of the output file (a symlink to the real file)
+  -link-target filename: the name of the real output file (not a symlink as -o)
   
 The configuration file 'config' for pymake is searched for
 first in the .pymake subdirectory of the current directory, then similarly
