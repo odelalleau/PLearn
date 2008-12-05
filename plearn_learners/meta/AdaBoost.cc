@@ -941,13 +941,10 @@ void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     if(weak_learner_template->classname()=="RegressionTree"){
         //we do this for optimization. Otherwise we will creat a RegressionTreeRegister
         //for each weak_learner. This is time consuming as it sort the dataset
-        if(training_set->classname()!="RegressionTreeRegisters"){
-            PP<RegressionTreeRegisters> sorted_train_set = new RegressionTreeRegisters();
-            sorted_train_set->setOption("report_progress", tostring(report_progress));
-            sorted_train_set->setOption("verbosity", tostring(verbosity));
-            sorted_train_set->initRegisters(training_set);
-            training_set = VMat(sorted_train_set);
-        }
+        if(training_set->classname()!="RegressionTreeRegisters")
+            training_set = new RegressionTreeRegisters(training_set,
+                                                       report_progress,
+                                                       verbosity);
 
         //we need to change the weight of the trainning set to reuse the RegressionTreeRegister
         if(!modif_train_set_weights)

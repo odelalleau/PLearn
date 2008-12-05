@@ -72,7 +72,7 @@ private:
 //    VMat train_set;
   
 /*
-  Learnt options: they are sized and initialized if need be, at initRegisters(...) or reinitRegisters()
+  Learnt options: they are sized and initialized if need be, at build() or reinitRegisters()
 */
 
     int       next_id;
@@ -86,6 +86,8 @@ private:
 public:
 
     RegressionTreeRegisters();
+    RegressionTreeRegisters(VMat source_, bool report_progress_ = false,
+                            bool vebosity_ = false);
     virtual              ~RegressionTreeRegisters();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeRegisters);
@@ -93,7 +95,6 @@ public:
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
-    void         initRegisters(VMat train_set);
     void         reinitRegisters();
     inline void         registerLeave(RTR_type_id leave_id, int row)
     { leave_register[row] = leave_id;    }
@@ -125,6 +126,8 @@ public:
                     "the weightsize only");
         setWeight(i,value);
     }
+    
+    //! usefull in MultiClassAdaBoost to save memory
     void         setTSortedRow(TMat<RTR_type> t){tsorted_row = t;}
     TMat<RTR_type> getTSortedRow(){return tsorted_row;}
 

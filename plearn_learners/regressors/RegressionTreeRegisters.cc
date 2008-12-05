@@ -64,6 +64,17 @@ RegressionTreeRegisters::RegressionTreeRegisters():
     build();
 }
 
+RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
+                                                 bool report_progress_,
+                                                 bool verbosity_):
+    report_progress(report_progress_),
+    verbosity(verbosity_),
+    next_id(0)
+{
+    source = source_;
+    build();
+}
+
 RegressionTreeRegisters::~RegressionTreeRegisters()
 {
 }
@@ -116,25 +127,20 @@ void RegressionTreeRegisters::build()
 
 void RegressionTreeRegisters::build_()
 {
-    if(source)
-        initRegisters(source);
-}
-
-void RegressionTreeRegisters::initRegisters(VMat the_train_set)
-{   
+    if(!source)
+        return;
     //check that we can put all the examples of the train_set
     //with respect to the size of RTR_type who limit the capacity
-    PLCHECK(the_train_set.length()>0 
-            && (unsigned)the_train_set.length()<=std::numeric_limits<RTR_type>::max());
+    PLCHECK(source.length()>0 
+            && (unsigned)source.length()
+            <= std::numeric_limits<RTR_type>::max());
 
-    if(the_train_set==source && tsource)
-        //we set the existing source file
-        return;
-    source = the_train_set;
-    VMat tmp = VMat(new TransposeVMatrix(the_train_set));
-    PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
-    tsource = VMat(tmp2 );
-    setMetaInfoFrom(the_train_set);
+    if(!tsource){
+        VMat tmp = VMat(new TransposeVMatrix(source));
+        PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
+        tsource = VMat(tmp2 );
+        setMetaInfoFrom(source);
+    }
     leave_register.resize(length());
     sortRows();
 }

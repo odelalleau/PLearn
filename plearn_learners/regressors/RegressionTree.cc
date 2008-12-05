@@ -285,12 +285,9 @@ void RegressionTree::initialiseTree()
         sorted_train_set->reinitRegisters();
     }
     else if(!sorted_train_set)
-    {
-        sorted_train_set = new RegressionTreeRegisters();
-        sorted_train_set->setOption("report_progress", tostring(report_progress));
-        sorted_train_set->setOption("verbosity", tostring(verbosity));
-        sorted_train_set->initRegisters(train_set);
-    }
+        sorted_train_set = new RegressionTreeRegisters(train_set,
+                                                       report_progress,
+                                                       verbosity);
     else
     {
         sorted_train_set->reinitRegisters();

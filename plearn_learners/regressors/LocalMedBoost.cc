@@ -183,12 +183,9 @@ void LocalMedBoost::train()
         initializeLineSearch();
         bound = 1.0;
         if (regression_tree > 0)
-        {
-            sorted_train_set = new RegressionTreeRegisters();
-            sorted_train_set->setOption("report_progress", tostring(report_progress));
-            sorted_train_set->setOption("verbosity", tostring(verbosity));
-            sorted_train_set->initRegisters(train_set);
-        }
+            sorted_train_set = new RegressionTreeRegisters(train_set,
+                                                           report_progress,
+                                                           verbosity);
     }
     PP<ProgressBar> pb;
     if (report_progress) pb = new ProgressBar("LocalMedBoost: train stages: ", nstages);
