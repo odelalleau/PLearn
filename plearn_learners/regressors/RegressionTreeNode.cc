@@ -347,12 +347,12 @@ void RegressionTreeNode::lookForBestSplit()
     }
     PLASSERT(fast_is_less(after_split_error,REAL_MAX)||split_col==-1);
 
-    DBG_MODULE_LOG<<"error after split: "<<after_split_error<<endl;
-    DBG_MODULE_LOG<<"split value: "<<split_feature_value<<endl;
-    DBG_MODULE_LOG<<"split_col: "<<split_col;
+    EXTREME_MODULE_LOG<<"error after split: "<<after_split_error<<endl;
+    EXTREME_MODULE_LOG<<"split value: "<<split_feature_value<<endl;
+    EXTREME_MODULE_LOG<<"split_col: "<<split_col;
     if(split_col>=0)
-        DBG_MODULE_LOG<<" "<<train_set->fieldName(split_col);
-    DBG_MODULE_LOG<<endl;
+        EXTREME_MODULE_LOG<<" "<<train_set->fieldName(split_col);
+    EXTREME_MODULE_LOG<<endl;
 }
 
 tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
