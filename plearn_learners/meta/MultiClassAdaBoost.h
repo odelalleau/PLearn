@@ -190,7 +190,7 @@ private:
     // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
-    static void getSubLearnerTarget(Vec target, TVec<Vec> sub_target);
+    static void getSubLearnerTarget(const Vec target, TVec<Vec> sub_target);
 private:
     //#####  Private Data Members  ############################################
     TVec<Vec> sub_target_tmp;

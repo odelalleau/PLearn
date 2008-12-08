@@ -467,7 +467,7 @@ TVec<string> MultiClassAdaBoost::getTrainCostNames() const
     return names;
 }
 
-void MultiClassAdaBoost::getSubLearnerTarget(Vec target,
+void MultiClassAdaBoost::getSubLearnerTarget(const Vec target,
                                              TVec<Vec> sub_target) 
 {
     if(fast_is_equal(target[0],0.)){
