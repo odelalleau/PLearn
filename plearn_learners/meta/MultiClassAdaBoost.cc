@@ -485,9 +485,12 @@ void MultiClassAdaBoost::getSubLearnerTarget(Vec target,
                   "it to a target of 2.", target[0]);
         sub_target[0][0]=1;
         sub_target[1][0]=1;
-    }else
+    }else{
         PLERROR("In MultiClassAdaBoost::getSubLearnerTarget - "
                   "We only support target 0/1/2. We got %f.", target[0]); 
+        sub_target[0][0]=0;
+        sub_target[1][0]=0;
+    }
 }
 
 void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
