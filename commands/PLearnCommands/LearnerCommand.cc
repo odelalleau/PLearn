@@ -138,8 +138,10 @@ void LearnerCommand::test(const string& trained_learner_file, const string& test
     if(outputs_file!="")
         testoutputs = new FileVMatrix(outputs_file,l,learner->outputsize());
     VMat testcosts;
-    if(set_testset_as_trainingset)
+    if(set_testset_as_trainingset){
         learner->setTrainingSet(testset, false);
+        learner->finalize();
+    }
     if(costs_file!="")
         testcosts = new FileVMatrix(costs_file,l,learner->getTestCostNames());
 
