@@ -301,7 +301,11 @@ nservers = 0 ;
 save_trainingset_prefix = "" ;
 test_minibatch_size = 1 ;
 use_a_separate_random_generator_for_testing = 1827  )
- )
+;
+train_time = 0 ;
+total_train_time = 0 ;
+test_time = 0 ;
+total_test_time = 0  )
 ;
 perf_evaluators = {};
 report_stats = 1 ;
