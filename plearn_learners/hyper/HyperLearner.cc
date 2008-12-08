@@ -42,6 +42,8 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/base/PLearnDiff.h>
 #include <plearn/io/load_and_save.h>
+#define PL_LOG_MODULE_NAME "HyperLearner"
+#include <plearn/io/pl_log.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/sys/Profiler.h>
 
@@ -371,7 +373,7 @@ void HyperLearner::auto_load()
     // this reload mechanism to let us reload multiple (chained) HyperLearners.
     if(expdir.isEmpty()){
         if(verbosity>1)
-            PLWARNING("In HyperLearner::auto_load() - no expdir. Can't reload.");
+            DBG_MODULE_LOG<<"auto_load() - no expdir. Can't reload."<<endl;
         return;
     }
     PPath f = expdir/"hyper_learner_auto_save.psave";
