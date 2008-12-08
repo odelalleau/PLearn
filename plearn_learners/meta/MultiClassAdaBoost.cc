@@ -507,25 +507,30 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     }else
         weight_prg = "1 :weights";
         
+    bool tsorted = false;
+
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
     if(training_set_has_changed || !learner1->getTrainingSet()){
         VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
                                            target_prg1,  weight_prg);
         learner1->setTrainingSet(vmat1, call_forget);
+        tsorted = true;
     }
     if(training_set_has_changed || !learner2->getTrainingSet()){
         VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
                                            target_prg2,  weight_prg);
         learner2->setTrainingSet(vmat2, call_forget);
+        tsorted = true;
     }
 
-    if(learner1->getTrainingSet()->classname()=="RegressionTreeRegisters"
+    if(tsorted &&
+       learner1->getTrainingSet()->classname()=="RegressionTreeRegisters"
        && learner2->getTrainingSet()->classname()=="RegressionTreeRegisters")
     {
-        TMat<RTR_type> t =  ((PP<RegressionTreeRegisters>)(learner2->getTrainingSet()))->getTSortedRow();
+        TMat<RTR_type> t1 =  ((PP<RegressionTreeRegisters>)(learner1->getTrainingSet()))->getTSortedRow();
         DBG_MODULE_LOG<<"removing duplicate tsorted_row in RegressionTreeRegisters to save memory"<<endl;
-        ((PP<RegressionTreeRegisters>)(learner1->getTrainingSet()))->setTSortedRow(t);
+        ((PP<RegressionTreeRegisters>)(learner2->getTrainingSet()))->setTSortedRow(t1);
     }
        
     //we do it here as RegressionTree need a trainingSet to know
