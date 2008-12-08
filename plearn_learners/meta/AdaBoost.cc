@@ -355,16 +355,16 @@ void AdaBoost::train()
                 " of the train_set must be know.");
 
 
-    static Vec input;
-    static Vec output;
-    static Vec target;
+    Vec input;
+    Vec output;
+    Vec target;
     real weight;
 
-    static Vec examples_error;
+    Vec examples_error;
 
     const int n = train_set.length();
-    static TVec<int> train_indices;
-    static Vec pseudo_loss;
+    TVec<int> train_indices;
+    Vec pseudo_loss;
 
     input.resize(inputsize());
     output.resize(weak_learner_template->outputsize());// We use only the first one as the output from the weak learner
@@ -738,9 +738,11 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
 
     // First cost is negative log-likelihood...  output[0] is the likelihood
     // of the first class
+#ifdef BOUNDCHECK
     if (target.size() > 1)
         PLERROR("AdaBoost::computeCostsFromOutputs: target must contain "
                 "one element only: the 0/1 class");
+#endif
     if (fast_exact_is_equal(target[0], 0)) {
         costs[0] = output[0] >= output_threshold; 
     }
