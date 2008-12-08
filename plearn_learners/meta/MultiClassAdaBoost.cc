@@ -500,7 +500,13 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
     target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
     target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
-    
+
+    if(training_set->weightsize()>0){
+        int index = training_set->inputsize()+training_set->targetsize();
+        weight_prg = "[%"+tostring(index)+"]";
+    }else
+        weight_prg = "1 :weights";
+        
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
     if(training_set_has_changed || !learner1->getTrainingSet()){
