@@ -272,6 +272,18 @@ void RegressionTree::verbose(string the_msg, int the_level)
         pout << the_msg << endl;
 }
 
+void RegressionTree::finalize()
+{
+    root->finalize();
+    priority_queue = 0;
+    split_cols = TVec<int>();
+    split_values = Vec();
+    leave_template = 0;
+    first_leave = 0;
+    if(sorted_train_set)
+        sorted_train_set->finalize();
+}
+
 void RegressionTree::forget()
 {
     stage = 0;

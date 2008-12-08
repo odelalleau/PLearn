@@ -281,6 +281,14 @@ int AdaBoost::outputsize() const
     return 1;
 }
 
+void AdaBoost::finalize()
+{
+    for(int i=0;i<weak_learners.size();i++){
+        weak_learners[i]->finalize();
+    }
+
+}
+
 void AdaBoost::forget()
 {
     stage = 0;
@@ -467,6 +475,7 @@ void AdaBoost::train()
             new_weak_learner->setExperimentDirectory( expdir / ("WeakLearner"+tostring(stage)+"Expdir") );
 
         new_weak_learner->train();
+        new_weak_learner->finalize();
 
         // calculate its weighted training error 
         {

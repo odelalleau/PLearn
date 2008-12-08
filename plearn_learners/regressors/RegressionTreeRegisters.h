@@ -130,6 +130,8 @@ public:
     //! usefull in MultiClassAdaBoost to save memory
     void         setTSortedRow(TMat<RTR_type> t){tsorted_row = t;}
     TMat<RTR_type> getTSortedRow(){return tsorted_row;}
+    //to lower total memory as this is not needed anymore
+    virtual void finalize(){tsorted_row = TMat<RTR_type>();}
 
 private:
     void         build_();

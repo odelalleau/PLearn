@@ -105,6 +105,7 @@ public:
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
     virtual void         train();
+    virtual void         finalize();
     virtual void         forget();
     virtual int          outputsize() const;
     virtual TVec<string> getTrainCostNames() const;

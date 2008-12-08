@@ -103,6 +103,8 @@ public:
     // (PLEASE IMPLEMENT IN .cc)
     virtual int outputsize() const;
 
+    virtual void finalize();
+
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!).

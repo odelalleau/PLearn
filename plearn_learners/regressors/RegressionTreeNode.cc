@@ -79,6 +79,20 @@ RegressionTreeNode::~RegressionTreeNode()
 {
 }
 
+void RegressionTreeNode::finalize(){
+    //those variable are not needed after training.
+    right_leave = 0;
+    left_leave = 0;
+    leave = 0;
+    //missing_leave used in computeOutputsAndNodes
+    if(right_node)
+        right_node->finalize();
+    if(left_node)
+        left_node->finalize();
+    if(missing_node)
+        missing_node->finalize();
+}
+
 void RegressionTreeNode::declareOptions(OptionList& ol)
 { 
     declareOption(ol, "missing_is_valid", &RegressionTreeNode::missing_is_valid, OptionBase::buildoption,

@@ -190,6 +190,12 @@ int MultiClassAdaBoost::outputsize() const
     return 3;
 }
 
+void MultiClassAdaBoost::finalize()
+{
+    learner1->finalize();
+    learner2->finalize();
+}
+
 void MultiClassAdaBoost::forget()
 {
     //! (Re-)initialize the PLearner in its fresh state (that state may depend

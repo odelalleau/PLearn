@@ -100,6 +100,7 @@ public:
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
+    void         finalize();
     void         initNode(PP<RegressionTree> tree,
                           PP<RegressionTreeLeave> leave);
     void         lookForBestSplit();

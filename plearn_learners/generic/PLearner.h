@@ -404,6 +404,15 @@ public:
     /**
      *  *** SUBCLASS WRITING: ***
      *
+     * When this method is called the learner know it we will never train it again.
+     * So it can free resources that are needed only during the training.
+     * The functions test()/computeOutputs()/... should continue to work.
+     */
+    virtual void finalize(){};
+
+    /**
+     *  *** SUBCLASS WRITING: ***
+     *
      *  The role of the train method is to bring the learner up to
      *  stage==nstages, updating the stats with training costs measured on-line
      *  in the process.
