@@ -918,7 +918,12 @@ class DBICondor(DBIBase):
                     out.write(line_header()+
                               "renew the launch file "+self.launch_file+"\n")
                     out.flush()
-                    self.make_launch_script(bash_exec, True)
+                    launch_tmp_file=self.launch_file+".tmp"
+                    fd=open(launch_tmp_file,'w')
+                    self.make_kerb_script(fd,self.second_lauch_file)
+                    fd.close()
+                    os.chmod(launch_tmp_file, 0755)
+                    os.rename(launch_tmp_file, self.launch_file)
                 out.flush()
                 #we do this as in some case(with dagman) the log file can 
                 #take a few second to be created. So we don't loop too fast
@@ -932,16 +937,29 @@ class DBICondor(DBIBase):
             
             os.system("pkboost +d "+str(pid))
 
-    def make_launch_script(self, bash_exec, renew=False):
+    def make_kerb_script(self, fd, second_lauch_file):
+        fd.write(dedent('''\
+                    #!/bin/sh
+                    '''))
+        get=self.get_pkdilly_var()
+            
+        for g in get:
+            fd.write("export "+g+"\n")
+        fd.write(dedent('''
+                export KRVEXECUTE=%s
+                /usr/sbin/circus "$@"
+                '''%(os.path.abspath(second_lauch_file))))
+
+    def make_launch_script(self, bash_exec):
             
         #we write in a temp file then move it to be sure no jobs will 
         # read a partially writed file when we renew the file.
 
         dbi_file=get_plearndir()+'/python_modules/plearn/parallel/dbi.py'
         overwrite_launch_file=False
-        if not os.path.exists(dbi_file) and not renew:
+        if not os.path.exists(dbi_file):
             print '[DBI] WARNING: Can\'t locate file "dbi.py". Maybe the file "'+self.launch_file+'" is not up to date!'
-        elif not renew:
+        else:
             if os.path.exists(self.launch_file):
                 mtimed=os.stat(dbi_file)[8]
                 mtimel=os.stat(self.launch_file)[8]
@@ -951,7 +969,7 @@ class DBICondor(DBIBase):
         if self.pkdilly:
             overwrite_launch_file = True
                     
-        if self.copy_local_source_file and not renew:
+        if self.copy_local_source_file:
             source_file_dest = os.path.join(self.log_dir,
                                             os.path.basename(self.source_file))
             shutil.copy( self.source_file, source_file_dest)
@@ -962,35 +980,28 @@ class DBICondor(DBIBase):
         launch_tmp_file=self.launch_file+".tmp"
         if not os.path.exists(self.launch_file) or overwrite_launch_file:
             self.temp_files.append(self.launch_file)
-            launch_fd = open(launch_tmp_file,'w')
-            fd=launch_fd
+            fd = open(launch_tmp_file,'w')
             
             if self.pkdilly:
-                second_lauch_file = self.launch_file+"2.sh"
-                    
+                self.second_lauch_file = self.launch_file+"2.sh"
+                self.make_kerb_script(fd, self.second_lauch_file)
+                fd.close()
+
+                fd = open(self.second_lauch_file,'w')
                 fd.write(dedent('''\
                     #!/bin/sh
                     '''))
-                get=self.get_pkdilly_var()
 
-                for g in get:
-                    launch_fd.write("export "+g+"\n")
-                launch_fd.write(dedent('''
-                export KRVEXECUTE=%s
-                /usr/sbin/circus "$@"
-                '''%(os.path.abspath(second_lauch_file))))
-                if not renew:
-                    fd=open(second_lauch_file,'w')
             bash=not self.source_file or not self.source_file.endswith(".cshrc")
-            if bash and not renew:
+            if bash:
                 fd.write(dedent('''\
                     #!/bin/sh
                     '''))
                 if self.condor_home:
                     fd.write('export HOME=%s\n' % self.condor_home)
-                fd.write('''
+                fd.write(dedent('''
                     cd %s
-                    '''%(os.path.abspath(".")))
+                    '''%(os.path.abspath("."))))
                 if self.source_file:
                     fd.write('source ' + self.source_file + '\n')
 
@@ -1007,7 +1018,7 @@ class DBICondor(DBIBase):
                     echo "Running: command: \\"$@\\"" 1>&2
                     %s
                     '''%(bash_exec)))
-            elif not renew:
+            else:
                 fd.write(dedent('''\
                     #!/bin/tcsh
                     '''))
@@ -1031,11 +1042,10 @@ class DBICondor(DBIBase):
                 echo "Running command: $argv"
                 $argv
                 '''))
-            if self.pkdilly and not renew:
-                fd.close()
-                os.chmod(second_lauch_file, 0755)
+            fd.close()
+            if self.pkdilly:
+                os.chmod(self.second_lauch_file, 0755)
 
-            launch_fd.close()
             os.chmod(launch_tmp_file, 0755)
             os.rename(launch_tmp_file, self.launch_file)
 
@@ -1218,7 +1228,6 @@ class DBICondor(DBIBase):
         condor_submit_fd.close()
 
         self.make_launch_script('sh -c "$@"')
-
         time.sleep(5)#we do this in hope that the error 'launch.sh2.sh is not executable'
 
         return self.condor_submit_exec + " " + self.condor_submit_file
