@@ -56,10 +56,6 @@ import sys,string
 from plearn.vmat.smartReadMat import *
 from numpy import *
 
-# should probably be an option
-separator = "_"
-output_separator = " "
-
 def get_col_index(fieldnames,colspec):
   if colspec in fieldnames:
     index=fieldnames.index(colspec)
@@ -165,7 +161,7 @@ def write_array(f,a):
       f.write(str(a[r,c])+" ")
     f.write("\n")
 
-def distinct_experiment_names(filenames):
+def distinct_experiment_names(filenames, separator):
   splitted_filenames = map(lambda fname: string.split(fname.replace("/",separator),separator), filenames)
   distinct_names = []
   for splitted_filename in splitted_filenames:
@@ -181,7 +177,7 @@ def distinct_experiment_names(filenames):
     distinct_names.append(string.join(different_parts,separator))
   return distinct_names
 
-def outputres(f,mode,speclist,results):
+def outputres(f, mode, speclist, results, separator, output_separator = " "):
   if not results:
     print "ERROR: no results selected!"
     sys.exit(0)
@@ -210,7 +206,7 @@ def outputres(f,mode,speclist,results):
     #
     # build the gnuplot command in the smartplot file header
     filenames = map(lambda res: res[1], results) # collect the filenames from the results list
-    distinct_expnames = distinct_experiment_names(filenames) # keep only the option=value parts that are distinct among experiments
+    distinct_expnames = distinct_experiment_names(filenames, separator) # keep only the option=value parts that are distinct among experiments
     f.write('# to set y on log-scale insert this at the beginning below: set logscale y;\n')
     # speclist has the elements: cols <xlabel> <ylabel> <minrow> <maxrow> <x> <col1> <name1> <col2> <name2> ...
     f.write('#: set xlabel "'+speclist[1]+'"; set ylabel "'+speclist[2]+'"; plot ')
@@ -248,7 +244,8 @@ def outputres(f,mode,speclist,results):
   else:
     raise ValueError("Invalid <spec> mode, expected 'min', 'sort', or 'plot', got "+mode)
 
-def collectres(outputfile,speclist,filenames,printcommand=True,verbose=1):
+def collectres(outputfile,speclist,filenames,printcommand=True,verbose=1,
+               separator="_", output_separator = " "):
   specs= string.split(speclist)
   mode = specs[0]
   f=open(outputfile,"w")
@@ -258,7 +255,7 @@ def collectres(outputfile,speclist,filenames,printcommand=True,verbose=1):
       f.write(file+" ")
   f.write("\n")
   f.write("# "+speclist + "\n")
-  outputres(f,mode,specs[1:],getres(specs[1:],filenames,verbose))
+  outputres(f,mode,specs[1:],getres(specs[1:],filenames,verbose), separator, output_separator)
   f.flush()
   f.close()
   
@@ -293,6 +290,9 @@ if __name__=='__main__':
     sys.exit(1)
   printcommand=True
   verbose=1
+  output_separator = " "
+  separator = "_"
+
   if args[1]=="--no_printcommand":
     printcommand=False
     del args[1]
@@ -307,4 +307,5 @@ if __name__=='__main__':
       output_separator = "\t"
     print "output_separator",output_separator
     del args[1]
-  collectres(args[1],args[2],args[3:],printcommand,verbose)
+
+  collectres(args[1],args[2],args[3:], printcommand, verbose, separator, output_separator)
