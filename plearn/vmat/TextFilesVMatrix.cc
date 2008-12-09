@@ -43,6 +43,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/fileutils.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -281,9 +282,8 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
                 }
             }
             if(!expended)
-                PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth - "
-                        "Don't have find any partial match to %s",
-                        fieldspec[i].first.c_str());
+                NORMAL_LOG<<"In TextFilesVMatrix::setColumnNamesAndWidth - "
+                    "Don't have find any partial match to "<<fieldspec[i].first;
         }
         fieldspec = new_fieldspec;
     }
@@ -319,7 +319,8 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
                 not_used_fs.append(name);
         }
         //check that we have the good number of fieldspec
-        if(fnames_header.size()!=fieldspec.size())
+        //if partial match is true, we don't want to generate the warning everytime
+        if(fnames_header.size()!=fieldspec.size() && !partial_match)
         {
             PLWARNING("In TextFilesVMatrix::setColumnNamesAndWidth() - "
                     "We read %d field names from the header but have %d"
@@ -328,7 +329,7 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 
         if(not_used_fs.size()!=0)
             PLWARNING("TextFilesVMatrix::setColumnNamesAndWidth() - "
-                      "Fieldspecs do not exist in source for field(s): %s\n"
+                      "Fieldspecs exists for field(s) that are not in the source: %s\n"
                       "They will be skipped.",
                       tostring(not_used_fs).c_str());
         if(not_used_fn.size()!=0)
