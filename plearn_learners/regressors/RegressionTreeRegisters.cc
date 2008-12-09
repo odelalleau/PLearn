@@ -42,6 +42,7 @@
 #include "RegressionTreeRegisters.h"
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/MemoryVMatrixNoSave.h>
+#include <plearn/vmat/SubVMatrix.h>
 #include <limits>
 
 namespace PLearn {
@@ -61,6 +62,21 @@ RegressionTreeRegisters::RegressionTreeRegisters():
     verbosity(0),
     next_id(0)
 {
+    build();
+}
+
+RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
+                                                 TMat<RTR_type> tsorted_row_,
+                                                 VMat tsource_,
+                                                 bool report_progress_,
+                                                 bool verbosity_):
+    report_progress(report_progress_),
+    verbosity(verbosity_),
+    next_id(0)
+{
+    source = source_;
+    tsource = tsource_;
+    tsorted_row = tsorted_row_;
     build();
 }
 
@@ -110,7 +126,6 @@ void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(tsorted_row, copies);
     deepCopyField(leave_register, copies);
-    deepCopyField(getExample_tmp, copies);
 //tsource should be deep copied, but as currently when it is deep copied
 // the copy is not used anymore to train. To save memory we don't do it.
 // It is deep copied eavily by HyperLearner and HyperOptimizer
@@ -134,13 +149,32 @@ void RegressionTreeRegisters::build_()
     PLCHECK(source.length()>0 
             && (unsigned)source.length()
             <= std::numeric_limits<RTR_type>::max());
+    PLCHECK(source->targetsize()==1);
+    PLCHECK(source->weightsize()<=1);
+    PLCHECK(source->inputsize()>0);
 
     if(!tsource){
-        VMat tmp = VMat(new TransposeVMatrix(source));
+        VMat tmp = VMat(new TransposeVMatrix(new SubVMatrix(
+                                                 source, 0,0,source->length(),
+                                                 source->inputsize())));
         PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
         tsource = VMat(tmp2 );
-        setMetaInfoFrom(source);
     }
+    setMetaInfoFrom(source);
+    weightsize_=1;
+    targetsize_=1;
+    target_weight.resize(source->length());
+    if(source->weightsize()<=0){
+        width_++;
+        for(int i=0;i<source->length();i++){
+            target_weight[i].first=source->get(i,inputsize());
+            target_weight[i].second=1.0 / length();
+        }
+    }else
+        for(int i=0;i<source->length();i++){
+            target_weight[i].first=source->get(i,inputsize());
+            target_weight[i].second=source->get(i,inputsize()+targetsize());
+        }
     leave_register.resize(length());
     sortRows();
 }
@@ -161,20 +195,18 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     target.resize(reg.length());
     weight.resize(reg.length());
     value.resize(reg.length());
-    int idx_target=inputsize();
-    int idx_weight=inputsize() + targetsize();
     if(weightsize() <= 0){
         weight.fill(1.0 / length());
         for(int i=0;i<reg.length();i++){            
-            target[i] = tsource->get(idx_target, reg[i]);
+            target[i] = target_weight[reg[i]].first;
             value[i]  = tsource->get(col, reg[i]);
         }
     } else {
         //It is better to do multiple pass for memory access.
-        for(int i=0;i<reg.length();i++)
-            target[i] = tsource->get(idx_target, reg[i]);
-        for(int i=0;i<reg.length();i++)
-            weight[i] = tsource->get(idx_weight, reg[i]);
+        for(int i=0;i<reg.length();i++){
+            target[i] = target_weight[reg[i]].first;
+            weight[i] = target_weight[reg[i]].second;
+        }
         for(int i=0;i<reg.length();i++)
             value[i]  = tsource->get(col, reg[i]);
     }
@@ -350,22 +382,10 @@ void RegressionTreeRegisters::getExample(int i, Vec& input, Vec& target, real& w
     if(weightsize()<0)
         PLERROR("In RegressionTreeRegisters::getExample, weightsize_ not defined for this vmat");
 #endif
-    input.resize(inputsize_);
-    getExample_tmp.resize(width());
-    tsource->getColumn(i,getExample_tmp);
-    input << getExample_tmp.subVec(0,input.size());
+    tsource->getColumn(i,input);
 
-    target.resize(targetsize_);
-    if (targetsize_ > 0) {
-        target<<getExample_tmp.subVec(inputsize(),targetsize());
-    }
-
-    if(weightsize()==0)
-        weight = 1;
-    else if(weightsize()>1)
-        PLERROR("In VMatrix::getExample, weightsize_ >1 not supported by this call");
-    else
-        weight = tsource->get(inputsize()+targetsize(),i);
+    target[0]=target_weight[i].first;
+    weight = target_weight[i].second;
 }
 
 

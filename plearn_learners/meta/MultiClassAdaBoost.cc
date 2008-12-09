@@ -218,6 +218,7 @@ void MultiClassAdaBoost::forget()
 
 void MultiClassAdaBoost::train()
 {
+    EXTREME_MODULE_LOG<<"train() start"<<endl;
     Profiler::start("MultiClassAdaBoost::train");
 
     learner1->nstages = nstages;
@@ -238,6 +239,8 @@ void MultiClassAdaBoost::train()
       PLCHECK(learner1->weak_learner_template->report_progress==false);
       PLCHECK(learner2->weak_learner_template->report_progress==false);
     }
+    
+    EXTREME_MODULE_LOG<<"train() // start"<<endl;
 #pragma omp parallel sections default(none)
 {
 #pragma omp section 
@@ -245,6 +248,7 @@ void MultiClassAdaBoost::train()
 #pragma omp section 
     learner2->train();
 }
+    EXTREME_MODULE_LOG<<"train() // end"<<endl;
 #else
     learner1->train();
     learner2->train();
@@ -272,7 +276,8 @@ void MultiClassAdaBoost::train()
     const Profiler::Stats& stats_test = Profiler::getStats("MultiClassAdaBoost::test");
     tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
     test_time=tmp-total_test_time;
-    total_test_time=tmp;  
+    total_test_time=tmp; 
+    EXTREME_MODULE_LOG<<"train() end"<<endl;
 }
 
 void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
@@ -516,32 +521,28 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     }else
         weight_prg = "1 :weights";
         
-    bool tsorted = false;
-
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
     if(training_set_has_changed || !learner1->getTrainingSet()){
         VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
                                            target_prg1,  weight_prg);
         learner1->setTrainingSet(vmat1, call_forget);
-        tsorted = true;
     }
     if(training_set_has_changed || !learner2->getTrainingSet()){
         VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
                                            target_prg2,  weight_prg);
+        PP<RegressionTreeRegisters> t1 = 
+            (PP<RegressionTreeRegisters>)learner1->getTrainingSet();
+        if(t1->classname()=="RegressionTreeRegisters"){
+            vmat2 = new RegressionTreeRegisters(vmat2,
+                                               t1->getTSortedRow(), 
+                                               t1->getTSource(),
+                                               learner1->report_progress,
+                                               learner1->verbosity);
+        }
         learner2->setTrainingSet(vmat2, call_forget);
-        tsorted = true;
     }
 
-    if(tsorted &&
-       learner1->getTrainingSet()->classname()=="RegressionTreeRegisters"
-       && learner2->getTrainingSet()->classname()=="RegressionTreeRegisters")
-    {
-        TMat<RTR_type> t1 =  ((PP<RegressionTreeRegisters>)(learner1->getTrainingSet()))->getTSortedRow();
-        DBG_MODULE_LOG<<"removing duplicate tsorted_row in RegressionTreeRegisters to save memory"<<endl;
-        ((PP<RegressionTreeRegisters>)(learner2->getTrainingSet()))->setTSortedRow(t1);
-    }
-       
     //we do it here as RegressionTree need a trainingSet to know
     // the number of test.
     subcosts2.resize(learner2->nTestCosts());

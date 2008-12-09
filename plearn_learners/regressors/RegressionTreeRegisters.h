@@ -81,12 +81,18 @@ private:
     TMat<RTR_type> tsorted_row;
     TVec<RTR_type_id> leave_register;
     VMat tsource;
+    //we put it in pair instead of two vector to speed up
+    //the getAllRegisteredRow(leave_id, col, reg, target, weight, value) fct
+    TVec<pair<real,real> > target_weight;
     VMat source;
 
 public:
 
     RegressionTreeRegisters();
     RegressionTreeRegisters(VMat source_, bool report_progress_ = false,
+                            bool vebosity_ = false);
+    RegressionTreeRegisters(VMat source_, TMat<RTR_type> tsorted_row_,
+                            VMat tsource_, bool report_progress_ = false,
                             bool vebosity_ = false);
     virtual              ~RegressionTreeRegisters();
     
@@ -98,17 +104,18 @@ public:
     void         reinitRegisters();
     inline void         registerLeave(RTR_type_id leave_id, int row)
     { leave_register[row] = leave_id;    }
-    inline virtual real get(int i, int j) const{return tsource->get(j,i);}
+    inline virtual real get(int i, int j) const{
+        if(j<inputsize())return tsource->get(j,i);
+        if(j==inputsize())return target_weight[i].first;
+        else  return target_weight[i].second;
+    }
     inline real         getTarget(int row)const
-    {return tsource->get(inputsize(), row);}
+    {return target_weight[row].first;}
     inline real         getWeight(int row)const{
-        if (weightsize() <= 0) return 1.0 / length();
-        else return tsource->get(inputsize() + targetsize(), row );
+        return target_weight[row].second;
     }
     inline void         setWeight(int row,real val){
-        PLASSERT(inputsize()>0&&targetsize()>0);
-        PLASSERT(weightsize() > 0);
-        tsource->put( inputsize() + targetsize(), row, val );
+        target_weight[row].second = val;
     }
     inline RTR_type_id     getNextId(){
         PLCHECK(next_id<std::numeric_limits<RTR_type_id>::max());
@@ -128,9 +135,8 @@ public:
     }
     
     //! usefull in MultiClassAdaBoost to save memory
-    void         setTSortedRow(TMat<RTR_type> t){tsorted_row = t;}
     TMat<RTR_type> getTSortedRow(){return tsorted_row;}
-    //to lower total memory as this is not needed anymore
+    VMat          getTSource(){return tsource;}
     virtual void finalize(){tsorted_row = TMat<RTR_type>();}
 
 private:
@@ -141,8 +147,6 @@ private:
     void         swapIndex(int index_i, int index_j, int dim);
     real         compare(real field1, real field2);
     void         verbose(string msg, int level);
-
-    mutable Vec  getExample_tmp;
 
 };
 
