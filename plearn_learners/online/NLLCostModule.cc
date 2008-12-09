@@ -241,7 +241,7 @@ void NLLCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
 
     Mat* prediction = ports_value[0];
     Mat* target = ports_value[1];
-#ifdef BOUNDCHECK
+#ifndef NDEBUG
     Mat* cost = ports_value[2];
 #endif
     Mat* prediction_grad = ports_gradient[0];

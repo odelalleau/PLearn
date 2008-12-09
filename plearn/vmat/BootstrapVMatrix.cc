@@ -181,7 +181,7 @@ void BootstrapVMatrix::build_()
             real weight;
             for (int i = 0; i < l; i++) {
                 source->getExample(i, input, target, weight);
-#ifdef BOUNDCHECK
+#ifndef NDEBUG
                 // Safety checks on bag information.
                 real bi = target.lastElement();
                 PLASSERT( is_equal(round(bi), bi) );
