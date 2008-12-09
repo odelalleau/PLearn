@@ -318,7 +318,7 @@ int PLearnService::watchServers(TVec< PP<RemotePLearnServer> > servers,
 }
 
 
-
+//! wait for one result
 PP<RemotePLearnServer> PLearnService::waitForResult(TVec< PP<RemotePLearnServer> > servers, 
                                 log_callback_t the_log_callback, 
                                 progress_callback_t the_progress_callback)
@@ -339,7 +339,7 @@ PP<RemotePLearnServer> PLearnService::waitForResult(TVec< PP<RemotePLearnServer>
     int server= servers.length();
 
     //send results from reserved servers only even if polling all servers
-    while(server >= 0 && server < min_server || server == servers.length())
+    while((server >= 0 && server < min_server) || server == servers.length())
         server= watchServers(servers, the_log_callback, the_progress_callback);
 
     if(server < 0)
