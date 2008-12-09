@@ -256,7 +256,7 @@ public:
     }
 
     //! Return the option "pathname" to retrieve the option using
-    //! \getOption() on the root object.  This will be the empty
+    //! getOption() on the root object.  This will be the empty
     //! string for the root object, or if the iterator was
     //! constructed with the option compute_optnames set to 'false'.
     const string& getCurrentOptionName() const
