@@ -245,12 +245,12 @@ void OnBagsModule::bpropUpdate( const Mat& inputs,
                 "Cannot resize input_gradients and accumulate into it." );
     else
     {
-        input_gradients.resize(inputs.length(), input_size);
+        input_gradients.resize(n_samples, input_size);
         input_gradients.fill(0);
     }
     bool bprop_wait_new_bag = true;
     int bag_start;
-    for (int j = 0; j < inputs.length(); j++) {
+    for (int j = 0; j < n_samples; j++) {
         int bag_info = int(round(bagtargets(j).lastElement()));
         if (bag_info & SumOverBagsVariable::TARGET_COLUMN_FIRST)
         {
