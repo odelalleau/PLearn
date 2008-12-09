@@ -109,7 +109,7 @@ pl_streambuf::int_type pl_streambuf::underflow()
 
     //fill buffer from underlying streambuf
     for(int i= oldbuflen; i < inbuflen; ++i)
-        if(original_buf.sgetc() != pl_streambuf::eof && original_buf.in_avail() || i == oldbuflen)
+        if((original_buf.sgetc() != pl_streambuf::eof && original_buf.in_avail()) || i == oldbuflen)
             inbuf[i]= original_buf.sbumpc();  //< get a char from underlying streambuf and advance it's pos.
         else
         { //no input available: stop filling buffer (set egptr at current pos)
