@@ -282,6 +282,8 @@ void RegressionTree::finalize()
     first_leave = 0;
     if(sorted_train_set)
         sorted_train_set->finalize();
+    if(train_set->classname()=="RegressionTreeRegisters")
+        ((PP<RegressionTreeRegisters>)train_set)->finalize();
 }
 
 void RegressionTree::forget()
