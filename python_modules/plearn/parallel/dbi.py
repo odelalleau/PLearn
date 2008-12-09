@@ -862,13 +862,17 @@ class DBICondor(DBIBase):
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
         assert self.p.stdout.readline()==""
-        err = self.p.stderr.readline()
+
 #example de sortie de pkdilly
 #La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
-        if not err.startswith('La tache a soumettre est dans: '):
-            print "[DBI] ERROR: pkdilly returned a bad string:\n", err
+        pkdilly_file=""
+        for err in self.p.stderr.readlines():
+            if err.startswith('La tache a soumettre est dans: '):
+                pkdilly_file = err.split()[-1]
+        if not pkdilly_file:
+            print "[DBI] ERROR: pkdilly didn't returned a good string"
             sys.exit(1)
-        pkdilly_file = err.split()[-1]
+
         pkdilly_fd = open( pkdilly_file, 'r' )
         lines = pkdilly_fd.readlines()
         pkdilly_fd.close()
