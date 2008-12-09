@@ -39,7 +39,7 @@
  * This file is part of the PLearn library.                                     *
  ******************************************************************************** */
 
-/*! \file PLearnLibrary/PLearnAlgo/RegressionTree.h */
+/*! \file RegressionTree.h */
 
 #ifndef RegressionTree_INC
 #define RegressionTree_INC
