@@ -973,6 +973,9 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="diff")
     {
+        if(argc < 4)
+            PLERROR("'vmat diff' must be used that way : vmat diff <dataset1> <dataset2> [<tolerance> [<verbose>]]");
+
         VMat vm1 = getVMat(argv[2], indexf);
         VMat vm2 = getVMat(argv[3], indexf);
         double tol = 1e-6;
@@ -1414,6 +1417,8 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="mtime")
     {    
+        if(argc!=3)
+            PLERROR("The command 'vmat mtime' must be used that way: vmat mtime <dataset>");
         VMat m1 = getVMat(argv[2], indexf);
         pout<<m1->getMtime()<<endl;
     }
