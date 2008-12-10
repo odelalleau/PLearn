@@ -197,13 +197,16 @@ void ChainedLearners::computeOutput(const Vec& input, Vec& output) const
             learners[k]->computeOutput(tmp_input, tmp_output);
         }
         learners[nlearners-1]->computeOutput(tmp_output, output);
+        
     }
 }
 
 void ChainedLearners::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
-    return learners.lastElement()->computeCostsFromOutputs(input, output, target, costs);
+    // this is generally called after a computeOutput, so the last learner's input 
+    // we used was stored in tmp_output
+    return learners.lastElement()->computeCostsFromOutputs(tmp_output, output, target, costs);
 }
 
 TVec<string> ChainedLearners::getTestCostNames() const
