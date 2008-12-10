@@ -39,12 +39,12 @@
 /*! \file HelpCommand.cc */
 #include "HelpCommand.h"
 
-#include <iostream>
+#include <plearn/io/PPath.h>
+#include <plearn/sys/Popen.h>
 #include <plearn/db/getDataSet.h>
 #include <plearn/base/general.h>        //!< For prgname().
 #include <plearn/base/stringutils.h>
 #include <plearn/io/fileutils.h>        //!< For isfile().
-
 #include <plearn/base/HelpSystem.h>
 
 namespace PLearn {
@@ -138,14 +138,35 @@ void HelpCommand::helpDatasets()
     pout << getDataSetHelp() << endl;
 }
 
-void HelpCommand::helpAboutScript(const string& fname)
+void HelpCommand::helpAboutPLearnScript(const string& fname)
 {
     if(!isfile(fname))
         PLERROR("Could not open script file %s", fname.c_str());
     pout << 
-        "Help about a script file not yet implemented \n"
+        "Help about a .plearn script file not yet implemented \n"
          << endl;
 }
+
+void HelpCommand::helpAboutPyPLearnScript(const string& fname)
+{
+    if(!isfile(fname))
+        PLERROR("Could not open script file %s", fname.c_str());
+    
+    pout << "#######################################################" << endl;
+    pout << "### Help on pyplearn script " << fname << endl;
+    pout << "#######################################################" << endl;
+    string command;
+#ifdef WIN32
+    command = "python.exe "+PPath("PLEARNDIR:scripts/pyplearn_driver.py").absolute();
+#else
+    command = "pyplearn_driver.py";
+#endif
+    vector<string> helptext = execute(command+" "+fname+" --help");
+    vector<string>::const_iterator it = helptext.begin();
+    while(it!=helptext.end())
+        pout << *it++ << endl;
+}
+
 
 //! The actual implementation of the 'HelpCommand' command 
 void HelpCommand::run(const vector<string>& args)
@@ -155,15 +176,20 @@ void HelpCommand::run(const vector<string>& args)
     else
     {
         string about = args[0];
+        string aboutext = extract_extension(about);
         
         if(args.size() > 1)//is option level present?
             OptionBase::setCurrentOptionLevel(
                 OptionBase::optionLevelFromString(args[1]));
 
-        if(extract_extension(about)==".plearn") // help is asked about a plearn script
-            helpAboutScript(about);//TODO: move to HelpSystem
-        if(about=="scripts")
-            helpScripts();//TODO: move to HelpSystem
+        // Note: some of these functions could be moved to HelpSystem
+
+        if(aboutext==".plearn") // help is asked about a plearn script
+            helpAboutPLearnScript(about);
+        else if(aboutext==".pyplearn") // help is asked about a pyplearn script
+            helpAboutPyPLearnScript(about);
+        else if(about=="scripts")
+            helpScripts();
         else if(about=="commands")
             helpCommands();
         else if(about=="datasets")

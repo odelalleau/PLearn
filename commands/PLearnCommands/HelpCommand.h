@@ -51,7 +51,8 @@ class HelpCommand: public PLearnCommand
 protected:
 
     void helpOverview();
-    void helpAboutScript(const string& fname);
+    void helpAboutPLearnScript(const string& fname);
+    void helpAboutPyPLearnScript(const string& fname);
     void helpScripts();
     void helpCommands();
     void helpDatasets();

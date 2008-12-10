@@ -54,7 +54,7 @@ with the command_line.pyplearn script being::
                                       internal = SomeObject( dataset = dataset ) )
 
 Those command-line arguments are widely refered as L{plargs}, on
-account of this class, troughout the pyplearn mechanism. Note that
+account of this class, throughout the pyplearn mechanism. Note that
 I{unexpected} (see binders and L{namespaces<plnamespace>} hereafter)
 arguments given on the command line are interpreted as strings, so if
 you want to pass integers (int) or floating-point values (float), you
@@ -1035,7 +1035,9 @@ def printAllOptions(out= sys.stdout):
         for opt in plopt.iterator(namespace):
             print >>out, namespace.__name__+'.'+opt.getName()+'='+str(opt.get())
 
-
+def optionsString(holder, separator="__"):
+    return separator.join( [ opt.getName()+'='+str(opt.get()) for opt in plopt.iterator(holder) ] )
+    
 
 #######  For backward compatibily: will be deprecated soon  ###################
 
@@ -1080,6 +1082,14 @@ def bindersHelp():
         for opt in plopt.iterator(binder):
             s+= opt.getName()+': '+opt.getDoc()+'\n\t'+str(opt)+'\n'
     return s
+
+def bindersHelp2():
+    s= ''
+    for binder in plargs.getBinders():
+        for opt in plopt.iterator(binder):
+            s+= opt.getName()+'='+repr(opt.get())+'  : '+opt.getDoc()+'\n'
+    return s
+
 
 def currentNamespacesHelp():
     s= ''

@@ -160,6 +160,16 @@ def usage_text(scriptname, all_argnames, default_values):
           "  ".join(quote_if_needed(name+'='+mystr(value)) for name,value in zip(all_argnames[defvalpos:],default_values))
     return txt
 
+def autoexpdir(prefix, locals_dict, separator="__", exclude=["self"]):
+    """Returns a suitable expdir string built from the passed dictionary of arguments (typically locals()).
+    This can typically be called as the first instruction in a function meant to be called by autoscript.
+    Typical example:
+      expdir = autoexpdir("exp/mymodel1",locals())
+
+      This will result in expdir of the form "exp/mymodel1__argname=value__argname=value__argname=value"
+      """
+    return prefix+separator+separator.join([ k+"="+str(v) for k,v in locals_dict.items() if k not in exclude ])
+
 def autoscript(callme, autocomplete_names=False, helptext="", argv=sys.argv):
     """Call autoscript as a one-liner to turn a callable (function, class or object) into a command-line script.
     Typical usage goes as follows:
@@ -228,6 +238,7 @@ def autoscript(callme, autocomplete_names=False, helptext="", argv=sys.argv):
 
         kwargs = check_args(args, kwargs, all_argnames, default_values)
         eval_str_argument_values(kwargs, all_argnames, default_values)
+
         print
         print "#"*80
         print "# Calling "+scriptname+" with following arguments: "
