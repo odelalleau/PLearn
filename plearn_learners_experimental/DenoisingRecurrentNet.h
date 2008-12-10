@@ -267,6 +267,7 @@ public:
     //! dynamic connections in the recurrent tuning phase,
     //! after the visible units have been clamped
     void recurrentUpdate(real input_reconstruction_weight,
+                         real hidden_reconstruction_cost_weight,
                          real temporal_gradient_contribution = 1);
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
@@ -361,9 +362,9 @@ protected:
     mutable Mat encoded_seq; // contains encoded version of current train or test sequence (possibly corrupted by noise)
     mutable Mat clean_encoded_seq; // copy of clean sequence contains encoded version of current train or test sequence
 
-    mutable Vec input_reconstruction_activation; // temporary Vec to hold input reconstruction activation (before softmax)
+    //mutable Vec input_reconstruction_activation; // temporary Vec to hold input reconstruction activation (before softmax)
     mutable Vec input_reconstruction_prob;       // temporary Vec to hold input reconstruction prob (after applying softmax)
-
+    mutable Vec hidden_reconstruction_prob;
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -401,6 +402,8 @@ private:
 
     Mat getInputConnectionsWeightMatrix();
 
+    Mat getDynamicConnectionsWeightMatrix();
+
     //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
     //! then backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
     //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
@@ -420,7 +423,8 @@ private:
     void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
-
+    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_prob, 
+                                                                          Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
 private:
     //#####  Private Data Members  ############################################
