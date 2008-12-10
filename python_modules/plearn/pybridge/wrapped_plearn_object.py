@@ -73,7 +73,7 @@ class WrappedPLearnObject(object):
         if '_cptr' in kwargs:
             self._cptr= kwargs['_cptr'] # ptr to c++ obj
         elif hasattr(self,'_cptr'):
-            self.setOptions(kwargs)
+            self.setOptions(kwargs)        
             
     def setOptions(self, kwargs):
         call_build= True
@@ -104,7 +104,7 @@ class WrappedPLearnObject(object):
             raise AttributeError("no attribute "
                                  + attr + " in "
                                  + repr(self))
-        
+
     def __del__(self):
         if hasattr(self, '_cptr'):
             self._unref()
@@ -140,14 +140,14 @@ class WrappedPLearnObject(object):
         for o in self._optionnames:
             d['_cptr'][2][o]= self.getOption(o)
         return d
-        ##### old, deprecated version follows: (for reference only)
-	def old_deprecated___getstate__(self):
-		d= self.__dict__.copy()
-	        if remote_pickle:
-        	    d['_cptr']= self.asStringRemoteTransmit()
-        	else:
-        	    d['_cptr']= self.asString()
-        	return d
+    ##### old, deprecated version follows: (for reference only)
+    def old_deprecated___getstate__(self):
+        d= self.__dict__.copy()
+        if remote_pickle:
+            d['_cptr']= self.asStringRemoteTransmit()
+        else:
+            d['_cptr']= self.asString()
+        return d
     
     def __setstate__(self, dict):
         """
@@ -171,9 +171,7 @@ class WrappedPLearnObject(object):
         PLEARN_PICKLE_PROTOCOL_VERSION= 2
         if d[0] != PLEARN_PICKLE_PROTOCOL_VERSION:
             raise RuntimeError, "PLearn pickle protocol version should be 2"
-        newone= plearn_module.newObjectFromClassname(d[1])
-        self._cptr= newone._cptr
-        self._refCPPObj(self, False)
+        # empty PLearn object already exists (from __new__)
         for k in dict:
             if k != '_cptr':
                 self.__setattr__(k, dict[k])
