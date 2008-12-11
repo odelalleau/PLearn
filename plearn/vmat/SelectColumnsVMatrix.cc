@@ -123,7 +123,7 @@ real SelectColumnsVMatrix::get(int i, int j) const {
                 "requested index: (%d,%d) but width of %d and length of %d",
                 i,j,width_,length_);
 #endif
-    static int col;
+    int col;
     col = sel_indices[j];
     if (col == -1)
         return MISSING_VALUE;
@@ -141,7 +141,7 @@ void SelectColumnsVMatrix::getSubRow(int i, int j, Vec v) const
                 "requested index: (%d,%d) but width of %d and length of %d",
                 i,j,width_,length_);
 #endif
-    static int col;
+    int col;
     for(int jj=0; jj<v.length(); jj++) {
         col = sel_indices[j+jj];
         if (col == -1)
@@ -417,7 +417,7 @@ void SelectColumnsVMatrix::getIndicesFromFields(){
 // getStringToRealMapping //
 ////////////////////////////
 const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) const {
-    static int the_col;
+    int the_col;
     static map<string, real> empty_mapping;
     the_col = sel_indices[col];
     if (the_col == -1)
@@ -429,7 +429,7 @@ const map<string,real>& SelectColumnsVMatrix::getStringToRealMapping(int col) co
 // getStringVal //
 //////////////////
 real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
-    static int the_col;
+    int the_col;
     the_col = sel_indices[col];
     if (the_col == -1)
         return MISSING_VALUE;
@@ -440,7 +440,7 @@ real SelectColumnsVMatrix::getStringVal(int col, const string & str) const {
 // getRealToStringMapping //
 ////////////////////////////
 const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) const {
-    static int the_col;
+    int the_col;
     static map<real, string> empty_mapping;
     the_col = sel_indices[col];
     if (the_col == -1)
@@ -452,7 +452,7 @@ const map<real,string>& SelectColumnsVMatrix::getRealToStringMapping(int col) co
 // getValString //
 //////////////////
 string SelectColumnsVMatrix::getValString(int col, real val) const {
-    static int the_col;
+    int the_col;
     the_col = sel_indices[col];
     if (the_col == -1)
         return "";
@@ -463,7 +463,7 @@ PP<Dictionary> SelectColumnsVMatrix::getDictionary(int col) const
 {
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-    static int the_col;
+    int the_col;
     the_col = sel_indices[col];
     if (the_col == -1)
         return 0;
@@ -475,7 +475,7 @@ void SelectColumnsVMatrix::getValues(int row, int col, Vec& values) const
 {
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-    static int the_col;
+    int the_col;
     the_col = sel_indices[col];
     if (the_col == -1)
         values.resize(0);
@@ -487,7 +487,7 @@ void SelectColumnsVMatrix::getValues(const Vec& input, int col, Vec& values) con
 {
     if(col>=width_)
         PLERROR("access out of bound. Width=%i accessed col=%i",width_,col);
-    static int the_col;
+    int the_col;
     the_col = sel_indices[col];
     if (the_col == -1)
         values.resize(0);
