@@ -398,7 +398,7 @@ PPath::PPath(const string& path_)
     const string* the_path = &path_;
 #if defined(__CYGWIN__) || defined(_MINGW_)
 #ifdef __CYGWIN__
-    static char buf[3000];
+    char buf[3000];
 #endif
     string new_path;
     // This is a hack to try to get the right DOS path from Cygwin.

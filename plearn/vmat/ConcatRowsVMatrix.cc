@@ -406,13 +406,12 @@ void ConcatRowsVMatrix::fullyCheckMappings(bool report_progress)
 /////////
 real ConcatRowsVMatrix::get(int i, int j) const
 {
-    static real val;
     int whichvm, rowofvm;
     getpositions(i,whichvm,rowofvm);
     if (!need_fix_mappings || fixed_mappings(whichvm, j).size() == 0)
         return to_concat[whichvm]->get(rowofvm,j);
     else {
-        val = to_concat[whichvm]->get(rowofvm,j);
+        real val = to_concat[whichvm]->get(rowofvm,j);
         if (!is_missing(val)) {
             map<real, real>::iterator it = fixed_mappings(whichvm, j).find(val);
             if (it != fixed_mappings(whichvm, j).end()) {

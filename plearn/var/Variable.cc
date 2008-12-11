@@ -591,12 +591,10 @@ void Variable::verifyGradient(real step)
 
 bool Variable::update(real step_size, Vec direction_vec, real coeff, real b)
 {
-    static bool hit;
-    static real full_coeff;
+    bool hit = false;
     if(allows_partial_update)
         PLWARNING("Warning in Variable::update(real,Vec): will update every elements of the Variable");
-    hit = false;
-    full_coeff = step_size * coeff + b;
+    real full_coeff = step_size * coeff + b;
     if(min_value>-FLT_MAX || max_value<FLT_MAX)
         // constrained update
     {

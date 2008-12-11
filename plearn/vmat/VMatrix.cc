@@ -1198,9 +1198,8 @@ real VMatrix::getStringVal(int col,const string & str) const
 ///////////////
 string VMatrix::getString(int row,int col) const
 {
-    static string str;
     real val = get(row,col);
-    str = getValString(col, val);
+    string str = getValString(col, val);
     if (str == "")
         // There is no string mapping associated to this value.
         return tostring(val);

@@ -1130,6 +1130,10 @@ real StatsCollector::getStat(const string& statname) const
     static bool init = false;
     static map<string,STATFUN> statistics;
     if (!init) {
+        //the two if(!init) is volontary not to acquire a lock at each fct call
+#pragma omp critical
+        if(!init){
+        init = true;
         statistics["E"]           = STATFUN(&StatsCollector::mean);
         statistics["V"]           = STATFUN(&StatsCollector::variance);
         statistics["STDDEV"]      = STATFUN(&StatsCollector::stddev);
@@ -1161,7 +1165,7 @@ real StatsCollector::getStat(const string& statname) const
         statistics["MEAN_LIFT"]   = STATFUN(&StatsCollector::mean_lift);
         statistics["PRBP"]        = STATFUN(&StatsCollector::prbp);
         statistics["DMODE"]       = STATFUN(&StatsCollector::dmode);
-        init = true;
+        }
     }
 
     // Special case :: interpret the PSEUDOQ(xx) and LIFT(xxx) forms

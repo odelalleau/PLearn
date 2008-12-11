@@ -1065,7 +1065,6 @@ template<class T>
 T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
               bool ignore_missing = false)
 {
-    static T result, diff;
 #ifdef BOUNDCHECK
     if(vec1.length() != vec2.length())
         PLERROR("In weighted_powdistance: vec1, vec2 should have the same length (%d!=%d)",
@@ -1074,7 +1073,8 @@ T powdistance(const TVec<T>& vec1, const TVec<T>& vec2, double n,
     int length = vec1.length();
     if (length == 0)
         return 0.0;
-    result = 0.0;
+    T result = 0;
+    T diff = 0;
     T* v1 = vec1.data();
     T* v2 = vec2.data();
     if(fast_exact_is_equal(n, 1.0)) // L1 distance
@@ -4497,9 +4497,9 @@ T trace(const TMat<T>& mat)
 template<class T>
 void regularizeMatrix(const TMat<T>& mat, T tolerance)
 {
-    static T reg;
-    static T* k;
-    static int shift;
+    T reg;
+    T* k;
+    int shift;
     reg = tolerance * trace(mat);
     k = mat.data();
     shift = mat.mod() + 1;
