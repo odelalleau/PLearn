@@ -38,6 +38,11 @@
 #ifndef PStream_INC
 #define PStream_INC
 
+//!The size of the temporary buffer to use inside some class function.
+//!Putting the buffer as a class variable don't give any speedup.
+//!So to remove threads issue, we put them as function variable.
+#define PSTREAM_BUF_SIZE 100
+
 #include <map>
 #include <set>
 #include <sstream>
@@ -156,9 +161,6 @@ public:
     map<void *, unsigned int> copies_map_out;
 
 private:
-    //! Buffer for some formatting operations
-    static char tmpbuf[100];
-
     //! Current format string for floats
     const char* format_float;
 

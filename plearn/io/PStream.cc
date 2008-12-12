@@ -129,8 +129,6 @@ PStream& get_perr()
 
 PStream perr = get_perr();
 
-char PStream::tmpbuf[100];
-
 PStream& flush(PStream& out)
 {
     out.flush();
@@ -481,54 +479,63 @@ void PStream::writeAsciiHexNum(unsigned char x)
 
 void PStream::writeAsciiNum(char x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", (int)x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned char x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", (int)x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(signed char x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", (int)x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(short x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%hd", x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned short x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%hu", x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(int x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%d", x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned int x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%u", x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(long x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%ld", x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
 
 void PStream::writeAsciiNum(unsigned long x)
 {
+    char tmpbuf[PSTREAM_BUF_SIZE];
     snprintf(tmpbuf, sizeof(tmpbuf), "%lu", x);
     write(tmpbuf, streamsize(strlen(tmpbuf)));
 }
@@ -578,6 +585,7 @@ void PStream::writeAsciiNum(float x)
     }
     else
     {
+        char tmpbuf[PSTREAM_BUF_SIZE];
         snprintf(tmpbuf, sizeof(tmpbuf), format_float, x);
         write(tmpbuf, streamsize(strlen(tmpbuf)));
     }
@@ -595,6 +603,7 @@ void PStream::writeAsciiNum(double x)
     }
     else
     {
+        char tmpbuf[PSTREAM_BUF_SIZE];
         snprintf(tmpbuf, sizeof(tmpbuf), format_double, x);
         write(tmpbuf, streamsize(strlen(tmpbuf)));
     }
@@ -743,6 +752,7 @@ void PStream::readAsciiNum(float &x)
 void PStream::readAsciiNum(double &x)
 {
     static const char* error_msg = "Bug while reading file and expecting a double";
+    char tmpbuf[PSTREAM_BUF_SIZE];
     skipBlanks();
     int l=0;
     bool opposite = false;
