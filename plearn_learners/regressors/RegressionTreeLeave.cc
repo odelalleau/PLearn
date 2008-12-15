@@ -97,9 +97,9 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
     declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
 
-    declareStaticOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
+    declareOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
-    declareStaticOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
+    declareOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
 
     inherited::declareOptions(ol);
