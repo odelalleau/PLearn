@@ -395,17 +395,21 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     for(int i=candidates.size()-2;i>=0;i--)
     {
         int next_row = candidates[i];
-        left_leave->removeRow(row, targets[i+1], weights[i+1], tmp, left_error);
-        right_leave->addRow(row, targets[i+1], weights[i+1], tmp, right_error);
-
         real next_feature=values[i];
         real row_feature=values[i+1];
         PLASSERT(train_set->get(next_row, col)==values[i]);
         PLASSERT(train_set->get(row, col)==values[i+1]);
         PLASSERT(next_feature<=row_feature);
-        row = next_row;
 
-        if (next_feature >= row_feature) continue;
+
+        left_leave->removeRow(row, targets[i+1], weights[i+1]);
+        right_leave->addRow(row, targets[i+1], weights[i+1]);
+        row = next_row;
+        if (next_feature < row_feature){
+            left_leave->getOutputAndError(tmp, left_error);
+            right_leave->getOutputAndError(tmp, right_error);
+        }else
+            continue;
         real work_error = missing_errors + left_error[0]
             + left_error[1] + right_error[0] + right_error[1];
         int work_balance = abs(left_leave->getLength() -

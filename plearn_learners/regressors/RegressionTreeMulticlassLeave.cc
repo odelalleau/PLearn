@@ -178,6 +178,12 @@ void RegressionTreeMulticlassLeave::removeRow(int row, Vec outputv, Vec errorv)
 
 void RegressionTreeMulticlassLeave::removeRow(int row, real target, real weight,
                                  Vec outputv, Vec errorv){
+    removeRow(row,target,weight);
+    getOutputAndError(outputv,errorv);
+}
+
+void RegressionTreeMulticlassLeave::removeRow(int row, real target, real weight)
+{
     length -= 1;
     weights_sum -= weight;
     PLASSERT(length>=0);
@@ -195,7 +201,6 @@ void RegressionTreeMulticlassLeave::removeRow(int row, real target, real weight,
         }
     }
     PLASSERT(found);
-    getOutputAndError(outputv,errorv);
 }
 
 void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)const

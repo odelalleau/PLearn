@@ -173,8 +173,7 @@ void RegressionTreeLeave::removeRow(int row, Vec output, Vec error)
     real target = train_set->getTarget(row);
     removeRow(row, target, weight, output, error);
 }
-void RegressionTreeLeave::removeRow(int row, real target, real weight,
-                                    Vec outputv, Vec errorv)
+void RegressionTreeLeave::removeRow(int row, real target, real weight)
 {
     length -= 1;
     weights_sum -= weight;
@@ -182,6 +181,11 @@ void RegressionTreeLeave::removeRow(int row, real target, real weight,
     real squared_target = pow(target, 2);
     weighted_targets_sum -= weight * target;
     weighted_squared_targets_sum -= weight * squared_target; 
+}
+void RegressionTreeLeave::removeRow(int row, real target, real weight,
+                                    Vec outputv, Vec errorv)
+{
+    removeRow(row,target,weight);
     getOutputAndError(outputv, errorv);
 }
 

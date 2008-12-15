@@ -81,6 +81,7 @@ public:
     void         addRow(int row, real target, real weight);
     void         addRow(int row, Vec outputv, Vec errorv);
     void         addRow(int row, real target, real weight, Vec outputv, Vec errorv);
+    void         removeRow(int row, real target, real weight);
     void         removeRow(int row, Vec outputv, Vec errorv);
     void         removeRow(int row, real target, real weight, Vec outputv, Vec errorv);
     void         getOutputAndError(Vec& output, Vec& error)const;

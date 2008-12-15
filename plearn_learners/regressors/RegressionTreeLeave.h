@@ -95,6 +95,7 @@ public:
     virtual void         addRow(int row, real target, real weight);
     virtual void         addRow(int row, Vec outputv, Vec errorv);
     virtual void         addRow(int row, real target, real weight, Vec outputv, Vec errorv);
+    virtual void         removeRow(int row, real target, real weight);
     virtual void         removeRow(int row, Vec outputv, Vec errorv);
     virtual void         removeRow(int row, real target, real weight, Vec outputv, Vec errorv);
     inline void          registerRow(int row)
