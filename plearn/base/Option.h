@@ -321,6 +321,37 @@ public:
 };
 
 
+// This is a special version of Option designed for TVec<T>.
+// The only difference is that it supports indexed reads and writes.
+template<class VecElementType>
+class TVecStaticOption : public StaticOption<TVec<VecElementType> >
+{
+    typedef StaticOption<TVec<VecElementType> > inherited;
+  
+public:
+    TVecStaticOption(const string& optionname, TVec<VecElementType> * member_ptr, 
+               OptionBase::flag_t flags, const string& optiontype, const string& defaultval,
+               const string& description, const OptionBase::OptionLevel& level)
+        : inherited(optionname, member_ptr, flags, optiontype, defaultval,
+                    description, level)
+    { }
+
+    virtual void readIntoIndex(Object* o, PStream& in, const string& index)
+    {
+        int i = tolong(index);
+//        in >> (dynamic_cast<ObjectType*>(o)->*(this->ptr))[i];
+        in >> (*(this->ptr))[i];
+    }
+
+    virtual void writeAtIndex(const Object* o, PStream& out, const string& index) const
+    {
+        int i = tolong(index);
+//        out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*(this->ptr))[i];
+        out << (*(this->ptr))[i];
+    }
+
+};
+
 //#####  declareOption and Friends  ###########################################
 
 /**
@@ -383,6 +414,22 @@ inline void declareStaticOption(OptionList& ol,                      //!< list t
     ol.push_back(new StaticOption<OptionType>(optionname, ptr, flags, 
                                                     TypeTraits<OptionType>::name(), 
                                                     defaultval, description, level));
+}
+
+// Overload for TVec<T>
+template <class VecElementType>//, class VecElementType>
+inline void declareStaticOption(OptionList& ol,                      //!< list to which this option should be appended 
+                          const string& optionname,            //!< the name of this option
+                          TVec<VecElementType> * ptr,                     //!< &YourClass::your_static_field
+                          OptionBase::flag_t flags,            //!< see the flags in OptionBase
+                          const string& description,           //!< a description of the option
+                          const OptionBase::OptionLevel level= OptionBase::default_level, //!< Option level (see OptionBase)
+                          const string& defaultval="")         //!< default value for this option, as set by the default constructor
+{
+    ol.push_back(new TVecStaticOption<VecElementType>(
+                     optionname, ptr, flags, 
+                     TypeTraits< TVec<VecElementType> >::name(), 
+                     defaultval, description, level));
 }
 
 
