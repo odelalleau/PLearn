@@ -71,7 +71,7 @@ protected:
   Learnt options: they are sized and initialized if need be, in initLeave(...)
 */
 
-    int  length;
+    int  length_;
     real weights_sum;
     real targets_sum;
     real weighted_targets_sum;
@@ -98,7 +98,7 @@ public:
     inline void          registerRow(int row)
     {train_set->registerLeave(id, row);}
     inline int           getId()const{return id;}
-    inline int           getLength()const{return length;}
+    inline int           length()const{return length_;}
     virtual void         getOutputAndError(Vec& output, Vec& error)const;
     virtual void         printStats();
   

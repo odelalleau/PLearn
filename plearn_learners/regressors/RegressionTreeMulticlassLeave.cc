@@ -112,7 +112,7 @@ void RegressionTreeMulticlassLeave::build_()
 
 void RegressionTreeMulticlassLeave::initStats()
 {
-    length = 0;
+    length_ = 0;
     weights_sum = 0.0;
     if (loss_function_weight != 0.0)
     {
@@ -144,7 +144,7 @@ void RegressionTreeMulticlassLeave::addRow(int row, real target, real weight,
 
 void RegressionTreeMulticlassLeave::addRow(int row, real target, real weight)
 {
-    length += 1;
+    length_ += 1;
     weights_sum += weight;
     int multiclass_found = 0;
     //if target are 0,1,2,... it can be optimized by multiclass_weights_sum[target]
@@ -184,11 +184,11 @@ void RegressionTreeMulticlassLeave::removeRow(int row, real target, real weight,
 
 void RegressionTreeMulticlassLeave::removeRow(int row, real target, real weight)
 {
-    length -= 1;
+    length_ -= 1;
     weights_sum -= weight;
-    PLASSERT(length>=0);
+    PLASSERT(length_>=0);
     PLASSERT(weights_sum>=0);
-    PLASSERT(length>0 || weights_sum==0);
+    PLASSERT(length_>0 || weights_sum==0);
     bool found=false;
     //can be optimized: see addRow
     for (int mc_ind = 0; mc_ind < multiclass_outputs.length(); mc_ind++)
@@ -210,7 +210,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
         PLERROR("In RegressionTreeMulticlassLeave::getOutputAndError() -"
                 " multiclass_outputs must not be empty");
 #endif
-    if(length==0){        
+    if(length_==0){        
         output.clear();
         output[0]=MISSING_VALUE;
         error.clear();
@@ -242,7 +242,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
                 error[0] += abs(output[0] - multiclass_outputs[mc_ind]) 
                     * multiclass_weights_sum[mc_ind];
             }
-            error[0] *= l1_loss_function_factor * length / weights_sum;
+            error[0] *= l1_loss_function_factor * length_ / weights_sum;
             if (error[0] < 1E-10) error[0] = 0.0;
             if (error[0] > weights_sum * l1_loss_function_factor)
                 error[2] = weights_sum * l1_loss_function_factor;
@@ -255,19 +255,19 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
                 error[0] += pow(output[0] - multiclass_outputs[mc_ind], 2) 
                     * multiclass_weights_sum[mc_ind];
             }
-            error[0] *= l2_loss_function_factor * length / weights_sum;
+            error[0] *= l2_loss_function_factor * length_ / weights_sum;
             if (error[0] < 1E-10) error[0] = 0.0;
             if (error[0] > weights_sum * l2_loss_function_factor) 
                 error[2] = weights_sum * l2_loss_function_factor; 
             else error[2] = error[0];
         }
-        error[1] = (1.0 - output[1]) * length;
+        error[1] = (1.0 - output[1]) * length_;
     }
 }
 
 void RegressionTreeMulticlassLeave::printStats()
 {
-    cout << " l " << length;
+    cout << " l " << length_;
     Vec output(2);
     Vec error(3);
     getOutputAndError(output,error);

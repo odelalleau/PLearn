@@ -57,7 +57,7 @@ RegressionTreeLeave::RegressionTreeLeave():
     missing_leave(false),
     loss_function_weight(0),
     id(-1),
-    length(0),
+    length_(0),
     weights_sum(0),
     targets_sum(0),
     weighted_targets_sum(0),
@@ -84,7 +84,7 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
     declareOption(ol, "train_set", &RegressionTreeLeave::train_set, 
                   OptionBase::buildoption | OptionBase::nosave,
                   "The train set with the sorted row index matrix and the leave id vector\n");
-    declareOption(ol, "length", &RegressionTreeLeave::length, OptionBase::learntoption,
+    declareOption(ol, "length", &RegressionTreeLeave::length_, OptionBase::learntoption,
                   "The number of rows in this leave\n");
     declareOption(ol, "weights_sum", &RegressionTreeLeave::weights_sum, OptionBase::learntoption,
                   "The sum of weights for the samples in this leave\n");
@@ -131,7 +131,7 @@ void RegressionTreeLeave::initLeave(PP<RegressionTreeRegisters> the_train_set, R
 
 void RegressionTreeLeave::initStats()
 {
-    length = 0;
+    length_ = 0;
     weights_sum= 0.0;
     targets_sum = 0.0;
     weighted_targets_sum = 0.0;
@@ -143,7 +143,7 @@ void RegressionTreeLeave::initStats()
 
 void RegressionTreeLeave::addRow(int row, real target, real weight)
 {
-    length += 1;
+    length_ += 1;
     weights_sum += weight;
     targets_sum += target;
     real squared_target = pow(target, 2);
@@ -178,7 +178,7 @@ void RegressionTreeLeave::removeRow(int row, Vec output, Vec error)
 }
 void RegressionTreeLeave::removeRow(int row, real target, real weight)
 {
-    length -= 1;
+    length_ -= 1;
     weights_sum -= weight;
     targets_sum -= target;
     real squared_target = pow(target, 2);
@@ -194,7 +194,7 @@ void RegressionTreeLeave::removeRow(int row, real target, real weight,
 
 void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
 {
-    if(length>0){
+    if(length_>0){
         output[0] = weighted_targets_sum / weights_sum;
         if (missing_leave != true)
         {
@@ -226,7 +226,7 @@ void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
 
 void RegressionTreeLeave::printStats()
 {
-    cout << " l " << length;
+    cout << " l " << length_;
     Vec output(2);
     Vec error(3);
     getOutputAndError(output,error);

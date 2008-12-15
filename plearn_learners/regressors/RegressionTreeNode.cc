@@ -242,13 +242,13 @@ void RegressionTreeNode::initNode(PP<RegressionTree> the_tree,
 //#define RCMP
 void RegressionTreeNode::lookForBestSplit()
 {
-    if(leave->getLength()<=1)
+    if(leave->length()<=1)
         return;
-    TVec<RTR_type> candidate(0, leave->getLength());//list of candidate row to split
-    TVec<RTR_type> registered_row(0, leave->getLength());
-    Vec registered_target(0, leave->getLength()); 
-    Vec registered_weight(0, leave->getLength());
-    Vec registered_value(0, leave->getLength());
+    TVec<RTR_type> candidate(0, leave->length());//list of candidate row to split
+    TVec<RTR_type> registered_row(0, leave->length());
+    Vec registered_target(0, leave->length()); 
+    Vec registered_weight(0, leave->length());
+    Vec registered_value(0, leave->length());
    tmp_vec.resize(2);
     Vec left_error(3);
     Vec right_error(3);
@@ -318,7 +318,7 @@ void RegressionTreeNode::lookForBestSplit()
 #ifndef BY_ROW
         //in case of missing value
         if(candidate.size()==0){
-            PLASSERT(missing_leave->getLength()>0);
+            PLASSERT(missing_leave->length()>0);
             continue;
         }
         int row = candidate.pop();
@@ -408,8 +408,8 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
             continue;
         real work_error = missing_errors + left_error[0]
             + left_error[1] + right_error[0] + right_error[1];
-        int work_balance = abs(left_leave->getLength() -
-                               right_leave->getLength());
+        int work_balance = abs(left_leave->length() -
+                               right_leave->length());
         if (fast_is_more(work_error,best_split_error)) continue;
         else if (fast_is_equal(work_error,best_split_error) &&
                  fast_is_more(work_balance,best_balance)) continue;
@@ -429,7 +429,7 @@ void RegressionTreeNode::compareSplit(int col, real left_leave_last_feature, rea
     PLASSERT(left_leave_last_feature<=right_leave_first_feature);
     if (left_leave_last_feature >= right_leave_first_feature) return;
     real work_error = missing_error[0] + missing_error[1] + left_error[0] + left_error[1] + right_error[0] + right_error[1];
-    int work_balance = abs(left_leave->getLength() - right_leave->getLength());
+    int work_balance = abs(left_leave->length() - right_leave->length());
     if (fast_is_more(work_error,after_split_error)) return;
     else if (fast_is_equal(work_error,after_split_error) &&
              fast_is_more(work_balance,split_balance)) return;
