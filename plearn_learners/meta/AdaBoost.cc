@@ -286,7 +286,8 @@ void AdaBoost::finalize()
     for(int i=0;i<weak_learners.size();i++){
         weak_learners[i]->finalize();
     }
-
+    if(train_set->classname()=="RegressionTreeRegisters")
+        ((PP<RegressionTreeRegisters>)train_set)->finalize();
 }
 
 void AdaBoost::forget()

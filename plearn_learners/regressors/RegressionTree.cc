@@ -280,10 +280,13 @@ void RegressionTree::finalize()
     split_values = Vec();
     leave_template = 0;
     first_leave = 0;
-    if(sorted_train_set)
-        sorted_train_set->finalize();
-    if(train_set->classname()=="RegressionTreeRegisters")
-        ((PP<RegressionTreeRegisters>)train_set)->finalize();
+    //we should not finalize the train_set and the sorted_train_set here 
+    //as AdaBoost share it between different weak_learners!
+    //AdaBoost will finalize.
+//    if(sorted_train_set)
+//        sorted_train_set->finalize();
+//    if(train_set->classname()=="RegressionTreeRegisters")
+//        ((PP<RegressionTreeRegisters>)train_set)->finalize();
 }
 
 void RegressionTree::forget()
