@@ -477,10 +477,10 @@ int RegressionTreeNode::expandNode()
         }
     }
 
-    PLASSERT(left_leave->length>0);
-    PLASSERT(right_leave->length>0);
-    PLASSERT(left_leave->length + right_leave->length + missing_leave->length
-             == registered_row.size());
+    PLASSERT(left_leave->length()>0);
+    PLASSERT(right_leave->length()>0);
+    PLASSERT(left_leave->length() + right_leave->length() + 
+             missing_leave->length() == registered_row.size());
 //  leave->printStats();
 //  left_leave->printStats();
 //  right_leave->printStats();
