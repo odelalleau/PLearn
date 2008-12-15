@@ -49,8 +49,6 @@ namespace PLearn {
 using namespace std;
 
 
-char TextFilesVMatrix::buf[50000];
-
 TextFilesVMatrix::TextFilesVMatrix():
     idxfile(0),
     delimiter("\t"),
@@ -127,6 +125,7 @@ void TextFilesVMatrix::buildIdx()
     fwrite(&length_, 4, 1, idxfile);
 
     TVec<string> fields;
+    char buf[50000];
 
     int lineno = 0;
     for(unsigned char fileno=0; fileno<txtfiles.length(); fileno++)
@@ -224,7 +223,8 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
     width_ = 0;
     TVec<string> fnames;
     TVec<string> fnames_header;//field names take in the header of source file
-    
+    char buf[50000];
+
     //read the fieldnames from the files.
     for(int i=0; i<txtfiles.size(); i++){
         FILE* f = txtfiles[i];
@@ -464,6 +464,8 @@ string TextFilesVMatrix::getTextRow(int i) const
     getFileAndPos(i, fileno, pos);
     FILE* f = txtfiles[(int)fileno];
     fseek(f,pos,SEEK_SET);
+    char buf[50000];
+
     if(!fgets(buf, sizeof(buf), f))
         PLERROR("In TextFilesVMatrix::getTextRow - fgets for row %d returned NULL",i);
     return removenewline(buf);
@@ -979,7 +981,7 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
     inherited::declareOptions(ol);
 }
 
-void TextFilesVMatrix::readAndCheckOptionName(PStream& in, const string& optionname)
+void TextFilesVMatrix::readAndCheckOptionName(PStream& in, const string& optionname, char buf[])
 {
     in.skipBlanksAndComments();
     in.readUntil(buf, sizeof(buf), "= ");

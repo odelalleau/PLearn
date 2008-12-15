@@ -72,8 +72,6 @@ protected:
     // * protected options *
     // *********************
 
-    static char buf[];
-
     FILE* idxfile;
     TVec<FILE*> txtfiles;
 
@@ -153,7 +151,7 @@ private:
     void setColumnNamesAndWidth();
     void getFileAndPos(int i, unsigned char& fileno, int& pos) const;
     void buildIdx();
-    static void readAndCheckOptionName(PStream& in, const string& optionname);
+    static void readAndCheckOptionName(PStream& in, const string& optionname, char buf[]);
     void closeCurrentFile();
 
 protected:
