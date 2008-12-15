@@ -97,9 +97,9 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
     declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
 
-    declareOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
+    declareStaticOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
-    declareOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
+    declareStaticOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
 
     inherited::declareOptions(ol);
@@ -121,9 +121,12 @@ void RegressionTreeLeave::build_()
 {
 }
 
-void RegressionTreeLeave::initLeave(PP<RegressionTreeRegisters> the_train_set)
+void RegressionTreeLeave::initLeave(PP<RegressionTreeRegisters> the_train_set, RTR_type_id the_id, bool the_missing_leave)
 {
     train_set = the_train_set;
+    if(the_id>=0)
+        id = the_id;
+    missing_leave = the_missing_leave;
 }
 
 void RegressionTreeLeave::initStats()

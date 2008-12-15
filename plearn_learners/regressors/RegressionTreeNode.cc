@@ -205,17 +205,13 @@ void RegressionTreeNode::initNode(PP<RegressionTree> the_tree,
     int right_leave_id =  the_train_set->getNextId();
 
     missing_leave = ::PLearn::deepCopy(leave_template);
-    missing_leave->id=missing_leave_id;
-    missing_leave->missing_leave=missing_is_valid;
-    missing_leave->initLeave(the_train_set);
+    missing_leave->initLeave(the_train_set, missing_leave_id, missing_is_valid);
 
     left_leave = ::PLearn::deepCopy(leave_template);
-    left_leave->id=left_leave_id;
-    left_leave->initLeave(the_train_set);
+    left_leave->initLeave(the_train_set, left_leave_id);
 
     right_leave = ::PLearn::deepCopy(leave_template);
-    right_leave->id=right_leave_id;
-    right_leave->initLeave(the_train_set);
+    right_leave->initLeave(the_train_set, right_leave_id);
 
     leave_output.resize(2);
     leave_error.resize(3);
@@ -246,13 +242,13 @@ void RegressionTreeNode::initNode(PP<RegressionTree> the_tree,
 //#define RCMP
 void RegressionTreeNode::lookForBestSplit()
 {
-    if(leave->length<=1)
+    if(leave->getLength()<=1)
         return;
-    TVec<RTR_type> candidate(0, leave->length);//list of candidate row to split
-    TVec<RTR_type> registered_row(0, leave->length);
-    Vec registered_target(0, leave->length); 
-    Vec registered_weight(0, leave->length);
-    Vec registered_value(0, leave->length);
+    TVec<RTR_type> candidate(0, leave->getLength());//list of candidate row to split
+    TVec<RTR_type> registered_row(0, leave->getLength());
+    Vec registered_target(0, leave->getLength()); 
+    Vec registered_weight(0, leave->getLength());
+    Vec registered_value(0, leave->getLength());
    tmp_vec.resize(2);
     Vec left_error(3);
     Vec right_error(3);
@@ -269,7 +265,7 @@ void RegressionTreeNode::lookForBestSplit()
     row_split_value.clear();
     row_split_balance.clear();
 #endif
-    int leave_id = leave->id;
+    int leave_id = leave->getId();
     for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
@@ -322,7 +318,7 @@ void RegressionTreeNode::lookForBestSplit()
 #ifndef BY_ROW
         //in case of missing value
         if(candidate.size()==0){
-            PLASSERT(missing_leave->length()>0);
+            PLASSERT(missing_leave->getLength()>0);
             continue;
         }
         int row = candidate.pop();
@@ -456,7 +452,7 @@ int RegressionTreeNode::expandNode()
     right_leave->initStats();
     TVec<RTR_type>registered_row;
     PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
-    train_set->getAllRegisteredRow(leave->id,split_col,registered_row);
+    train_set->getAllRegisteredRow(leave->getId(),split_col,registered_row);
 
     for (int row_index = 0;row_index<registered_row.size();row_index++)
     {

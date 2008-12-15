@@ -317,8 +317,7 @@ void RegressionTree::initialiseTree()
     leave_template->initStats();
 
     first_leave = ::PLearn::deepCopy(leave_template);
-    first_leave->id=sorted_train_set->getNextId();
-    first_leave->initLeave(sorted_train_set);
+    first_leave->initLeave(sorted_train_set, sorted_train_set->getNextId());
 
     for (int train_sample_index = 0; train_sample_index < length;
          train_sample_index++)
