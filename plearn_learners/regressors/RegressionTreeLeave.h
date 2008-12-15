@@ -51,7 +51,7 @@ class RegressionTreeLeave: public Object
 {
     typedef Object inherited;
  
-    Vec dummy_vec;
+    static Vec dummy_vec;
 
 public:
     bool missing_leave;

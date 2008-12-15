@@ -52,6 +52,7 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeLeave,
     );
 
 int RegressionTreeLeave::verbosity = 0;
+Vec RegressionTreeLeave::dummy_vec;
 
 RegressionTreeLeave::RegressionTreeLeave():
     missing_leave(false),
@@ -97,9 +98,9 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
     declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
 
-    declareOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
+    declareStaticOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
-    declareOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
+    declareStaticOption(ol, "error", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
 
     inherited::declareOptions(ol);
