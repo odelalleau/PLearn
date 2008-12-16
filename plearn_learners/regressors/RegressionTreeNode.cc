@@ -245,7 +245,7 @@ void RegressionTreeNode::lookForBestSplit()
     if(leave->length()<=1)
         return;
     TVec<RTR_type> candidate(0, leave->length());//list of candidate row to split
-    TVec<RTR_type> registered_row(0, leave->length());
+    TVec<RTR_type> registered_row(leave->length());
     Vec registered_target(0, leave->length()); 
     Vec registered_weight(0, leave->length());
     Vec registered_value(0, leave->length());
@@ -271,12 +271,12 @@ void RegressionTreeNode::lookForBestSplit()
         missing_leave->initStats();
         left_leave->initStats();
         right_leave->initStats();
-        registered_row.resize(0);
         
         train_set->getAllRegisteredRow(leave_id, col, registered_row,
                                        registered_target, registered_weight,
                                        registered_value);
-        PLASSERT(registered_row.size()>0);
+
+        PLASSERT(registered_row.size()==leave->length());
         PLASSERT(candidate.size()==0);
 
         //we do this optimization in case their is many row with the same value
@@ -450,7 +450,7 @@ int RegressionTreeNode::expandNode()
     missing_leave->initStats();
     left_leave->initStats();
     right_leave->initStats();
-    TVec<RTR_type>registered_row;
+    TVec<RTR_type>registered_row(leave->length());
     PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
     train_set->getAllRegisteredRow(leave->getId(),split_col,registered_row);
 

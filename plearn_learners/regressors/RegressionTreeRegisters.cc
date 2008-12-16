@@ -211,14 +211,21 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
             value[i]  = tsource->get(col, reg[i]);
     }
 }
+
+//! reg must already have a size >= the number of row that we will put in it.
+//! Will resize reg to the number of registered leave==leave_id
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg) const
 {
-    for(int i=0;i<length();i++)
+
+    int idx=0;
+    int n=reg.length();
+    int i;
+    for( i=0;i<length() && n> idx;i++)
     {
         int srow = tsorted_row(col, i);
         if ( leave_register[srow] == leave_id)
-            reg.append(srow);
+            reg[idx++]=srow;
     }
 }
 
