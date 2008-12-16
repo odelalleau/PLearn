@@ -339,14 +339,12 @@ public:
     virtual void readIntoIndex(Object* o, PStream& in, const string& index)
     {
         int i = tolong(index);
-//        in >> (dynamic_cast<ObjectType*>(o)->*(this->ptr))[i];
         in >> (*(this->ptr))[i];
     }
 
     virtual void writeAtIndex(const Object* o, PStream& out, const string& index) const
     {
         int i = tolong(index);
-//        out << (dynamic_cast<ObjectType*>(const_cast<Object*>(o))->*(this->ptr))[i];
         out << (*(this->ptr))[i];
     }
 
