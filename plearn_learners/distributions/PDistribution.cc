@@ -407,7 +407,7 @@ void PDistribution::generateN(const Mat& Y) const
         v = Y(i);
         generate(v);
         if (pb)
-            pb->updateone();
+            pb->update(i);
     }
 }
 

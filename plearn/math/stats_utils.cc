@@ -329,9 +329,7 @@ void KS_test(const VMat& m1, const VMat& m2, const int conv, Vec& Ds, Vec& p_val
         Ds[col]=D;
         p_values[col]=p_value;
         if (report_progress)
-#pragma omp critical
-            pbar->updateone();
-
+            pbar->update(col);
     }
     }
 }

@@ -231,13 +231,9 @@ void MultiClassAdaBoost::train()
     if(omp_get_max_threads()>1){
       PLCHECK(learner1->verbosity==0);
       PLCHECK(learner2->verbosity==0);
-      PLCHECK(learner1->report_progress==false);
-      PLCHECK(learner2->report_progress==false);
       
       PLCHECK(learner1->weak_learner_template->verbosity==0);
       PLCHECK(learner2->weak_learner_template->verbosity==0);
-      PLCHECK(learner1->weak_learner_template->report_progress==false);
-      PLCHECK(learner2->weak_learner_template->report_progress==false);
     }
     
     EXTREME_MODULE_LOG<<"train() // start"<<endl;

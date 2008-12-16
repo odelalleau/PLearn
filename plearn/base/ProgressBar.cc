@@ -53,6 +53,8 @@
 
 #if USING_MPI
 #include <plearn/sys/PLMPI.h>
+#elif _OPENMP
+#include <omp.h>
 #endif //USING_MPI
 
 namespace PLearn {
@@ -128,22 +130,25 @@ void TextProgressBarPlugin::addProgressBar(ProgressBar * pb)
 {
 #if USING_MPI
     if(PLMPI::rank==0)
-    {
+#elif _OPENMP
+    if(omp_get_thread_num()==0)
 #endif
+    {
+
         string fulltitle = string(" ") + pb->title + " (" + tostring(pb->maxpos) + ") ";
         out << "[" + center(fulltitle,width,'-') + "]\n[";
         out.flush();
-#if USING_MPI
     }
-#endif
 }
 
 void TextProgressBarPlugin::update(ProgressBar * pb, uint32_t newpos)
 {
 #if USING_MPI
     if(PLMPI::rank==0)
-    {
+#elif _OPENMP
+    if(omp_get_thread_num()==0)
 #endif
+    {
         // this handles the case where we reuse the same progress bar
         if(newpos < pb->currentpos)
         {
@@ -168,9 +173,7 @@ void TextProgressBarPlugin::update(ProgressBar * pb, uint32_t newpos)
             out << "]";
             out << endl;
         }
-#if USING_MPI
     }
-#endif
 }
 
 
