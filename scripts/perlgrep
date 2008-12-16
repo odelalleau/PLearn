@@ -103,7 +103,7 @@ sub process_list(@)
                 my @flist = lsdir($fname);
                 
                 @flist = grep { -d $_ or /Makefile|makefile|pytest\.config|
-                                    \.c$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$
+                                    \.c$|\.C$|\.cc$|\.cpp$|\.CC$|\.h$|\.hpp$
                                    |\.plearn$|\.pyplearn$|\.psave$|\.vmat$|\.py$|\.pymat$
                                    |\.txt$|^readme|^Readme|^README/x } @flist;
                 process_list(@flist); 
@@ -129,7 +129,7 @@ usage: perlgrep regexp <list of files and directories>
 
 Will perform the specified grep operation on every file in the
 list and recursively in directories.  (only certain kinds of files are
-considered when recursing in directories, .c .cc .cpp .CC .h .hpp .txt .plearn .pyplearn .psave .py .vmat .pymat Makefile makefile readme Readme README)
+considered when recursing in directories, .c .C .cc .cpp .CC .h .hpp .txt .plearn .pyplearn .psave .py .vmat .pymat Makefile makefile readme Readme README)
 
 Ex: perlgrep '\\bVMatrix\\b' .
 ";
