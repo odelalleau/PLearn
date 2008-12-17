@@ -85,13 +85,6 @@ int DERIVEDCLASS::outputsize() const
     // may depend on its inputsize(), targetsize() and set options).
 }
 
-void DERIVEDCLASS::finalize()
-{
-    //! When this method is called the learner know it we will never train it again.
-    //! So it can free resources that are needed only during the training.
-    //! The function test()/computeOutputs()/... should continue to work.
-}
-
 void DERIVEDCLASS::forget()
 {
     //! (Re-)initialize the PLearner in its fresh state (that state may depend

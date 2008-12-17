@@ -43,12 +43,6 @@ public:
 
 
 
-    //! When this method is called the learner know it we will never train it again.
-    //! So it can free resources that are needed only during the training.
-    //! The function test()/computeOutputs()/... should continue to work.
-    // (PLEASE IMPLEMENT IN .cc)
-    virtual void finalize();
-
     //! (Re-)initializes the PLearner in its fresh state (that state may depend
     //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
     //! a fresh learner!).
@@ -95,7 +89,10 @@ public:
     // virtual int nTrainCosts() const;
     // virtual void resetInternalState();
     // virtual bool isStatefulLearner() const;
-
+    //! When this method is called the learner knows it we will not be trained
+    //! anymore, so it can free resources that are needed only during training.
+    //! Methods test()/computeOutputs()/... should continue to work.
+    // virtual void finalize();
 
     //#####  PLearn::Object Protocol  #########################################
 
