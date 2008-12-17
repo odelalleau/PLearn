@@ -858,6 +858,11 @@ class DBICondor(DBIBase):
             #keeps a list of the temporary files created, so that they can be deleted at will
 
     def get_pkdilly_var(self):
+
+#the ssh is to have a renewed and cleaned kerberos ticket
+#the +P is to have only the KRV* var, 
+#the +P don't need a condor_submit_file
+#ssh HOSTNAME pkdilly +P
         cmd="pkdilly -S "+self.condor_submit_file
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
@@ -992,9 +997,6 @@ class DBICondor(DBIBase):
                 fd.close()
 
                 fd = open(self.second_lauch_file,'w')
-                fd.write(dedent('''\
-                    #!/bin/sh
-                    '''))
 
             bash=not self.source_file or not self.source_file.endswith(".cshrc")
             if bash:
