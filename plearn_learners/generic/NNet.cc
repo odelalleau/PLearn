@@ -1274,7 +1274,7 @@ void NNet::train()
                 & SumOverBagsVariable::TARGET_COLUMN_FIRST)
                 n_training_bags++;
             if (pb)
-                pb->updateone();
+                pb->update(i);
         }
     }
     

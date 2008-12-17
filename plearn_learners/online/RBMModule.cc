@@ -1321,12 +1321,13 @@ void RBMModule::fprop(const TVec<Mat*>& ports_value)
                 verbosity >= 2 ? new ProgressBar("Gibbs sampling",
                                                  min_n - Gibbs_step)
                                : NULL;
+            int start = Gibbs_step;
             for (;Gibbs_step<min_n;Gibbs_step++)
             {
                 sampleHiddenGivenVisible(visible_layer->samples);
                 sampleVisibleGivenHidden(hidden_layer->samples);
                 if (pb)
-                    pb->updateone();
+                    pb->update(Gibbs_step - start);
             }
             if (pb)
                 pb = NULL;
