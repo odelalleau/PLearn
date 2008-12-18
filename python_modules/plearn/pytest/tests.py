@@ -222,6 +222,9 @@ class Resources(core.PyTestObject):
     def link_resources(self, path_to, resources, target_dir): 
         resources_to_append = []
         for resource in resources:
+            if not resource:
+                print "Empty ressource to link to the target_dir '%s', we skip it."%target_dir
+                continue
             self.single_link( path_to, resource, target_dir )
                         
             if toolkit.isvmat( resource ):
