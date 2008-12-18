@@ -1,0 +1,1 @@
+SelectColumnsVMatrix(source=SubVMatrix(length=100,source=AutoVMatrix(filename="linear_4x_2y_multi_class.vmat")),indices=[0 1 2 3 5])
