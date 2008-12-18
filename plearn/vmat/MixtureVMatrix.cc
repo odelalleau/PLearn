@@ -180,7 +180,7 @@ void MixtureVMatrix::buildPeriod()
     for (int i=0; i<n_sources; i++)
     {
         PLASSERT(period.count(i) == weights[i]);
-        PLASSERT( i==0 && occurrences[0]==0
+        PLASSERT( (i==0 && occurrences[0]==0)
                   || period.subVec(0,i-1).count(period[i]) == occurrences[i]);
     }
 #endif
