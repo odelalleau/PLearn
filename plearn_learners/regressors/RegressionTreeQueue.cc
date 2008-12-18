@@ -41,6 +41,7 @@
 
 #include "RegressionTreeQueue.h"
 #include "RegressionTreeNode.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;
@@ -110,7 +111,11 @@ void RegressionTreeQueue::addHeap(PP<RegressionTreeNode> new_node)
     {
         return;
     }
-    if (next_available_node >= maximum_number_of_nodes) PLERROR("RegressionTreeQueue: maximum number of entries exceeded (400)");
+    if (next_available_node >= maximum_number_of_nodes){
+        string s = "RegressionTreeQueue: maximum number of entries exceeded ("
+            +tostring(maximum_number_of_nodes)+")";
+        PLERROR(s.c_str());
+    }
     nodes[next_available_node] = upHeap(new_node, next_available_node);
     next_available_node += 1;
 }
