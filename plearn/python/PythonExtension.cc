@@ -31,6 +31,8 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
+#define PL_LOG_MODULE_NAME "PythonExtension"
+
 #include <plearn/python/PythonExtension.h>
 #include <plearn/python/PythonObjectWrapper.h>
 #include <plearn/base/RemoteDeclareMethod.h>
@@ -39,12 +41,16 @@
 #include <plearn/base/PMemPool.h>
 #include <plearn/base/stringutils.h>
 #include <plearn/vmat/VMatrix.h>
+#include <plearn/io/pl_log.h>
+#include <plearn/sys/procinfo.h>
 
 namespace PLearn {
 
 // Trampoline for global PLearn 'remote' functions
 PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args)
 {
+    DBG_MODULE_LOG << "pythonGlobalFuncTramp(" << PythonObjectWrapper(self)
+                   << ", " << PythonObjectWrapper(args) << ')' << endl;
     RemoteTrampoline* t= 
         static_cast<RemoteTrampoline*>(PyCObject_AsVoidPtr(self));
     int nas= PyTuple_GET_SIZE(args);
@@ -268,6 +274,7 @@ void injectPLearnClasses(PyObject* module)
             + pyclassname + "(" + actual_wrapper_name + "):\n"
             "  \"\"\" \n" + class_help_text + "\n \"\"\"\n"
             "  def __new__(cls,*args,**kwargs):\n"
+            "    #get_plearn_module().loggingControl(500, ['__ALL__'])"
             "    #print '** "+pyclassname+".__new__',kwargs\n"
             "    obj= object.__new__(cls,*args,**kwargs)\n"
             "    if '_cptr' not in kwargs:\n"
@@ -388,6 +395,11 @@ void injectPLearnClasses(PyObject* module)
 
 void createWrappedObjectsSet(PyObject* module)
 {
+    /* can't set logging before this gets called
+    perr << "[pid=" << getPid() << "] "
+         << "createWrappedObjectsSet for module: " << PythonObjectWrapper(module) << endl;
+    */
+
     string code= "";
 #if PL_PYTHON_VERSION <= 230
     code+= "\nfrom sets import Set as set\n";
@@ -405,6 +417,8 @@ void createWrappedObjectsSet(PyObject* module)
 
 void addToWrappedObjectsSet(PyObject* o)
 {
+    DBG_MODULE_LOG << "addToWrappedObjectsSet for module: " << PythonObjectWrapper(the_PLearn_python_module)
+                   << "\tadding object: " << PythonObjectWrapper(o) << endl;
     PLASSERT(the_PLearn_python_module);
     if(-1 == PyObject_SetAttrString(the_PLearn_python_module, const_cast<char*>("_tmp_wrapped_instance"), o))
         PLERROR("in addToWrappedObjectsSet : cannot add wrapped object to module.");
@@ -422,6 +436,8 @@ void addToWrappedObjectsSet(PyObject* o)
 }
 void removeFromWrappedObjectsSet(PyObject* o)
 {
+    DBG_MODULE_LOG << "removeFromWrappedObjectsSet for module: " << PythonObjectWrapper(the_PLearn_python_module)
+                   << "\tremoving object: " << PythonObjectWrapper(o) << endl;
     PLASSERT(the_PLearn_python_module);
     if(-1 == PyObject_SetAttrString(the_PLearn_python_module, const_cast<char*>("_tmp_wrapped_instance"), o))
         PLERROR("in removeFromWrappedObjectsSet : cannot add wrapped object to module.");
@@ -442,6 +458,10 @@ void removeFromWrappedObjectsSet(PyObject* o)
 // init module, then inject global funcs
 void initPythonExtensionModule(char const * module_name)
 {
+    /* can't set logging before this gets called
+    perr << "[pid=" << getPid() << "] "
+         << "initPythonExtensionModule name=" << module_name << endl;
+    */
     PythonObjectWrapper::initializePython();
     PyObject* plext= Py_InitModule(const_cast<char*>(module_name), NULL);
     setPythonModuleAndInject(plext);
@@ -449,11 +469,14 @@ void initPythonExtensionModule(char const * module_name)
 
 void setPythonModuleAndInject(PyObject* module)
 {
+    /* can't set logging before this gets called
+    perr << "[pid=" << getPid() << "] "
+         << "setPythonModuleAndInject for module: " << PythonObjectWrapper(module) << "\tat " << (void*)module << endl;
+    */
     injectPLearnGlobalFunctions(module);
     injectPLearnClasses(module);
     createWrappedObjectsSet(module);
-    the_PLearn_python_module= module;
-    
+    the_PLearn_python_module= module;   
 }
 
 PyObject* the_PLearn_python_module= 0;
@@ -465,11 +488,18 @@ void setNullPout()
 {
     pout= pnull;
 }
+void setPoutToPerr()
+{
+    pout= perr;
+}
 
 BEGIN_DECLARE_REMOTE_FUNCTIONS
 
     declareFunction("setNullPout", &setNullPout,
                     (BodyDoc("Sets the pout output stream to be null.\n")));
+
+    declareFunction("setPoutToPerr", &setPoutToPerr,
+                    (BodyDoc("Sets the pout output stream to be perr.\n")));
 
 END_DECLARE_REMOTE_FUNCTIONS
         
