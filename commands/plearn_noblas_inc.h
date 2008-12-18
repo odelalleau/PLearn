@@ -351,6 +351,7 @@
 #include <plearn/vmat/RandomSamplesVMatrix.h>
 #include <plearn/vmat/RandomSamplesFromVMatrix.h>
 #include <plearn/vmat/RankedVMatrix.h>
+#include <plearn/vmat/RepeatVMatrix.h>
 #include <plearn/vmat/RegularGridVMatrix.h>
 #include <plearn/vmat/RemoveDuplicateVMatrix.h>
 #include <plearn/vmat/ReorderByMissingVMatrix.h>
