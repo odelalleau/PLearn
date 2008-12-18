@@ -1,0 +1,3 @@
+$DEFINE{outputs}{[]}
+$DEFINE{leave}{RegressionTreeLeave()}
+$INCLUDE{test_tree.plearn}

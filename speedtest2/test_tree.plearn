@@ -1,0 +1,146 @@
+# ARGUMENTS:
+# datadir = prefix of ${datadir}/{train,test}_input.vmat files
+# dt = deletion_threshold
+# outputs = [] for regression [ 0 1 2 ... ] for classification
+# missing_is_valid = 0 if missing are not a valid value, 1 otherwise
+# n = number of online training iterations (examples to see)
+# epoch = number of examples forming an "epoch" (when to save model, compute error)
+
+
+$DEFINE{learner}{test_tree}
+$DEFINE{expdir}{exp}
+
+$EVALUATE{expdir}
+ShellScript(
+  shell_commands = [ 
+		     "echo \"expdir=${expdir}\""
+                   ]
+)
+PTester
+  ( 
+  expdir = "${expdir}"  ;
+
+  splitter = ExplicitSplitter( splitsets = 1 3
+                    [ *1->RepeatVMatrix(repeat_n_times=1000000
+                                              source=AutoVMatrix(
+					               filename = "${train}"
+                                                       targetsize = 1;
+                                                       weightsize = 0;
+                                                       ))
+                      *1
+                                RepeatVMatrix(repeat_n_times=1000000
+                                              source=AutoVMatrix(
+					               filename = "${test}"
+                                                       targetsize = 1;
+                                                       weightsize = 0;
+                                                       ))
+				]
+			      )
+
+  statnames = [
+          "E[test1.E[mse]]" "E[test2.E[mse]]" "E[test2.STDERROR[mse]]"
+          "E[test1.E[class_error]]" "E[test2.E[class_error]]" "E[test2.STDERROR[class_error]]"
+          ] ;
+  report_stats = 1  ;
+  save_initial_tester = 0  ;
+  save_stat_collectors = 0  ;
+  save_learners = 0  ;
+  save_initial_learners = 0  ;
+  save_data_sets = 0  ;
+  save_test_outputs = 0  ;
+  save_test_costs = 0  ;
+  provide_learner_expdir = 1  ;
+  save_test_confidence = 0  ;
+  enforce_clean_expdir = 0
+  learner = HyperLearner(
+                        option_fields = [ "nstages" "loss_function_weight" ];
+                        dont_restart_upon_change = [ "nstages" ] ;
+                        provide_strategy_expdir = 1 ;
+                        save_final_learner = 0 ;
+                        provide_learner_expdir = 1 ;
+                        forget_when_training_set_changes = 0 ;
+                        nstages = 1 ;
+                        nservers = 0 ;
+                        report_progress = 1 ;
+                        verbosity = 0 ;
+                        learner = 
+					RegressionTree(
+							# nstages = 15 ;
+                                                        loss_function_weight = 1 ;
+                                                        # sort_train_set = 1 ;
+                                                        missing_is_valid = ${missing_is_valid} ;
+							multiclass_outputs = ${outputs}
+                                                        maximum_number_of_nodes = 500 ;
+                                                        compute_train_stats = 0 ;
+                                                        complexity_penalty_factor = 0.0 ;
+							output_confidence_target = 0
+                                                        verbosity = 2 ;
+                                                        report_progress = 1 ;
+                                                        forget_when_training_set_changes = 1 ;
+                                                        leave_template = ${leave} ; 
+                                                        test_minibatch_size = 32
+                                                        ) ;  # end of RegressionTree
+                        tester = PTester(
+                                        splitter =  ExplicitSplitter( splitsets = 1 3 
+                    [ *1->RepeatVMatrix(repeat_n_times=1000
+                                              source=AutoVMatrix(
+					               filename = "${train}"
+                                                       targetsize = 1;
+                                                       weightsize = 0;
+                                                       ))
+                       *1
+                                RepeatVMatrix(repeat_n_times=1000
+                                              source=AutoVMatrix(
+					               filename = "${test}"
+                                                       targetsize = 1;
+                                                       weightsize = 0;
+                                                       ))
+				]
+			      )
+
+
+
+
+                                        statnames = [
+                                                    "E[test1.E[mse]]" "E[test2.E[mse]]" "E[test2.STDERROR[mse]]"
+                                                    "E[test1.E[class_error]]" "E[test2.E[class_error]]" "E[test2.STDERROR[class_error]]"
+                                                    ] ;
+                                        save_test_outputs = 0 ;
+                                        report_stats = 1  ;
+                                        save_initial_tester = 0 ;
+                                        save_learners = 0 ;                         
+                                        save_initial_learners = 0  ;
+                                        save_data_sets = 0  ;
+                                        save_test_costs = 0  ;
+                                        provide_learner_expdir = 1  ;
+                                        save_test_confidence = 0  ;
+                                        save_test_names = 0;
+                                        enforce_clean_expdir = 0
+                                        ) ; # end of Hyperlearner PTester
+                        strategy = [
+                                   HyperOptimize(
+                                                which_cost = "E[test2.E[class_error]]" ;
+                                                min_n_trials = 1 ;
+                                                provide_tester_expdir = 0 ;
+                                                rerun_after_sub = 0 ;
+                                                provide_sub_expdir = 0 ;
+						verbosity=3
+                                                oracle = EarlyStoppingOracle(
+                                                                                                        option = "nstages" ;
+                                                                                                        range = [ ${epoch} ${n} ${epoch} ]
+                                                                                                        min_value = -3.40282e+38 ;
+                                                                                                        max_value = 3.40282e+38 ;
+                                                                                                        max_degradation = 3.40282e+38 ;
+                                                                                                        relative_max_degradation = -1 ;
+                                                                                                        min_improvement = -3.40282e+38 ;
+                                                                                                        relative_min_improvement = -1 ;
+                                                                                                        max_degraded_steps = 120 ;
+                                                                                                        min_n_steps = 2 ;
+                                                                                                        ) ; # end of EarlyStoppingOracle
+                                                ) ; # end of strategy.HyperOptimize 
+                                   ] ; # end of HyperLearner strategy
+                        ) ; # end of HyperLearner
+        final_commands = [
+			  "echo \"expdir=${expdir}\""
+                          ]
+  ) # end of main Ptester

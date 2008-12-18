@@ -1,0 +1,153 @@
+import os.path,sys
+from plearn.pyplearn import *
+import plearn.utilities.ppath
+from plearn.utilities.ppath import ppath
+
+plarg_defaults.traintest='train'
+plarg_defaults.datadir = "meanmode"
+plarg_defaults.dt = 0.
+plarg_defaults.ind = True
+plarg_defaults.weightsize = 0
+plarg_defaults.memorymatrix = False
+plarg_defaults.memorymatrix_nosave = False
+plarg_defaults.deep_copy_memory_data=False
+plarg_defaults.target=True
+plarg_defaults.length=-1
+plarg_defaults.istart=-1
+
+
+if plargs.memorymatrix and plargs.memorymatrix_nosave:
+       print "ERROR can set only memorymatrix or memorymatrix_nosave"
+       sys.exit(1)
+       
+def getpvmatfilename(file):
+    file=plearn.utilities.ppath.ppath(file)
+    if os.path.exists(file+"pmat") and os.path.exists(file+"vmat"):
+        mtime1=os.path.getmtime(file+"vmat")
+	mtime2=os.path.getmtime(file+"pmat")
+	if mtime1>=mtime2:
+            print "ERROR: "+file+"vmat older then "+file+"pmat, recreate the pmat"
+            sys.exit(2)
+	else:
+            file = file+"pmat"
+    elif os.path.exists(file+"pmat"):
+        file = file+"pmat"
+    else:
+        file = file+"vmat"
+        print >> sys.stderr, "INFO: no pmat file for the file",file
+    return file
+
+def removeIndVMat(original):
+       fd = open('common/missing_indicator_field_names.inc','r')
+       lines = [ s.strip() for s in fd.readlines()]
+       lines = lines[1:-1]
+       return pl.SelectColumnsVMatrix(
+              inputsize=original.inputsize-len(lines),
+              targetsize=original.targetsize,
+              weightsize=original.weightsize,
+              inverse_fields_selection = True,
+              source=original,
+              fields = lines
+              )
+
+inputfile=os.path.join(plargs.datadir,plargs.traintest)+"_input."
+
+if plargs.datadir.startswith("letter"):
+       sizeinput=16
+       sizetarget=1
+       plarg_defaults.target=False
+elif plargs.datadir.find("imputation2007") != -1:
+       sizeinput=-1
+       sizetarget=1
+       inputfile=os.path.join(plargs.datadir,plargs.traintest)+"."
+       plarg_defaults.target=False
+else:
+       sizeinput=500
+       sizetarget=0
+
+
+inputfile=getpvmatfilename(inputfile)
+vmat=pl.AutoVMatrix( specification = inputfile,
+		     inputsize=sizeinput,
+		     targetsize=sizetarget,
+		     weightsize=0
+		     )
+
+if plargs.target:
+	targetfile="noimp/"+plargs.traintest+"_target.vmat"
+	vmat=pl.ConcatColumnsVMatrix(sources=[vmat,
+					      pl.ProcessingVMatrix(source=pl.AutoVMatrix(specification=targetfile),
+								   prg = "@CLASSE_REEL 1 - :CLASSE_REEL")
+					      ],
+				     inputsize=sizeinput,
+				     targetsize=1,
+				     weightsize=0)
+	
+if plargs.length>0 and plargs.istart>0:
+       vmat = pl.SubVMatrix(source=vmat,
+                            length=plargs.length,
+                            istart=plargs.istart,
+                            inputsize=vmat.inputsize,
+                            targetsize=vmat.targetsize,
+                            weightsize=vmat.weightsize)
+elif plargs.length>0:
+       vmat = pl.SubVMatrix(source=vmat,
+                            length=plargs.length,
+                            inputsize=vmat.inputsize,
+                            targetsize=vmat.targetsize,
+                            weightsize=vmat.weightsize)
+elif plargs.istart>0:
+       vmat = pl.SubVMatrix(source=vmat,
+                            istart=plargs.istart,
+                            inputsize=vmat.inputsize,
+                            targetsize=vmat.targetsize,
+                            weightsize=vmat.weightsize)
+       
+if not plargs.ind:
+       vmat = removeIndVMat(vmat)
+       
+if plargs.dt != 0:
+       dtvmat = pl.VariableDeletionVMatrix(source=vmat,
+                                         min_non_missing_threshold = plargs.dt,
+                                         max_constant_threshold = 0,
+#                                        remove_columns_with_constant_value = 0,
+#                                         number_of_train_samples = 30000
+                                         )
+       if not plargs.ind:
+              train_set = pl.AutoVMatrix(specification=getpvmatfilename("noimp/train_input_class_noind."),
+                                         inputsize=500,
+                                         targetsize=1)
+       else:
+           train_set = pl.AutoVMatrix(specification=getpvmatfilename("noimp/train_input_class."),
+                                      inputsize=500,
+                                      targetsize=1)
+
+       dtvmat.train_set = train_set
+       vmat = dtvmat
+       
+if plargs.weightsize != 0:
+       vmat = pl.ConcatColumnsVMatrix(sources=[
+                     vmat,
+                     pl.ConstantVMatrix(length=vmat.length,width=1,
+                                        constant_output=1./vmat.length,
+                                        inputsize=0,targetsize=0)]
+                                      ,weightsize=1,targetsize=1)
+       
+if plargs.memorymatrix:
+       vmat=pl.MemoryVMatrix(source=vmat,
+	deep_copy_memory_data=plargs.deep_copy_memory_data)
+elif plargs.memorymatrix_nosave:
+       vmat=pl.MemoryVMatrixNoSave(source=vmat,
+	deep_copy_memory_data=plargs.deep_copy_memory_data) 
+dir="newcommon/train.pymat.metadata/traintest="+plargs.traintest
+dir+="_datadir="+plargs.datadir
+dir+="_dt="+str(plargs.dt)
+dir+="_ind="+str(plargs.ind)
+dir+="_weightsize="+str(plargs.weightsize)
+dir+="_memorymatrix="+str(plargs.memorymatrix)
+dir+="_target="+str(plargs.target)
+dir+="_length="+str(plargs.length)
+#print 
+vmat.metadatadir=dir
+def main():
+       return vmat

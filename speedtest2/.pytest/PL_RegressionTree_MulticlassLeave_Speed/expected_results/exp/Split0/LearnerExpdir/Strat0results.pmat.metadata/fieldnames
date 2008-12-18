@@ -1,0 +1,10 @@
+_trial_	0
+_objective_	0
+nstages	0
+loss_function_weight	0
+E[test1.E[mse]]	0
+E[test2.E[mse]]	0
+E[test2.STDERROR[mse]]	0
+E[test1.E[class_error]]	0
+E[test2.E[class_error]]	0
+E[test2.STDERROR[class_error]]	0
