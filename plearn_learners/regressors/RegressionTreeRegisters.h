@@ -49,7 +49,9 @@
 
 //!used to limit the memory used by limiting the length of the dataset.
 //!work with unsigned int, uint16_t, but fail with uint8_t???
+#ifndef RTR_type
 #define RTR_type uint32_t
+#endif
 //!The type for the leave id
 #ifndef RTR_type_id
 #define RTR_type_id int16_t
