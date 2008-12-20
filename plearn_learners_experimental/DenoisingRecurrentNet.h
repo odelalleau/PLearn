@@ -319,7 +319,7 @@ protected:
     
     //! Stores hidden gradient of dynamic connections coming from time t+1
     mutable Vec hidden_temporal_gradient;
-        
+
     //! List of hidden layers values
     // mutable TVec< Vec > hidden_list;
     mutable Mat hidden_list;
@@ -423,9 +423,11 @@ private:
     void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
-    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_prob, 
-                                                                          Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
-
+    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
+                                                                          Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
+    
+    double fpropHiddenSymmetricDynamicMatrix(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_prob, 
+                                                                          Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
 private:
     //#####  Private Data Members  ############################################
 
