@@ -147,6 +147,9 @@ public:
 
     // learnt bias for input reconstruction
     Vec input_reconstruction_bias;
+
+    // learnt bias for hidden reconstruction
+    Vec hidden_reconstruction_bias;
     
     double prediction_cost_weight;
     double input_reconstruction_cost_weight;
@@ -423,7 +426,7 @@ private:
     void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
-    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
+    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_bias, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
                                                                           Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
     
     double fpropHiddenSymmetricDynamicMatrix(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_prob, 
