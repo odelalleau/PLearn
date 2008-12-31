@@ -271,7 +271,8 @@ public:
     //! after the visible units have been clamped
     void recurrentUpdate(real input_reconstruction_weight,
                          real hidden_reconstruction_cost_weight,
-                         real temporal_gradient_contribution = 1);
+                         real temporal_gradient_contribution = 1,
+                         real prediction_cost_weight = 1);
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;

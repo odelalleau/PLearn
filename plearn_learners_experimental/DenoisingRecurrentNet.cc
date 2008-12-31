@@ -671,28 +671,6 @@ void DenoisingRecurrentNet::train()
 
                 if(corrupt_input)  // WARNING: encoded_sequence will be dirty!!!!
                     inject_zero_forcing_noise(encoded_seq, input_noise_prob);
-                
-                // greedy phase input
-                if(input_reconstruction_lr!=0){
-                    setLearningRate( input_reconstruction_lr );
-                    recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(input_reconstruction_cost_weight, 0, 0);
-                }
-                
-                // greedy phase hidden
-                if(hidden_reconstruction_lr!=0){
-                    setLearningRate( hidden_reconstruction_lr );
-                    recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(0, hidden_reconstruction_cost_weight, 0);
-                }
-
-                // recurrent noisy phase
-                if(noisy_recurrent_lr!=0)
-                {
-                    setLearningRate( noisy_recurrent_lr );
-                    recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(input_reconstruction_cost_weight, hidden_reconstruction_cost_weight, 1);
-                }
 
                 // recurrent no noise phase
                 if(recurrent_lr!=0)
@@ -701,8 +679,32 @@ void DenoisingRecurrentNet::train()
                         encoded_seq << clean_encoded_seq;                  
                     setLearningRate( recurrent_lr );                    
                     recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(0,0,1);
+                    recurrentUpdate(0,0,1, prediction_cost_weight );
                 }
+                
+                // greedy phase input
+                if(input_reconstruction_lr!=0){
+                    setLearningRate( input_reconstruction_lr );
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate(input_reconstruction_cost_weight, 0, 0, prediction_cost_weight );
+                }
+                
+                // greedy phase hidden
+                if(hidden_reconstruction_lr!=0){
+                    setLearningRate( dynamic_gradient_scale_factor*hidden_reconstruction_lr);
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate(0, hidden_reconstruction_cost_weight, 0, 0 );
+                }
+
+                // recurrent noisy phase
+                if(noisy_recurrent_lr!=0)
+                {
+                    setLearningRate( noisy_recurrent_lr );
+                    recurrentFprop(train_costs, train_n_items);
+                    recurrentUpdate(input_reconstruction_cost_weight, hidden_reconstruction_cost_weight, 1, prediction_cost_weight );
+                }
+
+                
             }
 
             if( pb )
@@ -1100,6 +1102,7 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     hidden_reconstruction_activation_grad -= hidden_target;
     hidden_reconstruction_activation_grad *= hidden_reconstruction_cost_weight;
 
+
     productAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
 
     // update weight
@@ -1287,7 +1290,8 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
 */
 void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                                             real hidden_reconstruction_weight,
-                                            real temporal_gradient_contribution)
+                                            real temporal_gradient_contribution,
+                                            real predic_cost_weight)
 {
     hidden_temporal_gradient.resize(hidden_layer->size);
     hidden_temporal_gradient.clear();
@@ -1298,7 +1302,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
         else
             hidden_gradient.resize(hidden_layer->size);
         hidden_gradient.clear();
-        if( prediction_cost_weight!=0 )
+        if( predic_cost_weight!=0 )
         {
             for( int tar=0; tar<target_layers.length(); tar++)
             {
@@ -1308,7 +1312,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                     target_layers[tar]->activation += target_layers[tar]->bias;
                     target_layers[tar]->setExpectation(target_prediction_list[tar](i));
                     target_layers[tar]->bpropNLL(targets_list[tar](i),nll_list(i,tar),bias_gradient);
-                    bias_gradient *= prediction_cost_weight;
+                    bias_gradient *= predic_cost_weight;
                     if(use_target_layers_masks)
                         bias_gradient *= masks_list[tar](i);
                     target_layers[tar]->update(bias_gradient);
@@ -1359,7 +1363,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
 
                 //truc stan
                 //fpropHiddenSymmetricDynamicMatrix(hidden_list(i-1), reconstruction_weights, hidden_reconstruction_prob, hidden_list(i), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
-                fpropHiddenReconstructionFromLastHidden(hidden_list(i), reconstruction_weights, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, dynamic_gradient_scale_factor*current_learning_rate);
+                fpropHiddenReconstructionFromLastHidden(hidden_list(i), reconstruction_weights, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
             
             }
             
@@ -1382,9 +1386,9 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
             if(hidden_reconstruction_weight!=0)
             {
                 // update bias
-                multiplyAcc(hidden_reconstruction_bias, hidden_reconstruction_activation_grad, -dynamic_gradient_scale_factor*current_learning_rate);
+                multiplyAcc(hidden_reconstruction_bias, hidden_reconstruction_activation_grad, -current_learning_rate);
                 // update weight
-                externalProductScaleAcc(reconstruction_weights, hidden_list(i), hidden_reconstruction_activation_grad, -dynamic_gradient_scale_factor*current_learning_rate);
+                externalProductScaleAcc(reconstruction_weights, hidden_list(i), hidden_reconstruction_activation_grad, -current_learning_rate);
                 
             }
 
@@ -1743,8 +1747,10 @@ void DenoisingRecurrentNet::setLearningRate( real the_learning_rate )
     input_layer->setLearningRate( the_learning_rate );
     hidden_layer->setLearningRate( the_learning_rate );
     input_connections->setLearningRate( the_learning_rate );
-    if( dynamic_connections )
-        dynamic_connections->setLearningRate( dynamic_gradient_scale_factor*the_learning_rate ); 
+    if( dynamic_connections ){
+        //dynamic_connections->setLearningRate( dynamic_gradient_scale_factor*the_learning_rate ); 
+        dynamic_connections->setLearningRate( the_learning_rate ); 
+    }
     if( hidden_layer2 )
     {
         hidden_layer2->setLearningRate( the_learning_rate );
