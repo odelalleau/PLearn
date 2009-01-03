@@ -97,6 +97,9 @@ public:
     //! The RBMConnection between the first hidden layers, through time
     PP<RBMConnection> dynamic_connections;
 
+    //! The RBMConnection for the reconstruction between the hidden layers, through time
+    PP<RBMConnection> dynamic_reconstruction_connections;
+
     //! The RBMConnection between the first and second hidden layers (optional)
     PP<RBMConnection> hidden_connections;
 
@@ -407,6 +410,8 @@ private:
     Mat getInputConnectionsWeightMatrix();
 
     Mat getDynamicConnectionsWeightMatrix();
+
+    Mat getDynamicReconstructionConnectionsWeightMatrix();
 
     //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
     //! then backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr

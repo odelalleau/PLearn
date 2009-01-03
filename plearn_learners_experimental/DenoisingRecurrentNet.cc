@@ -138,6 +138,12 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
                   "The RBMConnection between the first hidden layers, "
                   "through time (optional).\n");
 
+    declareOption(ol, "dynamic_reconstruction_connections", 
+                  &DenoisingRecurrentNet::dynamic_reconstruction_connections,
+                  OptionBase::buildoption,
+                  "The RBMConnection for the reconstruction between the hidden layers, "
+                  "through time (optional).\n");
+
     declareOption(ol, "hidden_connections", 
                   &DenoisingRecurrentNet::hidden_connections,
                   OptionBase::buildoption,
@@ -402,6 +408,18 @@ void DenoisingRecurrentNet::build_()
             dynamic_connections->build();
         }
 
+        if( dynamic_reconstruction_connections )
+        {
+            dynamic_reconstruction_connections->down_size = hidden_layer->size;
+            dynamic_reconstruction_connections->up_size = hidden_layer->size;
+            if( !dynamic_reconstruction_connections->random_gen )
+            {
+                dynamic_reconstruction_connections->random_gen = random_gen;
+                dynamic_reconstruction_connections->forget();
+            }
+            dynamic_reconstruction_connections->build();
+        }
+
         if( hidden_layer2 )
         {
             if( !hidden_layer2->random_gen )
@@ -467,6 +485,7 @@ void DenoisingRecurrentNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField( hidden_layer, copies);
     deepCopyField( hidden_layer2 , copies);
     deepCopyField( dynamic_connections , copies);
+    deepCopyField( dynamic_reconstruction_connections , copies);
     deepCopyField( hidden_connections , copies);
     deepCopyField( input_connections , copies);
     deepCopyField( target_connections , copies);
@@ -516,6 +535,8 @@ void DenoisingRecurrentNet::forget()
     input_connections->forget();
     if( dynamic_connections )
         dynamic_connections->forget();
+    if( dynamic_reconstruction_connections )
+        dynamic_reconstruction_connections->forget();
     if( hidden_layer2 )
     {
         hidden_layer2->forget();
@@ -693,7 +714,7 @@ void DenoisingRecurrentNet::train()
                 if(hidden_reconstruction_lr!=0){
                     setLearningRate( dynamic_gradient_scale_factor*hidden_reconstruction_lr);
                     recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(0, hidden_reconstruction_cost_weight, 0, 0 );
+                    recurrentUpdate(0, hidden_reconstruction_cost_weight, 1, 0 );
                 }
 
                 // recurrent noisy phase
@@ -995,6 +1016,14 @@ Mat DenoisingRecurrentNet::getDynamicConnectionsWeightMatrix()
     return conn->weights;
 }
 
+Mat DenoisingRecurrentNet::getDynamicReconstructionConnectionsWeightMatrix()
+{
+    RBMMatrixConnection* conn = dynamic_cast<RBMMatrixConnection*>((RBMConnection*)dynamic_reconstruction_connections);
+    if(conn==0)
+        PLERROR("Expecting input connection to be a RBMMatrixConnection. Je sais c'est sale, mais au point ou on est rendu..");
+    return conn->weights;
+}
+
 double DenoisingRecurrentNet::fpropUpdateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
                                                                        Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr)
 {
@@ -1087,7 +1116,8 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     reconstruction_prob.resize(fullhiddenlength);
 
     // predict (denoised) input_reconstruction 
-    transposeProduct(reconstruction_activation, reconstruction_weights, hidden); 
+    //transposeProduct(reconstruction_activation, reconstruction_weights, hidden);
+    product(reconstruction_activation, reconstruction_weights, hidden);
     reconstruction_activation += reconstruction_bias;
 
     for( int j=0 ; j<fullhiddenlength ; j++ )
@@ -1103,7 +1133,14 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     hidden_reconstruction_activation_grad *= hidden_reconstruction_cost_weight;
 
 
-    productAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
+    //productAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
+    transposeProductAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
+    
+    //update bias
+    multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
+    // update weight
+    externalProductScaleAcc(reconstruction_weights, hidden_reconstruction_activation_grad, hidden, -lr);
+                
 
     // update weight
     //externalProductScaleAcc(reconstruction_weights, hidden, hidden_reconstruction_activation_grad, -lr);
@@ -1355,7 +1392,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
             // Add contribution of hidden reconstruction cost in hidden_gradient
             Vec hidden_reconstruction_activation_grad;
             hidden_reconstruction_activation_grad.resize(hidden_layer->size);
-            Mat reconstruction_weights = getDynamicConnectionsWeightMatrix();
+            Mat reconstruction_weights = getDynamicReconstructionConnectionsWeightMatrix();
             if(hidden_reconstruction_weight!=0)
             {
                 //Vec hidden_reconstruction_activation_grad;
@@ -1364,7 +1401,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                 //truc stan
                 //fpropHiddenSymmetricDynamicMatrix(hidden_list(i-1), reconstruction_weights, hidden_reconstruction_prob, hidden_list(i), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
                 fpropHiddenReconstructionFromLastHidden(hidden_list(i), reconstruction_weights, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
-            
+                
             }
             
 
@@ -1373,6 +1410,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
             { // add weighted contribution of hidden_temporal gradient to hidden_gradient
                 // It does this: hidden_gradient += temporal_gradient_contribution*hidden_temporal_gradient;
                 multiplyAcc(hidden_gradient, hidden_temporal_gradient, temporal_gradient_contribution);
+                
             }
             hidden_layer->bpropUpdate(
                 hidden_act_no_bias_list(i), hidden_list(i),
@@ -1383,14 +1421,14 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                 hidden_act_no_bias_list(i), // Here, it should be dynamic_act_no_bias_contribution, but doesn't matter because a RBMMatrixConnection::bpropUpdate doesn't use its second argument
                 hidden_gradient, hidden_temporal_gradient);
 
-            if(hidden_reconstruction_weight!=0)
+            /*if(hidden_reconstruction_weight!=0)
             {
                 // update bias
                 multiplyAcc(hidden_reconstruction_bias, hidden_reconstruction_activation_grad, -current_learning_rate);
                 // update weight
                 externalProductScaleAcc(reconstruction_weights, hidden_list(i), hidden_reconstruction_activation_grad, -current_learning_rate);
                 
-            }
+                }*/
 
             input_connections->bpropUpdate(
                 input_list[i],
@@ -1750,6 +1788,10 @@ void DenoisingRecurrentNet::setLearningRate( real the_learning_rate )
     if( dynamic_connections ){
         //dynamic_connections->setLearningRate( dynamic_gradient_scale_factor*the_learning_rate ); 
         dynamic_connections->setLearningRate( the_learning_rate ); 
+    }
+    if( dynamic_reconstruction_connections ){
+        //dynamic_reconstruction_connections->setLearningRate( dynamic_gradient_scale_factor*the_learning_rate ); 
+        dynamic_reconstruction_connections->setLearningRate( the_learning_rate ); 
     }
     if( hidden_layer2 )
     {
