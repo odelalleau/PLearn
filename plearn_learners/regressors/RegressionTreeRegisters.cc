@@ -212,8 +212,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     }
 }
 
-//! reg must already have a size >= the number of row that we will put in it.
-//! Will resize reg to the number of registered leave==leave_id
+//! reg.size() == the number of row that we will put in it.
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg) const
 {
@@ -252,6 +251,7 @@ void RegressionTreeRegisters::sortRows()
 //     {
 //         sorted_row(each_train_sample_index).fill(each_train_sample_index);
 //     }
+#pragma omp parallel for default(none) shared(pb)
     for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
     {
         sortEachDim(sample_dim);
