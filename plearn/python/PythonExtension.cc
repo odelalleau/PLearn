@@ -275,7 +275,8 @@ void injectPLearnClasses(PyObject* module)
             "  \"\"\" \n" + class_help_text + "\n \"\"\"\n"
             "  def __new__(cls,*args,**kwargs):\n"
             "    #get_plearn_module().loggingControl(500, ['__ALL__'])"
-            "    #print '** "+pyclassname+".__new__',kwargs\n"
+            "    #print '** "+pyclassname+".__new__',args,kwargs\n"
+            "    #import sys; sys.stdout.flush()\n"
             "    obj= object.__new__(cls,*args,**kwargs)\n"
             "    if '_cptr' not in kwargs:\n"
             "      obj._cptr= cls._newCPPObj('"+classname+"')\n"
@@ -300,9 +301,11 @@ void injectPLearnClasses(PyObject* module)
         //set option names
         OptionList& options= tit->second.getoptionlist_method();
         unsigned int nopts= options.size();
-        set<string> optionnames;
+        //set<string> optionnames;
+        map<string, vector<string> > optionnames;
         for(unsigned int i= 0; i < nopts; ++i)
-            optionnames.insert(options[i]->optionname());
+            //optionnames.insert(options[i]->optionname());
+            optionnames[options[i]->optionname()]= options[i]->flagStrings();
         the_pyclass= clit->second;
         if(-1==PyObject_SetAttrString(the_pyclass, const_cast<char*>("_optionnames"), 
                                       PythonObjectWrapper(optionnames).getPyObject()))

@@ -41,6 +41,8 @@
 
 /*! \file PythonObjectWrapper.cc */
 
+#define PL_LOG_MODULE_NAME "PythonObjectWrapper"
+
 // Must include Python first...
 #include "PythonObjectWrapper.h"
 #include "PythonEmbedder.h"
@@ -58,6 +60,7 @@
 #include <plearn/var/VarArray.h>
 #include <plearn/base/RealMapping.h> // for RealRange
 #include <plearn/vmat/VMField.h>
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -193,6 +196,9 @@ PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj,
 Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
                                               bool print_traceback)
 {
+    DBG_MODULE_LOG << "ConvertFromPyObject<Object*>::convert("
+                   << (void*)pyobj << ' ' << PythonObjectWrapper(pyobj)
+                   << ')' << endl;
     PLASSERT(pyobj);
     if(pyobj == Py_None)
         return 0;
@@ -211,6 +217,9 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
     Object* obj= static_cast<Object*>(PyCObject_AsVoidPtr(cptr));
 
     Py_DECREF(cptr);
+    DBG_MODULE_LOG << "EXITING ConvertFromPyObject<Object*>::convert("
+                   << (void*)pyobj << ' ' << PythonObjectWrapper(pyobj)
+                   << ')' << " => " << (void*)obj << ' ' << obj->asString() << endl;
     return obj;
 }
 
@@ -502,6 +511,8 @@ bool PythonObjectWrapper::isNull() const
 //##### Trampoline ############################################################
 PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
 {
+    DBG_MODULE_LOG << "PythonObjectWrapper::trampoline(" << PythonObjectWrapper(self)
+                   << ", " << PythonObjectWrapper(args) << ')' << endl;
     PythonGlobalInterpreterLock gil;         // For thread-safety
 
     //get object and trampoline from self
@@ -557,6 +568,26 @@ PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
     }
 }
 
+
+void checkWrappedObjects(const string& msg)
+{
+    DBG_MODULE_LOG << msg << endl;
+    map<PyObject*, const Object*> rev_map;
+    for(PythonObjectWrapper::wrapped_objects_t::iterator it= PythonObjectWrapper::m_wrapped_objects.begin();
+        it != PythonObjectWrapper::m_wrapped_objects.end(); ++it)
+    {
+        DBG_MODULE_LOG << "checking:" << (void*)it->first << " -> " << (void*)it->second << endl;
+        map<PyObject*, const Object*>::iterator jt= rev_map.find(it->second);
+        DBG_MODULE_LOG.clearInOutMaps();
+        if(jt != rev_map.end())
+            DBG_MODULE_LOG << "*** ALREADY IN MAP:" << it->second << "w/" << it->first << " ; now " << jt->second << endl;
+        //else
+        rev_map[it->second]= it->first;
+    }
+    DBG_MODULE_LOG << "FINISHED checking wrapped objects:\t" << rev_map.size() << '\t' << msg << endl;
+}
+
+
 PyObject* PythonObjectWrapper::python_del(PyObject* self, PyObject* args)
 {
     TVec<PyObject*> args_tvec=
@@ -593,6 +624,7 @@ PyObject* PythonObjectWrapper::newCPPObj(PyObject* self, PyObject* args)
         PythonObjectWrapper(args).as<TVec<PyObject*> >();
     Object* o= newObjectFromClassname(PyString_AsString(args_tvec[1]));
 
+    DBG_MODULE_LOG << "In PythonObjectWrapper::newCPPObj() " << PyString_AsString(args_tvec[1]) << " <-> " << (void*)o << '\t' << o << endl;
     //perr << "new o->usage()= " << o->usage() << endl;
 
     return PyCObject_FromVoidPtr(o, 0);
@@ -609,16 +641,21 @@ PyObject* PythonObjectWrapper::refCPPObj(PyObject* self, PyObject* args)
 
     //perr << "ref o->usage()= " << o->usage() << endl;
     PythonObjectWrapper::m_wrapped_objects[o]= pyo;
+    //checkWrappedObjects(">>>>>>>>>> in refcppobj -> checkWrappedObjects");// debug only
     //perr << "refCPPObj: " << (void*)o << " : " << (void*)pyo << endl;
 
+    DBG_MODULE_LOG << "In PythonObjectWrapper::refCPPObj() " << PythonObjectWrapper(pyo) << " <-> " << (void*)o << '\t' << o << endl;
     addToWrappedObjectsSet(pyo);//Py_INCREF(pyo);
-    //printWrappedObjects();
+    
+    //printWrappedObjects();///***///***
 
     return newPyObject();//None
 }
 
 void PythonObjectWrapper::gc_collect1()
 {
+    DBG_MODULE_LOG << "entering PythonObjectWrapper::gc_collect1()" << endl;
+
     if(m_gc_next_object == m_wrapped_objects.end())
         m_gc_next_object= m_wrapped_objects.begin();
     if(m_gc_next_object != m_wrapped_objects.end())
@@ -628,10 +665,24 @@ void PythonObjectWrapper::gc_collect1()
         if(it->first->usage() == 1 && it->second->ob_refcnt == 1)
         {
             //Py_DECREF(it->second);
+            DBG_MODULE_LOG.clearInOutMaps();
+            PyObject* cptr= PyObject_GetAttrString(it->second, const_cast<char*>("_cptr"));
+            DBG_MODULE_LOG << "In PythonObjectWrapper::gc_collect1(), removing object " 
+                           << PythonObjectWrapper(it->second)
+                           << " ; python version of: " << it->first << " (" << (void*)it->first 
+                           << ", " << PyCObject_AsVoidPtr(cptr) << ')'
+                           << endl;
+            if(!cptr)
+            {
+                if(PyErr_Occurred()) PyErr_Print();
+                PLERROR("In PythonObjectWrapper::gc_collect1 : cannot get attribute '_cptr' from Python object ");
+            }
+            Py_DECREF(cptr);
             removeFromWrappedObjectsSet(it->second);
             gc_collect1();
         }
     }
+    DBG_MODULE_LOG << "exiting PythonObjectWrapper::gc_collect1()" << endl;
 }
 
 
@@ -660,6 +711,8 @@ PythonObjectWrapper::wrapped_objects_t::iterator
 
 PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 {
+    DBG_MODULE_LOG << "ENTER ConvertToPyObject<Object*>::newPyObject " 
+                   << (void*)x << ' ' << (x?x->asString():"") << endl;
     // void ptr becomes None
     if(!x) return PythonObjectWrapper::newPyObject();
 
@@ -707,11 +760,15 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
     x->ref();
 
     PythonObjectWrapper::m_wrapped_objects[x]= the_obj;
+    //checkWrappedObjects(">>>>>>>>>> in newpyobj -> checkWrappedObjects"); // debug only
 
 //    perr << "newPyObject: " << (void*)x << " : " << (void*)the_obj << endl;
 
     addToWrappedObjectsSet(the_obj);//Py_INCREF(the_obj);
     //printWrappedObjects();
+    DBG_MODULE_LOG << "EXIT ConvertToPyObject<Object*>::newPyObject " 
+                   << (void*)x << ' ' << x->asString() << " => "
+                   << (void*) the_obj << ' ' << PythonObjectWrapper(the_obj) << endl;
 
     return the_obj;
 }
@@ -948,6 +1005,9 @@ PStream& operator>>(PStream& in, PythonObjectWrapper& v)
 
 PStream& operator<<(PStream& out, const PythonObjectWrapper& v)
 {
+    out << v.getPyObject();
+    return out;
+
     PLERROR("operator<<(PStream&, const PythonObjectWrapper&) : "
             "not supported (yet).");
 /*
@@ -970,7 +1030,7 @@ PStream& operator<<(PStream& out, const PythonObjectWrapper& v)
     Py_DECREF(res);
     string pickle= 
         PythonObjectWrapper(env).as<std::map<string, PythonObjectWrapper> >()["result"];
-    Py_DECREF(env);
+        Py_DECREF(env);
     string toout= string("PythonObjectWrapper(ownership=") + tostring(v.m_ownership) + ", object=\"" + pickle + "\")";
     out << toout;
 */
@@ -1002,6 +1062,10 @@ PStream& operator<<(PStream& out, const PyObject* v)
 //! debug
 void printWrappedObjects()
 {
+    //checkWrappedObjects(">>>>>>>>>> in printwrappedobjs -> checkWrappedObjects"); // debug only
+
+    DBG_MODULE_LOG << "the_PLearn_python_module= " << (void*)the_PLearn_python_module << endl;
+
     perr << "wrapped_objects= " << endl;
     for(PythonObjectWrapper::wrapped_objects_t::iterator it= 
             PythonObjectWrapper::m_wrapped_objects.begin();
@@ -1013,6 +1077,7 @@ void printWrappedObjects()
 
 void ramassePoubelles()
 {
+    DBG_MODULE_LOG << "entering ramassePoubelles" << endl;
     size_t sz= 0;
     while(sz != PythonObjectWrapper::m_wrapped_objects.size())
     {
@@ -1024,9 +1089,13 @@ void ramassePoubelles()
             PythonObjectWrapper::wrapped_objects_t::iterator jt= it;
             ++it;
             if(jt->second->ob_refcnt == 1 && jt->first->usage() == 1)
+            {
+                DBG_MODULE_LOG << "In ramassePoubelles, removing object" << PythonObjectWrapper(jt->second) << endl;
                 removeFromWrappedObjectsSet(jt->second);
+            }
         }
     }
+    DBG_MODULE_LOG << "exiting ramassePoubelles" << endl;
 }
 
 
