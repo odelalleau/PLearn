@@ -86,7 +86,7 @@ public:
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
-    void         initLeave(PP<RegressionTreeRegisters> the_train_set, RTR_type_id the_id=-1, bool the_missing_leave = false);
+    void         initLeave(PP<RegressionTreeRegisters> the_train_set, RTR_type_id the_id, bool the_missing_leave = false);
     virtual void         initStats();
     virtual void         addRow(int row);
     virtual void         addRow(int row, real target, real weight);

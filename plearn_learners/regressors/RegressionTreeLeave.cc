@@ -125,8 +125,7 @@ void RegressionTreeLeave::build_()
 void RegressionTreeLeave::initLeave(PP<RegressionTreeRegisters> the_train_set, RTR_type_id the_id, bool the_missing_leave)
 {
     train_set = the_train_set;
-    if(the_id>=0)
-        id = the_id;
+    id = the_id;
     missing_leave = the_missing_leave;
 }
 
