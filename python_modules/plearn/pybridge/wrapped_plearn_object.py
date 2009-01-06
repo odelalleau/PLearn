@@ -131,14 +131,17 @@ class WrappedPLearnObject(object):
 
     def __getstate__(self):
         """
-        Returns self's dict, except that the value associated with the '_cptr'
-        key is replaced by 
+        Returns self's dict, except that the value associated with the
+        '_cptr' key is replaced by a PLearn class name with a dict of
+        options and values.
         """
         PLEARN_PICKLE_PROTOCOL_VERSION= 2
         d= self.__dict__.copy()
         d['_cptr']= (PLEARN_PICKLE_PROTOCOL_VERSION,self.classname(),{})
         for o in self._optionnames:
-            d['_cptr'][2][o]= self.getOption(o)
+            if 'nosave' not in self._optionnames[o] \
+                    or get_remote_pickle() and 'remotetransmit' in self._optionnames[o]:
+                d['_cptr'][2][o]= self.getOption(o)
         return d
     ##### old, deprecated version follows: (for reference only)
     def old_deprecated___getstate__(self):
@@ -171,6 +174,13 @@ class WrappedPLearnObject(object):
         PLEARN_PICKLE_PROTOCOL_VERSION= 2
         if d[0] != PLEARN_PICKLE_PROTOCOL_VERSION:
             raise RuntimeError, "PLearn pickle protocol version should be 2"
+
+        if not hasattr(self, '_cptr'):
+            # TODO: check that this works in all cases...
+            newone= plearn_module.newObjectFromClassname(d[1])
+            self._cptr= newone._cptr
+            self._refCPPObj(self, False)
+
         # empty PLearn object already exists (from __new__)
         for k in dict:
             if k != '_cptr':
