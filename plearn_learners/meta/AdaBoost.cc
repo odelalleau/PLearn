@@ -408,14 +408,14 @@ void AdaBoost::train()
     {
         VMat weak_learner_training_set;
         { 
-            PP<ProgressBar> pb;
-            if(report_progress) pb = new ProgressBar(
-                "AdaBoost round " + tostring(stage) +
-                ": making training set for weak learner", n);
-
             // We shall now construct a training set for the new weak learner:
             if (weight_by_resampling)
             {
+                PP<ProgressBar> pb;
+                if(report_progress) pb = new ProgressBar(
+                    "AdaBoost round " + tostring(stage) +
+                    ": making training set for weak learner", n);
+
                 // use a "smart" resampling that approximated sampling 
                 // with replacement with the probabilities given by 
                 // example_weights.
