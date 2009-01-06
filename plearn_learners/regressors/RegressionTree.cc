@@ -217,6 +217,9 @@ void RegressionTree::train()
 {
     Profiler::pl_profile_start("RegressionTree::train");
 
+    if(std::numeric_limits<RTR_type_id>::max() < nstages*(missing_is_valid?9:6))
+        PLERROR("The type of RTR_type_id(%s) doesn't have enought capacity","RTR_type_id");
+
     if (stage == 0) initialiseTree();
     PP<ProgressBar> pb;
     if (report_progress)
