@@ -220,12 +220,20 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     int idx=0;
     int n=reg.length();
     int i;
+    RTR_type* preg = reg.data();
+    RTR_type* ptsorted_row = tsorted_row[col];
+    RTR_type_id* pleave_register = leave_register.data();
     for( i=0;i<length() && n> idx;i++)
     {
-        int srow = tsorted_row(col, i);
-        if ( leave_register[srow] == leave_id)
-            reg[idx++]=srow;
+        PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
+        int srow = ptsorted_row[i];
+        if ( pleave_register[srow] == leave_id){
+            PLASSERT(leave_register[srow] == leave_id);
+            PLASSERT(preg[idx]==reg[idx]);
+            preg[idx++]=srow;
+        }
     }
+    PLASSERT(idx==reg->size());
 }
 
 void RegressionTreeRegisters::sortRows()
