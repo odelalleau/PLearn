@@ -49,6 +49,8 @@
 #include <plearn/io/load_and_save.h>
 #include <plearn/base/stringutils.h>
 #include <plearn_learners/regressors/RegressionTreeRegisters.h>
+#define PL_LOG_MODULE_NAME "AdaBoost"
+#include <plearn/io/pl_log.h>
 
 namespace PLearn {
 using namespace std;
@@ -962,7 +964,12 @@ void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         if(!modif_train_set_weights)
             if(training_set->weightsize()==1)
                 modif_train_set_weights=1;
-
+            else
+                NORMAL_LOG<<"In AdaBoost::setTrainingSet() -"
+                          <<" We have RegressionTree as weak_learner, but the"
+                          <<" training_set don't have a weigth. This will cause"
+                          <<" the creation of a RegressionTreeRegisters at"
+                          <<" each stage of AdaBoost!";
         //we do this as RegressionTreeNode need a train_set for getTestCostNames
         if(!weak_learner_template->getTrainingSet())
             weak_learner_template->setTrainingSet(training_set,call_forget);
