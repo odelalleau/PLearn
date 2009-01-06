@@ -566,7 +566,13 @@ public:
 
     inline void append(const T& newval)
     {
-        resize(length()+1, length());
+        //we do this as an speed optimization. I see a 3.5% speed up...
+        //g++4.1 don't seam to inline resize event in heavy loop of append.
+        //maybe this is the cause of the speed up?
+        if (storage.isNotNull() && (length() < capacity())){
+            length_++;
+        }else
+            resize(length()+1, length());
         lastElement() = newval;
     }
 
