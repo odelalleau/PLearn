@@ -156,6 +156,11 @@ def PL_default_repository_revision():
                                                   "pl_repository_revision.cc" ))
 
 from plearn.pytest.core import pytest_defines
+
+optionalLibrary( name = 'infinite_mnist',
+                 triggers = 'kernel-invariant.h',
+                 linkeroptions = '-lkernel-invariant' )
+
 optionalLibrary( name = 'pytest_defines',
                  triggers = 'pytest/defines.h',
                  includedirs = [ os.path.join(ppath('HOME'), '.plearn') ], 
