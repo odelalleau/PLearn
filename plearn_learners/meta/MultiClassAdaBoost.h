@@ -59,10 +59,19 @@ class MultiClassAdaBoost : public PLearner
 {
     typedef PLearner inherited;
 
+    mutable Vec tmp_input;
+    mutable Vec tmp_target;
+    mutable Vec tmp_output;
+    mutable Vec tmp_costs;
+
     mutable Vec output1;
     mutable Vec output2;
     mutable Vec subcosts1;
     mutable Vec subcosts2;
+
+    mutable TVec<VMat> saved_testset;
+    mutable TVec<VMat> saved_testset1;
+    mutable TVec<VMat> saved_testset2;
 
     //! The time it took for the last execution of the train() function
     real train_time;
@@ -81,6 +90,9 @@ public:
 
     //! Did we add the learner1 and learner2 costs to our costs
     bool forward_sub_learner_test_costs;
+
+    //! Did we forward the test function to the sub learner?
+    bool forward_test;
 
     //! The learner1 and learner2 must be trained!
     PP<AdaBoost> learner1;
@@ -126,6 +138,9 @@ public:
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
 
+    void computeCostsFromOutputs_(const Vec& input, const Vec& output,
+                                  const Vec& target, Vec& sub_costs1,
+                                  Vec& sub_costs2, Vec& costs) const;
     virtual TVec<string> getOutputNames() const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and

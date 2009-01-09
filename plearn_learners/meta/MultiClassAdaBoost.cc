@@ -62,7 +62,8 @@ MultiClassAdaBoost::MultiClassAdaBoost():
     total_train_time(0),
     test_time(0),
     total_test_time(0),
-    forward_sub_learner_test_costs(false)
+    forward_sub_learner_test_costs(false),
+    forward_test(false)
 /* ### Initialize all fields to their default value here */
 {
     // ...
@@ -108,6 +109,10 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
                   &MultiClassAdaBoost::learner_template,
                   OptionBase::buildoption,
                   "The template to use for learner1 and learner2.\n");
+    declareOption(ol, "forward_test", 
+                  &MultiClassAdaBoost::forward_test,
+                  OptionBase::buildoption,
+                  "Did we add forward the test fct to the sub learner.\n");
 
     declareOption(ol, "train_time",
                   &MultiClassAdaBoost::train_time, OptionBase::learntoption,
@@ -139,6 +144,8 @@ void MultiClassAdaBoost::build_()
         if(!learner2)
             learner2 = ::PLearn::deepCopy(learner_template);
     }
+    tmp_target.resize(1);
+    tmp_output.resize(outputsize());
     if(learner1)
         output1.resize(learner1->outputsize());
     if(learner2)
@@ -171,6 +178,10 @@ void MultiClassAdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    deepCopyField(tmp_input,             copies);
+    deepCopyField(tmp_target,            copies);
+    deepCopyField(tmp_output,            copies);
+    deepCopyField(tmp_costs,             copies);
     deepCopyField(output1,           copies);
     deepCopyField(output2,           copies);
     deepCopyField(subcosts1,         copies);
@@ -249,7 +260,6 @@ void MultiClassAdaBoost::train()
     learner1->train();
     learner2->train();
 #endif
-
     stage=max(learner1->stage,learner2->stage);
 
     train_stats->stats.resize(0);
@@ -272,7 +282,7 @@ void MultiClassAdaBoost::train()
     const Profiler::Stats& stats_test = Profiler::getStats("MultiClassAdaBoost::test");
     tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
     test_time=tmp-total_test_time;
-    total_test_time=tmp; 
+    total_test_time=tmp;
     EXTREME_MODULE_LOG<<"train() end"<<endl;
 }
 
@@ -310,6 +320,7 @@ void MultiClassAdaBoost::computeOutput(const Vec& input, Vec& output) const
     output[1]=output1[0];
     output[2]=output2[0];
 }
+
 void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
                                                const Vec& target,
                                                Vec& output, Vec& costs) const
@@ -385,6 +396,15 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
 void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
 {
+  subcosts1.resize(0);
+  subcosts2.resize(0);
+  computeCostsFromOutputs_(input, output, target, subcosts1, subcosts2, costs);
+}
+
+void MultiClassAdaBoost::computeCostsFromOutputs_(const Vec& input, const Vec& output,
+						  const Vec& target, Vec& sub_costs1,
+						  Vec& sub_costs2, Vec& costs) const
+{
     PLASSERT(costs.size()==nTestCosts());
 
     int out = int(round(output[0]));
@@ -406,20 +426,24 @@ void MultiClassAdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& ou
     costs[8]=total_train_time;
     costs[9]=test_time;
     costs[10]=total_test_time;
-
     if(forward_sub_learner_test_costs){
         costs.resize(7+4);
-        subcosts1.resize(learner1->nTestCosts());
-        subcosts2.resize(learner1->nTestCosts());
+	PLASSERT(sub_costs1.size()==learner1->nTestCosts() || sub_costs1.size()==0);
+	PLASSERT(sub_costs2.size()==learner2->nTestCosts() || sub_costs2.size()==0);
+
         getSubLearnerTarget(target, sub_target_tmp);
-
-//not paralized as this to add more overhead then the time saved.
-//meaby not true for all weak_learner.
-        learner1->computeCostsOnly(input,sub_target_tmp[0],subcosts1);
-        learner2->computeCostsOnly(input,sub_target_tmp[1],subcosts2);
-
-        subcosts1+=subcosts2;
-        costs.append(subcosts1);
+	if(sub_costs1.size()==0){
+            PLASSERT(input.size()>0);
+            sub_costs1.resize(learner1->nTestCosts());
+            learner1->computeCostsOnly(input,sub_target_tmp[0],sub_costs1);
+	}
+	if(sub_costs2.size()==0){
+            PLASSERT(input.size()>0);
+            sub_costs2.resize(learner2->nTestCosts());
+            learner2->computeCostsOnly(input,sub_target_tmp[1],sub_costs2);
+	}
+        sub_costs1+=sub_costs2;
+        costs.append(sub_costs1);
     }
 
     PLASSERT(costs.size()==nTestCosts());
@@ -516,7 +540,7 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         weight_prg = "[%"+tostring(index)+"]";
     }else
         weight_prg = "1 :weights";
-        
+    
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
     if(training_set_has_changed || !learner1->getTrainingSet()){
@@ -527,14 +551,14 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     if(training_set_has_changed || !learner2->getTrainingSet()){
         VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
                                            target_prg2,  weight_prg);
-        PP<RegressionTreeRegisters> t1 = 
+        PP<RegressionTreeRegisters> t1 =
             (PP<RegressionTreeRegisters>)learner1->getTrainingSet();
         if(t1->classname()=="RegressionTreeRegisters"){
             vmat2 = new RegressionTreeRegisters(vmat2,
-                                               t1->getTSortedRow(), 
-                                               t1->getTSource(),
-                                               learner1->report_progress,
-                                               learner1->verbosity);
+                                                t1->getTSortedRow(),
+                                                t1->getTSource(),
+                                                learner1->report_progress,
+                                                learner1->verbosity);
         }
         learner2->setTrainingSet(vmat2, call_forget);
     }
@@ -551,12 +575,147 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
                               VMat testoutputs, VMat testcosts) const
 {
     Profiler::pl_profile_start("MultiClassAdaBoost::test");
+    if(!forward_test){
+        inherited::test(testset,test_stats,testoutputs,testcosts);
+        Profiler::end("MultiClassAdaBoost::test");
+	return;
+    }
+    Profiler::pl_profile_start("MultiClassAdaBoost::test() part1");
+    int index=-1;
+    for(int i=0;i<saved_testset.length();i++){
+        if(saved_testset[i]==testset){
+            index=i;break;
+        }
+    }
+    PP<VecStatsCollector> test_stats1 = 0;
+    PP<VecStatsCollector> test_stats2 = 0;
+    VMat testoutputs1 = VMat(new MemoryVMatrix(testset->length(),
+                                               learner1->outputsize()));
+    VMat testoutputs2 = VMat(new MemoryVMatrix(testset->length(),
+                                               learner2->outputsize()));
+    VMat testcosts1 = 0;
+    VMat testcosts2 = 0;
+    VMat testset1 = 0;
+    VMat testset2 = 0;
+    if ((testcosts || test_stats )){
+        //comment
+        testcosts1 = VMat(new MemoryVMatrix(testset->length(),
+                                            learner1->nTestCosts()));
+        testcosts2 = VMat(new MemoryVMatrix(testset->length(),
+                                            learner2->nTestCosts()));
+    }
+    if(index<0){
+        testset1 = new ProcessingVMatrix(testset, input_prg,
+                                         target_prg1,  weight_prg);
+        testset2 = new ProcessingVMatrix(testset, input_prg,
+                                         target_prg2,  weight_prg);
+        saved_testset.append(testset);
+        saved_testset1.append(testset1);
+        saved_testset2.append(testset2);
+    }else{
+        //we need to do that as AdaBoost need 
+        //the same dataset to reuse their test results
+        testset1=saved_testset1[index];
+        testset2=saved_testset2[index];
+        PLCHECK(((PP<ProcessingVMatrix>)testset1)->source==testset);
+        PLCHECK(((PP<ProcessingVMatrix>)testset2)->source==testset);
+    }
 
-    //we need this in case we reload the learner without training it.
-    subcosts1.resize(learner1->nTestCosts());
-    subcosts2.resize(learner2->nTestCosts());
+    if (test_stats){
+        
+    }
+    Profiler::pl_profile_end("MultiClassAdaBoost::test() part1");
+    Profiler::start("MultiClassAdaBoost::subtest");
+    learner1->test(testset1,test_stats1,testoutputs1,testcosts1);
+    learner2->test(testset2,test_stats2,testoutputs2,testcosts2);
+    Profiler::end("MultiClassAdaBoost::subtest");
 
-    inherited::test(testset,test_stats,testoutputs,testcosts);
+    VMat my_outputs = 0;
+    VMat my_costs = 0;
+    if(testoutputs){
+        my_outputs=testoutputs;
+    }else if(bool(testcosts) | bool(test_stats)){
+        my_outputs=VMat(new MemoryVMatrix(testset->length(),
+                                          outputsize()));
+    }
+    if(testcosts){
+        my_costs=testcosts;
+    }else if(test_stats){
+        my_costs=VMat(new MemoryVMatrix(testset->length(),
+					nTestCosts()));
+    }
+    Profiler::pl_profile_start("MultiClassAdaBoost::test() my_outputs");
+    if(my_outputs){
+        for(int row=0;row<testset.length();row++){
+            real out1=testoutputs1->get(row,0);
+            real out2=testoutputs2->get(row,0);
+            int ind1=int(round(out1));
+            int ind2=int(round(out2));
+            int ind=-1;
+            if(ind1==0 && ind2==0)
+                ind=0;
+            else if(ind1==1 && ind2==0)
+                ind=1;
+            else if(ind1==1 && ind2==1)
+                ind=2;
+            else
+                ind=1;//TODOself.confusion_target;
+            tmp_output[0]=ind;
+            tmp_output[1]=out1;
+            tmp_output[2]=out2;
+	    my_outputs->putOrAppendRow(row,tmp_output);
+	}
+    }
+    Profiler::pl_profile_end("MultiClassAdaBoost::test() my_outputs");
+    Profiler::pl_profile_start("MultiClassAdaBoost::test() my_costs");
+
+    if (my_costs){
+        tmp_costs.resize(nTestCosts());
+//        if (forward_sub_learner_test_costs)
+	    //TODO optimize by reusing testoutputs1 and testoutputs2
+            //            PLWARNING("will be long");
+	int target_index = testset->inputsize();
+	PLASSERT(testset->targetsize()==1);
+        Vec costs1(learner1->nTestCosts());
+        Vec costs2(learner1->nTestCosts());
+        for(int row=0;row<testset.length();row++){
+            //default version
+            //testset.getExample(row, input, target, weight);
+	    //computeCostsFromOutputs(input,my_outputs(row),target,costs);
+            
+            //the input is not needed for the cost of this class if the subcost are know.
+            testset->getSubRow(row,target_index,tmp_target);
+//	    Vec costs1=testcosts1(row);
+//	    Vec costs2=testcosts2(row);
+            testcosts1->getRow(row,costs1);
+            testcosts2->getRow(row,costs2);
+            //TODO??? tmp_input is empty!!!
+	    computeCostsFromOutputs_(tmp_input, my_outputs(row), tmp_target, costs1,
+                                     costs2, tmp_costs);
+	    my_costs->putOrAppendRow(row,tmp_costs);
+        }
+    }
+    Profiler::pl_profile_end("MultiClassAdaBoost::test() my_costs");
+    Profiler::pl_profile_start("MultiClassAdaBoost::test() test_stats");
+
+    if (test_stats){
+	if(testset->weightsize()==0){
+            for(int row=0;row<testset.length();row++){
+                Vec costs = my_costs(row);
+                test_stats->update(costs, 1);
+            }
+	}else{
+            int weight_index=inputsize()+targetsize();
+            Vec costs(my_costs.width());
+            for(int row=0;row<testset.length();row++){
+//                Vec costs = my_costs(row);
+                my_costs->getRow(row, costs);
+                test_stats->update(costs, testset->get(row, weight_index));
+            }
+	}
+    }
+    Profiler::pl_profile_end("MultiClassAdaBoost::test() test_stats");
+
     Profiler::pl_profile_end("MultiClassAdaBoost::test");
 }
 
