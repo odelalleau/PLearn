@@ -35,10 +35,108 @@
 # Author: Pascal Vincent
 
 # from array import *
+import numpy
+import MA
 import numpy.numarray as numarray
 from numpy.numarray import *
 
 threshold = 0
+
+def default_is_missing(x):
+    return x is None or x=='-' or (type(x) is str and x.strip()=='')
+    
+def to_numpy_float_array(values_list,
+                         missing_value = ValueError("Found value interpreted as missing value and no missing_value was specified"),
+                         mapping = ValueError("Could not convert value to float and no mapping was specified"),
+                         mapping_start = 1.0,
+                         is_missing = default_is_missing ):
+    """
+    Transforms a list of values into a numpy array of floats.
+    Values that are not floats are handled automatically, according to the following policies:    
+
+      * missing_value specifies what to do if we encounter a value that we consider a missing value:
+        If missing_value is a float, then its value is used
+        If missing_value is None, then we'll return an apporpriately masked array (MA.array)
+        If missing_value is not specified as a float nor None, it will get raised as an exception.        
+      Note that a value x is considered a missing value if it satisfies is_missing(x)
+      (defaults to None or blank string or single dash '-').
+      
+      * If the value x is not missing, an attempt will be made to convert it to float using float(x).      
+        This has the effect of converting strings representing float to that float,
+        and of converting a bool to 1. or 0.
+
+      * If the value is the string 'True' or 'False' it will similarly be changed to 1. or 0.      
+
+      * If all the above fails, mapping can be used to specify how to automatically handle the case:
+          If mapping is a float, then its value will be used.
+          If mapping is a dictionary, then it will be looked up to find the corresponding value to use
+          and if it is not found, then new corresponding mapping will automatically be added
+          starting at mapping_start (which will get incremented ny 1).
+          If you don't want automatical adding of mappings you can specify mapping_start = None
+          (in this case an exception will be raised if not present in the mapping)
+          If mapping is not specified as a float or a dict it will get raised as an exception.B 
+      """
+    if type(missing_value) is int:
+        missing_value = float(missing_value)
+    if type(mapping) is int:
+        mapping = float(mapping)
+
+    vec = []
+    missing_pos = []
+    for i in xrange(len(values_list)):
+        val = values_list[i]
+        if is_missing(val):
+            if type(missing_value) is float:
+                val = missing_value
+            elif missing_value is None:
+                val = 0.
+                missing_pos.append(1)
+            else:
+                raise missing_value
+        else:
+            try:
+                val = float(val)
+            except ValueError:
+                if val=='True':
+                    val = 1.
+                elif val=='False':
+                    val = 0.
+                elif type(mapping) is float:
+                    val = mapping
+                elif type(mapping) is dict:
+                    if val in mapping:
+                        val = mapping[val]
+                    elif mapping_start is None:
+                        raise ValueError("At position "+str(i)+" value "+str(val)+" not present in specified mapping.")
+                    else:
+                        mapping[val] = mapping_start
+                        val = mapping_start
+                        mapping_start += 1.
+                else: # mapping is neither float nor dict:
+                    raise mapping
+        # Now we have a val that should be a valid float
+        vec.append(val)
+            
+    # now return a proper numpy.array or MA.array (if we wanted masking).
+    if len(missing_pos)==0: # return numpy.array
+        return numpy.array(vec)
+    else: # return masked array
+        n = len(vec)
+        mask = [0]*n
+        for pos in missing_pos:
+            mask[pos] = 1
+        return MA.array(vec, mask=mask)
+
+def mapping_of_values_to_pos(array_or_list):
+    """Returns a dictionary mapping values present in array_or_list to a vector of their positions in the array_or_list."""
+    d = {}    
+    for i in xrange(len(array_or_list)):
+        pos = d.setdefault(array_or_list[i], [])
+        pos.append(i)
+    # convert the positions lists into numpy arrays
+    for key in d:
+        d[key] = numpy.array(d[key])
+    return d
 
 def margin(scorevec):
     if len(scorevec)==1:
