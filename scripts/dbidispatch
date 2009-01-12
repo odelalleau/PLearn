@@ -4,7 +4,7 @@ from plearn.utilities.toolkit import search_file
 from socket import gethostname
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] <back-end parameter> {--file=FILEPATH | <command-template>}
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--machine=HOSTNAME] [--machines=regex] <back-end parameter> {--file=FILEPATH | <command-template>}
 
 <back-end parameter>:
     bqtools, cluster option  :[--duree=X]
@@ -22,6 +22,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [*--[no_]abs_path] [--[*no_]pkdilly]
                               [*--[no_]set_special_env]
                               [--universe={vanilla*, standard, grid, java, scheduler, local, parallel, vm}]
+                              [--machine=HOSTNAME] [--machines=regex]
     cluster option           :[*--[no_]cwait]  [--[*no_]force]
                               [--[*no_]interruptible]
 An * after '[', '{' or ',' signals the default value.
@@ -140,10 +141,12 @@ condor only options:
     first. This is equivalent to dbidispatch '--rank=SERVER=?=True'.
   The '--rank=STRING' option add rank=STRING in the submit file.
   The '--machine=full_host_name' option add the requirement that the executing
-     host is full_host_name. Is equivalent to
+     host is full_host_name. If multiple --machine or --machines options,
+    take anyone of them. Is equivalent to
      dbidispatch '--req=Machine=="full_host_name"'
   The '--machines=regexp' option add the requirement that the executing host 
-    name must be match the regexp
+    name must be match the regexp. If multiple --machine or --machines options,
+    take anyone of them.
      dbidispatch '--machines=computer00*'
         witch is equivalent to
      dbidispatch '--req=regexp("computer0*", target.Machine)'
@@ -293,28 +296,26 @@ for argv in to_parse:
         testmode=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
-                                "--universe", "--exp_dir"]:
-        param=argv.split('=')[0][2:]
+                                "--universe", "--exp_dir", "--machine", "--machines"]:
+        sp = argv.split('=',1)
+        param=sp[0][2:]
+        val = sp[1]
         if param in ["req", "files", "rank"]:
             #param that we happend to if defined more then one time
             dbi_param.setdefault(param,'True')
-            dbi_param[param]+='&&('+argv.split('=',1)[1]+')'
+            dbi_param[param]+='&&('+val+')'
         elif param == "raw":
             dbi_param.setdefault(param,'')
-            dbi_param[param]+='\n'+argv.split('=',1)[1]
+            dbi_param[param]+='\n'+val
         elif param=="env":
             dbi_param.setdefault(param,"")
-            dbi_param[param]+='"'+argv.split('=',1)[1]+'"'
+            dbi_param[param]+='"'+val+'"'
+        elif param=="machines" or param=="machine":
+            dbi_param.setdefault(param,[])
+            dbi_param[param]+=val.split(",")
         else:
             #otherwise we erase the old value
-            dbi_param[param]=argv.split('=',1)[1]
-    elif argv.startswith('--machine=') or argv.startswith('--machines='):
-        if argv.split('=')[0] == "--machine":
-            new='&&(Machine=="'+argv.split('=')[1]+'")'
-        elif argv.split('=')[0] == "--machines":
-            new='&&(regexp("'+argv.split('=')[1]+'", target.Machine))'
-        dbi_param.setdefault('req','True')
-        dbi_param["req"]+=new
+            dbi_param[param]=val
     elif argv=="--server" or argv=="--no_server" \
             or argv=='--prefserver' or argv=="--no_prefserver":
         if argv.find('prefserver')!=-1:
@@ -347,7 +348,7 @@ if launch_cmd=="Cluster":
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
-                       "universe"]
+                       "universe", "machine", "machines"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["micro", "long", "duree"]
 

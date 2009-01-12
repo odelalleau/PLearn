@@ -729,6 +729,8 @@ class DBICondor(DBIBase):
         self.pkdilly = False
         self.launch_file = None
         self.universe = "vanilla"
+        self.machine = []
+        self.machines = []
 
         DBIBase.__init__(self, commands, **args)
 
@@ -1283,7 +1285,16 @@ class DBICondor(DBIBase):
             self.req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
                             self.os.split(','),
                             self.req+'&&(False ')+")"
-
+        machine_choice=[]
+        for m in self.machine:
+            machine_choice.append('(Machine=="'+m+'")')
+        for m in self.machines:
+            machine_choice.append('(regexp("'+m+'", target.Machine))')
+        if machine_choice:
+            self.req+="&&(False "
+            for m in machine_choice:
+                self.req+="||"+m
+            self.req+=")"
         #if no mem requirement added, use the executable size.
         #todo: if they are not the same executable, take the biggest
         if self.mem<=0:
