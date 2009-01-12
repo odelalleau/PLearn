@@ -214,6 +214,7 @@ void KFoldLogisticClassifier::train()
         PP<NNet> nnet = new NNet();
         nnet->optimizer = opt;
         nnet->seed_ = this->seed_;
+        nnet->report_progress = this->report_progress;
         if (n_classes == 2) {
             cost_func = "stable_cross_entropy";
             nnet->output_transfer_func = "sigmoid";
@@ -263,6 +264,7 @@ void KFoldLogisticClassifier::train()
         hyper->save_final_learner = false;
         hyper->strategy = TVec< PP<HyperCommand> >(1, get_pointer(strategy));
         hyper->tester = htester;
+        hyper->verbosity = 0; // Get rid of useless output.
         hyper->build();
         // Perform training.
         hyper->train();
