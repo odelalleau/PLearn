@@ -574,7 +574,7 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
                               VMat testoutputs, VMat testcosts) const
 {
-    Profiler::pl_profile_start("MultiClassAdaBoost::test");
+    Profiler::start("MultiClassAdaBoost::test");
     if(!forward_test){
         inherited::test(testset,test_stats,testoutputs,testcosts);
         Profiler::end("MultiClassAdaBoost::test");
@@ -716,7 +716,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     }
     Profiler::pl_profile_end("MultiClassAdaBoost::test() test_stats");
 
-    Profiler::pl_profile_end("MultiClassAdaBoost::test");
+    Profiler::end("MultiClassAdaBoost::test");
 }
 
 } // end of namespace PLearn
