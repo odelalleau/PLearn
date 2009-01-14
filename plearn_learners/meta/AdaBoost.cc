@@ -307,7 +307,10 @@ int AdaBoost::outputsize() const
 {
     // Outputsize is always 2, since this is a 0-1 classifier
     // and we append the weighted sum to allow the reuse of previous test
-    return 2;
+    if(reuse_test_results)
+        return 2;
+    else 
+        return 1;
 }
 
 void AdaBoost::finalize()
@@ -824,7 +827,8 @@ void AdaBoost::computeOutput_(const Vec& input, Vec& output,
         }
 
     output[0] = sum_out/sum_voting_weights;
-    output[1] = sum_out;
+    if(reuse_test_results)
+        output[1] = sum_out;
 }
 
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
@@ -927,7 +931,8 @@ void AdaBoost::computeOutputAndCosts(const Vec& input, const Vec& target,
     }
 
     output[0] = sum_out/sum_voting_weights;
-    output[1] = sum_out;
+    if(reuse_test_results)
+        output[1] = sum_out;
 
     //when computing train stats, costs==nTrainCosts() 
     //  and forward_sub_learner_test_costs==false
