@@ -42,7 +42,9 @@
 /*! \file EarlyStoppingOracle.cc */
 #include "EarlyStoppingOracle.h"
 #include <plearn/base/stringutils.h>
-
+#define PL_LOG_MODULE_NAME "EarlyStoppingOracle"
+#include <plearn/io/pl_log.h>
+#
 namespace PLearn {
 using namespace std;
 
@@ -190,8 +192,59 @@ TVec<string> EarlyStoppingOracle::generateNextTrial(const TVec<string>& older_tr
               (relative_max_degradation>=0 && degradation > relative_max_degradation * abs(best_objective)) ||
               (improvement < min_improvement) ||
               (relative_min_improvement>=0 && improvement < relative_min_improvement * abs(previous_objective))
-                ) && current_step >= min_n_steps)
+                ) && current_step >= min_n_steps){
             met_early_stopping = true;
+
+            //print debug info
+            if(current_objective < min_value){
+                DBG_MODULE_LOG 
+                    <<"stopping the learner as: current_objective "
+                    <<current_objective
+                    <<" < min_value "<<min_value
+                    <<endl;
+            }
+            if(current_objective > max_value){
+                DBG_MODULE_LOG
+                    <<"stopping the learner as: current_objective ("<<current_objective
+                    <<") < max_value ("<<max_value<<")"<<endl;
+            }
+            if(n_degraded_steps >= max_degraded_steps){
+                DBG_MODULE_LOG
+                    <<"stopping the learner as:n_degraded_steps("<<
+                    n_degraded_steps<<") >= max_degraded_steps("<<
+                    max_degraded_steps<<") "
+                    <<endl;
+            }
+            if(degradation > max_degradation){
+                DBG_MODULE_LOG
+                    <<"stopping the learner as: degradation("<<degradation
+                    <<") > max_degradation("<<max_degradation<<")"
+                    <<endl;
+            }
+            if(relative_max_degradation>=0 
+               && degradation > relative_max_degradation * abs(best_objective)){
+                DBG_MODULE_LOG
+                    <<"stopping the learner as: relative_max_degradation>=0 "
+                    <<"&& degradation("<<degradation
+                    <<") > relative_max_degradation("<<relative_max_degradation
+                    <<") * abs(best_objective)("<<best_objective<<")"
+                    <<endl;
+            }
+            if(improvement < min_improvement){
+                DBG_MODULE_LOG
+                    <<"stopping the learner as: improvement("<<improvement<<") < min_improvement("
+                    <<min_improvement<<")"
+                    <<endl;
+            }
+            if(relative_min_improvement>=0 
+               && improvement < relative_min_improvement * abs(previous_objective)){
+                DBG_MODULE_LOG
+                    <<"stopping the learner as: relative_min_improvement("<<relative_min_improvement<<")>=0 "
+                    <<endl
+                    <<"&& improvement("<<improvement<<") < relative_min_improvement("<<relative_min_improvement<<") * abs(previous_objective"<<previous_objective<<")"
+                    <<endl;
+            }
+        }
 
         previous_objective = current_objective;
     }
