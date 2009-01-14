@@ -70,7 +70,6 @@ for i in "$@";
   pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc
   status=$?
   if [ "$status" != "0" ]; then
-      last_status=$status
       echo "Build failed for $i"
       exit $status
   fi
