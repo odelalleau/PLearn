@@ -2981,9 +2981,10 @@ def main( args ):
                 print "Files to compile: "
                 for i in ccfiles_to_compile:
                     print i.filebase
-            print '++++ Compiling',
-            print str(len(ccfiles_to_compile))+'/'+str(len(ccfiles_to_link))
-            print 'files...'
+            if len(ccfiles_to_compile)>0:
+                print '++++ Compiling',
+                print str(len(ccfiles_to_compile))+'/'+str(len(ccfiles_to_link)),
+                print 'files...'
 
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
