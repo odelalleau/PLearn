@@ -51,6 +51,13 @@ BinaryOpVMatrix::BinaryOpVMatrix()
 {
 }
 
+BinaryOpVMatrix::BinaryOpVMatrix(VMat source1, VMat source2, string op):
+    source1(source1),
+    source2(source2),
+    op(op)
+{
+    build();
+}
 PLEARN_IMPLEMENT_OBJECT(BinaryOpVMatrix,
                         "This VMat allows simple binary operations on two VMatrix.",
                         "It is assumed that the two source matrices are the same size"
