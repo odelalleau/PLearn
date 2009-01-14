@@ -50,6 +50,9 @@ except ImportError:
 #####  Helper function definitions  ###########################################
 # (plus some global variables)
 
+def printversion():
+    print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
+
 ###  Usage
 
 def printshortusage():
@@ -2546,7 +2549,6 @@ digraph G
 #####  Main function  #########################################################
 
 def main( args ):
-    print "pymake 2.0 [ (C) 2001, Pascal Vincent. This is free software distributed under a BSD type license. Report problems to vincentp@iro.umontreal.ca ]"
 
     ######## Initialization of variables
     #
@@ -2587,9 +2589,6 @@ def main( args ):
     target_platform = platform # for possible cross-compilation
     homedir = get_homedir()
     myhostname = get_hostname()
-
-    print '*** Current platform is: ' + platform
-    print
 
     # Filetype extensions
     cpp_exts = ['.cc','.c','.C','.cpp','.CC', '.cxx']
@@ -2676,6 +2675,29 @@ def main( args ):
     
 
     ####  Checking optionargs to know which task to perform
+    # I do multiple for on optionarfs, as their is a bug that make that not all
+    # elements of optionargs are computed
+    for option in optionargs:
+        if option[0] == 'v':
+            remove_verbosity_option = True
+            if option == 'v' or option == 'v1' or option == 'v0':
+                verbose = 1
+            elif option == 'v'*2 or option == 'v2':
+                verbose = 2
+            elif option == 'v'*3 or option == 'v3':
+                verbose = 3
+            elif option[:4] == 'v'*4 or option == 'v4':
+                verbose = 4
+            else:
+                # Not a verbosity option, just an option starting with a 'v'.
+                remove_verbosity_option = False
+            if remove_verbosity_option:
+                optionargs.remove(option)
+    if verbose > 1:
+        printversion()
+        print '*** Current platform is: ' + platform
+        print
+
 
     ##  Options specifying the type of compiled file to produce
     # do we want to create a dll instead of an executable file
@@ -2832,25 +2854,6 @@ def main( args ):
                 optionargs.remove(option)
                 optionargs.append('tmp')
 
-    # I do multiple for on optionarfs, as their is a bug that make that not all
-    # elements of optionargs are computed
-    for option in optionargs:
-        if option[0] == 'v':
-            remove_verbosity_option = True
-            if option == 'v' or option == 'v1' or option == 'v0':
-                verbose = 1
-            elif option == 'v'*2 or option == 'v2':
-                verbose = 2
-            elif option == 'v'*3 or option == 'v3':
-                verbose = 3
-            elif option[:4] == 'v'*4 or option == 'v4':
-                verbose = 4
-            else:
-                # Not a verbosity option, just an option starting with a 'v'.
-                remove_verbosity_option = False
-            if remove_verbosity_option:
-                optionargs.remove(option)
-
     if 'tmp' in optionargs:
         objspolicy = 2
         temp_objs=1
@@ -2917,6 +2920,7 @@ def main( args ):
         distribute = 0
 
     if 'help' in optionargs:
+        printversion()
         printusage()
         sys.exit()
 
