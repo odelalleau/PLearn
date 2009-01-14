@@ -284,8 +284,29 @@ options_choices = [
   [ '', 'cygwin-fgets-bugfix'],
   [ '', 'openmpgcc'],
   
+  [ '', 'pass']
 ]
 
+optionargs_new=set()
+for option in optionargs:
+    if option.startswith('pass='):
+        option=option[5:]
+        optionargs_new.add(option)
+        pymakeOption( name = option,
+                      description = option,
+                      compileroptions = option)
+        options_choices+=[['',option]]
+    else:
+        optionargs_new.add(option)
+optionargs=list(optionargs_new)
+
+pymakeOption( name = 'pass',
+              description = 'The command line parameter -pass=X will make add the parameter X to the compiler command. Usefull to test new option without modifying the pymake.config.model file.',
+              )
+if "openmpgcc" in optionargs:
+    print "WARNING: plearn is not fully thread safe, use it at your own risk!"
+
+#optionargs.remove('myoption')
 ### Using Python code snippets in C++ code
 ### TODO Using /u/lisa/... is quite ugly. But the PLEARN_LIBDIR ppath may also
 ### be problematic (it should be different depending on the platform) => must
