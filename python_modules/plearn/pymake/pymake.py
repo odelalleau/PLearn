@@ -916,7 +916,7 @@ def isccfile(filepath):
 
 def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link, executables_to_link,linkname):
     """A target can be a .cc file, a binary target, or a directory.
-    The function updates (by appending to them) ccfiles_to_compile and ofiles_to_link
+    The function updates (by appending to them) ccfiles_to_compile and ccfiles_to_link
     ccfiles_to_compile is a dictionary containing FileInfo of all .cc files to compile
     ccfiles_to_link is a dictionary containing FileInfo of all .cc files on
     which target depends
@@ -1715,7 +1715,7 @@ class FileInfo:
     def analyseFile(self):
         global useqt
 
-        self.mtime = os.path.getmtime(self.filepath)
+        self.mtime = self.get_mtime()
         self.filedir, fname = os.path.split(self.filepath)
         self.filebase, self.fileext = os.path.splitext(fname)
 
@@ -1907,13 +1907,17 @@ class FileInfo:
                 linkeroptions = linkeroptions + '-L'+qtdir + 'lib/ -lqt-mt'
         return linkeroptions
 
+    def get_mtime(self):
+        if not hasattr(self,"mtime"):
+            self.mtime = os.path.getmtime(self.filepath)
+        return self.mtime
 
     def get_depmtime(self):
         "returns the single latest last modification time of"
         "this file and all its .h dependencies through includes"
         if not hasattr(self,"depmtime"):
             # YB DEBUGGING
-            self.mtime = os.path.getmtime(self.filepath)
+            self.mtime = self.get_mtime()
             #
             self.depmtime = self.mtime
             for includefile in self.includes_from_sourcedirs:
@@ -1923,7 +1927,34 @@ class FileInfo:
                     #print "time of ",includefile.filepath," = ",depmtime
         return self.depmtime
 
-
+    def file_is_modified(self):
+        """return false if the corresponding .o file is up to date,
+        without taking dependencies into accout"""
+        try:
+            if self.fileext in cpp_exts:
+                if not os.path.exists(self.corresponding_ofile):
+                    return False
+                else:
+                    t1 = self.get_mtime()
+                    t2 = os.path.getmtime(self.corresponding_ofile)
+                    return t1 > t2
+            elif self.fileext in h_exts:
+                f=self.corresponding_ccfile
+                if not f or not os.path.exists(f.filepath):
+                    return False
+                else:
+                    t1 = self.get_mtime()
+                    t2 = os.path.getmtime(f.corresponding_ofile)
+#                    print self.filename(), f.filename(), t1,t2,os.path.getmtime(self.filepath), t1<=t2, t1>t2
+                    return t1 > t2
+                pass
+            else:
+                print self.filepath, "not handled here."
+                return False
+        except OSError: # OSError: [Errno 116] Stale NFS file handle
+            print "OSError... (probably NFS latency); Will be retrying"
+            return False
+        
     def corresponding_ofile_is_up_to_date(self):
         """returns true if the corresponding .o file is up to date,
         false if it needs recompiling."""
@@ -2982,9 +3013,13 @@ def main( args ):
                 for i in ccfiles_to_compile:
                     print i.filebase
             if len(ccfiles_to_compile)>0:
+                ccf=reduce(lambda x,y: x+y.file_is_modified(),ccfiles_to_compile,0)
+                l=[x for x in file_info_map.values() if x.fileext in h_exts]
+                hf=reduce(lambda x,y: x+y.file_is_modified(),l,0)
                 print '++++ Compiling',
                 print str(len(ccfiles_to_compile))+'/'+str(len(ccfiles_to_link)),
-                print 'files...'
+                print 'files. '+str(ccf)+' code and '+str(hf),
+                print 'headers file were modified.'
 
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
