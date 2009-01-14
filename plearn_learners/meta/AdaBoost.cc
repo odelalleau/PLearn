@@ -69,7 +69,8 @@ AdaBoost::AdaBoost()
       early_stopping(1),
       save_often(0),
       forward_sub_learner_test_costs(false),
-      modif_train_set_weights(false)
+      modif_train_set_weights(false),
+      reuse_test_results(false)
 { }
 
 PLEARN_IMPLEMENT_OBJECT(
@@ -218,7 +219,29 @@ void AdaBoost::declareOptions(OptionList& ol)
                   OptionBase::nosave,
                   "A temp vector that contain the weak learner output\n");
 
-    // Now call the parent class' declareOptions
+    declareOption(ol, "reuse_test_results",
+                  &AdaBoost::reuse_test_results,
+                  OptionBase::buildoption,
+                  "If true we save and reuse previous call to test(). This is"
+                  " usefull to have a test time that is independent of the"
+                  " number of adaboost itaration.\n");
+
+     declareOption(ol, "saved_testset",
+                  &AdaBoost::saved_testset,
+                  OptionBase::nosave,
+                  "Used with reuse_test_results\n");
+
+     declareOption(ol, "saved_testoutputs",
+                  &AdaBoost::saved_testoutputs,
+                  OptionBase::nosave,
+                  "Used with reuse_test_results\n");
+
+     declareOption(ol, "saved_last_test_stages",
+                  &AdaBoost::saved_last_test_stages,
+                  OptionBase::nosave,
+                  "Used with reuse_test_results\n");
+
+   // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 
     declareOption(ol, "train_set",
@@ -263,9 +286,12 @@ void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
-    deepCopyField(tmp_output2,              copies);
     deepCopyField(weighted_costs,           copies);
     deepCopyField(sum_weighted_costs,       copies);
+    deepCopyField(saved_testset,            copies);
+    deepCopyField(saved_testoutputs,        copies);
+    deepCopyField(saved_last_test_stages,   copies);
+
     deepCopyField(learners_error,           copies);
     deepCopyField(example_weights,          copies);
     deepCopyField(weak_learner_output,      copies);
@@ -279,8 +305,9 @@ void AdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 ////////////////
 int AdaBoost::outputsize() const
 {
-    // Outputsize is always 1, since this is a 0-1 classifier
-    return 1;
+    // Outputsize is always 2, since this is a 0-1 classifier
+    // and we append the weighted sum to allow the reuse of previous test
+    return 2;
 }
 
 void AdaBoost::finalize()
@@ -701,30 +728,103 @@ void AdaBoost::train()
 
 
     }
+    PLCHECK(stage==weak_learners.length());
     Profiler::pl_profile_end("AdaBoost::train");
 
 }
 
+void AdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
+                    VMat testoutputs, VMat testcosts) const
+{
+    if(!reuse_test_results){
+        inherited::test(testset, test_stats, testoutputs, testcosts);
+        return;
+    }
+    Profiler::pl_profile_start("AdaBoost::test()");
+    int index=-1;
+    for(int i=0;i<saved_testset.size();i++){
+        if(saved_testset[i]==testset){
+            index=i;
+            break;
+        }
+    }
+    if(index<0){
+        //first time the testset is seen
+        Profiler::pl_profile_start("AdaBoost::test() first" );
+        inherited::test(testset, test_stats, testoutputs, testcosts);
+        saved_testset.append(testset);
+        saved_testoutputs.append(PLearn::deepCopy(testoutputs));
+        PLCHECK(weak_learners.length()==stage);
+        saved_last_test_stages.append(stage);
+        Profiler::pl_profile_end("AdaBoost::test() first" );
+    }else{
+        Profiler::pl_profile_start("AdaBoost::test() seconds" );
+        PLCHECK(weak_learners.size()>1);
+        PLCHECK(stage>1);
+        PLCHECK(weak_learner_output.size()==weak_learner_template->outputsize());
 
-void AdaBoost::computeOutput(const Vec& input, Vec& output) const
+        PLCHECK(saved_testset.length()>index);
+        PLCHECK(saved_testoutputs.length()>index);
+        PLCHECK(saved_last_test_stages.length()>index);
+
+        int stages_done = saved_last_test_stages[index];
+        PLCHECK(weak_learners.size()>=stages_done);
+         
+        Vec input;
+        Vec output(outputsize());
+        Vec target;
+        Vec costs(nTestCosts());
+        real weight;
+        VMat old_outputs=saved_testoutputs[index];
+        PLCHECK(old_outputs->width()==testoutputs->width());
+        PLCHECK(old_outputs->length()==testset->length());
+#ifndef NDEBUG
+        Vec output2(outputsize());
+        Vec costs2(nTestCosts());
+#endif
+        for(int row=0;row<testset.length();row++){
+            output=old_outputs(row);
+            //compute the new testoutputs
+            testset.getExample(row, input, target, weight);
+            computeOutput_(input, output, stages_done, output[1]);
+            computeCostsFromOutputs(input,output,target,costs);
+#ifndef NDEBUG
+            computeOutputAndCosts(input,target, output2, costs2);
+            PLCHECK(output==output2);
+            PLCHECK(costs.isEqual(costs2,true));
+#endif
+            if(testoutputs)testoutputs->putOrAppendRow(row,output);
+            if(testcosts)testcosts->putOrAppendRow(row,costs);
+            if(test_stats)test_stats->update(costs,weight);
+        }
+        saved_testoutputs[index]=PLearn::deepCopy(testoutputs);
+        saved_last_test_stages[index]=stage;
+        Profiler::pl_profile_end("AdaBoost::test() seconds" );
+    }
+    Profiler::pl_profile_end("AdaBoost::test()");
+}
+
+void AdaBoost::computeOutput_(const Vec& input, Vec& output,
+                             int start, real sum) const
 {
     PLASSERT(weak_learners.size()>0);
     PLASSERT(weak_learner_output.size()==weak_learner_template->outputsize());
     PLASSERT(output.size()==outputsize());
-    real sum_out=0;
+    real sum_out=sum;
     if(!pseudo_loss_adaboost && !conf_rated_adaboost)
-        for (int i=0;i<weak_learners.size();i++){
+        for (int i=start;i<weak_learners.size();i++){
             weak_learners[i]->computeOutput(input,weak_learner_output);
             sum_out += (weak_learner_output[0] < output_threshold ? 0 : 1) 
                 *voting_weights[i];
         }
     else
-        for (int i=0;i<weak_learners.size();i++){
+        for (int i=start;i<weak_learners.size();i++){
             weak_learners[i]->computeOutput(input,weak_learner_output);
             sum_out += weak_learner_output[0]*voting_weights[i];
         }
 
     output[0] = sum_out/sum_voting_weights;
+    output[1] = sum_out;
 }
 
 void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output, 
@@ -737,7 +837,6 @@ void AdaBoost::computeCostsFromOutputs(const Vec& input, const Vec& output,
     else
         PLASSERT(costs.size()==nTrainCosts()||costs.size()==nTestCosts());
     costs.resize(5);
-    costs.clear();
 
     // First cost is negative log-likelihood...  output[0] is the likelihood
     // of the first class
@@ -828,6 +927,7 @@ void AdaBoost::computeOutputAndCosts(const Vec& input, const Vec& target,
     }
 
     output[0] = sum_out/sum_voting_weights;
+    output[1] = sum_out;
 
     //when computing train stats, costs==nTrainCosts() 
     //  and forward_sub_learner_test_costs==false

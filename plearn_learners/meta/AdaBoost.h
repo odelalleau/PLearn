@@ -53,17 +53,20 @@ class AdaBoost: public PLearner
     typedef PLearner inherited;
 
     //! Global storage to save memory allocations.
-    mutable Vec tmp_output2;
     mutable Vec weighted_costs;
     mutable Vec sum_weighted_costs;
+    mutable Vec weak_learner_output;
+
+    //! Used with reuse_test_results
+    mutable TVec<VMat> saved_testset;
+    mutable TVec<VMat> saved_testoutputs;
+    mutable TVec<int>  saved_last_test_stages;
+
 protected:
     // average weighted error of each learner
     Vec learners_error;
     // weighing scheme over examples
     Vec example_weights;
-
-    //! Used to store outputs from the weak learners.
-    mutable Vec weak_learner_output;
 
     // *********************
     // * protected options *
@@ -125,6 +128,11 @@ public:
 
     // Did we modif directly the train_set weights?
     bool modif_train_set_weights;
+
+    // Did we save and reuse previous test result?
+    // This is usefull to have a test time that is 
+    // independent of the number of adaboost itaration
+    bool reuse_test_results;
     // ****************
     // * Constructors *
     // ****************
@@ -143,6 +151,9 @@ private:
     void build_();
 
     void computeTrainingError(Vec input, Vec target);
+
+    void computeOutput_(const Vec& input, Vec& output,
+                       int start=0, real sum=0.) const;
 
 protected: 
     //! Declares this class' options
@@ -183,14 +194,15 @@ public:
     //! And sets 'stage' back to 0   (this is the stage of a fresh learner!)
     virtual void forget();
 
-    
     //! The role of the train method is to bring the learner up to stage==nstages,
     //! updating the train_stats collector with training costs measured on-line in the process.
     virtual void train();
-
+    virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
+                      VMat testoutputs, VMat testcosts) const;
 
     //! Computes the output from the input
-    virtual void computeOutput(const Vec& input, Vec& output) const;
+    virtual void computeOutput(const Vec& input, Vec& output) const{
+        computeOutput_(input,output,0,0);}
     virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
                                        Vec& output, Vec& costs) const;
 
