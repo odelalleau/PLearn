@@ -40,6 +40,7 @@
 #include "VMatViewCommand.h"
 #include <plearn/db/getDataSet.h>
 #include <plearn/misc/viewVMat.h>
+#include <plearn/vmat/BinaryOpVMatrix.h>
 
 namespace PLearn {
 using namespace std;
@@ -51,7 +52,7 @@ VMatViewCommand::VMatViewCommand()
     : PLearnCommand(
         "vmat_view",
         "interactive display of a vmatrix (curses-based)",
-        "vmat view <vmat_specification> \n"
+        "vmat view [--add,--sub,--diff,--mult,--div] <vmat> ...\n"
         "will interactively display contents of the \n"
         "specified vmatrix (any recognized file format)\n"
         )
@@ -60,6 +61,24 @@ VMatViewCommand::VMatViewCommand()
 //! The actual implementation of the 'VMatViewCommand' command
 void VMatViewCommand::run(const vector<string>& args)
 {
+    string op;
+    if(args[0]=="--add")
+        op="add";
+    else if(args[0]=="--sub" || args[0]=="--diff")
+        op="sub";
+    else if(args[0]=="--mult")
+        op="mult";
+    else if(args[0]=="--div")
+        op="div";
+    if(!op.empty()){
+        if(args.size()!=3)
+            PLERROR("Usage: vmat_view [--add,--sub,--diff,--mult,--div] <source1> ... \n"
+                    "If an option is used their must be two sources matrix.");
+        VMat vm = new BinaryOpVMatrix(getDataSet(args[1]),getDataSet(args[2]),op);
+        viewVMat(vm, op);
+        return;
+    }
+
     for(uint i=0;i<args.size();i++){
         PPath vmat_view_dataset(args[i]);
         if(args.size()>1)
