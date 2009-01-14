@@ -67,8 +67,14 @@ for i in "$@";
   iname=${i//\ /_}
   echo -e "\nCompiling \"${BASEPROG}${iname}.cc\" with command:"
   echo " pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc"
-  pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc || ( echo "Build failed for $i"; exit)
-  echo -e "Ended with status: $?\n"
+  pymake $i ${PYMAKEFLAGS[@]} ${BASEPROG}${iname}.cc
+  status=$?
+  if [ "$status" != "0" ]; then
+      last_status=$status
+      echo "Build failed for $i"
+      exit $status
+  fi
+#  echo -e "Ended with status: $status\n"
 done
 
 echo "Time finished:" `date`
