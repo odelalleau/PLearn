@@ -62,8 +62,13 @@ MultiClassAdaBoost::MultiClassAdaBoost():
     total_train_time(0),
     test_time(0),
     total_test_time(0),
+    time_sum(0),
+    time_sum_rtr(0),
+    time_last_stage(0),
+    time_last_stage_rtr(0),
+    last_stage(0),
     forward_sub_learner_test_costs(false),
-    forward_test(false)
+    forward_test(0)
 /* ### Initialize all fields to their default value here */
 {
     // ...
@@ -112,7 +117,9 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
     declareOption(ol, "forward_test", 
                   &MultiClassAdaBoost::forward_test,
                   OptionBase::buildoption,
-                  "Did we add forward the test fct to the sub learner.\n");
+                  "if 0, default test. If 1 forward the test fct to the sub"
+                  " learner. If 2, determine at each stage what is the faster"
+                  " based on past  test time.\n");
 
     declareOption(ol, "train_time",
                   &MultiClassAdaBoost::train_time, OptionBase::learntoption,
@@ -130,6 +137,26 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
                   &MultiClassAdaBoost::total_test_time, OptionBase::learntoption,
                   "The total time spent in the test() function in second.");
 
+    declareOption(ol, "time_sum",
+                  &MultiClassAdaBoost::time_sum, 
+                  OptionBase::learntoption|OptionBase::nosave,
+                  "The time spend in test() during the last stage. If test() is called multiple time for the same stage this is the sum of the time.");
+    declareOption(ol, "time_sum_rtr",
+                  &MultiClassAdaBoost::time_sum_rtr, 
+                  OptionBase::learntoption|OptionBase::nosave,
+                  "The time spend in test() during the last stage. If test() is called multiple time for the same stage this is the sum of the time.");
+    declareOption(ol, "time_last_stage",
+                  &MultiClassAdaBoost::time_last_stage, 
+                  OptionBase::learntoption|OptionBase::nosave,
+                  "");
+    declareOption(ol, "time_last_stage_rtr",
+                  &MultiClassAdaBoost::time_last_stage_rtr, 
+                  OptionBase::learntoption|OptionBase::nosave,
+                  "");
+    declareOption(ol, "last_stage",
+                  &MultiClassAdaBoost::last_stage, 
+                  OptionBase::learntoption |OptionBase::nosave,
+                  "The stage at witch time_sum was used");
  }
 
 void MultiClassAdaBoost::build_()
@@ -163,7 +190,7 @@ void MultiClassAdaBoost::build_()
     }
 
     Profiler::activate();
-    Profiler::reset("MultiClassAdaBoost::test");
+    Profiler::reset("MultiClassAdaBoost::test()");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -279,7 +306,7 @@ void MultiClassAdaBoost::train()
 
     //we get the test_time here as we want the test time for all dataset.
     //if we put it in the test function, we would have it for one dataset.
-    const Profiler::Stats& stats_test = Profiler::getStats("MultiClassAdaBoost::test");
+    const Profiler::Stats& stats_test = Profiler::getStats("MultiClassAdaBoost::test()");
     tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
     test_time=tmp-total_test_time;
     total_test_time=tmp;
@@ -574,13 +601,39 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
 void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
                               VMat testoutputs, VMat testcosts) const
 {
-    Profiler::start("MultiClassAdaBoost::test");
+    Profiler::start("MultiClassAdaBoost::test()");
     if(!forward_test){
-        inherited::test(testset,test_stats,testoutputs,testcosts);
-        Profiler::end("MultiClassAdaBoost::test");
-	return;
+         inherited::test(testset,test_stats,testoutputs,testcosts);
+         Profiler::end("MultiClassAdaBoost::test()");
+         return;
     }
-    Profiler::pl_profile_start("MultiClassAdaBoost::test() part1");
+
+    if(last_stage<stage && time_sum>0){
+        time_last_stage=time_sum;
+        time_sum=0;
+    }
+    if(last_stage<stage && time_sum_rtr>0){
+        time_last_stage_rtr=time_sum_rtr;
+        time_sum_rtr=0;
+    }
+
+    if(forward_test==2 && time_last_stage<time_last_stage_rtr){
+        DBG_MODULE_LOG<<"inherited start time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+        Profiler::reset("MultiClassAdaBoost::test() current");
+        Profiler::start("MultiClassAdaBoost::test() current");
+        PLCHECK(last_stage<=stage);
+        inherited::test(testset,test_stats,testoutputs,testcosts);
+        Profiler::end("MultiClassAdaBoost::test() current");
+        Profiler::end("MultiClassAdaBoost::test()");
+        time_sum += Profiler::getStats("MultiClassAdaBoost::test() current").wall_duration;
+        last_stage=stage;
+        DBG_MODULE_LOG<<"inherited end time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+        return;
+    }
+    DBG_MODULE_LOG<<"start time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+    Profiler::reset("MultiClassAdaBoost::test() current");
+    Profiler::start("MultiClassAdaBoost::test() current");
+    //Profiler::pl_profile_start("MultiClassAdaBoost::test() part1");//cheap
     int index=-1;
     for(int i=0;i<saved_testset.length();i++){
         if(saved_testset[i]==testset){
@@ -597,7 +650,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     VMat testcosts2 = 0;
     VMat testset1 = 0;
     VMat testset2 = 0;
-    if ((testcosts || test_stats )){
+    if ((testcosts || test_stats )&& forward_sub_learner_test_costs){
         //comment
         testcosts1 = VMat(new MemoryVMatrix(testset->length(),
                                             learner1->nTestCosts()));
@@ -624,11 +677,11 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     if (test_stats){
         
     }
-    Profiler::pl_profile_end("MultiClassAdaBoost::test() part1");
-    Profiler::start("MultiClassAdaBoost::subtest");
+    //Profiler::pl_profile_end("MultiClassAdaBoost::test() part1");//cheap
+    Profiler::start("MultiClassAdaBoost::test() subtest");
     learner1->test(testset1,test_stats1,testoutputs1,testcosts1);
     learner2->test(testset2,test_stats2,testoutputs2,testcosts2);
-    Profiler::end("MultiClassAdaBoost::subtest");
+    Profiler::end("MultiClassAdaBoost::test() subtest");
 
     VMat my_outputs = 0;
     VMat my_costs = 0;
@@ -676,8 +729,11 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
             //            PLWARNING("will be long");
 	int target_index = testset->inputsize();
 	PLASSERT(testset->targetsize()==1);
-        Vec costs1(learner1->nTestCosts());
-        Vec costs2(learner1->nTestCosts());
+        Vec costs1,costs2;
+        if(forward_sub_learner_test_costs){
+            costs1.resize(learner1->nTestCosts());
+            costs2.resize(learner2->nTestCosts());
+        }
         for(int row=0;row<testset.length();row++){
             //default version
             //testset.getExample(row, input, target, weight);
@@ -687,8 +743,10 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
             testset->getSubRow(row,target_index,tmp_target);
 //	    Vec costs1=testcosts1(row);
 //	    Vec costs2=testcosts2(row);
-            testcosts1->getRow(row,costs1);
-            testcosts2->getRow(row,costs2);
+            if(forward_sub_learner_test_costs){
+                testcosts1->getRow(row,costs1);
+                testcosts2->getRow(row,costs2);
+            }
             //TODO??? tmp_input is empty!!!
 	    computeCostsFromOutputs_(tmp_input, my_outputs(row), tmp_target, costs1,
                                      costs2, tmp_costs);
@@ -715,8 +773,14 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
 	}
     }
     Profiler::pl_profile_end("MultiClassAdaBoost::test() test_stats");
+    Profiler::end("MultiClassAdaBoost::test() current");
+    Profiler::end("MultiClassAdaBoost::test()");
+    
+    time_sum_rtr += Profiler::getStats("MultiClassAdaBoost::test() current").wall_duration;
 
-    Profiler::end("MultiClassAdaBoost::test");
+    last_stage=stage;
+    DBG_MODULE_LOG<<"end time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+
 }
 
 } // end of namespace PLearn

@@ -82,6 +82,13 @@ class MultiClassAdaBoost : public PLearner
     real test_time;
     //! The total time passed in test()
     real total_test_time;
+
+    mutable long time_sum;
+    mutable long time_sum_rtr;
+    mutable long time_last_stage;
+    mutable long time_last_stage_rtr;
+    mutable int last_stage;
+
 public:
     //#####  Public Build Options  ############################################
 
@@ -92,7 +99,7 @@ public:
     bool forward_sub_learner_test_costs;
 
     //! Did we forward the test function to the sub learner?
-    bool forward_test;
+    uint16_t forward_test;
 
     //! The learner1 and learner2 must be trained!
     PP<AdaBoost> learner1;
