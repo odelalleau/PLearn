@@ -386,10 +386,30 @@ class ExperimentWorkbench(HasTraits) :
         'params' (and the classes contained therin) inherits from
         HasStrictTraits so that any assignment to inexistant options raises
         an exception.
+
+        If an argument starts with an '@'-sign, it is intrepreted as a filename
+        containing extra arguments to insert in the list of arguments. The file is
+        opened, and each line that doesn't start with a '#'-sign is taken as a new 
+        argument. These argument are inserted in order, where the @filename directive
+        was found, with said @filename directive being removed from the list of 
+        arguments. It is possible to use this multiple times: @filename2 @filename2
+
         """
+
+        # First replace all @filename by their contents
+        expanded_argv = []
         for arg in argv:
+            if arg.startswith('@'):
+                f = open(arg[1:], 'rU')
+                expanded_argv.extend(line.strip() for line in f if not line.startswith('#'))
+                f.close()
+            else:
+                expanded_argv.append(arg)
+
+        for arg in expanded_argv:
             if arg.startswith('-'):
                 continue
+            
             if '=' in arg:
                 (k,v) = arg.split('=', 1)
                 v = v.replace("'", "\\'")
