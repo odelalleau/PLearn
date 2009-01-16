@@ -4,11 +4,12 @@ from plearn.utilities.toolkit import search_file
 from socket import gethostname
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--machine=HOSTNAME] [--machines=regex] <back-end parameter> {--file=FILEPATH | <command-template>}
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] <back-end parameter> {--file=FILEPATH | <command-template>}
 
 <back-end parameter>:
     bqtools, cluster option  :[--duree=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
+                              [--queue=X]
     cluster, condor options  :[--32|--64|--3264] [--os=X] [--mem=N]
                               [--cpu=nb_cpu_per_node]
     bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,sh(condor only)}+]
@@ -22,11 +23,11 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [*--[no_]abs_path] [--[*no_]pkdilly]
                               [*--[no_]set_special_env]
                               [--universe={vanilla*, standard, grid, java, scheduler, local, parallel, vm}]
-                              [--machine=HOSTNAME] [--machines=regex]
+                              [--machine=HOSTNAME+] [--machines=regex+]
     cluster option           :[*--[no_]cwait]  [--[*no_]force]
                               [--[*no_]interruptible]
 An * after '[', '{' or ',' signals the default value.
-An + after } tell that we can put one or more of the choise separeted by a comma
+An + tell that we can put one or more separeted by a comma
 '''
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster,
 local and ssh. If no system is selected on the command line, we try them in the
@@ -84,7 +85,8 @@ bqtools only options:
     set, and 1200:00:00 (50 days) otherwise. Since long jobs are launched on a
     different queue with few nodes, please make sure you are not using too many
     nodes at once with the --nb_proc option.
-
+  The '--queue=X' tell on witch queue the jobs will be launched
+  
 cluster and condor options:
   The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
     Default the same as the submit host.
@@ -296,7 +298,8 @@ for argv in to_parse:
         testmode=False
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
-                                "--universe", "--exp_dir", "--machine", "--machines"]:
+                                "--universe", "--exp_dir", "--machine", "--machines",
+                                "--queue"]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
