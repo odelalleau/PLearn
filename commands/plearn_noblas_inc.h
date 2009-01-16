@@ -252,6 +252,7 @@
 #include <plearn_learners/online/ScaleGradientModule.h>
 #include <plearn_learners/online/ShuntingNNetLayerModule.h>
 #include <plearn_learners/online/SoftmaxModule.h>
+#include <plearn_learners/online/SoftmaxNLLCostModule.h>
 #include <plearn_learners/online/SplitModule.h>
 #include <plearn_learners/online/SquaredErrorCostModule.h>
 #include <plearn_learners/online/BinarizeModule.h>
