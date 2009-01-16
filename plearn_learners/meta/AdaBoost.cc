@@ -343,8 +343,8 @@ void AdaBoost::train()
         return;
     else if (nstages < stage){        //!< Asking to revert to previous stage
         PLCHECK(nstages>0); // should use forget
-        cout<<"In AdaBoost::train() - reverting from stage "<<stage
-            <<" to stage "<<nstages<<endl;
+        NORMAL_LOG<<"In AdaBoost::train() - reverting from stage "<<stage
+                  <<" to stage "<<nstages<<endl;
         stage = nstages;
         PLCHECK(learners_error.size()>=stage);
         PLCHECK(weak_learners.size()>=stage);
@@ -513,10 +513,10 @@ void AdaBoost::train()
         // calculate its weighted training error 
         {
             PP<ProgressBar> pb;
-            if(report_progress) pb = new ProgressBar("computing weighted training error of weak learner",n);
+            if(report_progress && verbosity >1) pb = new ProgressBar("computing weighted training error of weak learner",n);
             learners_error[stage] = 0;
             for (int i=0; i<n; ++i) {
-                if(report_progress) pb->update(i);
+                if(pb) pb->update(i);
                 train_set->getExample(i, input, target, weight);
 #ifdef BOUNDCHECK
                 if(!(is_equal(target[0],0)||is_equal(target[0],1)))
@@ -568,8 +568,8 @@ void AdaBoost::train()
         }
 
         if (verbosity>1)
-            cout << "weak learner at stage " << stage 
-                 << " has average loss = " << learners_error[stage] << endl;
+            NORMAL_LOG << "weak learner at stage " << stage 
+                       << " has average loss = " << learners_error[stage] << endl;
 
         weak_learners.push_back(new_weak_learner);
 
@@ -612,15 +612,15 @@ void AdaBoost::train()
             for(iter=1;iter<=itmax;iter++)
             {
                 if(verbosity>4)
-                    cout << "iteration " << iter << ": fx = " << fb << endl;
+                    NORMAL_LOG << "iteration " << iter << ": fx = " << fb << endl;
                 if (abs(cx-ax) <= tolerance)
                 {
                     xmin=bx;
                     if(verbosity>3)
                     {
-                        cout << "nIters for minimum: " << iter << endl;
-                        cout << "xmin = " << xmin << endl;
-                        cout << "fx = " << fb << endl;
+                        NORMAL_LOG << "nIters for minimum: " << iter << endl;
+                        NORMAL_LOG << "xmin = " << xmin << endl;
+                        NORMAL_LOG << "fx = " << fb << endl;
                     }
                     break;
                 }
@@ -678,7 +678,7 @@ void AdaBoost::train()
             }
             if(verbosity>3)
             {
-                cout << "Too many iterations in Brent" << endl;
+                NORMAL_LOG << "Too many iterations in Brent" << endl;
             }
             xmin=bx;
             voting_weights.push_back(xmin);
@@ -705,9 +705,9 @@ void AdaBoost::train()
 
         if(fast_exact_is_equal(learners_error[stage], 0))
         {
-            cout << "AdaBoost::train found weak learner with 0 training "
-                 << "error at stage " 
-                 << stage << " is " << learners_error[stage] << endl;  
+            NORMAL_LOG << "AdaBoost::train found weak learner with 0 training "
+                       << "error at stage " 
+                       << stage << " is " << learners_error[stage] << endl;  
 
             // Simulate infinite weight on new_weak_learner
             weak_learners.resize(0);
@@ -723,7 +723,7 @@ void AdaBoost::train()
         if (early_stopping && learners_error[stage] >= target_error)
         {
             nstages = stage;
-            cout << 
+            NORMAL_LOG << 
                 "AdaBoost::train early stopping because learner's loss at stage " 
                  << stage << " is " << learners_error[stage] << endl;       
             break;
@@ -1046,9 +1046,9 @@ void AdaBoost::computeTrainingError(Vec input, Vec target)
             save_forward_sub_learner_test_costs;
 
         if (verbosity>2)
-            cout << "At stage " << stage << 
+            NORMAL_LOG << "At stage " << stage << 
                 " boosted (weighted) classification error on training set = " 
-                 << train_stats->getMean() << endl;
+                       << train_stats->getMean() << endl;
      
     }
 }
