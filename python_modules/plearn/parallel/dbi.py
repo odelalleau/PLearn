@@ -547,7 +547,7 @@ class DBIBqtools(DBIBase):
         self.nb_proc = -1
         self.clean_up = True
         self.micro = 1
-        self.queue = "qwork@ms"
+        self.queue = "qwork"
         self.long = False
         self.duree = "120:00:00"
         self.mem = None
