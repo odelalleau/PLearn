@@ -107,8 +107,6 @@ void InfiniteMNISTVMatrix::getNewRow(int i, const Vec& v) const
         *vj = *xj/input_divisor;
     
     v.last() = InfiniteMNISTVMatrix::dataset->y[ (i_dataset<10000) ? i_dataset : 10000 + ((i_dataset - 10000) % 60000) ];
-
-    free(image);
 }
 
 void InfiniteMNISTVMatrix::declareOptions(OptionList& ol)
