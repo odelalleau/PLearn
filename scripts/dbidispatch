@@ -10,6 +10,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     bqtools, cluster option  :[--duree=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
                               [--queue=X]
+                              [--nano=X]
     cluster, condor options  :[--32|--64|--3264] [--os=X] [--mem=N]
                               [--cpu=nb_cpu_per_node]
     bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,sh(condor only)}+]
@@ -86,6 +87,7 @@ bqtools only options:
     different queue with few nodes, please make sure you are not using too many
     nodes at once with the --nb_proc option.
   The '--queue=X' tell on witch queue the jobs will be launched
+  The '--nano=X'
   
 cluster and condor options:
   The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
@@ -299,7 +301,7 @@ for argv in to_parse:
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
                                 "--universe", "--exp_dir", "--machine", "--machines",
-                                "--queue"]:
+                                "--queue", "--nano"]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -353,7 +355,7 @@ elif launch_cmd=="Condor":
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines"]
 elif launch_cmd=="Bqtools":
-    valid_dbi_param +=["micro", "long", "duree"]
+    valid_dbi_param +=["micro", "long", "duree", "queue", "nano"]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.
@@ -576,8 +578,14 @@ else:
     t1=time.time()
     jobs = DBI(commands,launch_cmd,**dbi_param)
     t2=time.time()
+    error=False
     print "it took %f s to create the DBI objects"%(t2-t1)
-    jobs.run()
+    try:
+        jobs.run()
+    except DBIError, e:
+        error=True
+        print e
+        sys.exit(1)
     t3=time.time()
     jobs.wait()
     if "test" in dbi_param:

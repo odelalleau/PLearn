@@ -32,6 +32,9 @@ STATUS_RUNNING = 1
 STATUS_WAITING = 2
 STATUS_INIT = 3
 
+class DBIError(Exception):
+    """Base class for exceptions in this module."""
+    pass
 
 #original version from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/196618
 class LockedIterator:
@@ -547,6 +550,7 @@ class DBIBqtools(DBIBase):
         self.nb_proc = -1
         self.clean_up = True
         self.micro = 1
+        self.nano = 1
         self.queue = "qwork"
         self.long = False
         self.duree = "120:00:00"
@@ -555,6 +559,7 @@ class DBIBqtools(DBIBase):
 
         self.nb_proc = int(self.nb_proc)
         self.micro = int(self.micro)
+        self.nano = int(self.nano)
 
 ### We can't accept the symbols "," as this cause trouble with bqtools
         if self.log_dir.find(',')!=-1 or self.log_file.find(',')!=-1:
@@ -651,7 +656,8 @@ class DBIBqtools(DBIBase):
                 linkFiles = launcher
                 preBatch = rm -f _*.BQ
                 microJobs = %d
-                '''%(self.unique_id[1:12],self.queue,self.duree,self.micro)) )
+                nanoJobs = %d
+                '''%(self.unique_id[1:12],self.queue,self.duree,self.micro,self.nano)) )
         if self.nb_proc>0:
             bqsubmit_dat.write('''\nconcurrentJobs = %d\n'''%(self.nb_proc))
 
@@ -670,6 +676,28 @@ class DBIBqtools(DBIBase):
                 t.set_scheduled_time()
             self.p = Popen( 'bqsubmit', shell=True)
             self.p.wait()
+            
+            #check for error string as bqsubmit don't already return an errorcode !=0 when their was an error.
+            error_str=False
+#            print self.p.stderr
+#            print dir(self.p.stderr)
+#            dir(self.p.stderr)
+#            print self.p.stderr.closed
+#            print self.p.stderr.peek
+#            help(self.p.stderr)
+#            self.p.stderr.flush()
+#            self.p.stderr.write('dd')
+#            print self.p.stderr.read()
+#            lines = self.p.stderr.readline()
+#            print len(lines)
+#            for line in lines:
+#                if line in ["qsub: Job exceeds queue resource limits MSG=cannot satisfy queue max walltime requirement\n"]:
+#                    error_str=True
+#                print line,
+            if self.p.returncode!=0:
+                raise DBIError("[DBI] ERROR: the bqsubmit returned an error code of"+str(self.p.returncode))
+            if error_str:
+                raise DBIError("[DBI] ERROR: the bqsubmit returned an error string. It was probably not launched correctly.")
         else:
             print "[DBI] Test mode, we generate all the file, but we do not execute bqsubmit"
             if self.dolog:
@@ -1728,6 +1756,9 @@ def DBI(commands, launch_system, **args):
     """
     try:
         jobs = eval('DBI'+launch_system+'(commands,**args)')
+    except DBIError, e:
+        print e
+        sys.exit(1)
     except NameError:
         print 'The launch system ',launch_system, ' does not exists. Available systems are: Cluster, Ssh, Bqtools and Condor'
         traceback.print_exc()
