@@ -68,6 +68,7 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     noise_type( "masking_noise" ),
     fraction_of_masked_inputs( 0 ),
     probability_of_masked_inputs( 0 ),
+    probability_of_masked_target( 0 ),
     mask_with_mean( false ),
     gaussian_std( 1. ),
     binary_sampling_noise_parameter( 1. ),
@@ -211,6 +212,16 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "weights of 1 will be assumed for all partial costs.\n"
         );
 
+    declareOption(ol, "greedy_target_connections",
+                  &StackedAutoassociatorsNet::greedy_target_connections,
+                  OptionBase::buildoption,
+                  "Optional target connections during greedy training..\n"
+                  "They connect the target with the hidden layer from which\n"
+                  "the autoassociator's cost (including partial cost) is computed\n"
+                  "(only during training).\n"
+                  "Currently works only if target is a class index.\n"
+        );
+
     declareOption(ol, "compute_all_test_costs",
                   &StackedAutoassociatorsNet::compute_all_test_costs,
                   OptionBase::buildoption,
@@ -249,6 +260,12 @@ void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
                   "Probability of masking each input component. Either this "
                   "option.\n"
                   "or fraction_of_masked_inputs should be > 0.\n"
+        );
+
+    declareOption(ol, "probability_of_masked_target",
+                  &StackedAutoassociatorsNet::probability_of_masked_target,
+                  OptionBase::buildoption,
+                  "Probability of masking the target, when using greedy_target_connections.\n"
         );
 
     declareOption(ol, "mask_with_mean",
@@ -412,6 +429,11 @@ void StackedAutoassociatorsNet::build_()
             PLERROR("StackedAutoassociatorsNet::build_()"
                     " - \n"
                     "probability_of_masked_inputs should be > or equal to 0.\n");
+
+        if( probability_of_masked_target < 0 )
+            PLERROR("StackedAutoassociatorsNet::build_()"
+                    " - \n"
+                    "probability_of_masked_target should be > or equal to 0.\n");
 
         if( online && fraction_of_masked_inputs > 0)
             PLERROR("StackedAutoassociatorsNet::build_()"
@@ -605,6 +627,25 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
             }
         }
 
+        if(greedy_target_connections.length() != 0)
+        {
+            if(reconstruct_hidden)
+                PLERROR("StackedAutoassociatorsNet::build_layers_and_connections()"
+                        " - \n"
+                        "greedy_target_connections not implemented with reconstruct_hidden=true.\n");
+
+            if( greedy_target_connections[i]->up_size != layers[i+1]->size )
+                PLERROR("StackedAutoassociatorsNet::build_layers_and_connections()"
+                        " - \n"
+                        "greedy_target_connections[%i] should have a up_size of %d.\n",
+                        i, layers[i+1]->size);
+            if( !(greedy_target_connections[i]->random_gen) )
+            {
+                greedy_target_connections[i]->random_gen = random_gen;
+                greedy_target_connections[i]->forget();
+            }
+        }
+
         if( !(layers[i]->random_gen) )
         {
             layers[i]->random_gen = random_gen;
@@ -640,17 +681,30 @@ void StackedAutoassociatorsNet::build_layers_and_connections()
 
     // For denoising autoencoders
     corrupted_autoassociator_expectations.resize( n_layers-1 );
-    if( noise_type == "masking_noise" && fraction_of_masked_inputs > 0 )
+    if( noise_type == "masking_noise" )
         autoassociator_expectation_indices.resize( n_layers-1 );
     
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         corrupted_autoassociator_expectations[i].resize( layers[i]->size );
-        if( noise_type == "masking_noise" && fraction_of_masked_inputs > 0 )
+        if( noise_type == "masking_noise" )
         {
             autoassociator_expectation_indices[i].resize( layers[i]->size );
             for( int j=0 ; j < autoassociator_expectation_indices[i].length() ; j++ )
                 autoassociator_expectation_indices[i][j] = j;
+        }
+    }
+
+    if(greedy_target_connections.length() != 0)
+    {
+        target_vec.resize(greedy_target_connections[0]->down_size);
+        target_vec_gradient.resize(greedy_target_connections[0]->down_size);
+        targets_vec.resize(n_layers-1);
+        targets_vec_gradient.resize(n_layers-1);
+        for( int i=0; i<n_layers-1; i++ )
+        {
+            targets_vec[i].resize(greedy_target_connections[0]->down_size);
+            targets_vec_gradient[i].resize(greedy_target_connections[0]->down_size);
         }
     }
 }
@@ -757,6 +811,7 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(final_cost, copies);
     deepCopyField(partial_costs, copies);
     deepCopyField(partial_costs_weights, copies);
+    deepCopyField(greedy_target_connections, copies);
 
     // Protected options
     deepCopyField(activations, copies);
@@ -807,6 +862,10 @@ void StackedAutoassociatorsNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(corrupted_autoassociator_expectations, copies);
     deepCopyField(autoassociator_expectation_indices, copies);
     deepCopyField(expectation_means, copies);
+    deepCopyField(target_vec, copies);
+    deepCopyField(target_vec_gradient, copies);
+    deepCopyField(targets_vec, copies);
+    deepCopyField(targets_vec_gradient, copies);
     deepCopyField(greedy_stages, copies);
 }
 
@@ -1299,10 +1358,24 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
             }
             else
                 connections[i]->fprop( expectations[i], correlation_activations[i] );
+
+            if( i == index && greedy_target_connections.length() && greedy_target_connections[i] )
+            {
+                target_vec.clear();
+                if( probability_of_masked_target == 0 ||
+                    random_gen->uniform_sample() >= probability_of_masked_target )
+                    target_vec[(int)target[0]] = 1;
+
+                greedy_target_connections[i]->setAsDownInput(target_vec);
+                greedy_target_connections[i]->computeProduct(0, correlation_activations[i].length(),
+                                                             correlation_activations[i], true);
+            }
+
             layers[i+1]->fprop( correlation_activations[i],
                                 correlation_expectations[i] );
             correlation_connections[i]->fprop( correlation_expectations[i],
                                                activations[i+1] );
+
             correlation_layers[i]->fprop( activations[i+1],
                                           expectations[i+1] );
         }
@@ -1318,6 +1391,19 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
             }
             else
                 connections[i]->fprop( expectations[i], activations[i+1] );
+            
+            if( i == index && greedy_target_connections.length() && greedy_target_connections[i] )
+            {
+                target_vec.clear();
+                if( probability_of_masked_target == 0 ||
+                    random_gen->uniform_sample() >= probability_of_masked_target )
+                    target_vec[(int)target[0]] = 1;
+
+                greedy_target_connections[i]->setAsDownInput(target_vec);
+                greedy_target_connections[i]->computeProduct(0, activations[i+1].length(),
+                                                             activations[i+1], true);
+            }
+
             layers[i+1]->fprop(activations[i+1],expectations[i+1]);
         }
     }
@@ -1496,6 +1582,15 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
             correlation_activations[ index ],
             reconstruction_expectation_gradients, //reused
             correlation_activation_gradients [ index ]);
+
+        if( greedy_target_connections.length() && greedy_target_connections[index] )
+        {
+            greedy_target_connections[index]->bpropUpdate(
+                target_vec, 
+                correlation_activations[index],
+                target_vec_gradient,
+                correlation_activation_gradients [ index ]);
+        }
     }
     else
     {
@@ -1510,6 +1605,14 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
             activations[ index + 1 ],
             reconstruction_expectation_gradients, //reused
             reconstruction_activation_gradients);
+        if( greedy_target_connections.length() && greedy_target_connections[index] )
+        {
+            greedy_target_connections[index]->bpropUpdate(
+                target_vec, 
+                activations[ index + 1 ],
+                target_vec_gradient,
+                reconstruction_activation_gradients);
+        }
     }
 
 }
@@ -1776,12 +1879,26 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
         for( int i=0 ; i<n_layers-1; i++ )
         {
             connections[i]->fprop( expectations[i], correlation_activations[i] );
+
+            if( greedy_target_connections.length() && greedy_target_connections[i] )
+            {
+                targets_vec[i].clear();
+                if( probability_of_masked_target == 0 ||
+                    random_gen->uniform_sample() >= probability_of_masked_target )
+                    targets_vec[i][(int)target[0]] = 1;
+
+                greedy_target_connections[i]->setAsDownInput(targets_vec[i]);
+                greedy_target_connections[i]->computeProduct(0, correlation_activations[i].length(),
+                                                             correlation_activations[i], true);
+            }
+
             layers[i+1]->fprop( correlation_activations[i],
                                 correlation_expectations[i] );
             correlation_connections[i]->fprop( correlation_expectations[i],
                                                activations[i+1] );
             correlation_layers[i]->fprop( activations[i+1],
                                           expectations[i+1] );
+
         }
     }
     else
@@ -1789,63 +1906,20 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
         for( int i=0 ; i<n_layers-1; i++ )
         {
             connections[i]->fprop( expectations[i], activations[i+1] );
-            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
 
-            if( partial_costs.length() != 0 && partial_costs[ i ] )
+            if( greedy_target_connections.length() && greedy_target_connections[i] )
             {
-                // Set learning rates
-                if( !fast_exact_is_equal(fine_tuning_decrease_ct , 0 ) )
-                    lr = fine_tuning_learning_rate /
-                        (1 + fine_tuning_decrease_ct * stage);
-                else
-                    lr = fine_tuning_learning_rate;
+                targets_vec[i].clear();
+                if( probability_of_masked_target == 0 ||
+                    random_gen->uniform_sample() >= probability_of_masked_target )
+                    targets_vec[i][(int)target[0]] = 1;
 
-                partial_costs[ i ]->setLearningRate( lr );
-                /* No, learning rate should already be OK in layers and
-                 * connections
-                layers[ i+1 ]->setLearningRate( lr );
-                connections[ i ]->setLearningRate( lr );
-                */
-
-                partial_costs[ i ]->fprop( expectations[ i + 1],
-                                           target, partial_cost_value );
-
-                // Update partial cost (might contain some weights for example)
-                partial_costs[ i ]->bpropUpdate(
-                    expectations[ i + 1 ],
-                    target, partial_cost_value[0],
-                    expectation_gradients[ i + 1 ]
-                    );
-
-                train_costs.subVec(partial_costs_positions[i]+1,
-                                   partial_cost_value.length())
-                    << partial_cost_value;
-
-                if( !fast_exact_is_equal( partial_costs_weights.length(), 0 ) )
-                    expectation_gradients[ i + 1 ] *= partial_costs_weights[i];
-
-                // Update hidden layer bias and weights
-                layers[ i+1 ]->bpropUpdate( activations[ i + 1 ],
-                                            expectations[ i + 1 ],
-                                            activation_gradients[ i + 1 ],
-                                            expectation_gradients[ i + 1 ] );
-
-                connections[ i ]->bpropUpdate( expectations[ i ],
-                                               activations[ i + 1 ],
-                                               expectation_gradients[ i ],
-                                               activation_gradients[ i + 1 ] );
-
-                /* no need
-                if( !fast_exact_is_equal( fine_tuning_decrease_ct , 0 ) )
-                    lr = fine_tuning_learning_rate /
-                        (1 + fine_tuning_decrease_ct * stage);
-                else
-                    lr = fine_tuning_learning_rate;
-
-                layers[ i+1 ]->setLearningRate( lr );
-                connections[ i ]->setLearningRate( lr );
-                */
+                greedy_target_connections[i]->setAsDownInput(targets_vec[i]);
+                greedy_target_connections[i]->computeProduct(0, activations[i+1].length(),
+                                                             activations[i+1], true);
             }
+
+            layers[i+1]->fprop(activations[i+1],expectations[i+1]);
         }
     }
 
@@ -1883,6 +1957,10 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
             correlation_layers[i]->setLearningRate( lr );
             correlation_connections[i]->setLearningRate( lr );
         }
+        if( partial_costs.length() != 0 && partial_costs[ i ] )
+        {
+            partial_costs[ i ]->setLearningRate( lr );
+        }
     }
     layers[n_layers-1]->setLearningRate( lr );
 
@@ -1912,6 +1990,28 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
             reconstruction_activations,
             reconstruction_expectation_gradients,
             reconstruction_activation_gradients);
+
+        if( partial_costs.length() != 0 && partial_costs[ i-1 ] )
+        {
+            
+            partial_costs[ i-1 ]->fprop( expectations[ i],
+                                       target, partial_cost_value );
+            
+            // Update partial cost (might contain some weights for example)
+            partial_costs[ i-1 ]->bpropUpdate(
+                expectations[ i ],
+                target, partial_cost_value[0],
+                expectation_gradients[ i ]
+                );
+
+            train_costs.subVec(partial_costs_positions[i-1]+1,
+                               partial_cost_value.length())
+                << partial_cost_value;
+            
+            if( !fast_exact_is_equal( partial_costs_weights.length(), 0 ) )
+                expectation_gradients[ i ] *= partial_costs_weights[i-1];
+            reconstruction_expectation_gradients += expectation_gradients[ i ];
+        }
 
         if(!fast_exact_is_equal(l1_neuron_decay,0))
         {
@@ -1953,6 +2053,15 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
                                            correlation_activations[i-1],
                                            reconstruction_expectation_gradients,
                                            correlation_activation_gradients[i-1] );
+
+            if( greedy_target_connections.length() && greedy_target_connections[i-1] )
+            {
+                greedy_target_connections[i-1]->bpropUpdate(
+                    targets_vec[i-1], 
+                    correlation_activations[i-1],
+                    targets_vec_gradient[i-1],
+                    correlation_activation_gradients [ i-1 ]);
+            }
         }
         else
         {
@@ -1967,6 +2076,15 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
                 activations[i],
                 reconstruction_expectation_gradients,
                 reconstruction_activation_gradients);
+
+            if( greedy_target_connections.length() && greedy_target_connections[i-1] )
+            {
+                greedy_target_connections[i-1]->bpropUpdate(
+                    targets_vec[i-1], 
+                    activations[ i ],
+                    targets_vec_gradient[i-1],
+                    reconstruction_activation_gradients);
+            }
         }
     }
 
@@ -2051,10 +2169,19 @@ void StackedAutoassociatorsNet::onlineStep(const Mat& inputs,
     expectations_m[0].resize(mbatch_size, inputsize());
     expectations_m[0] << inputs;
 
+    if( greedy_target_connections.length() != 0 )
+        PLERROR("In StackedAutoassociatorsNet::onlineStep(): greedy_target_connections not "
+                "implemented yet in mini-batch online setting.\n");
+    
     if(correlation_connections.length() != 0)
     {
         for( int i=0 ; i<n_layers-1; i++ )
         {
+            if( partial_costs.length() != 0 && partial_costs[ i ] )
+                PLERROR("In StackedAutoassociatorsNet::onlineStep(): partial costs not "
+                        "implemented yet for correlation_connections, in mini-batch online "
+                        "setting.\n");
+
             connections[i]->fprop(expectations_m[i],
                                   correlation_activations_m[i]);
             layers[i+1]->fprop(correlation_activations_m[i],

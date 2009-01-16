@@ -65,7 +65,7 @@ public:
     //#####  Public Build Options  ############################################
 
     //! The learning rate used during the autoassociator gradient descent
-    //! training
+    //! training. It is also used for the partial costs.
     real greedy_learning_rate;
 
     //! The decrease constant of the learning rate used during the
@@ -139,6 +139,13 @@ public:
     //! weights of 1 will be assumed for all partial costs.
     Vec partial_costs_weights;
 
+    //! Optional target connections during greedy training.
+    //! They connect the target with the hidden layer from which
+    //! the autoassociator's cost (including partial cost) is computed
+    //! (only during training).
+    //! Currently works only if target is a class index.
+    TVec< PP<RBMConnection> > greedy_target_connections;
+
     //! Indication that, at test time, all costs for all
     //! layers (up to the currently trained layer) should be computed.
     bool compute_all_test_costs;
@@ -157,6 +164,9 @@ public:
     //! Probability of masking each input component. Either this option
     //! or fraction_of_masked_inputs should be > 0.
     real probability_of_masked_inputs;
+
+    //! Probability of masking the target, when using greedy_target_connections
+    real probability_of_masked_target;
 
     //! Indication that inputs should be masked with the 
     //! training set mean of that component
@@ -403,6 +413,13 @@ protected:
 
     //! Mean of layers on the training set for each layer
     TVec<Vec> expectation_means;
+
+    //! Vectorial representation of the target
+    Vec target_vec;
+    Vec target_vec_gradient;
+    //! For online case
+    TVec< Vec > targets_vec;
+    TVec< Vec > targets_vec_gradient;
 
     //! Stages of the different greedy phases
     TVec<int> greedy_stages;
