@@ -731,7 +731,7 @@ void AdaBoost::train()
 
 
     }
-    PLCHECK(stage==weak_learners.length());
+    PLCHECK(stage==weak_learners.length() || found_zero_error_weak_learner);
     Profiler::pl_profile_end("AdaBoost::train");
 
 }
