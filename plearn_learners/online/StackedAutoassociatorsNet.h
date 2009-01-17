@@ -408,6 +408,12 @@ protected:
     //! Layers randomly masked, for unsupervised fine-tuning.
     TVec< Vec > corrupted_autoassociator_expectations;
 
+    //! Layers random binary maske, for online learning.
+    TVec< Vec > binary_masks;
+
+    //! For when corrupt_input() with binary_mask parameter is called
+    Vec tmp_mask;
+
     //! Indices of the expectation components
     TVec< TVec<int> > autoassociator_expectation_indices;
 
@@ -457,6 +463,8 @@ private:
     Mat remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const;
 
     void corrupt_input(const Vec& input, Vec& corrupted_input, int layer);
+
+    void corrupt_input(const Vec& input, Vec& corrupted_input, int layer, Vec& binary_mask);
 
     //! Global storage to save memory allocations.
     mutable Vec tmp_output;
