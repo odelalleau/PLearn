@@ -927,6 +927,9 @@ void StackedAutoassociatorsNet::forget()
             direct_connections[i]->forget();
     }
 
+    for( int i=0; i<greedy_target_connections.length(); i++ )
+        greedy_target_connections[i]->forget();
+
     stage = 0;
     unsupervised_stage = 0;
     greedy_stages.clear();
