@@ -74,7 +74,7 @@ DeepBeliefNet::DeepBeliefNet() :
     online ( false ),
     background_gibbs_update_ratio(0),
     gibbs_chain_reinit_freq( INT_MAX ),
-    use_mean_field_contrastive_divergence( false ),
+    mean_field_contrastive_divergence_ratio( 0 ),
     train_stats_window( -1 ),
     minibatch_size( 0 ),
     initialize_gibbs_chain( false ),
@@ -279,11 +279,12 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   "If == INT_MAX, the default value of this option, then NEVER\n"
                   "re-initialize except at the beginning, when stage==0.\n");
 
-    declareOption(ol, "use_mean_field_contrastive_divergence",
-                  &DeepBeliefNet::use_mean_field_contrastive_divergence,
+    declareOption(ol, "mean_field_contrastive_divergence_ratio",
+                  &DeepBeliefNet::mean_field_contrastive_divergence_ratio,
                   OptionBase::buildoption,
-                  "Indication that mean-field contrastive divergence\n"
-                  "should be used instead of standard contrastive divergence.\n");
+                  "Coefficient between 0 and 1. 0 means CD-1 update only and\n"
+                  "1 means MF-CD only. Values in between means a weighted\n" 
+                  "combination of both.\n");
 
     declareOption(ol, "train_stats_window",
                   &DeepBeliefNet::train_stats_window,
@@ -364,19 +365,20 @@ void DeepBeliefNet::build_()
         PLERROR("In DeepBeliefNet::build_ - up-down algorithm not implemented "
             "for minibatch setting.");
 
-    if( use_mean_field_contrastive_divergence && up_down_nstages > 0 )
-        PLERROR("In DeepBeliefNet::build_ - up-down algorithm not implemented "
-            "for mean-field CD.");
-
-    if( use_mean_field_contrastive_divergence &&
+    if( mean_field_contrastive_divergence_ratio > 0 &&
         background_gibbs_update_ratio != 0 )
         PLERROR("In DeepBeliefNet::build_ - mean-field CD cannot be used "
                 "with background_gibbs_update_ratio != 0.");
 
-    if( use_mean_field_contrastive_divergence &&
+    if( mean_field_contrastive_divergence_ratio > 0 &&
         use_sample_for_up_layer )
         PLERROR("In DeepBeliefNet::build_ - mean-field CD cannot be used "
-                "with use_sample_for_top_layer");
+                "with use_sample_for_up_layer.");
+
+    if( mean_field_contrastive_divergence_ratio < 0 ||
+        mean_field_contrastive_divergence_ratio > 1 )
+        PLERROR("In DeepBeliefNet::build_ - mean_field_contrastive_divergence_ratio should "
+            "be in [0,1].");
 
     if( !online )
     {
@@ -526,12 +528,6 @@ void DeepBeliefNet::build_layers_and_connections()
     expectations_gradients.resize( n_layers );
     gibbs_down_state.resize( n_layers-1 );
 
-    if( up_down_nstages > 0 )
-    {
-        up_sample.resize(n_layers);
-        down_sample.resize(n_layers);
-    }
-
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
         if( layers[i]->size != connections[i]->down_size )
@@ -560,21 +556,11 @@ void DeepBeliefNet::build_layers_and_connections()
         activation_gradients[i].resize( layers[i]->size );
         expectation_gradients[i].resize( layers[i]->size );
 
-        if( up_down_nstages > 0 )
-        {
-            up_sample[i].resize(layers[i]->size);
-            down_sample[i].resize(layers[i]->size);
-        }
     }
     if( !(layers[n_layers-1]->random_gen) )
     {
         layers[n_layers-1]->random_gen = random_gen;
         layers[n_layers-1]->forget();
-        if( up_down_nstages > 0 )
-        {
-            up_sample[n_layers-1].resize(layers[n_layers-1]->size);
-            down_sample[n_layers-1].resize(layers[n_layers-1]->size);
-        }
     }
     int last_layer_size = layers[n_layers-1]->size;
     PLASSERT_MSG(last_layer_size >= 0,
@@ -769,6 +755,10 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(pos_up_val,               copies);
     deepCopyField(cd_neg_up_vals,           copies);
     deepCopyField(cd_neg_down_vals,         copies);
+    deepCopyField(mf_cd_neg_up_vals,        copies);
+    deepCopyField(mf_cd_neg_down_vals,      copies);
+    deepCopyField(mf_cd_neg_up_val,         copies);
+    deepCopyField(mf_cd_neg_down_val,       copies);
     deepCopyField(gibbs_down_state,         copies);
     deepCopyField(optimized_costs,          copies);
     deepCopyField(reconstruction_costs,     copies);
@@ -1083,6 +1073,15 @@ void DeepBeliefNet::train()
                     wt->rbm_matrix_connection = w;
                     wt->build();
                     generative_connections[c] = wt;
+                }
+
+                up_sample.resize(n_layers);
+                down_sample.resize(n_layers);
+                
+                for( int i=0 ; i<n_layers ; i++ )
+                {
+                    up_sample[i].resize(layers[i]->size);
+                    down_sample[i].resize(layers[i]->size);
                 }
             }
             /***** up-down algorithm *****/
@@ -2264,8 +2263,8 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         pos_up_vals.resize(minibatch_size, up_layer->size);
 
         pos_down_vals << down_layer->getExpectations();
-        if( !use_sample_for_up_layer )
-            pos_up_vals << up_layer->getExpectations();
+        pos_up_vals << up_layer->getExpectations();
+        up_layer->generateSamples();
 
         // down propagation, starting from a sample of up_layer
         if (background_gibbs_update_ratio<1)
@@ -2273,8 +2272,11 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         {
             Mat neg_down_vals;
             Mat neg_up_vals;
-            if( use_mean_field_contrastive_divergence )
+            if( mean_field_contrastive_divergence_ratio > 0 )
             {
+                mf_cd_neg_down_vals.resize(minibatch_size, down_layer->size);
+                mf_cd_neg_up_vals.resize(minibatch_size, up_layer->size);
+
                 connection->setAsUpInputs( up_layer->getExpectations() );
                 down_layer->getAllActivations( connection, 0, true );
                 down_layer->computeExpectations();
@@ -2283,12 +2285,12 @@ void DeepBeliefNet::contrastiveDivergenceStep(
                 up_layer->getAllActivations( connection, 0, mbatch );
                 up_layer->computeExpectations();
 
-                neg_down_vals = down_layer->getExpectations();
-                neg_up_vals = up_layer->getExpectations();
+                mf_cd_neg_down_vals << down_layer->getExpectations();
+                mf_cd_neg_up_vals << up_layer->getExpectations();
             }
-            else
+            
+            if( mean_field_contrastive_divergence_ratio <  1 )
             {
-                up_layer->generateSamples();
                 if( use_sample_for_up_layer )
                     pos_up_vals << up_layer->samples;
                 connection->setAsUpInputs( up_layer->samples );
@@ -2313,10 +2315,45 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             if (background_gibbs_update_ratio==0)
             // update here only if there is ONLY contrastive divergence
             {
-                down_layer->update( pos_down_vals, neg_down_vals );
-                connection->update( pos_down_vals, pos_up_vals,
-                                    neg_down_vals, neg_up_vals );
-                up_layer->update( pos_up_vals, neg_up_vals );
+                if( mean_field_contrastive_divergence_ratio < 1 )
+                {
+                    real lr_dl = down_layer->learning_rate;
+                    real lr_ul = up_layer->learning_rate;
+                    real lr_c = connection->learning_rate;
+
+                    down_layer->setLearningRate(lr_dl * (1-mean_field_contrastive_divergence_ratio));
+                    up_layer->setLearningRate(lr_ul * (1-mean_field_contrastive_divergence_ratio));
+                    connection->setLearningRate(lr_c * (1-mean_field_contrastive_divergence_ratio));
+
+                    down_layer->update( pos_down_vals, neg_down_vals );
+                    connection->update( pos_down_vals, pos_up_vals,
+                                        neg_down_vals, neg_up_vals );
+                    up_layer->update( pos_up_vals, neg_up_vals );
+
+                    down_layer->setLearningRate(lr_dl);
+                    up_layer->setLearningRate(lr_ul);
+                    connection->setLearningRate(lr_c);
+                }
+
+                if( mean_field_contrastive_divergence_ratio > 0 )
+                {
+                    real lr_dl = down_layer->learning_rate;
+                    real lr_ul = up_layer->learning_rate;
+                    real lr_c = connection->learning_rate;
+
+                    down_layer->setLearningRate(lr_dl * mean_field_contrastive_divergence_ratio);
+                    up_layer->setLearningRate(lr_ul * mean_field_contrastive_divergence_ratio);
+                    connection->setLearningRate(lr_c * mean_field_contrastive_divergence_ratio);
+
+                    down_layer->update( pos_down_vals, mf_cd_neg_down_vals );
+                    connection->update( pos_down_vals, pos_up_vals,
+                                        mf_cd_neg_down_vals, mf_cd_neg_up_vals );
+                    up_layer->update( pos_up_vals, mf_cd_neg_up_vals );
+
+                    down_layer->setLearningRate(lr_dl);
+                    up_layer->setLearningRate(lr_ul);
+                    connection->setLearningRate(lr_c);
+                }
             }
             else
             {
@@ -2382,59 +2419,96 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             down_state << down_layer->samples;
         }
     } else {
-        if( !use_mean_field_contrastive_divergence )
-            up_layer->generateSample();
-
         // accumulate positive stats using the expectation
         // we deep-copy because the value will change during negative phase
         pos_down_val.resize( down_layer->size );
         pos_up_val.resize( up_layer->size );
 
-        pos_down_val << down_layer->expectation;
-        if( use_sample_for_up_layer )
-            pos_up_val << up_layer->sample;
-        else
-            pos_up_val << up_layer->expectation;
-
-        // down propagation, starting from a sample of up_layer
-        if( use_mean_field_contrastive_divergence )
-            connection->setAsUpInput( up_layer->expectation );
-        else
-            connection->setAsUpInput( up_layer->sample );
-
-        down_layer->getAllActivations( connection );
-        down_layer->computeExpectation();
-        if( !use_mean_field_contrastive_divergence )
-            down_layer->generateSample();
-
-        // negative phase
-        if( use_mean_field_contrastive_divergence )
-            connection->setAsDownInput( down_layer->expectation );
-        else
-            connection->setAsDownInput( down_layer->sample );
-        up_layer->getAllActivations( connection, 0, mbatch );
-        up_layer->computeExpectation();
-        // accumulate negative stats
-        // no need to deep-copy because the values won't change before update
         Vec neg_down_val;
-        if( use_mean_field_contrastive_divergence )
-            neg_down_val = down_layer->expectation;
-        else
-            neg_down_val = down_layer->sample;
         Vec neg_up_val;
-        if( use_sample_for_up_layer )
+
+        pos_down_val << down_layer->expectation;
+        pos_up_val << up_layer->expectation;
+        up_layer->generateSample();
+            
+        // negative phase
+        // down propagation, starting from a sample of up_layer
+        if( mean_field_contrastive_divergence_ratio > 0 )
         {
-            up_layer->generateSample();
-            neg_up_val = up_layer->sample;
+            connection->setAsUpInput( up_layer->expectation );
+            down_layer->getAllActivations( connection );
+            down_layer->computeExpectation();
+            connection->setAsDownInput( down_layer->expectation );
+            up_layer->getAllActivations( connection, 0, mbatch );
+            up_layer->computeExpectation();
+            mf_cd_neg_down_val.resize( down_layer->size );
+            mf_cd_neg_up_val.resize( up_layer->size );
+            mf_cd_neg_down_val << down_layer->expectation;
+            mf_cd_neg_up_val << up_layer->expectation;
         }
-        else
-            neg_up_val = up_layer->expectation;
+
+        if( mean_field_contrastive_divergence_ratio < 1 )
+        {
+            if( use_sample_for_up_layer )
+                pos_up_val << up_layer->sample;
+            connection->setAsUpInput( up_layer->sample );
+            down_layer->getAllActivations( connection );
+            down_layer->computeExpectation();
+            down_layer->generateSample();
+            connection->setAsDownInput( down_layer->sample );
+            up_layer->getAllActivations( connection, 0, mbatch );
+            up_layer->computeExpectation();
+
+            neg_down_val = down_layer->sample;
+            if( use_sample_for_up_layer )
+            {
+                up_layer->generateSample();
+                neg_up_val = up_layer->sample;
+            }
+            else
+                neg_up_val = up_layer->expectation;
+        }
 
         // update
-        down_layer->update( pos_down_val, neg_down_val );
-        connection->update( pos_down_val, pos_up_val,
-                neg_down_val, neg_up_val );
-        up_layer->update( pos_up_val, neg_up_val );
+        if( mean_field_contrastive_divergence_ratio < 1 )
+        {
+            real lr_dl = down_layer->learning_rate;
+            real lr_ul = up_layer->learning_rate;
+            real lr_c = connection->learning_rate;
+            
+            down_layer->setLearningRate(lr_dl * (1-mean_field_contrastive_divergence_ratio));
+            up_layer->setLearningRate(lr_ul * (1-mean_field_contrastive_divergence_ratio));
+            connection->setLearningRate(lr_c * (1-mean_field_contrastive_divergence_ratio));
+            
+            down_layer->update( pos_down_val, neg_down_val );
+            connection->update( pos_down_val, pos_up_val,
+                                neg_down_val, neg_up_val );
+            up_layer->update( pos_up_val, neg_up_val );
+            
+            down_layer->setLearningRate(lr_dl);
+            up_layer->setLearningRate(lr_ul);
+            connection->setLearningRate(lr_c);
+        }
+
+        if( mean_field_contrastive_divergence_ratio > 0 )
+        {
+            real lr_dl = down_layer->learning_rate;
+            real lr_ul = up_layer->learning_rate;
+            real lr_c = connection->learning_rate;
+            
+            down_layer->setLearningRate(lr_dl * mean_field_contrastive_divergence_ratio);
+            up_layer->setLearningRate(lr_ul * mean_field_contrastive_divergence_ratio);
+            connection->setLearningRate(lr_c * mean_field_contrastive_divergence_ratio);
+            
+            down_layer->update( pos_down_val, mf_cd_neg_down_val );
+            connection->update( pos_down_val, pos_up_val,
+                                mf_cd_neg_down_val, mf_cd_neg_up_val );
+            up_layer->update( pos_up_val, mf_cd_neg_up_val );
+            
+            down_layer->setLearningRate(lr_dl);
+            up_layer->setLearningRate(lr_ul);
+            connection->setLearningRate(lr_c);
+        }
     }
 }
 

@@ -194,9 +194,10 @@ public:
     //! stage==0)
     int gibbs_chain_reinit_freq;
 
-    //! Indication that mean-field contrastive divergence
-    //! should be used instead of standard contrastive divergence.
-    bool use_mean_field_contrastive_divergence;
+    //! Coefficient between 0 and 1. 0 means CD-1 update only and
+    //! 1 means MF-CD only. Values in between means a weighted 
+    //! combination of both.
+    real mean_field_contrastive_divergence_ratio;
 
     //! The number of samples to use to compute training stats.
     //! -1 (default) means the number of training samples.
@@ -370,6 +371,10 @@ protected:
     mutable Mat pos_up_vals;
     mutable Mat cd_neg_down_vals;
     mutable Mat cd_neg_up_vals;
+    mutable Mat mf_cd_neg_down_vals;
+    mutable Mat mf_cd_neg_up_vals;
+    mutable Vec mf_cd_neg_down_val;
+    mutable Vec mf_cd_neg_up_val;
 
     //! Store the state of the Gibbs chain for each RBM
     mutable TVec<Mat> gibbs_down_state;
