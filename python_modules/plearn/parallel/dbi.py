@@ -759,6 +759,7 @@ class DBICondor(DBIBase):
         self.universe = "vanilla"
         self.machine = []
         self.machines = []
+        self.to_all = False
 
         DBIBase.__init__(self, commands, **args)
 
@@ -1236,20 +1237,28 @@ class DBICondor(DBIBase):
             for i in condor_datas:
                 condor_submit_fd.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
         else:
-            def print_task(task, stdout_file, stderr_file):
+            def print_task(task, stdout_file, stderr_file,req=""):
                 argstring = condor_escape_argument(' ; '.join(task.commands))
                 condor_submit_fd.write("arguments    = %s \n" %argstring)
-                condor_submit_fd.write("output       = %s \n" %stdout_file)
-                condor_submit_fd.write("error        = %s \nqueue\n" %stderr_file)
-
+                if stdout_file:
+                    condor_submit_fd.write("output       = %s \n" %stdout_file)
+                if stderr_file:
+                    condor_submit_fd.write("error        = %s \nqueue\n" %stderr_file)
+                if req:
+                    condor_submit_fd.write("requirements   = %s\n"%(req))
+            reqs=[""]*len(self.tasks)
+            if self.to_all:
+                reqs=[]
+                for m in self.machine:
+                    reqs.append(self.req+'&&(Machine=="'+m+'")')
             if self.base_tasks_log_file:
-                for (task,task_log) in zip(self.tasks,self.base_tasks_log_file):
+                for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,reqs):
                     stdout_file=self.log_dir+"/condor"+task_log+".out"
                     stderr_file=self.log_dir+"/condor"+task_log+".err"
-                    print_task(task,stdout_file,stderr_file)
+                    print_task(task,stdout_file,stderr_file,req)
             elif self.stdouts and self.stderrs:
                 assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
-                for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
+                for (task,stdout_file,stderr_file,req) in zip(self.tasks,self.stdouts,self.stderrs,reqs):
                     if stdout_file==stderr_file:
                         print "Condor can't redirect the stdout and stderr to the same file!"
                         sys.exit(1)
@@ -1258,9 +1267,8 @@ class DBICondor(DBIBase):
                 print "DBICondor should have stdouts and stderrs or none of them"
                 sys.exit(1)
             else:
-                for task in self.tasks:
-                    argstring =condor_escape_argument(' ; '.join(task.commands))
-                    condor_submit_fd.write("arguments      = %s \nqueue\n" %argstring)
+                for (task,req) in zip(self.tasks,reqs):
+                    print_task(task, "", "", req)
         condor_submit_fd.close()
 
         self.make_launch_script('sh -c "$@"')
@@ -1314,8 +1322,9 @@ class DBICondor(DBIBase):
                             self.os.split(','),
                             self.req+'&&(False ')+")"
         machine_choice=[]
-        for m in self.machine:
-            machine_choice.append('(Machine=="'+m+'")')
+        if not self.to_all:
+            for m in self.machine:
+                machine_choice.append('(Machine=="'+m+'")')
         for m in self.machines:
             machine_choice.append('(regexp("'+m+'", target.Machine))')
         if machine_choice:
