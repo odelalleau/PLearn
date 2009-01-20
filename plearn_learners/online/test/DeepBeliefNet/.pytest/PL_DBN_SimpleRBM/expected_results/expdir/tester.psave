@@ -101,7 +101,7 @@ verbosity = 1  )
 i_output_layer = 1 ;
 connections = 1 [ *10 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.560455637071321955 	0.444593612352269352 	
+-0.560455637071321955 	0.444593612352269463 	
 0.660992724240852536 	-0.608576095398922656 	
 ]
 ;
@@ -134,8 +134,8 @@ previous_to_last = *10  ;
 last_layer = *9  ;
 last_to_target = *12 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.585660771216213738 	0.00133253715303369722 	
--0.342792729210354141 	-0.0547933521911874305 	
+-0.585660771216213738 	0.00133253715303371933 	
+-0.342792729210354141 	-0.0547933521911874166 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -222,7 +222,7 @@ use_sample_for_up_layer = 0 ;
 online = 0 ;
 background_gibbs_update_ratio = 0 ;
 gibbs_chain_reinit_freq = 2147483647 ;
-use_mean_field_contrastive_divergence = 0 ;
+mean_field_contrastive_divergence_ratio = 0 ;
 train_stats_window = -1 ;
 top_layer_joint_cd = 0 ;
 n_layers = 2 ;

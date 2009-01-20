@@ -79,7 +79,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.0041988074813960885 0.00291521845148070419 ] ;
+bias = 2 [ -0.00419880748139610759 0.0029152184514807198 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMBinomialLayer" ;
@@ -93,7 +93,7 @@ i_output_layer = 1 ;
 connections = 1 [ *9 ->RBMMatrixConnection(
 weights = 2  2  [ 
 -0.222066209664342068 	0.582925561708350082 	
-0.516883916989072545 	-0.316272804129796303 	
+0.516883916989072434 	-0.316272804129796303 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -125,8 +125,8 @@ previous_to_last = *9  ;
 last_layer = *8  ;
 last_to_target = *11 ->RBMMatrixConnection(
 weights = 2  2  [ 
--0.603392333131359426 	0.370787384786479657 	
-0.09708625652197031 	-0.668099599496062679 	
+-0.603392333131359537 	0.370787384786479657 	
+0.0970862565219703239 	-0.668099599496062679 	
 ]
 ;
 gibbs_ma_schedule = []
@@ -163,7 +163,7 @@ gibbs_ma_schedule = []
 ;
 gibbs_ma_increment = 0.100000000000000006 ;
 gibbs_initial_ma_coefficient = 0.100000000000000006 ;
-bias = 2 [ -0.00487910443291659449 0.00487910443291660317 ] ;
+bias = 2 [ -0.00487910443291655199 0.00487910443291657281 ] ;
 input_size = 2 ;
 output_size = 2 ;
 name = "RBMMultinomialLayer" ;
@@ -213,7 +213,7 @@ use_sample_for_up_layer = 0 ;
 online = 0 ;
 background_gibbs_update_ratio = 0 ;
 gibbs_chain_reinit_freq = 2147483647 ;
-use_mean_field_contrastive_divergence = 0 ;
+mean_field_contrastive_divergence_ratio = 0 ;
 train_stats_window = -1 ;
 top_layer_joint_cd = 0 ;
 n_layers = 2 ;
@@ -283,7 +283,7 @@ relative_min_improvement = -1 ;
 max_degraded_steps = 31 ;
 min_n_steps = 0 ;
 nreturned = 16 ;
-best_objective = 0.614096318051678525 ;
+best_objective = 0.614096318051678636 ;
 best_step = 16 ;
 met_early_stopping = 0  )
 ;
@@ -297,8 +297,8 @@ splitter = *0 ;
 auto_save = 0 ;
 auto_save_diff_time = 10800 ;
 auto_save_test = 0 ;
-best_objective = 0.614096318051678525 ;
-best_results = 4 [ 0.651261219307483818 0.5 0.614096318051678525 0 ] ;
+best_objective = 0.614096318051678636 ;
+best_results = 4 [ 0.651261219307483818 0.5 0.614096318051678636 0 ] ;
 best_learner = *5  ;
 trialnum = 16 ;
 option_vals = []
