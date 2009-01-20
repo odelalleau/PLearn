@@ -1246,19 +1246,21 @@ class DBICondor(DBIBase):
                     condor_submit_fd.write("error        = %s \nqueue\n" %stderr_file)
                 if req:
                     condor_submit_fd.write("requirements   = %s\n"%(req))
-            reqs=[""]*len(self.tasks)
+            local_req=[""]*len(self.tasks)
             if self.to_all:
-                reqs=[]
+                local_req=[]
                 for m in self.machine:
-                    reqs.append(self.req+'&&(Machine=="'+m+'")')
+                    local_req.append(self.req+'&&(Machine=="'+m+'")')
             if self.base_tasks_log_file:
-                for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,reqs):
+                for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,
+                                               local_req):
                     stdout_file=self.log_dir+"/condor"+task_log+".out"
                     stderr_file=self.log_dir+"/condor"+task_log+".err"
                     print_task(task,stdout_file,stderr_file,req)
             elif self.stdouts and self.stderrs:
                 assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
-                for (task,stdout_file,stderr_file,req) in zip(self.tasks,self.stdouts,self.stderrs,reqs):
+                for (task,stdout_file,stderr_file,req) in zip(self.tasks,self.stdouts,
+                                                              self.stderrs,local_req):
                     if stdout_file==stderr_file:
                         print "Condor can't redirect the stdout and stderr to the same file!"
                         sys.exit(1)
@@ -1267,7 +1269,7 @@ class DBICondor(DBIBase):
                 print "DBICondor should have stdouts and stderrs or none of them"
                 sys.exit(1)
             else:
-                for (task,req) in zip(self.tasks,reqs):
+                for (task,req) in zip(self.tasks,local_req):
                     print_task(task, "", "", req)
         condor_submit_fd.close()
 
@@ -1323,6 +1325,8 @@ class DBICondor(DBIBase):
                             self.req+'&&(False ')+")"
         machine_choice=[]
         if not self.to_all:
+            #we don't put them in the requirement here
+            #as they will be "local" requirement to each jobs.
             for m in self.machine:
                 machine_choice.append('(Machine=="'+m+'")')
         for m in self.machines:
