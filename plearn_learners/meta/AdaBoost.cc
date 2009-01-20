@@ -1063,10 +1063,11 @@ void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         if(training_set->classname()!="RegressionTreeRegisters")
             training_set = new RegressionTreeRegisters(training_set,
                                                        report_progress,
-                                                       verbosity);
+                                                       verbosity,
+                                                       will_train, will_train);
 
         //we need to change the weight of the trainning set to reuse the RegressionTreeRegister
-        if(!modif_train_set_weights)
+        if(!modif_train_set_weights){
             if(training_set->weightsize()==1)
                 modif_train_set_weights=1;
             else
@@ -1075,6 +1076,7 @@ void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
                           <<" training_set don't have a weigth. This will cause"
                           <<" the creation of a RegressionTreeRegisters at"
                           <<" each stage of AdaBoost!";
+        }
         //we do this as RegressionTreeNode need a train_set for getTestCostNames
         if(!weak_learner_template->getTrainingSet())
             weak_learner_template->setTrainingSet(training_set,call_forget);
