@@ -230,22 +230,13 @@ int MultiClassAdaBoost::outputsize() const
 
 void MultiClassAdaBoost::finalize()
 {
+    inherited::finalize();
     learner1->finalize();
     learner2->finalize();
 }
 
 void MultiClassAdaBoost::forget()
 {
-    //! (Re-)initialize the PLearner in its fresh state (that state may depend
-    //! on the 'seed' option) and sets 'stage' back to 0 (this is the stage of
-    //! a fresh learner!)
-    /*!
-      A typical forget() method should do the following:
-      - call inherited::forget() to initialize its random number generator
-        with the 'seed' option
-      - initialize the learner's parameters, using this random generator
-      - stage = 0
-    */
     inherited::forget();
 
     stage = 0;
