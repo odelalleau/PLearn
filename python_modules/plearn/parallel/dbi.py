@@ -103,8 +103,7 @@ class MultiThread:
         if maxThreads==-1:
             nb_thread=len(argsVector)
         elif maxThreads<=0:
-            print "[DBI] you set %d concurrent jobs. Must be higher then 0!!"%(maxThreads)
-            sys.exit(1)
+            raise DBIError("[DBI] ERROR: you set %d concurrent jobs. Must be higher then 0!!"%(maxThreads))
         else:
             nb_thread=maxThreads
         if nb_thread>len(argsVector):
@@ -563,10 +562,7 @@ class DBIBqtools(DBIBase):
 
 ### We can't accept the symbols "," as this cause trouble with bqtools
         if self.log_dir.find(',')!=-1 or self.log_file.find(',')!=-1:
-            print "[DBI] ERROR: The log file and the log dir should not have the symbol ','"
-            print "[DBI] log file=",self.log_file
-            print "[DBI] log dir=",self.log_dir
-            sys.exit(1)
+            raise DBIError("[DBI] ERROR: The log file(%s) and the log dir(%s) should not have the symbol ','"%(self.log_file,self.log_dir))
 
         # create directory in which all the temp files will be created
         if not os.path.exists(self.tmp_dir):
@@ -721,8 +717,9 @@ def condor_dag_escape_argument(argstring):
     # escape the double quote so that dagman handle it corretly
     # DAGMAN don't handle single quote!!!
     if "'" in argstring:
-        print "[DBI] ERROR: the condor back-end with dagman don't support using the ' symbol in the command line"
-        sys.exit(1)
+        raise DBIError("[DBI] ERROR: the condor back-end with dagman don't support using the ' symbol in the command to execute")
+    if ";" in argstring:
+        raise DBIError("[DBI] ERROR: the condor back-end with dagman don't support the symbol ';' in the command to execute!")
     return argstring.replace('"',r'\\\"')
 
 class DBICondor(DBIBase):
@@ -765,13 +762,11 @@ class DBICondor(DBIBase):
 
         valid_universe = ["standard", "vanilla", "grid", "java", "scheduler", "local", "parallel", "vm"]
         if not self.universe in valid_universe:
-            print "[DBI] ERROR: the universe option have an invalid value",self.universe,". Valid values are:",valid_universe
-            sys.exit(1)
+            raise DBIError("[DBI] ERROR: the universe option have an invalid value",self.universe,". Valid values are:",valid_universe)
         if self.universe=="local":
             n=subprocess.Popen("cat /proc/cpuinfo |grep processor|wc -l", shell = True, stdout=PIPE).stdout.readline()
             if len(commands)>int(n):
-                print "[DBI] ERROR we refuse to start more jobs on the local universe then the total number of core. Start less jobs or use another universe."
-                sys.exit(1)
+                raise DBIError("[DBI] ERROR we refuse to start more jobs on the local universe then the total number of core. Start less jobs or use another universe.")
 
         #transform from meg to kilo
         self.mem=int(self.mem)*1024
@@ -858,7 +853,7 @@ class DBICondor(DBIBase):
                 newcommand+='; else '
                 newcommand+=c+".32"+c2+'; fi'
                 if not os.access(c+".64", os.X_OK):
-                    raise Exception("The command '"+c+".64' does not have execution permission!")
+                    raise DBIError("[DBI] ERROR: The command '"+c+".64' does not have execution permission!")
 #                newcommand=command
                 c+=".32"
             elif self.cplat=="INTEL" and os.path.exists(c+".32"):
@@ -877,9 +872,9 @@ class DBICondor(DBIBase):
                 pass
             elif not os.path.exists(c):
                 if not os.path.abspath(c):
-                    raise Exception("The command '"+c+"' does not exist!")
+                    raise DBIError("[DBI] ERROR: The command '"+c+"' does not exist!")
             elif not os.access(c, os.X_OK):
-                raise Exception("The command '"+c+"' does not have execution permission!")
+                raise DBIError("[DBI] ERROR: The command '"+c+"' does not have execution permission!")
 
             self.tasks.append(Task(newcommand, self.tmp_dir, self.log_dir,
                                    self.time_format, self.pre_tasks,
@@ -906,8 +901,7 @@ class DBICondor(DBIBase):
             if err.startswith('La tache a soumettre est dans: '):
                 pkdilly_file = err.split()[-1]
         if not pkdilly_file:
-            print "[DBI] ERROR: pkdilly didn't returned a good string"
-            sys.exit(1)
+            raise DBIError("[DBI] ERROR: pkdilly didn't returned a good string")
 
         pkdilly_fd = open( pkdilly_file, 'r' )
         lines = pkdilly_fd.readlines()
@@ -1087,6 +1081,8 @@ class DBICondor(DBIBase):
             os.rename(launch_tmp_file, self.launch_file)
 
     def run_dag(self):
+        if self.to_all:
+            raise DBIError("[DBI] ERROR: condor backend don't support the option --to_all and a maximum number of process")
         condor_submit_fd = open( self.condor_submit_file, 'w' )
 
         self.log_file = os.path.join("/tmp/bastienf/dbidispatch",self.log_dir)
@@ -1129,11 +1125,6 @@ class DBICondor(DBIBase):
 
         condor_dag_file = self.condor_submit_file+".dag"
         condor_dag_fd = open( condor_dag_file, 'w' )
-        for task in self.tasks:
-            for c in task.commands:
-                if ";" in c:
-                    print "[DBI] ERROR the option --condor=N don't support the symbol ';' in the command to execute!"
-                    sys.exit(1)
 
         if self.base_tasks_log_file:
             for i in range(len(self.tasks)):
@@ -1148,19 +1139,11 @@ class DBICondor(DBIBase):
         elif self.stdouts and self.stderrs:
             assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
             for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
-                if stdout_file==stderr_file:
-                    print "Condor can't redirect the stdout and stderr to the same file!"
-                    sys.exit(1)
                 argstring =condor_dag_escape_argument(' ; '.join(task.commands))
                 condor_dag_fd.write("JOB %d %s\n"%(i,self.condor_submit_file))
                 condor_dag_fd.write('VARS %d args="%s"\n'%(i,argstring))
                 condor_dag_fd.write('VARS %d stdout="%s"\n'%(i,stdout_file))
                 condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(i,stderr_file))
-
-
-        elif self.stdouts or self.stderrs:
-            print "DBICondor should have stdouts and stderrs or none of them"
-            sys.exit(1)
         else:
             #should not happen
             raise NotImplementedError()
@@ -1246,30 +1229,19 @@ class DBICondor(DBIBase):
                     condor_submit_fd.write("error        = %s \nqueue\n" %stderr_file)
                 if req:
                     condor_submit_fd.write("requirements   = %s\n"%(req))
-            local_req=[""]*len(self.tasks)
-            if self.to_all:
-                local_req=[]
-                for m in self.machine:
-                    local_req.append(self.req+'&&(Machine=="'+m+'")')
             if self.base_tasks_log_file:
                 for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,
-                                               local_req):
+                                               self.tasks_req):
                     stdout_file=self.log_dir+"/condor"+task_log+".out"
                     stderr_file=self.log_dir+"/condor"+task_log+".err"
                     print_task(task,stdout_file,stderr_file,req)
             elif self.stdouts and self.stderrs:
                 assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
                 for (task,stdout_file,stderr_file,req) in zip(self.tasks,self.stdouts,
-                                                              self.stderrs,local_req):
-                    if stdout_file==stderr_file:
-                        print "Condor can't redirect the stdout and stderr to the same file!"
-                        sys.exit(1)
+                                                              self.stderrs,self.tasks_req):
                     print_task(task,stdout_file,stderr_file)
-            elif self.stdouts or self.stderrs:
-                print "DBICondor should have stdouts and stderrs or none of them"
-                sys.exit(1)
             else:
-                for (task,req) in zip(self.tasks,local_req):
+                for (task,req) in zip(self.tasks,self.tasks_req):
                     print_task(task, "", "", req)
         condor_submit_fd.close()
 
@@ -1288,10 +1260,16 @@ class DBICondor(DBIBase):
                     pass
                 pass
 
-
     def run(self):
         if (self.pkdilly and self.nb_proc > 0):
-            print "curently pkdilly with nb_proc >0 is not supported!"
+            raise DBIError("[DBI] ERROR: curently pkdilly with nb_proc >0 is not supported!")
+        if (self.stdouts and not self.stderrs) or (self.stderrs and not self.stdouts)
+            raise DBIError("[DBI] ERROR: the condor back-end should have both stdouts and stderrs or none of them")
+        if self.stdouts and self.stderrs:
+            assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
+            for (stdout_file,stderr_file) in zip(self.stdouts, self.stderrs):
+                if stdout_file==stderr_file:
+                    raise DBIError("[DBI] ERROR: the condor back-end can't redirect the stdout and stderr to the same file!")
 
         print "[DBI] The Log file are under %s"%self.log_dir
         if self.source_file and self.source_file.endswith(".cshrc"):
@@ -1324,11 +1302,17 @@ class DBICondor(DBIBase):
                             self.os.split(','),
                             self.req+'&&(False ')+")"
         machine_choice=[]
+        self.tasks_req=[""]*len(self.tasks)
         if not self.to_all:
             #we don't put them in the requirement here
             #as they will be "local" requirement to each jobs.
             for m in self.machine:
                 machine_choice.append('(Machine=="'+m+'")')
+        else:
+            assert(len(self.machines)==0)
+            for m in self.machine:
+                self.tasks_req.append(self.req+'&&(Machine=="'+m+'")')
+
         for m in self.machines:
             machine_choice.append('(regexp("'+m+'", target.Machine))')
         if machine_choice:
@@ -1446,7 +1430,7 @@ class DBILocal(DBIBase):
             # same architecture as the architecture of the launch computer
 
             if not os.access(c, os.X_OK):
-                raise Exception("The command '"+c+"' does not exist or does not have execution permission!")
+                raise DBIError("[DBI] ERROR: The command '"+c+"' does not exist or does not have execution permission!")
             self.tasks.append(Task(command, tmp_dir, log_dir,
                                    time_format, pre_tasks,
                                    post_tasks,dolog,id,False,self.args))
@@ -1609,8 +1593,7 @@ def get_platform():
 def find_all_ssh_hosts():
     hostspath_list = [os.path.join(os.getenv("HOME"),".pymake",get_platform()+'.hosts')]
     if os.path.exists(hostspath_list[0])==0:
-        print "[DBI] no host file %s for the ssh backend"%(hostspath_list[0])
-        sys.exit(1)
+        raise DBIError("[DBI] ERROR: no host file %s for the ssh backend"%(hostspath_list[0]))
     print "[DBI] using file %s for the list of host"%(hostspath_list[0])
 #    from plearn.pymake.pymake import process_hostspath_list
 #    (list_of_hosts, nice_values) = process_hostspath_list(hostspath_list,19,get_hostname())
