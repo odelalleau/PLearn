@@ -60,7 +60,9 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeRegisters,
 RegressionTreeRegisters::RegressionTreeRegisters():
     report_progress(0),
     verbosity(0),
-    next_id(0)
+    next_id(0),
+    do_sort_rows(true),
+    mem_tsource(true)
 {
     build();
 }
@@ -69,10 +71,14 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
                                                  TMat<RTR_type> tsorted_row_,
                                                  VMat tsource_,
                                                  bool report_progress_,
-                                                 bool verbosity_):
+                                                 bool verbosity_,
+                                                 bool do_sort_rows_,
+                                                 bool mem_tsource_):
     report_progress(report_progress_),
     verbosity(verbosity_),
-    next_id(0)
+    next_id(0),
+    do_sort_rows(do_sort_rows_),
+    mem_tsource(mem_tsource_)
 {
     source = source_;
     tsource = tsource_;
@@ -82,10 +88,14 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
 
 RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
                                                  bool report_progress_,
-                                                 bool verbosity_):
+                                                 bool verbosity_,
+                                                 bool do_sort_rows_,
+                                                 bool mem_tsource_):
     report_progress(report_progress_),
     verbosity(verbosity_),
-    next_id(0)
+    next_id(0),
+    do_sort_rows(do_sort_rows_),
+    mem_tsource(mem_tsource_)
 {
     source = source_;
     build();
@@ -113,6 +123,15 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
                   "The next id for creating a new leave\n");
     declareOption(ol, "leave_register", &RegressionTreeRegisters::leave_register, OptionBase::learntoption,
                   "The vector identifying the leave to which, each row belongs\n");
+
+    declareOption(ol, "do_sort_rows", &RegressionTreeRegisters::do_sort_rows,
+                  OptionBase::buildoption,
+                  "Do we generate the sorted rows? Not usefull if used only to test.\n");
+
+    declareOption(ol, "mem_tsource", &RegressionTreeRegisters::mem_tsource,
+                  OptionBase::buildoption,
+                  "Do we put the tsource in memory? default to true as this"
+                  " give an great speed up for the trainning of RegressionTree.\n");
 
     //too big to save
     declareOption(ol, "tsorted_row", &RegressionTreeRegisters::tsorted_row, OptionBase::nosave,
@@ -154,11 +173,13 @@ void RegressionTreeRegisters::build_()
     PLCHECK(source->inputsize()>0);
 
     if(!tsource){
-        VMat tmp = VMat(new TransposeVMatrix(new SubVMatrix(
-                                                 source, 0,0,source->length(),
-                                                 source->inputsize())));
-        PP<MemoryVMatrixNoSave> tmp2 = new MemoryVMatrixNoSave(tmp);
-        tsource = VMat(tmp2 );
+        tsource = VMat(new TransposeVMatrix(new SubVMatrix(
+                                                source, 0,0,source->length(),
+                                                source->inputsize())));
+        if(do_sort_rows){
+            PP<MemoryVMatrixNoSave> tmp = new MemoryVMatrixNoSave(tsource);
+            tsource = VMat(tmp);
+        }
     }
     setMetaInfoFrom(source);
     weightsize_=1;
@@ -194,7 +215,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     getAllRegisteredRow(leave_id,col,reg);
     target.resize(reg.length());
     weight.resize(reg.length());
-    value.resize(reg.length());
+    value.resize(reg.length());    
     if(weightsize() <= 0){
         weight.fill(1.0 / length());
         for(int i=0;i<reg.length();i++){            
@@ -239,6 +260,8 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
 void RegressionTreeRegisters::sortRows()
 {
     next_id = 0;
+    if(!do_sort_rows)
+        return;
     if (tsorted_row.length() == inputsize() && tsorted_row.width() == length())
     {
         verbose("RegressionTreeRegisters: Sorted train set indices are present, no sort required", 3);

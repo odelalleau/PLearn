@@ -71,14 +71,12 @@ private:
 
     int  report_progress;
     int  verbosity;
-//    VMat train_set;
   
 /*
   Learnt options: they are sized and initialized if need be, at build() or reinitRegisters()
 */
 
     int       next_id;
-    //TMat<int> sorted_row;
 
     TMat<RTR_type> tsorted_row;
     TVec<RTR_type_id> leave_register;
@@ -88,14 +86,19 @@ private:
     TVec<pair<real,real> > target_weight;
     VMat source;
 
+    bool do_sort_rows;
+    bool mem_tsource;
+
 public:
 
     RegressionTreeRegisters();
     RegressionTreeRegisters(VMat source_, bool report_progress_ = false,
-                            bool vebosity_ = false);
+                            bool vebosity_ = false, bool do_sort_rows = true,
+                            bool mem_tsource_ = true);
     RegressionTreeRegisters(VMat source_, TMat<RTR_type> tsorted_row_,
                             VMat tsource_, bool report_progress_ = false,
-                            bool vebosity_ = false);
+                            bool vebosity_ = false, bool do_sort_rows = true,
+                            bool mem_tsource_ = true);
     virtual              ~RegressionTreeRegisters();
     
     PLEARN_DECLARE_OBJECT(RegressionTreeRegisters);
