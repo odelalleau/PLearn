@@ -1063,8 +1063,7 @@ void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         if(training_set->classname()!="RegressionTreeRegisters")
             training_set = new RegressionTreeRegisters(training_set,
                                                        report_progress,
-                                                       verbosity,
-                                                       will_train, will_train);
+                                                       verbosity);
 
         //we need to change the weight of the trainning set to reuse the RegressionTreeRegister
         if(!modif_train_set_weights){
