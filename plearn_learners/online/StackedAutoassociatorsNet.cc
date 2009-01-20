@@ -2752,6 +2752,10 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
         }
         reconstruction_connections[i]->setLearningRate( the_learning_rate );
     }
+
+    for( int i=0; i<greedy_target_connections.length(); i++ )
+        greedy_target_connections[i]->setLearningRate( the_learning_rate );
+
     layers[n_layers-1]->setLearningRate( the_learning_rate );
 
     final_cost->setLearningRate( the_learning_rate );
