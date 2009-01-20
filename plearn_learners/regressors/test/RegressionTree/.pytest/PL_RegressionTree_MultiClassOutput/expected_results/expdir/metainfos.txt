@@ -1,2 +1,2 @@
-__REVISION__ = "PL9601"
+__REVISION__ = "PL9855"
 data                                          = PLEARNDIR:examples/data/test_suite/linear_4x_2y_multi_class.vmat

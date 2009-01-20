@@ -81,7 +81,7 @@ multiclass_weights_sum = []
 ;
 l1_loss_function_factor = 0 ;
 l2_loss_function_factor = 0 ;
-id = -1 ;
+id = 0 ;
 missing_leave = 0 ;
 loss_function_weight = 0 ;
 verbosity = 0 ;
@@ -119,6 +119,7 @@ perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 0 ;
 save_stat_collectors = 1 ;
+save_split_stats = 1 ;
 save_learners = 0 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
@@ -134,7 +135,9 @@ global_template_stats_collector = *0 ;
 final_commands = []
 ;
 save_test_confidence = 0 ;
-enforce_clean_expdir = 1  )
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )
 ;
 option_fields = 1 [ "nstages" ] ;
 dont_restart_upon_change = 1 [ "nstages" ] ;
@@ -203,6 +206,7 @@ perf_evaluators = {};
 report_stats = 1 ;
 save_initial_tester = 1 ;
 save_stat_collectors = 1 ;
+save_split_stats = 1 ;
 save_learners = 0 ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
@@ -218,4 +222,6 @@ global_template_stats_collector = *0 ;
 final_commands = []
 ;
 save_test_confidence = 0 ;
-enforce_clean_expdir = 1  )
+enforce_clean_expdir = 1 ;
+redirect_stdout = 0 ;
+redirect_stderr = 0  )

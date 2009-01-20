@@ -57,7 +57,7 @@ Vec RegressionTreeLeave::dummy_vec;
 RegressionTreeLeave::RegressionTreeLeave():
     missing_leave(false),
     loss_function_weight(0),
-    id(-1),
+    id(0),
     length_(0),
     weights_sum(0),
     targets_sum(0),
