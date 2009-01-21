@@ -73,6 +73,7 @@ PLearner::PLearner()
       parallelize_here(true),
       master_sends_testset_rows(false),
       use_a_separate_random_generator_for_testing(1827),
+      finalized(false),
       inputsize_(-1),
       targetsize_(-1),
       weightsize_(-1),
@@ -261,6 +262,14 @@ void PLearner::declareOptions(OptionList& ol)
         "(which is probably not desired here).\n"
         "Note that this option might not be taken into account in some\n"
         "sub-classes that override the PLearner's test method.");
+
+    declareOption(
+        ol, "finalized", &PLearner::finalized,
+        OptionBase::learntoption,
+        "(default false)"
+        " After training(when finalized() is called) it will be set to true.\n"
+        " When true, it mean the learner it won't be trained again and this\n"
+        " allow some optimization.\n");
 
     inherited::declareOptions(ol);
 }
@@ -651,6 +660,15 @@ void PLearner::forget()
     if (random_gen && seed_ != 0)
         random_gen->manual_seed(seed_);
     stage = 0;
+    finalized=false;
+}
+
+//////////////
+// finalize //
+//////////////
+void PLearner::finalize()
+{
+    finalized=true;
 }
 
 ////////////////

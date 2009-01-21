@@ -195,6 +195,15 @@ public:
      */
     int use_a_separate_random_generator_for_testing;
 
+
+    /**
+     * (default false)
+     * After training(when finalized() is called) it will be set to true.
+     * When true, it mean the learner it won't be trained again and this
+     * allow some optimization.
+     */
+    bool finalized;
+
 protected:
 
     /**
@@ -408,7 +417,7 @@ public:
      * So it can free resources that are needed only during the training.
      * The functions test()/computeOutputs()/... should continue to work.
      */
-    virtual void finalize(){};
+    virtual void finalize();
 
     /**
      *  *** SUBCLASS WRITING: ***

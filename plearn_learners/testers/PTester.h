@@ -120,6 +120,9 @@ public:
     /// is false yield MISSING_VALUE.
     bool should_test;
 
+    //! if true, we finalize the learner after training.
+    bool finalize_learner;
+
     /**
      *  If this option is true, the PTester ensures that the expdir does not
      *  already exist when the experiment is started, and gives a PLerror

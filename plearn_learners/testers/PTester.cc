@@ -101,6 +101,7 @@ PTester::PTester():
        save_test_confidence(false),
        should_train(true),
        should_test(true),
+       finalize_learner(false),
        enforce_clean_expdir(true),
        redirect_stdout(false),
        redirect_stderr(false),
@@ -246,7 +247,12 @@ void PTester::declareOptions(OptionList& ol)
         "to train only (without testing) and save the learners, and test later. \n"
         "Any test statistics that are required to be computed if 'should_test'\n"
         "is false yield MISSING_VALUE.\n");
-    
+
+    declareOption(
+        ol, "finalize_learner", &PTester::finalize_learner,
+        OptionBase::buildoption,
+        "Default false. If true, will finalize the learner after the training.");
+
     declareOption(
         ol, "template_stats_collector", &PTester::template_stats_collector, OptionBase::buildoption,
         "If provided, this instance of a subclass of VecStatsCollector will be used as a template\n"
@@ -544,6 +550,8 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
 
         train_stats->forget();
         learner->train();
+        if(finalize_learner)
+            learner->finalize();
         train_stats->finalize();
 
         if (is_splitdir)
