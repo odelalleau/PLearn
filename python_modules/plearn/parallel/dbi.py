@@ -658,8 +658,11 @@ class DBIBqtools(DBIBase):
             bqsubmit_dat.write('''microJobs = %d\n'''%(self.micro))
         if self.nano>0:
             bqsubmit_dat.write('''nanoJobs = %d\n'''%(self.nano))
-        if self.nb_proc>0:
-            bqsubmit_dat.write('''concurrentJobs = %d\n'''%(self.nb_proc))
+        p=self.nb_proc
+        if p==-1:
+            p=len(self.tasks)
+        if p>0:
+            bqsubmit_dat.write('''concurrentJobs = %d\n'''%(p))
         if self.raw:
             bqsubmit_dat.write(self.raw+"\n")
             
