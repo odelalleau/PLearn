@@ -1265,7 +1265,7 @@ class DBICondor(DBIBase):
     def run(self):
         if (self.pkdilly and self.nb_proc > 0):
             raise DBIError("[DBI] ERROR: curently pkdilly with nb_proc >0 is not supported!")
-        if (self.stdouts and not self.stderrs) or (self.stderrs and not self.stdouts)
+        if (self.stdouts and not self.stderrs) or (self.stderrs and not self.stdouts):
             raise DBIError("[DBI] ERROR: the condor back-end should have both stdouts and stderrs or none of them")
         if self.stdouts and self.stderrs:
             assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
