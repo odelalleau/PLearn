@@ -315,6 +315,7 @@ int AdaBoost::outputsize() const
 
 void AdaBoost::finalize()
 {
+    inherited::finalize();
     for(int i=0;i<weak_learners.size();i++){
         weak_learners[i]->finalize();
     }
@@ -1063,7 +1064,8 @@ void AdaBoost::setTrainingSet(VMat training_set, bool call_forget)
         if(training_set->classname()!="RegressionTreeRegisters")
             training_set = new RegressionTreeRegisters(training_set,
                                                        report_progress,
-                                                       verbosity);
+                                                       verbosity,
+                                                       !finalized, !finalized);
 
         //we need to change the weight of the trainning set to reuse the RegressionTreeRegister
         if(!modif_train_set_weights){

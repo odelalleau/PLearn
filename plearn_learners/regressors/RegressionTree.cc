@@ -277,6 +277,7 @@ void RegressionTree::verbose(string the_msg, int the_level)
 
 void RegressionTree::finalize()
 {
+    inherited::finalize();
     root->finalize();
     priority_queue = 0;
     split_cols = TVec<int>();
