@@ -548,8 +548,8 @@ class DBIBqtools(DBIBase):
     def __init__( self, commands, **args ):
         self.nb_proc = -1
         self.clean_up = True
-        self.micro = 1
-        self.nano = 1
+        self.micro = 0
+        self.nano = 0
         self.queue = "qwork"
         self.long = False
         self.duree = "120:00:00"
@@ -651,11 +651,13 @@ class DBIBqtools(DBIBase):
                 param1 = (task, logfile) = load tasks, logfiles
                 linkFiles = launcher
                 preBatch = rm -f _*.BQ
-                microJobs = %d
-                nanoJobs = %d
-                '''%(self.unique_id[1:12],self.queue,self.duree,self.micro,self.nano)) )
+                '''%(self.unique_id[1:12],self.queue,self.duree)) )
+        if self.micro>0:
+            bqsubmit_dat.write('''microJobs = %d\n'''%(self.micro))
+        if self.nano>0:
+            bqsubmit_dat.write('''nanoJobs = %d\n'''%(self.nano))
         if self.nb_proc>0:
-            bqsubmit_dat.write('''\nconcurrentJobs = %d\n'''%(self.nb_proc))
+            bqsubmit_dat.write('''concurrentJobs = %d\n'''%(self.nb_proc))
 
         print self.unique_id
         if self.clean_up:
