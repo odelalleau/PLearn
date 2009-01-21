@@ -11,6 +11,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     cluster, condor options  :[--32|--64|--3264] [--os=X] [--mem=N]
                               [--cpu=nb_cpu_per_node]
     bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,sh(condor only,clusterid(condor only),processid(condor only))}+]
+                              [--raw=STRING[\nSTRING]]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
                               [--queue=X]
                               [--nano=X]
@@ -19,7 +20,6 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [--rank=RANK_EXPRESSION] 
                               [--files=file1[,file2...]]
                               [--env=VAR=VALUE[;VAR2=VALUE2]]
-                              [--raw=CONDOR_EXPRESSION]
                               [*--[no_]abs_path] [--[*no_]pkdilly]
                               [*--[no_]set_special_env]
                               [--universe={vanilla*, standard, grid, java, scheduler, local, parallel, vm}]
@@ -114,6 +114,8 @@ bqtools and condor options:
                   to /dev/null
       - clusterid: (condor only)put the cluster id of the jobs.
       - processid: (condor only)put the process id of the jobs. Idem as nb0
+  The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the submit file.
+      if this option appread many time, they will be concatanated with a new line.
 
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. 
@@ -162,7 +164,6 @@ condor only options:
     jobs the variable VAR with value VALUE. To pass many variable you can:
       1) use one --env option and separ the pair by ';'(don't forget to quote)
       2) you can pass many time the --env parameter.
-  The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the condor submit file.
   The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
     MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
   The '--[no_]abs_path' option will tell condor to change the path to the 
@@ -357,7 +358,7 @@ elif launch_cmd=="Condor":
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines", "to_all"]
 elif launch_cmd=="Bqtools":
-    valid_dbi_param +=["micro", "long", "duree", "queue", "nano"]
+    valid_dbi_param +=["micro", "long", "duree", "queue", "nano", "raw"]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.

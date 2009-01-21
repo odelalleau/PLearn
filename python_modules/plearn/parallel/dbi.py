@@ -179,6 +179,7 @@ class DBIBase:
         self.temp_files = []
         self.arch = 0 # TODO, we should put the local arch: 32,64 or 3264 bits
         self.base_tasks_log_file = []
+        self.raw = ''
 
         for key in args.keys():
             self.__dict__[key] = args[key]
@@ -658,7 +659,9 @@ class DBIBqtools(DBIBase):
             bqsubmit_dat.write('''nanoJobs = %d\n'''%(self.nano))
         if self.nb_proc>0:
             bqsubmit_dat.write('''concurrentJobs = %d\n'''%(self.nb_proc))
-
+        if self.raw:
+            bqsubmit_dat.write(self.raw+"\n")
+            
         print self.unique_id
         if self.clean_up:
             bqsubmit_dat.write('postBatch = rm -rf dbi_batch*.BQ ; rm -f logfiles tasks launcher bqsubmit.dat ;')
@@ -734,7 +737,6 @@ class DBICondor(DBIBase):
         self.mem = 0
         self.cpu = 0
         self.req = ''
-        self.raw = ''
         self.rank = ''
         self.copy_local_source_file = False
         self.files = ''
@@ -1158,7 +1160,6 @@ class DBICondor(DBIBase):
         return condor_cmd
 
     def run_non_dag(self):
-        # create the bqsubmit.dat, with
         condor_datas = []
 
         #we supose that each task in tasks have the same number of commands
