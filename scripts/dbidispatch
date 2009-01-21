@@ -13,8 +13,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,sh(condor only,clusterid(condor only),processid(condor only))}+]
                               [--raw=STRING[\nSTRING]]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
-                              [--queue=X]
-                              [--nano=X]
+                              [--queue=X] [--nano=X] [--submit_options=X]
     condor option            :[--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
                               [--[*no_]getenv] [*--[no_]prefserver] 
                               [--rank=RANK_EXPRESSION] 
@@ -85,8 +84,9 @@ bqtools only options:
     set, and 1200:00:00 (50 days) otherwise. Since long jobs are launched on a
     different queue with few nodes, please make sure you are not using too many
     nodes at once with the --nb_proc option.
-  The '--queue=X' tell on witch queue the jobs will be launched
-  The '--nano=X'
+  The '--queue=X' tell on witch queue the jobs will be launched.
+  The '--nano=X' add nanoJobs=X in the submit file.
+  The '--submit_options=X' X is appended to the submitOptions in the submit file.
   
 cluster and condor options:
   The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
@@ -304,7 +304,7 @@ for argv in to_parse:
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
                                 "--universe", "--exp_dir", "--machine", "--machines",
-                                "--queue", "--nano"]:
+                                "--queue", "--nano", "--submit_options"]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -358,7 +358,7 @@ elif launch_cmd=="Condor":
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines", "to_all"]
 elif launch_cmd=="Bqtools":
-    valid_dbi_param +=["micro", "long", "duree", "queue", "nano", "raw"]
+    valid_dbi_param +=["micro", "long", "duree", "queue", "nano", "raw", "submit_options"]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.

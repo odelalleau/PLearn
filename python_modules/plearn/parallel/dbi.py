@@ -555,6 +555,7 @@ class DBIBqtools(DBIBase):
         self.long = False
         self.duree = "120:00:00"
         self.mem = None
+        self.submit_options = ""
         DBIBase.__init__(self, commands, **args)
 
         self.nb_proc = int(self.nb_proc)
@@ -648,11 +649,11 @@ class DBIBqtools(DBIBase):
                 batchName = dbi_%s
                 command = sh launcher
                 templateFiles = launcher
-                submitOptions = -q %s -l walltime=%s
+                submitOptions = -q %s -l walltime=%s %s
                 param1 = (task, logfile) = load tasks, logfiles
                 linkFiles = launcher
                 preBatch = rm -f _*.BQ
-                '''%(self.unique_id[1:12],self.queue,self.duree)) )
+                '''%(self.unique_id[1:12],self.queue,self.duree,self.submit_options)) )
         if self.micro>0:
             bqsubmit_dat.write('''microJobs = %d\n'''%(self.micro))
         if self.nano>0:
