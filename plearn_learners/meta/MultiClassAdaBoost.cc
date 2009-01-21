@@ -609,7 +609,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     }
 
     if(forward_test==2 && time_last_stage<time_last_stage_rtr){
-        DBG_MODULE_LOG<<"inherited start time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+        EXTREME_MODULE_LOG<<"inherited start time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
         Profiler::reset("MultiClassAdaBoost::test() current");
         Profiler::start("MultiClassAdaBoost::test() current");
         PLCHECK(last_stage<=stage);
@@ -618,10 +618,10 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         Profiler::end("MultiClassAdaBoost::test()");
         time_sum += Profiler::getStats("MultiClassAdaBoost::test() current").wall_duration;
         last_stage=stage;
-        DBG_MODULE_LOG<<"inherited end time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+        EXTREME_MODULE_LOG<<"inherited end time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
         return;
     }
-    DBG_MODULE_LOG<<"start time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+    EXTREME_MODULE_LOG<<"start time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
     Profiler::reset("MultiClassAdaBoost::test() current");
     Profiler::start("MultiClassAdaBoost::test() current");
     //Profiler::pl_profile_start("MultiClassAdaBoost::test() part1");//cheap
@@ -770,7 +770,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     time_sum_rtr += Profiler::getStats("MultiClassAdaBoost::test() current").wall_duration;
 
     last_stage=stage;
-    DBG_MODULE_LOG<<"end time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
+    EXTREME_MODULE_LOG<<"end time_sum="<<time_sum<<" time_sum_rtr="<<time_sum_rtr<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_rtr=" <<time_last_stage_rtr<<endl;
 
 }
 
