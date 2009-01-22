@@ -682,27 +682,8 @@ class DBIBqtools(DBIBase):
             self.p = Popen( 'bqsubmit', shell=True)
             self.p.wait()
             
-            #check for error string as bqsubmit don't already return an errorcode !=0 when their was an error.
-            error_str=False
-#            print self.p.stderr
-#            print dir(self.p.stderr)
-#            dir(self.p.stderr)
-#            print self.p.stderr.closed
-#            print self.p.stderr.peek
-#            help(self.p.stderr)
-#            self.p.stderr.flush()
-#            self.p.stderr.write('dd')
-#            print self.p.stderr.read()
-#            lines = self.p.stderr.readline()
-#            print len(lines)
-#            for line in lines:
-#                if line in ["qsub: Job exceeds queue resource limits MSG=cannot satisfy queue max walltime requirement\n"]:
-#                    error_str=True
-#                print line,
             if self.p.returncode!=0:
                 raise DBIError("[DBI] ERROR: the bqsubmit returned an error code of"+str(self.p.returncode))
-            if error_str:
-                raise DBIError("[DBI] ERROR: the bqsubmit returned an error string. It was probably not launched correctly.")
         else:
             print "[DBI] Test mode, we generate all the file, but we do not execute bqsubmit"
             if self.dolog:
