@@ -258,7 +258,8 @@ linkeroptions_tail = ''
 # First option that appears in each group is the default, and is assumed if you
 # do not specify any option from that group.
 options_choices = [
-  [ 'g++', 'g++3', 'g++no-cygwin', 'icc', 'icc8', 'icc9', 'icc10', 'mpi',
+  [ 'g++', 'g++3', 'g++no-cygwin', 'g++-4', 'icc',
+    'icc8', 'icc9', 'icc10', 'mpi',
     'purify', 'quantify', 'vc++', 'condor' ],
   
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
@@ -603,6 +604,15 @@ pymakeOption( name = 'g++no-cygwin',
                               + '-mno-cygwin',
               cpp_definitions = ['USING_MPI=0', '_MINGW_'],
               linker = 'g++ -mno-cygwin' )
+
+pymakeOption( name = 'g++-4',
+              description = 'compiling with g++, with no MPI support, ' \
+                          + 'without the need of the Cygwin DLL',
+              compiler = 'g++-4',
+              compileroptions = '-Wno-deprecated '+pedantic_mode \
+                              + '-Wno-long-long -ftemplate-depth-100 -Wno-variadic-macros',
+              cpp_definitions = ['USING_MPI=0'],
+              linker = 'g++-4' )
 
 pymakeOption( name = 'icc',   # For C++, it is actually icpc
               description = '(DEPRECATED, use icc8 or icc9 instead) compiling with Intel Compiler (version 8.x), with no MPI support',
