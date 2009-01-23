@@ -219,14 +219,14 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     if(weightsize() <= 0){
         weight.fill(1.0 / length());
         for(int i=0;i<reg.length();i++){            
-            target[i] = target_weight[reg[i]].first;
+            target[i] = target_weight[int(reg[i])].first;
             value[i]  = tsource->get(col, reg[i]);
         }
     } else {
         //It is better to do multiple pass for memory access.
         for(int i=0;i<reg.length();i++){
-            target[i] = target_weight[reg[i]].first;
-            weight[i] = target_weight[reg[i]].second;
+            target[i] = target_weight[int(reg[i])].first;
+            weight[i] = target_weight[int(reg[i])].second;
         }
         for(int i=0;i<reg.length();i++)
             value[i]  = tsource->get(col, reg[i]);
