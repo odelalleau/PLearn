@@ -180,6 +180,8 @@ class DBIBase:
         self.arch = 0 # TODO, we should put the local arch: 32,64 or 3264 bits
         self.base_tasks_log_file = []
         self.raw = ''
+        self.cpu = 0
+        self.mem = 0
 
         for key in args.keys():
             self.__dict__[key] = args[key]
@@ -189,6 +191,8 @@ class DBIBase:
 #            if self.dolog or self.file_redirect_stdout or self.file_redirect_stderr:
             os.mkdir(self.log_dir)
 
+        self.mem = int(self.mem)
+        self.cpu = int(self.cpu)
         # If some arguments aren't lists, put them in a list
         if not isinstance(commands, list):
             commands = [commands]
@@ -394,13 +398,11 @@ class DBICluster(DBIBase):
         self.cwait=True
         self.force=False
         self.interruptible=False
-        self.cpu=1
         self.threads=[]
         self.started=0
         self.nb_proc=32
         self.mt=None
         self.args=args
-        self.mem=None
         self.os=None
         DBIBase.__init__(self, commands, **args)
 
@@ -460,13 +462,13 @@ class DBICluster(DBIBase):
             command += " --duree "+self.duree
         if self.cwait:
             command += " --wait"
-        if self.mem:
+        if self.mem > 0:
             command += " --memoire "+self.mem
         if self.force:
             command += " --force"
         if self.interruptible:
             command += " --interruptible"
-        if self.cpu!=1:
+        if self.cpu>0:
             command += " --cpu "+self.cpu
         if self.os:
             command += " --os "+self.os
@@ -551,10 +553,9 @@ class DBIBqtools(DBIBase):
         self.clean_up = True
         self.micro = 0
         self.nano = 0
-        self.queue = "qwork"
+        self.queue = "qwork@ms"
         self.long = False
         self.duree = "120:00:00"
-        self.mem = None
         self.submit_options = ""
         DBIBase.__init__(self, commands, **args)
 
@@ -643,17 +644,31 @@ class DBIBqtools(DBIBase):
         tasks_file.close()
         logfiles_file.close()
 
+        tmp_options = self.submit_options
+        if self.queue:
+            tmp_options+=" -q "+self.queue
+        l=""
+        if self.cpu >0:
+            l+="ncpus="+str(self.cpu)
+        if self.mem >0:
+            if l: l+=","
+            l="mem=%dM"%(self.mem)
+        if self.duree:
+            if l: l+=","
+            l+="walltime="+self.duree
+        if l:
+            tmp_options+=" -l "+l
         # Create the bqsubmit.dat, with
         bqsubmit_dat = open( 'bqsubmit.dat', 'w' )
         bqsubmit_dat.write( dedent('''\
                 batchName = dbi_%s
                 command = sh launcher
                 templateFiles = launcher
-                submitOptions = -q %s -l walltime=%s %s
+                submitOptions = %s
                 param1 = (task, logfile) = load tasks, logfiles
                 linkFiles = launcher
                 preBatch = rm -f _*.BQ
-                '''%(self.unique_id[1:12],self.queue,self.duree,self.submit_options)) )
+                '''%(self.unique_id[1:12],tmp_options)) )
         if self.micro>0:
             bqsubmit_dat.write('''microJobs = %d\n'''%(self.micro))
         if self.nano>0:
@@ -668,7 +683,7 @@ class DBIBqtools(DBIBase):
             
         print self.unique_id
         if self.clean_up:
-            bqsubmit_dat.write('postBatch = rm -rf dbi_batch*.BQ ; rm -f logfiles tasks launcher bqsubmit.dat ;')
+            bqsubmit_dat.write('postBatch = rm -rf dbi_batch*.BQ ; rm -f logfiles tasks launcher bqsubmit.dat ;\n')
         bqsubmit_dat.close()
 
         # Execute pre-batch
@@ -719,8 +734,6 @@ class DBICondor(DBIBase):
         self.nice = False
         # in Meg for initialization for consistency with cluster
         # then in kilo as that is what is needed by condor
-        self.mem = 0
-        self.cpu = 0
         self.req = ''
         self.rank = ''
         self.copy_local_source_file = False
@@ -758,7 +771,7 @@ class DBICondor(DBIBase):
                 raise DBIError("[DBI] ERROR we refuse to start more jobs on the local universe then the total number of core. Start less jobs or use another universe.")
 
         #transform from meg to kilo
-        self.mem=int(self.mem)*1024
+        self.mem=self.mem*1024
 
         self.os = self.os.upper()
         if not os.path.exists(self.log_dir):

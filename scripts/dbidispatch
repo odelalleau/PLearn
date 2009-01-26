@@ -7,13 +7,20 @@ ScriptName="launchdbi.py"
 ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] <back-end parameter> {--file=FILEPATH | <command-template>}
 
 <back-end parameter>:
-    bqtools, cluster option  :[--duree=X]
-    cluster, condor options  :[--32|--64|--3264] [--os=X] [--mem=N]
+    bqtools, cluster, condor option  : [--mem=N]
                               [--cpu=nb_cpu_per_node]
-    bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,sh(condor only,clusterid(condor only),processid(condor only))}+]
+    bqtools, cluster option  :[--duree=X]
+    bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,
+                                                 sh(condor only),
+                                                 clusterid(condor only),
+                                                 processid(condor only))}+]
                               [--raw=STRING[\nSTRING]]
+    cluster, condor options  :[--32|--64|--3264] [--os=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
                               [--queue=X] [--nano=X] [--submit_options=X]
+                              [*--[no_]clean_up]
+    cluster option           :[*--[no_]cwait]  [--[*no_]force]
+                              [--[*no_]interruptible]
     condor option            :[--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
                               [--[*no_]getenv] [*--[no_]prefserver] 
                               [--rank=RANK_EXPRESSION] 
@@ -21,10 +28,9 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [--env=VAR=VALUE[;VAR2=VALUE2]]
                               [*--[no_]abs_path] [--[*no_]pkdilly]
                               [*--[no_]set_special_env]
-                              [--universe={vanilla*, standard, grid, java, scheduler, local, parallel, vm}]
+                              [--universe={vanilla*, standard, grid, java,
+                                           scheduler, local, parallel, vm}]
                               [--machine=HOSTNAME+] [--machines=regex+]
-    cluster option           :[*--[no_]cwait]  [--[*no_]force]
-                              [--[*no_]interruptible]
 An * after '[', '{' or ',' signals the default value.
 An + tell that we can put one or more separeted by a comma
 '''
@@ -59,45 +65,22 @@ common options:
   The '--exp_dir=dir' specifies the name of the temporary directory
     relative to LOGDIR, instead of one generated automatically based
     upon the command line and the time.
-  The '--[*no_]clean_up' set the DBI option clean_up to true or false
+  The '*--[no_]clean_up' set the DBI option clean_up to true or false
   The 'DBIDISPATCH_DEFAULT_OPTION' environnement variable can contain default
     option for dbidispatch. They can be overrided on the command line.
   The 'DBIDISPATCH_LOGDIR' environnement variable set the name of the directory
     where all the individual logs directory will be put. Default to LOGS.
+
+bqtools, cluster and condor option:
+  The '--mem=X' speficify the number of ram in meg the program need to execute.
+  The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
+    will be reserved for each job.
 
 bqtools and cluster option:
   The '--duree' option specifies the maximum duration of the jobs. The syntax 
     depends on the back-end. For the cluster syntax, see 'cluster --help'. 
     For bqtools, the syntax is '--duree=12:13:15', giving 12 hours, 
     13 minutes and 15 seconds.
-
-bqtools only options:
-  If the --long option is not set, the maximum duration of each job will be 
-    120 hours (5 days).
-  The '--micro[=nb_batch]' option can be used with BqTools when launching many 
-    jobs that have a very short duration. This may prevent some queue crashes. 
-    The nb_batch value is the number of experience to group together in a batch.
-    (by default not used, --micro is equivalent to --micro=20)
-  The '--long' option must be used with BqTools to launch jobs whose duration
-    is more than 5 days. The maximum duration of a job will be either the
-    BQ_MAX_JOB_DURATION environment variable (in the form hour:min:sec) if it is
-    set, and 1200:00:00 (50 days) otherwise. Since long jobs are launched on a
-    different queue with few nodes, please make sure you are not using too many
-    nodes at once with the --nb_proc option.
-  The '--queue=X' tell on witch queue the jobs will be launched.
-  The '--nano=X' add nanoJobs=X in the submit file.
-  The '--submit_options=X' X is appended to the submitOptions in the submit file.
-  
-cluster and condor options:
-  The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
-    Default the same as the submit host.
-  The '--mem=X' speficify the number of ram in meg the program need to execute.
-  The '--os=X' speficify the os of the server. 
-    Cluster default: fc7. Cluster accepted value fc4, fc7 and fc9.
-    Condor default to the same as the submit host and --os=FC7,FC9 
-    tell to use FC7 or FC9 hosts.
-  The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
-    will be reserved for each job.
 
 bqtools and condor options:
   The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
@@ -117,6 +100,31 @@ bqtools and condor options:
   The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the submit file.
       if this option appread many time, they will be concatanated with a new line.
 
+cluster and condor options:
+  The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
+    Default the same as the submit host.
+  The '--os=X' speficify the os of the server. 
+    Cluster default: fc7. Cluster accepted value fc4, fc7 and fc9.
+    Condor default to the same as the submit host and --os=FC7,FC9 
+    tell to use FC7 or FC9 hosts.
+
+bqtools only options:
+  If the --long option is not set, the maximum duration of each job will be 
+    120 hours (5 days).
+  The '--micro[=nb_batch]' option can be used with BqTools when launching many 
+    jobs that have a very short duration. This may prevent some queue crashes. 
+    The nb_batch value is the number of experience to group together in a batch.
+    (by default not used, --micro is equivalent to --micro=20)
+  The '--long' option must be used with BqTools to launch jobs whose duration
+    is more than 5 days. The maximum duration of a job will be either the
+    BQ_MAX_JOB_DURATION environment variable (in the form hour:min:sec) if it is
+    set, and 1200:00:00 (50 days) otherwise. Since long jobs are launched on a
+    different queue with few nodes, please make sure you are not using too many
+    nodes at once with the --nb_proc option.
+  The '--queue=X' tell on witch queue the jobs will be launched.
+  The '--nano=X' add nanoJobs=X in the submit file.
+  The '--submit_options=X' X is appended to the submitOptions in the submit file.
+  
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. 
     This must be enabled if there is not nb_proc available nodes. Otherwise 
@@ -358,7 +366,8 @@ elif launch_cmd=="Condor":
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines", "to_all"]
 elif launch_cmd=="Bqtools":
-    valid_dbi_param +=["micro", "long", "duree", "queue", "nano", "raw", "submit_options"]
+    valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
+                       "nano", "queue", "raw", "submit_options"]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.
