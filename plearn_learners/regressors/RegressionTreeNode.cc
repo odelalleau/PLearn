@@ -391,6 +391,10 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     real missing_errors = missing_error[0] + missing_error[1];
     real first_value=values.first();
     real next_feature=values.last();
+
+    //next_feature!=first_value is to check if their is more split point
+    // in case of binary variable or variable with few different value,
+    // this give a great speed up.
     for(int i=candidates.size()-2;i>=0&&next_feature!=first_value;i--)
     {
         int next_row = candidates[i];
