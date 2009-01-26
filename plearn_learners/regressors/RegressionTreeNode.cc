@@ -318,7 +318,8 @@ void RegressionTreeNode::lookForBestSplit()
 #ifndef BY_ROW
         //in case of missing value
         if(candidate.size()==0){
-            PLASSERT(missing_leave->length()>0);
+            PLCHECK(missing_leave->length()+right_leave->length()
+                    ==leave->length());
             continue;
         }
         int row = candidate.pop();
@@ -388,18 +389,24 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     Vec tmp(3);
 
     real missing_errors = missing_error[0] + missing_error[1];
-    for(int i=candidates.size()-2;i>=0;i--)
+    real first_value=values.first();
+    real next_feature=values.last();
+    for(int i=candidates.size()-2;i>=0&&next_feature!=first_value;i--)
     {
         int next_row = candidates[i];
-        real next_feature=values[i];
-        real row_feature=values[i+1];
+        real row_feature=next_feature;
+        PLASSERT(row_feature==values[i+1]);
+        next_feature=values[i];
+
+        real target=targets[i+1];
+        real weight=weights[i+1];
         PLASSERT(train_set->get(next_row, col)==values[i]);
         PLASSERT(train_set->get(row, col)==values[i+1]);
         PLASSERT(next_feature<=row_feature);
 
 
-        left_leave->removeRow(row, targets[i+1], weights[i+1]);
-        right_leave->addRow(row, targets[i+1], weights[i+1]);
+        left_leave->removeRow(row, target, weight);
+        right_leave->addRow(row, target, weight);
         row = next_row;
         if (next_feature < row_feature){
             left_leave->getOutputAndError(tmp, left_error);
