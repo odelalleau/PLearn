@@ -1050,6 +1050,8 @@ void StackedAutoassociatorsNet::train()
             {
                 direct_connections[i]->setLearningRate( lr );
             }
+            if( greedy_target_connections.length() && greedy_target_connections[i] )
+                greedy_target_connections[i]->setLearningRate( lr );
             layers[i+1]->setLearningRate( lr );
             if(partial_costs.length() != 0 && partial_costs[i])
                         partial_costs[i]->setLearningRate( lr );
@@ -1102,6 +1104,8 @@ void StackedAutoassociatorsNet::train()
                     }
                     if(partial_costs.length() != 0 && partial_costs[i])
                         partial_costs[i]->setLearningRate( lr );
+                    if( greedy_target_connections.length() && greedy_target_connections[i] )
+                        greedy_target_connections[i]->setLearningRate( lr );
                 }
                 sample = *this_stage % nsamples;
                 train_set->getExample(sample, input, target, weight);
@@ -1979,6 +1983,8 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
         {
             partial_costs[ i ]->setLearningRate( lr );
         }
+        if( greedy_target_connections.length() && greedy_target_connections[i] )
+            greedy_target_connections[i]->setLearningRate( lr );
     }
     layers[n_layers-1]->setLearningRate( lr );
 
@@ -2125,6 +2131,8 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
             correlation_layers[i]->setLearningRate( lr );
             correlation_connections[i]->setLearningRate( lr );
         }
+        if( greedy_target_connections.length() && greedy_target_connections[i] )
+            greedy_target_connections[i]->setLearningRate( lr );
     }
     layers[n_layers-1]->setLearningRate( lr );
 
