@@ -2815,7 +2815,9 @@ def main( args ):
         while 'local_ofiles' in optionargs: optionargs.remove('local_ofiles')
     else:
         local_ofiles = 0
-    for option in optionargs:
+    #we must use a copy of optionargs as we should not modify a list that we iterate over.
+    #this cause bug if multiple local are present. In that case, we should keep the last one.
+    for option in optionargs[:]:
         if option.count('local', 0, 5)==1:
             local_compilation = 1
             optionargs.remove(option)
@@ -2827,7 +2829,8 @@ def main( args ):
                     # nprocesses_on_localhost=1
                 else:
                     nprocesses_on_localhost=int(option[6:])
-
+            else:
+                    nprocesses_on_localhost=1
     local_ofiles_base_path= '/tmp/.pymake/local_ofiles/' # could add an option for that...
 
     if 'ssh' in optionargs:
