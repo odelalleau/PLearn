@@ -372,7 +372,7 @@ if not 'nopython' in optionargs:
         #numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
         python_version = '2.5'
         optionargs += [ 'python%s' % python_version.replace('.', '') ]
-        python_lib_root = '/home/delallea/local/lib'
+        python_lib_root = '/opt/python64/2.5.1/lib'
     elif domain_name.endswith('.rqchp.qc.ca'):
         numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
         numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
@@ -867,7 +867,7 @@ pymakeLinkOption( name = 'p4blas',
 
 pymakeLinkOption( name = 'mammouthblas',
               description = 'linking BLAS for P4 Mammouth-Serie cluster',
-              linkeroptions = '-L/opt/intel/mkl/10.0.011/lib/32 -lmkl -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
+              linkeroptions = '-L/opt/intel/mkl/10.0.011/lib/em64t -lmkl -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
 
 pymakeLinkOption( name = 'apintelblas',
               description = 'Intel BLAS+LAPACK for generic install in /usr/local/lib (incl. ApSTAT)',
