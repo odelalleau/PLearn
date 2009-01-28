@@ -288,18 +288,18 @@ options_choices = [
   [ '', 'pass']
 ]
 
-optionargs_new=set()
-for option in optionargs:
+#we must use a copy of the list as modifiing
+# a list with iterating throught it is not safe.
+for option in optionargs[:]:
     if option.startswith('pass='):
+        optionargs.remove(option)
         option=option[5:]
-        optionargs_new.add(option)
+        
+        optionargs.append(option)
         pymakeOption( name = option,
                       description = option,
                       compileroptions = option)
         options_choices+=[['',option]]
-    else:
-        optionargs_new.add(option)
-optionargs=list(optionargs_new)
 
 pymakeOption( name = 'pass',
               description = 'The command line parameter -pass=X will make add the parameter X to the compiler command. Usefull to test new option without modifying the pymake.config.model file.',
