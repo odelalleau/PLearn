@@ -140,6 +140,12 @@ public:
     //! The weights of the connections between the layers
     TVec< PP<RBMConnection> > connections;
 
+    //! Optional target layers for greedy layer-wise pretraining
+    TVec< PP<RBMMultinomialLayer> > greedy_target_layers;
+
+    //! Optional target matrix connections for greedy layer-wise pretraining
+    TVec< PP<RBMMatrixConnection> > greedy_target_connections;
+
     //! Optional module that takes as input the output of the last layer
     //! (layers[n_layers-1), and its output is fed to final_cost, and
     //! concatenated with the one of classification_cost (if present) as output
@@ -339,6 +345,15 @@ protected:
     //! (at the output of the layers)
     mutable TVec<Vec> expectation_gradients;
     mutable TVec<Mat> expectations_gradients; //!< For mini-batch.
+    
+    //! For the fprop with greedy_target_layers
+    mutable TVec< TVec<Vec> > greedy_target_expectations;
+    mutable TVec< TVec<Vec> > greedy_target_activations;
+    mutable TVec< TVec<Vec> > greedy_target_expectation_gradients;
+    mutable TVec< TVec<Vec> > greedy_target_activation_gradients;
+    mutable TVec< Vec > greedy_target_probability_gradients;
+    mutable TVec< PP<RBMLayer> > greedy_joint_layers;
+    mutable TVec< PP<RBMConnection> > greedy_joint_connections;
 
     mutable Vec final_cost_input;
     mutable Mat final_cost_inputs; //!< For mini-batch.
@@ -382,6 +397,9 @@ protected:
     //! Used to store the costs optimized by the final cost module.
     Vec optimized_costs;
 
+    //! One-hot representation of the target
+    mutable Vec target_one_hot;
+
     //! Stores reconstruction costs
     mutable Vec reconstruction_costs;
 
@@ -399,6 +417,9 @@ protected:
 
     //! Keeps the beginning index of the reconstruction costs in train_costs
     int reconstruction_cost_index;
+
+    //! Keeps the beginning index of the greedy target layer NLLs
+    int greedy_target_layer_nlls_index;
 
     //! Index of the cpu time cost (per each call of train())
     int training_cpu_time_cost_index;

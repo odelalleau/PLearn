@@ -201,6 +201,14 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "The weights of the connections between the layers");
 
+    declareOption(ol, "greedy_target_layers", &DeepBeliefNet::greedy_target_layers,
+                  OptionBase::buildoption,
+                  "Optional target layers for greedy layer-wise pretraining");
+
+    declareOption(ol, "greedy_target_connections", &DeepBeliefNet::greedy_target_connections,
+                  OptionBase::buildoption,
+                  "Optional target matrix connections for greedy layer-wise pretraining");
+
     declareOption(ol, "classification_module",
                   &DeepBeliefNet::classification_module,
                   OptionBase::learntoption,
@@ -492,6 +500,17 @@ void DeepBeliefNet::build_costs()
     else
         reconstruction_costs.resize(0);
 
+    if( !greedy_target_layers.isEmpty() )
+    {
+        greedy_target_layer_nlls_index = current_index;
+        target_one_hot.resize(n_classes);
+        for( int i=0; i<n_layers-1; i++ )
+        {
+            cost_names.append("layer"+tostring(i)+".nll");
+            current_index++;
+        }
+    }
+
 
     cost_names.append("cpu_time");
     cost_names.append("cumulative_train_time");
@@ -556,6 +575,78 @@ void DeepBeliefNet::build_layers_and_connections()
         activation_gradients[i].resize( layers[i]->size );
         expectation_gradients[i].resize( layers[i]->size );
 
+
+        if( greedy_target_layers.length()>i && greedy_target_layers[i] )
+        {
+            if( use_classification_cost )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_classification_cost not implemented for greedy_target_layers.");
+
+            if( greedy_target_connections.length()>i && !greedy_target_connections[i] )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "some greedy_target_connections are missing.");
+
+            if( greedy_target_layers[i]->size != n_classes)
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "greedy_target_layers[%d] should be of size %d.",i,n_classes);
+
+            if( greedy_target_connections[i]->down_size != n_classes ||
+                greedy_target_connections[i]->up_size != layers[i+1]->size )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "greedy_target_connections[%d] should be of size (%d,%d).",
+                        i,layers[i+1]->size,n_classes);
+                
+            if( partial_costs.length() != 0 )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "greedy_target_layers can't be used with partial_costs.");
+                
+            greedy_target_expectations.resize(n_layers-1);
+            greedy_target_activations.resize(n_layers-1);
+            greedy_target_expectation_gradients.resize(n_layers-1);
+            greedy_target_activation_gradients.resize(n_layers-1);
+            greedy_target_probability_gradients.resize(n_layers-1);
+
+            greedy_target_expectations[i].resize(n_classes);
+            greedy_target_activations[i].resize(n_classes);
+            greedy_target_expectation_gradients[i].resize(n_classes);
+            greedy_target_activation_gradients[i].resize(n_classes);
+            greedy_target_probability_gradients[i].resize(n_classes);
+            for( int c=0; c<n_classes; c++) 
+            {
+                greedy_target_expectations[i][c].resize(layers[i+1]->size);
+                greedy_target_activations[i][c].resize(layers[i+1]->size);
+                greedy_target_expectation_gradients[i][c].resize(layers[i+1]->size);
+                greedy_target_activation_gradients[i][c].resize(layers[i+1]->size);
+            }
+
+            greedy_joint_layers.resize(n_layers-1);
+            PP<RBMMixedLayer> ml = new RBMMixedLayer();
+            ml->sub_layers.resize(2);
+            ml->sub_layers[0] = layers[ i ];
+            ml->sub_layers[1] = greedy_target_layers[ i ];
+            ml->random_gen = random_gen;
+            ml->build();
+            greedy_joint_layers[i] = (RBMMixedLayer *)ml;
+
+            greedy_joint_connections.resize(n_layers-1);
+            PP<RBMMixedConnection> mc = new RBMMixedConnection();
+            mc->sub_connections.resize(1,2);
+            mc->sub_connections(0,0) = connections[i];
+            mc->sub_connections(0,1) = greedy_target_connections[i];
+            mc->build();
+            greedy_joint_connections[i] = (RBMMixedConnection *)mc;
+
+            if( !(greedy_target_connections[i]->random_gen) )
+            {
+                greedy_target_connections[i]->random_gen = random_gen;
+                greedy_target_connections[i]->forget();
+            }
+            if( !(greedy_target_layers[i]->random_gen) )
+            {
+                greedy_target_layers[i]->random_gen = random_gen;
+                greedy_target_layers[i]->forget();
+            }
+        }
     }
     if( !(layers[n_layers-1]->random_gen) )
     {
@@ -726,6 +817,8 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(training_schedule,        copies);
     deepCopyField(layers,                   copies);
     deepCopyField(connections,              copies);
+    deepCopyField(greedy_target_layers,     copies);
+    deepCopyField(greedy_target_connections,copies);
     deepCopyField(final_module,             copies);
     deepCopyField(final_cost,               copies);
     deepCopyField(partial_costs,            copies);
@@ -738,6 +831,13 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(activations_gradients,    copies);
     deepCopyField(expectation_gradients,    copies);
     deepCopyField(expectations_gradients,   copies);
+    deepCopyField(greedy_target_expectations,copies);
+    deepCopyField(greedy_target_activations, copies);
+    deepCopyField(greedy_target_expectation_gradients,copies);
+    deepCopyField(greedy_target_activation_gradients,copies);
+    deepCopyField(greedy_target_probability_gradients,copies);
+    deepCopyField(greedy_joint_layers   ,   copies);
+    deepCopyField(greedy_joint_connections, copies);
     deepCopyField(final_cost_input,         copies);
     deepCopyField(final_cost_inputs,        copies);
     deepCopyField(final_cost_value,         copies);
@@ -753,14 +853,17 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(save_layer_expectations,  copies);
     deepCopyField(pos_down_val,             copies);
     deepCopyField(pos_up_val,               copies);
-    deepCopyField(cd_neg_up_vals,           copies);
+    deepCopyField(pos_down_vals,            copies);
+    deepCopyField(pos_up_vals,              copies);
     deepCopyField(cd_neg_down_vals,         copies);
-    deepCopyField(mf_cd_neg_up_vals,        copies);
+    deepCopyField(cd_neg_up_vals,           copies);
     deepCopyField(mf_cd_neg_down_vals,      copies);
-    deepCopyField(mf_cd_neg_up_val,         copies);
+    deepCopyField(mf_cd_neg_up_vals,        copies);
     deepCopyField(mf_cd_neg_down_val,       copies);
+    deepCopyField(mf_cd_neg_up_val,         copies);
     deepCopyField(gibbs_down_state,         copies);
     deepCopyField(optimized_costs,          copies);
+    deepCopyField(target_one_hot,           copies);
     deepCopyField(reconstruction_costs,     copies);
     deepCopyField(partial_costs_indices,    copies);
     deepCopyField(cumulative_schedule,      copies);
@@ -819,6 +922,15 @@ void DeepBeliefNet::forget()
         for( int i=0 ; i<n_layers-1 ; i++ )
             if( partial_costs[i] )
                 partial_costs[i]->forget();
+
+    for( int i=0 ; i<generative_connections.length() ; i++ )
+        generative_connections[i]->forget();
+
+    for( int i=0; i<greedy_target_connections.length(); i++ )
+        greedy_target_connections[i]->forget();
+
+    for( int i=0; i<greedy_target_layers.length(); i++ )
+        greedy_target_layers[i]->forget();
 
     cumulative_training_time = 0;
     cumulative_testing_time = 0;
@@ -976,6 +1088,15 @@ void DeepBeliefNet::train()
             connections[i]->setLearningRate( cd_learning_rate );
             layers[i+1]->setLearningRate( cd_learning_rate );
 
+            if( greedy_target_layers.length() && greedy_target_layers[i] )
+                greedy_target_layers[i]->setLearningRate( cd_learning_rate );
+            if( greedy_target_connections.length() && greedy_target_connections[i] )
+                greedy_target_connections[i]->setLearningRate( cd_learning_rate );
+            if( greedy_joint_layers.length() && greedy_joint_layers[i] )
+                greedy_joint_layers[i]->setLearningRate( cd_learning_rate );
+            if( greedy_joint_connections.length() && greedy_joint_connections[i] )
+                greedy_joint_connections[i]->setLearningRate( cd_learning_rate );
+
             for( ; stage<end_stage ; stage++ )
             {
                 if( !fast_exact_is_equal( cd_decrease_ct, 0. ) )
@@ -987,6 +1108,14 @@ void DeepBeliefNet::train()
                     layers[i]->setLearningRate( lr );
                     connections[i]->setLearningRate( lr );
                     layers[i+1]->setLearningRate( lr );
+                    if( greedy_target_layers.length() && greedy_target_layers[i] )
+                        greedy_target_layers[i]->setLearningRate( lr );
+                    if( greedy_target_connections.length() && greedy_target_connections[i] )
+                        greedy_target_connections[i]->setLearningRate( lr );
+                    if( greedy_joint_layers.length() && greedy_joint_layers[i] )
+                        greedy_joint_layers[i]->setLearningRate( lr );
+                    if( greedy_joint_connections.length() && greedy_joint_connections[i] )
+                        greedy_joint_connections[i]->setLearningRate( lr );
                 }
 
                 initialize_gibbs_chain=(stage%gibbs_chain_reinit_freq==0);
@@ -1202,6 +1331,10 @@ void DeepBeliefNet::onlineStep(const Vec& input, const Vec& target,
 {
     real lr;
     PLASSERT(batch_size == 1);
+
+    if( greedy_target_layers.length() )
+        PLERROR("In DeepBeliefNet::onlineStep(): greedy_target_layers not implemented\n"
+                "for online setting");
 
     TVec<Vec> cost;
     if (!partial_costs.isEmpty())
@@ -1427,6 +1560,10 @@ void DeepBeliefNet::onlineStep(const Mat& inputs, const Mat& targets,
     if (partial_costs) {
         cost.resize(n_layers-1);
     }
+
+    if( greedy_target_layers.length() )
+        PLERROR("In DeepBeliefNet::onlineStep(): greedy_target_layers not implemented\n"
+                "for online setting");
 
     layers[0]->setExpectations(inputs);
     // FORWARD PHASE
@@ -1683,9 +1820,56 @@ void DeepBeliefNet::greedyStep(const Vec& input, const Vec& target, int index)
     layers[0]->expectation << input;
     for( int i=0 ; i<=index ; i++ )
     {
-        connections[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( connections[i] );
-        layers[i+1]->computeExpectation();
+        if( greedy_target_layers.length() && greedy_target_layers[i] )
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+
+            if( i != index )
+            {
+                greedy_target_layers[i]->activation.clear();
+                greedy_target_layers[i]->activation += greedy_target_layers[i]->bias;
+                for( int c=0; c<n_classes; c++ )
+                {
+                    // Compute class free-energy
+                    layers[i+1]->activation.toMat(layers[i+1]->size,1) += 
+                        greedy_target_connections[i]->weights.column(c);
+                    greedy_target_layers[i]->activation[c] -= 
+                        layers[i+1]->freeEnergyContribution(layers[i+1]->activation);
+                    
+                    // Compute class dependent expectation and store it
+                    layers[i+1]->expectation_is_not_up_to_date();
+                    layers[i+1]->computeExpectation();
+                    greedy_target_expectations[i][c] << layers[i+1]->expectation;
+                    
+                    // Remove class-dependent energy for next free-energy computations
+                    layers[i+1]->activation.toMat(layers[i+1]->size,1) -= greedy_target_connections[i]->weights.column(c);
+                }
+                greedy_target_layers[i]->expectation_is_not_up_to_date();
+                greedy_target_layers[i]->computeExpectation();
+            
+                // Computing next layer representation
+                layers[i+1]->expectation.clear();
+                Vec expectation = layers[i+1]->expectation;
+                for( int c=0; c<n_classes; c++ )
+                {
+                    Vec expectation_c = greedy_target_expectations[i][c];
+                    real p_c = greedy_target_layers[i]->expectation[c];
+                    multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+                }
+            }
+            else
+            {
+                fill_one_hot( greedy_target_layers[i]->expectation, 
+                              (int) round(target[0]), real(0.), real(1.) );
+            }
+        }
+        else
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+            layers[i+1]->computeExpectation();
+        }
     }
 
     if( !partial_costs.isEmpty() && partial_costs[ index ] )
@@ -1733,10 +1917,20 @@ void DeepBeliefNet::greedyStep(const Vec& input, const Vec& target, int index)
         layers[ index+1 ]->setLearningRate( lr );
     }
 
-    contrastiveDivergenceStep( layers[ index ],
-                               connections[ index ],
-                               layers[ index+1 ],
-                               index, true);
+    if( greedy_target_layers.length() && greedy_target_layers[index] )
+    {
+        contrastiveDivergenceStep( greedy_joint_layers[ index ],
+                                   greedy_joint_connections[ index ],
+                                   layers[ index+1 ],
+                                   index, false);
+    }
+    else
+    {
+        contrastiveDivergenceStep( layers[ index ],
+                                   connections[ index ],
+                                   layers[ index+1 ],
+                                   index, true);
+    }
 }
 
 /////////////////
@@ -1749,6 +1943,11 @@ void DeepBeliefNet::greedyStep(const Mat& inputs, const Mat& targets,
     PLASSERT( index < n_layers );
 
     layers[0]->setExpectations(inputs);
+
+    if( greedy_target_layers.length() && greedy_target_layers[0] )
+        PLERROR("In DeepBeliefNet::greedyStep(): greedy_target_layers not implemented\n"
+                "for minibatch setting");
+
     for( int i=0 ; i<=index ; i++ )
     {
         connections[i]->setAsDownInputs( layers[i]->getExpectations() );
@@ -1911,6 +2110,11 @@ void DeepBeliefNet::jointGreedyStep(const Mat& inputs, const Mat& targets)
 void DeepBeliefNet::upDownStep( const Vec& input, const Vec& target,
                                 Vec& train_costs )
 {
+
+    if( greedy_target_layers.length() )
+        PLERROR("In DeepBeliefNet::onlineStep(): greedy_target_layers not implemented\n"
+                "for up-down setting");
+
     // Up pass
     up_sample[0] << input;
     for( int i=0 ; i<n_layers-2 ; i++ )
@@ -1997,18 +2201,96 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
     layers[0]->expectation << input;
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
-        connections[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( connections[i] );
-        layers[i+1]->computeExpectation();
+        if( greedy_target_layers.length() && greedy_target_layers[i] )
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+            
+            greedy_target_layers[i]->activation.clear();
+            greedy_target_layers[i]->activation += greedy_target_layers[i]->bias;
+            for( int c=0; c<n_classes; c++ )
+            {
+                // Compute class free-energy
+                layers[i+1]->activation.toMat(layers[i+1]->size,1) += greedy_target_connections[i]->weights.column(c);
+                greedy_target_layers[i]->activation[c] -= layers[i+1]->freeEnergyContribution(layers[i+1]->activation);
+                
+                // Compute class dependent expectation and store it
+                layers[i+1]->expectation_is_not_up_to_date();
+                layers[i+1]->computeExpectation();
+                greedy_target_expectations[i][c] << layers[i+1]->expectation;
+                
+                // Remove class-dependent energy for next free-energy computations
+                layers[i+1]->activation.toMat(layers[i+1]->size,1) -= greedy_target_connections[i]->weights.column(c);
+            }
+            greedy_target_layers[i]->expectation_is_not_up_to_date();
+            greedy_target_layers[i]->computeExpectation();
+            
+            // Computing next layer representation
+            layers[i+1]->expectation.clear();
+            Vec expectation = layers[i+1]->expectation;
+            for( int c=0; c<n_classes; c++ )
+            {
+                Vec expectation_c = greedy_target_expectations[i][c];
+                real p_c = greedy_target_layers[i]->expectation[c];
+                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+            }
+        }
+        else
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+            layers[i+1]->computeExpectation();
+        }
     }
 
     if( final_cost )
     {
-        connections[ n_layers-2 ]->setAsDownInput(
-            layers[ n_layers-2 ]->expectation );
-        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
-        layers[ n_layers-1 ]->computeExpectation();
-
+        if( greedy_target_layers.length() && greedy_target_layers[n_layers-2] )
+        {
+            connections[n_layers-2]->setAsDownInput( layers[n_layers-2]->expectation );
+            layers[n_layers-1]->getAllActivations( connections[n_layers-2] );
+            
+            greedy_target_layers[n_layers-2]->activation.clear();
+            greedy_target_layers[n_layers-2]->activation += 
+                greedy_target_layers[n_layers-2]->bias;
+            for( int c=0; c<n_classes; c++ )
+            {
+                // Compute class free-energy
+                layers[n_layers-1]->activation.toMat(layers[n_layers-1]->size,1) += 
+                    greedy_target_connections[n_layers-2]->weights.column(c);
+                greedy_target_layers[n_layers-2]->activation[c] -= 
+                    layers[n_layers-1]->freeEnergyContribution(layers[n_layers-1]->activation);
+                
+                // Compute class dependent expectation and store it
+                layers[n_layers-1]->expectation_is_not_up_to_date();
+                layers[n_layers-1]->computeExpectation();
+                greedy_target_expectations[n_layers-2][c] << layers[n_layers-1]->expectation;
+                
+                // Remove class-dependent energy for next free-energy computations
+                layers[n_layers-1]->activation.toMat(layers[n_layers-1]->size,1) -= 
+                    greedy_target_connections[n_layers-2]->weights.column(c);
+            }
+            greedy_target_layers[n_layers-2]->expectation_is_not_up_to_date();
+            greedy_target_layers[n_layers-2]->computeExpectation();
+            
+            // Computing next layer representation
+            layers[n_layers-1]->expectation.clear();
+            Vec expectation = layers[n_layers-1]->expectation;
+            for( int c=0; c<n_classes; c++ )
+            {
+                Vec expectation_c = greedy_target_expectations[n_layers-2][c];
+                real p_c = greedy_target_layers[n_layers-2]->expectation[c];
+                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+            }
+        }
+        else
+        {
+            connections[ n_layers-2 ]->setAsDownInput(
+                layers[ n_layers-2 ]->expectation );
+            layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
+            layers[ n_layers-1 ]->computeExpectation();
+        }
+        
         if( final_module )
         {
             final_module->fprop( layers[ n_layers-1 ]->expectation,
@@ -2036,17 +2318,78 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
         train_costs.subVec(final_cost_index, final_cost_value.length())
             << final_cost_value;
 
-        layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
-                                           layers[ n_layers-1 ]->expectation,
-                                           activation_gradients[ n_layers-1 ],
-                                           expectation_gradients[ n_layers-1 ]
-                                         );
+        if( greedy_target_layers.length() && greedy_target_layers[n_layers-2] )
+        {
+            activation_gradients[n_layers-1].clear();
+            for( int c=0; c<n_classes; c++ )
+            {
+                greedy_target_expectation_gradients[n_layers-2][c] << 
+                    expectation_gradients[ n_layers-1 ];
+                greedy_target_expectation_gradients[n_layers-2][c] *= 
+                    greedy_target_layers[n_layers-2]->expectation[c];
+                layers[ n_layers-1 ]->bpropUpdate( 
+                    greedy_target_activations[n_layers-2][c],
+                    greedy_target_expectations[n_layers-2][c],
+                    greedy_target_activation_gradients[n_layers-2][c],
+                    greedy_target_expectation_gradients[n_layers-2][c] );
 
-        connections[ n_layers-2 ]->bpropUpdate(
-            layers[ n_layers-2 ]->expectation,
-            layers[ n_layers-1 ]->activation,
-            expectation_gradients[ n_layers-2 ],
-            activation_gradients[ n_layers-1 ] );
+                activation_gradients[n_layers-1] += 
+                    greedy_target_activation_gradients[n_layers-2][c];
+
+                // Update target connections, with gradient from p(h_l | h_l-1, y)
+                multiplyScaledAdd( greedy_target_activation_gradients[n_layers-2][c].toMat(layers[n_layers-1]->size,1),
+                                   1., -greedy_target_connections[n_layers-2]->learning_rate,
+                                   greedy_target_connections[n_layers-2]->weights.column(c));
+                
+                greedy_target_probability_gradients[n_layers-2][c] = 
+                    dot( expectation_gradients[ n_layers-1 ], 
+                         greedy_target_expectations[ n_layers-2 ][c] );
+            }
+
+            // Update bias
+            greedy_target_layers[n_layers-2]->bpropUpdate(
+                greedy_target_layers[n_layers-2]->expectation, // Isn't used
+                greedy_target_layers[n_layers-2]->expectation,
+                greedy_target_probability_gradients[n_layers-2], 
+                greedy_target_probability_gradients[n_layers-2] );
+
+            for( int c=0; c<n_classes; c++ )
+            {
+                layers[n_layers-1]->freeEnergyContributionGradient(
+                    greedy_target_activations[n_layers-2][c],
+                    greedy_target_activation_gradients[n_layers-2][c], // Overwrite previous activation gradient
+                    -greedy_target_probability_gradients[n_layers-2][c] );
+
+                activation_gradients[n_layers-1] += 
+                    greedy_target_activation_gradients[n_layers-2][c];
+
+                // Update target connections, with gradient from p(y | h_l-1 )
+                multiplyScaledAdd( greedy_target_activation_gradients[n_layers-2][c].toMat(layers[n_layers-1]->size,1),
+                                   1., -greedy_target_connections[n_layers-2]->learning_rate,
+                                   greedy_target_connections[n_layers-2]->weights.column(c));
+            }
+
+            connections[ n_layers-2 ]->bpropUpdate(
+                layers[ n_layers-2 ]->expectation,
+                layers[ n_layers-1 ]->activation, //Not really, but this isn't used for matrix connections
+                expectation_gradients[ n_layers-2 ],
+                activation_gradients[ n_layers-1 ] );
+            
+        }
+        else
+        {
+            layers[ n_layers-1 ]->bpropUpdate( layers[ n_layers-1 ]->activation,
+                                               layers[ n_layers-1 ]->expectation,
+                                               activation_gradients[ n_layers-1 ],
+                                               expectation_gradients[ n_layers-1 ]
+                );
+            
+            connections[ n_layers-2 ]->bpropUpdate(
+                layers[ n_layers-2 ]->expectation,
+                layers[ n_layers-1 ]->activation,
+                expectation_gradients[ n_layers-2 ],
+                activation_gradients[ n_layers-1 ] );
+        }
     }
     else  {
         expectation_gradients[ n_layers-2 ].clear();
@@ -2082,21 +2425,85 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
     for( int i=n_layers-2 ; i>0 ; i-- )
     {
-        layers[i]->bpropUpdate( layers[i]->activation,
-                                layers[i]->expectation,
-                                activation_gradients[i],
-                                expectation_gradients[i] );
+        if( greedy_target_layers.length() && greedy_target_layers[i] )
+        {
+            activation_gradients[i-1].clear();
+            for( int c=0; c<n_classes; c++ )
+            {
+                greedy_target_expectation_gradients[i-1][c] << 
+                    expectation_gradients[ i ];
+                greedy_target_expectation_gradients[i-1][c] *= 
+                    greedy_target_layers[i-1]->expectation[c];
+                layers[ i ]->bpropUpdate( 
+                    greedy_target_activations[i-1][c],
+                    greedy_target_expectations[i-1][c],
+                    greedy_target_activation_gradients[i-1][c],
+                    greedy_target_expectation_gradients[i-1][c] );
 
-        connections[i-1]->bpropUpdate( layers[i-1]->expectation,
-                                       layers[i]->activation,
-                                       expectation_gradients[i-1],
-                                       activation_gradients[i] );
+                activation_gradients[i ] += 
+                    greedy_target_activation_gradients[i-1][c];
+
+                // Update target connections, with gradient from p(h_l | h_l-1, y)
+                multiplyScaledAdd( greedy_target_activation_gradients[i-1][c].toMat(layers[i]->size,1),
+                                   1., -greedy_target_connections[i-1]->learning_rate,
+                                   greedy_target_connections[i-1]->weights.column(c));
+                
+                greedy_target_probability_gradients[i-1][c] = 
+                    dot( expectation_gradients[ i ], 
+                         greedy_target_expectations[ i-1 ][c] );
+            }
+
+            // Update bias
+            greedy_target_layers[i-1]->bpropUpdate(
+                greedy_target_layers[i-1]->expectation, // Isn't used
+                greedy_target_layers[i-1]->expectation,
+                greedy_target_probability_gradients[i-1], 
+                greedy_target_probability_gradients[i-1] );
+
+            for( int c=0; c<n_classes; c++ )
+            {
+                layers[i]->freeEnergyContributionGradient(
+                    greedy_target_activations[i-1][c],
+                    greedy_target_activation_gradients[i-1][c], // Overwrite previous activation gradient
+                    -greedy_target_probability_gradients[i-1][c] );
+
+                activation_gradients[i] += 
+                    greedy_target_activation_gradients[i-1][c];
+
+                // Update target connections, with gradient from p(y | h_l-1 )
+                multiplyScaledAdd( greedy_target_activation_gradients[i-1][c].toMat(layers[i]->size,1),
+                                   1., -greedy_target_connections[i-1]->learning_rate,
+                                   greedy_target_connections[i-1]->weights.column(c));
+            }
+
+            connections[ i-1 ]->bpropUpdate(
+                layers[ i-1 ]->expectation,
+                layers[ i ]->activation, //Not really, but this isn't used for matrix connections
+                expectation_gradients[ i-1 ],
+                activation_gradients[ i ] );
+        }
+        else
+        {
+            layers[i]->bpropUpdate( layers[i]->activation,
+                                    layers[i]->expectation,
+                                    activation_gradients[i],
+                                    expectation_gradients[i] );
+            
+            connections[i-1]->bpropUpdate( layers[i-1]->expectation,
+                                           layers[i]->activation,
+                                           expectation_gradients[i-1],
+                                           activation_gradients[i] );
+        }
     }
 }
 
 void DeepBeliefNet::fineTuningStep(const Mat& inputs, const Mat& targets,
                                    Mat& train_costs)
 {
+    if( greedy_target_layers.length() )
+        PLERROR("In DeepBeliefNet::fineTuningStep(): greedy_target_layers not implemented\n"
+                "for minibatch setting");
+
     final_cost_values.resize(0, 0);
     // fprop
     layers[0]->getExpectations() << inputs;
@@ -2530,10 +2937,46 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 
     for( int i=0 ; i<n_layers-2 ; i++ )
     {
-        connections[i]->setAsDownInput( layers[i]->expectation );
-        layers[i+1]->getAllActivations( connections[i] );
-        layers[i+1]->computeExpectation();
-
+        if( greedy_target_layers.length() && greedy_target_layers[i] )
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+            
+            greedy_target_layers[i]->activation.clear();
+            greedy_target_layers[i]->activation += greedy_target_layers[i]->bias;
+            for( int c=0; c<n_classes; c++ )
+            {
+                // Compute class free-energy
+                layers[i+1]->activation.toMat(layers[i+1]->size,1) += greedy_target_connections[i]->weights.column(c);
+                greedy_target_layers[i]->activation[c] -= layers[i+1]->freeEnergyContribution(layers[i+1]->activation);
+                
+                // Compute class dependent expectation and store it
+                layers[i+1]->expectation_is_not_up_to_date();
+                layers[i+1]->computeExpectation();
+                greedy_target_expectations[i][c] << layers[i+1]->expectation;
+                
+                // Remove class-dependent energy for next free-energy computations
+                layers[i+1]->activation.toMat(layers[i+1]->size,1) -= greedy_target_connections[i]->weights.column(c);
+            }
+            greedy_target_layers[i]->expectation_is_not_up_to_date();
+            greedy_target_layers[i]->computeExpectation();
+            
+            // Computing next layer representation
+            layers[i+1]->expectation.clear();
+            Vec expectation = layers[i+1]->expectation;
+            for( int c=0; c<n_classes; c++ )
+            {
+                Vec expectation_c = greedy_target_expectations[i][c];
+                real p_c = greedy_target_layers[i]->expectation[c];
+                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+            }
+        }
+        else
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i] );
+            layers[i+1]->computeExpectation();
+        }
         if( i_output_layer==i && (!use_classification_cost && !final_module))
         {
             output.resize(outputsize());
@@ -2569,10 +3012,51 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
 
     if( final_cost || (!partial_costs.isEmpty() && partial_costs[n_layers-2] ))
     {
-        connections[ n_layers-2 ]->setAsDownInput(
-            layers[ n_layers-2 ]->expectation );
-        layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
-        layers[ n_layers-1 ]->computeExpectation();
+        if( greedy_target_layers.length() && greedy_target_layers[n_layers-2] )
+        {
+            connections[n_layers-2]->setAsDownInput( layers[n_layers-2]->expectation );
+            layers[n_layers-1]->getAllActivations( connections[n_layers-2] );
+            
+            greedy_target_layers[n_layers-2]->activation.clear();
+            greedy_target_layers[n_layers-2]->activation += 
+                greedy_target_layers[n_layers-2]->bias;
+            for( int c=0; c<n_classes; c++ )
+            {
+                // Compute class free-energy
+                layers[n_layers-1]->activation.toMat(layers[n_layers-1]->size,1) += 
+                    greedy_target_connections[n_layers-2]->weights.column(c);
+                greedy_target_layers[n_layers-2]->activation[c] -= 
+                    layers[n_layers-1]->freeEnergyContribution(layers[n_layers-1]->activation);
+                
+                // Compute class dependent expectation and store it
+                layers[n_layers-1]->expectation_is_not_up_to_date();
+                layers[n_layers-1]->computeExpectation();
+                greedy_target_expectations[n_layers-2][c] << layers[n_layers-1]->expectation;
+                
+                // Remove class-dependent energy for next free-energy computations
+                layers[n_layers-1]->activation.toMat(layers[n_layers-1]->size,1) -= 
+                    greedy_target_connections[n_layers-2]->weights.column(c);
+            }
+            greedy_target_layers[n_layers-2]->expectation_is_not_up_to_date();
+            greedy_target_layers[n_layers-2]->computeExpectation();
+            
+            // Computing next layer representation
+            layers[n_layers-1]->expectation.clear();
+            Vec expectation = layers[n_layers-1]->expectation;
+            for( int c=0; c<n_classes; c++ )
+            {
+                Vec expectation_c = greedy_target_expectations[n_layers-2][c];
+                real p_c = greedy_target_layers[n_layers-2]->expectation[c];
+                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+            }
+        }
+        else
+        {
+            connections[ n_layers-2 ]->setAsDownInput(
+                layers[ n_layers-2 ]->expectation );
+            layers[ n_layers-1 ]->getAllActivations( connections[ n_layers-2 ] );
+            layers[ n_layers-1 ]->computeExpectation();
+        }
 
         if( final_module )
         {
@@ -2654,6 +3138,19 @@ void DeepBeliefNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                 costs.subVec(partial_costs_indices[i], pcosts.length())
                     << pcosts;
             }
+    }
+
+    if( !greedy_target_layers.isEmpty() )
+    {
+        target_one_hot.clear();
+        fill_one_hot( target_one_hot, 
+                      (int) round(target[0]), real(0.), real(1.) );
+        for( int i=0 ; i<n_layers-1 ; i++ )
+            if( greedy_target_layers[i] )
+                costs[greedy_target_layer_nlls_index+i] = 
+                    greedy_target_layers[i]->fpropNLL(target_one_hot);
+            else
+                costs[greedy_target_layer_nlls_index+i] = MISSING_VALUE;
     }
 
     if (reconstruct_layerwise)
@@ -2831,6 +3328,12 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
 
     for( int i=0 ; i<generative_connections.length() ; i++ )
         generative_connections[i]->setLearningRate( the_learning_rate );
+
+    for( int i=0; i<greedy_target_connections.length(); i++ )
+        greedy_target_connections[i]->setLearningRate( the_learning_rate );
+
+    for( int i=0; i<greedy_target_layers.length(); i++ )
+        greedy_target_layers[i]->setLearningRate( the_learning_rate );
 }
 
 } // end of namespace PLearn
