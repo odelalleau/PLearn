@@ -144,7 +144,6 @@ public:
     // Phase recurrent no noise (supervised fine tuning)
     double recurrent_lr;
 
-
     // When training with trainUnconditionalPredictor, this is simply used to store the avg encoded frame
     Vec mean_encoded_vec;
 
@@ -315,6 +314,21 @@ protected:
     //! Store external data;
     AutoVMatrix*  data;
    
+    mutable TVec< Mat > acc_target_connections_gr;
+
+    mutable Mat acc_input_connections_gr;
+
+    mutable Mat acc_dynamic_connections_gr;
+
+    //! Stores accumulate target bias gradient
+    mutable Vec acc_target_bias_gr;
+
+    //! Stores accumulate hidden bias gradient
+    mutable Vec acc_hidden_bias_gr;
+
+    //! Stores accumulate reconstruction bias gradient
+    mutable Vec acc_recons_bias_gr;
+
     //! Stores bias gradient
     mutable Vec bias_gradient;
     
@@ -407,11 +421,35 @@ private:
     void trainUnconditionalPredictor();
     void unconditionalFprop(Vec train_costs, Vec train_n_items) const;
 
+    Mat getTargetConnectionsWeightMatrix(int tar);
+
     Mat getInputConnectionsWeightMatrix();
 
     Mat getDynamicConnectionsWeightMatrix();
 
     Mat getDynamicReconstructionConnectionsWeightMatrix();
+
+    void updateTargetLayer( Vec& grad, 
+                            Vec& bias , 
+                            real& lr );
+    
+    void bpropUpdateConnection(const Vec& input, 
+                               const Vec& output,
+                               Vec& input_gradient,
+                               const Vec& output_gradient,
+                               Mat& weights,
+                               Mat& acc_weights_gr,
+                               int& down_size,
+                               int& up_size,
+                               real& lr,
+                               bool accumulate);
+
+    void bpropUpdateHiddenLayer(const Vec& input, 
+                                const Vec& output,
+                                Vec& input_gradient,
+                                const Vec& output_gradient,
+                                Vec& bias,
+                                real& lr);
 
     //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
     //! then backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
@@ -432,7 +470,7 @@ private:
     void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
-    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_bias, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
+    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
                                                                           Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
     
     double fpropHiddenSymmetricDynamicMatrix(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_prob, 
