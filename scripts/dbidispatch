@@ -10,7 +10,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     bqtools, cluster, condor option  : [--mem=N]
                               [--cpu=nb_cpu_per_node]
     bqtools, cluster option  :[--duree=X]
-    bqtools, condor options  :[--tasks_filename={compact,explicit,*nb0,nb1,
+    bqtools, condor options  :[--tasks_filename={compact,explicit,nb0,nb1,
                                                  sh(condor only),
                                                  clusterid(condor only),
                                                  processid(condor only))}+]
@@ -88,7 +88,7 @@ bqtools and condor options:
     filename where the stdout, stderr are redirected. We can put many option 
     separated by comma. They will apper in the filename in order separated by a 
     dot. For all except sh, they have this pattern condor.X.{out,error} where X=:
-      - default : same as nb0
+      - default : as --tasks_filename=nb0,compact
       - compact : a unic string with parameter that change of value between jobs
       - explicit: a unic string that represent the full command to execute
       - nb0     : a number from 0 to nb job -1.
@@ -396,10 +396,8 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
         if source_with_kerb:
             dbi_param['copy_local_source_file']=True
 
-if launch_cmd=="Bqtools" and not tasks_filename:
-    tasks_filename = ["explicit"]
-elif launch_cmd=="Condor" and not tasks_filename:
-    tasks_filename = ["nb0"]
+if not tasks_filename and launch_cmd in ["Bqtools","Condor"]:
+    tasks_filename = ["nb0","compact"]
 elif tasks_filename:
     print "WARNING: The parameter --tasks_filename={} is only supported by condor and bqtools.",
     print "It will be ignored"
@@ -557,7 +555,7 @@ for pattern in tasks_filename:
         dbi_param["stdouts"]=stdouts
         dbi_param["stderrs"]=stderrs
     else:
-        print "internal error!"
+        print "internal error! bad pattern:",pattern
         sys.exit(2)
     assert(not (dbi_param.has_key("stdouts") and (dbi_param[n])==0))
 
