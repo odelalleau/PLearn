@@ -48,7 +48,9 @@
 #define TANGVEC_PATH "/home/fringant2/lisa/data/mnist/tangVec_float_60000x28x28.bin"
 
 #include <plearn/vmat/RowBufferedVMatrix.h>
+#include <plearn/math/PRandom.h>
 #include <kernel-invariant.h>
+//#include "kernel-invariant2.h"
 
 namespace PLearn {
 
@@ -74,9 +76,23 @@ public:
     //! Indication that the validation set examples (the last 10000 examples from the
     //! training set) should be included in this VMatrix.
     bool include_validation_examples;
+
+    //! Indication that the VMatrix should randomly (from time to time) provide
+    //! an example from the original training set instead of an example
+    //! from the global dataset
+    bool random_switch_to_original_training_set;
     
+    //! Proportion of switches to the original training set
+    real proportion_of_switches;
+    
+    //! Seed of random number generator
+    int seed;
+
     //! Value that the inputs should be divided by.
     real input_divisor;
+
+    //! Random number generator
+    PP< PRandom > random_gen;
 
     // Files required for loading infinite MNIST dataset
     //! File path of MNIST test images.
@@ -121,6 +137,7 @@ protected:
 
     static mnistproblem_t *dataset;
     static int n_pointers_to_dataset;
+    mutable unsigned char* image;
 
 protected:
     //#####  Protected Member Functions  ######################################

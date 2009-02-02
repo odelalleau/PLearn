@@ -60,6 +60,9 @@ PLEARN_IMPLEMENT_OBJECT(
 InfiniteMNISTVMatrix::InfiniteMNISTVMatrix():
     include_test_examples(false),
     include_validation_examples(false),
+    random_switch_to_original_training_set(false),
+    proportion_of_switches(0.0),
+    seed(1834),
     input_divisor(1.),
     test_images(TEST_IMAGES_PATH),
     test_labels(TEST_LABELS_PATH),
@@ -70,6 +73,8 @@ InfiniteMNISTVMatrix::InfiniteMNISTVMatrix():
 /* ### Initialize all fields to their default value */
 {
     InfiniteMNISTVMatrix::n_pointers_to_dataset++;
+    random_gen = new PRandom();
+    image = (unsigned char*)malloc(EXSIZE);
 }
 
 InfiniteMNISTVMatrix::~InfiniteMNISTVMatrix()
@@ -80,6 +85,7 @@ InfiniteMNISTVMatrix::~InfiniteMNISTVMatrix()
             destroy_mnistproblem(dataset);
             InfiniteMNISTVMatrix::dataset = 0;
     }
+    free( image );
 }
 
 void InfiniteMNISTVMatrix::getNewRow(int i, const Vec& v) const
@@ -99,7 +105,11 @@ void InfiniteMNISTVMatrix::getNewRow(int i, const Vec& v) const
         else
             i_dataset = i + (i/50000)*10000 + 10000;
 
-    unsigned char *image = cache_transformed_vector(InfiniteMNISTVMatrix::dataset, i_dataset);
+    if( random_switch_to_original_training_set && 
+        random_gen->uniform_sample() < proportion_of_switches )
+        i_dataset = (i_dataset % 50000)+10000;
+
+    image = compute_transformed_vector_in_place(InfiniteMNISTVMatrix::dataset, i_dataset, image);
 
     unsigned char* xj=image;
     real* vj=v.data();
@@ -122,6 +132,21 @@ void InfiniteMNISTVMatrix::declareOptions(OptionList& ol)
                    OptionBase::buildoption,
                    "Indication that the validation set examples (the last 10000 examples from the\n"
                    "training set) should be included in this VMatrix.\n");     
+
+     declareOption(ol, "random_switch_to_original_training_set", 
+                   &InfiniteMNISTVMatrix::random_switch_to_original_training_set,
+                   OptionBase::buildoption,
+                   "Indication that the VMatrix should randomly (from time to time) provide\n"
+                   "an example from the original training set instead of an example\n"
+                   "from the global dataset.\n");     
+
+     declareOption(ol, "proportion_of_switches", &InfiniteMNISTVMatrix::proportion_of_switches,
+                   OptionBase::buildoption,
+                   "Proportion of switches to the original training set.\n");     
+
+     declareOption(ol, "seed", &InfiniteMNISTVMatrix::seed,
+                   OptionBase::buildoption,
+                   "Seed of random number generator.\n");
 
      declareOption(ol, "input_divisor", &InfiniteMNISTVMatrix::input_divisor,
                    OptionBase::buildoption,
@@ -157,6 +182,7 @@ void InfiniteMNISTVMatrix::declareOptions(OptionList& ol)
 
 void InfiniteMNISTVMatrix::build_()
 {
+    random_gen->manual_seed(seed);
 
     if( !InfiniteMNISTVMatrix::dataset )
     {
@@ -233,6 +259,7 @@ void InfiniteMNISTVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     PLWARNING("InfiniteMNISTVMatrix::makeDeepCopyFromShallowCopy is not totally implemented. Need "
               "to figure out how to deep copy the \"dataset\" variable (mnistproblem_t*).\n");
     InfiniteMNISTVMatrix::n_pointers_to_dataset++;
+    image = (unsigned char*)malloc(EXSIZE);
 }
 
 } // end of namespace PLearn
