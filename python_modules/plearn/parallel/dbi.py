@@ -559,6 +559,7 @@ class DBIBqtools(DBIBase):
         self.duree = "120:00:00"
         self.submit_options = ""
         self.jobs_name = ""
+        self.m32G = False
         
         DBIBase.__init__(self, commands, **args)
 
@@ -664,6 +665,9 @@ class DBIBqtools(DBIBase):
         if self.duree:
             if l: l+=","
             l+="walltime="+self.duree
+        if self.m32G:
+            if l: l+=","
+            l+="nodes=1:m32G"
         if l:
             tmp_options+=" -l "+l
         batchName = self.jobs_name
