@@ -635,6 +635,10 @@ class DBIBqtools(DBIBase):
         logfiles_file = open( 'logfiles', 'w' )
         if self.base_tasks_log_file:
             for task,base in zip(self.tasks,self.base_tasks_log_file):
+                if len(base) > 255-4:
+                    raise DBIError("WARNING: the filename for the stdout and"+
+                                   " stderr file will be too long, so the jobs will fail."+
+                                   " Use the --tasks_filename option to change those name.")
                 tasks_file.write( ';'.join(task.commands) + '\n' )
                 logfiles_file.write( os.path.join(self.log_dir,base) + '\n' )
         else:
@@ -1128,24 +1132,27 @@ class DBICondor(DBIBase):
         condor_dag_file = self.condor_submit_file+".dag"
         condor_dag_fd = open( condor_dag_file, 'w' )
 
+        def print_task(id, task, stdout_file, stderr_file):
+            argstring =condor_dag_escape_argument(' ; '.join(task.commands))
+            condor_dag_fd.write("JOB %d %s\n"%(id,self.condor_submit_file))
+            if len(stdout_file)<255 or len(stderr_file)>255:
+                raise DBIError("WARNING: the filename for the stdout and stderr"+
+                               " file will be too long, so the jobs will fail."+
+                               " Use the --tasks_filename option to change those name.")
+                
+            condor_dag_fd.write('VARS %d args="%s"\n'%(id,argstring))
+            condor_dag_fd.write('VARS %d stdout="%s"\n'%(id,stdout_file))
+            condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(id,stderr_file))
+
         if self.base_tasks_log_file:
             for i in range(len(self.tasks)):
                 task=self.tasks[i]
-                argstring =condor_dag_escape_argument(' ; '.join(task.commands))
-                condor_dag_fd.write("JOB %d %s\n"%(i,self.condor_submit_file))
-                condor_dag_fd.write('VARS %d args="%s"\n'%(i,argstring))
-                s=os.path.join(self.log_dir,
-                               "condor."+self.base_tasks_log_file[i])
-                condor_dag_fd.write('VARS %d stdout="%s"\n'%(i,s+".out"))
-                condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(i,s+".err"))
+                s=os.path.join(self.log_dir,"condor."+self.base_tasks_log_file[i])
+                print_task(i,task,s+".out",s+".err")
         elif self.stdouts and self.stderrs:
             assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
-            for (task,stdout_file,stderr_file) in zip(self.tasks,self.stdouts,self.stderrs):
-                argstring =condor_dag_escape_argument(' ; '.join(task.commands))
-                condor_dag_fd.write("JOB %d %s\n"%(i,self.condor_submit_file))
-                condor_dag_fd.write('VARS %d args="%s"\n'%(i,argstring))
-                condor_dag_fd.write('VARS %d stdout="%s"\n'%(i,stdout_file))
-                condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(i,stderr_file))
+            for (i,task,stdout_file,stderr_file) in zip(range(len(self.tasks)),self.tasks,self.stdouts,self.stderrs):
+                print_task(i,task,stdout_file,stderr_file)
         else:
             #should not happen
             raise NotImplementedError()
@@ -1224,6 +1231,10 @@ class DBICondor(DBIBase):
             def print_task(task, stdout_file, stderr_file,req=""):
                 argstring = condor_escape_argument(' ; '.join(task.commands))
                 condor_submit_fd.write("arguments    = %s \n" %argstring)
+                if len(stdout_file) > 255 or len(stderr_file) > 255:
+                    raise DBIError("WARNING: the filename for the stdout and stderr file"+
+                                   " will be too long, so the jobs will fail."+
+                                   " Use the --tasks_filename option to change those name.")
                 if stdout_file:
                     condor_submit_fd.write("output       = %s \n" %stdout_file)
                 if stderr_file:
@@ -1233,9 +1244,8 @@ class DBICondor(DBIBase):
             if self.base_tasks_log_file:
                 for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,
                                                self.tasks_req):
-                    stdout_file=self.log_dir+"/condor"+task_log+".out"
-                    stderr_file=self.log_dir+"/condor"+task_log+".err"
-                    print_task(task,stdout_file,stderr_file,req)
+                    s=os.path.join(self.log_dir,"condor."+task_log)
+                    print_task(task,s+".out",s+".err",req)
             elif self.stdouts and self.stderrs:
                 assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
                 for (task,stdout_file,stderr_file,req) in zip(self.tasks,self.stdouts,
