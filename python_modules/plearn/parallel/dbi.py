@@ -31,6 +31,7 @@ STATUS_FINISHED = 0
 STATUS_RUNNING = 1
 STATUS_WAITING = 2
 STATUS_INIT = 3
+MAX_FILENAME_SIZE=255
 
 class DBIError(Exception):
     """Base class for exceptions in this module."""
@@ -635,7 +636,8 @@ class DBIBqtools(DBIBase):
         logfiles_file = open( 'logfiles', 'w' )
         if self.base_tasks_log_file:
             for task,base in zip(self.tasks,self.base_tasks_log_file):
-                if len(base) > 255-4:
+                #-4 as we will happend .err or .out
+                if len(base) > MAX_FILENAME_SIZE-4:
                     raise DBIError("WARNING: the filename for the stdout and"+
                                    " stderr file will be too long, so the jobs will fail."+
                                    " Use the --tasks_filename option to change those name.")
@@ -1135,7 +1137,7 @@ class DBICondor(DBIBase):
         def print_task(id, task, stdout_file, stderr_file):
             argstring =condor_dag_escape_argument(' ; '.join(task.commands))
             condor_dag_fd.write("JOB %d %s\n"%(id,self.condor_submit_file))
-            if len(stdout_file)<255 or len(stderr_file)>255:
+            if len(stdout_file)>MAX_FILENAME_SIZE or len(stderr_file)>MAX_FILENAME_SIZE:
                 raise DBIError("WARNING: the filename for the stdout and stderr"+
                                " file will be too long, so the jobs will fail."+
                                " Use the --tasks_filename option to change those name.")
@@ -1231,7 +1233,7 @@ class DBICondor(DBIBase):
             def print_task(task, stdout_file, stderr_file,req=""):
                 argstring = condor_escape_argument(' ; '.join(task.commands))
                 condor_submit_fd.write("arguments    = %s \n" %argstring)
-                if len(stdout_file) > 255 or len(stderr_file) > 255:
+                if len(stdout_file) > MAX_FILENAME_SIZE or len(stderr_file) > MAX_FILENAME_SIZE:
                     raise DBIError("WARNING: the filename for the stdout and stderr file"+
                                    " will be too long, so the jobs will fail."+
                                    " Use the --tasks_filename option to change those name.")
