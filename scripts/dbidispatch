@@ -18,7 +18,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
     cluster, condor options  :[--32|--64|--3264] [--os=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
                               [--queue=X] [--nano=X] [--submit_options=X]
-                              [*--[no_]clean_up]
+                              [*--[no_]clean_up] [--jobs_name=X]
     cluster option           :[*--[no_]cwait]  [--[*no_]force]
                               [--[*no_]interruptible]
     condor option            :[--req="CONDOR_REQUIREMENT"] [--[*no_]nice]
@@ -36,7 +36,8 @@ An + tell that we can put one or more separeted by a comma
 '''
 LongHelp="""Dispatches jobs with dbi.py. dbi can dispatch jobs on condor, bqtools, cluster,
 local and ssh. If no system is selected on the command line, we try them in the
-previous order. ssh is never automaticaly selected.
+previous order. ssh is never automaticaly selected. Currently we have a common interface for parallel jobs that run on SMP node. We
+we don't have a common interface for parallel job that run on multiple nodes.
 
 %(ShortHelp)s
 
@@ -124,6 +125,7 @@ bqtools only options:
   The '--queue=X' tell on witch queue the jobs will be launched.
   The '--nano=X' add nanoJobs=X in the submit file.
   The '--submit_options=X' X is appended to the submitOptions in the submit file.
+  The '--jobs_name=X' option give the X as the jobs name to bqtools. Default, random.
   
 cluster only options:
   The '--[no_]cwait' is transfered to cluster. 
@@ -312,7 +314,7 @@ for argv in to_parse:
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
                                 "--universe", "--exp_dir", "--machine", "--machines",
-                                "--queue", "--nano", "--submit_options"]:
+                                "--queue", "--nano", "--submit_options", "--jobs_name"]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -367,7 +369,7 @@ elif launch_cmd=="Condor":
                        "universe", "machine", "machines", "to_all"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
-                       "nano", "queue", "raw", "submit_options"]
+                       "nano", "queue", "raw", "submit_options", "jobs_name" ]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.
