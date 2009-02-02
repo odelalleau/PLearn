@@ -1164,7 +1164,7 @@ class DBICondor(DBIBase):
         if self.base_tasks_log_file:
             for i in range(len(self.tasks)):
                 task=self.tasks[i]
-                s=os.path.join(self.log_dir,"condor."+self.base_tasks_log_file[i])
+                s=os.path.join(self.log_dir,self.base_tasks_log_file[i])
                 print_task(i,task,s+".out",s+".err")
         elif self.stdouts and self.stderrs:
             assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
@@ -1207,8 +1207,8 @@ class DBICondor(DBIBase):
                 executable     = %s
                 universe       = %s
                 requirements   = %s
-                output         = %s/condor.$(Process).out
-                error          = %s/condor.$(Process).error
+                output         = %s/$(Process).out
+                error          = %s/$(Process).error
                 log            = %s
                 getenv         = %s
                 nice_user      = %s
@@ -1261,7 +1261,7 @@ class DBICondor(DBIBase):
             if self.base_tasks_log_file:
                 for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,
                                                self.tasks_req):
-                    s=os.path.join(self.log_dir,"condor."+task_log)
+                    s=os.path.join(self.log_dir,task_log)
                     print_task(task,s+".out",s+".err",req)
             elif self.stdouts and self.stderrs:
                 assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
