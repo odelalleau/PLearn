@@ -907,6 +907,7 @@ class DBICondor(DBIBase):
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
         assert self.p.stdout.readline()==""
+        assert self.p.returncode==0
 
 #example de sortie de pkdilly
 #La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
