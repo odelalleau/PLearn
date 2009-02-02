@@ -910,7 +910,7 @@ class DBICondor(DBIBase):
         if l!="":
             DBIError("pkdilly returned something on the stdout, this should not happen:\n"+l+"\n"+self.p.stdout.readlines())
         if self.p.returncode!=0:
-            DBIError("pkdilly returned an error code of "+str(self.p.returncode))
+            DBIError("pkdilly returned an error code of "+str(self.p.returncode)+":\n"+self.p.stderr.readlines()+"\n"+self.p.stdout.readlines())
 
 #example de sortie de pkdilly
 #La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
@@ -1049,6 +1049,7 @@ class DBICondor(DBIBase):
                 if self.condor_home:
                     fd.write('export HOME=%s\n' % self.condor_home)
                 fd.write(dedent('''
+                    klist
                     cd %s
                     '''%(os.path.abspath("."))))
                 if self.source_file:
