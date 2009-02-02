@@ -906,8 +906,11 @@ class DBICondor(DBIBase):
         cmd="pkdilly -S "+self.condor_submit_file
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
-        assert self.p.stdout.readline()==""
-        assert self.p.returncode==0
+        l = self.p.stdout.readline()
+        if l!="":
+            DBIError("pkdilly returned something on the stdout, this should not happen:\n"+l+"\n"+self.p.stdout.readlines())
+        if self.p.returncode!=0:
+            DBIError("pkdilly returned an error code of "+str(self.p.returncode))
 
 #example de sortie de pkdilly
 #La tache a soumettre est dans: /tmp/soumet_12368_Qbr7Av
