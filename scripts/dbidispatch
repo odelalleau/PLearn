@@ -98,6 +98,7 @@ bqtools and condor options:
                   to /dev/null
       - clusterid: (condor only)put the cluster id of the jobs.
       - processid: (condor only)put the process id of the jobs. Idem as nb0
+      - none    : remove all preceding pattern
   The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the submit file.
       if this option appread many time, they will be concatanated with a new line.
 
@@ -287,7 +288,7 @@ for argv in to_parse:
             dbi_param["micro"]=argv[8:]
     elif argv.startswith("--tasks_filename="):
         part = argv.split('=',1)
-        accepted_value=["compact","explicit","nb0","nb1","sh","clusterid","processid"]
+        accepted_value=["compact","explicit","nb0","nb1","sh","clusterid","processid","none"]
         val=part[1].split(",") 
         for v in val:
             if v not in accepted_value:
@@ -522,6 +523,8 @@ for pattern in tasks_filename:
         dbi_param[n]=merge_pattern(map(str,range(1,len(commands)+1)))
     elif pattern == "":
         pass
+    elif pattern == "none":
+        dbi_param[n]=[""]*len(commands)
     elif pattern == "clusterid":#$(Cluster)
         dbi_param[n]=merge_pattern(["$(Cluster)"]*len(dbi_param[n]))
     elif pattern == "processid":#$(Process)
