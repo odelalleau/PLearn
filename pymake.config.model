@@ -867,7 +867,7 @@ pymakeLinkOption( name = 'p4blas',
 
 pymakeLinkOption( name = 'mammouthblas',
               description = 'linking BLAS for P4 Mammouth-Serie cluster',
-              linkeroptions = '-L/opt/intel/mkl/10.0.011/lib/em64t -lmkl -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
+              linkeroptions = '-L/opt/intel/mkl/9.0/lib/em64t -lmkl -lmkl_lapack -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
 
 pymakeLinkOption( name = 'apintelblas',
               description = 'Intel BLAS+LAPACK for generic install in /usr/local/lib (incl. ApSTAT)',
