@@ -288,6 +288,7 @@ class DBIBase:
         while True:
             sp=os.path.split(l[0])
             if sp[0]=="": break
+            if sp[1]=="": l[0]=sp[0];break
             l.append(sp[1])
             l[0]=sp[0]
         for pp in l:
