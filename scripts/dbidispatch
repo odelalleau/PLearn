@@ -399,9 +399,8 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
 
 if not tasks_filename and launch_cmd in ["Bqtools","Condor"]:
     tasks_filename = ["nb0","compact"]
-elif tasks_filename:
+elif tasks_filename and launch_cmd not in ["Bqtools", "Condor"]:
     print "WARNING: The parameter --tasks_filename={} is only supported by condor and bqtools.",
-    print "It will be ignored"
     
 print "\n\nThe jobs will be launched on the system:", launch_cmd
 print "With options: ",dbi_param
