@@ -276,6 +276,27 @@ class DBIBase:
         print "[DBI] %d jobs. finished: %d, running: %d, waiting: %d, init: %d"%(len(self.tasks),finished, running, waiting, init)
         print "[DBI] jobs unfinished (starting at 1): ",unfinished
 
+    def check_path(self, p):
+        """
+        A function that check we use a path to file that is valid.
+        We currently check that each directory and the file in the path
+        are not too long.
+        """
+        l = [p]
+        while True:
+            sp=os.path.split(l[0])
+            if sp[0]=="": break
+            l.append(sp[1])
+            l[0]=sp[0]
+        for pp in l:
+            if len(pp)> MAX_FILENAME_SIZE:
+                raise DBIError("ERROR: a path containt a diretory or a filename that "+
+                               " is too long, so the jobs will fail. Maybe"+
+                               " use the --tasks_filename option to change those name.\n"+
+                               "The full bad path: "+p+"\n"+"The bad part: "+pp)
+                
+
+
 class Task:
 
     def __init__(self, command, tmp_dir, log_dir, time_format, pre_tasks=[], post_tasks=[], dolog = True, id=-1, gen_unique_id = True, args = {}):
@@ -640,12 +661,10 @@ class DBIBqtools(DBIBase):
         if self.base_tasks_log_file:
             for task,base in zip(self.tasks,self.base_tasks_log_file):
                 #-4 as we will happend .err or .out
-                if len(os.path.basename(base)) > MAX_FILENAME_SIZE-4:
-                    raise DBIError("ERROR: the filename for the stdout and"+
-                                   " stderr file will be too long, so the jobs will fail."+
-                                   " Use the --tasks_filename option to change those name.")
+                p=os.path.join(self.log_dir,base)
+                self.check_path(p)
                 tasks_file.write( ';'.join(task.commands) + '\n' )
-                logfiles_file.write( os.path.join(self.log_dir,base) + '\n' )
+                logfiles_file.write( p + '\n' )
         else:
             for task in self.tasks:
                 tasks_file.write( ';'.join(task.commands) + '\n' )
@@ -1152,11 +1171,8 @@ class DBICondor(DBIBase):
         def print_task(id, task, stdout_file, stderr_file):
             argstring =condor_dag_escape_argument(' ; '.join(task.commands))
             condor_dag_fd.write("JOB %d %s\n"%(id,self.condor_submit_file))
-            if len(os.path.basename(stdout_file))>MAX_FILENAME_SIZE or len(os.path.basename(stderr_file))>MAX_FILENAME_SIZE:
-                raise DBIError("ERROR: the filename for the stdout and stderr"+
-                               " file will be too long, so the jobs will fail."+
-                               " Use the --tasks_filename option to change those name.")
-                
+            self.check_path(stdout_file)
+            self.check_path(stderr_file)
             condor_dag_fd.write('VARS %d args="%s"\n'%(id,argstring))
             condor_dag_fd.write('VARS %d stdout="%s"\n'%(id,stdout_file))
             condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(id,stderr_file))
@@ -1248,10 +1264,8 @@ class DBICondor(DBIBase):
             def print_task(task, stdout_file, stderr_file,req=""):
                 argstring = condor_escape_argument(' ; '.join(task.commands))
                 condor_submit_fd.write("arguments    = %s \n" %argstring)
-                if len(os.path.basename(stdout_file)) > MAX_FILENAME_SIZE or len(os.path.basename(stderr_file)) > MAX_FILENAME_SIZE:
-                    raise DBIError("ERROR: the filename for the stdout and stderr file"+
-                                   " will be too long, so the jobs will fail."+
-                                   " Use the --tasks_filename option to change those name.")
+                self.check_path(stdout_file)
+                self.check_path(stderr_file)
                 if stdout_file:
                     condor_submit_fd.write("output       = %s \n" %stdout_file)
                 if stderr_file:
