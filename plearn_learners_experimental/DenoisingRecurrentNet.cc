@@ -480,6 +480,8 @@ void DenoisingRecurrentNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
 
+    // Public fields
+    deepCopyField( target_layers_weights, copies );
     deepCopyField( input_layer, copies);
     deepCopyField( target_layers , copies);
     deepCopyField( hidden_layer, copies);
@@ -492,8 +494,18 @@ void DenoisingRecurrentNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField( target_layers_n_of_target_elements, copies);
     deepCopyField( input_symbol_sizes, copies);
     deepCopyField( target_symbol_sizes, copies);
-    
+    deepCopyField( mean_encoded_vec, copies);
+    deepCopyField( input_reconstruction_bias, copies);
+    deepCopyField( hidden_reconstruction_bias, copies);
 
+    // Protected fields
+    deepCopyField( data, copies);
+    deepCopyField( acc_target_connections_gr, copies);
+    deepCopyField( acc_input_connections_gr, copies);
+    deepCopyField( acc_dynamic_connections_gr, copies);
+    deepCopyField( acc_target_bias_gr, copies);
+    deepCopyField( acc_hidden_bias_gr, copies);
+    deepCopyField( acc_recons_bias_gr, copies);
     deepCopyField( bias_gradient , copies);
     deepCopyField( visi_bias_gradient , copies);
     deepCopyField( hidden_gradient , copies);
@@ -509,7 +521,14 @@ void DenoisingRecurrentNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField( nll_list , copies);
     deepCopyField( masks_list , copies);
     deepCopyField( dynamic_act_no_bias_contribution, copies);
-
+    deepCopyField( trainset_boundaries, copies);
+    deepCopyField( testset_boundaries, copies);
+    deepCopyField( seq, copies);
+    deepCopyField( encoded_seq, copies);
+    deepCopyField( clean_encoded_seq, copies);
+    deepCopyField( input_reconstruction_prob, copies);
+    deepCopyField( hidden_reconstruction_prob, copies);
+    
 
     // deepCopyField(, copies);
 
@@ -1240,13 +1259,14 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
 
     // update weight
     externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr);
+    
     /********************************************************************************/
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
     for(int k=0; k<reconstruction_prob.length(); k++)
         if(hidden_target[k]!=0)
-            neg_log_cost -= hidden_target[k]*safelog(reconstruction_prob[k]);
+            neg_log_cost -= hidden_target[k]*safelog(reconstruction_prob[k]) + (1-hidden_target[k])*safelog(1-reconstruction_prob[k]);
     result_cost = neg_log_cost;
     
     return result_cost;

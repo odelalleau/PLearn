@@ -312,7 +312,7 @@ protected:
     mutable double current_learning_rate;
 
     //! Store external data;
-    AutoVMatrix*  data;
+    PP<AutoVMatrix> data;
    
     mutable TVec< Mat > acc_target_connections_gr;
 
