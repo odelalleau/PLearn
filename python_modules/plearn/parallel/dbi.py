@@ -217,10 +217,12 @@ class DBIBase:
         output = PIPE
         error = PIPE
         if int(self.file_redirect_stdout):
+            self.check_path(stdout_file)
             output = open(stdout_file, 'w')
         if self.redirect_stderr_to_stdout:
             error = STDOUT
         elif int(self.file_redirect_stderr):
+            self.check_path(stderr_file)
             error = open(stderr_file, 'w')
         return (output,error)
 
