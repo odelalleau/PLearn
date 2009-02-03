@@ -640,8 +640,8 @@ class DBIBqtools(DBIBase):
         if self.base_tasks_log_file:
             for task,base in zip(self.tasks,self.base_tasks_log_file):
                 #-4 as we will happend .err or .out
-                if len(base) > MAX_FILENAME_SIZE-4:
-                    raise DBIError("WARNING: the filename for the stdout and"+
+                if len(os.path.basename(base)) > MAX_FILENAME_SIZE-4:
+                    raise DBIError("ERROR: the filename for the stdout and"+
                                    " stderr file will be too long, so the jobs will fail."+
                                    " Use the --tasks_filename option to change those name.")
                 tasks_file.write( ';'.join(task.commands) + '\n' )
@@ -1152,8 +1152,8 @@ class DBICondor(DBIBase):
         def print_task(id, task, stdout_file, stderr_file):
             argstring =condor_dag_escape_argument(' ; '.join(task.commands))
             condor_dag_fd.write("JOB %d %s\n"%(id,self.condor_submit_file))
-            if len(stdout_file)>MAX_FILENAME_SIZE or len(stderr_file)>MAX_FILENAME_SIZE:
-                raise DBIError("WARNING: the filename for the stdout and stderr"+
+            if len(os.path.basename(stdout_file))>MAX_FILENAME_SIZE or len(os.path.basename(stderr_file))>MAX_FILENAME_SIZE:
+                raise DBIError("ERROR: the filename for the stdout and stderr"+
                                " file will be too long, so the jobs will fail."+
                                " Use the --tasks_filename option to change those name.")
                 
@@ -1248,8 +1248,8 @@ class DBICondor(DBIBase):
             def print_task(task, stdout_file, stderr_file,req=""):
                 argstring = condor_escape_argument(' ; '.join(task.commands))
                 condor_submit_fd.write("arguments    = %s \n" %argstring)
-                if len(stdout_file) > MAX_FILENAME_SIZE or len(stderr_file) > MAX_FILENAME_SIZE:
-                    raise DBIError("WARNING: the filename for the stdout and stderr file"+
+                if len(os.path.basename(stdout_file)) > MAX_FILENAME_SIZE or len(os.path.basename(stderr_file)) > MAX_FILENAME_SIZE:
+                    raise DBIError("ERROR: the filename for the stdout and stderr file"+
                                    " will be too long, so the jobs will fail."+
                                    " Use the --tasks_filename option to change those name.")
                 if stdout_file:
