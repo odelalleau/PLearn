@@ -1622,7 +1622,8 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                                   input_connections->learning_rate,
                                   false);
                 
-            hidden_temporal_gradient << hidden_gradient;                
+            hidden_temporal_gradient << hidden_gradient;  
+            hidden_temporal_gradient +=  hidden_reconstruction_activation_grad;
         }
         else
         {
