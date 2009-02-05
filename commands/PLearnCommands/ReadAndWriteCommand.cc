@@ -93,7 +93,6 @@ void ReadAndWriteCommand::run(const vector<string>& args)
     string right;
     for(uint i=2; i<args.size();i++){
         split_on_first(args[i], "=", left, right);
-        cout <<left<<endl<<right<<endl;
         o->setOption(left, right);
     }
 
