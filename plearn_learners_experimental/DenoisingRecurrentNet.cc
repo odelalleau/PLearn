@@ -1252,15 +1252,19 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     //transposeProductAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
     
     //update bias
-    multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
+    //multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
     // update weight
     //externalProductScaleAcc(reconstruction_weights, hidden_reconstruction_activation_grad, hidden, -lr);
                 
 
     // update weight
-    externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr);
+    //externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr);
     
     /********************************************************************************/
+    
+    hidden_reconstruction_activation_grad.clear();
+    for(int k=0; k<reconstruction_prob.length(); k++)
+            hidden_reconstruction_activation_grad[k] = safelog(reconstruction_prob[k] - safelog(1-reconstruction_prob[k]);
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
