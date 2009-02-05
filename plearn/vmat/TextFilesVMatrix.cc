@@ -107,8 +107,9 @@ void TextFilesVMatrix::buildIdx()
 
     if(idxfile)
         fclose(idxfile);
-
-    idxfile = fopen(( getMetaDataDir()/"txtmat.idx").c_str(),"wb");
+    PPath ft=getMetaDataDir()/"txtmat.idx.tmp";
+    PPath f=getMetaDataDir()/"txtmat.idx";
+    idxfile = fopen(ft.c_str(),"wb");
     FILE* logfile = fopen((getMetaDataDir()/"txtmat.idx.log").c_str(),"a");
 
     if (! idxfile)
@@ -204,7 +205,7 @@ void TextFilesVMatrix::buildIdx()
     // close files
     fclose(logfile);
     fclose(idxfile);
-
+    mvforce(ft,f);
     perr << "Index file built." << endl;
 }
 
