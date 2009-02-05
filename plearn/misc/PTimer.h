@@ -76,7 +76,7 @@ public:
     real getTimer(const string& timer_name);
 
     //! Add a new timer.
-    void newTimer(const string& timer_name);
+    void newTimer(const string& timer_name, bool can_exit = false);
 
     //! Reset all timers.
     void resetAllTimers();

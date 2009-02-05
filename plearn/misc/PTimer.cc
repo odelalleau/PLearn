@@ -134,9 +134,10 @@ real PTimer::getTimer(const string& timer_name)
 //////////////
 // newTimer //
 //////////////
-void PTimer::newTimer(const string& timer_name)
+void PTimer::newTimer(const string& timer_name, bool can_exist)
 {
-    PLASSERT( name_to_idx.find(timer_name) == name_to_idx.end() );
+    if(!can_exist)
+        PLASSERT( name_to_idx.find(timer_name) == name_to_idx.end() );
     int n_timers = total_times.length();
     name_to_idx[timer_name] = n_timers;
     total_times.append(0);
