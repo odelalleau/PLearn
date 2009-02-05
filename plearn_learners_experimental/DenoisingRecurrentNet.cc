@@ -1264,7 +1264,7 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     
     hidden_reconstruction_activation_grad.clear();
     for(int k=0; k<reconstruction_prob.length(); k++)
-            hidden_reconstruction_activation_grad[k] = safelog(reconstruction_prob[k] - safelog(1-reconstruction_prob[k]);
+        hidden_reconstruction_activation_grad[k] = safelog(reconstruction_prob[k]) - safelog(1-reconstruction_prob[k]);
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
