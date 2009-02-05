@@ -136,7 +136,7 @@ bool rm(const PPath& file);
 PRStatus mv(const PPath& source, const PPath& dest, bool fail_on_error = true);
 
 //! Same as mv, but will not prompt before overwriting.
-void mvforce(const PPath& source, const PPath& dest);
+PRStatus mvforce(const PPath& source, const PPath& dest, bool fail_on_error = true);
 
 //! Trivial unix touch.
 void touch(const PPath& file);

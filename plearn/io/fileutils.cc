@@ -399,11 +399,15 @@ PRStatus mv(const PPath& source, const PPath& destination, bool fail_on_error)
 /////////////
 // mvforce //
 /////////////
-void mvforce(const PPath& source, const PPath& destination)
+PRStatus mvforce(const PPath& source, const PPath& destination, bool fail_on_error)
 {
-    // TODO Cross-platform, PR_Access, PR_Delete and PR_Rename
-    string command = "\\mv -f '" + source.absolute() + "' '" + destination.absolute()+"'";
-    system(command.c_str());
+     if(PR_Access(destination.c_str(), PR_ACCESS_EXISTS)==PR_SUCCESS)
+         if(PR_Delete(destination.c_str())!=PR_SUCCESS)
+             if(fail_on_error)
+                 PLERROR("In mvforce(%s,%s) - we failed to delete the destination!",source.c_str(),destination.c_str());
+             else
+                 return PR_FAILURE;
+     return mv(source,destination);
 }
 
 
