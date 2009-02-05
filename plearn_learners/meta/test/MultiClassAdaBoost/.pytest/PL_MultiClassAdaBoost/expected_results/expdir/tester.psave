@@ -316,7 +316,8 @@ forward_test = 0 ;
 train_time = 0 ;
 total_train_time = 0 ;
 test_time = 0 ;
-total_test_time = 0  )
+total_test_time = 0 ;
+time_costs = 0  )
 ;
 perf_evaluators = {};
 report_stats = 1 ;

@@ -33,7 +33,8 @@
                     ),
                 weight_by_resampling = 0
                 ),
-            test_minibatch_size = 1
+            test_minibatch_size = 1,
+            time_costs = False
             ),
         nstages = 1,
         option_fields = [ "nstages" ],

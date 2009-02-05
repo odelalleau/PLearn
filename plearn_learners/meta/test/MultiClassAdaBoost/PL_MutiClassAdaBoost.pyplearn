@@ -7,6 +7,7 @@ plarg_defaults.tms     = 1
 learner=pl.MultiClassAdaBoost( 
     forward_sub_learner_test_costs=1,
     test_minibatch_size=plargs.tms,
+    time_costs=False,
     learner_template = pl.AdaBoost(
         weak_learner_template=pl.RegressionTree(
             nstages = 4,

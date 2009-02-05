@@ -42,6 +42,7 @@
 
 #include <plearn_learners/generic/PLearner.h>
 #include <plearn_learners/meta/AdaBoost.h>
+#include <plearn/misc/PTimer.h>
 
 namespace PLearn {
 
@@ -83,10 +84,14 @@ class MultiClassAdaBoost : public PLearner
     //! The total time passed in test()
     real total_test_time;
 
-    mutable long time_sum;
-    mutable long time_sum_rtr;
-    mutable long time_last_stage;
-    mutable long time_last_stage_rtr;
+    bool time_costs;
+
+    PP<PTimer> timer;
+
+    mutable real time_sum;
+    mutable real time_sum_rtr;
+    mutable real time_last_stage;
+    mutable real time_last_stage_rtr;
     mutable int last_stage;
 
 public:
