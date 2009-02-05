@@ -124,19 +124,23 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
                   " based on past  test time.\n");
 
     declareOption(ol, "train_time",
-                  &MultiClassAdaBoost::train_time, OptionBase::learntoption,
+                  &MultiClassAdaBoost::train_time, 
+                  OptionBase::learntoption|OptionBase::nosave,
                   "The time spent in the last call to train() in second.");
 
     declareOption(ol, "total_train_time",
-                  &MultiClassAdaBoost::total_train_time, OptionBase::learntoption,
+                  &MultiClassAdaBoost::total_train_time, 
+                  OptionBase::learntoption|OptionBase::nosave,
                   "The total time spent in the train() function in second.");
 
     declareOption(ol, "test_time",
-                  &MultiClassAdaBoost::test_time, OptionBase::learntoption,
+                  &MultiClassAdaBoost::test_time, 
+                  OptionBase::learntoption|OptionBase::nosave,
                   "The time spent in the last call to test() in second.");
 
     declareOption(ol, "total_test_time",
-                  &MultiClassAdaBoost::total_test_time, OptionBase::learntoption,
+                  &MultiClassAdaBoost::total_test_time, 
+                  OptionBase::learntoption|OptionBase::nosave,
                   "The total time spent in the test() function in second.");
 
     declareOption(ol, "time_costs",
