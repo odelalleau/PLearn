@@ -36,6 +36,10 @@ pl_lib_dir, pl_lib_name = getLib()
 exec 'from %s.%s import *' % (pl_lib_dir, pl_lib_name)
 exec 'from %s import %s as pl' % (pl_lib_dir, pl_lib_name)
 
+
+from plearn.pybridge import wrapped_plearn_object
+wrapped_plearn_object.plearn_module= pl
+
 import gc, atexit
 from plearn.pyplearn.plargs import *
 from plearn.utilities.options_dialog import *
