@@ -630,6 +630,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         PLCHECK(last_stage<=stage);
         inherited::test(testset,test_stats,testoutputs,testcosts);
         timer->stopTimer("MultiClassAdaBoost::test() current");
+        timer->stopTimer("MultiClassAdaBoost::test()");
         Profiler::pl_profile_end("MultiClassAdaBoost::test()");
         time_sum += timer->getTimer("MultiClassAdaBoost::test() current");
         last_stage=stage;
@@ -780,6 +781,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     }
     Profiler::pl_profile_end("MultiClassAdaBoost::test() test_stats");
     timer->stopTimer("MultiClassAdaBoost::test() current");
+    timer->stopTimer("MultiClassAdaBoost::test()");
     Profiler::pl_profile_end("MultiClassAdaBoost::test()");
     
     time_sum_rtr +=timer->getTimer("MultiClassAdaBoost::test() current");
