@@ -83,7 +83,6 @@ template<class T>
 inline void tmpsave(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii, bool implicit_storage = true)
 { 
     PPath tmp_file=filepath+".plearn_tmpsave";
-    perr<<tmp_file<<endl;
     PLearn::save(tmp_file, x, io_formatting, implicit_storage);
     mvforce(tmp_file, filepath);
 }
