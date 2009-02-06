@@ -995,8 +995,9 @@ class DBICondor(DBIBase):
                               "expected a return code of 0 or 1. Exiting\n")
                     break
                 else:
+                    s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
                     out.write(line_header()+
-                              "renew the launch file "+self.launch_file+". The old version had a size of \n")
+                              "renew the launch file "+self.launch_file+". The old version had a size of "+str(s)+"\n")
                     out.flush()
                     launch_tmp_file=self.launch_file+".tmp"
                     fd=open(launch_tmp_file,'w')
@@ -1006,7 +1007,7 @@ class DBICondor(DBIBase):
                     os.rename(launch_tmp_file, self.launch_file)
                     s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
                     out.write(line_header()+
-                              "generated "+len(kerb_vars)+" kerberos variables. The file size is "+str(s)+"\n")
+                              "generated "+str(len(kerb_vars))+" kerberos variables. The file size is "+str(s)+"\n")
                 out.flush()
                 #we do this as in some case(with dagman) the log file can 
                 #take a few second to be created. So we don't loop too fast
