@@ -977,6 +977,8 @@ class DBICondor(DBIBase):
         if pid==0:#in the childreen
             #renew each hour
             out=open(renew_out_file,"w")
+            out.write(line_header()+"will renew the lauch file "+self.launch_file+" each "+str(seconds)+"s\n")
+            out.flush()
             while True:
                 p = Popen( cmd, shell=True, stdout=out, stderr=STDOUT)
                 ret = p.wait()
@@ -994,14 +996,17 @@ class DBICondor(DBIBase):
                     break
                 else:
                     out.write(line_header()+
-                              "renew the launch file "+self.launch_file+"\n")
+                              "renew the launch file "+self.launch_file+". The old version had a size of \n")
                     out.flush()
                     launch_tmp_file=self.launch_file+".tmp"
                     fd=open(launch_tmp_file,'w')
-                    self.make_kerb_script(fd,self.second_lauch_file)
+                    kerb_vars=self.make_kerb_script(fd,self.second_lauch_file)
                     fd.close()
                     os.chmod(launch_tmp_file, 0755)
                     os.rename(launch_tmp_file, self.launch_file)
+                    s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
+                    out.write(line_header()+
+                              "generated "+len(kerb_vars)+" kerberos variables. The file size is "+str(s)+"\n")
                 out.flush()
                 #we do this as in some case(with dagman) the log file can 
                 #take a few second to be created. So we don't loop too fast
@@ -1027,6 +1032,7 @@ class DBICondor(DBIBase):
                 export KRVEXECUTE=%s
                 /usr/sbin/circus "$@"
                 '''%(os.path.abspath(second_lauch_file))))
+        return get
 
     def make_launch_script(self, bash_exec):
             
@@ -1062,7 +1068,8 @@ class DBICondor(DBIBase):
             
             if self.pkdilly:
                 self.second_lauch_file = self.launch_file+"2.sh"
-                self.make_kerb_script(fd, self.second_lauch_file)
+                kerb_vars=self.make_kerb_script(fd, self.second_lauch_file)
+                assert(len(kerb_vars)>0)
                 fd.close()
 
                 fd = open(self.second_lauch_file,'w')
@@ -1075,13 +1082,13 @@ class DBICondor(DBIBase):
                 if self.condor_home:
                     fd.write('export HOME=%s\n' % self.condor_home)
                 fd.write(dedent('''
-                    klist
                     cd %s
                     '''%(os.path.abspath("."))))
                 if self.source_file:
                     fd.write('source ' + self.source_file + '\n')
 
                 fd.write(dedent('''\
+                    klist
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
