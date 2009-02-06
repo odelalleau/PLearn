@@ -997,7 +997,7 @@ class DBICondor(DBIBase):
                 else:
                     s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
                     out.write(line_header()+
-                              "renew the launch file "+self.launch_file+". The old version had a size of "+str(s)+"\n")
+                              "renew the launch file. The old version had a size of "+str(s)+"\n")
                     out.flush()
                     launch_tmp_file=self.launch_file+".tmp"
                     fd=open(launch_tmp_file,'w')
