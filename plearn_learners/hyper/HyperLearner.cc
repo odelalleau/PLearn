@@ -255,6 +255,9 @@ void HyperLearner::train()
     }
 }
 
+////////////
+// forget //
+////////////
 void HyperLearner::forget()
 {
     learner_->forget();
@@ -263,6 +266,15 @@ void HyperLearner::forget()
     // Forward the forget to each command of the strategy.
     for (int i=0, n=strategy.size() ; i<n ; ++i)
         strategy[i]->forget();
+}
+
+//////////////
+// finalize //
+//////////////
+void HyperLearner::finalize()
+{
+    inherited::finalize();
+    learner_->finalize();
 }
 
 ////////////

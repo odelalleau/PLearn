@@ -99,6 +99,7 @@ public:
     virtual void train();
 
     virtual void forget();
+    virtual void finalize();
 
     //! Returns the getResultNames() of its last strategy command
     TVec<string> getTrainCostNames() const;
