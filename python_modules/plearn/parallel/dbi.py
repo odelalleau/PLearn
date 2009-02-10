@@ -797,6 +797,7 @@ class DBICondor(DBIBase):
         self.machine = []
         self.machines = []
         self.to_all = False
+        self.keep_failed_jobs_in_queue = False
 
         DBIBase.__init__(self, commands, **args)
 
@@ -1132,7 +1133,44 @@ class DBICondor(DBIBase):
 
             os.chmod(launch_tmp_file, 0755)
             os.rename(launch_tmp_file, self.launch_file)
+    def print_common_condor_submit(self, fd, output, error, arguments=None):
+        fd.write( dedent('''\
+                executable     = %s
+                universe       = %s
+                requirements   = %s
+                output         = %s
+                error          = %s
+                log            = %s
+                getenv         = %s
+                nice_user      = %s
+                ''' % (self.launch_file, self.universe, self.req,
+                       output,
+                       error,
+                       self.log_file,str(self.getenv),str(self.nice))))
+        if arguments:
+            fd.write('arguments      = '+arguments+'\n')
+        if self.keep_failed_jobs_in_queue:
+            fd.write('leave_in_queue = (ExitCode!=0)\n')
+        if self.mem>0:
+            #condor need value in Kb
+            fd.write('ImageSize      = %d\n'%(self.mem))
 
+        if self.files: #ON_EXIT_OR_EVICT
+            fd.write( dedent('''\
+                when_to_transfer_output = ON_EXIT
+                should_transfer_files   = Yes
+                transfer_input_files    = %s
+                '''%(self.files+','+self.launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
+        if self.env:
+            fd.write('environment    = '+self.env+'\n')
+        if self.raw:
+            fd.write( self.raw+'\n')
+        if self.rank:
+            fd.write( dedent('''\
+                rank = %s
+                ''' %(self.rank)))
+
+        
     def run_dag(self):
         if self.to_all:
             raise DBIError("[DBI] ERROR: condor backend don't support the option --to_all and a maximum number of process")
@@ -1141,37 +1179,7 @@ class DBICondor(DBIBase):
         self.log_file = os.path.join("/tmp/bastienf/dbidispatch",self.log_dir)
         os.system('mkdir -p ' + self.log_file)
         self.log_file = os.path.join(self.log_file,"condor.log")
-
-        condor_submit_fd.write( dedent('''\
-                executable     = %s
-                universe       = %s
-                requirements   = %s
-                output         = $(stdout)
-                error          = $(stderr)
-                log            = %s
-                getenv         = %s
-                nice_user      = %s
-                arguments      = $(args)
-                ''' % (self.launch_file, self.universe, self.req,
-                       self.log_file,str(self.getenv),str(self.nice))))
-        if self.mem>0:
-            #condor need value in Kb
-            condor_submit_fd.write('ImageSize      = %d\n'%(self.mem))
-
-        if self.files: #ON_EXIT_OR_EVICT
-            condor_submit_fd.write( dedent('''\
-                when_to_transfer_output = ON_EXIT
-                should_transfer_files   = Yes
-                transfer_input_files    = %s
-                '''%(self.files+','+self.launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
-        if self.env:
-            condor_submit_fd.write('environment    = '+self.env+'\n')
-        if self.raw:
-            condor_submit_fd.write( self.raw+'\n')
-        if self.rank:
-            condor_submit_fd.write( dedent('''\
-                rank = %s
-                ''' %(self.rank)))
+        self.print_common_condor_submit(condor_submit_fd, "$(stdout)", "$(stderr)","$(args)")
 
         condor_submit_fd.write("\nqueue\n")
         condor_submit_fd.close()
@@ -1227,47 +1235,16 @@ class DBICondor(DBIBase):
 
 
         condor_submit_fd = open( self.condor_submit_file, 'w' )
-
         self.log_file= os.path.join(self.log_dir,"condor.log")
+        self.print_common_condor_submit(condor_submit_fd, self.log_dir+"/$(Process).out", self.log_dir+"/$(Process).error")
 
-        condor_submit_fd.write( dedent('''\
-                executable     = %s
-                universe       = %s
-                requirements   = %s
-                output         = %s/$(Process).out
-                error          = %s/$(Process).error
-                log            = %s
-                getenv         = %s
-                nice_user      = %s
-                ''' % (self.launch_file, self.universe, self.req,
-                       self.log_dir,
-                       self.log_dir,
-                       self.log_file,str(self.getenv),str(self.nice))))
         if self.pkdilly:
             condor_submit_fd.write(dedent("""
-            stream_error = True
-            stream_output = True
-            transfer_executable = True
+            stream_error            = True
+            stream_output           = True
+            transfer_executable     = True
             when_to_transfer_output = ON_EXIT
             """))
-        if self.mem>0:
-            #condor need value in Kb
-            condor_submit_fd.write('ImageSize      = %d\n'%(self.mem))
-
-        if self.files: #ON_EXIT_OR_EVICT
-            condor_submit_fd.write( dedent('''\
-                when_to_transfer_output = ON_EXIT
-                should_transfer_files   = Yes
-                transfer_input_files    = %s
-                '''%(self.files+','+self.launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
-        if self.env:
-            condor_submit_fd.write('environment    = '+self.env+'\n')
-        if self.raw:
-            condor_submit_fd.write( self.raw+'\n')
-        if self.rank:
-            condor_submit_fd.write( dedent('''\
-                rank = %s
-                ''' %(self.rank)))
         if len(condor_datas)!=0:
             for i in condor_datas:
                 condor_submit_fd.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
