@@ -273,8 +273,10 @@ public:
     //! after the visible units have been clamped
     void recurrentUpdate(real input_reconstruction_weight,
                          real hidden_reconstruction_cost_weight,
-                         real temporal_gradient_contribution = 1,
-                         real prediction_cost_weight = 1);
+                         real temporal_gradient_contribution,
+                         real prediction_cost_weight,
+                         Vec train_costs,
+                         Vec train_n_items);
 
     virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
                       VMat testoutputs=0, VMat testcosts=0) const;
@@ -319,6 +321,8 @@ protected:
     mutable Mat acc_input_connections_gr;
 
     mutable Mat acc_dynamic_connections_gr;
+
+    mutable Mat acc_reconstruction_dynamic_connections_gr;
 
     //! Stores accumulate target bias gradient
     mutable Vec acc_target_bias_gr;
@@ -456,7 +460,7 @@ private:
     //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
     //! Also computes neg log cost and returns it
     
-    double fpropUpdateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
+    double fpropUpdateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Mat& acc_weights_gr, Vec& input_reconstruction_bias, Vec& input_reconstruction_prob, 
                                                 Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
     
@@ -467,7 +471,7 @@ private:
 
     //! Backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
     //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
-    void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
+    void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Mat& acc_weights_gr, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
     double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
