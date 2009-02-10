@@ -410,6 +410,7 @@ void DenoisingRecurrentNet::build_()
 
         if( dynamic_reconstruction_connections )
         {
+
             dynamic_reconstruction_connections->down_size = hidden_layer->size;
             dynamic_reconstruction_connections->up_size = hidden_layer->size;
             if( !dynamic_reconstruction_connections->random_gen )
@@ -418,6 +419,9 @@ void DenoisingRecurrentNet::build_()
                 dynamic_reconstruction_connections->forget();
             }
             dynamic_reconstruction_connections->build();
+            RBMMatrixConnection* conn = dynamic_cast<RBMMatrixConnection*>((RBMConnection*)dynamic_connections);
+            RBMMatrixConnection* conn_rec = dynamic_cast<RBMMatrixConnection*>((RBMConnection*)dynamic_reconstruction_connections);
+            conn_rec->weights << conn->weights;
         }
 
         if( hidden_layer2 )
@@ -503,6 +507,7 @@ void DenoisingRecurrentNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField( acc_target_connections_gr, copies);
     deepCopyField( acc_input_connections_gr, copies);
     deepCopyField( acc_dynamic_connections_gr, copies);
+    deepCopyField( acc_reconstruction_dynamic_connections_gr, copies);
     deepCopyField( acc_target_bias_gr, copies);
     deepCopyField( acc_hidden_bias_gr, copies);
     deepCopyField( acc_recons_bias_gr, copies);
@@ -1231,8 +1236,8 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     reconstruction_prob.resize(fullhiddenlength);
 
     // predict (denoised) input_reconstruction 
-    transposeProduct(reconstruction_activation, reconstruction_weights, hidden);
-    //product(reconstruction_activation, reconstruction_weights, hidden);
+    //transposeProduct(reconstruction_activation, reconstruction_weights, hidden); //dynamic matrice tied
+    product(reconstruction_activation, reconstruction_weights, hidden); //dynamic matrice not tied
     reconstruction_activation += reconstruction_bias;
 
     for( int j=0 ; j<fullhiddenlength ; j++ )
@@ -1241,30 +1246,28 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     //hidden_layer->fprop(reconstruction_activation, reconstruction_prob);
 
     /********************************************************************************/
-    // Vec hidden_reconstruction_activation_grad;
     hidden_reconstruction_activation_grad.resize(reconstruction_prob.size());
     hidden_reconstruction_activation_grad << reconstruction_prob;
     hidden_reconstruction_activation_grad -= hidden_target;
     hidden_reconstruction_activation_grad *= hidden_reconstruction_cost_weight;
+    
 
-
-    productAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
-    //transposeProductAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad);
+    //productAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad); //dynamic matrice tied
+    transposeProductAcc(hidden_gradient, reconstruction_weights, hidden_reconstruction_activation_grad); //dynamic matrice not tied
     
     //update bias
-    //multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
+    multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
     // update weight
-    //externalProductScaleAcc(reconstruction_weights, hidden_reconstruction_activation_grad, hidden, -lr);
+    //externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr); //dynamic matrice tied
+    externalProductScaleAcc(acc_weights_gr, hidden_reconstruction_activation_grad, hidden, -lr); //dynamic matrice not tied
                 
-
-    // update weight
-    //externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr);
     
     /********************************************************************************/
+    // Vec hidden_reconstruction_activation_grad;
+    //hidden_reconstruction_activation_grad.clear();
+    //for(int k=0; k<reconstruction_prob.length(); k++)
+    //    hidden_reconstruction_activation_grad[k] = safelog(reconstruction_prob[k]) - safelog(1-reconstruction_prob[k]);
     
-    hidden_reconstruction_activation_grad.clear();
-    for(int k=0; k<reconstruction_prob.length(); k++)
-        hidden_reconstruction_activation_grad[k] = safelog(reconstruction_prob[k]) - safelog(1-reconstruction_prob[k]);
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
@@ -1477,6 +1480,8 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
     { 
         acc_dynamic_connections_gr.resize(dynamic_connections->up_size, dynamic_connections->down_size);
         acc_dynamic_connections_gr.clear();
+        acc_reconstruction_dynamic_connections_gr.resize(dynamic_connections->down_size, dynamic_connections->up_size);
+        acc_reconstruction_dynamic_connections_gr.clear();
     }
 
 
@@ -1574,7 +1579,8 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
 
                 //truc stan
                 //fpropHiddenSymmetricDynamicMatrix(hidden_list(i-1), reconstruction_weights, hidden_reconstruction_prob, hidden_list(i), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
-                fpropHiddenReconstructionFromLastHidden(hidden_list(i), dynamicWeights, acc_dynamic_connections_gr, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
+                //fpropHiddenReconstructionFromLastHidden(hidden_list(i), dynamicWeights, acc_dynamic_connections_gr, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
+                fpropHiddenReconstructionFromLastHidden(hidden_list(i), reconsWeights, acc_reconstruction_dynamic_connections_gr, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
                 
             }
             
@@ -1627,7 +1633,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                                   false);
                 
             hidden_temporal_gradient << hidden_gradient;  
-            hidden_temporal_gradient +=  hidden_reconstruction_activation_grad;
+            //hidden_temporal_gradient +=  hidden_reconstruction_activation_grad;
         }
         else
         {
@@ -1658,7 +1664,10 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
     }
     multiplyAcc(inputWeights, acc_input_connections_gr, 1);
     if(dynamic_connections )
+    {
         multiplyAcc(dynamicWeights, acc_dynamic_connections_gr, 1);
+        multiplyAcc(reconsWeights, acc_reconstruction_dynamic_connections_gr, 1);
+    }
 }
 
 
