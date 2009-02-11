@@ -674,7 +674,8 @@ void VecStatsCollector::getCovariance(Mat& covar) const {
     // The first  case occurs when sum^i,j_k w(k) == 0.
     // The second case occurs when sum^i,j_k w(k) == sqrt(sum^i,j_k w(k)^2)
     //                                            == sum^{i or j}_k w(k)
-    static Vec meanvec;
+    Vec meanvec;
+
     PLASSERT( compute_covariance && cov.length() == cov.width() );
     int d = cov.length();
     getMean(meanvec);
