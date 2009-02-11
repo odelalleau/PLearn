@@ -71,19 +71,12 @@ template<class T>
 inline void save(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii, bool implicit_storage = true)
 { 
     force_mkdir_for_file(filepath);
-    PStream out = openFile( filepath, io_formatting, "w" );
-    out.implicit_storage = implicit_storage;
-    out << x;
-}
-
-
-//! We save in a tmp file, then we move it to the real file. 
-//! This help to don't have file partially saved.
-template<class T> 
-inline void tmpsave(const PPath& filepath, const T& x, PStream::mode_t io_formatting=PStream::plearn_ascii, bool implicit_storage = true)
-{ 
     PPath tmp_file=filepath+".plearn_tmpsave";
-    PLearn::save(tmp_file, x, io_formatting, implicit_storage);
+    {
+        PStream out = openFile( tmp_file, io_formatting, "w" );
+        out.implicit_storage = implicit_storage;
+        out << x;
+    }//to be sure out is closed.
     mvforce(tmp_file, filepath);
 }
 
