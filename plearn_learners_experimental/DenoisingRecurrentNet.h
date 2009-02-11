@@ -157,7 +157,7 @@ public:
     double input_reconstruction_cost_weight;
     double hidden_reconstruction_cost_weight;
 
-
+    double nb_stage_reconstruction;
     //#####  Not Options  #####################################################
 
 

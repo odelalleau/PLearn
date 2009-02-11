@@ -87,7 +87,8 @@ DenoisingRecurrentNet::DenoisingRecurrentNet() :
     prediction_cost_weight(1),
     input_reconstruction_cost_weight(0),
     hidden_reconstruction_cost_weight(0),
-    current_learning_rate(0)
+    current_learning_rate(0),
+    nb_stage_reconstruction(0)
 {
     random_gen = new PRandom();
 }
@@ -258,6 +259,10 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
     declareOption(ol, "hidden_reconstruction_cost_weight", &DenoisingRecurrentNet::hidden_reconstruction_cost_weight,
                   OptionBase::learntoption,
                   "The training weight for the hidden reconstruction");
+
+    declareOption(ol, "nb_stage_reconstruction", &DenoisingRecurrentNet::nb_stage_reconstruction,
+                  OptionBase::learntoption,
+                  "The nomber of stage for de reconstructions");
 
  /*
     declareOption(ol, "", &DenoisingRecurrentNet::,
@@ -716,17 +721,19 @@ void DenoisingRecurrentNet::train()
                     inject_zero_forcing_noise(encoded_seq, input_noise_prob);
 
                 // recurrent no noise phase
-                if(recurrent_lr!=0)
-                {
-                    
-                    if(corrupt_input) // need to recover the clean sequence                        
-                        encoded_seq << clean_encoded_seq;                  
-                    setLearningRate( recurrent_lr );                    
-                    recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(0,0,1, prediction_cost_weight, train_costs, train_n_items );
-                    
+                if(stage>=nb_stage_reconstruction){
+                    if(recurrent_lr!=0)
+                    {
+                        
+                        if(corrupt_input) // need to recover the clean sequence                        
+                            encoded_seq << clean_encoded_seq;                  
+                        setLearningRate( recurrent_lr );                    
+                        recurrentFprop(train_costs, train_n_items);
+                        recurrentUpdate(0,0,1, prediction_cost_weight, train_costs, train_n_items );
+                        
+                    }
                 }
-                if(stage<2){
+                if(stage<nb_stage_reconstruction){
                     // greedy phase input
                     if(input_reconstruction_lr!=0){
                         setLearningRate( input_reconstruction_lr );
