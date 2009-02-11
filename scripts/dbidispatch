@@ -74,7 +74,11 @@ common options:
     option for dbidispatch. They can be overrided on the command line.
   The 'DBIDISPATCH_LOGDIR' environnement variable set the name of the directory
     where all the individual logs directory will be put. Default to LOGS.
-  The '--[*no_]restart_jobs' option work only for condor. The parameter following it should be condor jobs number. We will parse the history on the local host and relauchn those jobs. We only take the command line that was executed, all other option are the new one passed to dbidispatch.
+  The '--[*no_]restart_jobs' option work only for condor. The parameter 
+    following this option should be condor jobs number. We will parse the
+    history on the local host and relaunch those jobs. We only take the command
+    line that was executed, all other options are are those passed to 
+    dbidispatch this time. Work only with jobs launched with dbidispatch.
 
 bqtools, cluster and condor option:
   The '--mem=X' speficify the number of ram in meg the program need to execute.
@@ -236,13 +240,8 @@ in the file, it is not interpreted by the shell.
 
 """%{'ShortHelp':ShortHelp,'ScriptName':ScriptName}
 
-if len(sys.argv) == 1:
-    print ShortHelp
-    sys.exit(1)
-FILE = ""
 dbi_param={}
 testmode=False
-tasks_filename = []
 
 PATH=os.getenv('PATH')
 if search_file('condor_submit',PATH):
@@ -284,8 +283,6 @@ for argv in to_parse:
         if argv.startswith("--ssh"):
             dbi_param["file_redirect_stdout"]=False
             dbi_param["file_redirect_stderr"]=False
-    elif argv.startswith("--file="):
-        FILE = argv[7:]
     elif argv in ["--32","--64","--3264"]:
         dbi_param["arch"]=argv[2:]
     elif argv.startswith("--micro"):
@@ -293,15 +290,6 @@ for argv in to_parse:
         if len(argv)>7:
             assert(argv[7]=="=")
             dbi_param["micro"]=argv[8:]
-    elif argv.startswith("--tasks_filename="):
-        part = argv.split('=',1)
-        accepted_value=["compact","explicit","nb0","nb1","sh","clusterid","processid","none"]
-        val=part[1].split(",") 
-        for v in val:
-            if v not in accepted_value:
-                print "The option '"+argv+"' have an invalid value. possible value are:", accepted_value
-                sys.exit(2)
-        tasks_filename = val
     elif argv in  ["--force", "--interruptible", "--long", 
                    "--getenv", "--cwait", "--clean_up" ,"--nice",
                    "--set_special_env", "--abs_path", "--pkdilly", "--to_all",
@@ -325,7 +313,8 @@ for argv in to_parse:
     elif argv.split('=')[0] in ["--duree","--cpu","--mem","--os","--nb_proc",
                                 "--req", "--files", "--raw", "--rank", "--env",
                                 "--universe", "--exp_dir", "--machine", "--machines",
-                                "--queue", "--nano", "--submit_options", "--jobs_name"]:
+                                "--queue", "--nano", "--submit_options",
+                                "--jobs_name", "--file", "--tasks_filename"]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -339,7 +328,7 @@ for argv in to_parse:
         elif param=="env":
             dbi_param.setdefault(param,"")
             dbi_param[param]+='"'+val+'"'
-        elif param=="machines" or param=="machine":
+        elif param in ["machines", "machine", "tasks_filename"]:
             dbi_param.setdefault(param,[])
             dbi_param[param]+=val.split(",")
         else:
@@ -364,23 +353,34 @@ for argv in to_parse:
         break
     command_argv.remove(argv)
 
-if len(command_argv) == 0 and FILE == "":
+if launch_cmd in ["Bqtools","Condor"]:
+    dbi_param.setdefault("tasks_filename", ["nb0","compact"])
+
+if len(command_argv) == 0 and not dbi_param.has_key("file"):
     print "No command or file with command to execute!"
     print
     print ShortHelp
     sys.exit(1)
+if dbi_param.has_key("file") and dbi_param.has_key("restart"):
+    print "the --file= and --restart option are incompatible!"
+    print
+    print ShortHelp
+    sys.exit(1)
 
-valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir"]
+
+valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file"]
 if launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","arch","interruptible",
                        "duree","cpu","mem","os"]
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
-                       "universe", "machine", "machines", "to_all", "keep_failed_jobs_in_queue"]
+                       "universe", "machine", "machines", "to_all", 
+                       "keep_failed_jobs_in_queue", "tasks_filename"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
-                       "nano", "queue", "raw", "submit_options", "jobs_name" ]
+                       "nano", "queue", "raw", "submit_options", "jobs_name",
+                       "tasks_filename" ]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.
@@ -404,10 +404,6 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
         if source_with_kerb:
             dbi_param['copy_local_source_file']=True
 
-if not tasks_filename and launch_cmd in ["Bqtools","Condor"]:
-    tasks_filename = ["nb0","compact"]
-elif tasks_filename and launch_cmd not in ["Bqtools", "Condor"]:
-    print "WARNING: The parameter --tasks_filename={} is only supported by condor and bqtools.",
     
 print "\n\nThe jobs will be launched on the system:", launch_cmd
 print "With options: ",dbi_param
@@ -463,11 +459,11 @@ def generate_commands(sp):
     return (argscombination,args_modif)
 
 #generate the command
-if FILE != "":
-    FD = open(FILE,'r')#|| die "couldn't open the file $FILE!";
+if dbi_param.has_key("file"):
+    fd = open(dbi_param.get("file"),'r')
     commands=[]
     choise_args = []
-    for line in FD.readlines():
+    for line in fd.readlines():
         line = line.rstrip()
         if not line:
             continue
@@ -475,7 +471,7 @@ if FILE != "":
         (t1,t2)=generate_commands(sp)
         commands+=t1
         choise_args+=t2
-    FD.close
+    fd.close
 elif dbi_param.get("restart",False):
     assert launch_cmd=="Condor"
     cmds=[]
@@ -500,7 +496,7 @@ if dbi_param.has_key("to_all"):
 
 if dbi_param.has_key("exp_dir"):
     dbi_param["log_dir"]=os.path.join(LOGDIR,dbi_param["exp_dir"])
-elif FILE == "":
+elif not dbi_param.has_key("file"):
     t = [x for x in sys.argv[1:] if not x[:2]=="--"]
     t[0]=os.path.split(t[0])[1]
     tmp="_".join(t)
@@ -508,6 +504,9 @@ elif FILE == "":
     ### We need to remove the symbols "," as this cause trouble with bqtools
     tmp=re.sub( ',', '-', tmp )
     date_str=str(datetime.datetime.now())
+    if dbi_param.has_key("restart"):
+        tmp="jobs_restarted_"+tmp
+    
     if launch_cmd == "Bqtools":
         #bqtools have a limit. It must have a abspath size < max_file_size -16
         #(255 on ext3)
@@ -521,7 +520,7 @@ elif FILE == "":
     tmp+='_'+date_str.replace(' ','_')
     dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
 else:
-    dbi_param["log_dir"]=os.path.join(LOGDIR,FILE)
+    dbi_param["log_dir"]=os.path.join(LOGDIR,dbi_param["file"])
 dbi_param["log_file"]=os.path.join(dbi_param["log_dir"],'log')
 
 n="base_tasks_log_file"
@@ -529,7 +528,7 @@ dbi_param[n]=[""]*len(commands)
 
 def merge_pattern(new_list):
     return [x+'.'+y if x else y for (x,y) in  zip(dbi_param[n], new_list)]
-for pattern in tasks_filename:
+for pattern in dbi_param.get("tasks_filename"):
     if pattern == "explicit":
         dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands])
     elif pattern == "compact":
@@ -577,8 +576,7 @@ for pattern in tasks_filename:
         dbi_param["stdouts"]=stdouts
         dbi_param["stderrs"]=stderrs
     else:
-        print "internal error! bad pattern:",pattern
-        sys.exit(2)
+        raise Exception("bad value for tasks_filename ("+pattern+"). Accepted value: compact, explicit, nb0, nb1, sh, clusterid, processid, none.")
     assert(not (dbi_param.has_key("stdouts") and (dbi_param[n])==0))
 
 #undef merge_pattern
