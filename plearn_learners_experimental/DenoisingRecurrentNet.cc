@@ -88,7 +88,8 @@ DenoisingRecurrentNet::DenoisingRecurrentNet() :
     input_reconstruction_cost_weight(0),
     hidden_reconstruction_cost_weight(0),
     current_learning_rate(0),
-    nb_stage_reconstruction(0)
+    nb_stage_reconstruction(0),
+    nb_stage_target(0)
 {
     random_gen = new PRandom();
 }
@@ -263,6 +264,10 @@ void DenoisingRecurrentNet::declareOptions(OptionList& ol)
     declareOption(ol, "nb_stage_reconstruction", &DenoisingRecurrentNet::nb_stage_reconstruction,
                   OptionBase::learntoption,
                   "The nomber of stage for de reconstructions");
+
+    declareOption(ol, "nb_stage_target", &DenoisingRecurrentNet::nb_stage_target,
+                  OptionBase::learntoption,
+                  "The nomber of stage for de target");
 
  /*
     declareOption(ol, "", &DenoisingRecurrentNet::,
@@ -721,7 +726,7 @@ void DenoisingRecurrentNet::train()
                     inject_zero_forcing_noise(encoded_seq, input_noise_prob);
 
                 // recurrent no noise phase
-                if(stage>=nb_stage_reconstruction){
+                if(stage>=nb_stage_reconstruction && stage<nb_stage_target){
                     if(recurrent_lr!=0)
                     {
                         
@@ -729,23 +734,38 @@ void DenoisingRecurrentNet::train()
                             encoded_seq << clean_encoded_seq;                  
                         setLearningRate( recurrent_lr );                    
                         recurrentFprop(train_costs, train_n_items);
-                        recurrentUpdate(0,0,1, prediction_cost_weight, train_costs, train_n_items );
+                        recurrentUpdate(0,0,1, prediction_cost_weight,0, train_costs, train_n_items );
                         
                     }
                 }
+
+                if(stage>=nb_stage_target){
+                    if(recurrent_lr!=0)
+                    {
+                        
+                        if(corrupt_input) // need to recover the clean sequence                        
+                            encoded_seq << clean_encoded_seq;                  
+                        setLearningRate( recurrent_lr );                    
+                        recurrentFprop(train_costs, train_n_items);
+                        recurrentUpdate(0,0,1, prediction_cost_weight,1, train_costs, train_n_items );
+                        
+                    }
+                }
+
                 if(stage<nb_stage_reconstruction){
+
                     // greedy phase input
                     if(input_reconstruction_lr!=0){
                         setLearningRate( input_reconstruction_lr );
                         recurrentFprop(train_costs, train_n_items);
-                        recurrentUpdate(input_reconstruction_cost_weight, 0, 1, 0, train_costs, train_n_items );
+                        recurrentUpdate(input_reconstruction_cost_weight, 0, 1, 0,1, train_costs, train_n_items );
                     }
                     
                     // greedy phase hidden
                     if(hidden_reconstruction_lr!=0){
                         setLearningRate( dynamic_gradient_scale_factor*hidden_reconstruction_lr);
                         recurrentFprop(train_costs, train_n_items);
-                        recurrentUpdate(0, hidden_reconstruction_cost_weight, 1, 0, train_costs, train_n_items );
+                        recurrentUpdate(0, hidden_reconstruction_cost_weight, 1, 0,1, train_costs, train_n_items );
                     }
                 }
                 // recurrent noisy phase
@@ -753,7 +773,7 @@ void DenoisingRecurrentNet::train()
                 {
                     setLearningRate( noisy_recurrent_lr );
                     recurrentFprop(train_costs, train_n_items);
-                    recurrentUpdate(input_reconstruction_cost_weight, hidden_reconstruction_cost_weight, 1, prediction_cost_weight, train_costs, train_n_items );
+                    recurrentUpdate(input_reconstruction_cost_weight, hidden_reconstruction_cost_weight, 1,1, prediction_cost_weight, train_costs, train_n_items );
                 }
 
                 
@@ -1271,10 +1291,11 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     
     /********************************************************************************/
     // Vec hidden_reconstruction_activation_grad;
-    //hidden_reconstruction_activation_grad.clear();
-    //for(int k=0; k<reconstruction_prob.length(); k++)
-    //    hidden_reconstruction_activation_grad[k] = safelog(reconstruction_prob[k]) - safelog(1-reconstruction_prob[k]);
-    
+    /*hidden_reconstruction_activation_grad.clear();
+    for(int k=0; k<reconstruction_prob.length(); k++){
+        //    hidden_reconstruction_activation_grad[k] = safelog(1-reconstruction_prob[k]) - safelog(reconstruction_prob[k]);
+        hidden_reconstruction_activation_grad[k] = - reconstruction_activation[k];
+        }*/
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
@@ -1459,6 +1480,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                                             real hidden_reconstruction_weight,
                                             real temporal_gradient_contribution,
                                             real predic_cost_weight,
+                                            real inputAndDynamicPart,
                                             Vec train_costs, 
                                             Vec train_n_items )
 {
@@ -1562,7 +1584,8 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                     hidden_gradient, bias_gradient);
             }
         }
-        else{   
+
+        if(inputAndDynamicPart){   
             // Add contribution of input reconstruction cost in hidden_gradient
             if(input_reconstruction_weight!=0)
             {
@@ -1570,7 +1593,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                 Vec clean_input = clean_encoded_seq.subMatRows(i, input_window_size).toVec();
                 
                 train_costs[4] += fpropUpdateInputReconstructionFromHidden(hidden_list(i), inputWeights, acc_input_connections_gr, input_reconstruction_bias, input_reconstruction_prob, 
-                                                                           clean_input, hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
+                                                                           clean_input, hidden_gradient, input_reconstruction_weight, current_learning_rate);
                 train_n_items[4]++;
             }
             
@@ -1642,8 +1665,9 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                                       input_connections->learning_rate,
                                       false);
                 
-                hidden_temporal_gradient << hidden_gradient;  
-                //hidden_temporal_gradient +=  hidden_reconstruction_activation_grad;
+                hidden_temporal_gradient << hidden_gradient; 
+                //if(hidden_reconstruction_weight!=0)
+                //    hidden_temporal_gradient +=  hidden_reconstruction_activation_grad;
             }
             else
             {

@@ -158,6 +158,8 @@ public:
     double hidden_reconstruction_cost_weight;
 
     double nb_stage_reconstruction;
+    double nb_stage_target;
+
     //#####  Not Options  #####################################################
 
 
@@ -275,6 +277,7 @@ public:
                          real hidden_reconstruction_cost_weight,
                          real temporal_gradient_contribution,
                          real prediction_cost_weight,
+                         real inputAndDynamicPart,
                          Vec train_costs,
                          Vec train_n_items);
 
