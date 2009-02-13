@@ -726,7 +726,7 @@ void DenoisingRecurrentNet::train()
                     inject_zero_forcing_noise(encoded_seq, input_noise_prob);
 
                 // recurrent no noise phase
-                if(stage>=nb_stage_reconstruction && stage<nb_stage_target){
+                if(stage>=nb_stage_reconstruction && stage<nb_stage_target+nb_stage_reconstruction){
                     if(recurrent_lr!=0)
                     {
                         
@@ -739,7 +739,7 @@ void DenoisingRecurrentNet::train()
                     }
                 }
 
-                if(stage>=nb_stage_target){
+                if(stage>=nb_stage_target+nb_stage_reconstruction){
                     if(recurrent_lr!=0)
                     {
                         
