@@ -601,7 +601,8 @@ void Object::newwrite(PStream& out) const
         if (i < optnames.size() - 1)
             out.write(";\n");
     }
-    out.write(" ) # "+classname()+"\n");
+//    out.write(" ) # "+classname()+"\n");
+    out.write(" )\n");
 }
 
 
