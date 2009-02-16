@@ -101,7 +101,8 @@ public:
     inline int           length()const{return length_;}
     virtual void         getOutputAndError(Vec& output, Vec& error)const;
     virtual void         printStats();
-  
+    real                 getWeightsSum(){return weights_sum;}
+    real                 getTargetsSum(){return targets_sum;}
 private:
     void         build_();
     void         verbose(string msg, int level);
