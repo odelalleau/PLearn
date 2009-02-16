@@ -39,6 +39,7 @@
  ******************************************************* */
 
 #include "SubVMatrix.h"
+#include <plearn/base/tostring.h>
 
 namespace PLearn {
 using namespace std;
@@ -97,6 +98,9 @@ SubVMatrix::SubVMatrix(VMat the_source,
 ////////////////////
 void SubVMatrix::declareOptions(OptionList &ol)
 {
+    //WARNING: If you add option make sure the we correctly build the metadatadir!
+    //search for setMetaDataDir in this file.
+
     declareOption(ol, "parent", &SubVMatrix::source, OptionBase::buildoption,
                   "DEPRECATED - Use 'source' instead.");
 
@@ -237,7 +241,13 @@ void SubVMatrix::build_()
         }
     }
     // else, nothing to change
-// */
+
+    if(!hasMetaDataDir() && source->hasMetaDataDir())
+        setMetaDataDir(source->getMetaDataDir() / classname()+
+                       "_istart=" + tostring(istart) + 
+                       "_jstart=" +tostring(jstart) + 
+                       "_length="+tostring(length()) + 
+                       "_width="+tostring(width()));
 
     //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }

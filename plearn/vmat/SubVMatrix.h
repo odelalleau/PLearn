@@ -61,14 +61,12 @@ public:
 
     //! Build options.
 
-    // DEPRECATED - Use inherited::source instead.
-    // VMat parent;
     int istart;
     int jstart;
     real fistart;
     real flength;
 
-    //! The appropriate VMFields of the parent VMat are copied upon
+    //! The appropriate VMFields of the source VMat are copied upon
     //! construction
     SubVMatrix(bool call_build_ = false);
 
