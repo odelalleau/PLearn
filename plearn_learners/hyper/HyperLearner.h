@@ -79,6 +79,9 @@ public:
     static bool reloading;
     // HyperLearner methods
 
+    //! if true, we finalize the learner after training.
+    bool finalize_learner;
+
     HyperLearner();
 
     inline void setLearner(PP<PLearner> learner)

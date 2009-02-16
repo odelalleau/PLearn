@@ -79,7 +79,8 @@ TVec<string> HyperLearner::getTrainCostNames() const
 HyperLearner::HyperLearner()
     : provide_strategy_expdir(true),
       save_final_learner(true),
-      reloaded(false)
+      reloaded(false),
+      finalize_learner(false)
 {
     // Forward the 'test' method to the underlying learner.
     forward_test = true;
@@ -130,6 +131,11 @@ HyperLearner::declareOptions(OptionList &ol)
 
     declareOption(ol, "save_final_learner", &HyperLearner::save_final_learner, OptionBase::buildoption,
                   "should final learner be saved in expdir/final_learner.psave");
+
+    declareOption(
+        ol, "finalize_learner", &HyperLearner::finalize_learner,
+        OptionBase::buildoption,
+        "Default false. If true, will finalize the learner after the training.");
 
     declareOption(ol, "reloaded", &HyperLearner::reloaded,
                   OptionBase::learntoption|OptionBase::nosave,
@@ -241,6 +247,9 @@ void HyperLearner::train()
         }
 
         train_stats->update(results);
+
+        if(finalize_learner)
+            learner_->finalize();
 
         if(save_final_learner)
         {
