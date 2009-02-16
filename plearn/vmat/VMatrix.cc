@@ -1830,6 +1830,9 @@ void VMatrix::flush()
 ////////////////////
 void VMatrix::putOrAppendRow(int i, Vec v)
 {
+    if (v.length() != width())
+        PLERROR("In putOrAppendRow, Vec to append must have same length (%d) as VMatrix width (%d)", v.length(), width());
+
     if(i==length())
         appendRow(v);
     else if(i<length())
@@ -1843,6 +1846,9 @@ void VMatrix::putOrAppendRow(int i, Vec v)
 /////////////////
 void VMatrix::forcePutRow(int i, Vec v)
 {
+    if (v.length() != width())
+        PLERROR("In forcePutRow, Vec to append must have same length (%d) as VMatrix width (%d)", v.length(), width());
+
     if(i<length())
         putRow(i,v);
     else
