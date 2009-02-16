@@ -286,7 +286,7 @@ void RegressionTreeRegisters::sortRows()
     for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
     {
         sortEachDim(sample_dim);
-        if (report_progress) pb->update(sample_dim);
+        if (report_progress) pb->update(sample_dim+1);
     }
 }
   
