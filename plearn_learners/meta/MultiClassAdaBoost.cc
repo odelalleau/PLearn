@@ -577,6 +577,8 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     if(training_set_has_changed || !learner1->getTrainingSet()){
         VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
                                            target_prg1,  weight_prg);
+        if(training_set->hasMetaDataDir())
+            vmat1->setMetaDataDir(training_set->getMetaDataDir()/"0vsOther");
         learner1->setTrainingSet(vmat1, call_forget);
     }
     if(training_set_has_changed || !learner2->getTrainingSet()){

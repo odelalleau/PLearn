@@ -40,9 +40,13 @@
  ********************************************************************************** */
 
 #include "RegressionTreeRegisters.h"
+#define PL_LOG_MODULE_NAME RegressionTreeRegisters
+#include <plearn/io/pl_log.h>
 #include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/MemoryVMatrixNoSave.h>
 #include <plearn/vmat/SubVMatrix.h>
+#include <plearn/io/fileutils.h>
+#include <plearn/io/load_and_save.h>
 #include <limits>
 
 namespace PLearn {
@@ -267,6 +271,14 @@ void RegressionTreeRegisters::sortRows()
         verbose("RegressionTreeRegisters: Sorted train set indices are present, no sort required", 3);
         return;
     }
+    string f=source->getMetaDataDir()+"RTR_tsorted_row.psave";
+
+    if(isUpToDate(f)){
+        NORMAL_LOG<<"RegressionTreeRegisters:: Reloading the sorted source VMatrix"<<endl;
+        PLearn::load(f,tsorted_row);
+        return;
+    }
+
     verbose("RegressionTreeRegisters: The train set is being sorted", 3);
     tsorted_row.resize(inputsize(), length());
     PP<ProgressBar> pb;
@@ -288,6 +300,13 @@ void RegressionTreeRegisters::sortRows()
         sortEachDim(sample_dim);
         if (report_progress) pb->update(sample_dim+1);
     }
+    if(source->hasMetaDataDir()){
+        NORMAL_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix"<<endl;
+        PLearn::save(f,tsorted_row);
+    }else{
+        NORMAL_LOG<<"RegressionTreeRegisters:: can't save the sorted source VMatrix as we don't have a metadatadir"<<endl;
+    }
+
 }
   
 void RegressionTreeRegisters::sortEachDim(int dim)
