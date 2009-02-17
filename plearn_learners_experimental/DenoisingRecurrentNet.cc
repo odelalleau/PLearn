@@ -89,7 +89,8 @@ DenoisingRecurrentNet::DenoisingRecurrentNet() :
     hidden_reconstruction_cost_weight(0),
     current_learning_rate(0),
     nb_stage_reconstruction(0),
-    nb_stage_target(0)
+    nb_stage_target(0),
+    noise(false)
 {
     random_gen = new PRandom();
 }
@@ -714,10 +715,13 @@ void DenoisingRecurrentNet::train()
             int nseq = nSequences();
             for(int i=0; i<nseq; i++)
             {
+
+                if(stage<nb_stage_reconstruction && input_noise_prob!=0 )
+                    noise = true;
                 getSequence(i, seq);
                 encodeSequenceAndPopulateLists(seq);
               
-                bool corrupt_input = input_noise_prob!=0 && (noisy_recurrent_lr!=0 || input_reconstruction_lr!=0);
+                bool corrupt_input = false;//input_noise_prob!=0 && (noisy_recurrent_lr!=0 || input_reconstruction_lr!=0);
 
                 clean_encoded_seq.resize(encoded_seq.length(), encoded_seq.width());
                 clean_encoded_seq << encoded_seq;
@@ -753,6 +757,7 @@ void DenoisingRecurrentNet::train()
                 }
 
                 if(stage<nb_stage_reconstruction){
+
 
                     // greedy phase input
                     if(input_reconstruction_lr!=0){
@@ -871,9 +876,14 @@ void DenoisingRecurrentNet::splitRawMaskedSupervisedSequence(Mat seq) const
     int l = seq.length();
     resize_lists(l);
     int inputsize_without_masks = inputsize()-targetsize();
-    Mat input_part = seq.subMatColumns(0,inputsize_without_masks);
+    Mat input_part;
+    input_part.resize(seq.length(),inputsize_without_masks);
+    input_part << seq.subMatColumns(0,inputsize_without_masks);
     Mat mask_part = seq.subMatColumns(inputsize_without_masks, targetsize());
     Mat target_part = seq.subMatColumns(inputsize_without_masks+targetsize(), targetsize());
+
+    if(noise)
+        inject_zero_forcing_noise(input_part, input_noise_prob);
 
     for(int i=0; i<l; i++)
         input_list[i] = input_part(i);
@@ -1295,7 +1305,7 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     for(int k=0; k<reconstruction_prob.length(); k++){
         //    hidden_reconstruction_activation_grad[k] = safelog(1-reconstruction_prob[k]) - safelog(reconstruction_prob[k]);
         hidden_reconstruction_activation_grad[k] = - reconstruction_activation[k];
-        }*/
+    }*/
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
@@ -1961,7 +1971,7 @@ void DenoisingRecurrentNet::encode_onehot_timeframe(Mat sequence, Mat& encoded_s
     
 
 // input noise injection
-void DenoisingRecurrentNet::inject_zero_forcing_noise(Mat sequence, double noise_prob)
+void DenoisingRecurrentNet::inject_zero_forcing_noise(Mat sequence, double noise_prob) const
 {
     if(!sequence.isCompact())
         PLERROR("Expected a compact sequence");

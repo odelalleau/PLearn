@@ -124,6 +124,8 @@ public:
     //! Chooses what type of encoding to apply to an input sequence
     //! Possibilities: "timeframe", "note_duration", "note_octav_duration", "raw_masked_supervised"
     string encoding;
+
+    bool noise;
     
     //! Input window size
     int input_window_size;
@@ -186,7 +188,7 @@ public:
 
 
     // input noise injection
-    void inject_zero_forcing_noise(Mat sequence, double noise_prob);
+    void inject_zero_forcing_noise(Mat sequence, double noise_prob) const;
 
     inline static Vec getInputWindow(Mat sequence, int startpos, int winsize)
     { return sequence.subMatRows(startpos, winsize).toVec(); }
