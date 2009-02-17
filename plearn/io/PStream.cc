@@ -56,7 +56,7 @@ using namespace std;
 // Default format string for floats and doubles
 const char* PStream::format_float_default  = "%.8g";
 const char* PStream::format_double_default = "%.18g";
-
+bool PStream::windows_endl = false;
 // Initialization for pin, pout, ...
 
 PStream& get_pnull()

@@ -67,6 +67,7 @@ void HelpCommand::helpOverview()
         "Global parameter:\n"
         "                 --no-progress: don't print progress bar\n"
         "                 --no-version: do not print the version \n"
+        "                 --windows_endl: use windows end of line\n"
         "                 --profile: print some profiling information\n"
         "                     Must have been compiled with '-logging=dbg-profile'\n"
         "                 --verbosity LEVEL: The level of log to print.\n"

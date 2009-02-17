@@ -184,6 +184,8 @@ static string global_options( vector<string>& command_line)
     // If we don't want no progress bars
     int no_progress_bars     = findpos( command_line, "--no-progress" );
 
+    int windows_endl         = findpos( command_line, "--windows_endl" );
+    
     // Note that the verbosity_value_pos IS NOT EQUAL TO verbosity_pos+1 if
     // (verbosity_pos == -1)!!!
     int verbosity_pos                = findpos( command_line, "--verbosity"  );
@@ -268,6 +270,7 @@ static string global_options( vector<string>& command_line)
         if ( c != no_version_pos             &&
              c != profile_pos                &&
              c != no_progress_bars           &&
+             c != windows_endl               &&
              c != verbosity_pos              &&
              c != verbosity_value_pos        &&
              c != enable_logging_pos         &&
@@ -299,6 +302,9 @@ static string global_options( vector<string>& command_line)
 
     if (no_progress_bars != -1)
         ProgressBar::setPlugin(new NullProgressBarPlugin);
+
+    if (windows_endl != -1)
+        PStream::windows_endl = true;
 
     if (enabled_modules_pos != -1)
         perr << "Logging enabled for modules: "

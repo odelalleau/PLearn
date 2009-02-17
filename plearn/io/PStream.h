@@ -185,7 +185,9 @@ public:
     //! Should be true if this stream is used to communicate with a remote
     //! PLearn host.  Will serialize options accordingly.
     bool remote_plearn_comm;
-
+    
+    //! If true, we should emit windows end of line(\r\n)
+    static bool windows_endl;
 public:
 
     PStream();
@@ -600,6 +602,8 @@ public:
 
     inline PStream& endl()
     {
+        if(windows_endl)
+            put('\r');
         put('\n');
         flush();
         return *this;
