@@ -255,9 +255,6 @@ else:
 LOGDIR=os.getenv("DBIDISPATCH_LOGDIR")
 if not LOGDIR:
     LOGDIR="LOGS"
-if not os.path.exists(LOGDIR):
-    os.mkdir(LOGDIR)
-
 
 to_parse=[]
 env=os.getenv("DBIDISPATCH_DEFAULT_OPTION")
@@ -367,6 +364,8 @@ if dbi_param.has_key("file") and dbi_param.has_key("restart"):
     print ShortHelp
     sys.exit(1)
 
+if not os.path.exists(LOGDIR):
+    os.mkdir(LOGDIR)
 
 valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file"]
 if launch_cmd=="Cluster":
