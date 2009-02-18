@@ -274,7 +274,7 @@ void RegressionTreeRegisters::sortRows()
     string f=source->getMetaDataDir()+"RTR_tsorted_row.psave";
 
     if(isUpToDate(f)){
-        NORMAL_LOG<<"RegressionTreeRegisters:: Reloading the sorted source VMatrix"<<endl;
+        DBG_LOG<<"RegressionTreeRegisters:: Reloading the sorted source VMatrix"<<endl;
         PLearn::load(f,tsorted_row);
         return;
     }
@@ -301,10 +301,10 @@ void RegressionTreeRegisters::sortRows()
         if (report_progress) pb->update(sample_dim+1);
     }
     if(source->hasMetaDataDir()){
-        NORMAL_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix"<<endl;
+        DBG_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix"<<endl;
         PLearn::save(f,tsorted_row);
     }else{
-        NORMAL_LOG<<"RegressionTreeRegisters:: can't save the sorted source VMatrix as we don't have a metadatadir"<<endl;
+        DBG_LOG<<"RegressionTreeRegisters:: can't save the sorted source VMatrix as we don't have a metadatadir"<<endl;
     }
 
 }
