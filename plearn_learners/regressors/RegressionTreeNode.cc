@@ -56,6 +56,7 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeNode,
                         "a left leave for samples with values below the value of the splitting attribute, and a right leave for the others,\n"
     );
 int RegressionTreeNode::dummy_int = 0;
+Vec RegressionTreeNode::tmp_vec;
 RegressionTreeNode::RegressionTreeNode():
     missing_is_valid(0),
     split_col(-1),
@@ -125,22 +126,22 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
     declareOption(ol, "right_leave", &RegressionTreeNode::right_leave, OptionBase::learntoption,
                   "The leave with the rows greater thean the split feature value after split\n");
 
-    declareOption(ol, "left_error", &RegressionTreeNode::tmp_vec,
+    declareStaticOption(ol, "left_error", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The left leave error vector\n");
-    declareOption(ol, "right_error", &RegressionTreeNode::tmp_vec,
+    declareStaticOption(ol, "right_error", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The right leave error vector\n");
-    declareOption(ol, "missing_error", &RegressionTreeNode::tmp_vec,
+    declareStaticOption(ol, "missing_error", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The missing leave error vector\n");
-    declareOption(ol, "left_output", &RegressionTreeNode::tmp_vec,
+    declareStaticOption(ol, "left_output", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The left leave output vector\n");
-    declareOption(ol, "right_output", &RegressionTreeNode::tmp_vec,
+    declareStaticOption(ol, "right_output", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The right leave output vector\n");
-    declareOption(ol, "missing_output", &RegressionTreeNode::tmp_vec,
+    declareStaticOption(ol, "missing_output", &RegressionTreeNode::tmp_vec,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The mising leave output vector\n");
 
@@ -249,7 +250,7 @@ void RegressionTreeNode::lookForBestSplit()
     Vec registered_target(0, leave->length()); 
     Vec registered_weight(0, leave->length());
     Vec registered_value(0, leave->length());
-   tmp_vec.resize(2);
+    tmp_vec.resize(2);
     Vec left_error(3);
     Vec right_error(3);
     Vec missing_error(3);

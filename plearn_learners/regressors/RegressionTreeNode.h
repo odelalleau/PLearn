@@ -89,7 +89,7 @@ private:
     PP<RegressionTreeLeave> right_leave;
     
     static int dummy_int;
-    Vec tmp_vec;
+    static Vec tmp_vec;
 public:  
     RegressionTreeNode();
     RegressionTreeNode(int missing_is_valid);
