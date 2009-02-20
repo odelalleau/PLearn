@@ -1344,7 +1344,7 @@ class DBICondor(DBIBase):
                 self.tasks_req.append(self.req+'&&(Machine=="'+m+'")')
 
         for m in self.machines:
-            machine_choice.append('(regexp("'+m+'", target.Machine))')
+            machine_choice.append('regexp("'+m+'", target.Machine)')
         if machine_choice:
             self.req+="&&(False "
             for m in machine_choice:
