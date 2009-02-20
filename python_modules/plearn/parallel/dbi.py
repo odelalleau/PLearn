@@ -798,6 +798,7 @@ class DBICondor(DBIBase):
         self.machines = []
         self.to_all = False
         self.keep_failed_jobs_in_queue = False
+        self.clean_up = True
 
         DBIBase.__init__(self, commands, **args)
 
@@ -951,7 +952,10 @@ class DBICondor(DBIBase):
         pkdilly_fd = open( pkdilly_file, 'r' )
         lines = pkdilly_fd.readlines()
         pkdilly_fd.close()
-        self.temp_files.append(pkdilly_file)
+        if self.clean_up:
+            os.remove(pkdilly_file)
+        else:
+            self.temp_files.append(pkdilly_file)
 
         get=[]
         for line in lines:
