@@ -1106,6 +1106,7 @@ class DBICondor(DBIBase):
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
                     %s
+                    rm -f echo ${KRB5CCNAME:5}
                     '''%(bash_exec)))
             else:
                 fd.write(dedent('''\
@@ -1130,6 +1131,7 @@ class DBICondor(DBIBase):
                 pwd
                 echo "Running command: $argv"
                 $argv
+                rm -f `echo  $KRB5CCNAME| cut -d':' -f2`
                 '''))
             fd.close()
             if self.pkdilly:
