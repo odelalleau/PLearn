@@ -1094,7 +1094,7 @@ class DBICondor(DBIBase):
                     fd.write('source ' + self.source_file + '\n')
 
                 fd.write(dedent('''\
-                    klist
+                    /usr/kerberos/bin/klist
                     echo "Executing on " `/bin/hostname` 1>&2
                     echo "HOSTNAME: ${HOSTNAME}" 1>&2
                     echo "PATH: $PATH" 1>&2
@@ -1121,6 +1121,7 @@ class DBICondor(DBIBase):
                     fd.write('source ' + self.source_file + '\n')
 
                 fd.write(dedent('''\
+                /usr/kerberos/bin/klist
                 echo "Executing on " `/bin/hostname`
                 echo "HOSTNAME: ${HOSTNAME}"
                 echo "PATH: $PATH"
