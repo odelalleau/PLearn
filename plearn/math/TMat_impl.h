@@ -242,11 +242,14 @@ namespace {
 }
 // Actual body of the method
 template <class T>
-TVec<int> TVec<T>::sortingPermutation() const
+TVec<int> TVec<T>::sortingPermutation(bool stable) const
 {    
     TVec<int> indices(length_);
     for (int i=0; i < length_; i++) indices[i] = i;
-    sort(indices.begin(), indices.end(), index_cmp<T>(*this));
+    if(stable)
+        stable_sort(indices.begin(), indices.end(), index_cmp<T>(*this));
+    else        
+        sort(indices.begin(), indices.end(), index_cmp<T>(*this));
     return indices;
 }
 

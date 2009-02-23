@@ -535,8 +535,8 @@ public:
     }
 
     //! Returns an index vector I so that (*this)(I) returns a sorted version
-    //! of this vec in ascending order.
-    TVec<int> sortingPermutation() const;
+    //! of this vec in ascending order. If stable is true, will return a stable sort
+    TVec<int> sortingPermutation(bool stable = false) const;
     
     int findSorted(T value) const
     {
