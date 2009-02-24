@@ -148,9 +148,6 @@ private:
     void         build_();
     void         sortRows();
     void         sortEachDim(int dim);
-    void         sortSmallSubArray(int start_index, int end_index, int dim);
-    void         swapIndex(int index_i, int index_j, int dim);
-    real         compare(real field1, real field2);
     void         verbose(string msg, int level);
 
 };

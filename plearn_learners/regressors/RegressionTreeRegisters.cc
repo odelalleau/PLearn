@@ -219,10 +219,10 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     getAllRegisteredRow(leave_id,col,reg);
     target.resize(reg.length());
     weight.resize(reg.length());
-    value.resize(reg.length());    
+    value.resize(reg.length());
     if(weightsize() <= 0){
         weight.fill(1.0 / length());
-        for(int i=0;i<reg.length();i++){            
+        for(int i=0;i<reg.length();i++){
             target[i] = target_weight[int(reg[i])].first;
             value[i]  = tsource->get(col, reg[i]);
         }
@@ -274,7 +274,7 @@ void RegressionTreeRegisters::sortRows()
     string f=source->getMetaDataDir()+"RTR_tsorted_row.psave";
 
     if(isUpToDate(f)){
-        DBG_LOG<<"RegressionTreeRegisters:: Reloading the sorted source VMatrix"<<endl;
+        DBG_LOG<<"RegressionTreeRegisters:: Reloading the sorted source VMatrix: "<<f<<endl;
         PLearn::load(f,tsorted_row);
         return;
     }
@@ -300,8 +300,9 @@ void RegressionTreeRegisters::sortRows()
         sortEachDim(sample_dim);
         if (report_progress) pb->update(sample_dim+1);
     }
+    if (report_progress) pb->close();//in case of parallel sort.
     if(source->hasMetaDataDir()){
-        DBG_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix"<<endl;
+        DBG_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix: "<<f<<endl;
         PLearn::save(f,tsorted_row);
     }else{
         DBG_LOG<<"RegressionTreeRegisters:: can't save the sorted source VMatrix as we don't have a metadatadir"<<endl;
@@ -311,108 +312,30 @@ void RegressionTreeRegisters::sortRows()
   
 void RegressionTreeRegisters::sortEachDim(int dim)
 {
-    int start_index = 0;
-    int end_index = length() - 1;
-    int forward_index;
-    int backward_index;
-    int stack_index = -1;
-    TVec<int> stack(50);
-    for (;;)
-    {
-        if ((end_index - start_index) < 7)
-        {
-            if (end_index > start_index)
-            {
-                sortSmallSubArray(start_index, end_index, dim);
-            }
-            if (stack_index < 0)
-            {
-                break;
-            }
-            end_index = stack[stack_index--];
-            start_index = stack[stack_index--];
-        }
-        else
-        {
-            swapIndex(start_index + 1, (start_index + end_index) / 2, dim);
-            if (compare(tsource->get(dim, tsorted_row(dim, start_index)),
-                        tsource->get(dim, tsorted_row(dim, end_index))) > 0.0)
-                swapIndex(start_index, end_index, dim);
-            if (compare(tsource->get(dim, tsorted_row(dim, start_index + 1)),
-                        tsource->get(dim, tsorted_row(dim, end_index))) > 0.0)
-                swapIndex(start_index + 1, end_index, dim);
-            if (compare(tsource->get(dim, tsorted_row(dim, start_index)),
-                        tsource->get(dim, tsorted_row(dim, start_index + 1))) > 0.0)
-                swapIndex(start_index, start_index + 1, dim);
-            forward_index = start_index + 1;
-            backward_index = end_index;
-            real sample_feature = tsource->get(dim, tsorted_row(dim, start_index + 1));
-            for (;;)
-            {
-                do forward_index++; while (compare(tsource->get(dim, tsorted_row(dim, forward_index)), sample_feature) < 0.0);
-                do backward_index--; while (compare(tsource->get(dim, tsorted_row(dim, backward_index)), sample_feature) > 0.0);
-                if (backward_index < forward_index)
-                {
-                    break;
-                }
-                swapIndex(forward_index, backward_index, dim);
-            }
-            swapIndex(start_index + 1, backward_index, dim);
-            stack_index += 2;
-            if (stack_index > 50)
-                PLERROR("RegressionTreeRegistersVMatrix: the stack for sorting the rows is too small");
-            if ((end_index - forward_index + 1) >= (backward_index - start_index))
-            {
-                stack[stack_index] = end_index;
-                stack[stack_index - 1] = forward_index;
-                end_index = backward_index - 1;
-            }
-            else
-            {
-                stack[stack_index] = backward_index - 1;
-                stack[stack_index - 1] = start_index;
-                start_index = forward_index;
-            }
-        }
+    PLCHECK(tsource->classname()=="MemoryVMatrixNoSave");
+    Mat m = tsource.toMat();
+    Vec v = m(dim);
+    TVec<int> order = v.sortingPermutation(true, true);
+    tsorted_row(dim)<<order;
+
+#ifndef NDEBUG
+    for(int i=0;i<length()-1;i++){
+        int reg1 = tsorted_row(dim,i);
+        int reg2 = tsorted_row(dim,i+1);
+        real v1 = tsource(dim,reg1);
+        real v2 = tsource(dim,reg2);
+//check that the sort is valid.
+        PLASSERT(v1<=v2);
+//check that the sort is stable
+        if(v1==v2 && reg1>reg2)
+            PLWARNING("In RegressionTreeRegisters::sortEachDim(%d) - "
+                      "sort is not stable. make it stable to be more optimized:"
+                      " reg1=%d, reg2=%d, v1=%f, v2=%f", 
+                      reg1, reg2, v1, v2);
     }
-}
-  
-void RegressionTreeRegisters::sortSmallSubArray(int the_start_index, int the_end_index, int dim)
-{
-    for (int next_train_sample_index = the_start_index + 1;
-         next_train_sample_index <= the_end_index;
-         next_train_sample_index++)
-    {
-        int saved_index = tsorted_row(dim, next_train_sample_index);
-        real sample_feature = tsource->get(dim,saved_index);
-        int each_train_sample_index;
-        for (each_train_sample_index = next_train_sample_index - 1;
-             each_train_sample_index >= the_start_index;
-             each_train_sample_index--)
-        {
-            if (compare(tsource->get(dim,tsorted_row(dim, each_train_sample_index)), sample_feature) <= 0.0)
-            {
-                break;
-            }
-            tsorted_row(dim, each_train_sample_index + 1) = tsorted_row(dim, each_train_sample_index);
-        }
-        tsorted_row(dim, each_train_sample_index + 1) = saved_index;
-    }  
-}
+#endif
+    return;
 
-void RegressionTreeRegisters::swapIndex(int index_i, int index_j, int dim)
-{
-    int saved_index = tsorted_row(dim, index_i);
-    tsorted_row(dim, index_i) = tsorted_row(dim, index_j);
-    tsorted_row(dim, index_j) = saved_index;
-}
-
-real RegressionTreeRegisters::compare(real field1, real field2)
-{
-    if (is_missing(field1) && is_missing(field2)) return 0.0;
-    if (is_missing(field1)) return -1.0;
-    if (is_missing(field2)) return +1.0;
-    return field1 - field2;
 }
 
 void RegressionTreeRegisters::printRegisters()
