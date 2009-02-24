@@ -236,20 +236,38 @@ namespace {
   struct index_cmp : public binary_function<int, int, bool>
   {
       const TVec<T>& m_values;
-      index_cmp(const Vec& values): m_values(values) { }        
+      index_cmp(const Vec& values): m_values(values) { }
       bool operator()(int x, int y) { return m_values[x] < m_values[y]; }
+  };
+  template <class T>
+  struct index_missing_cmp : public binary_function<int, int, bool>
+  {
+      const TVec<T>& m_values;
+      index_missing_cmp(const Vec& values): m_values(values) { }
+      bool operator()(int x, int y) {
+          T v1=m_values[x];
+          T v2=m_values[y];
+          if(is_missing(v1) && is_missing(v2)) return false;
+          else if(is_missing(v1)) return false;
+          else if(is_missing(v2)) return true;
+          return v1 < v2;
+      }
   };
 }
 // Actual body of the method
 template <class T>
-TVec<int> TVec<T>::sortingPermutation(bool stable) const
+TVec<int> TVec<T>::sortingPermutation(bool stable, bool missing) const
 {    
     TVec<int> indices(length_);
     for (int i=0; i < length_; i++) indices[i] = i;
-    if(stable)
+    if(stable && ! missing)
         stable_sort(indices.begin(), indices.end(), index_cmp<T>(*this));
-    else        
+    else if(! stable && !missing)
         sort(indices.begin(), indices.end(), index_cmp<T>(*this));
+    else if(stable && missing)
+        stable_sort(indices.begin(), indices.end(),index_missing_cmp<T>(*this));
+    else if(!stable && missing)
+        sort(indices.begin(), indices.end(), index_missing_cmp<T>(*this));
     return indices;
 }
 
