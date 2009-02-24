@@ -180,7 +180,7 @@ void RegressionTreeRegisters::build_()
         tsource = VMat(new TransposeVMatrix(new SubVMatrix(
                                                 source, 0,0,source->length(),
                                                 source->inputsize())));
-        if(do_sort_rows){
+        if(mem_tsource){
             PP<MemoryVMatrixNoSave> tmp = new MemoryVMatrixNoSave(tsource);
             tsource = VMat(tmp);
         }
