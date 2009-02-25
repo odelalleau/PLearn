@@ -156,6 +156,7 @@ void MissingInstructionVMatrix::build_()
     int skip_instruction_input = 0;
     int skip_instruction_target = 0;
     int skip_instruction_weight = 0;
+    int skip_instruction_extra = 0;
     if(default_instruction!="skip")
         width_=source->width();
     else{
@@ -221,16 +222,20 @@ void MissingInstructionVMatrix::build_()
         if (ins[source_col] == "skip"){
             if(source_col<source->inputsize())
                 skip_instruction_input++;
-            else if(source_col<(source->inputsize()+source->targetsize()))
+            else if(source_col<(source->inputsize() + source->targetsize()))
                 skip_instruction_target++;
-            else skip_instruction_weight++;
+            else if (source_col<(source->inputsize() + source->targetsize()
+                                 + source->weightsize()))
+                skip_instruction_weight++;
+            else skip_instruction_extra++;
         }
     }
     setMetaInfoFromSource();
-    inputsize_ = source->inputsize() - skip_instruction_input;
-    targetsize_ = source->targetsize() - skip_instruction_target;
-    weightsize_ = source->weightsize() - skip_instruction_weight;
-    width_ = inputsize_ + targetsize_ + weightsize_;
+    defineSizes(source->inputsize() - skip_instruction_input,
+                source->targetsize() - skip_instruction_target,
+                source->weightsize() - skip_instruction_weight,
+                source->extrasize() - skip_instruction_extra);
+    width_ = inputsize_ + targetsize_ + weightsize_ + extrasize_;
     int missing_instruction = 0;
     for (int col = 0; col < source->width(); col++)
     {

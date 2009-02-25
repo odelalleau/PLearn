@@ -199,7 +199,7 @@ void SubVMatrix::build_()
 //*
     bool sizes_are_inconsistent =
         inputsize_ < 0 || targetsize_ < 0 || weightsize_ < 0 ||
-        inputsize_ + targetsize_ + weightsize_ != width();
+        inputsize_ + targetsize_ + weightsize_ + extrasize_ != width();
     if( sizes_are_inconsistent )
     {
         int source_is = source->inputsize();

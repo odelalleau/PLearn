@@ -153,7 +153,6 @@ void DichotomizeVMatrix::build_()
 
     updateMtime(source);
 
-    instruction_index.fill(-1);
     TVec<string> source_names = source->fieldNames();
 
     instruction_index.resize(source->width());
@@ -185,9 +184,11 @@ void DichotomizeVMatrix::build_()
     length_=source->length();
     int sisize=source->inputsize();
     int stsize=source->targetsize();
+    int swsize=source->weightsize();
     int isize=0;
     int tsize=0;
     int wsize=0;
+    int esize=0;
     for (int source_col = 0; source_col < sisize; source_col++)
     {
         if (instruction_index[source_col] < 0) isize++;
@@ -210,7 +211,7 @@ void DichotomizeVMatrix::build_()
         }
     }
     for (int source_col = sisize + stsize;
-         source_col < sisize + stsize + source->weightsize() ; source_col++)
+         source_col < sisize + stsize + swsize ; source_col++)
     {
         if (instruction_index[source_col] < 0) wsize++;
         else
@@ -220,8 +221,19 @@ void DichotomizeVMatrix::build_()
             wsize += instruction_ptr.size();
         }
     }
-    defineSizes(isize, tsize, wsize);
-    width_ = isize + tsize + wsize;
+    for (int source_col = sisize + stsize + swsize;
+         source_col < sisize + stsize + swsize + source->extrasize() ; source_col++)
+    {
+        if (instruction_index[source_col] < 0) esize++;
+        else
+        {
+            TVec<pair<real, real> > instruction_ptr = 
+                discrete_variable_instructions[instruction_index[source_col]].second;
+            esize += instruction_ptr.size();
+        }
+    }
+    defineSizes(isize, tsize, wsize, esize);
+    width_ = isize + tsize + wsize + esize;
 
     //get the fieldnames
     TVec<string> fnames(width());

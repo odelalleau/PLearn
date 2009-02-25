@@ -266,9 +266,8 @@ void MissingIndicatorVMatrix::buildNewRecordFormat()
       new_col += 1;
     }
     length_ = source->length();
-    inputsize_ = source_inputsize + added_colomns;
-    targetsize_ = source->targetsize();
-    weightsize_ = source->weightsize();
+    defineSizes(source_inputsize + added_colomns, source->targetsize(), source->weightsize(), source->extrasize());
+
     source_input.resize(source_inputsize);
     declareFieldNames(new_field_names);
 
