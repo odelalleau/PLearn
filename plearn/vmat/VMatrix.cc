@@ -2242,14 +2242,15 @@ void VMatrix::computeMissingSizeValue(bool warn_if_cannot_compute,
 
     if (width_ < 0 && v <= -1) {
         if (warn_if_cannot_compute)
-            PLWARNING("In VMatrix::computeMissingSizeValue - Cannot compute "
-                      "the missing size value when the width is undefined");
+            PLWARNING("In VMatrix::computeMissingSizeValue for %s - Cannot "
+                      "compute the missing size value when the width is undefined",
+                      classname().c_str());
         return;
     }
 
     if(v < -1){
         if(warn_if_cannot_compute)
-            PLWARNING("In VMatrix::compute_missing_size_value() - in class %s"
+            PLWARNING("In VMatrix::computeMissingSizeValue() - in class %s"
                       " more then one of"
                       " inputsize(%d), targetsize(%d), weightsize(%d) and"
                       " extrasize(%d) is unknow so we cannot compute them with"
@@ -2259,7 +2260,7 @@ void VMatrix::computeMissingSizeValue(bool warn_if_cannot_compute,
         return;
     }else if(v==0 && warn_if_size_mismatch && width_ >= 0 &&
             width_ != inputsize_ + targetsize_ + weightsize_ + extrasize_)
-        PLWARNING("In VMatrix::compute_missing_size_value() for class %s - "
+        PLWARNING("In VMatrix::computeMissingSizeValue() for class %s - "
                   "inputsize_(%d) + targetsize_(%d) + weightsize_(%d) + "
                   "extrasize_(%d) != width_(%d) !",
                   classname().c_str(), inputsize_, targetsize_, weightsize_,
