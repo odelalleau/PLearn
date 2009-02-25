@@ -2219,9 +2219,9 @@ void VMatrix::compareStats(VMat target,
     return;
 }
 
-/////////////////////////
-// max_fieldnames_size //
-/////////////////////////
+///////////////////////
+// maxFieldNamesSize //
+///////////////////////
 int VMatrix::maxFieldNamesSize() const
 {
     uint size_fieldnames=0;
@@ -2231,9 +2231,9 @@ int VMatrix::maxFieldNamesSize() const
     return size_fieldnames;
 }
 
-////////////////////////////////
-// compute_missing_size_value //
-////////////////////////////////
+/////////////////////////////
+// computeMissingSizeValue //
+/////////////////////////////
 void VMatrix::computeMissingSizeValue(bool warn_if_cannot_compute,
                                       bool warn_if_size_mismatch)
 {
