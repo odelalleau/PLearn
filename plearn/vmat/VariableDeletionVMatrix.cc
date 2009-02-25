@@ -317,15 +317,22 @@ void VariableDeletionVMatrix::build_()
     // Then remove columns that are too constant.
     TVec<int> final_indices;
     if (is_equal(max_constant_threshold,1)){
+        TVec<int> const_indices;
         for (int k = 0; k < indices.length(); k++) {
             int i = indices[k];
             StatsCollector stat = stats[i];
             if(!(stat.min()==stat.max() && stat.nnonmissing()>0))
                 final_indices.append(i);
             else if (warn_removed_var)
-                PLWARNING("In VariableDeletionVMatrix::build_() var '%s'"
-                          " is constant with value: %f. We remove it.",
-                          source->fieldName(i).c_str(), stat.min());
+                const_indices.append(i);
+        }
+        if(warn_removed_var && const_indices.length()>0){
+            NORMAL_LOG<<" WARNING: In VariableDeletionVMatrix::build_() - The following tuple (variable, constant value) indicate variable that are removed because they are constant: " <<endl;
+            for(int i=0;i<const_indices.length();i++){
+                StatsCollector stat = stats[i];
+                NORMAL_LOG<<"("<<source->fieldName(i)<<","<<stat.min()<<"),";
+            }
+            NORMAL_LOG<<endl;
         }
         indices.resize(final_indices.length());
         indices << final_indices; 
