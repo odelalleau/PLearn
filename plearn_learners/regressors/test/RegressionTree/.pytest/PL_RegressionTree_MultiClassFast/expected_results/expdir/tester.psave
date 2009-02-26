@@ -75,12 +75,6 @@ output_confidence_target = 1 ;
 multiclass_outputs = []
 ;
 leave_template = *9 ->RegressionTreeMulticlassLeaveFast(
-nb_class = 2 ;
-objective_function = "l1" ;
-multiclass_weights_sum = []
-;
-l1_loss_function_factor = 9.71580092546811329e-320 ;
-l2_loss_function_factor = 0 ;
 id = 0 ;
 missing_leave = 0 ;
 loss_function_weight = 0 ;
@@ -90,7 +84,11 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1  )
+loss_function_factor = 1 ;
+nb_class = 2 ;
+objective_function = "l1" ;
+multiclass_weights_sum = []
+ )
 ;
 root = *0 ;
 priority_queue = *0 ;

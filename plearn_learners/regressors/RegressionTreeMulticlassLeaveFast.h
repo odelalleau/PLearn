@@ -64,7 +64,6 @@ private:
   Learnt options: they are sized and initialized if need be, in initLeave(...)
 */
 
-    real loss_function_factor;
     Vec multiclass_weights_sum;
  
 public:

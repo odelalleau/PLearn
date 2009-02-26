@@ -64,6 +64,8 @@ RegressionTreeMulticlassLeaveFast::~RegressionTreeMulticlassLeaveFast()
 
 void RegressionTreeMulticlassLeaveFast::declareOptions(OptionList& ol)
 { 
+    inherited::declareOptions(ol);
+
     declareOption(ol, "nb_class", 
                   &RegressionTreeMulticlassLeaveFast::nb_class,
                   OptionBase::buildoption,
@@ -80,23 +82,16 @@ void RegressionTreeMulticlassLeaveFast::declareOptions(OptionList& ol)
                   OptionBase::learntoption,
                   "A vector to count the weight sum of each possible output "
                   "for the sample in this leave.\n");
-    declareOption(ol, "l1_loss_function_factor",
-                  &RegressionTreeMulticlassLeaveFast::l1_loss_function_factor,
+    redeclareOption(ol, "loss_function_factor",
+                  &RegressionTreeMulticlassLeaveFast::loss_function_factor,
                   OptionBase::learntoption,
-                  "2 / loss_function_weight.\n");
-    declareOption(ol, "l2_loss_function_factor",
-                  &RegressionTreeMulticlassLeaveFast::l2_loss_function_factor,
-                  OptionBase::learntoption,
-                  "2 / pow(loss_function_weight, 2.0).\n");
-    inherited::declareOptions(ol);
+                  "The loss fct factor. Depend of the objective_function.\n");
 }
 
 void RegressionTreeMulticlassLeaveFast::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(objective_function, copies);
-    deepCopyField(l1_loss_function_factor, copies);
-    deepCopyField(l2_loss_function_factor, copies);
     deepCopyField(multiclass_weights_sum, copies);
 }
 
@@ -116,13 +111,14 @@ void RegressionTreeMulticlassLeaveFast::initStats()
     weights_sum = 0.0;
     if (loss_function_weight != 0.0)
     {
-        l1_loss_function_factor = 2.0 / loss_function_weight;
-        l2_loss_function_factor = 2.0 / pow(loss_function_weight, 2);
+        if(objective_function == "l1")
+            loss_function_factor = 2.0 / loss_function_weight;
+        else
+            loss_function_factor = 2.0 / pow(loss_function_weight, 2);
     }
     else
     {
-        l1_loss_function_factor = 1.0;
-        l2_loss_function_factor = 1.0;
+        loss_function_factor = 1.0;
     }
     multiclass_weights_sum.resize(nb_class);
     multiclass_weights_sum.fill(0);
@@ -132,14 +128,14 @@ void RegressionTreeMulticlassLeaveFast::addRow(int row)
 {
     real weight = train_set->getWeight(row);
     real target = train_set->getTarget(row);
-    addRow(row, target, weight);
+    RegressionTreeMulticlassLeaveFast::addRow(row, target, weight);
 }
 
 void RegressionTreeMulticlassLeaveFast::addRow(int row, real target, real weight,
                                  Vec outputv, Vec errorv)
 {
-    addRow(row, target, weight);
-    getOutputAndError(outputv,errorv);
+    RegressionTreeMulticlassLeaveFast::addRow(row, target, weight);
+    RegressionTreeMulticlassLeaveFast::getOutputAndError(outputv,errorv);
 }
 
 void RegressionTreeMulticlassLeaveFast::addRow(int row, real target, real weight)
@@ -151,21 +147,21 @@ void RegressionTreeMulticlassLeaveFast::addRow(int row, real target, real weight
 
 void RegressionTreeMulticlassLeaveFast::addRow(int row, Vec outputv, Vec errorv)
 {
-    addRow(row);
-    getOutputAndError(outputv,errorv);    
+    RegressionTreeMulticlassLeaveFast::addRow(row);
+    RegressionTreeMulticlassLeaveFast::getOutputAndError(outputv,errorv);    
 }
 
 void RegressionTreeMulticlassLeaveFast::removeRow(int row, Vec outputv, Vec errorv)
 {
     real weight = train_set->getWeight(row);
     real target = train_set->getTarget(row);
-    removeRow(row,target,weight,outputv,errorv);
+    RegressionTreeMulticlassLeaveFast::removeRow(row,target,weight,outputv,errorv);
 }
 
 void RegressionTreeMulticlassLeaveFast::removeRow(int row, real target, real weight,
                                  Vec outputv, Vec errorv){
-    removeRow(row,target,weight);
-    getOutputAndError(outputv,errorv);
+    RegressionTreeMulticlassLeaveFast::removeRow(row,target,weight);
+    RegressionTreeMulticlassLeaveFast::getOutputAndError(outputv,errorv);
 }
 
 void RegressionTreeMulticlassLeaveFast::removeRow(int row, real target, real weight)
@@ -217,11 +213,6 @@ void RegressionTreeMulticlassLeaveFast::getOutputAndError(Vec& output, Vec& erro
                 error[0] += abs(output[0] - mc_ind) 
                     * multiclass_weights_sum[mc_ind];
             }
-            error[0] *= l1_loss_function_factor * length_ / weights_sum;
-            if (error[0] < 1E-10) error[0] = 0.0;
-            if (error[0] > weights_sum * l1_loss_function_factor)
-                error[2] = weights_sum * l1_loss_function_factor;
-            else error[2] = error[0];
         }
         else
         {
@@ -230,12 +221,12 @@ void RegressionTreeMulticlassLeaveFast::getOutputAndError(Vec& output, Vec& erro
                 error[0] += pow(output[0] - mc_ind, 2) 
                     * multiclass_weights_sum[mc_ind];
             }
-            error[0] *= l2_loss_function_factor * length_ / weights_sum;
-            if (error[0] < 1E-10) error[0] = 0.0;
-            if (error[0] > weights_sum * l2_loss_function_factor) 
-                error[2] = weights_sum * l2_loss_function_factor; 
-            else error[2] = error[0];
         }
+        error[0] *= loss_function_factor * length_ / weights_sum;
+        if (error[0] < 1E-10) error[0] = 0.0;
+        if (error[0] > weights_sum * loss_function_factor) 
+            error[2] = weights_sum * loss_function_factor; 
+        else error[2] = error[0];
         error[1] = (1.0 - output[1]) * length_;
     }
 }
