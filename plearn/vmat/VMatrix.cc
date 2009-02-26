@@ -1359,6 +1359,10 @@ void VMatrix::setMetaInfoFrom(const VMatrix* vm)
             // number): we can get its string mapping.
             setStringMapping(i, vm->getStringToRealMapping(vm_index));
     }
+
+    //we save it now in case the program crash
+    if(hasMetaDataDir())
+        saveFieldInfos();
 }
 
 ////////////////////
