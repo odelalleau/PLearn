@@ -1,0 +1,171 @@
+*1 ->VecStatsCollector(
+maxnvalues = 0 ;
+fieldnames = 7 [ "mse" "base_confidence" "base_reward_l2" "base_reward_l1" "class_error" "SPLIT_VAR_x1" "SPLIT_VAR_y2" ] ;
+compute_covariance = 0 ;
+epsilon = 0 ;
+window = -1 ;
+full_update_frequency = -1 ;
+window_nan_code = 0 ;
+no_removal_warnings = 0 ;
+stats = 7 [ StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = 51 ;
+sumsquare_ = 51 ;
+sumcube_ = 51 ;
+sumfourth_ = 51 ;
+min_ = 0 ;
+max_ = 1 ;
+agmemin_ = 199 ;
+agemax_ = 197 ;
+first_ = 0 ;
+last_ = 0 ;
+binary_ = 1 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = -13.0253164556962204 ;
+sumsquare_ = 1.40213941133083142 ;
+sumcube_ = -0.150936442542046217 ;
+sumfourth_ = 0.0162478919736128886 ;
+min_ = 0.702479338842975198 ;
+max_ = 0.810126582278481 ;
+agmemin_ = 197 ;
+agemax_ = 199 ;
+first_ = 0.810126582278481 ;
+last_ = 0.702479338842975198 ;
+binary_ = 0 ;
+integer_ = 0 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = -102 ;
+sumsquare_ = 204 ;
+sumcube_ = -408 ;
+sumfourth_ = 816 ;
+min_ = -1 ;
+max_ = 1 ;
+agmemin_ = 197 ;
+agemax_ = 199 ;
+first_ = 1 ;
+last_ = 1 ;
+binary_ = 0 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = -102 ;
+sumsquare_ = 204 ;
+sumcube_ = -408 ;
+sumfourth_ = 816 ;
+min_ = -1 ;
+max_ = 1 ;
+agmemin_ = 197 ;
+agemax_ = 199 ;
+first_ = 1 ;
+last_ = 1 ;
+binary_ = 0 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = 51 ;
+sumsquare_ = 51 ;
+sumcube_ = 51 ;
+sumfourth_ = 51 ;
+min_ = 0 ;
+max_ = 1 ;
+agmemin_ = 199 ;
+agemax_ = 197 ;
+first_ = 0 ;
+last_ = 0 ;
+binary_ = 1 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = 121 ;
+sumsquare_ = 121 ;
+sumcube_ = 121 ;
+sumfourth_ = 121 ;
+min_ = 0 ;
+max_ = 1 ;
+agmemin_ = 199 ;
+agemax_ = 197 ;
+first_ = 0 ;
+last_ = 1 ;
+binary_ = 1 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+StatsCollector(
+epsilon = 0 ;
+maxnvalues = 0 ;
+no_removal_warnings = 0 ;
+nmissing_ = 0 ;
+nnonmissing_ = 200 ;
+sumsquarew_ = 200 ;
+sum_ = -121 ;
+sumsquare_ = 121 ;
+sumcube_ = -121 ;
+sumfourth_ = 121 ;
+min_ = 1 ;
+max_ = 2 ;
+agmemin_ = 197 ;
+agemax_ = 199 ;
+first_ = 2 ;
+last_ = 1 ;
+binary_ = 0 ;
+integer_ = 1 ;
+counts = {};
+more_than_maxnvalues = 1  )
+] ;
+cov = 0  0  [ 
+]
+;
+sum_cross = 0  0  [ 
+]
+;
+sum_cross_weights = 0  0  [ 
+]
+;
+sum_cross_square_weights = 0  0  [ 
+]
+;
+sum_non_missing_weights = 0 ;
+sum_non_missing_square_weights = 0  )
