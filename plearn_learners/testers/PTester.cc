@@ -513,7 +513,7 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
     if (should_train) {
         VMat trainset = dsets[0];
         if (is_splitdir && save_data_sets)
-            PLearn::save(splitdir / "training_set.psave", trainset);
+            PLearn::save(splitdir / "training_set.vmat", trainset);
             
         if (provide_learner_expdir)
         {
@@ -594,7 +594,7 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
             PP<VecStatsCollector> test_stats = stcol[setnum];
             const string setname = "test" + tostring(setnum);
             if (is_splitdir && save_data_sets)
-                PLearn::save(splitdir / (setname + "_set.psave"), testset);
+                PLearn::save(splitdir / (setname + "_set.vmat"), testset);
 
             // QUESTION Why is this done so late? Can't it be moved
             // somewhere earlier? At least before the save_data_sets?
