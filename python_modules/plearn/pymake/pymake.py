@@ -375,7 +375,8 @@ def get_ofiles_to_copy(executables_to_link):
     return files_to_copy
 
 def copy_ofiles_locally(executables_to_link):
-    print '++++ Copying remaining ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link))
+    if verbose > 1:
+        print '++++ Copying remaining ofiles locally for ', string.join(map(lambda x: x.filebase, executables_to_link))
     files_to_copy= get_ofiles_to_copy(executables_to_link)
     for f in files_to_copy:
         copy_ofile_locally(f)
@@ -1106,7 +1107,8 @@ def sequential_link(executables_to_link, linkname):
                 link_exit_code = 1
         else:
             if not local_compilation:
-                print 'Waiting for NFS to catch up...',
+                if verbose>=2:
+                    print 'Waiting for NFS to catch up...',
                 # Flush stdhout to make sure the previous message shows up,
                 # so if wait_for_all_...() doesn't work properly, then at
                 # least we learn we are waiting for NFS now and not when we
@@ -1955,7 +1957,6 @@ class FileInfo:
                 print self.filepath, "not handled here."
                 return False
         except OSError: # OSError: [Errno 116] Stale NFS file handle
-            print "OSError... (probably NFS latency); Will be retrying"
             return False
         
     def corresponding_ofile_is_up_to_date(self):
@@ -2251,6 +2252,8 @@ class FileInfo:
         else:
             self.retry_compilation = False
 
+        if msg and verbose == 1 and self.hostname!="localhost":
+            print "On host:",self.hostname
         if msg:
             print self.filebase+self.fileext,':', string.join(msg,'')
 
@@ -3027,6 +3030,10 @@ def main( args ):
                 print str(len(ccfiles_to_compile))+'/'+str(len(ccfiles_to_link)),
                 print 'files. '+str(ccf)+' code and '+str(hf),
                 print 'headers file were modified.'
+                if verbose >=4:
+                    for i in ccfiles_to_compile:
+                        if i.file_is_modified():
+                            print i.filename(),"were modified"
 
             if platform=='win32':
                 win32_parallel_compile(ccfiles_to_compile.keys())
