@@ -204,13 +204,13 @@ void RegressionTreeMulticlassLeaveFast::getOutputAndError(Vec& output, Vec& erro
     }
     else
     {
-        output[1] = multiclass_weights_sum[mc_winer] / weights_sum;;
+        output[1] = multiclass_weights_sum[mc_winer] / weights_sum;
         error[0] = 0.0;
         if (objective_function == "l1")
         {
             for (int mc_ind = 0; mc_ind < nb_class;mc_ind++)
             {
-                error[0] += abs(output[0] - mc_ind) 
+                error[0] += abs(mc_winer - mc_ind) 
                     * multiclass_weights_sum[mc_ind];
             }
         }
@@ -218,14 +218,14 @@ void RegressionTreeMulticlassLeaveFast::getOutputAndError(Vec& output, Vec& erro
         {
             for (int mc_ind = 0; mc_ind < nb_class;mc_ind++)
             {
-                error[0] += pow(output[0] - mc_ind, 2) 
+                error[0] += pow(mc_winer - mc_ind, 2) 
                     * multiclass_weights_sum[mc_ind];
             }
         }
         error[0] *= loss_function_factor * length_ / weights_sum;
         if (error[0] < 1E-10) error[0] = 0.0;
-        if (error[0] > weights_sum * loss_function_factor) 
-            error[2] = weights_sum * loss_function_factor; 
+        if (error[0] > weights_sum * loss_function_factor)
+            error[2] = weights_sum * loss_function_factor;
         else error[2] = error[0];
         error[1] = (1.0 - output[1]) * length_;
     }
