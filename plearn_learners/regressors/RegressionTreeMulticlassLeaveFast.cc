@@ -218,7 +218,7 @@ void RegressionTreeMulticlassLeaveFast::getOutputAndError(Vec& output, Vec& erro
         {
             for (int mc_ind = 0; mc_ind < nb_class;mc_ind++)
             {
-                error[0] += pow(mc_winer - mc_ind, 2) 
+                error[0] += pow(mc_winer - mc_ind, 2.) 
                     * multiclass_weights_sum[mc_ind];
             }
         }
