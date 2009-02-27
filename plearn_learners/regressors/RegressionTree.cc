@@ -42,7 +42,6 @@
 #include "RegressionTree.h"
 #include "RegressionTreeQueue.h"
 #include "RegressionTreeLeave.h"
-#include "RegressionTreeMulticlassLeave.h"
 #include "RegressionTreeRegisters.h"
 #include "RegressionTreeNode.h"
 

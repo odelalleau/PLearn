@@ -189,6 +189,7 @@
 #include <plearn_learners/regressors/RankLearner.h>
 #include <plearn_learners/regressors/RegressorFromDistribution.h>
 #include <plearn_learners/regressors/RegressionTree.h>
+#include <plearn_learners/regressors/RegressionTreeMulticlassLeave.h>
 #include <plearn_learners/regressors/RegressionTreeMulticlassLeaveFast.h>
 // Unsupervised
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
