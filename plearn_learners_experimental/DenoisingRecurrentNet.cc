@@ -716,8 +716,14 @@ void DenoisingRecurrentNet::train()
             for(int i=0; i<nseq; i++)
             {
 
-                if(stage<nb_stage_reconstruction && input_noise_prob!=0 )
+                if(input_noise_prob!=0 )
                     noise = true;
+                else
+                    noise = false;
+
+                
+                
+                noise = false;
                 getSequence(i, seq);
                 encodeSequenceAndPopulateLists(seq);
               
@@ -730,24 +736,11 @@ void DenoisingRecurrentNet::train()
                     inject_zero_forcing_noise(encoded_seq, input_noise_prob);
 
                 // recurrent no noise phase
-                if(stage>=nb_stage_reconstruction && stage<nb_stage_target+nb_stage_reconstruction){
+                if(stage>=nb_stage_reconstruction){
                     if(recurrent_lr!=0)
                     {
                         
-                        if(corrupt_input) // need to recover the clean sequence                        
-                            encoded_seq << clean_encoded_seq;                  
-                        setLearningRate( recurrent_lr );                    
-                        recurrentFprop(train_costs, train_n_items);
-                        recurrentUpdate(0,0,1, prediction_cost_weight,0, train_costs, train_n_items );
-                        
-                    }
-                }
-
-                if(stage>=nb_stage_target+nb_stage_reconstruction){
-                    if(recurrent_lr!=0)
-                    {
-                        
-                        if(corrupt_input) // need to recover the clean sequence                        
+                        if(noise) // need to recover the clean sequence                        
                             encoded_seq << clean_encoded_seq;                  
                         setLearningRate( recurrent_lr );                    
                         recurrentFprop(train_costs, train_n_items);
@@ -756,7 +749,7 @@ void DenoisingRecurrentNet::train()
                     }
                 }
 
-                if(stage<nb_stage_reconstruction){
+                if(stage<nb_stage_reconstruction || nb_stage_reconstruction == 0 ){
 
 
                     // greedy phase input
@@ -773,6 +766,24 @@ void DenoisingRecurrentNet::train()
                         recurrentUpdate(0, hidden_reconstruction_cost_weight, 1, 0,1, train_costs, train_n_items );
                     }
                 }
+
+                // recurrent no noise phase
+                /*if(stage>=nb_stage_reconstruction && stage<nb_stage_target+nb_stage_reconstruction){
+                    if(recurrent_lr!=0)
+                    {
+                        
+                        if(noise) // need to recover the clean sequence                        
+                            encoded_seq << clean_encoded_seq;                  
+                        setLearningRate( recurrent_lr );                    
+                        recurrentFprop(train_costs, train_n_items);
+                        recurrentUpdate(0,0,1, prediction_cost_weight,0, train_costs, train_n_items );
+                        
+                        }
+                    }*/
+
+                
+
+
                 // recurrent noisy phase
                 if(noisy_recurrent_lr!=0)
                 {
@@ -783,7 +794,7 @@ void DenoisingRecurrentNet::train()
 
                 
             }
-
+            noise= false;
             if( pb )
                 pb->update( stage + 1 - init_stage);
             
@@ -1037,6 +1048,8 @@ void DenoisingRecurrentNet::recurrentFprop(Vec train_costs, Vec train_n_items) c
             }
         }
     }
+    if(noise)
+        inject_zero_forcing_noise(hidden_list, input_noise_prob);
 }
 
 
@@ -1211,14 +1224,37 @@ double DenoisingRecurrentNet::fpropInputReconstructionFromHidden(Vec hidden, Mat
     transposeProduct(reconstruction_activation, reconstruction_weights, hidden); 
     reconstruction_activation += reconstruction_bias;
 
+    for( int j=0 ; j<fullinputlength ; j++ ){
+        if(clean_input[j]==1 || clean_input[j]==0)
+            reconstruction_prob[j] = fastsigmoid( reconstruction_activation[j] );
+        else
+            reconstruction_prob[j] = reconstruction_activation[j] ;
+    }
+
     double result_cost = 0;
     if(encoding=="raw_masked_supervised") // complicated input format... consider it's squared error
     {
-        real r;
-        reconstruction_prob << reconstruction_activation;
-        for(int i=0; i<reconstruction_activation.length(); i++)
-            r += reconstruction_activation[i] - clean_input[i];
-        result_cost = r*r;
+        double r = 0;
+        double neg_log_cost = 0; // neg log softmax
+        for(int k=0; k<reconstruction_prob.length(); k++){
+            if(clean_input[k]==1 || clean_input[k]==0){
+                neg_log_cost -= clean_input[k]*safelog(reconstruction_prob[k]) + (1-clean_input[k])*safelog(1-reconstruction_prob[k]);
+            }                
+            else{
+                r = reconstruction_prob[k] - clean_input[k];
+                neg_log_cost += r*r;
+            }
+            
+            
+        }
+        result_cost = neg_log_cost;
+        
+        /*real r;
+        //reconstruction_prob << reconstruction_activation;
+        for(int i=0; i<reconstruction_activation.length(); i++){
+            r = reconstruction_activation[i] - clean_input[i];
+            result_cost += r*r;
+            }*/
     }
     else // suppose it's a multiple softmax
     {
@@ -1295,7 +1331,7 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     //update bias
     multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
     // update weight
-    externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr); //dynamic matrice tied
+    //externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr); //dynamic matrice tied
     //externalProductScaleAcc(acc_weights_gr, hidden_reconstruction_activation_grad, hidden, -lr); //dynamic matrice not tied
                 
     
@@ -1305,13 +1341,14 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec hidden
     for(int k=0; k<reconstruction_prob.length(); k++){
         //    hidden_reconstruction_activation_grad[k] = safelog(1-reconstruction_prob[k]) - safelog(reconstruction_prob[k]);
         hidden_reconstruction_activation_grad[k] = - reconstruction_activation[k];
-    }*/
+        }*/
 
     double result_cost = 0;
     double neg_log_cost = 0; // neg log softmax
-    for(int k=0; k<reconstruction_prob.length(); k++)
-        if(hidden_target[k]!=0)
-            neg_log_cost -= hidden_target[k]*safelog(reconstruction_prob[k]) + (1-hidden_target[k])*safelog(1-reconstruction_prob[k]);
+    for(int k=0; k<reconstruction_prob.length(); k++){
+        //if(hidden_target[k]!=0)
+        neg_log_cost -= hidden_target[k]*safelog(reconstruction_prob[k]) + (1-hidden_target[k])*safelog(1-reconstruction_prob[k]);
+    }
     result_cost = neg_log_cost;
     
     return result_cost;
