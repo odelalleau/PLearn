@@ -38,7 +38,11 @@
 
 //! All includes should go into plearn_inc.h.
 #include "plearn_version.h"
-//#include "plearn_noblas_inc.h"
+#ifndef WIN32
+#include <plearn/misc/ShellScript.h>
+#include <plearn/misc/Redirect.h>
+#endif
+
 /*****************
  * Miscellaneous *
  *****************/
@@ -74,6 +78,7 @@
 #include <plearn_learners/hyper/HyperLearner.h>
 #include <plearn_learners/hyper/HyperOptimize.h>
 #include <plearn_learners/hyper/EarlyStoppingOracle.h>
+#include <plearn_learners/cgi/StabilisationLearner.h>
 
 /************
  * Splitter *
