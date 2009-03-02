@@ -272,7 +272,10 @@ void VMatLanguage::setSource(VMat the_source)
 }
 
 void VMatLanguage::setSourceFieldNames(TVec<string> the_srcfieldnames)
-{ srcfieldnames = the_srcfieldnames; }
+{ 
+    srcfieldnames = the_srcfieldnames; 
+    myvec.resize(srcfieldnames.length());
+}
 
 //! Make it an empty program by clearing outputfieldnames, program, mappings
 void VMatLanguage::clear()
@@ -1373,7 +1376,6 @@ void VMatLanguage::run(const Vec& srcvec, const Vec& result, int rowindex) const
 
 void VMatLanguage::run(int rowindex, const Vec& result) const
 {
-    myvec.resize(srcfieldnames.length());
     vmsource->getRow(rowindex,myvec);
     run(myvec, result, rowindex);
 }
