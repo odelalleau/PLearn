@@ -297,9 +297,12 @@ static string global_options( vector<string>& command_line)
         }
     command_line.resize( cleaned ); // Truncating the end of the vector.
   
-    if (no_version_pos == -1)
+    if (no_version_pos == -1){
         output_version( );
-
+#ifdef _OPENMP
+        pout<<"Using OPENMP with "+tostring(omp_get_max_threads())+" threads."<<endl;
+#endif
+    }
     if (no_progress_bars != -1)
         ProgressBar::setPlugin(new NullProgressBarPlugin);
 
@@ -344,9 +347,6 @@ int plearn_main( int argc, char** argv,
         PLMPI::init(&argc, &argv);
 #endif
 
-#ifdef _OPENMP
-        pout<<"Using OPENMP with "+tostring(omp_get_max_threads())+" threads."<<endl;
-#endif
         seed();
 
         // set program name
