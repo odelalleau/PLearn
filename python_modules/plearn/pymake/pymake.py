@@ -2872,13 +2872,12 @@ def main( args ):
 
     ##  Special options that will not compile, but perform various operations
     if 'clean' in optionargs:
-        #remove some option that are save to have.
-        #some people can put those option in their PYMAKE_OPTIONS and 
+        #some people can put options in their PYMAKE_OPTIONS and 
         #we want them to be able to do pymake -clean .
-        allowed_options=['local_ofiles','logging=dbg','logging=dbg-profile', 'goto']
-        for i in allowed_options:
+        for i in os.getenv('PYMAKE_OPTIONS').split():
+            i=i[1:]
             if i in optionargs: optionargs.remove(i)
-
+                        
         if len(optionargs)!=1 or len(otherargs)==0:
             print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option:', optionargs
             sys.exit(100)
