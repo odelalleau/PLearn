@@ -5,7 +5,7 @@ from socket import gethostname
 from subprocess import Popen,PIPE
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart_jobs condor_jobs_number... }
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart_jobs condor_jobs_number... }
 
 <back-end parameter>:
     bqtools, cluster, condor option  : [--mem=N]
@@ -79,6 +79,7 @@ common options:
     history on the local host and relaunch those jobs. We only take the command
     line that was executed, all other options are are those passed to 
     dbidispatch this time. Work only with jobs launched with dbidispatch.
+  The '--only_n_first=N' option tell to launch only the first N jobs from the list.
 
 bqtools, cluster and condor option:
   The '--mem=X' speficify the number of ram in meg the program need to execute.
@@ -311,7 +312,8 @@ for argv in to_parse:
                                 "--req", "--files", "--raw", "--rank", "--env",
                                 "--universe", "--exp_dir", "--machine", "--machines",
                                 "--queue", "--nano", "--submit_options",
-                                "--jobs_name", "--file", "--tasks_filename"]:
+                                "--jobs_name", "--file", "--tasks_filename",
+                                "--only_n_first" ]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -486,6 +488,10 @@ elif dbi_param.get("restart",False):
     choise_args=[]
 else:
     (commands,choise_args)=generate_commands(command_argv)
+
+if dbi_param.has_key("only_n_first"):
+    commands=commands[:int(dbi_param["only_n_first"])]
+    del dbi_param["only_n_first"]
 
 #we duplicate the command so that everything else work correctly.
 if dbi_param.has_key("to_all"):
