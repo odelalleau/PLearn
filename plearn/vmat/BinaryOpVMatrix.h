@@ -82,7 +82,9 @@ public:
     //! Default constructor.
     BinaryOpVMatrix();
 
-    BinaryOpVMatrix(VMat source1, VMat source2, string op);
+    BinaryOpVMatrix(VMat source1, VMat source2, const string& op,
+                    bool call_build_ = true);
+
     // ******************
     // * Object methods *
     // ******************

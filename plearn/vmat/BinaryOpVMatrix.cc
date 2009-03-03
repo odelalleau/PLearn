@@ -48,20 +48,23 @@ using namespace std;
 
 
 BinaryOpVMatrix::BinaryOpVMatrix()
-{
-}
+{}
 
-BinaryOpVMatrix::BinaryOpVMatrix(VMat source1, VMat source2, string op):
+BinaryOpVMatrix::BinaryOpVMatrix(VMat source1, VMat source2, const string& op,
+                                 bool call_build_):
+    inherited(call_build_),
     source1(source1),
     source2(source2),
     op(op)
 {
-    build();
+    if (call_build_)
+        build_();
 }
+
 PLEARN_IMPLEMENT_OBJECT(BinaryOpVMatrix,
-                        "This VMat allows simple binary operations on two VMatrix.",
-                        "It is assumed that the two source matrices are the same size"
-    );
+        "This VMat allows simple binary operations on two VMatrix.",
+        "It is assumed that the two source matrices have the same size."
+);
 
 void BinaryOpVMatrix::getNewRow(int i, const Vec& v) const
 {
