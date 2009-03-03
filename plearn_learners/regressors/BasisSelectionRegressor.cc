@@ -311,7 +311,8 @@ void BasisSelectionRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 
 int BasisSelectionRegressor::outputsize() const
 {
-    return 1;
+    //return 1;
+    return template_learner->outputsize();
 }
 
 void BasisSelectionRegressor::forget()
@@ -1124,6 +1125,7 @@ void BasisSelectionRegressor::retrainLearner()
         newtrainset= new RealFunctionsProcessedVMatrix(train_set, selected_functions, false, true, true);
     newtrainset->defineSizes(nf,1,weighted?1:0);
     learner->setTrainingSet(newtrainset);
+    template_learner->setTrainingSet(newtrainset);
     learner->forget();
     learner->train();
     // resize features matrix so it contains only the features
@@ -1158,7 +1160,8 @@ void BasisSelectionRegressor::train()
                 recomputeFeatures();
                 if(stage==0) // only mandatory funcs.
                     retrainLearner();
-                recomputeResidue();
+                if (candidate_functions.length()>0)
+                    recomputeResidue();
             }
         }
 
@@ -1269,8 +1272,8 @@ void BasisSelectionRegressor::recomputeResidue()
 void BasisSelectionRegressor::computeOutputFromFeaturevec(const Vec& featurevec, Vec& output) const
 {
     int nout = outputsize();
-    if(nout!=1)
-        PLERROR("outputsize should always be one for this learner");
+    if(nout!=1 && !use_all_basis)
+        PLERROR("outputsize should always be 1 for this learner (=%d)", nout);
     output.resize(nout);
 
     if(learner.isNull())
