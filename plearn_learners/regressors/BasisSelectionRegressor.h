@@ -144,22 +144,6 @@ public:
     virtual TVec<std::string> getTrainCostNames() const;
 
 
-    // *** SUBCLASS WRITING: ***
-    // While in general not necessary, in case of particular needs
-    // (efficiency concerns for ex) you may also want to overload
-    // some of the following methods:
-    // virtual void computeOutputAndCosts(const Vec& input, const Vec& target,
-    //                                    Vec& output, Vec& costs) const;
-    // virtual void computeCostsOnly(const Vec& input, const Vec& target,
-    //                               Vec& costs) const;
-    // virtual void test(VMat testset, PP<VecStatsCollector> test_stats,
-    //                   VMat testoutputs=0, VMat testcosts=0) const;
-    // virtual int nTestCosts() const;
-    // virtual int nTrainCosts() const;
-    // virtual void resetInternalState();
-    // virtual bool isStatefulLearner() const;
-
-
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
