@@ -796,6 +796,7 @@ class DBICondor(DBIBase):
         self.universe = "vanilla"
         self.machine = []
         self.machines = []
+        self.no_machine = []
         self.to_all = False
         self.keep_failed_jobs_in_queue = False
         self.clean_up = True
@@ -1349,14 +1350,20 @@ class DBICondor(DBIBase):
             assert(len(self.machines)==0)
             for m in self.machine:
                 self.tasks_req.append(self.req+'&&(Machine=="'+m+'")')
-
+        
         for m in self.machines:
-            machine_choice.append('regexp("'+m+'", target.Machine)')
-        if machine_choice:
+            machine_choice.append('regexp("'+m+'", Machine)')
+
+        if len(machine_choice)==1:
+            self.req+="&&("+machine_choice[0]+")"
+        elif machine_choice:
             self.req+="&&(False "
             for m in machine_choice:
                 self.req+="||"+m
             self.req+=")"
+
+        for m in self.no_machine:
+            self.req+='&&(Machine!="'+m+'")'
         #if no mem requirement added, use the executable size.
         #todo: if they are not the same executable, take the biggest
         if self.mem<=0:

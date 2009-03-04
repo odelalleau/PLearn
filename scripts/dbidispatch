@@ -32,6 +32,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [--universe={vanilla*, standard, grid, java,
                                            scheduler, local, parallel, vm}]
                               [--machine=HOSTNAME+] [--machines=regex+]
+                              [--no_machine=HOSTNAME+]
                               [--[*no_]keep_failed_jobs_in_queue]
 
 An * after '[', '{' or ',' signals the default value.
@@ -173,6 +174,8 @@ condor only options:
      host is full_host_name. If multiple --machine or --machines options,
     take anyone of them. Is equivalent to
      dbidispatch '--req=Machine=="full_host_name"'
+  The '--no_machine=full_host_name' option remove the machines from possible 
+    host to run your jobs.
   The '--machines=regexp' option add the requirement that the executing host 
     name must be match the regexp. If multiple --machine or --machines options,
     take anyone of them.
@@ -313,7 +316,7 @@ for argv in to_parse:
                                 "--universe", "--exp_dir", "--machine", "--machines",
                                 "--queue", "--nano", "--submit_options",
                                 "--jobs_name", "--file", "--tasks_filename",
-                                "--only_n_first" ]:
+                                "--only_n_first", "--no_machine" ]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -327,7 +330,7 @@ for argv in to_parse:
         elif param=="env":
             dbi_param.setdefault(param,"")
             dbi_param[param]+='"'+val+'"'
-        elif param in ["machines", "machine", "tasks_filename"]:
+        elif param in ["machine", "machines", "no_machine", "tasks_filename"]:
             dbi_param.setdefault(param,[])
             dbi_param[param]+=val.split(",")
         else:
@@ -376,7 +379,7 @@ if launch_cmd=="Cluster":
 elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
-                       "universe", "machine", "machines", "to_all", 
+                       "universe", "machine", "machines", "no_machine","to_all",
                        "keep_failed_jobs_in_queue", "tasks_filename"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
