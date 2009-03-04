@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import inspect, os, popen2, shutil, string, sys, time, types
+import inspect, os, shutil, string, sys, time, types
 from os.path import exists, join, abspath
 from string import split
 
@@ -66,6 +66,7 @@ def command_output(command, stderr = True, stdout = True):
     @return: Output lines.
     @rtype:  Array of strings.
     """
+    import popen2
     if stderr and stdout:
         (stdout_and_stderr, stdin) = popen2.popen4(command)
         return stdout_and_stderr.readlines()
