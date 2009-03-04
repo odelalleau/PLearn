@@ -48,7 +48,6 @@ from plearn.utilities.svn   import repository_revision
 # create_dll: we link the object files in a Windows library, not an executable
 #####
 
-
 # Qt Specific stuff
 
 qtdir = '/usr/lib/qt-3.1/'
@@ -268,7 +267,7 @@ options_choices = [
   [ 'double', 'float' ],
   
   # [ 'throwerrors', 'exiterrors' ],
-  [ 'autopython', 'python23', 'python24', 'python25', 'nopython' ],
+  [ 'autopython', 'python23', 'python24', 'python25', 'python26','nopython' ],
   
   [ 'blas', 'noblas' ],
   [ 'defblas', 'nolibblas', 'p3blas','p4blas','athlonblas','pentiumblas',
@@ -317,7 +316,6 @@ if "openmpgcc" in optionargs:
 
 pyver = sys.version.split()[0][0:3]
 pyoption = 'python%s' % pyver.replace('.', '')
-
 # Verify/set optionargs for python and numpy
 python_choices= [x for x in options_choices if 'autopython' in x][0]
 if [x for x in python_choices if x in optionargs]==[] and not domain_name.endswith('.apstat.com'):
@@ -370,9 +368,9 @@ if not 'nopython' in optionargs:
             #numpy_site_packages = '/u/lisa/local/' + target_platform + '/lib/python%s/site-packages/numarray -lutil' % pyver
     elif domain_name.endswith('.m'):
         #numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
-        python_version = '2.5'
+        python_version = '2.6'
         optionargs += [ 'python%s' % python_version.replace('.', '') ]
-        python_lib_root = '/opt/python64/2.5.1/lib'
+        python_lib_root = '/opt/python64/2.6.1/lib'
     elif domain_name.endswith('.rqchp.qc.ca'):
         numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
         numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
@@ -387,6 +385,8 @@ if not 'nopython' in optionargs:
             python_version = '2.4'
         elif 'python25' in optionargs:
             python_version = '2.5'
+        elif 'python26' in optionargs:
+            python_version = '2.6'
         else:
             python_version = pyver
             
@@ -653,7 +653,7 @@ pymakeOption( name = 'icc10',   # For C++, it is actually icpc
               # remark #981: operands are evaluated in unspecified order
               # remark #383: value copied to temporary, reference to temporary used
               # remark #1418: external function definition with no prior declaration
-              compiler = 'icpc -wd981 -wd383 -wd1418',
+              compiler = 'icpc -wd981 -wd383 -wd1418 -wd869',
               cpp_definitions = ['USING_MPI=0'],
               linker = 'icpc  '
               )
@@ -798,6 +798,9 @@ pymakeOption( name = 'python24',
 pymakeOption( name = 'python25',
               description = 'the installed version of python is 2.5.X',
               cpp_definitions = ['PL_PYTHON_VERSION=250'] )
+pymakeOption( name = 'python26',
+              description = 'the installed version of python is 2.6.X',
+              cpp_definitions = ['PL_PYTHON_VERSION=260'] )
 pymakeOption( name = 'nopython',
               description = 'compile w/o python')
 
@@ -867,7 +870,7 @@ pymakeLinkOption( name = 'p4blas',
 
 pymakeLinkOption( name = 'mammouthblas',
               description = 'linking BLAS for P4 Mammouth-Serie cluster',
-              linkeroptions = '-L/opt/intel/mkl/9.0/lib/em64t -lmkl -lmkl_lapack -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
+              linkeroptions = '-lmkl -lmkl_lapack -openmp' ) #-lmkl_lapack -lmkl_p4 -lmkl_vml_p4 -lpthread ' )
 
 pymakeLinkOption( name = 'apintelblas',
               description = 'Intel BLAS+LAPACK for generic install in /usr/local/lib (incl. ApSTAT)',
