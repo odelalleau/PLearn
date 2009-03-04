@@ -25,7 +25,9 @@ MATNAME="$1"
 shift
 
 # Wait until nobody else is messing with the output file.
-lockfile $MATNAME.amat.lock
+# we wait 60s in case the filesystem is too busy.
+# in that case retrying too often worsen the trouble.
+lockfile -n60 $MATNAME.amat.lock
 
 # Don't do anything if files already exist.
 if [ -f $MATNAME.amat ] && [ -f $MATNAME.vmat ]; then
