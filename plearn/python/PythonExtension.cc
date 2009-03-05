@@ -69,7 +69,7 @@ PyObject* pythonGlobalFuncTramp(PyObject* self, PyObject* args)
     }
     catch(const PLearnError& e) 
     {
-        PyErr_SetString(PyExc_Exception, e.message().c_str());
+        PyErr_SetString(the_PLearn_python_exception, e.message().c_str());
         return 0;
     }
     catch(const std::exception& e) 
