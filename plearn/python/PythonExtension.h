@@ -59,6 +59,7 @@ void removeFromWrappedObjectsSet(PyObject* o);
 
 
 extern PyObject* the_PLearn_python_module;
+extern PyObject* the_PLearn_python_exception;
 
 } // end of namespace PLearn
 

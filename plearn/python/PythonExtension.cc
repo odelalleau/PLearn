@@ -396,6 +396,30 @@ void injectPLearnClasses(PyObject* module)
     }
 }
 
+PyObject* the_PLearn_python_exception= 0;
+void injectPLearnException(PyObject* module)
+{
+    PyObject* res= PyRun_String("class PLearnError(Exception):\n\tpass\n", 
+                                Py_file_input, 
+                                PyModule_GetDict(module), 
+                                PyModule_GetDict(module));
+    if(!res)
+    {
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in injectPLearnException : cannot create PLearnException class.");
+    }
+    Py_DECREF(res);
+
+    the_PLearn_python_exception= PyObject_GetAttrString(module, "PLearnError");
+    if(!the_PLearn_python_exception)
+    {
+        if(PyErr_Occurred()) PyErr_Print();
+        PLERROR("in injectPLearnException : cannot retrieve PLearnException class.");
+    }
+    //keep ref. to PLearnError forever.
+}
+
+
 void createWrappedObjectsSet(PyObject* module)
 {
     /* can't set logging before this gets called
@@ -461,7 +485,7 @@ void removeFromWrappedObjectsSet(PyObject* o)
 // init module, then inject global funcs
 void initPythonExtensionModule(char const * module_name)
 {
-    /* can't set logging before this gets called
+    /* // can't set logging before this gets called
     perr << "[pid=" << getPid() << "] "
          << "initPythonExtensionModule name=" << module_name << endl;
     */
@@ -472,12 +496,13 @@ void initPythonExtensionModule(char const * module_name)
 
 void setPythonModuleAndInject(PyObject* module)
 {
-    /* can't set logging before this gets called
+    /* //can't set logging before this gets called
     perr << "[pid=" << getPid() << "] "
          << "setPythonModuleAndInject for module: " << PythonObjectWrapper(module) << "\tat " << (void*)module << endl;
     */
     injectPLearnGlobalFunctions(module);
     injectPLearnClasses(module);
+    injectPLearnException(module);
     createWrappedObjectsSet(module);
     the_PLearn_python_module= module;   
 }
