@@ -215,22 +215,37 @@ class WrappedPLearnVMat(WrappedPLearnObject):
         return self.length
 
     def __getitem__(self, key):
-        l= len(self)
-        if isinstance(key,int):
-            if key < 0: key+= l
-            if key < 0 or key >= l:
-                raise IndexError
-            return self.getRow(key)
-        if isinstance(key,slice):
+        class len_thunk(object):
+            """
+            get length only as needed, and only once.
+            """
+            __slots__ = ['vm','l']
+            def __init__(self, vm):
+                self.vm= vm
+                self.l= None
+            def __call__(self):
+                self.l= self.l or len(self.vm)
+                return self.l
+        lt= len_thunk(self)
+        if isinstance(key, int):
+            if key < 0: key+= lt()
+            try:
+                return self.getRow(key)
+            except get_plearn_module().PLearnError, e:
+                if 'OUT OF BOUND' in e.message:
+                    raise IndexError(e)
+                else:
+                    raise
+        if isinstance(key, slice):
             start= key.start or 0
-            stop= key.stop or l-1
+            stop= key.stop or lt()-1
             step= key.step or 1
-            if start < 0: start+= l
-            if stop < 0: stop+= l
+            if start < 0: start+= lt()
+            if stop < 0: stop+= lt()
             if step==1:
                 return self.subMat(start, 0, stop-start, self.width)
-            raise NotImplementedError, 'slice step != 1'
-        raise TypeError, "key should be an int or a slice"
+            raise NotImplementedError('slice step != 1')
+        raise TypeError("key should be an int or a slice")
     
 class RealRange:
     """
