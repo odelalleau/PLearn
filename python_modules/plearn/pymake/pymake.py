@@ -2872,7 +2872,7 @@ def main( args ):
 
     ##  Special options that will not compile, but perform various operations
     if 'clean' in optionargs:
-        #some people can put options in their PYMAKE_OPTIONS and 
+        #some people put options in their PYMAKE_OPTIONS env variable and
         #we want them to be able to do pymake -clean .
         for i in os.getenv('PYMAKE_OPTIONS').split():
             i=i[1:]
