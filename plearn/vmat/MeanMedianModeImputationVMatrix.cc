@@ -214,8 +214,9 @@ void MeanMedianModeImputationVMatrix::getRow(int i, Vec v) const
       else if (variable_imputation_instruction[source_col] == 4)
 	;//do nothing
       else if (variable_imputation_instruction[source_col] == 5)
-	return PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d) - the value is"
-		       " missing and have a instruction err!",i);
+	return PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d) -"
+		       " the value is missing for column %s"
+		       " and have a instruction err!",i, fieldName(source_col).c_str());
       else
 	PLERROR("In MeanMedianModeImputationVMatrix::getRow(%d, Vec) - "
 		"unknow variable_imputation_instruction value of %d",i,
@@ -297,7 +298,7 @@ void MeanMedianModeImputationVMatrix::build_()
     //We sho
     TVec<pair<string,string> > save_imputation_spec = imputation_spec;
     imputation_spec = save_imputation_spec.copy();
-
+    TVec<string> not_expanded;
     for (int spec_col = 0; spec_col < imputation_spec.size(); spec_col++)
     {
         int train_col;
@@ -328,14 +329,10 @@ void MeanMedianModeImputationVMatrix::build_()
 	    }
 	  }
 	  if(!expended){
-	    PLWARN_ERR(!missing_field_error,
-		       "In MeanMedianModeImputationVMatrix::build_() - "
-		       "Didn't found partial match for '%s'",
-		       imputation_spec[spec_col].first.c_str());
+	    not_expanded.append(imputation_spec[spec_col].first);
 	  }
 	  continue;
 	}
-	
         if (imputation_spec[spec_col].second == "mean") variable_imputation_instruction[train_col] = 1;
         else if (imputation_spec[spec_col].second == "median") variable_imputation_instruction[train_col] = 2;
         else if (imputation_spec[spec_col].second == "mode") variable_imputation_instruction[train_col] = 3;
@@ -345,6 +342,14 @@ void MeanMedianModeImputationVMatrix::build_()
 	  PLERROR("In MeanMedianModeImputationVMatrix: unsupported imputation instruction: %s : %s",
 		     (imputation_spec[spec_col].first).c_str(), (imputation_spec[spec_col].second).c_str());
     }
+    if(not_expanded.length()>0){
+      PLWARN_ERR(!missing_field_error,
+		 "In MeanMedianModeImputationVMatrix::build_() - "
+		 "For %d spec, we didn't found partial match '%s'",
+		 not_expanded.length(), tostring(not_expanded).c_str());
+    }
+	
+
     imputation_spec = save_imputation_spec;
 
     if(nofields.length()>0)
