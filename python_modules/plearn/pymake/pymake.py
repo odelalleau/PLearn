@@ -2874,9 +2874,11 @@ def main( args ):
     if 'clean' in optionargs:
         #some people put options in their PYMAKE_OPTIONS env variable and
         #we want them to be able to do pymake -clean .
-        for i in os.getenv('PYMAKE_OPTIONS').split():
-            i=i[1:]
-            if i in optionargs: optionargs.remove(i)
+        env_options = os.getenv('PYMAKE_OPTIONS')
+        if env_options:
+            for i in env_options.split():
+                i=i[1:]
+                if i in optionargs: optionargs.remove(i)
                         
         if len(optionargs)!=1 or len(otherargs)==0:
             print 'BAD ARGUMENTS: with -clean, specify one or more directories to clean, but no other -option:', optionargs
