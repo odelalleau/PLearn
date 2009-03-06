@@ -239,7 +239,7 @@ class PyPLearnObject( PLOptionDict ):
             return cls
         
         def __init__(cls, name, bases, dict):
-            super(type, cls).__init__(name, bases, dict) 
+            super(type, cls).__init__()
             for rop_name in cls._rop_names:
                 lop_name = rop_name[0:2] + rop_name[3:]
                 if ( not dict.has_key(rop_name)

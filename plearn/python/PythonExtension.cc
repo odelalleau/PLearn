@@ -277,7 +277,7 @@ void injectPLearnClasses(PyObject* module)
             "    #get_plearn_module().loggingControl(500, ['__ALL__'])"
             "    #print '** "+pyclassname+".__new__',args,kwargs\n"
             "    #import sys; sys.stdout.flush()\n"
-            "    obj= object.__new__(cls,*args,**kwargs)\n"
+            "    obj= object.__new__(cls)\n"
             "    if '_cptr' not in kwargs:\n"
             "      obj._cptr= cls._newCPPObj('"+classname+"')\n"
             "      cls._refCPPObj(obj)\n"
