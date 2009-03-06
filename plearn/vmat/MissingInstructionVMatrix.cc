@@ -165,7 +165,7 @@ void MissingInstructionVMatrix::build_()
                   "we suppose that the default instruction apply only to input fields");
         skip_instruction_input = source->width() - missing_instructions.size();
     }
-    int missing_field = 0;
+    TVec< pair<string, string> > not_used_spec;
     for (int ins_col = 0; ins_col < missing_instructions.size(); ins_col++)
     {
         int source_col = 0;
@@ -189,12 +189,7 @@ void MissingInstructionVMatrix::build_()
         {
             if(missing_instructions[ins_col].second!="skip"){
                 //if the instruction is skip, we don't care that it is missing in the source!
-                PLWARNING("In MissingInstructionVMatrix::build_() -"
-                          " missing_instructions '%d': no field with this name: '%s'."
-                          " It have '%s' as spec"
-                          ,ins_col,(missing_instructions[ins_col].first).c_str(),
-                          (missing_instructions[ins_col].second).c_str());
-                missing_field++;
+                not_used_spec.append(missing_instructions[ins_col]);
             }
             continue;
         }
@@ -230,6 +225,13 @@ void MissingInstructionVMatrix::build_()
             else skip_instruction_extra++;
         }
     }
+    if(not_used_spec.length()>0){
+        TVec< pair<string, string> >  m;
+        PLWARNING("In MissingInstructionVMatrix::build_() -"
+                  " There is %d instructions where the field are not in the source: %s"
+                  ,not_used_spec.length(),tostring(not_used_spec).c_str());
+
+    }
     setMetaInfoFromSource();
     defineSizes(source->inputsize() - skip_instruction_input,
                 source->targetsize() - skip_instruction_target,
@@ -252,10 +254,10 @@ void MissingInstructionVMatrix::build_()
                 " Their have been %d field in the source"
                 " matrix that have no instruction. Do you want"
                 " to set the default_instruction option?",missing_instruction);
-    if(missing_field && missing_field_error)
+    if(not_used_spec.length()>0 && missing_field_error)
         PLERROR("In MissingInstructionVMatrix::build_ - Their have been %d"
                 " instruction that have no correcponding field in the"
-                " source matrix",missing_field);
+                " source matrix",not_used_spec.length());
 
     // Copy the appropriate VMFields
     fieldinfos.resize(width());
