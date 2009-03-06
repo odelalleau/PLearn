@@ -5,7 +5,7 @@ from socket import gethostname
 from subprocess import Popen,PIPE
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart_jobs condor_jobs_number... }
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
 
 <back-end parameter>:
     bqtools, cluster, condor option  : [--mem=N]
@@ -75,7 +75,7 @@ common options:
     option for dbidispatch. They can be overrided on the command line.
   The 'DBIDISPATCH_LOGDIR' environnement variable set the name of the directory
     where all the individual logs directory will be put. Default to LOGS.
-  The '--[*no_]restart_jobs' option work only for condor. The parameter 
+  The '--[*no_]restart' option work only for condor. The parameter 
     following this option should be condor jobs number. We will parse the
     history on the local host and relaunch those jobs. We only take the command
     line that was executed, all other options are are those passed to 
@@ -380,7 +380,7 @@ elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines", "no_machine","to_all",
-                       "keep_failed_jobs_in_queue", "tasks_filename"]
+                       "keep_failed_jobs_in_queue", "tasks_filename", "restart"]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
                        "nano", "queue", "raw", "submit_options", "jobs_name",
