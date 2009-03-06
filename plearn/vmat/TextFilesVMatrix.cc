@@ -256,6 +256,7 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
     if(partial_match)
     {
         TVec< pair<string, string> > new_fieldspec;
+        TVec<string> no_expended_fields;
         PLCHECK_MSG(reorder_fieldspec_from_headers,
                     "In TextFilesVMatrix::setColumnNamesAndWidth - "
                     "when partial_match is true, reorder_fieldspec_from_headers"
@@ -283,9 +284,16 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
                 }
             }
             if(!expended)
-                NORMAL_LOG<<"In TextFilesVMatrix::setColumnNamesAndWidth - "
-                    "Don't have find any partial match to "<<fieldspec[i].first;
+                no_expended_fields.append(fieldspec[i].first);
         }
+        if(no_expended_fields.length()>0){
+            NORMAL_LOG<<"In TextFilesVMatrix::setColumnNamesAndWidth - "
+                      <<"Don't have find any partial match for:";
+            for(int i=0;i<no_expended_fields.length();i++)
+                NORMAL_LOG<<" "<<fieldspec[i].first;
+            NORMAL_LOG<<endl;
+        }
+            
         fieldspec = new_fieldspec;
     }
 
@@ -330,14 +338,14 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 
         if(not_used_fs.size()!=0)
             PLWARNING("TextFilesVMatrix::setColumnNamesAndWidth() - "
-                      "Fieldspecs exists for field(s) that are not in the source: %s\n"
+                      "%d fieldspecs exists for field(s) that are not in the source: %s\n"
                       "They will be skipped.",
-                      tostring(not_used_fs).c_str());
+                      not_used_fs.length(), tostring(not_used_fs).c_str());
         if(not_used_fn.size()!=0)
             PLWARNING("TextFilesVMatrix::setColumnNamesAndWidth() - "
-                      "Fieldnames in source that don't have fieldspec: %s\n"
+                      "%d fieldnames in source that don't have fieldspec: %s\n"
                       "They will be skipped.",
-                      tostring(not_used_fn).c_str());
+                      not_used_fn.length(), tostring(not_used_fn).c_str());
     
 
         //the new order for fieldspecs
