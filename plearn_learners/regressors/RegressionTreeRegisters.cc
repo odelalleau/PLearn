@@ -331,7 +331,7 @@ void RegressionTreeRegisters::sortEachDim(int dim)
             PLWARNING("In RegressionTreeRegisters::sortEachDim(%d) - "
                       "sort is not stable. make it stable to be more optimized:"
                       " reg1=%d, reg2=%d, v1=%f, v2=%f", 
-                      reg1, reg2, v1, v2);
+                      dim, reg1, reg2, v1, v2);
     }
 #endif
     return;
