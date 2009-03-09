@@ -63,6 +63,8 @@ MultiClassAdaBoost::MultiClassAdaBoost():
     test_time(0),
     total_test_time(0),
     time_costs(true),
+    warn_once_target_gt_2(false),
+    done_warn_once_target_gt_2(false),
     timer(new PTimer()),
     time_sum(0),
     time_sum_rtr(0),
@@ -146,6 +148,16 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
     declareOption(ol, "time_costs",
                   &MultiClassAdaBoost::time_costs, OptionBase::buildoption,
                   "If true, generate the time costs. Else they are nan.");
+
+    declareOption(ol, "warn_once_target_gt_2",
+                  &MultiClassAdaBoost::warn_once_target_gt_2,
+                  OptionBase::buildoption,
+                  "If true, generate only one warning if we find target > 2.");
+
+    declareOption(ol, "done_warn_once_target_gt_2",
+                  &MultiClassAdaBoost::done_warn_once_target_gt_2,
+                  OptionBase::learntoption,
+                  "Used to keep track if we have done the warning or not.");
 
     declareOption(ol, "time_sum",
                   &MultiClassAdaBoost::time_sum, 
@@ -530,7 +542,7 @@ TVec<string> MultiClassAdaBoost::getTrainCostNames() const
 }
 
 void MultiClassAdaBoost::getSubLearnerTarget(const Vec target,
-                                             TVec<Vec> sub_target) 
+                                             TVec<Vec> sub_target) const
 {
     if(fast_is_equal(target[0],0.)){
         sub_target[0][0]=0;
@@ -542,9 +554,14 @@ void MultiClassAdaBoost::getSubLearnerTarget(const Vec target,
         sub_target[0][0]=1;
         sub_target[1][0]=1;
     }else if(target[0]>2){
-        PLWARNING("In MultiClassAdaBoost::getSubLearnerTarget - "
-                  "We only support target 0/1/2. We got %f. We transform "
-                  "it to a target of 2.", target[0]);
+        if(!warn_once_target_gt_2 || ! done_warn_once_target_gt_2){
+            PLWARNING("In MultiClassAdaBoost::getSubLearnerTarget - "
+                      "We only support target 0/1/2. We got %f. We transform "
+                      "it to a target of 2.", target[0]);
+            done_warn_once_target_gt_2=true;
+            if(warn_once_target_gt_2)
+                PLWARNING("We will show this warning only once.");
+        }
         sub_target[0][0]=1;
         sub_target[1][0]=1;
     }else{
