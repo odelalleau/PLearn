@@ -370,8 +370,8 @@ void PLearner::declareMethods(RemoteMethodMap& rmm)
         (BodyDoc("Test on a given testset and return stats, outputs and costs."),
          ArgDoc("testset","test set"),
          ArgDoc("test_stats","VecStatsCollector to use"),
-         ArgDoc("rtestoutputs","wether to return outputs"),
-         ArgDoc("rtestcosts","wether to return costs"),
+         ArgDoc("rtestoutputs","whether to return outputs"),
+         ArgDoc("rtestcosts","whether to return costs"),
          RetDoc ("tuple of (stats, outputs, costs)")));
 
 
