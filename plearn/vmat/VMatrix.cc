@@ -814,7 +814,10 @@ void VMatrix::saveFieldInfos() const
 {
     // check if we need to save the fieldinfos
     if(fieldinfos.size() > 0) {
-        Array<VMField> current_fieldinfos = getSavedFieldInfos();
+        Array<VMField> current_fieldinfos;
+        try{
+            current_fieldinfos = getSavedFieldInfos();
+        }catch(PLearnError){}
         if (current_fieldinfos != fieldinfos) {
 
             // Ensure that the metadatadir exists
