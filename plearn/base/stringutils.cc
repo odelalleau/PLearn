@@ -407,7 +407,7 @@ vector<string> split_quoted_delimiter(const string& s, char delimiter,
         bool bw=f[0]==double_quote;
         bool ew=f[f.size()-1]==double_quote;
         if(bw && ew){
-            ret2.push_back(f.substr(1,f.size()-1)); 
+            ret2.push_back(f.substr(1,f.size()-2)); 
         }else if(bw){
             string tmp=f.substr(1);
             tmp+=delimiter;
