@@ -136,7 +136,8 @@ void PrecomputedVMatrix::usePrecomputed()
 
         if ( isdir(dmatdir) )
         {
-            precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir)
+            precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir,
+                                                                  false)
                                        : new DiskVMatrix(dmatdir);
             if(isUpToDate(precomp_source))
                 recompute = false;
@@ -146,7 +147,8 @@ void PrecomputedVMatrix::usePrecomputed()
         {
             force_rmdir(dmatdir);
             source->saveDMAT(dmatdir);
-            precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir)
+            precomp_source = temporary ? new TemporaryDiskVMatrix(dmatdir,
+                                                                  false)
                                        : new DiskVMatrix(dmatdir);
         }
         length_ = precomp_source->length();
