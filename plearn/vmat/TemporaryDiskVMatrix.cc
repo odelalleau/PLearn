@@ -61,10 +61,11 @@ TemporaryDiskVMatrix::TemporaryDiskVMatrix()
 {}
 
 TemporaryDiskVMatrix::TemporaryDiskVMatrix(const PPath& filename,
-                                           bool writable):
-    inherited(filename, writable)
+                                           bool writable, bool call_build_):
+    inherited(filename, writable, call_build_)
 {
-    build_();
+    if (call_build_)
+        build_();
 }
 
 ////////////////////

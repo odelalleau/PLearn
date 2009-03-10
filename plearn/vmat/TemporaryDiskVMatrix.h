@@ -73,7 +73,8 @@ public:
     TemporaryDiskVMatrix();
 
     //! Convenient constructor.
-    TemporaryDiskVMatrix(const PPath& filename, bool writable = true);
+    TemporaryDiskVMatrix(const PPath& filename, bool writable = true,
+                         bool call_build_ = true);
 
     //! Destructor.
     virtual ~TemporaryDiskVMatrix();
