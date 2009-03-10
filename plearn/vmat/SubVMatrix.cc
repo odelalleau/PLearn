@@ -247,7 +247,8 @@ void SubVMatrix::build_()
                        "_istart=" + tostring(istart) + 
                        "_jstart=" +tostring(jstart) + 
                        "_length="+tostring(length()) + 
-                       "_width="+tostring(width()));
+                       "_width="+tostring(width()) +
+                       ".metadata");
 
     //  cerr << "inputsize: "<<inputsize_ << "  targetsize:"<<targetsize_<<"weightsize:"<<weightsize_<<endl;
 }
