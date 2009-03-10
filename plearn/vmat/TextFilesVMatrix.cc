@@ -388,6 +388,8 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
 
 void TextFilesVMatrix::build_()
 {
+    if (!default_spec.empty() && !reorder_fieldspec_from_headers)
+        PLERROR("In TextFilesVMatrix::build_() when the option default_spec is used, reorder_fieldspec_from_headers must be true");
     if (metadatapath != "") {
         PLWARNING("In TextFilesVMatrix::build_() metadatapath option is deprecated. "
                   "You should use metadatadir instead.\n");
@@ -395,8 +397,6 @@ void TextFilesVMatrix::build_()
         metadatadir = metadatapath;
         setMetaDataDir(metadatapath);
     }
-    if (!default_spec.empty() && !reorder_fieldspec_from_headers)
-        PLERROR("In TextFilesVMatrix::build_() when the option default_spec is used, reorder_fieldspec_from_headers must be true");
 }
 ////////////////////
 // setMetaDataDir //
@@ -1019,7 +1019,7 @@ TextFilesVMatrix::~TextFilesVMatrix()
     for(int k=0; k<txtfiles.length(); k++)
         fclose(txtfiles[k]);
 
-    for(int k=0; k<fieldspec.size(); k++)
+    for(int k=0; k<mapfiles.size(); k++)
     {
         if(mapfiles[k])
             fclose(mapfiles[k]);
