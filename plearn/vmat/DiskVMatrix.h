@@ -81,7 +81,8 @@ public:
   If readwrite is false (the default), then the files are opened in read only mode, and calling appendRow
   will issue an error.
 */
-    DiskVMatrix(const PPath& the_dirname, bool readwrite=false);
+    DiskVMatrix(const PPath& the_dirname, bool readwrite=false,
+                bool call_build_ = true);
 
 /*!     Create a new one.
   If directory already exist an error is issued

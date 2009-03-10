@@ -118,8 +118,9 @@ DiskVMatrix::DiskVMatrix():
     writable = false;
 }
 
-DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite):
-    inherited   (true),
+DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite,
+                         bool call_build_):
+    inherited   (call_build_),
     indexf      (0),
     freshnewfile(false),
     old_format  (false),
@@ -130,7 +131,8 @@ DiskVMatrix::DiskVMatrix(const PPath& the_dirname, bool readwrite):
 {
     writable = readwrite;
     dirname.removeTrailingSlash(); // For safety.
-    build_();
+    if (call_build_)
+        build_();
 }
 
 DiskVMatrix::DiskVMatrix(const PPath& the_dirname, int the_width,
