@@ -245,12 +245,14 @@ namespace {
       const TVec<T>& m_values;
       index_missing_cmp(const Vec& values): m_values(values) { }
       bool operator()(int x, int y) {
-          T v1=m_values[x];
-          T v2=m_values[y];
-          if(is_missing(v1) && is_missing(v2)) return false;
-          else if(is_missing(v1)) return false;
-          else if(is_missing(v2)) return true;
-          return v1 < v2;
+          const T& v1 = m_values[x];
+          const T& v2 = m_values[y];
+          if (is_missing(v1))
+              return false;
+          else if (is_missing(v2))
+              return true;
+          else
+              return v1 < v2;
       }
   };
 }
