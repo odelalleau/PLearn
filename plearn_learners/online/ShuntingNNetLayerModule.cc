@@ -411,8 +411,8 @@ void ShuntingNNetLayerModule::bpropUpdate(const Mat& inputs, const Mat& outputs,
         Mat tmp(n, output_size);
         // tmp = (1 + E + S ).^2;
         tmp.fill(1.);
-        multiplyAcc(tmp, batch_excitations, 1);
-        multiplyAcc(tmp, batch_inhibitions, 1);
+        multiplyAcc(tmp, batch_excitations, (real)1);
+        multiplyAcc(tmp, batch_inhibitions, (real)1);
         squareElements(tmp);
         
         Vec bias_updates(output_size);
