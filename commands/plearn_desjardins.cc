@@ -79,6 +79,7 @@
 #include <plearn_learners/hyper/HyperOptimize.h>
 #include <plearn_learners/hyper/EarlyStoppingOracle.h>
 #include <plearn_learners/cgi/StabilisationLearner.h>
+#include <plearn_learners/cgi/ConfigParsing.h>
 
 /************
  * Splitter *
@@ -96,13 +97,13 @@
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/vmat/DichotomizeVMatrix.h>
 #include <plearn/vmat/FilteredVMatrix.h>
-#include <plearn/vmat/GaussianizeVMatrix.h>
-#include <plearn/vmat/ConstantVMatrix.h>
+//#include <plearn/vmat/GaussianizeVMatrix.h>
+//#include <plearn/vmat/ConstantVMatrix.h>
 #include <plearn/vmat/MemoryVMatrixNoSave.h>
 #include <plearn/vmat/MissingInstructionVMatrix.h>
 #include <plearn/vmat/ProcessingVMatrix.h>
 #include <plearn/vmat/TextFilesVMatrix.h>
-#include <plearn/vmat/TransposeVMatrix.h>
+//#include <plearn/vmat/TransposeVMatrix.h>
 #include <plearn/vmat/VariableDeletionVMatrix.h>
 #include <plearn/vmat/MeanMedianModeImputationVMatrix.h>
 #include <plearn/vmat/MissingIndicatorVMatrix.h>
