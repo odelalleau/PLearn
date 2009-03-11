@@ -53,12 +53,20 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "Note that for advanced profiling, one should probably use the\n"
     "Profiler class instead.\n"
+    "For short duration and when the option use_times_fct is false\n"
+    "we will use the clock() fct that take the sum of all chield threads\n"
+    "Otherwise we use the times(0) fct that report the wall time.\n"
     );
 
 ////////////
 // PTimer //
 ////////////
-PTimer::PTimer() 
+PTimer::PTimer()
+    :use_times_fct(false)
+{}
+
+PTimer::PTimer(bool use_times_fct_)
+    :use_times_fct(use_times_fct_)
 {}
 
 ///////////
@@ -99,6 +107,11 @@ void PTimer::declareOptions(OptionList& ol)
     declareOption(ol, "total_times", &PTimer::total_times,
                                      OptionBase::learntoption,
         "Contains the current total times of all timers.");
+
+    declareOption(ol, "use_times_fct", &PTimer::use_times_fct,
+                  OptionBase::buildoption,
+                  "If true, we will use the times(0) fct. So we will report the"
+                  " wall time. Usefull in multithread case.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -189,7 +202,7 @@ void PTimer::stopTimer(const string& timer_name)
     int timer_id = name_to_idx[timer_name];
     clock_t time_clock_t = clock() - start_clock_t[timer_id];
     long time_long = long(time(0)) - start_long[timer_id];
-    if (time_long > 1800)
+    if (time_long > 1800 || use_times_fct)
         // More than 30 mins: we use the approximate length.
         total_times[timer_id] += time_long;
     else

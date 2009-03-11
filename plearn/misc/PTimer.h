@@ -63,12 +63,13 @@ public:
 
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
-
+    bool use_times_fct;
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor
     PTimer();
+    PTimer(bool use_times_fct_);
 
     // Your other public member functions go here
 
