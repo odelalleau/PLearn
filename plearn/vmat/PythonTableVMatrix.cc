@@ -58,7 +58,10 @@ PythonTableVMatrix::PythonTableVMatrix(PyObject* table)
 void PythonTableVMatrix::getNewRow(int i, const Vec& v) const
 {
     PLASSERT(the_table);
-    PyObject* row= PyObject_CallMethod(the_table, "getRow", "i", i);
+    // Casting away const is okay here, PyObject_CallMethod does not
+    // modify its arguments. XXX
+    PyObject* row= PyObject_CallMethod(the_table, const_cast<char*>("getRow"),
+                                       const_cast<char*>("i"), i);
     if(!row)
     {
         if (PyErr_Occurred()) PyErr_Print();
@@ -82,7 +85,9 @@ void PythonTableVMatrix::declareOptions(OptionList& ol)
 void PythonTableVMatrix::build_()
 {
     if(!the_table) return;
-    PyObject* pywidth= PyObject_CallMethod(the_table, "width", 0);
+    // Casting away const is okay, PyObject_CallMethod does not modify its
+    // arguments.
+    PyObject* pywidth= PyObject_CallMethod(the_table, const_cast<char*>("width"), NULL);
     if(!pywidth)
     {
         if (PyErr_Occurred()) PyErr_Print();
@@ -91,7 +96,7 @@ void PythonTableVMatrix::build_()
     }
     width_= PythonObjectWrapper(pywidth);
     Py_DECREF(pywidth);
-    PyObject* pylength= PyObject_CallMethod(the_table, "length", 0);
+    PyObject* pylength= PyObject_CallMethod(the_table, const_cast<char*>("length"), NULL);
     if(!pylength)
     {
         if (PyErr_Occurred()) PyErr_Print();
