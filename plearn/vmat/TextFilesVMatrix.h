@@ -177,7 +177,6 @@ protected:
 
     //! Return true iff 'ftype' is a valid type that does not need to be skipped.
     virtual bool isValidNonSkipFieldType(const string& ftype) const;
-    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
 public:
 
@@ -212,6 +211,7 @@ public:
     //! Returns the index in a split text row of the given named text field
     //! (this is the position of that named field in fieldspec )
     int getIndexOfTextField(const string& fieldname) const;
+    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
     //! Transform field-k value strval according to its fieldtype into one ore more reals
     //! and write those into dest (which should be of appropriate size: colrange[k].second)
