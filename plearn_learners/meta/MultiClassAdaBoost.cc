@@ -65,7 +65,7 @@ MultiClassAdaBoost::MultiClassAdaBoost():
     time_costs(true),
     warn_once_target_gt_2(false),
     done_warn_once_target_gt_2(false),
-    timer(new PTimer()),
+    timer(new PTimer(true)),
     time_sum(0),
     time_sum_rtr(0),
     time_last_stage(0),
@@ -279,12 +279,12 @@ void MultiClassAdaBoost::train()
 //Otherwise this will cause crash due to the parallel printing to stdout stderr.
 #ifdef _OPENMP
     //the AdaBoost and the weak learner should not print anything as this will cause race condition on the printing
+    //TODO find a way to have thread safe output?
     if(omp_get_max_threads()>1){
-      PLCHECK(learner1->verbosity==0);
-      PLCHECK(learner2->verbosity==0);
-      
-      PLCHECK(learner1->weak_learner_template->verbosity==0);
-      PLCHECK(learner2->weak_learner_template->verbosity==0);
+        learner1->verbosity=0;
+        learner2->verbosity=0;
+        learner1->weak_learner_template->verbosity=0;
+        learner2->weak_learner_template->verbosity=0;
     }
     
     EXTREME_MODULE_LOG<<"train() // start"<<endl;
