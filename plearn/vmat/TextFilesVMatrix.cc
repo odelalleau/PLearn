@@ -288,9 +288,10 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
         }
         if(no_expended_fields.length()>0){
             NORMAL_LOG<<"In TextFilesVMatrix::setColumnNamesAndWidth - "
-                      <<"Did not find any partial match for:";
+                      <<"Did not find any partial match for "
+                      <<no_expended_fields.length()<<" spec:";
             for(int i=0;i<no_expended_fields.length();i++)
-                NORMAL_LOG<<" "<<fieldspec[i].first;
+                NORMAL_LOG<<" "<<no_expended_fields[i];
             NORMAL_LOG<<endl;
         }
             
