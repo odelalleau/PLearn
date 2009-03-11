@@ -656,6 +656,9 @@ void viewVMat(const VMat& vm, PPath filename)
                     endwin();
                     // And launch the new one.
                     viewVMat(new_vm, filename);
+                    if(string(c).empty())
+                        //if we reload, we should forget the last one
+                        key='q';
                 }
             }
             break;
