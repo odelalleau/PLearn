@@ -53,21 +53,25 @@ PLEARN_IMPLEMENT_OBJECT(
     "\n"
     "Note that for advanced profiling, one should probably use the\n"
     "Profiler class instead.\n"
-    "For short duration and when the option use_times_fct is false\n"
-    "we will use the clock() fct that take the sum of all chield threads\n"
-    "Otherwise we use the times(0) fct that report the wall time.\n"
+    "For short duration or when the option use_time_fct is false we will use\n"
+    "the clock() function that takes the sum of all child threads. Otherwise\n"
+    "we use the time(0) function that reports the wall time.\n"
     );
 
 ////////////
 // PTimer //
 ////////////
 PTimer::PTimer()
-    :use_times_fct(false)
+    :use_time_fct(false)
 {}
 
-PTimer::PTimer(bool use_times_fct_)
-    :use_times_fct(use_times_fct_)
-{}
+PTimer::PTimer(bool use_time_fct_, bool call_build_):
+    inherited(call_build_),
+    use_time_fct(use_time_fct_)
+{
+    if (call_build_)
+        build_();
+}
 
 ///////////
 // build //
@@ -108,10 +112,10 @@ void PTimer::declareOptions(OptionList& ol)
                                      OptionBase::learntoption,
         "Contains the current total times of all timers.");
 
-    declareOption(ol, "use_times_fct", &PTimer::use_times_fct,
+    declareOption(ol, "use_time_fct", &PTimer::use_time_fct,
                   OptionBase::buildoption,
-                  "If true, we will use the times(0) fct. So we will report the"
-                  " wall time. Usefull in multithread case.");
+        "If true, we will use the time(0) function. So we will report the\n"
+        "wall time. Useful in multithread case.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -202,7 +206,7 @@ void PTimer::stopTimer(const string& timer_name)
     int timer_id = name_to_idx[timer_name];
     clock_t time_clock_t = clock() - start_clock_t[timer_id];
     long time_long = long(time(0)) - start_long[timer_id];
-    if (time_long > 1800 || use_times_fct)
+    if (time_long > 1800 || use_time_fct)
         // More than 30 mins: we use the approximate length.
         total_times[timer_id] += time_long;
     else
