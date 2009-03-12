@@ -58,7 +58,7 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTree,
                         "with the mean square error and a facto of the confidence funtion.\n"
                         "At each node expansion, it creates 3 nodes, one to hold any samples with a missing value on the\n"
                         "splitting attribute, one for the samples with values less than the value of the splitting attribute\n"
-                        "and one fr the others.\n"
+                        "and one for the others.\n"
     );
 
 RegressionTree::RegressionTree()     
@@ -237,8 +237,10 @@ void RegressionTree::train()
         if (report_progress) pb->update(stage);
     }
     pb = NULL;
+#ifndef _OPENMP
     verbose("split_cols: "+tostring(split_cols),2);
     verbose("split_values: "+tostring(split_values),2);
+#endif
     if (compute_train_stats < 1){
         Profiler::pl_profile_end("RegressionTree::train");
         return;
