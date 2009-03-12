@@ -117,7 +117,7 @@ void MissingInstructionVMatrix::declareOptions(OptionList& ol)
     declareOption(ol, "missing_instructions", &MissingInstructionVMatrix::missing_instructions,
                   OptionBase::buildoption,
                   "The variable missing regeneration instructions in the form of pairs field : instruction.\n"
-                  "Supported instructions are skip, as_is, zero_is_missing, zero_or_neg_is_missing, 2436935_is_missing(01JAN1960 in julian day), present.\n"
+                  "Supported instructions are skip, as_is, zero_is_missing, zero_or_neg_is_missing, 2436935_is_missing(01JAN1960 in julian day), jdate_is_missing(idem as 2436935_is_missing), present.\n"
                   "If the instruction fieldname end with '*' we will extend it to all the source matrix fieldname that match the regex.\n"
                   "No other regex are supported");
     declareOption(ol, "default_instruction",
@@ -201,7 +201,8 @@ void MissingInstructionVMatrix::build_()
             ins[source_col] = "zero_is_missing";
         else if (missing_instructions[ins_col].second == "zero_or_neg_is_missing")
             ins[source_col] = "zero_or_neg_is_missing";
-        else if (missing_instructions[ins_col].second == "2436935_is_missing")
+        else if (missing_instructions[ins_col].second == "2436935_is_missing"
+                 || missing_instructions[ins_col].second == "jdate_is_missing")
             ins[source_col] = "2436935_is_missing";
         else if (missing_instructions[ins_col].second == "present")
             ins[source_col] = "present";
