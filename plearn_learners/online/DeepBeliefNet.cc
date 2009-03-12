@@ -1855,7 +1855,7 @@ void DeepBeliefNet::greedyStep(const Vec& input, const Vec& target, int index)
                 {
                     Vec expectation_c = greedy_target_expectations[i][c];
                     real p_c = greedy_target_layers[i]->expectation[c];
-                    multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+                    multiplyScaledAdd(expectation_c, real(1.), p_c, expectation);
                 }
             }
             else
@@ -2232,7 +2232,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
             {
                 Vec expectation_c = greedy_target_expectations[i][c];
                 real p_c = greedy_target_layers[i]->expectation[c];
-                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+                multiplyScaledAdd(expectation_c, real(1.), p_c, expectation);
             }
         }
         else
@@ -2280,7 +2280,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
             {
                 Vec expectation_c = greedy_target_expectations[n_layers-2][c];
                 real p_c = greedy_target_layers[n_layers-2]->expectation[c];
-                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+                multiplyScaledAdd(expectation_c, real(1.), p_c, expectation);
             }
         }
         else
@@ -2338,7 +2338,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
                 // Update target connections, with gradient from p(h_l | h_l-1, y)
                 multiplyScaledAdd( greedy_target_activation_gradients[n_layers-2][c].toMat(layers[n_layers-1]->size,1),
-                                   1., -greedy_target_connections[n_layers-2]->learning_rate,
+                                   real(1.), -greedy_target_connections[n_layers-2]->learning_rate,
                                    greedy_target_connections[n_layers-2]->weights.column(c));
                 
                 greedy_target_probability_gradients[n_layers-2][c] = 
@@ -2365,7 +2365,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
                 // Update target connections, with gradient from p(y | h_l-1 )
                 multiplyScaledAdd( greedy_target_activation_gradients[n_layers-2][c].toMat(layers[n_layers-1]->size,1),
-                                   1., -greedy_target_connections[n_layers-2]->learning_rate,
+                                   real(1.), -greedy_target_connections[n_layers-2]->learning_rate,
                                    greedy_target_connections[n_layers-2]->weights.column(c));
             }
 
@@ -2445,7 +2445,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
                 // Update target connections, with gradient from p(h_l | h_l-1, y)
                 multiplyScaledAdd( greedy_target_activation_gradients[i-1][c].toMat(layers[i]->size,1),
-                                   1., -greedy_target_connections[i-1]->learning_rate,
+                                   real(1.), -greedy_target_connections[i-1]->learning_rate,
                                    greedy_target_connections[i-1]->weights.column(c));
                 
                 greedy_target_probability_gradients[i-1][c] = 
@@ -2472,7 +2472,7 @@ void DeepBeliefNet::fineTuningStep( const Vec& input, const Vec& target,
 
                 // Update target connections, with gradient from p(y | h_l-1 )
                 multiplyScaledAdd( greedy_target_activation_gradients[i-1][c].toMat(layers[i]->size,1),
-                                   1., -greedy_target_connections[i-1]->learning_rate,
+                                   real(1.), -greedy_target_connections[i-1]->learning_rate,
                                    greedy_target_connections[i-1]->weights.column(c));
             }
 
@@ -2968,7 +2968,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             {
                 Vec expectation_c = greedy_target_expectations[i][c];
                 real p_c = greedy_target_layers[i]->expectation[c];
-                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+                multiplyScaledAdd(expectation_c, real(1.), p_c, expectation);
             }
         }
         else
@@ -3047,7 +3047,7 @@ void DeepBeliefNet::computeOutput(const Vec& input, Vec& output) const
             {
                 Vec expectation_c = greedy_target_expectations[n_layers-2][c];
                 real p_c = greedy_target_layers[n_layers-2]->expectation[c];
-                multiplyScaledAdd(expectation_c, 1., p_c, expectation);
+                multiplyScaledAdd(expectation_c,real(1.), p_c, expectation);
             }
         }
         else
