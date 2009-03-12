@@ -936,8 +936,13 @@ void NNet::computeOutputAndCosts(const Vec& inputv, const Vec& targetv,
 /////////////////
 // fillWeights //
 /////////////////
-void NNet::fillWeights(const Var& weights, bool clear_first_row) {
-    if (initialization_method == "zero") {
+void NNet::fillWeights(const Var& weights, bool clear_first_row)
+{
+    if (!weights)
+        return;
+
+    if (initialization_method == "zero")
+    {
         weights->value->clear();
         return;
     }
@@ -1176,8 +1181,7 @@ void NNet::initializeParams(bool set_seed)
         wout->matValue(0).clear();
     }
     else {
-        if (wout)
-            fillWeights(wout, true);
+        fillWeights(wout, true);
     }
 }
 
@@ -1277,16 +1281,25 @@ void NNet::train()
                 pb->update(i);
         }
     }
-    
+
     if(!train_stats)
         setTrainStatsCollector(new VecStatsCollector());
     // PLERROR("In NNet::train, you did not setTrainStatsCollector");
 
     int n_train = operate_on_bags ? n_training_bags
                                   : train_set->length();  
-    
-    if(input_to_output.isNull()) // Net has not been properly built yet (because build was called before the learner had a proper training set)
+
+    if(input_to_output.isNull())
+    {
+        // Net has not been properly built yet (because build was called before the learner had a proper training set)
         build();
+        if (input_to_output.isNull())
+            PLERROR(
+                "NNet::build was not able to properly build the network.\n"
+                "Please check that your variables have an appropriate value,\n"
+                "that your training set is correctly defined, that its sizes\n"
+                "are consistent, that its targetsize is not -1...");
+    }
 
     // number of samples seen by optimizer before each optimizer update
     int nsamples = batch_size>0 ? batch_size : n_train;
