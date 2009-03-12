@@ -237,8 +237,19 @@ void RegressionTreeLeave::printStats()
     cout << " ws " << weights_sum;
     cout << " ts " << targets_sum;
     cout << " wts " << weighted_targets_sum;
-    cout << " wsts " << weighted_squared_targets_sum; 
+    cout << " wsts " << weighted_squared_targets_sum;
+    cout << " wts/ws " <<weighted_targets_sum/weights_sum;
+    cout << " wsts/ws "<<weighted_squared_targets_sum/weights_sum;
+    cout << " sqrt(wsts/ws) "<<sqrt(weighted_squared_targets_sum/weights_sum);
     cout << endl;
+}
+bool RegressionTreeLeave::uniqTarget(){
+    if(classname()=="RegressionTreeLeave"){
+        real wts_w = weighted_targets_sum/weights_sum;
+        real wsts_w= sqrt(weighted_squared_targets_sum/weights_sum);
+        return fast_is_equal(wts_w,wsts_w);
+    }else
+        PLERROR("In RegressionTreeLeave::uniqTarget subclass must reimplement it.");
 }
 
 void RegressionTreeLeave::verbose(string the_msg, int the_level)
