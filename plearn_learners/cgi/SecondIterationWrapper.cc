@@ -314,8 +314,6 @@ real SecondIterationWrapper::deGaussianize(real prediction)
 
 void SecondIterationWrapper::forget()
 {
-    PLASSERT( base_regressor );
-    base_regressor->forget();
 }
 
 int SecondIterationWrapper::outputsize() const
@@ -357,8 +355,8 @@ void SecondIterationWrapper::computeCostsFromOutputs(const Vec& inputv, const Ve
         real class_pred;
         if (outputv[0] <= 0.5) class_pred = 0.;
         else if (outputv[0] <= 1.5) class_pred = 1.0;
-        else if (outputv[0] <= 2.5) class_pred = 2.0;
-        else class_pred = 3.0;
+//        else if (outputv[0] <= 2.5) class_pred = 2.0;
+        else class_pred = 2.0;
         costsv[1] = pow((class_pred - targetv[0]), 2);
         costsv[2] = fabs(class_pred - targetv[0]);
         costsv[3] = class_pred == targetv[0]?0:1;

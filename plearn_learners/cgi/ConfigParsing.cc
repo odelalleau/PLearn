@@ -104,25 +104,27 @@ void ConfigParsing::run(const vector<string>& args)
             f_csv << (r[1]) << endl;
         }
         string y = lowerstring(r[2]);//TODO check that this is an accepted command.
+        bool remove=false;
         if(y=="y" ||y=="yes"){//comment
             f_remove << (r[0]) << endl;
+            remove=true;
         }else if(y=="n" ||y=="no"||y==""){
         }else{
             PLERROR("Unknow value in column C:'%s'",r[2].c_str());
         }
-        if(!r[3].empty()){
+        if(!r[3].empty() && !remove){
             f_missing << (r[0]);
             f_missing << (" : ");
             f_missing << (r[3]);//TODO check that this is an accepted command.
             f_missing << endl;
         }
-        if(!r[4].empty()){
+        if(!r[4].empty() && !remove){
             f_imputation << (r[0]);
             f_imputation << (" : ");
             f_imputation << (r[4]);//TODO check that this is an accepted command.
             f_imputation << endl;
         }
-        if(!r[5].empty()){
+        if(!r[5].empty() && !remove){
             f_dichotomize <<r[0]<<" : ["<< (r[5]) << " ]"<<endl;
         }
 
