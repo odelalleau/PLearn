@@ -66,7 +66,8 @@ RegressionTreeRegisters::RegressionTreeRegisters():
     verbosity(0),
     next_id(0),
     do_sort_rows(true),
-    mem_tsource(true)
+    mem_tsource(true),
+    compact_reg_leave(-1)
 {
     build();
 }
@@ -82,7 +83,8 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
     verbosity(verbosity_),
     next_id(0),
     do_sort_rows(do_sort_rows_),
-    mem_tsource(mem_tsource_)
+    mem_tsource(mem_tsource_),
+    compact_reg_leave(-1)
 {
     source = source_;
     tsource = tsource_;
@@ -99,7 +101,8 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
     verbosity(verbosity_),
     next_id(0),
     do_sort_rows(do_sort_rows_),
-    mem_tsource(mem_tsource_)
+    mem_tsource(mem_tsource_),
+    compact_reg_leave(-1)
 {
     source = source_;
     build();
@@ -202,6 +205,7 @@ void RegressionTreeRegisters::build_()
         }
     leave_register.resize(length());
     sortRows();
+    compact_reg.resize(length());
 }
 
 void RegressionTreeRegisters::reinitRegisters()
@@ -244,21 +248,39 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
 
     int idx=0;
     int n=reg.length();
-    int i;
     RTR_type* preg = reg.data();
     RTR_type* ptsorted_row = tsorted_row[col];
     RTR_type_id* pleave_register = leave_register.data();
-    for( i=0;i<length() && n> idx;i++)
-    {
-        PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
-        int srow = ptsorted_row[i];
-        if ( pleave_register[srow] == leave_id){
-            PLASSERT(leave_register[srow] == leave_id);
-            PLASSERT(preg[idx]==reg[idx]);
-            preg[idx++]=srow;
+    if(compact_reg_leave==leave_id){
+        //compact_reg is used as an optimization.
+        //as it is more compact in memory then leave_register
+        //we are more memory friendly.
+        for(int i=0;i<length() && n> idx;i++){
+            PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
+            int srow = ptsorted_row[i];
+            if ( compact_reg[srow] ){
+                PLASSERT(leave_register[srow] == leave_id);
+                PLASSERT(preg[idx]==reg[idx]);
+                preg[idx++]=srow;
+            }
         }
+    }else{
+        for(uint i=0;i<compact_reg.size();i++)
+            compact_reg[i]=false;
+        for(int i=0;i<length() && n> idx;i++){
+            PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
+            int srow = ptsorted_row[i];
+            if ( pleave_register[srow] == leave_id){
+                PLASSERT(leave_register[srow] == leave_id);
+                PLASSERT(preg[idx]==reg[idx]);
+                preg[idx++]=srow;
+                compact_reg[srow]=true;
+            }
+        }
+        compact_reg_leave = leave_id;
     }
     PLASSERT(idx==reg->size());
+
 }
 
 void RegressionTreeRegisters::sortRows()

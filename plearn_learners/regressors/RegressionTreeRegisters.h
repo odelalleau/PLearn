@@ -88,6 +88,8 @@ private:
 
     bool do_sort_rows;
     bool mem_tsource;
+    mutable vector<bool> compact_reg;
+    mutable int compact_reg_leave;
 
 public:
 
