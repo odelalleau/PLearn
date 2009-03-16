@@ -239,7 +239,6 @@ void RegressionTreeNode::initNode(PP<RegressionTree> the_tree,
     leave_output[0] = closest_value;
 }
 
-#define BY_ROW
 //#define RCMP
 void RegressionTreeNode::lookForBestSplit()
 {
@@ -315,26 +314,6 @@ void RegressionTreeNode::lookForBestSplit()
         }
 
         missing_leave->getOutputAndError(tmp_vec, missing_error);
-
-#ifndef BY_ROW
-        //in case of missing value
-        if(candidate.size()==0){
-            PLCHECK(missing_leave->length()+right_leave->length()
-                    ==leave->length());
-            continue;
-        }
-        int row = candidate.pop();
-        while (candidate.size()>0)
-        {
-            int next_row = candidate.pop();
-            left_leave->removeRow(row, tmp_vec, left_error);
-            right_leave->addRow(row, tmp_vec, right_error);
-            compareSplit(col, train_set->get(next_row, col),
-                         train_set->get(row, col), left_error,
-                         right_error, missing_error);
-            row = next_row;
-        }
-#else
         tuple<real,real,int> ret=bestSplitInRow(col, candidate, left_error,
                                                 right_error, missing_error,
                                                 right_leave, left_leave,
@@ -355,7 +334,6 @@ void RegressionTreeNode::lookForBestSplit()
         split_feature_value = get<1>(ret);
         split_balance = get<2>(ret);
         PLASSERT(fast_is_less(after_split_error,REAL_MAX)||split_col==-1);
-#endif
     }
     PLASSERT(fast_is_less(after_split_error,REAL_MAX)||split_col==-1);
 
