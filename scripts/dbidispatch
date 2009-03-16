@@ -414,7 +414,10 @@ print "With options: ",dbi_param
 for i in dbi_param:
     if i not in valid_dbi_param:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end. It will be ignored."
-print "With the command to be expanded:"," ".join(command_argv),"\n\n"
+if dbi_param.get("restart",False):
+    print "With the command to be restarted:"," ".join(command_argv),"\n\n"
+else:
+    print "With the command to be expanded:"," ".join(command_argv),"\n\n"
 
 def generate_combination(repl,sep=" "):
     if repl == []:
@@ -480,9 +483,15 @@ elif dbi_param.get("restart",False):
     assert launch_cmd=="Condor"
     cmds=[]
     for arg in command_argv:
-        p=Popen("condor_history -l "+arg, shell=True, stdout=PIPE)
-        p.wait()
-        lines=p.stdout.readlines()
+        p1=Popen("condor_q -l "+arg, shell=True, stdout=PIPE)
+        p2=Popen("condor_history -l "+arg, shell=True, stdout=PIPE)
+        p1.wait();p2.wait()
+        lines=p1.stdout.readlines()
+        for l in lines:
+            if l.startswith("Arguments = "):
+                print "We don't accept to restart jobs in the queue:", arg
+                sys.exit(1)
+        lines=p2.stdout.readlines()
         for l in lines:
             if l.startswith("Arguments = "):
                 cmd=l[13:-2]
