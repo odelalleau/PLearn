@@ -328,7 +328,9 @@ void RegressionTreeRegisters::sortRows()
 //     {
 //         sorted_row(each_train_sample_index).fill(each_train_sample_index);
 //     }
+#ifdef _OPENMP
 #pragma omp parallel for default(none) shared(pb)
+#endif
     for (int sample_dim = 0; sample_dim < inputsize(); sample_dim++)
     {
         sortEachDim(sample_dim);
