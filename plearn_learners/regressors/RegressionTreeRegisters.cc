@@ -224,20 +224,30 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     target.resize(reg.length());
     weight.resize(reg.length());
     value.resize(reg.length());
+    real * p = tsource.toMat()[col];
+    pair<real,real> * ptw = target_weight.data();
+    real * pt = target.data();
+    real * pw = weight.data();
+    real * pv = value.data();
     if(weightsize() <= 0){
         weight.fill(1.0 / length());
         for(int i=0;i<reg.length();i++){
-            target[i] = target_weight[int(reg[i])].first;
-            value[i]  = tsource->get(col, reg[i]);
+            PLASSERT(tsource->get(col, reg[i])==p[reg[i]]);
+            int idx = int(reg[i]);
+            pt[i] = ptw[idx].first;
+            pv[i] = p[idx];
         }
     } else {
         //It is better to do multiple pass for memory access.
         for(int i=0;i<reg.length();i++){
-            target[i] = target_weight[int(reg[i])].first;
-            weight[i] = target_weight[int(reg[i])].second;
+            int idx = int(reg[i]);
+            pt[i] = ptw[idx].first;
+            pw[i] = ptw[idx].second;
         }
-        for(int i=0;i<reg.length();i++)
-            value[i]  = tsource->get(col, reg[i]);
+        for(int i=0;i<reg.length();i++){
+            PLASSERT(tsource->get(col, reg[i])==p[reg[i]]);
+            pv[i] = p[reg[i]];
+        }
     }
 }
 
@@ -257,7 +267,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
         //we are more memory friendly.
         for(int i=0;i<length() && n> idx;i++){
             PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
-            int srow = ptsorted_row[i];
+            RTR_type srow = ptsorted_row[i];
             if ( compact_reg[srow] ){
                 PLASSERT(leave_register[srow] == leave_id);
                 PLASSERT(preg[idx]==reg[idx]);
@@ -269,7 +279,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
             compact_reg[i]=false;
         for(int i=0;i<length() && n> idx;i++){
             PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
-            int srow = ptsorted_row[i];
+            RTR_type srow = ptsorted_row[i];
             if ( pleave_register[srow] == leave_id){
                 PLASSERT(leave_register[srow] == leave_id);
                 PLASSERT(preg[idx]==reg[idx]);
