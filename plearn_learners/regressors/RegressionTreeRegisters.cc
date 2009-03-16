@@ -229,24 +229,26 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     real * pt = target.data();
     real * pw = weight.data();
     real * pv = value.data();
+    RTR_type * preg = reg.data();
+
     if(weightsize() <= 0){
         weight.fill(1.0 / length());
         for(int i=0;i<reg.length();i++){
             PLASSERT(tsource->get(col, reg[i])==p[reg[i]]);
-            int idx = int(reg[i]);
+            int idx = int(preg[i]);
             pt[i] = ptw[idx].first;
             pv[i] = p[idx];
         }
     } else {
         //It is better to do multiple pass for memory access.
         for(int i=0;i<reg.length();i++){
-            int idx = int(reg[i]);
+            int idx = int(preg[i]);
             pt[i] = ptw[idx].first;
             pw[i] = ptw[idx].second;
         }
         for(int i=0;i<reg.length();i++){
             PLASSERT(tsource->get(col, reg[i])==p[reg[i]]);
-            pv[i] = p[reg[i]];
+            pv[i] = p[preg[i]];
         }
     }
 }
