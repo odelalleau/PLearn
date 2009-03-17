@@ -1484,6 +1484,7 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                 layers[ index ]->expectation);
 
         layers[ index ]->activation << direct_and_reconstruction_activations;
+        layers[ index ]->activation += layers[ index ]->bias;
         //layers[ index ]->expectation_is_up_to_date = true;  // Won't work for certain RBMLayers
         layers[ index ]->setExpectationByRef( layers[ index ]->expectation );
         train_costs[index] = layers[ index ]->fpropNLL(expectations[index]);
@@ -1511,6 +1512,7 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                 layers[ index ]->expectation);
 
         layers[ index ]->activation << reconstruction_activations;
+        layers[ index ]->activation += layers[ index ]->bias;
         //layers[ index ]->expectation_is_up_to_date = true;
         layers[ index ]->setExpectationByRef( layers[ index ]->expectation );
         real rec_err = layers[ index ]->fpropNLL(expectations[index]);
@@ -1526,6 +1528,7 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
             layers[ index+1 ]->fprop( hidden_reconstruction_activations,
                 layers[ index+1 ]->expectation );
             layers[ index+1 ]->activation << hidden_reconstruction_activations;
+            layers[ index+1 ]->activation += layers[ index+1 ]->bias;
             //layers[ index+1 ]->expectation_is_up_to_date = true;
             layers[ index+1 ]->setExpectationByRef( layers[ index+1 ]->expectation );
             real hid_rec_err = layers[ index+1 ]->fpropNLL(expectations[index+1]);
@@ -1706,6 +1709,7 @@ void StackedAutoassociatorsNet::unsupervisedFineTuningStep(const Vec& input,
 
     layers[ 0 ]->setExpectation( fine_tuning_reconstruction_expectations[ 0 ] );
     layers[ 0 ]->activation << fine_tuning_reconstruction_activations[0];
+    layers[ 0 ]->activation += layers[ 0 ]->bias;
     real rec_err = layers[ 0 ]->fpropNLL( input );
     train_costs[n_layers-1] = rec_err;
 
@@ -1999,6 +2003,7 @@ void StackedAutoassociatorsNet::onlineStep(const Vec& input,
                               layers[ i-1 ]->expectation);
 
         layers[ i-1 ]->activation << reconstruction_activations;
+        layers[ i-1 ]->activation += layers[ i-1 ]->bias;
         //layers[ i-1 ]->expectation_is_up_to_date = true;
         layers[ i-1 ]->setExpectationByRef( layers[ i-1 ]->expectation );
         real rec_err = layers[ i-1 ]->fpropNLL( expectations[i-1] );
@@ -2337,6 +2342,7 @@ void StackedAutoassociatorsNet::onlineStep(const Mat& inputs,
 
         layers[ i-1 ]->activations.resize(mbatch_size, layers[i-1]->size);
         layers[ i-1 ]->activations << reconstruction_activations_m;
+        layers[ i-1 ]->activations += layers[ i-1 ]->bias;
 
         Mat layer_exp = layers[i-1]->getExpectations();
         layers[ i-1 ]->fprop(reconstruction_activations_m,
@@ -2617,6 +2623,7 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
                                 layers[ i ]->expectation);
 
             layers[ i ]->activation << reconstruction_activations;
+            layers[ i ]->activation += layers[ i ]->bias;
             //layers[ i ]->expectation_is_up_to_date = true;
             layers[ i ]->setExpectationByRef( layers[ i ]->expectation );
 
@@ -2651,6 +2658,8 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
 
         layers[ currently_trained_layer-1 ]->activation <<
             reconstruction_activations;
+        layers[ currently_trained_layer-1 ]->activation += 
+            layers[ currently_trained_layer-1 ]->bias;
         //layers[ currently_trained_layer-1 ]->expectation_is_up_to_date = true;
         layers[ currently_trained_layer-1 ]->setExpectationByRef(
             layers[ currently_trained_layer-1 ]->expectation );
@@ -2668,6 +2677,8 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
                 layers[ currently_trained_layer ]->expectation );
             layers[ currently_trained_layer ]->activation <<
                 hidden_reconstruction_activations;
+            layers[ currently_trained_layer ]->activation += 
+                layers[ currently_trained_layer ]->bias;
             //layers[ currently_trained_layer ]->expectation_is_up_to_date = true;
             layers[ currently_trained_layer ]->setExpectationByRef(
                 layers[ currently_trained_layer ]->expectation );
