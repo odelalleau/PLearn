@@ -190,6 +190,7 @@ static string global_options( vector<string>& command_line)
     // (verbosity_pos == -1)!!!
     int verbosity_pos                = findpos( command_line, "--verbosity"  );
     int verbosity_value_pos          = -1; // ... 
+    int quiet_pos                   = findpos( command_line, "--quiet" );
     VerbosityLevel verbosity_value   = VLEVEL_NORMAL;
 
     if ( verbosity_pos != -1 )
@@ -278,6 +279,7 @@ static string global_options( vector<string>& command_line)
              c != global_calendar_pos        &&
              c != global_calendar_value_pos  &&
              c != servers_pos                &&
+             c != quiet_pos                  &&
              c != serversfile_pos            /*&&
              c != option_level_pos           &&
              c != option_level_value_pos*/
@@ -297,7 +299,7 @@ static string global_options( vector<string>& command_line)
         }
     command_line.resize( cleaned ); // Truncating the end of the vector.
   
-    if (no_version_pos == -1){
+    if (no_version_pos == -1 && quiet_pos == -1){
         output_version( );
 #ifdef _OPENMP
         pout<<"Using OPENMP with "+tostring(omp_get_max_threads())+" threads."<<endl;
@@ -309,7 +311,7 @@ static string global_options( vector<string>& command_line)
     if (windows_endl != -1)
         PStream::windows_endl = true;
 
-    if (enabled_modules_pos != -1)
+    if (enabled_modules_pos != -1 && quiet_pos == -1)
         perr << "Logging enabled for modules: "
              << join(PL_Log::instance().namedLogging(), ", ")
              << endl;
