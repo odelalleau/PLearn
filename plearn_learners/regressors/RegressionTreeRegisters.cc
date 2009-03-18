@@ -401,7 +401,7 @@ void RegressionTreeRegisters::getExample(int i, Vec& input, Vec& target, real& w
     if(weightsize()<0)
         PLERROR("In RegressionTreeRegisters::getExample, weightsize_ not defined for this vmat");
 #endif
-    tsource->getColumn(i,input);
+    tsource_mat.copyColumnTo(i,input.data());
 
     target[0]=target_weight[i].first;
     weight = target_weight[i].second;

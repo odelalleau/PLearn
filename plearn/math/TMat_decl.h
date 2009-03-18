@@ -691,6 +691,17 @@ public:
                 x[k] = row[j];
     }
 
+    //! copy a column to a C vector starting at x
+    //! This is fct is thead safe!
+    void copyColumnTo(int col, T* x) const
+    {
+        T* s = data()+col;
+        for(int i=0;i<length();i++){
+            *x=*s;
+            x++;
+            s+=mod();
+        }
+    }
     /*! ************
       Deep copying
       ************
