@@ -56,6 +56,15 @@
 #ifndef RTR_type_id
 #define RTR_type_id int16_t
 #endif
+//!The type for the target
+#ifndef RTR_target_t
+#define RTR_target_t real
+#endif
+//!The type for the weight
+#ifndef RTR_weight_t
+#define RTR_weight_t real
+#endif
+
 namespace PLearn {
 using namespace std;
 
@@ -81,9 +90,10 @@ private:
     TMat<RTR_type> tsorted_row;
     TVec<RTR_type_id> leave_register;
     VMat tsource;
+    Mat tsource_mat;
     //we put it in pair instead of two vector to speed up
     //the getAllRegisteredRow(leave_id, col, reg, target, weight, value) fct
-    TVec<pair<real,real> > target_weight;
+    TVec<pair<RTR_target_t,RTR_weight_t> > target_weight;
     VMat source;
 
     bool do_sort_rows;
@@ -129,7 +139,7 @@ public:
         next_id += 1;return next_id;}
     void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg)const;
     void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
-                                     Vec &target, Vec &weight, Vec &value)const;
+                                     TVec<RTR_target_t> &target, TVec<RTR_weight_t> &weight, Vec &value)const;
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
     inline virtual void put(int i, int j, real value)

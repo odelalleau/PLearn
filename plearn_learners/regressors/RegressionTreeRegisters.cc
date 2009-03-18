@@ -88,6 +88,7 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
 {
     source = source_;
     tsource = tsource_;
+    tsource_mat = tsource.toMat();
     tsorted_row = tsorted_row_;
     build();
 }
@@ -187,6 +188,7 @@ void RegressionTreeRegisters::build_()
             PP<MemoryVMatrixNoSave> tmp = new MemoryVMatrixNoSave(tsource);
             tsource = VMat(tmp);
         }
+        tsource_mat = tsource.toMat();
     }
     setMetaInfoFrom(source);
     weightsize_=1;
@@ -217,17 +219,18 @@ void RegressionTreeRegisters::reinitRegisters()
 }
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg,
-                                                  Vec &target,
-                                                  Vec &weight, Vec &value) const
+                                                  TVec<RTR_target_t> &target,
+                                                  TVec<RTR_weight_t> &weight,
+                                                  Vec &value) const
 {
     getAllRegisteredRow(leave_id,col,reg);
     target.resize(reg.length());
     weight.resize(reg.length());
     value.resize(reg.length());
-    real * p = tsource.toMat()[col];
-    pair<real,real> * ptw = target_weight.data();
-    real * pt = target.data();
-    real * pw = weight.data();
+    real * p = tsource_mat[col];
+    pair<RTR_target_t,RTR_weight_t> * ptw = target_weight.data();
+    RTR_target_t * pt = target.data();
+    RTR_weight_t * pw = weight.data();
     real * pv = value.data();
     RTR_type * preg = reg.data();
 
@@ -263,7 +266,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     RTR_type* preg = reg.data();
     RTR_type* ptsorted_row = tsorted_row[col];
     RTR_type_id* pleave_register = leave_register.data();
-    if(compact_reg_leave==leave_id){
+    if(false && compact_reg_leave==leave_id){
         //compact_reg is used as an optimization.
         //as it is more compact in memory then leave_register
         //we are more memory friendly.
@@ -277,8 +280,8 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
             }
         }
     }else{
-        for(uint i=0;i<compact_reg.size();i++)
-            compact_reg[i]=false;
+//        for(uint i=0;i<compact_reg.size();i++)
+//            compact_reg[i]=false;
         for(int i=0;i<length() && n> idx;i++){
             PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
             RTR_type srow = ptsorted_row[i];
@@ -286,7 +289,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                 PLASSERT(leave_register[srow] == leave_id);
                 PLASSERT(preg[idx]==reg[idx]);
                 preg[idx++]=srow;
-                compact_reg[srow]=true;
+                //compact_reg[srow]=true;
             }
         }
         compact_reg_leave = leave_id;
