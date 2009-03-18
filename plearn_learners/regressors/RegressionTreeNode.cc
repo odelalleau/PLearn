@@ -246,8 +246,8 @@ void RegressionTreeNode::lookForBestSplit()
         return;
     TVec<RTR_type> candidate(0, leave->length());//list of candidate row to split
     TVec<RTR_type> registered_row(leave->length());
-    Vec registered_target(0, leave->length()); 
-    Vec registered_weight(0, leave->length());
+    TVec<RTR_target_t> registered_target(0, leave->length()); 
+    TVec<RTR_weight_t> registered_weight(0, leave->length());
     Vec registered_value(0, leave->length());
     tmp_vec.resize(2);
     Vec left_error(3);
@@ -354,7 +354,7 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     PP<RegressionTreeLeave> right_leave,
     PP<RegressionTreeLeave> left_leave,
     PP<RegressionTreeRegisters> train_set,
-    Vec values, Vec targets, Vec weights
+    Vec values, TVec<RTR_target_t> targets, TVec<RTR_weight_t> weights
     )
 {
     int best_balance=INT_MAX;
