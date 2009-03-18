@@ -401,6 +401,8 @@ void RegressionTreeRegisters::getExample(int i, Vec& input, Vec& target, real& w
     if(weightsize()<0)
         PLERROR("In RegressionTreeRegisters::getExample, weightsize_ not defined for this vmat");
 #endif
+    //going by tsource is not thread safe as PP are not thread safe.
+    //so we use tsource_mat.copyColumnTo that is thread safe.
     tsource_mat.copyColumnTo(i,input.data());
 
     target[0]=target_weight[i].first;
