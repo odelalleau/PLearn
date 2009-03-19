@@ -608,7 +608,7 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
                                                 t1->getTSortedRow(),
                                                 t1->getTSource(),
                                                 learner1->report_progress,
-                                                learner1->verbosity,false);
+                                                learner1->verbosity,false,false);
         }
         learner2->setTrainingSet(vmat2, call_forget);
     }
