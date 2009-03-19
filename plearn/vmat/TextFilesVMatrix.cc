@@ -460,10 +460,6 @@ void TextFilesVMatrix::setMetaDataDir(const PPath& the_metadatadir){
         buildVMatrixStringMapping();
 
     // Sanity checking
-    if (delimiter.size() != 1)
-        PLERROR("In TextFilesVMatrix::setMetaDataDir - the 'delimiter' option"
-                " '%s' must contain exactly one character",
-                delimiter.c_str());
 }
 
 
@@ -641,7 +637,7 @@ real TextFilesVMatrix::getMapping(int fieldnum, const string& strval) const
 
 TVec<string> TextFilesVMatrix::splitIntoFields(const string& raw_row) const
 {
-    return split_quoted_delimiter(removeblanks(raw_row), delimiter[0],quote_delimiter);
+    return split_quoted_delimiter(removeblanks(raw_row), delimiter,quote_delimiter);
 }
 
 TVec<string> TextFilesVMatrix::getTextFields(int i) const
