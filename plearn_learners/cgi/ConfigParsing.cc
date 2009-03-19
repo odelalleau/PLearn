@@ -74,7 +74,7 @@ void ConfigParsing::run(const vector<string>& args)
     input.default_spec="char";
 //#auto_extend_map = 0  ;
     input.build_vmatrix_stringmap = 1  ;
-    input.delimiter = ","  ;//TODO ; or auto?
+    input.delimiter = ",;"  ;//TODO ; or auto?
     input.quote_delimiter = '"';
     input.skipheader.append(1);
     input.reorder_fieldspec_from_headers=1;
