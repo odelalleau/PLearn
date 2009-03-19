@@ -169,6 +169,11 @@ vector<string> split(const string& s, char delimiter);
 */
 vector<string> split(const string& s, const string& delimiters=" \t\n\r", bool keepdelimiters=false);
 
+/*! splits a string into a list of substrings (using any occurence of 
+  the given delimiters as split point)
+*/
+vector<string> split_all(const string& s, const string& delimiters=" \t\n\r");
+
 /*! Split a string at deliminer while allowing a delimiter to be quoted so that it is not considered to be as a delimiter.
   The double_quote are only considered at the boundary of the field.
   The function should execute in O(n+k) where n is the number of character in s and k is the number of field in k.
@@ -183,6 +188,9 @@ vector<string> split_quoted_delimiter(const string& s, char delimiter,
 
 vector<string> split_quoted_delimiter(const string& s, char delimiter,
                                       char double_quote);
+
+vector<string> split_quoted_delimiter(const string& s, const string& delimiters,
+                                      const string& double_quote);
 
 /*!     Split the string on the first occurence of a delimiter and returns 
   what was left of the delimitor and what was right of it.

@@ -366,9 +366,12 @@ vector<string> split(const string& s, char delimiter)
 
 vector<string> split_quoted_delimiter(const string& s, char delimiter,
                                       const string& double_quote){
-    int delim_size=double_quote.size();
-    if(delim_size==1)
+    int quote_size=double_quote.size();
+    if(quote_size==1)
         return split_quoted_delimiter(s,delimiter,double_quote[0]);
+    else if(quote_size==0)
+        return split(s,delimiter);
+    PLASSERT(double_quote.size()>0);
 
     vector<string> ret = split(s, delimiter);
     vector<string> ret2;
@@ -376,14 +379,14 @@ vector<string> split_quoted_delimiter(const string& s, char delimiter,
         bool bw=string_begins_with(ret[i],double_quote);
         bool ew=string_ends_with(ret[i],double_quote);
         if(bw && ew){
-            ret2.push_back(ret[i].substr(delim_size,
-                                         ret[i].size()-delim_size)); 
+            ret2.push_back(ret[i].substr(quote_size,
+                                         ret[i].size()-quote_size)); 
         }else if(bw){
-            string tmp=ret[i].substr(delim_size);
+            string tmp=ret[i].substr(quote_size);
             tmp+=delimiter;
             for(uint j=i+1;j<ret.size();j++){
                 if(string_ends_with(ret[j],double_quote)){
-                    tmp+=ret[j].substr(0,ret[j].size()-delim_size);
+                    tmp+=ret[j].substr(0,ret[j].size()-quote_size);
                     ret2.push_back(tmp);
                     i=j;
                     break;
@@ -425,7 +428,66 @@ vector<string> split_quoted_delimiter(const string& s, char delimiter,
             ret2.push_back(f);
     }
     return ret2;
-    
+}
+
+vector<string> split_quoted_delimiter(const string& s, const string& delimiters,
+                                      const string& double_quote)
+{
+    int quote_size=double_quote.size();
+    if(quote_size==1 && delimiters.size()==1)
+        return split_quoted_delimiter(s,delimiters[0],double_quote[0]);
+    else if(delimiters.size()==1 && quote_size==0)
+        return split(s,delimiters[0]);
+    PLASSERT(delimiters.size()>0);
+    vector<string> ret;
+
+    size_t startpos = 0;
+    size_t endpos = 0;
+
+    for(;;)
+    {
+        startpos = endpos;
+        bool quoted = string_begins_with(s.substr(startpos),double_quote);
+        if(quoted){
+            startpos+=quote_size;
+            endpos = s.find(double_quote,startpos);
+        }else
+            endpos = s.find_first_of(delimiters,startpos);
+        if(endpos==string::npos)
+        {
+            ret.push_back(s.substr(startpos));
+            break;
+        }
+        ret.push_back(s.substr(startpos,endpos-startpos));
+        if(quoted)
+            startpos+=quote_size;
+        else
+            endpos++;
+    }
+    return ret;
+}
+
+vector<string> split_all(const string& s, const string& delimiters)
+{
+    vector<string> result;
+
+    size_t startpos = 0;
+    size_t endpos = 0;
+
+    for(;;)
+    {
+        startpos = endpos;
+        endpos = s.find_first_of(delimiters,startpos);
+        if(endpos==string::npos)
+        {
+            result.push_back(s.substr(startpos));
+            break;
+        }
+        result.push_back(s.substr(startpos,endpos-startpos));
+        endpos++;
+    }
+
+    return result;
 }
 
 vector<string> split(const string& s, const string& delimiters, bool keep_delimiters)
