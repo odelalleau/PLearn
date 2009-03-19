@@ -80,6 +80,8 @@ VMatCommand::VMatCommand():
         "       such as 0-18, or any combination thereof, e.g. 5,3,8-18,Date,74-85\n"
         "       If the option --mat_to_mem is specified, we load the original matrix into memory\n"
         "       If the option --save_vmat is specified, we save the source vmat in the destination metadatadir\n"
+        "       If the option --update is specified, we generate the <destination> only when the <source> file is newer\n"
+        "         then the destination file or when the destination file is missing\n"
         "       If .csv (Comma-Separated Value) is specified as the destination file, the \n"
         "       following additional options are also supported:\n"
         "         --skip-missings: if a row (after selecting the appropriate columns) contains\n"

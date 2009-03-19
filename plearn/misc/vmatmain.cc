@@ -660,7 +660,10 @@ int vmatmain(int argc, char** argv)
          *           :: load the source vmat in memory before saving
          *     --save_vmat 
          *           :: if the source is a vmat, we serialize the constructed
-         *           ::object in the metadatadir of the destination
+         *           :: object in the metadatadir of the destination
+         *     --update
+         *           :: we generate the <destination> only when the <source> file is newer than
+         *           :: the destination  file or when the destination file is missing
          */
         TVec<string> columns;
         TVec<string> date_columns;
@@ -669,6 +672,7 @@ int vmatmain(int argc, char** argv)
         string delimiter = ",";
         bool convert_date = false;
         bool save_vmat = false;
+        bool update = false;
         for (int i=4 ; i < argc && argv[i] ; ++i) {
             string curopt = removeblanks(argv[i]);
             if (curopt == "")
@@ -695,6 +699,8 @@ int vmatmain(int argc, char** argv)
                 mat_to_mem = true;
             else if (curopt == "--save_vmat")
                 save_vmat = true;
+            else if (curopt == "--update")
+                update = true;
             else
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                           curopt.c_str());
@@ -713,7 +719,9 @@ int vmatmain(int argc, char** argv)
                       ext.c_str());
         if(mat_to_mem)
             vm.precompute();
-        if(ext==".amat")
+        if(update && vm->isUpToDate(destination))
+            pout << "The file is up to date. We don't regenerate it."<<endl;
+        else if(ext==".amat")
             // Save strings as strings so they are not lost.
             vm->saveAMAT(destination, true, false, true);
         else if(ext==".pmat")
