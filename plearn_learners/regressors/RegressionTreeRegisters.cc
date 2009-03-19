@@ -88,7 +88,8 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
 {
     source = source_;
     tsource = tsource_;
-    tsource_mat = tsource.toMat();
+    if(tsource->classname()=="MemoryVMatrixNoSave")
+        tsource_mat = tsource.toMat();
     tsorted_row = tsorted_row_;
     build();
 }
@@ -188,7 +189,8 @@ void RegressionTreeRegisters::build_()
             PP<MemoryVMatrixNoSave> tmp = new MemoryVMatrixNoSave(tsource);
             tsource = VMat(tmp);
         }
-        tsource_mat = tsource.toMat();
+        if(tsource->classname()=="MemoryVMatrixNoSave")
+            tsource_mat = tsource.toMat();
     }
     setMetaInfoFrom(source);
     weightsize_=1;
@@ -223,6 +225,8 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_weight_t> &weight,
                                                   Vec &value) const
 {
+    PLASSERT(tsource_mat.length()==tsource.length());
+
     getAllRegisteredRow(leave_id,col,reg);
     target.resize(reg.length());
     weight.resize(reg.length());
@@ -260,6 +264,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg) const
 {
+    PLASSERT(tsource_mat.length()==tsource.length());
 
     int idx=0;
     int n=reg.length();
