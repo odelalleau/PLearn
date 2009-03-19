@@ -60,21 +60,19 @@ ConfigParsing::ConfigParsing()
 //! The actual implementation of the 'ConfigParsing' command
 void ConfigParsing::run(const vector<string>& args)
 {
-    // *** PLEASE COMPLETE HERE ****
-/*    args1 = conf/conf.all.csv;
-    args2 = conf/1convertCSV0709toPLearn.inc;
-    args3 = conf/3b_remove_col.inc;
-    args4 = conf/3fix_missing.inc;
-    args5 = conf/9dichotomize.inc;
-    args6 = conf/global_imputation_specifications.inc;
+/*    args0 = conf/conf.all.csv;
+    args1 = conf/1convertCSV0709toPLearn.inc;
+    args2 = conf/3b_remove_col.inc;
+    args3 = conf/3fix_missing.inc;
+    args4 = conf/9dichotomize.inc;
+    args5 = conf/global_imputation_specifications.inc;
 */
     PLCHECK(args.size()==6);
     TextFilesVMatrix input = TextFilesVMatrix();
     input.auto_build_map = 0  ;
     input.default_spec="char";
-//#auto_extend_map = 0  ;
     input.build_vmatrix_stringmap = 1  ;
-    input.delimiter = ",;"  ;//TODO ; or auto?
+    input.delimiter = ",;"  ;
     input.quote_delimiter = '"';
     input.skipheader.append(1);
     input.reorder_fieldspec_from_headers=1;
@@ -82,6 +80,16 @@ void ConfigParsing::run(const vector<string>& args)
     input.partial_match=1;
     input.setMetaDataDir(args[0]+".metadatadir");
     input.build();
+    bool all_uptodate = true;
+    for(int i=1;i<=5;i++)
+        if(!input.isUpToDate(args[i])){
+            all_uptodate = false;
+            break;
+        }
+    if(all_uptodate){
+        pout << "All file are uptodate. We don't regenerate the.";
+        return;
+    }
     PStream f_csv = openFile(PPath(args[1]),PStream::raw_ascii,"w");
     PStream f_remove = openFile(args[2],PStream::raw_ascii,"w");
     PStream f_missing = openFile(args[3],PStream::raw_ascii,"w");
@@ -127,16 +135,12 @@ void ConfigParsing::run(const vector<string>& args)
         if(!r[5].empty() && !remove){
             f_dichotomize <<r[0]<<" : ["<< (r[5]) << " ]"<<endl;
         }
-
-        
     }
     f_csv<<"$INCLUDE{conf/date_undef.inc}"<<endl;
     f_remove<<"$INCLUDE{conf/date_undef.inc}"<<endl;
     f_missing<<"$INCLUDE{conf/date_undef.inc}"<<endl;
     f_dichotomize<<"$INCLUDE{conf/date_undef.inc}"<<endl;
     f_imputation<<"$INCLUDE{conf/date_undef.inc}"<<endl;
-
-        
 
 }
 
