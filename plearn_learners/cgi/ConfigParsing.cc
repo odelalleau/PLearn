@@ -96,11 +96,6 @@ void ConfigParsing::run(const vector<string>& args)
     PStream f_dichotomize = openFile(args[4],PStream::raw_ascii,"w");
     PStream f_imputation = openFile(args[5],PStream::raw_ascii,"w");
 
-    f_csv<<"$INCLUDE{conf/date.inc}"<<endl;
-    f_remove<<"$INCLUDE{conf/date.inc}"<<endl;
-    f_missing<<"$INCLUDE{conf/date.inc}"<<endl;
-    f_dichotomize<<"$INCLUDE{conf/date.inc}"<<endl;
-    f_imputation<<"$INCLUDE{conf/date.inc}"<<endl;
     for(int i=0;i<input.length();i++){
         TVec<string> r = input.getTextFields(i);
         char c = r[0][0];
@@ -136,12 +131,6 @@ void ConfigParsing::run(const vector<string>& args)
             f_dichotomize <<r[0]<<" : ["<< (r[5]) << " ]"<<endl;
         }
     }
-    f_csv<<"$INCLUDE{conf/date_undef.inc}"<<endl;
-    f_remove<<"$INCLUDE{conf/date_undef.inc}"<<endl;
-    f_missing<<"$INCLUDE{conf/date_undef.inc}"<<endl;
-    f_dichotomize<<"$INCLUDE{conf/date_undef.inc}"<<endl;
-    f_imputation<<"$INCLUDE{conf/date_undef.inc}"<<endl;
-
 }
 
 } // end of namespace PLearn
