@@ -459,10 +459,12 @@ vector<string> split_quoted_delimiter(const string& s, const string& delimiters,
             break;
         }
         ret.push_back(s.substr(startpos,endpos-startpos));
-        if(quoted)
-            startpos+=quote_size;
-        else
+        if(quoted){
+            endpos+=quote_size+1;
+        }else
             endpos++;
+        if(endpos>s.size())
+            break;
     }
     return ret;
 }
