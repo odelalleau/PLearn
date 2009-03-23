@@ -1640,12 +1640,15 @@ TVec<StatsCollector> VMatrix::getPrecomputedStatsFromFile(
     try{
         if (uptodate){
             PLearn::load(statsfile, stats);
-            if(stats.length()!=width())
-                PLERROR("In VMatrix::getPrecomputedStatsFromFile() for class %s -"
-                        " bad file %s. Delete it to have it recreated.",
+            if(stats.length()!=width()){
+                uptodate=false;
+                PLWARNING("In VMatrix::getPrecomputedStatsFromFile() for class"
+                          " %s - The file %s don't have the good number of"
+                          " stats. We regenerate it.",
                         classname().c_str(), statsfile.c_str());
-        } else
-        {
+            }
+        }
+        if(!uptodate){
             VMat vm = const_cast<VMatrix*>(this);
             stats = PLearn::computeStats(vm, maxnvalues, progress_bar);
             if(!metadatadir.isEmpty())
