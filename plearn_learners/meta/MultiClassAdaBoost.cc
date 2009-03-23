@@ -440,6 +440,7 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
         costs[15]=last_stage;
     }else{
         costs[7]=costs[8]=costs[9]=costs[10]=MISSING_VALUE;
+        costs[11]=costs[12]=costs[13]=costs[14]=costs[15]=MISSING_VALUE;
     }
     if(forward_sub_learner_test_costs){
         costs.resize(7+4+5);
