@@ -90,10 +90,12 @@ class MultiClassAdaBoost : public PLearner
 
     PP<PTimer> timer;
 
+    //Variable used when forward_test==2.
+    //They are used to determine if inherited::test is faster then forwarding the test fct.
     mutable real time_sum;
-    mutable real time_sum_rtr;
+    mutable real time_sum_ft;
     mutable real time_last_stage;
-    mutable real time_last_stage_rtr;
+    mutable real time_last_stage_ft;
     mutable int last_stage;
 
 public:
