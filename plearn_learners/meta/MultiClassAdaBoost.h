@@ -97,6 +97,7 @@ class MultiClassAdaBoost : public PLearner
     mutable real time_last_stage;
     mutable real time_last_stage_ft;
     mutable int last_stage;
+    mutable int nb_sequential_ft;
 
 public:
     //#####  Public Build Options  ############################################

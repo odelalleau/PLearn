@@ -71,6 +71,7 @@ MultiClassAdaBoost::MultiClassAdaBoost():
     time_last_stage(0),
     time_last_stage_ft(0),
     last_stage(0),
+    nb_sequential_ft(0),
     forward_sub_learner_test_costs(false),
     forward_test(0)
 /* ### Initialize all fields to their default value here */
@@ -189,7 +190,13 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
                   &MultiClassAdaBoost::last_stage, 
                   OptionBase::learntoption |OptionBase::nosave,
                   "The stage at witch time_sum or time_sum_ft was used");
-}
+    declareOption(ol, "nb_sequential_ft",
+                  &MultiClassAdaBoost::nb_sequential_ft, 
+                  OptionBase::learntoption |OptionBase::nosave,
+                  "The number of sequential time that we forward the test()"
+                  " fct. We must do that as the first time we forward it, the"
+                  " time is higher then the following ones.");
+ }
 
 void MultiClassAdaBoost::build_()
 {
@@ -244,8 +251,10 @@ void MultiClassAdaBoost::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(output2,           copies);
     deepCopyField(subcosts1,         copies);
     deepCopyField(subcosts2,         copies);
+    deepCopyField(timer,             copies);
     deepCopyField(learner1,          copies);
     deepCopyField(learner2,          copies);
+
     //not needed as we only read it.
     //deepCopyField(learner_template,  copies);
 }
@@ -666,7 +675,9 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         time_sum=0;
     }
     if(last_stage<stage && time_sum_ft>0){
+        if(nb_sequential_ft>0)
             time_last_stage_ft=time_sum_ft;
+        nb_sequential_ft++;
         time_sum_ft=0;
     }
 
@@ -681,6 +692,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         Profiler::pl_profile_end("MultiClassAdaBoost::test()");
         time_sum += timer->getTimer("MultiClassAdaBoost::test() current");
         last_stage=stage;
+        nb_sequential_ft = 0;
         EXTREME_MODULE_LOG<<"inherited end time_sum="<<time_sum<<" time_sum_ft="<<time_sum_ft<<" last_stage="<<last_stage <<" stage=" <<stage <<" time_last_stage=" <<time_last_stage<<" time_last_stage_ft=" <<time_last_stage_ft<<endl;
         return;
     }
@@ -730,8 +742,18 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
 
     //Profiler::pl_profile_end("MultiClassAdaBoost::test() part1");//cheap
     Profiler::pl_profile_start("MultiClassAdaBoost::test() subtest");
+#ifdef _OPENMP
+#pragma omp parallel sections
+{
+#pragma omp section 
+    learner1->test(testset1,test_stats1,testoutputs1,testcosts1);
+#pragma omp section 
+    learner2->test(testset2,test_stats2,testoutputs2,testcosts2);
+}
+#else
     learner1->test(testset1,test_stats1,testoutputs1,testcosts1);
     learner2->test(testset2,test_stats2,testoutputs2,testcosts2);
+#endif
     Profiler::pl_profile_end("MultiClassAdaBoost::test() subtest");
 
     VMat my_outputs = 0;
