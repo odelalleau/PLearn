@@ -777,7 +777,7 @@ class results(ResultsBasedMode):
         ogroups = super(results, cls).option_groups(parser)
 
         ogroups[1].add_option(
-            '--force', default=False,
+            '-f', '--force', default=False,
             action="store_true",
             help="If True, new results will be generated without prompting, even "
             "if results already are under version control." )
