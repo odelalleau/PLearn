@@ -9,6 +9,11 @@ train_time
 total_train_time
 test_time
 total_test_time
+time_sum
+time_sum_ft
+time_last_stage
+time_last_stage_ft
+last_stage
 sum_sublearner.binary_class_error
 sum_sublearner.exp_neg_margin
 sum_sublearner.class_error

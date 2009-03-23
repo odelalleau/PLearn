@@ -9,6 +9,11 @@ train_time	0
 total_train_time	0
 test_time	0
 total_test_time	0
+time_sum	0
+time_sum_ft	0
+time_last_stage	0
+time_last_stage_ft	0
+last_stage	0
 sum_sublearner.binary_class_error	0
 sum_sublearner.exp_neg_margin	0
 sum_sublearner.class_error	0

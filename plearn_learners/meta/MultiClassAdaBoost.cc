@@ -156,7 +156,7 @@ void MultiClassAdaBoost::declareOptions(OptionList& ol)
 
     declareOption(ol, "done_warn_once_target_gt_2",
                   &MultiClassAdaBoost::done_warn_once_target_gt_2,
-                  OptionBase::learntoption,
+                  OptionBase::learntoption|OptionBase::nosave,
                   "Used to keep track if we have done the warning or not.");
 
     declareOption(ol, "time_sum",
@@ -442,7 +442,7 @@ void MultiClassAdaBoost::computeOutputAndCosts(const Vec& input,
         costs[7]=costs[8]=costs[9]=costs[10]=MISSING_VALUE;
     }
     if(forward_sub_learner_test_costs){
-        costs.resize(7+4);
+        costs.resize(7+4+5);
         subcosts1+=subcosts2;
         costs.append(subcosts1);
     }

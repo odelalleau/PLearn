@@ -924,11 +924,8 @@ use_a_separate_random_generator_for_testing = 1827 ;
 finalized = 0  )
 ;
 forward_test = 0 ;
-train_time = 0 ;
-total_train_time = 0 ;
-test_time = 0 ;
-total_test_time = 0 ;
-time_costs = 0  )
+time_costs = 0 ;
+warn_once_target_gt_2 = 0  )
 ;
 perf_evaluators = {};
 report_stats = 1 ;
@@ -998,6 +995,7 @@ verbosity = 0  )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 0 ;
+finalize_learner = 0 ;
 learner = *5  ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;
