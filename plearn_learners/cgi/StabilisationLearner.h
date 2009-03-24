@@ -106,7 +106,7 @@ public:
     //! and for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
-
+    virtual TVec<std::string> getOutputNames() const;
 
     //#####  PLearn::Object Protocol  #########################################
 

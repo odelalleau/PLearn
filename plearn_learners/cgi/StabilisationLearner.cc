@@ -152,6 +152,12 @@ TVec<string> StabilisationLearner::getTrainCostNames() const
     return names;
 }
 
+TVec<string> StabilisationLearner::getOutputNames() const
+{
+    TVec<string> names(1);
+    names[0]="predicted_class";
+    return names;
+}
 
 } // end of namespace PLearn
 
