@@ -346,9 +346,10 @@ if not 'nopython' in optionargs:
         python_version = '2.5'
         optionargs += [ 'python%s' % python_version.replace('.', '') ]
         python_lib_root = '/usr/lib'
-        numpy_site_packages = '-L/usr/lib/python' + python_version + '/site-packages/numarray'
+        numpy_site_packages = '-L/usr/local/lib/python' + python_version + '/site-packages/numpy'
         python_includedirs = [ '/usr/include/python' + python_version]
-        numpy_includedirs = python_includedirs
+        numpy_includedirs = ['/usr/local/lib/python2.5/site-packages/numpy/core/include',
+                             '/usr/local/stow/python2.5-numpy/lib/python2.5/site-packages/numpy/numarray/numpy'] + python_includedirs
     elif domain_name.endswith('iro.umontreal.ca'):
         optionargs += [ pyoption ]
         python_version = pyver
