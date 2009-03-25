@@ -997,15 +997,25 @@ int vmatmain(int argc, char** argv)
     else if(command=="cat")
     {
         if(argc < 3)
-            PLERROR("'vmat cat' must be used that way : vmat cat FILE... [vplFilteringCode]");
+            PLERROR("'vmat cat' must be used that way : vmat cat FILE... [--precision=N] [vplFilteringCode]");
         string code;
         int nb_file=argc-2;
-        if(argc>=4)
-        {
-            if(!isfile(argv[argc-1])){
+        int precision = -1;
+        for (int i=argc-1 ; i >=3 && argv[i] ; i--) {
+            string curopt = removeblanks(argv[i]);
+            if(curopt.substr(0,12) == "--precision="){
+                precision = toint(curopt.substr(12));
+                nb_file--;
+            }else if(!isfile(argv[argc-1])){
                 code=argv[argc-1];
                 nb_file--;
             }
+        }
+        if(precision>0){
+            char tmpbuf[100];
+            snprintf(tmpbuf,100,"%%#.%df",precision);
+            pout.setDoubleFormat(tmpbuf);
+            pout.setFloatFormat(tmpbuf);
         }
         for(int file=0;file<nb_file;file++)
         {
