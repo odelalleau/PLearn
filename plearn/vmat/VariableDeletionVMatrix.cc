@@ -293,6 +293,7 @@ void VariableDeletionVMatrix::build_()
     if (min_non_missing_threshold > 0){
         int min_non_missing =
             int(round(min_non_missing_threshold * the_train_source->length()));
+        TVec<int> have_missing;
         for (int i = 0; i < is; i++){
             if (stats[i].nnonmissing() >= min_non_missing 
                 && stats[i].nnonmissing() > 0)
@@ -303,12 +304,20 @@ void VariableDeletionVMatrix::build_()
                           source->fieldName(i).c_str(),
                           int(stats[i].nmissing()),
                           int(stats[i].n()));
-            if (info_var_with_missing && stats[i].nmissing() > 0)
-                MODULE_LOG<<"INFO: In build_() var '"
-                          <<source->fieldName(i).c_str()
-                          <<"' have missing value: "
-                          <<stats[i].nmissing()
-                          <<"/"<< stats[i].n()<<"."<<endl;
+            if (info_var_with_missing && stats[i].nmissing() > 0){
+                have_missing.append(i);
+            }
+        }
+        if(have_missing.length()>0){
+            string s="INFO: In build_() variable with missing value (var,nb_missing/nb_value): ";
+            for(int i=0;i<have_missing.length();i++){
+                int ii = have_missing[i];
+                s+=" ("+source->fieldName(ii)
+                    +","+tostring(stats[ii].nmissing())
+                    +"/"+ tostring(stats[ii].n())+")";
+
+            }
+            MODULE_LOG<<s<<endl;
         }
                 
     } else
@@ -327,12 +336,12 @@ void VariableDeletionVMatrix::build_()
                 const_indices.append(i);
         }
         if(warn_removed_var && const_indices.length()>0){
-            NORMAL_LOG<<" WARNING: In VariableDeletionVMatrix::build_() - The following tuple (variable, constant value) indicate variable that are removed because they are constant: " <<endl;
+            string s = " WARNING: In VariableDeletionVMatrix::build_() - The following tuple (variable, constant value) indicate variable that are removed because they are constant: \n";
             for(int i=0;i<const_indices.length();i++){
                 StatsCollector stat = stats[i];
-                NORMAL_LOG<<"("<<source->fieldName(i)<<","<<stat.min()<<"),";
+                s+=" ("+source->fieldName(i)+","+tostring(stat.min())+")";
             }
-            NORMAL_LOG<<endl;
+            NORMAL_LOG<<s<<endl;
         }
         indices.resize(final_indices.length());
         indices << final_indices; 
