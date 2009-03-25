@@ -60,7 +60,7 @@ private:
     //! It is private because it is safer to access stats from getStatNames,
     //! since the 'statmask' option may modify the stats.
     TVec<string> statnames;
-
+    bool reloaded;
 protected:
 
     //! The 'real' statnames: these are obtained from 'statnames' by a

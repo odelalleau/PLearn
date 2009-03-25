@@ -75,8 +75,7 @@ public:
 
     bool provide_strategy_expdir; //!< should each strategy step be provided a directory expdir/Step#
     bool save_final_learner; //!< should final learner be saved in expdir/final_learner.psave
-    bool reloaded; //!< Need to don't reload each time build is called as it can be called many time.
-    static bool reloading;
+    bool reloaded; //!< needed for a warning
     // HyperLearner methods
 
     //! if true, we finalize the learner after training.
@@ -115,9 +114,6 @@ public:
 
     //! Save the current HyperLearner in its expdir
     void auto_save();
-
-    //! Load the previously saved HyperLearner in its expdir if available
-    void auto_load();
 
 }; // class HyperLearner
 

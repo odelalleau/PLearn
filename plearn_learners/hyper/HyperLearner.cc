@@ -66,8 +66,6 @@ PLEARN_IMPLEMENT_OBJECT(
     "They are accessible in the higher level PTester as: \n"
     "for ex: E[test1.E[mse]]");
 
-bool HyperLearner::reloading = false;
-
 TVec<string> HyperLearner::getTrainCostNames() const
 {
     if (strategy.size() > 0)
@@ -139,10 +137,7 @@ HyperLearner::declareOptions(OptionList &ol)
 
     declareOption(ol, "reloaded", &HyperLearner::reloaded,
                   OptionBase::learntoption|OptionBase::nosave,
-        "Used internally to avoid reloading a file, since the build function\n"
-        "may be called many times after the expdir is set,in particular in\n"
-        "PLearn::HyperLearner::setTrainingSet.");
-
+                  "Used to give a warning.");
     inherited::declareOptions(ol);
 
     // Hide some unused options.
@@ -306,7 +301,6 @@ void HyperLearner::build_()
     for(int commandnum=0; commandnum<strategy.length(); commandnum++)
         strategy[commandnum]->setHyperLearner(this);
 
-    auto_load();
 }
 
 /////////
@@ -374,43 +368,14 @@ void HyperLearner::auto_save()
     PLearn::save(tmp, this);
 
 #ifdef BOUNDCHECK
-    HyperLearner n;
+    HyperLearner *n = new HyperLearner();
     PLearn::load(tmp,n);
-    PLCHECK(PLearn::diff(&n,this));
+    PLCHECK(PLearn::diff(n,this));
+    delete n;
 #endif
 
     mvforce(tmp,f);
     Profiler::pl_profile_end("HyperLearner::auto_save");
-}
-
-///////////////
-// auto_load //
-///////////////
-void HyperLearner::auto_load()
-{
-    // Reload the saved HyperLearner. Note that becase the boolean 'reloading'
-    // is static, it means we can currently reload only one single
-    // HyperLearner at a time. It may be interesting in the future to change
-    // this reload mechanism to let us reload multiple (chained) HyperLearners.
-    if(expdir.isEmpty()){
-        if(verbosity>1)
-            DBG_MODULE_LOG<<"auto_load() - no expdir. Can't reload."<<endl;
-        return;
-    }
-    PPath f = expdir/"hyper_learner_auto_save.psave";
-    bool isf=isfile(f);
-    if(stage==0 && !reloading && !reloaded && isf){
-        Profiler::pl_profile_start("HyperLearner::auto_load");
-        if(verbosity>0)
-            PLWARNING("In HyperLearner::auto_load() - reloading from file %s",f.c_str());
-        reloading = true;
-        PLearn::load(f,*this);
-        reloading = false;
-        reloaded = true;
-        Profiler::pl_profile_end("HyperLearner::auto_load");
-    }
-    else if(!isf && verbosity>1)
-        PLWARNING("In HyperLearner::auto_load() - no file to reload.");
 }
 
 } // end of namespace PLearn

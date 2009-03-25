@@ -47,6 +47,7 @@
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <assert.h>
 #include <plearn/base/RemoteDeclareMethod.h>
+#include <plearn_learners/hyper/HyperLearner.h>
 
 #include <plearn/misc/PLearnService.h>
 
@@ -85,6 +86,7 @@ template<class T> TVec<T> operator&(const T& x, const TVec<T>& v)
 // PTester //
 /////////////
 PTester::PTester():
+       reloaded(false),
        need_to_save_test_names(false),
        provide_learner_expdir(false),
        report_stats(true),
@@ -354,6 +356,30 @@ void PTester::build_()
     if (PLMPI::rank!=0)
         expdir = "";
 #endif
+
+    if(!reloaded && learner && learner->classname()=="HyperLearner"){
+        if(expdir.isEmpty()){
+            PLWARNING("PTester::build_() - no expdir. Can't reload.");
+            return;
+        }
+        PPath f = expdir/"Split0"/"LearnerExpdir"/"hyper_learner_auto_save.psave";
+        bool isf=isfile(f);
+        if(!reloaded && isf){
+            if(splitter->nsplits()!=1){
+                PLERROR("In PTester::build_() - The auto_save function only work when their is one split.");
+                //TODO: this only work if we have only one split
+            }
+            Profiler::pl_profile_start("PTester::auto_load");
+            PLWARNING("In PTester::build_() - reloading from file %s",f.c_str());
+            HyperLearner *l = new HyperLearner();
+            PLearn::load(f,l);
+            l->reloaded=true;
+            learner=l;
+            reloaded = true;
+            Profiler::pl_profile_end("PTester::auto_load");
+        }
+    }
+
     statnames_processed.resize(statnames.length());
     statnames_processed << statnames;
     if (statmask) {
