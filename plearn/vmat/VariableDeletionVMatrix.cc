@@ -310,11 +310,11 @@ void VariableDeletionVMatrix::build_()
         }
         if(have_missing.length()>0){
             string s="INFO: In build_() variable with missing value (var,nb_missing/nb_value): ";
-            for(int i=0;i<have_missing.length();i++){
-                int ii = have_missing[i];
-                s+=" ("+source->fieldName(ii)
-                    +","+tostring(stats[ii].nmissing())
-                    +"/"+ tostring(stats[ii].n())+")";
+            for(int k=0;k<have_missing.length();k++){
+                int i = have_missing[k];
+                s+=" ("+source->fieldName(i)
+                    +","+tostring(stats[i].nmissing())
+                    +"/"+ tostring(stats[i].n())+")";
 
             }
             MODULE_LOG<<s<<endl;
@@ -337,7 +337,8 @@ void VariableDeletionVMatrix::build_()
         }
         if(warn_removed_var && const_indices.length()>0){
             string s = " WARNING: In VariableDeletionVMatrix::build_() - The following tuple (variable, constant value) indicate variable that are removed because they are constant: \n";
-            for(int i=0;i<const_indices.length();i++){
+            for(int k=0;k<const_indices.length();k++){
+                int i = const_indices[k];
                 StatsCollector stat = stats[i];
                 s+=" ("+source->fieldName(i)+","+tostring(stat.min())+")";
             }
