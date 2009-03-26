@@ -133,7 +133,7 @@ class Program(core.PyTestObject):
             if self.compiler is None:
                 self.compiler = Program.default_compiler
             self.__attempted_to_compile = False
-            self.__log_file_path = internal_exec_path+'.log'
+            self.__log_file_path = self.getCompilationLogPath()
         logging.debug("Program instance: %s\n"%repr(self))
 
     def handleCompileOptions(self):        
@@ -308,6 +308,9 @@ class Program(core.PyTestObject):
     def getName(self):
         return self.name
         
+    def getCompilationLogPath(self):
+        return self.getInternalExecPath()+'.log'
+
     def getInternalExecPath(self, candidate=None):
         if hasattr(self, '_internal_exec_path'):
             assert candidate is None, 'candidate is not None:'+repr(candidate)

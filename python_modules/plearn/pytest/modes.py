@@ -745,6 +745,13 @@ class RoutineBasedMode(PyTestMode):
                     else:
                         logging.debug(e)
                         test.setStatus("SKIPPED", core.traceback(e))
+        l=[]
+        for (test_name, test) in test_instances:
+            if not test.compilationSucceeded():
+                f=test.program.getCompilationLogPath()
+                if f not in l:
+                    l+=[f]
+                    logging.info("The failed compile log %s"%f)
 
 class compile(RoutineBasedMode):
     RoutineType = CompilationRoutine
