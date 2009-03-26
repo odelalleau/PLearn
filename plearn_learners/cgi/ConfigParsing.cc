@@ -40,6 +40,7 @@
 #include "ConfigParsing.h"
 #include <plearn/vmat/TextFilesVMatrix.h>
 #include <plearn/io/openFile.h>
+#include <plearn/io/pl_log.h>
 #include <plearn/base/stringutils.h>
 
 namespace PLearn {
@@ -87,7 +88,7 @@ void ConfigParsing::run(const vector<string>& args)
             break;
         }
     if(all_uptodate){
-        pout << "All file are uptodate. We don't regenerate the.";
+        NORMAL_LOG << "All config file are uptodate. We don't regenerate them."<<endl;
         return;
     }
     PStream f_csv = openFile(PPath(args[1]),PStream::raw_ascii,"w");
