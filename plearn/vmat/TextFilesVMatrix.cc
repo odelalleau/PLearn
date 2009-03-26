@@ -43,6 +43,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/fileutils.h>
+#define PL_LOG_MODULE_NAME "TextFilesVMatrix"
 #include <plearn/io/pl_log.h>
 
 namespace PLearn {
@@ -131,8 +132,8 @@ void TextFilesVMatrix::buildIdx()
     int lineno = 0;
     for(unsigned char fileno=0; fileno<txtfiles.length(); fileno++)
     {
-        FILE* f = txtfiles[(int)fileno];
-        fseek(f,0,SEEK_SET);
+        FILE* fi = txtfiles[(int)fileno];
+        fseek(fi,0,SEEK_SET);
 
         int nskip = 0; // number of header lines to skip
         if(!skipheader.isEmpty())
@@ -141,18 +142,18 @@ void TextFilesVMatrix::buildIdx()
         // read the data rows and build the index
         for(;;)
         {
-            long pos_long = ftell(f);
+            long pos_long = ftell(fi);
             if (pos_long > INT_MAX)
                 PLERROR("In TextFilesVMatrix::buildIdx - 'pos_long' cannot be "
                         "more than %d", INT_MAX);
             int pos = int(pos_long);
-            if(!fgets(buf, sizeof(buf), f))
+            if(!fgets(buf, sizeof(buf), fi))
                 break;
 
 #ifdef CYGWIN_FGETS_BUGFIX
             // Bugfix for CYGWIN carriage return bug.
             // Should be safe to enable in all case, but need to be tester more widely.
-            long new_pos = ftell(f);
+            long new_pos = ftell(fi);
             long lbuf = long(strlen(buf));
             if (lbuf+pos != new_pos)
                 if(lbuf+1+pos==new_pos && buf[lbuf-1]=='\n' && buf[lbuf-2]!='\r')
@@ -162,15 +163,15 @@ void TextFilesVMatrix::buildIdx()
                     //So if their is only a \n, we are a caractere too far.
                     //if dos end of lines, return \n as end of lines in the strings and put the pos correctly.
                     
-                    fseek(f,-1,SEEK_CUR);
+                    fseek(fi,-1,SEEK_CUR);
                     
 		    //if unix end of lines
-                    if(fgetc(f)!='\n')
+                    if(fgetc(fi)!='\n')
                     	fseek(f,-1,SEEK_CUR);
                 }
                 //in the eof case?
                 else if(lbuf-1+pos==new_pos && buf[lbuf-1]=='\n' && buf[lbuf-2]!='\r')
-                    fseek(f,+1,SEEK_CUR);
+                    fseek(fi,+1,SEEK_CUR);
                 else
                     PLERROR("In TextFilesVMatrix::buildId - The number of characters read "
                             "does not match the position in the file.");
@@ -225,6 +226,50 @@ void TextFilesVMatrix::setColumnNamesAndWidth()
     TVec<string> fnames;
     TVec<string> fnames_header;//field names take in the header of source file
     char buf[50000];
+
+
+    //select witch delimiter we will use for all the files.
+    if(delimiter.size()>1){
+        FILE* f = txtfiles[0];
+        fseek(f,0,SEEK_SET);
+        if(!fgets(buf, sizeof(buf), f))
+            PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                    "Couldn't read the fields names from file '%s'",
+                    txtfilenames[0].c_str());
+
+        string s1 = string(buf);
+        if(!fgets(buf, sizeof(buf), f))
+            PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - "
+                    "Couldn't read the fields names from file '%s'",
+                    txtfilenames[0].c_str());
+        string s2 = string(buf);
+        TVec<int> nbs1(delimiter.size());
+        TVec<int> nbs2(delimiter.size());
+        
+        string old_delimiter = delimiter;
+        for(uint i=0;i<old_delimiter.size();i++){
+            delimiter = old_delimiter[i];
+            TVec<string> fields1 = splitIntoFields(s1);
+            TVec<string> fields2 = splitIntoFields(s2);
+            nbs1[i]=fields1.size();
+            nbs2[i]=fields2.size();
+        }
+        delimiter=old_delimiter;
+        for(uint i=0;i<old_delimiter.size();i++){
+            if(nbs1[i]==nbs2[i]&& nbs1[i]>0){
+                delimiter = old_delimiter[i];
+            }
+        }
+        MODULE_LOG << "Selected delimiter: <" << delimiter << ">" << endl;
+        if(delimiter.size()!=1){
+            PLERROR("In TextFilesVMatrix::setColumnNamesAndWidth() - We can't"
+                    " automatically determine the delimiter to use as the two"
+                    " first row don't have a common delimiter with the same"
+                    " number of occurence. nbs1=%s, nbs2=%s",
+                    tostring(nbs1).c_str(),tostring(nbs2).c_str());
+        }
+    }
+    PLCHECK(delimiter.size()==1);
 
     //read the fieldnames from the files.
     for(int i=0; i<txtfiles.size(); i++){
@@ -921,7 +966,9 @@ void TextFilesVMatrix::declareOptions(OptionList& ol)
                   "Delimiter to use to split the fields.  Common delimiters are:\n"
                   "- \"\\t\" : used for SAS files (the default)\n"
                   "- \",\"  : used for CSV files\n"
-                  "- \";\"  : used for a variant of CSV files");
+                  "- \";\"  : used for a variant of CSV files\n"
+                  "If more then 1 delimiter, we will select one based on the"
+                  " first two line\n");
 
     declareOption(ol, "quote_delimiter", &TextFilesVMatrix::quote_delimiter, OptionBase::buildoption,
         "The escape character to indicate the delimiter is not considered.\n"
