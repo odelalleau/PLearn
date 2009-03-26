@@ -155,7 +155,7 @@ void TextFilesVMatrix::buildIdx()
             // Should be safe to enable in all case, but need to be tester more widely.
             long new_pos = ftell(fi);
             long lbuf = long(strlen(buf));
-            if (lbuf+pos != new_pos)
+            if (lbuf+pos != new_pos){
                 if(lbuf+1+pos==new_pos && buf[lbuf-1]=='\n' && buf[lbuf-2]!='\r')
                 {
                     //bug under windows. fgets return the good string if unix end of lines, but
@@ -167,7 +167,7 @@ void TextFilesVMatrix::buildIdx()
                     
 		    //if unix end of lines
                     if(fgetc(fi)!='\n')
-                    	fseek(f,-1,SEEK_CUR);
+                    	fseek(fi,-1,SEEK_CUR);
                 }
                 //in the eof case?
                 else if(lbuf-1+pos==new_pos && buf[lbuf-1]=='\n' && buf[lbuf-2]!='\r')
@@ -175,6 +175,7 @@ void TextFilesVMatrix::buildIdx()
                 else
                     PLERROR("In TextFilesVMatrix::buildId - The number of characters read "
                             "does not match the position in the file.");
+            }
 #endif
 
             buf[sizeof(buf)-1] = '\0';         // ensure null-terminated
