@@ -77,7 +77,7 @@ protected:
     real weighted_targets_sum;
     real weighted_squared_targets_sum;
     real loss_function_factor;
- 
+    static bool output_confidence_target;
 public:
     RegressionTreeLeave();
     virtual              ~RegressionTreeLeave();
@@ -86,6 +86,8 @@ public:
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
+    virtual int          outputsize() const
+    {return output_confidence_target?2:1;}
     void         initLeave(PP<RegressionTreeRegisters> the_train_set, RTR_type_id the_id, bool the_missing_leave = false);
     virtual void         initStats();
     virtual void         addRow(int row);

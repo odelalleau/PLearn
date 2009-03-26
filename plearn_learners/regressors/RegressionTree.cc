@@ -61,14 +61,14 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTree,
                         "and one for the others.\n"
     );
 
+bool RegressionTree::output_confidence_target = false;
+
 RegressionTree::RegressionTree()     
     : missing_is_valid(false),
       loss_function_weight(1.0),
       maximum_number_of_nodes(400),
       compute_train_stats(1),
-      complexity_penalty_factor(0.0),
-      output_confidence_target(false)
-
+      complexity_penalty_factor(0.0)
 {
 }
 
@@ -93,13 +93,10 @@ void RegressionTree::declareOptions(OptionList& ol)
                   "If the error inprovement for the next split is less than the result, the algorithm proceed to an early stop."
                   "(When set to 0.0, the default value, it has no impact).");
 
-    declareOption(ol, "output_confidence_target",
+    declareStaticOption(ol, "output_confidence_target",
                   &RegressionTree::output_confidence_target,
                   OptionBase::buildoption,
-                  "If false the output size is 1 and contain only the predicted"
-                  " target. Else output size is 2 and contain also the"
-                  " confidence\n");
-
+                  "to reload old learner.");
 
     declareOption(ol, "multiclass_outputs", &RegressionTree::multiclass_outputs, OptionBase::buildoption,
                   "A vector of possible output values when solving a multiclass problem.\n"
@@ -152,7 +149,7 @@ void RegressionTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(first_leave, copies);
     deepCopyField(split_cols, copies);
     deepCopyField(split_values, copies);
-    deepCopyField(tmp_vec, copies);
+    //deepCopyField(tmp_vec, copies); not needed as we don't use it.
     
 }
 
@@ -196,7 +193,6 @@ void RegressionTree::build_()
                     weightsize);
     }
 
-    tmp_vec.resize(2);
     nodes = new TVec<PP<RegressionTreeNode> >();
     tmp_computeCostsFromOutput.resize(outputsize());
     
@@ -367,14 +363,6 @@ PP<RegressionTreeNode> RegressionTree::expandTree()
     return node; 
 }
 
-int RegressionTree::outputsize() const
-{
-    if(output_confidence_target)
-        return 2;
-    else
-        return 1;
-}
-
 TVec<string> RegressionTree::getTrainCostNames() const
 {
     TVec<string> return_msg(5);
@@ -407,24 +395,13 @@ PP<RegressionTreeRegisters> RegressionTree::getSortedTrainingSet() const
 }
 void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
-    if(!output_confidence_target){
-        computeOutputAndNodes(inputv, tmp_vec);
-        outputv[0]=tmp_vec[0];
-    }
-    else
-        computeOutputAndNodes(inputv, outputv);
-        
+    computeOutputAndNodes(inputv, outputv);
 }
 
 void RegressionTree::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
                                            TVec<PP<RegressionTreeNode> >* nodes) const
 {
-    if(!output_confidence_target){
-        root->computeOutputAndNodes(inputv, tmp_vec, nodes);
-        outputv[0]=tmp_vec[0];
-    }
-    else
-        root->computeOutputAndNodes(inputv, outputv, nodes);
+    root->computeOutputAndNodes(inputv, outputv, nodes);
     return;
 }
 
@@ -436,13 +413,9 @@ void RegressionTree::computeOutputAndCosts(const Vec& input,
     PLASSERT(nodes);
     nodes->resize(0);
 
-    computeOutputAndNodes(input, tmp_vec, nodes);
-    if(!output_confidence_target)
-        output[0]=tmp_vec[0];
-    else
-        output<<tmp_vec;
+    computeOutputAndNodes(input, output, nodes);
 
-    computeCostsFromOutputsAndNodes(input, tmp_vec, target, *nodes, costs);
+    computeCostsFromOutputsAndNodes(input, output, target, *nodes, costs);
 }
 
 void RegressionTree::computeCostsFromOutputsAndNodes(const Vec& input,

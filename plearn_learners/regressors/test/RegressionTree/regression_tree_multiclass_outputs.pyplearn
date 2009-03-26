@@ -30,7 +30,7 @@ learner = pl.HyperLearner(
         ,report_progress = 1
         ,forget_when_training_set_changes = 1
 #        ,conf_rated_adaboost = 0
-        ,leave_template = pl.RegressionTreeLeave( )
+        ,leave_template = pl.RegressionTreeLeave(output_confidence_target = 1)
         ),
     tester = pl.PTester(
     splitter = pl.FractionSplitter(splits = TMat(1,3,[ (0,0.75), (0,.75), (0.75,1) ])),

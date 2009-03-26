@@ -85,6 +85,7 @@ targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
 loss_function_factor = 1 ;
+output_confidence_target = 1 ;
 nb_class = 2 ;
 objective_function = "l1" ;
 multiclass_weights_sum = []

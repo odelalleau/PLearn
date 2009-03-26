@@ -53,6 +53,7 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeLeave,
 
 int RegressionTreeLeave::verbosity = 0;
 Vec RegressionTreeLeave::dummy_vec;
+bool RegressionTreeLeave::output_confidence_target = false;
 
 RegressionTreeLeave::RegressionTreeLeave():
     missing_leave(false),
@@ -97,6 +98,13 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
                   "The sum of squared weighted target values for the samples in this leave\n");
     declareOption(ol, "loss_function_factor", &RegressionTreeLeave::loss_function_factor, OptionBase::learntoption,
                   "2 / pow(loss_function_weight, 2.0).\n");
+
+    declareStaticOption(ol, "output_confidence_target",
+                  &RegressionTreeLeave::output_confidence_target,
+                  OptionBase::buildoption,
+                  "If false the output size is 1 and contain only the predicted"
+                  " target. Else output size is 2 and contain also the"
+                  " confidence\n");
 
     declareStaticOption(ol, "output", &RegressionTreeLeave::dummy_vec, OptionBase::nosave,
                   "DEPRECATED");
@@ -194,12 +202,13 @@ void RegressionTreeLeave::removeRow(int row, real target, real weight,
 
 void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
 {
+    real conf = 0;
     if(length_>0){
         output[0] = weighted_targets_sum / weights_sum;
         if (missing_leave != true)
         {
             //we put the most frequent case first as an optimisation
-            output[1] = 1.0;
+            conf = 1.0;
             error[0] = ((weights_sum * output[0] * output[0]) - 
                         (2.0 * weighted_targets_sum * output[0]) + weighted_squared_targets_sum)
                 * loss_function_factor;
@@ -211,17 +220,15 @@ void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
         }
         else
         {
-            output[1] = 0.0;
             error[0] = 0.0;
             error[1] = weights_sum;
             error[2] = 0.0;
         }
     }else{
-        output[0]=MISSING_VALUE;
-        output[1] = 0.0;
+        output[0] = MISSING_VALUE;
         error.clear();
-        return;
     }
+    if(output_confidence_target) output[1] = conf;
 }
 
 void RegressionTreeLeave::printStats()
@@ -231,7 +238,8 @@ void RegressionTreeLeave::printStats()
     Vec error(3);
     getOutputAndError(output,error);
     cout << " o0 " << output[0];
-    cout << " o1 " << output[1];
+    if(output_confidence_target)
+        cout << " o1 " << output[1];
     cout << " e0 " << error[0];
     cout << " e1 " << error[1];
     cout << " ws " << weights_sum;

@@ -28,7 +28,8 @@
                 multiclass_outputs = [
                     0,
                     1
-                    ]
+                    ],
+                output_confidence_target = 1
                 ),
             loss_function_weight = 1,
             maximum_number_of_nodes = 50,

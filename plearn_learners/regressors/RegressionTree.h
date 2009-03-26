@@ -46,10 +46,10 @@
 
 #include <plearn_learners/generic/PLearner.h>
 #include "RegressionTreeRegisters.h"
+#include "RegressionTreeLeave.h"
 namespace PLearn {
 using namespace std;
 class RegressionTreeQueue;
-class RegressionTreeLeave;
 class RegressionTreeNode;
 
 class RegressionTree: public PLearner
@@ -63,16 +63,15 @@ private:
   Build options: they have to be set before training
 */
 
-    bool  missing_is_valid;
+    bool missing_is_valid;
     real loss_function_weight;
     int maximum_number_of_nodes;
     int compute_train_stats;   
     real complexity_penalty_factor;
-    bool output_confidence_target;
     Vec multiclass_outputs;
     PP<RegressionTreeLeave> leave_template;    
     PP<RegressionTreeRegisters> sorted_train_set;
-  
+    static bool output_confidence_target; //to reload old computer
 /*
   Learnt options: they are sized and initialized if need be, at stage 0
 */
@@ -107,7 +106,7 @@ public:
     virtual void         train();
     virtual void         finalize();
     virtual void         forget();
-    virtual int          outputsize() const;
+    virtual int          outputsize() const {return leave_template->outputsize();}
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
     PP<RegressionTreeRegisters> getSortedTrainingSet() const;

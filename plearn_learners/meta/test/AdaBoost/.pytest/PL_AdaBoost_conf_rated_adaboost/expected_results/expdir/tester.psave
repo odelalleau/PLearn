@@ -68,7 +68,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1  )
+loss_function_factor = 1 ;
+output_confidence_target = 1  )
 ;
 root = *0 ;
 priority_queue = *0 ;
@@ -193,6 +194,7 @@ verbosity = 0  )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 0 ;
+finalize_learner = 0 ;
 learner = *6  ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;

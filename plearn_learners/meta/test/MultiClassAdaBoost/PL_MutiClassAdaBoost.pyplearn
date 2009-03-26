@@ -20,7 +20,7 @@ learner=pl.MultiClassAdaBoost(
             verbosity = 2,
             report_progress = 1,
             forget_when_training_set_changes = 1,
-            leave_template = pl.RegressionTreeLeave( )
+            leave_template = pl.RegressionTreeLeave(output_confidence_target = 1)
             ),
         test_minibatch_size=plargs.tms,
         weight_by_resampling=0,

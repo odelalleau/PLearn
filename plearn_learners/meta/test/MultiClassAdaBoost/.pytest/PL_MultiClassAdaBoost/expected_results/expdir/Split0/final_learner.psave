@@ -277,7 +277,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *10 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -299,7 +300,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *12 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -321,7 +323,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -349,7 +352,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *16 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -371,7 +375,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -399,7 +404,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -431,7 +437,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -486,7 +493,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1  )
+loss_function_factor = 1 ;
+output_confidence_target = 1  )
 ;
 root = *0 ;
 priority_queue = *0 ;
@@ -572,7 +580,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *28 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -594,7 +603,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *30 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -616,7 +626,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -644,7 +655,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *34 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -666,7 +678,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -694,7 +707,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -726,7 +740,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -781,7 +796,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1  )
+loss_function_factor = 1 ;
+output_confidence_target = 1  )
 ;
 root = *0 ;
 priority_queue = *0 ;
@@ -867,7 +883,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1  )
+loss_function_factor = 1 ;
+output_confidence_target = 1  )
 ;
 root = *0 ;
 priority_queue = *0 ;

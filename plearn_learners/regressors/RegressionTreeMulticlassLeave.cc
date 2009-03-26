@@ -216,6 +216,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
         error.clear();
         return;
     }
+    real conf = 0;
     int mc_winer = 0;
     //index of the max. Is their an optimized version?
     for (int mc_ind = 1; mc_ind < multiclass_outputs.length(); mc_ind++)
@@ -226,14 +227,13 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
     output[0] = multiclass_outputs[mc_winer];
     if (missing_leave)
     {
-        output[1] = 0.0;
         error[0] = 0.0;
         error[1] = weights_sum;
         error[2] = 0.0;
     }
     else
     {
-        output[1] = multiclass_weights_sum[mc_winer] / weights_sum;;
+        conf = multiclass_weights_sum[mc_winer] / weights_sum;;
         error[0] = 0.0;
         if (objective_function == "l1")
         {
@@ -261,8 +261,9 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
                 error[2] = weights_sum * l2_loss_function_factor; 
             else error[2] = error[0];
         }
-        error[1] = (1.0 - output[1]) * length_;
+        error[1] = (1.0 - conf) * length_;
     }
+    if(output_confidence_target) output[1] = conf;
 }
 
 void RegressionTreeMulticlassLeave::printStats()

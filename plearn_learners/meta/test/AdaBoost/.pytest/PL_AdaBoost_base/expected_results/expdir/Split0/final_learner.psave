@@ -260,7 +260,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *9 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -282,7 +283,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *11 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -304,7 +306,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -332,7 +335,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *15 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -354,7 +358,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -382,7 +387,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -414,7 +420,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *21 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -436,7 +443,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -464,7 +472,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -526,7 +535,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *28 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -548,7 +558,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *30 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -570,7 +581,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -598,7 +610,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -628,7 +641,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *36 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -650,7 +664,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *38 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -672,7 +687,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -700,7 +716,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -730,7 +747,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -792,7 +810,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *47 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -814,7 +833,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *49 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -836,7 +856,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *51 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -858,7 +879,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -886,7 +908,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *55 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -908,7 +931,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -936,7 +960,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -968,7 +993,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -998,7 +1024,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1058,7 +1085,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *66 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1080,7 +1108,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *68 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1102,7 +1131,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *70 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1124,7 +1154,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1152,7 +1183,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1182,7 +1214,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1212,7 +1245,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *78 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1234,7 +1268,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1262,7 +1297,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1324,7 +1360,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *85 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1346,7 +1383,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1374,7 +1412,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *89 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1396,7 +1435,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1424,7 +1464,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *93 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1446,7 +1487,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1474,7 +1516,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *97 ->RegressionTreeNode(
 missing_is_valid = 0 ;
@@ -1496,7 +1539,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1524,7 +1568,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 2  )
+loss_function_factor = 2 ;
+output_confidence_target = 1  )
 ;
 left_node = *0 ;
 left_leave = *0 ;
@@ -1585,7 +1630,8 @@ weights_sum = 0 ;
 targets_sum = 0 ;
 weighted_targets_sum = 0 ;
 weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1  )
+loss_function_factor = 1 ;
+output_confidence_target = 1  )
 ;
 root = *0 ;
 priority_queue = *0 ;
@@ -1709,6 +1755,7 @@ verbosity = 0  )
 ] ;
 provide_strategy_expdir = 1 ;
 save_final_learner = 0 ;
+finalize_learner = 0 ;
 learner = *5  ;
 provide_learner_expdir = 1 ;
 expdir_append = "" ;

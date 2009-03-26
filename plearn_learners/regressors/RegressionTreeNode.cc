@@ -214,7 +214,7 @@ void RegressionTreeNode::initNode(PP<RegressionTree> the_tree,
     right_leave = ::PLearn::deepCopy(leave_template);
     right_leave->initLeave(the_train_set, right_leave_id);
 
-    leave_output.resize(2);
+    leave_output.resize(leave_template->outputsize());
     leave_error.resize(3);
 
     leave->getOutputAndError(leave_output,leave_error);
@@ -496,8 +496,7 @@ void RegressionTreeNode::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
         nodes->append(this);
     if (!left_node)
     {
-        outputv[0] = leave_output[0];
-        outputv[1] = leave_output[1];
+        outputv << leave_output;
         return;
     }
     if (is_missing(inputv[split_col]))

@@ -8,7 +8,7 @@
             complexity_penalty_factor = 0.0,
             compute_train_stats = 1,
             forget_when_training_set_changes = 1,
-            leave_template = *2 -> RegressionTreeLeave( ),
+            leave_template = *2 -> RegressionTreeLeave( output_confidence_target = 1 ),
             loss_function_weight = 1,
             maximum_number_of_nodes = 50,
             multiclass_outputs = [
