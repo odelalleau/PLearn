@@ -426,7 +426,7 @@ void RegressionTree::computeCostsFromOutputsAndNodes(const Vec& input,
 {
     costs.clear();
     costs[0] = pow((output[0] - target[0]), 2);
-    if(output.length()>1) costs[1] = output[1];
+    if(leave_template->output_confidence_target) costs[1] = output[1];
     else costs[1] = MISSING_VALUE;
     costs[2] = 1.0 - (l2_loss_function_factor * costs[0]);
     costs[3] = 1.0 - (l1_loss_function_factor * abs(output[0] - target[0]));

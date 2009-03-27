@@ -191,6 +191,8 @@
 #include <plearn_learners/regressors/RegressionTree.h>
 #include <plearn_learners/regressors/RegressionTreeMulticlassLeave.h>
 #include <plearn_learners/regressors/RegressionTreeMulticlassLeaveFast.h>
+#include <plearn_learners/regressors/RegressionTreeMulticlassLeaveProb.h>
+
 // Unsupervised
 #include <plearn_learners/unsupervised/UniformizeLearner.h>
 

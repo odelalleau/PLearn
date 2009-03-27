@@ -1,0 +1,11 @@
+HyperLearner: starting the optimization
+split_cols: []
+
+split_values: []
+
+split_cols: 1 
+split_values: 0.547790627008831965 
+split_cols: 1 0 
+split_values: 0.547790627008831965 1.88430442629138994 
+split_cols: 1 0 0 
+split_values: 0.547790627008831965 1.88430442629138994 3.07754902034128275 

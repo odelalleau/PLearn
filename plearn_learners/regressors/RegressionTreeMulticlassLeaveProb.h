@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// RegressionTreeLeave.h
+// RegressionTreeMulticlassLeaveProb.h
 // Copyright (c) 1998-2002 Pascal Vincent
 // Copyright (C) 1999-2002 Yoshua Bengio and University of Montreal
 // Copyright (c) 2002 Jean-Sebastien Senecal, Xavier Saint-Mleux, Rejean Ducharme
@@ -35,83 +35,62 @@
 
 
 /* *********************************************************************************   
- * $Id: RegressionTreeLeave.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
+ * $Id: RegressionTreeMulticlassLeaveProb.h, v 1.0 2004/07/19 10:00:00 Bengio/Kegl/Godbout     *
  * This file is part of the PLearn library.                                      *
  ********************************************************************************* */
 
-#ifndef RegressionTreeLeave_INC
-#define RegressionTreeLeave_INC
+#ifndef RegressionTreeMulticlassLeaveProb_INC
+#define RegressionTreeMulticlassLeaveProb_INC
 
-#include <plearn/base/Object.h>
-#include "RegressionTreeRegisters.h"
+#include "RegressionTreeLeave.h"
+
 namespace PLearn {
 using namespace std;
 
-class RegressionTreeLeave: public Object
+class RegressionTreeMulticlassLeaveProb: public RegressionTreeLeave
 {
-    typedef Object inherited;
- 
-    static Vec dummy_vec;
-
-public:
-    bool missing_leave;
-    real loss_function_weight;
-    static int  verbosity;
+    typedef RegressionTreeLeave inherited;
+  
+private:
 
 /*
   Build options: they have to be set before building
 */
-    RTR_type_id  id;
-    PP<RegressionTreeRegisters> train_set;
-    static bool output_confidence_target;
 
-protected:
- 
+    int nb_class;
+    string objective_function;   
+    
 /*
   Learnt options: they are sized and initialized if need be, in initLeave(...)
 */
-    int  length_;
-    real weights_sum;
-    real targets_sum;
-    real weighted_targets_sum;
-    real weighted_squared_targets_sum;
-    real loss_function_factor;
 
+    Vec multiclass_weights_sum;
+ 
 public:
-    RegressionTreeLeave();
-    virtual              ~RegressionTreeLeave();
-    PLEARN_DECLARE_OBJECT(RegressionTreeLeave);
+    RegressionTreeMulticlassLeaveProb();
+    virtual              ~RegressionTreeMulticlassLeaveProb();
+    PLEARN_DECLARE_OBJECT(RegressionTreeMulticlassLeaveProb);
 
     static  void         declareOptions(OptionList& ol);
     virtual void         makeDeepCopyFromShallowCopy(CopiesMap &copies);
     virtual void         build();
-    virtual int          outputsize() const
-    {return output_confidence_target?2:1;}
-    void         initLeave(PP<RegressionTreeRegisters> the_train_set, RTR_type_id the_id, bool the_missing_leave = false);
-    virtual void         initStats();
-    virtual void         addRow(int row);
-    virtual void         addRow(int row, real target, real weight);
-    virtual void         addRow(int row, Vec outputv, Vec errorv);
-    virtual void         addRow(int row, real target, real weight, Vec outputv, Vec errorv);
-    virtual void         removeRow(int row, real target, real weight);
-    virtual void         removeRow(int row, Vec outputv, Vec errorv);
-    virtual void         removeRow(int row, real target, real weight, Vec outputv, Vec errorv);
-    inline void          registerRow(int row)
-    {train_set->registerLeave(id, row);}
-    inline int           getId()const{return id;}
-    inline int           length()const{return length_;}
-    virtual void         getOutputAndError(Vec& output, Vec& error)const;
-    virtual void         printStats();
-    inline real          getWeightsSum(){return weights_sum;}
-    inline real          getTargetsSum(){return targets_sum;}
-    virtual bool         uniqTarget();
-
+    virtual int          outputsize() const {return nb_class+1;}
+    void         initStats();
+    void         addRow(int row);
+    void         addRow(int row, real target, real weight);
+    void         addRow(int row, Vec outputv, Vec errorv);
+    void         addRow(int row, real target, real weight, Vec outputv, Vec errorv);
+    void         removeRow(int row, real target, real weight);
+    void         removeRow(int row, Vec outputv, Vec errorv);
+    void         removeRow(int row, real target, real weight, Vec outputv, Vec errorv);
+    void         getOutputAndError(Vec& output, Vec& error)const;
+    void         printStats();
+  
 private:
     void         build_();
-    void         verbose(string msg, int level);
 };
 
-DECLARE_OBJECT_PTR(RegressionTreeLeave);
+DECLARE_OBJECT_PTR(RegressionTreeMulticlassLeaveProb);
 
 } // end of namespace PLearn
 

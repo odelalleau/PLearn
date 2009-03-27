@@ -1,0 +1,116 @@
+*12 -> PTester(
+    dataset = *3 -> ConcatRowsVMatrix(
+        inputsize = 2,
+        sources = [
+            *1 -> AutoVMatrix(
+                inputsize = 2,
+                specification = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_train.amat",
+                targetsize = 1
+                ),
+            *2 -> AutoVMatrix(
+                inputsize = 2,
+                specification = "PLEARNDIR:examples/data/test_suite/eslt_mixture/data_test.amat",
+                targetsize = 1
+                )
+            ],
+        targetsize = 1,
+        weightsize = 0
+        ),
+    expdir = "expdir",
+    learner = *10 -> HyperLearner(
+        dont_restart_upon_change = [ "nstages" ],
+        forget_when_training_set_changes = 0,
+        learner = *5 -> RegressionTree(
+            complexity_penalty_factor = 0.0,
+            compute_train_stats = 1,
+            forget_when_training_set_changes = 1,
+            leave_template = *4 -> RegressionTreeMulticlassLeaveProb( nb_class = 2 ),
+            loss_function_weight = 1,
+            maximum_number_of_nodes = 50,
+            nstages = 10,
+            output_confidence_target = 1,
+            report_progress = 1,
+            verbosity = 2
+            ),
+        nstages = 1,
+        option_fields = [ "nstages" ],
+        provide_learner_expdir = 1,
+        provide_strategy_expdir = 1,
+        report_progress = 1,
+        save_final_learner = 0,
+        strategy = [
+            *7 -> HyperOptimize(
+                oracle = *6 -> EarlyStoppingOracle(
+                    max_degradation = 3.40282e+38,
+                    max_degraded_steps = 120,
+                    max_value = 3.40282e+38,
+                    min_improvement = -3.40282e+38,
+                    min_n_steps = 2,
+                    min_value = -3.40282e+38,
+                    option = "nstages",
+                    range = [
+                        1,
+                        5,
+                        1
+                        ],
+                    relative_max_degradation = -1,
+                    relative_min_improvement = -1
+                    ),
+                provide_tester_expdir = 1,
+                which_cost = "E[test2.E[class_error]]"
+                )
+            ],
+        tester = *9 -> PTester(
+            provide_learner_expdir = 1,
+            report_stats = 1,
+            save_data_sets = 0,
+            save_initial_learners = 0,
+            save_initial_tester = 0,
+            save_learners = 0,
+            save_test_confidence = 0,
+            save_test_costs = 0,
+            save_test_names = 0,
+            save_test_outputs = 0,
+            splitter = *8 -> FractionSplitter(
+                splits = 1 3 [
+                        (0, 200),
+                        (0, 200),
+                        (200, 1)
+                        ]
+                ),
+            statnames = [
+                "E[test1.E[class_error]]",
+                "E[test1.E[base_confidence]]",
+                "E[test1.E[base_reward_l2]]",
+                "E[test1.E[base_reward_l1]]",
+                "E[test2.E[class_error]]",
+                "E[test2.E[base_confidence]]",
+                "E[test2.E[base_reward_l2]]",
+                "E[test2.E[base_reward_l1]]"
+                ]
+            ),
+        verbosity = 1
+        ),
+    provide_learner_expdir = 1,
+    save_learners = 0,
+    save_test_confidence = 0,
+    save_test_costs = 1,
+    save_test_outputs = 1,
+    splitter = *11 -> FractionSplitter(
+        splits = 1 3 [
+                (0, 1),
+                (0, 200),
+                (200, 1)
+                ]
+        ),
+    statnames = [
+        "E[test1.E[class_error]]",
+        "E[test1.E[base_confidence]]",
+        "E[test1.E[base_reward_l2]]",
+        "E[test1.E[base_reward_l1]]",
+        "E[test2.E[class_error]]",
+        "E[test2.E[base_confidence]]",
+        "E[test2.E[base_reward_l2]]",
+        "E[test2.E[base_reward_l1]]"
+        ]
+    )
