@@ -142,7 +142,7 @@ void RegressionTree::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(compute_train_stats, copies);
     deepCopyField(complexity_penalty_factor, copies);
     deepCopyField(multiclass_outputs, copies);
-    deepCopyField(leave_template, copies);
+//    deepCopyField(leave_template, copies);We don't need to deepCopy it as we only read it
     deepCopyField(sorted_train_set, copies);
     deepCopyField(root, copies);
     deepCopyField(priority_queue, copies);
@@ -279,7 +279,7 @@ void RegressionTree::finalize()
     priority_queue = 0;
     split_cols = TVec<int>();
     split_values = Vec();
-    leave_template = 0;
+//    leave_template = 0; we need it to reload a saved learner.
     first_leave = 0;
     //we should not finalize the train_set and the sorted_train_set here 
     //as AdaBoost share it between different weak_learners!

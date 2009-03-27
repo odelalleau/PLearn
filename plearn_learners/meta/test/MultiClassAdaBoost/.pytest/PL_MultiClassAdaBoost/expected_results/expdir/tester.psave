@@ -161,19 +161,7 @@ compute_train_stats = 0 ;
 complexity_penalty_factor = 0 ;
 output_confidence_target = 0 ;
 multiclass_outputs = 3 [ 0 1 2 ] ;
-leave_template = *12 ->RegressionTreeLeave(
-id = 0 ;
-missing_leave = 0 ;
-loss_function_weight = 0 ;
-verbosity = 0 ;
-length = 0 ;
-weights_sum = 0 ;
-targets_sum = 0 ;
-weighted_targets_sum = 0 ;
-weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1 ;
-output_confidence_target = 1  )
-;
+leave_template = *9  ;
 root = *0 ;
 priority_queue = *0 ;
 first_leave = *0 ;
@@ -229,7 +217,7 @@ use_a_separate_random_generator_for_testing = 1827 ;
 finalized = 0  )
 ;
 forward_sub_learner_test_costs = 1 ;
-learner_template = *13 ->AdaBoost(
+learner_template = *12 ->AdaBoost(
 weak_learners = []
 ;
 voting_weights = []
@@ -240,7 +228,7 @@ example_weights = []
 ;
 learners_error = []
 ;
-weak_learner_template = *14 ->RegressionTree(
+weak_learner_template = *13 ->RegressionTree(
 missing_is_valid = 0 ;
 loss_function_weight = 1 ;
 maximum_number_of_nodes = 3 ;
@@ -248,19 +236,7 @@ compute_train_stats = 0 ;
 complexity_penalty_factor = 0 ;
 output_confidence_target = 0 ;
 multiclass_outputs = 3 [ 0 1 2 ] ;
-leave_template = *15 ->RegressionTreeLeave(
-id = 0 ;
-missing_leave = 0 ;
-loss_function_weight = 0 ;
-verbosity = 0 ;
-length = 0 ;
-weights_sum = 0 ;
-targets_sum = 0 ;
-weighted_targets_sum = 0 ;
-weighted_squared_targets_sum = 0 ;
-loss_function_factor = 1 ;
-output_confidence_target = 1  )
-;
+leave_template = *9  ;
 root = *0 ;
 priority_queue = *0 ;
 first_leave = *0 ;
@@ -346,10 +322,10 @@ redirect_stderr = 0  )
 ;
 option_fields = 1 [ "nstages" ] ;
 dont_restart_upon_change = 1 [ "nstages" ] ;
-strategy = 1 [ *16 ->HyperOptimize(
+strategy = 1 [ *14 ->HyperOptimize(
 which_cost = "E[test2.E[class_error]]" ;
 min_n_trials = 0 ;
-oracle = *17 ->EarlyStoppingOracle(
+oracle = *15 ->EarlyStoppingOracle(
 option = "nstages" ;
 values = []
 ;
