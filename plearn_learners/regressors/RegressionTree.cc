@@ -389,10 +389,17 @@ TVec<string> RegressionTree::getTestCostNames() const
     }
     return costs;
 }
+
+TVec<string> RegressionTree::getOutputNames() const
+{
+    return leave_template->getOutputNames();
+}
+
 PP<RegressionTreeRegisters> RegressionTree::getSortedTrainingSet() const
 {
     return sorted_train_set;
 }
+
 void RegressionTree::computeOutput(const Vec& inputv, Vec& outputv) const
 {
     computeOutputAndNodes(inputv, outputv);

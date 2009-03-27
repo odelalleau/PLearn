@@ -232,6 +232,15 @@ void RegressionTreeMulticlassLeaveFast::getOutputAndError(Vec& output, Vec& erro
     if(output_confidence_target) output[1] = conf;
 }
 
+TVec<string> RegressionTreeMulticlassLeaveFast::getOutputNames() const
+{
+    TVec<string> ret;
+    ret.append("class_pred");
+    if(output_confidence_target)
+        ret.append("confidence");
+    return ret;
+}
+
 void RegressionTreeMulticlassLeaveFast::printStats()
 {
     cout << " l " << length_;

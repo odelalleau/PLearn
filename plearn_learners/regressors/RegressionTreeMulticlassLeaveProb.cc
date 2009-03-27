@@ -233,6 +233,17 @@ void RegressionTreeMulticlassLeaveProb::getOutputAndError(Vec& output, Vec& erro
     }
 }
 
+TVec<string> RegressionTreeMulticlassLeaveProb::getOutputNames() const
+{
+    TVec<string> ret(nb_class+1);
+    ret[0]="class_pred";
+    for (int mc_ind = 0; mc_ind < nb_class;mc_ind++)
+    {
+        ret[mc_ind+1]="prob_class_"+tostring(mc_ind);
+    }
+    return ret;
+}
+
 void RegressionTreeMulticlassLeaveProb::printStats()
 {
     cout << " l " << length_;

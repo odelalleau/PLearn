@@ -101,6 +101,7 @@ public:
     inline int           getId()const{return id;}
     inline int           length()const{return length_;}
     virtual void         getOutputAndError(Vec& output, Vec& error)const;
+    virtual TVec<string> getOutputNames() const;
     virtual void         printStats();
     inline real          getWeightsSum(){return weights_sum;}
     inline real          getTargetsSum(){return targets_sum;}

@@ -231,6 +231,15 @@ void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
     if(output_confidence_target) output[1] = conf;
 }
 
+TVec<string> RegressionTreeLeave::getOutputNames() const
+{
+    TVec<string> ret;
+    ret.append("val_pred");
+    if(output_confidence_target)
+        ret.append("confidence");
+    return ret;
+}
+
 void RegressionTreeLeave::printStats()
 {
     cout << " l " << length_;

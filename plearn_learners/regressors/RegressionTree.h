@@ -109,6 +109,7 @@ public:
     virtual int          outputsize() const {return leave_template->outputsize();}
     virtual TVec<string> getTrainCostNames() const;
     virtual TVec<string> getTestCostNames() const;
+    virtual TVec<string> getOutputNames() const;
     PP<RegressionTreeRegisters> getSortedTrainingSet() const;
     virtual void         computeOutput(const Vec& input, Vec& output) const;
     virtual void         computeOutputAndCosts(const Vec& input,

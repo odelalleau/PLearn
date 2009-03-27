@@ -83,6 +83,7 @@ public:
     void         removeRow(int row, Vec outputv, Vec errorv);
     void         removeRow(int row, real target, real weight, Vec outputv, Vec errorv);
     void         getOutputAndError(Vec& output, Vec& error)const;
+    TVec<string> getOutputNames() const;
     void         printStats();
   
 private:
