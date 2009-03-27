@@ -691,8 +691,8 @@ public:
                 x[k] = row[j];
     }
 
-    //! copy a column to a C vector starting at x
-    //! This is fct is thead safe!
+    //! Copy a column to a C vector starting at x.
+    //! This function is thread safe.
     void copyColumnTo(int col, T* x) const
     {
         T* s = data()+col;
