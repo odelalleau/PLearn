@@ -421,7 +421,8 @@ class confirm( PyTestMode ):
                     if os.path.exists(svn_results):
                         expected_results = test.resultsDirectory(tests.EXPECTED_RESULTS)
                         confirmed_results = expected_results+'.confirmed'
-                        shutil.rmtree(confirmed_results)#in case we crashed
+                        if os.path.exists(confirmed_results):
+                            shutil.rmtree(confirmed_results)#in case we crashed
                         os.rename(expected_results, confirmed_results)
                         os.rename(svn_results, expected_results)
                         self.migrate_results_trees(expected_results, confirmed_results)
