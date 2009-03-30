@@ -129,7 +129,10 @@ void ConfigParsing::run(const vector<string>& args)
             f_imputation << endl;
         }
         if(!r[5].empty() && !remove){
-            f_dichotomize <<r[0]<<" : ["<< (r[5]) << " ]"<<endl;
+            string s = r[0];
+            if(s[s.length()-1]=='*')
+                s=s.substr(0,s.length()-1);
+            f_dichotomize << s <<" : ["<< r[5] << " ]"<<endl;
         }
     }
 }
