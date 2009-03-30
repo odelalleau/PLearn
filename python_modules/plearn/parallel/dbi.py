@@ -727,7 +727,7 @@ class DBIBqtools(DBIBase):
         # Execute pre-batch
         self.exec_pre_batch()
 
-        print "[DBI] All the log will be in the directory: ",self.log_dir
+        print "[DBI] All logs will be in the directory: ",self.log_dir
         # Launch bqsubmit
         if not self.test:
             for t in self.tasks:
@@ -736,11 +736,11 @@ class DBIBqtools(DBIBase):
             self.p.wait()
             
             if self.p.returncode!=0:
-                raise DBIError("[DBI] ERROR: the bqsubmit returned an error code of"+str(self.p.returncode))
+                raise DBIError("[DBI] ERROR: bqsubmit returned an error code of"+str(self.p.returncode))
         else:
-            print "[DBI] Test mode, we generate all the file, but we do not execute bqsubmit"
+            print "[DBI] Test mode, we generated all files, but will not execute bqsubmit"
             if self.dolog:
-                print "[DBI] The scheduling time will not be logged when you will submit the generated file"
+                print "[DBI] The scheduling time will not be logged when you submit the generated file"
 
         # Execute post-batchs
         self.exec_post_batch()
