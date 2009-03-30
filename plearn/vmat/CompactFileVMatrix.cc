@@ -488,6 +488,8 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
                 current_v += max + 1;
         }
     }
+
+    free(buffer);
 }
 
 ///////////////
