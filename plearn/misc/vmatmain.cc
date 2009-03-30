@@ -286,6 +286,31 @@ int print_diff(ostream& out, VMat m1, VMat m2, double tolerance, int verbose)
             << m2.length() << " x " << m2.width() << endl;
         return -1;
     }
+    if(m1->getFieldInfos()!=m2->getFieldInfos()){
+        Array<VMField> a1=m1->getFieldInfos();
+        Array<VMField> a2=m2->getFieldInfos();
+        if(verbose)
+            pout << "Field infos differ:";
+        //compare fieldnames
+        for(int i=0;i<m1.width();i++){
+            if(a1[i].name!=a2[i].name){
+                ++ndiff;
+                if(verbose)
+                    pout << " " << a1[i].name << "!=" << a2[i].name;
+            }
+        }
+        //compare fieldtype
+        for(int i=0;i<m1.width();i++){
+            if(a1[i].fieldtype!=a2[i].fieldtype){
+                ++ndiff;
+                if(verbose)
+                    pout << " " << a1[i].fieldtype << "!=" << a2[i].fieldtype;
+            }
+        }
+        if(verbose)
+            pout <<endl;
+        
+    }
     int l = m1.length();
     int w = m1.width();
     Vec v1(w);
