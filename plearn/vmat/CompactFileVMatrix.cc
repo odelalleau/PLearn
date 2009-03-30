@@ -409,7 +409,7 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
 #endif
 
     unsigned char* buffer;
-    bool m_flag; // to check if we allocated the buffer using malloc
+    bool m_flag=false; // to check if we allocated the buffer using malloc
 
     if (in_ram_ && (cache_index[i/8] & (1 << (i%8)))) {
         buffer = (unsigned char*)(cache.data() + (i*compact_width_));
