@@ -221,43 +221,61 @@ void RegressionTreeRegisters::reinitRegisters()
 }
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg,
-                                                  TVec<RTR_target_t> &target,
-                                                  TVec<RTR_weight_t> &weight,
+                                                  TVec<pair<RTR_target_t,RTR_weight_t> > &t_w,
                                                   Vec &value) const
 {
     PLASSERT(tsource_mat.length()==tsource.length());
 
     getAllRegisteredRow(leave_id,col,reg);
-    target.resize(reg.length());
-    weight.resize(reg.length());
+    t_w.resize(reg.length());
     value.resize(reg.length());
     real * p = tsource_mat[col];
     pair<RTR_target_t,RTR_weight_t> * ptw = target_weight.data();
-    RTR_target_t * pt = target.data();
-    RTR_weight_t * pw = weight.data();
+    pair<RTR_target_t,RTR_weight_t>* ptwd = t_w.data();
     real * pv = value.data();
     RTR_type * preg = reg.data();
 
     if(weightsize() <= 0){
-        weight.fill(1.0 / length());
+        RTR_weight_t w = 1.0 / length();
         for(int i=0;i<reg.length();i++){
             PLASSERT(tsource->get(col, reg[i])==p[reg[i]]);
             int idx = int(preg[i]);
-            pt[i] = ptw[idx].first;
+            ptwd[i].first = ptw[idx].first;
+            ptwd[i].second = w;
             pv[i] = p[idx];
         }
     } else {
         //It is better to do multiple pass for memory access.
         for(int i=0;i<reg.length();i++){
             int idx = int(preg[i]);
-            pt[i] = ptw[idx].first;
-            pw[i] = ptw[idx].second;
+            ptwd[i].first = ptw[idx].first;
+            ptwd[i].second = ptw[idx].second;
+
         }
         for(int i=0;i<reg.length();i++){
             PLASSERT(tsource->get(col, reg[i])==p[reg[i]]);
-            pv[i] = p[preg[i]];
+            int idx = int(preg[i]);
+            pv[i] = p[idx];
         }
     }
+}
+
+//! reg.size() == the number of row that we will put in it.
+void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id,
+                                                  TVec<RTR_type> &reg) const
+{
+    PLASSERT(tsource_mat.length()==tsource.length());
+
+    int idx=0;
+    int n=reg.length();
+    RTR_type* preg = reg.data();
+    RTR_type_id* pleave_register = leave_register.data();
+    for(int i=0;i<length() && n> idx;i++){
+        if (pleave_register[i] == leave_id){
+            preg[idx++]=i;
+        }
+    }
+    PLASSERT(idx==reg->size());
 }
 
 //! reg.size() == the number of row that we will put in it.
@@ -349,14 +367,13 @@ void RegressionTreeRegisters::sortRows()
         DBG_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix: "<<f<<endl;
         PLearn::save(f,tsorted_row);
     }else{
-        DBG_LOG<<"RegressionTreeRegisters:: can't save the sorted source VMatrix as we don't have a metadatadir"<<endl;
     }
 
 }
   
 void RegressionTreeRegisters::sortEachDim(int dim)
 {
-    PLCHECK(tsource->classname()=="MemoryVMatrixNoSave");
+    PLCHECK_MSG(tsource->classname()=="MemoryVMatrixNoSave",tsource->classname().c_str());
     Mat m = tsource.toMat();
     Vec v = m(dim);
     TVec<int> order = v.sortingPermutation(true, true);

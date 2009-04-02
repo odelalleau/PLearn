@@ -136,7 +136,8 @@ private:
                                                PP<RegressionTreeLeave> right_leave,
                                                PP<RegressionTreeLeave> left_leave,
                                                PP<RegressionTreeRegisters> train_set,
-                                               Vec values, TVec<RTR_target_t> targets, TVec<RTR_weight_t> weights
+                                               Vec values, 
+                                               TVec<pair<RTR_target_t,RTR_weight_t> > t_w
         );
 };
 

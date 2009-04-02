@@ -246,10 +246,11 @@ void RegressionTreeNode::lookForBestSplit()
         return;
     TVec<RTR_type> candidate(0, leave->length());//list of candidate row to split
     TVec<RTR_type> registered_row(leave->length());
-    TVec<RTR_target_t> registered_target(0, leave->length()); 
-    TVec<RTR_weight_t> registered_weight(0, leave->length());
+    TVec<pair<RTR_target_t,RTR_weight_t> > registered_target_weight(leave->length());
+    registered_target_weight.resize(leave->length());
+    registered_target_weight.resize(0);
     Vec registered_value(0, leave->length());
-    tmp_vec.resize(2);
+    tmp_vec.resize(leave->outputsize());
     Vec left_error(3);
     Vec right_error(3);
     Vec missing_error(3);
@@ -273,7 +274,7 @@ void RegressionTreeNode::lookForBestSplit()
         right_leave->initStats();
         
         train_set->getAllRegisteredRow(leave_id, col, registered_row,
-                                       registered_target, registered_weight,
+                                       registered_target_weight,
                                        registered_value);
 
         PLASSERT(registered_row.size()==leave->length());
@@ -291,11 +292,11 @@ void RegressionTreeNode::lookForBestSplit()
             prev_row = registered_row[row_idx_end - 1];
             prev_val = registered_value[row_idx_end - 1];
             if (is_missing(val))
-                missing_leave->addRow(row, registered_target[row_idx_end],
-                                      registered_weight[row_idx_end]);
+                missing_leave->addRow(row, registered_target_weight[row_idx_end].first,
+                                      registered_target_weight[row_idx_end].second);
             else if(val==prev_val)
-                right_leave->addRow(row, registered_target[row_idx_end],
-                                    registered_weight[row_idx_end]);
+                right_leave->addRow(row, registered_target_weight[row_idx_end].first,
+                                    registered_target_weight[row_idx_end].second);
             else
                 break;
         }
@@ -304,11 +305,11 @@ void RegressionTreeNode::lookForBestSplit()
         {
             int row=registered_row[row_idx];
             if (is_missing(registered_value[row_idx]))
-                missing_leave->addRow(row, registered_target[row_idx],
-                                      registered_weight[row_idx]);
+                missing_leave->addRow(row, registered_target_weight[row_idx].first,
+                                      registered_target_weight[row_idx].second);
             else {
-                left_leave->addRow(row, registered_target[row_idx],
-                                   registered_weight[row_idx]);
+                left_leave->addRow(row, registered_target_weight[row_idx].first,
+                                   registered_target_weight[row_idx].second);
                 candidate.append(row);
             }
         }
@@ -318,7 +319,7 @@ void RegressionTreeNode::lookForBestSplit()
                                                 right_error, missing_error,
                                                 right_leave, left_leave,
                                                 train_set, registered_value,
-                                                registered_target, registered_weight);
+                                                registered_target_weight);
 #ifdef RCMP
         row_split_err[col] = get<0>(ret);
         row_split_value[col] = get<1>(ret);
@@ -354,7 +355,7 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     PP<RegressionTreeLeave> right_leave,
     PP<RegressionTreeLeave> left_leave,
     PP<RegressionTreeRegisters> train_set,
-    Vec values, TVec<RTR_target_t> targets, TVec<RTR_weight_t> weights
+    Vec values,TVec<pair<RTR_target_t,RTR_weight_t> > t_w
     )
 {
     int best_balance=INT_MAX;
@@ -381,8 +382,8 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
         PLASSERT(row_feature==values[i+1]);
         next_feature=values[i];
 
-        real target=targets[i+1];
-        real weight=weights[i+1];
+        real target=t_w[i+1].first;
+        real weight=t_w[i+1].second;
         PLASSERT(train_set->get(next_row, col)==values[i]);
         PLASSERT(train_set->get(row, col)==values[i+1]);
         PLASSERT(next_feature<=row_feature);

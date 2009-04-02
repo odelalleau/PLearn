@@ -137,9 +137,10 @@ public:
     inline RTR_type_id     getNextId(){
         PLCHECK(next_id<std::numeric_limits<RTR_type_id>::max());
         next_id += 1;return next_id;}
+    void         getAllRegisteredRow(RTR_type_id leave_id, TVec<RTR_type> &reg)const;
     void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg)const;
     void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
-                                     TVec<RTR_target_t> &target, TVec<RTR_weight_t> &weight, Vec &value)const;
+                                     TVec<pair<RTR_target_t,RTR_weight_t> > &t_w, Vec &value)const;
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
     inline virtual void put(int i, int j, real value)
@@ -152,8 +153,8 @@ public:
     }
     
     //! usefull in MultiClassAdaBoost to save memory
-    TMat<RTR_type> getTSortedRow(){return tsorted_row;}
-    VMat          getTSource(){return tsource;}
+    inline TMat<RTR_type> getTSortedRow(){return tsorted_row;}
+    inline VMat   getTSource(){return tsource;}
     virtual void finalize(){tsorted_row = TMat<RTR_type>();}
 
 private:
