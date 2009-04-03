@@ -261,7 +261,7 @@ options_choices = [
     'icc8', 'icc9', 'icc10', 'mpi',
     'purify', 'quantify', 'vc++', 'condor' ],
   
-  [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbggprof', 'safegprof',
+  [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbg', 'optdbggprof', 'safegprof', 
     'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg', 'vecgcc' ],
   
   [ 'double', 'float' ],
@@ -744,6 +744,11 @@ pymakeOption( name = 'optdbggprof',
               compileroptions = '-Wall -O3 -g -pg',
               cpp_definitions = ['NDEBUG'],
               linkeroptions = '-pg' )
+
+pymakeOption( name = 'optdbg',
+              description = 'optimized mode WITH DEBUGGING (-g)',
+              compileroptions = '-Wall -O3 -g',
+              cpp_definitions = ['NDEBUG'])
 
 pymakeOption( name = 'safegprof',
               description = 'safe optimized mode with profiler support (-pg)',
