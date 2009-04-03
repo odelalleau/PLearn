@@ -175,7 +175,8 @@ static string global_options( vector<string>& command_line)
     // Note that the findpos function (stringutils.h) returns -1 if the
     // option is not found.
     int profile_pos       = findpos( command_line, "--profile" );
-    if(profile_pos != -1)
+    int profile_wall_pos       = findpos( command_line, "--profile-wall" );
+    if(profile_pos != -1 || profile_wall_pos != -1)
         Profiler::pl_profile_activate();
     // Note that the findpos function (stringutils.h) returns -1 if the
     // option is not found.
@@ -270,6 +271,7 @@ static string global_options( vector<string>& command_line)
         // Neglecting to copy options
         if ( c != no_version_pos             &&
              c != profile_pos                &&
+             c != profile_wall_pos           &&
              c != no_progress_bars           &&
              c != windows_endl               &&
              c != verbosity_pos              &&
@@ -393,6 +395,10 @@ int plearn_main( int argc, char** argv,
         Profiler::pl_profile_end("Prog");
         Profiler::pl_profile_deactivate();
         Profiler::pl_profile_report(perr);
+        Profiler::pl_profile_reportwall(perr);
+    }else if(findpos( command_line_orig, "--profile-wall" )!=-1){
+        Profiler::pl_profile_end("Prog");
+        Profiler::pl_profile_deactivate();
         Profiler::pl_profile_reportwall(perr);
     }
     return EXIT_CODE;

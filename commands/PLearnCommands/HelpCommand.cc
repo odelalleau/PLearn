@@ -70,6 +70,7 @@ void HelpCommand::helpOverview()
         "                 --windows_endl: use Windows end of line\n"
         "                 --profile: print some profiling information\n"
         "                     Must have been compiled with '-logging=dbg-profile'\n"
+        "                 --profile-wall: same as above except we only print the wall time\n"
         "                 --verbosity LEVEL: The level of log to print.\n"
         "                     Must have been compiled with the same level of more\n"
         "                     Available level:\n"
