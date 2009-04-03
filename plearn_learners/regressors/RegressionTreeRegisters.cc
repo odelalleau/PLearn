@@ -40,6 +40,7 @@
  ********************************************************************************** */
 
 #include "RegressionTreeRegisters.h"
+#include "RegressionTreeLeave.h"
 #define PL_LOG_MODULE_NAME RegressionTreeRegisters
 #include <plearn/io/pl_log.h>
 #include <plearn/vmat/TransposeVMatrix.h>
@@ -219,6 +220,99 @@ void RegressionTreeRegisters::reinitRegisters()
     //in case we don't save the sorted data
     sortRows();
 }
+
+void RegressionTreeRegisters::getAllRegisteredRowLeave(
+    RTR_type_id leave_id, int col,
+    TVec<RTR_type> &reg,
+    TVec<pair<RTR_target_t,RTR_weight_t> > &t_w,
+    Vec &value,
+    PP<RegressionTreeLeave> missing_leave,
+    PP<RegressionTreeLeave> left_leave,
+    PP<RegressionTreeLeave> right_leave,
+    TVec<RTR_type> &candidate) const
+{
+    PLASSERT(tsource_mat.length()==tsource.length());
+
+    getAllRegisteredRow(leave_id,col,reg);
+    t_w.resize(reg.length());
+    value.resize(reg.length());
+    real * p = tsource_mat[col];
+    pair<RTR_target_t,RTR_weight_t> * ptw = target_weight.data();
+    pair<RTR_target_t,RTR_weight_t>* ptwd = t_w.data();
+    real * pv = value.data();
+    RTR_type * preg = reg.data();
+
+    //It is better to do multiple pass for memory access.
+
+    //we do this optimization in case their is many row with the same value
+    //at the end as with binary variable.
+    //we do it here to overlap computation and memory access
+    int row_idx_end = reg.size() - 1;
+    int prev_row=preg[row_idx_end];
+    real prev_val=p[prev_row];
+    PLASSERT(reg.size()>row_idx_end && row_idx_end>=0);
+    PLASSERT(p[prev_row]==tsource(col,prev_row));
+
+    for( ;row_idx_end>0;row_idx_end--)
+    {
+        int futur_row = preg[row_idx_end-8];
+        __builtin_prefetch(&ptw[futur_row],1,2);
+        __builtin_prefetch(&p[futur_row],1,2);
+
+        int row=prev_row;
+        real val=prev_val;
+        prev_row = preg[row_idx_end-1];
+        prev_val = p[prev_row];
+
+        PLASSERT(reg.size()>row_idx_end && row_idx_end>0);
+        PLASSERT(target_weight.size()>row && row>=0);
+        PLASSERT(p[row]==tsource(col,row));
+        RTR_target_t target = ptw[row].first;
+        RTR_weight_t weight = ptw[row].second;
+
+        if (is_missing(val))
+            missing_leave->addRow(row, target, weight);
+        else if(val==prev_val)
+            right_leave->addRow(row, target, weight);
+        else
+            break;
+    }
+
+    //We need the last data for an optimization in RTN
+    {
+        int idx=reg.size()-1;
+        PLASSERT(reg.size()>idx && idx>=0);
+        int row=int(preg[idx]);
+        PLASSERT(target_weight.size()>row && row>=0);
+        PLASSERT(p[row]==tsource(col,row));
+        pv[idx]=p[row];
+    }
+        for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
+        {
+            int futur_row = preg[row_idx+8];
+            __builtin_prefetch(&ptw[futur_row],1,2);
+            __builtin_prefetch(&p[futur_row],1,2);
+            
+            PLASSERT(reg.size()>row_idx && row_idx>=0);
+            int row=int(preg[row_idx]);
+            real val=p[row];
+            PLASSERT(target_weight.size()>row && row>=0);
+            PLASSERT(p[row]==tsource(col,row));
+            ptwd[row_idx].first=ptw[row].first;
+            ptwd[row_idx].second=ptw[row].second;
+            pv[row_idx]=val;
+            
+            RTR_target_t target = ptw[row].first;
+            RTR_weight_t weight = ptw[row].second;
+            if (is_missing(val)){
+                missing_leave->addRow(row, target, weight);
+            }else {
+                left_leave->addRow(row, target, weight);
+                candidate.append(row);
+            }
+        }
+}
+
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg,
                                                   TVec<pair<RTR_target_t,RTR_weight_t> > &t_w,
@@ -368,9 +462,8 @@ void RegressionTreeRegisters::sortRows()
         PLearn::save(f,tsorted_row);
     }else{
     }
-
 }
-  
+                                                  
 void RegressionTreeRegisters::sortEachDim(int dim)
 {
     PLCHECK_MSG(tsource->classname()=="MemoryVMatrixNoSave",tsource->classname().c_str());

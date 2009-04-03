@@ -267,12 +267,19 @@ void RegressionTreeNode::lookForBestSplit()
     row_split_balance.clear();
 #endif
     int leave_id = leave->getId();
+   
     for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
         left_leave->initStats();
         right_leave->initStats();
         
+        PLASSERT(registered_row.size()==leave->length());
+        PLASSERT(candidate.size()==0);
+
+#ifdef NPREFETCH
+        //The ifdef is in case we don't want to use the optimized version with
+        //prefetch of memory. Maybe the optimization is hurtfull for some computer.
         train_set->getAllRegisteredRow(leave_id, col, registered_row,
                                        registered_target_weight,
                                        registered_value);
@@ -313,6 +320,18 @@ void RegressionTreeNode::lookForBestSplit()
                 candidate.append(row);
             }
         }
+
+#else
+        train_set->getAllRegisteredRowLeave(leave_id, col, registered_row,
+                                            registered_target_weight,
+                                            registered_value,
+                                            missing_leave,
+                                            left_leave,
+                                            right_leave, candidate);
+        PLASSERT(registered_row.size()==leave->length());
+        PLASSERT(candidate.size()>0);
+
+#endif
 
         missing_leave->getOutputAndError(tmp_vec, missing_error);
         tuple<real,real,int> ret=bestSplitInRow(col, candidate, left_error,
