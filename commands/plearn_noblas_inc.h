@@ -108,7 +108,9 @@
  * Kernel *
  **********/
 #include <plearn/ker/AdditiveNormalizationKernel.h>
-#include <plearn/ker/BetaKernel.h>
+//! The include of 'BetaKernel' is disabled because it also triggers the
+//! include of 'distr_maths.h', which currently requires BLAS.
+//#include <plearn/ker/BetaKernel.h>
 #include <plearn/ker/CosKernel.h>
 #include <plearn/ker/DistanceKernel.h>
 #include <plearn/ker/DotProductKernel.h>
