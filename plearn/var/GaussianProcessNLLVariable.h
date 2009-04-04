@@ -98,6 +98,9 @@ public:
      *  @param allow_bprop: if true, assume we will be performing bprops on the
      *                  Variable; if not, only fprops are allowed.  BProps
      *                  involve computing a full inverse of the Gram matrix
+     *  @param save_gram_matrix: whether the Gram matrix should be saved
+     *                           (useful for debugging)
+     *  @param expdir:  where to save the Gram matrix if required
      */
     GaussianProcessNLLVariable(Kernel* kernel, real noise,
                                Mat inputs, Mat targets,

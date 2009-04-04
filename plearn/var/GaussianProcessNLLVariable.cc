@@ -128,7 +128,8 @@ void GaussianProcessNLLVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_alpha_t,         copies);
     deepCopyField(m_alpha_buf,       copies);
     deepCopyField(m_inverse_gram,    copies);
-    deepCopyField(m_cholesky_gram,   copies);
+    deepCopyField(m_cholesky_tmp,    copies);
+    deepCopyField(m_rhs_tmp,         copies);
 }
 
 void GaussianProcessNLLVariable::declareOptions(OptionList& ol)
