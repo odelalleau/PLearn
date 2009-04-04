@@ -112,6 +112,10 @@ public:
     virtual void computeGramMatrixDerivative(Mat& KD, const string& kernel_param,
                                              real epsilon=1e-6) const;
     
+    //! Fill k_xi_x with K(x_i, x), for all i from istart to istart + k_xi_x.length() - 1.
+    virtual void evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                  real squared_norm_of_x=-1, int istart = 0) const;
+
 
     //#####  PLearn::Object Protocol  #########################################
 

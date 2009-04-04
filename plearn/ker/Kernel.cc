@@ -128,10 +128,17 @@ void Kernel::declareMethods(RemoteMethodMap& rmm)
 
     declareMethod(
         rmm, "evaluate", &Kernel::evaluate,
-        (BodyDoc("evaluate the kernel on two vectors\n"),
+        (BodyDoc("Evaluate the kernel on two vectors\n"),
          ArgDoc("x1","first vector"),
          ArgDoc("x2","second vector"),
          RetDoc ("K(x1,x2)")));
+
+    declareMethod(
+        rmm, "setDataForKernelMatrix", &Kernel::setDataForKernelMatrix,
+        (BodyDoc("This method sets the data VMat that will be used to define the kernel\n"
+                 "matrix. It may precompute values from this that may later accelerate\n"
+                 "the evaluation of a kernel matrix element\n"),
+         ArgDoc("data", "The data matrix to set into the kernel")));
 }
 
 ///////////
@@ -407,6 +414,93 @@ Mat Kernel::returnComputedGramMatrix() const
     computeGramMatrix(K);
     return K;
 }
+
+
+//////////////////////////////
+// computePartialGramMatrix //
+//////////////////////////////
+void Kernel::computePartialGramMatrix(const TVec<int>& subset_indices, Mat K) const
+{
+    if (!data)
+        PLERROR("Kernel::computePartialGramMatrix should be called only after setDataForKernelMatrix");
+    if (!is_symmetric)
+        PLERROR("In Kernel::computePartialGramMatrix - Currently not implemented for non-symmetric kernels");
+    if (K.length() != subset_indices.length() || K.width() != subset_indices.length())
+        PLERROR("Kernel::computePartialGramMatrix: the argument matrix K should be\n"
+                "of size %d x %d (currently of size %d x %d)",
+                subset_indices.length(), subset_indices.length(), K.length(), K.width());
+
+    int l=subset_indices.size();
+    int m=K.mod();
+    PP<ProgressBar> pb;
+    int count = 0;
+    if (report_progress)
+        pb = new ProgressBar("Computing Partial Gram matrix for " + classname(),
+                             (l * (l + 1)) / 2);
+    real Kij;
+    real* Ki;
+    real* Kji_;
+    for (int i=0;i<l;i++)
+    {
+        int index_i = subset_indices[i];
+        Ki = K[i];
+        Kji_ = &K[0][i];
+        for (int j=0; j<=i; j++,Kji_+=m)
+        {
+            int index_j = subset_indices[j];
+            Kij = evaluate_i_j(index_i, index_j);
+            *Ki++ = Kij;
+            if (j<i)
+                *Kji_ = Kij;
+        }
+        if (report_progress) {
+            count += i + 1;
+            PLASSERT( pb.isNotNull() );
+            pb->update(count);
+        }
+    }
+}
+
+///////////////////////////
+// computeTestGramMatrix //
+///////////////////////////
+void Kernel::computeTestGramMatrix(Mat test_elements, Mat K, Vec self_cov) const
+{
+    if (!data)
+        PLERROR("Kernel::computeTestGramMatrix should be called only after setDataForKernelMatrix");
+
+    if (test_elements.width() != data.width())
+        PLERROR("Kernel::computeTestGramMatrix: the input matrix test_elements "
+                "should be of width %d (currently of width %d)",
+                data.width(), test_elements.width());
+    
+    if (K.length() != test_elements.length() || K.width() != data.length())
+        PLERROR("Kernel::computeTestGramMatrix: the output matrix K should be\n"
+                "of size %d x %d (currently of size %d x %d)",
+                test_elements.length(), data.length(), K.length(), K.width());
+
+    if (self_cov.size() != test_elements.length())
+        PLERROR("Kernel::computeTestGramMatrix: the output vector self_cov should be\n"
+                "of length %d (currently of length %d)",
+                test_elements.length(), self_cov.size());
+
+    int n=test_elements.length();
+    PP<ProgressBar> pb = report_progress?
+        new ProgressBar("Computing Test Gram matrix for " + classname(), n)
+        : 0;
+
+    for (int i=0 ; i<n ; ++i)
+    {
+        Vec cur_test_elem = test_elements(i);
+        evaluate_all_i_x(cur_test_elem, K(i));
+        self_cov[i] = evaluate(cur_test_elem, cur_test_elem);
+        
+        if (pb)
+            pb->update(i);
+    }
+}
+
+
 /////////////////////////////
 // computeSparseGramMatrix //
 /////////////////////////////

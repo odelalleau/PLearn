@@ -272,6 +272,15 @@ void SquaredExponentialARDKernel::computeGramMatrixDerivative(
 }
 
 
+//#####  evaluate_all_i_x  ####################################################
+
+void SquaredExponentialARDKernel::evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                                   real squared_norm_of_x, int istart) const
+{
+    evaluateAllIXNV<SquaredExponentialARDKernel>(x, k_xi_x, istart);
+}
+
+
 //#####  derivIspSignalSigma  #################################################
 
 real SquaredExponentialARDKernel::derivIspSignalSigma(int i, int j, int arg, real K) const

@@ -289,6 +289,15 @@ void NeuralNetworkARDKernel::computeGramMatrixDerivative(
 }
 
 
+//#####  evaluate_all_i_x  ####################################################
+
+void NeuralNetworkARDKernel::evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                              real squared_norm_of_x, int istart) const
+{
+    evaluateAllIXNV<NeuralNetworkARDKernel>(x, k_xi_x, istart);
+}
+
+
 //#####  derivIspGlobalSigma  #################################################
 
 real NeuralNetworkARDKernel::derivIspGlobalSigma(int i, int j, int arg, real K) const

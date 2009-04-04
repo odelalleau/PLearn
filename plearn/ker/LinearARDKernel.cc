@@ -2,7 +2,7 @@
 
 // LinearARDKernel.cc
 //
-// Copyright (C) 2007 Nicolas Chapados
+// Copyright (C) 2007-2009 Nicolas Chapados
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -253,6 +253,16 @@ void LinearARDKernel::computeGramMatrixDerivative(
     else
         inherited::computeGramMatrixDerivative(KD, kernel_param, epsilon);
 }
+
+
+//#####  evaluate_all_i_x  ####################################################
+
+void LinearARDKernel::evaluate_all_i_x(const Vec& x, const Vec& k_xi_x,
+                                       real squared_norm_of_x, int istart) const
+{
+    evaluateAllIXNV<LinearARDKernel>(x, k_xi_x, istart);
+}
+
 
 
 //#####  derivIspSignalSigma  #################################################

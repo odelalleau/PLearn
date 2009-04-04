@@ -173,6 +173,13 @@ protected:
               real (DerivedClass::*derivativeFunc)(int, int, int, real) const>
     void computeGramMatrixDerivNV(Mat& KD, const DerivedClass* This, int arg,
                                   bool derivative_func_requires_K = true) const;
+
+    /**
+     *  Interface to ease derived-class implementation of evaluate_all_i_x
+     *  that avoids virtual function calls in kernel evaluation.
+     */
+    template <class DerivedClass>
+    void evaluateAllIXNV(const Vec& x, const Vec& k_xi_x, int istart) const;
     
     
 private:
@@ -313,6 +320,25 @@ void MemoryCachedKernel::computeGramMatrixDerivNV(Mat& KD, const DerivedClass* T
     }
 }
 
+
+//#####  evaluateAllIXNV  #####################################################
+
+template <class DerivedClass>
+void MemoryCachedKernel::evaluateAllIXNV(const Vec& x, const Vec& k_xi_x, int istart) const
+{
+    if (!data)
+        PLERROR("Kernel::computeGramMatrix: setDataForKernelMatrix not yet called");
+
+    const DerivedClass* This = static_cast<const DerivedClass*>(this);
+    int l = min(data->length(), k_xi_x.size());
+    Vec row_i;
+    real* k_xi = &k_xi_x[0];
+    
+    for (int i=istart ; i<l ; ++i) {
+        dataRow(i, row_i);
+        *k_xi++ = This->DerivedClass::evaluate(row_i, x);
+    }
+}
 
 
 } // end of namespace PLearn

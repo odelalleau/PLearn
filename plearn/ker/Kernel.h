@@ -160,6 +160,28 @@ public:
     virtual Mat returnComputedGramMatrix() const;
 
     /**
+     *  Compute a partial Gram matrix between all pairs of a subset of elements
+     *  (length M) of the Kernel data matrix.  This is stored in matrix K
+     *  (assumed to be preallocated to M x M).  The subset_indices should be
+     *  SORTED in order of increasing indices.
+     */
+    virtual void computePartialGramMatrix(const TVec<int>& subset_indices,
+                                          Mat K) const;
+    
+    /**
+     *  Compute a cross-covariance matrix between the given test elements
+     *  (length M) and the elements of the Kernel data matrix (length N).
+     *  This is stored in matrix K (assumed to be preallocated to M x N).
+     *  The self-covariance of the test elements is further stored in the
+     *  vector test_cov (assumed to be preallocated to size M).  (This is
+     *  useful for some kernels used in Gaussian Processes, since there is a
+     *  difference between vector equality and vector identity regarding how
+     *  sampling noise is treated.)
+     */
+    virtual void computeTestGramMatrix(Mat test_elements,
+                                       Mat K, Vec self_cov) const;
+    
+    /**
      *  Fill K[i] with the non-zero elements of row i of the Gram matrix.
      *  Specifically, K[i] is a (k_i x 2) matrix where k_i is the number of
      *  non-zero elements in the i-th row of the Gram matrix, and K[i](k) =
