@@ -2,7 +2,7 @@
 
 // GaussianProcessRegressor.cc
 //
-// Copyright (C) 2006-2007 Nicolas Chapados 
+// Copyright (C) 2006-2009 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -52,12 +52,16 @@
 #include <plearn/opt/Optimizer.h>
 #include <plearn/io/pl_log.h>
 
+#ifdef USE_BLAS_SPECIALISATIONS
+#include <plearn/math/plapack.h>
+#endif
+
 namespace PLearn {
 using namespace std;
 
 PLEARN_IMPLEMENT_OBJECT(
     GaussianProcessRegressor,
-    "Kernelized version of linear ridge regression.",
+    "Implements Gaussian Process Regression (GPR) with an arbitrary kernel",
     "Given a kernel K(x,y) = phi(x)'phi(y), where phi(x) is the projection of a\n"
     "vector x into feature space, this class implements a version of the ridge\n"
     "estimator, giving the prediction at x as\n"
@@ -100,6 +104,18 @@ PLEARN_IMPLEMENT_OBJECT(
     "number of training examples (due to the matrix inversion).  When saving the\n"
     "learner, the training set inputs must be saved, along with an additional\n"
     "matrix of length number-of-training-examples, and width number-of-targets.\n"
+    "\n"
+    "To alleviate the computational bottleneck of the exact method, the sparse\n"
+    "approximation method of Projected Process is also available.  This method\n"
+    "requires identifying M datapoints in the training set called the active\n"
+    "set, although it makes use of all N training points for computing the\n"
+    "likelihood.  The computational complexity of the approach is then O(NM^2).\n"
+    "Note that in the current implementation, hyperparameter optimization is\n"
+    "performed using ONLY the active set (called the \"Subset of Data\" method in\n"
+    "the Rasmussen & Williams book).  Making use of the full set of datapoints\n"
+    "is more computationally expensive and would require substantial updates to\n"
+    "the PLearn Kernel class (to efficiently support asymmetric kernel-matrix\n"
+    "gradient).  This may come later.\n"
     );
 
 GaussianProcessRegressor::GaussianProcessRegressor() 
@@ -107,7 +123,8 @@ GaussianProcessRegressor::GaussianProcessRegressor()
       m_include_bias(true),
       m_compute_confidence(false),
       m_confidence_epsilon(1e-8),
-      m_save_gram_matrix(false)
+      m_save_gram_matrix(false),
+      m_solution_algorithm("exact")
 { }
 
 
@@ -189,14 +206,39 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
         "It is saved in the current expdir under the names 'gram_matrix_N.pmat'\n"
         "where N is an increasing counter.\n");
 
+    declareOption(
+        ol, "solution_algorithm", &GaussianProcessRegressor::m_solution_algorithm,
+        OptionBase::buildoption,
+        "Solution algorithm used for the regression.  If \"exact\", use the exact\n"
+        "Gaussian process solution (requires O(N^3) computation).  If\n"
+        "\"projected-process\", use the PP approximation, which requires O(MN^2)\n"
+        "computation, where M is given by the size of the active training\n"
+        "examples specified by the \"active-set\" option.  Default=\"exact\".\n");
 
+    declareOption(
+        ol, "active_set_indices", &GaussianProcessRegressor::m_active_set_indices,
+        OptionBase::buildoption,
+        "If a sparse approximation algorithm is used (e.g. projected process),\n"
+        "this specifies the indices of the training-set examples which should be\n"
+        "considered to be part of the active set.  Note that these indices must\n"
+        "be SORTED IN INCREASING ORDER and should not contain duplicates.\n");
+
+    
     //#####  Learnt Options  ##################################################
 
     declareOption(
         ol, "alpha", &GaussianProcessRegressor::m_alpha,
         OptionBase::learntoption,
-        "Vector of learned parameters, determined from the equation\n"
-        "    (M + lambda I)^-1 y");
+        "Matrix of learned parameters, determined from the equation\n"
+        "\n"
+        "  (K + lambda I)^-1 y\n"
+        "\n"
+        "(don't forget that y can be a matrix for multivariate output problems)\n"
+        "\n"
+        "In the case of the projected-process approximation, this contains\n"
+        "the result of the equiation\n"
+        "\n"
+        "  (lambda K_mm + K_mn K_nm)^-1 K_mn y\n");
 
     declareOption(
         ol, "gram_inverse", &GaussianProcessRegressor::m_gram_inverse,
@@ -204,8 +246,17 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
         "Inverse of the Gram matrix, used to compute confidence intervals (must\n"
         "be saved since the confidence intervals are obtained from the equation\n"
         "\n"
-        "  sigma^2 = k(x,x) - k(x)'(M + lambda I)^-1 k(x)\n");
+        "  sigma^2 = k(x,x) - k(x)'(K + lambda I)^-1 k(x)\n"
+        "\n"
+        "An adjustment similar to 'alpha' is made for the projected-process\n"
+        "approximation.\n");
 
+    declareOption(
+        ol, "subgram_inverse", &GaussianProcessRegressor::m_subgram_inverse,
+        OptionBase::learntoption,
+        "Inverse of the sub-Gram matrix, i.e. K_mm^-1.  Used only with the\n"
+        "projected-process approximation.\n");
+    
     declareOption(
         ol, "target_mean", &GaussianProcessRegressor::m_target_mean,
         OptionBase::learntoption,
@@ -215,7 +266,9 @@ void GaussianProcessRegressor::declareOptions(OptionList& ol)
         ol, "training_inputs", &GaussianProcessRegressor::m_training_inputs,
         OptionBase::learntoption,
         "Saved version of the training set, which must be kept along for\n"
-        "carrying out kernel evaluations with the test point");
+        "carrying out kernel evaluations with the test point.  If using the\n"
+        "projected-process approximation, only the inputs in the active set are\n"
+        "saved.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -244,6 +297,16 @@ void GaussianProcessRegressor::build_()
 
     if (m_confidence_epsilon < 0)
         PLERROR("GaussianProcessRegressor::build_: 'confidence_epsilon' must be non-negative");
+
+    // Cache solution algorithm in quick form
+    if (m_solution_algorithm == "exact")
+        m_algorithm_enum = AlgoExact;
+    else if (m_solution_algorithm == "projected-process")
+        m_algorithm_enum = AlgoProjectedProcess;
+    else
+        PLERROR("GaussianProcessRegressor::build_: the option solution_algorithm=='%s' "
+                "is not supported.  Value must be in {'exact', 'projected-process'}",
+                m_solution_algorithm.c_str());
 }
 
 // ### Nothing to add here, simply calls build_
@@ -261,8 +324,10 @@ void GaussianProcessRegressor::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(m_kernel,                     copies);
     deepCopyField(m_hyperparameters,            copies);
     deepCopyField(m_optimizer,                  copies);
+    deepCopyField(m_active_set_indices,         copies);
     deepCopyField(m_alpha,                      copies);
     deepCopyField(m_gram_inverse,               copies);
+    deepCopyField(m_subgram_inverse,            copies);
     deepCopyField(m_target_mean,                copies);
     deepCopyField(m_training_inputs,            copies);
     deepCopyField(m_kernel_evaluations,         copies);
@@ -322,9 +387,29 @@ void GaussianProcessRegressor::train()
     if (!initTrain())
         return;
 
+    // If we use the projected process approximation, make sure that the
+    // active-set indices are specified and that they are sorted in increasing
+    // order
+    if (m_algorithm_enum == AlgoProjectedProcess) {
+        if (m_active_set_indices.size() == 0)
+            PLERROR("GaussianProcessRegressor::train: with the projected-process "
+                    "approximation, the active_set_indices option must be specified.");
+        int last_index = -1;
+        for (int i=0, n=m_active_set_indices.size() ; i<n ; ++i) {
+            int cur_index = m_active_set_indices[i];
+            if (cur_index <= last_index)
+                PLERROR("GaussianProcessRegressor::train: the option active_set_indices "
+                        "must be sorted and should not contain duplicates; at index %d, "
+                        "encounted value %d whereas previous value was %d.",
+                        i, cur_index, last_index);
+            last_index = cur_index;
+        }
+    }
+    
     PLASSERT( m_kernel );
     if (! train_set || ! m_training_inputs)
         PLERROR("GaussianProcessRegressor::train: the training set must be specified");
+    int activelength= m_active_set_indices.size();
     int trainlength = train_set->length();
     int inputsize   = train_set->inputsize() ;
     int targetsize  = train_set->targetsize();
@@ -344,10 +429,25 @@ void GaussianProcessRegressor::train()
         targets -= m_target_mean;
     }
 
+    // Determine the subset of training inputs and targets to use depending on
+    // the training algorithm
+    Mat sub_training_inputs;
+    Mat sub_training_targets;
+    if (m_algorithm_enum == AlgoExact) {
+        sub_training_inputs = m_training_inputs;
+        sub_training_targets= targets;
+    }
+    else if (m_algorithm_enum == AlgoProjectedProcess) {
+        sub_training_inputs .resize(activelength, inputsize);
+        sub_training_targets.resize(activelength, targetsize);
+        selectRows(m_training_inputs, m_active_set_indices, sub_training_inputs);
+        selectRows(targets,           m_active_set_indices, sub_training_targets);
+    }
+    
     // Optimize hyperparameters
     VarArray hyperparam_vars;
-    PP<GaussianProcessNLLVariable> nll = hyperOptimize(m_training_inputs, targets,
-                                                       hyperparam_vars);
+    PP<GaussianProcessNLLVariable> nll =
+        hyperOptimize(sub_training_inputs, sub_training_targets, hyperparam_vars);
     PLASSERT( nll );
     
     // Compute parameters.  Be careful to also propagate through the
@@ -355,23 +455,34 @@ void GaussianProcessRegressor::train()
     // into their respective kernels.
     hyperparam_vars.fprop();
     nll->fprop();
-    m_alpha = nll->alpha();
-    m_gram_inverse = nll->gramInverse();
+    if (m_algorithm_enum == AlgoExact) {
+        m_alpha = nll->alpha();
+        m_gram_inverse = nll->gramInverse();
+    }
+    else if (m_algorithm_enum == AlgoProjectedProcess) {
+        trainProjectedProcess(m_training_inputs, sub_training_inputs, targets);
 
-    // Compute train MSE, as 1/(2N) * dot(z,z), with z=K*alpha - y
-    // *** FIXME: MSE IS NOT COMPUTED CORRECTLY SINCE GRAM MATRIX IS
-    // OVERWRITTEN BY CHOLESKY DECOMPOSITION ***
-    Mat residuals(m_alpha.length(), m_alpha.width());
-    product(residuals, nll->gram(), m_alpha);
-    residuals -= targets;
-    real mse = dot(residuals, residuals) / (2 * trainlength);
+        // Full training set no longer required from now on
+        m_training_inputs = sub_training_inputs;
+        m_kernel->setDataForKernelMatrix(m_training_inputs);
+    }
+
+    if (getTrainStatsCollector()) {
+        // Compute train statistics by running a test over the training set.
+        // This works uniformly for all solution algorithms, albeit with some
+        // performance hit.
+        PP<VecStatsCollector> test_stats = new VecStatsCollector;
+        test(getTrainingSet(), test_stats);
     
-    // And accumulate some statistics
-    Vec costs(2);
-    costs[0] = nll->value[0];
-    costs[1] = mse;
-    getTrainStatsCollector()->update(costs);
-    MODULE_LOG << "Train NLL: " << costs[0] << endl;
+        // And accumulate some statistics.  Note: the NLL corresponds to the
+        // subset-of-data version if the projected-process approximation is
+        // used.  It is the exact NLL if the exact algorithm is used.
+        Vec costs(3);
+        costs.subVec(0,2) << test_stats->getMean();
+        costs[2] = nll->value[0];
+        getTrainStatsCollector()->update(costs);
+    }
+    MODULE_LOG << "Train marginal NLL (subset-of-data): " << nll->value[0] << endl;
 }
 
 
@@ -400,7 +511,9 @@ void GaussianProcessRegressor::computeOutputAux(
     
     m_kernel->evaluate_all_i_x(input, kernel_evaluations);
 
-    // Finally compute k(x,x_i) * (M + \lambda I)^-1 y
+    // Finally compute k(x,x_i) * (K + \lambda I)^-1 y.
+    // This expression does not change depending on whether we are using
+    // the exact algorithm or the projected-process approximation.
     product(Mat(1, output.size(), output),
             Mat(1, kernel_evaluations.size(), kernel_evaluations),
             m_alpha);
@@ -461,14 +574,28 @@ bool GaussianProcessRegressor::computeConfidenceFromOutput(
         return false;
     }
 
-    // BIG-BIG assumption: assume that computeOutput has just been called and
-    // that m_kernel_evaluations contains the right stuff.
+    // BIG assumption: assume that computeOutput has just been called and that
+    // m_kernel_evaluations contains the right stuff.
     PLASSERT( m_kernel && m_gram_inverse.isNotNull() );
     real base_sigma_sq = m_kernel(input, input);
     m_gram_inverse_product.resize(m_kernel_evaluations.size());
-    product(m_gram_inverse_product, m_gram_inverse, m_kernel_evaluations);
-    real sigma_reductor = dot(m_gram_inverse_product, m_kernel_evaluations);
-    real sigma = sqrt(max(real(0.), base_sigma_sq - sigma_reductor + m_confidence_epsilon));
+
+    real sigma;
+    if (m_algorithm_enum == AlgoExact) {
+        product(m_gram_inverse_product, m_gram_inverse, m_kernel_evaluations);
+        real sigma_reductor = dot(m_gram_inverse_product, m_kernel_evaluations);
+        sigma = sqrt(max(real(0.),
+                         base_sigma_sq - sigma_reductor + m_confidence_epsilon));
+    }
+    else if (m_algorithm_enum == AlgoProjectedProcess) {
+        // From R&W eq. (8.27).
+        product(m_gram_inverse_product, m_subgram_inverse, m_kernel_evaluations);
+        productScaleAcc(m_gram_inverse_product, m_gram_inverse, m_kernel_evaluations,
+                        -1.0, 1.0);
+        real sigma_reductor = dot(m_gram_inverse_product, m_kernel_evaluations);
+        sigma = sqrt(max(real(0.),
+                         base_sigma_sq - sigma_reductor + m_confidence_epsilon));
+    }
 
     // two-tailed
     const real multiplier = gauss_01_quantile((1+probability)/2);
@@ -516,7 +643,7 @@ void GaussianProcessRegressor::computeOutputCovMat(
         has_missings = has_missings || inputs(i).hasMissing();
     }
 
-    // If any missings found in the inputs, don't bother with with computing a
+    // If any missings found in the inputs, don't bother with computing a
     // covariance matrix
     if (has_missings) {
         covmat.fill(MISSING_VALUE);
@@ -527,34 +654,42 @@ void GaussianProcessRegressor::computeOutputCovMat(
     // less lifted from Kernel.cc ==> must see with Olivier how to better
     // factor this code
     Mat& K = covmat;
-    PLASSERT( K.width() == N && K.length() == N );
-    const int mod = K.mod();
-    real Kij;
-    real* Ki;
-    real* Kji;
-    for (int i=0 ; i<N ; ++i) {
-        Ki  = K[i];
-        Kji = &K[0][i];
-        const Vec& cur_input_i = inputs(i);
-        for (int j=0 ; j<=i ; ++j, Kji += mod) {
-            Kij = m_kernel->evaluate(cur_input_i, inputs(j));
-            *Ki++ = Kij;
-            if (j<i)
-                *Kji = Kij;    // Assume symmetry, checked at build
-        }
-    }
-
-    // The predictive covariance matrix is (c.f. Rasmussen and Williams):
+    Vec self_cov(N);
+    m_kernel->computeTestGramMatrix(inputs, K, self_cov);
+    
+    // The predictive covariance matrix is for the exact cast(c.f. Rasmussen
+    // and Williams):
     //
     //    cov(f*) = K(X*,X*) - K(X*,X) [K(X,X) + sigma*I]^-1 K(X,X*)
     //
     // where X are the training inputs, and X* are the test inputs.
+    //
+    // For the projected process case, it is:
+    //
+    //    cov(f*) = K(X*,X*) - K(X*,X_m) K_mm^-1 K(X*,X_m)
+    //               + sigma^2 K(X*,X_m) (sigma^2 K_mm + K_mn K_nm)^-1 K(X*,X_m)
+    //
+    // Note that all sigma^2's have been absorbed into their respective
+    // cached terms, and in particular in this context sigma^2 is emphatically
+    // not equal to the weight decay.
     m_gram_inv_traintest_product.resize(T,N);
     m_sigma_reductor.resize(N,N);
-    productTranspose(m_gram_inv_traintest_product, m_gram_inverse,
-                     m_gram_traintest_inputs);
-    product(m_sigma_reductor, m_gram_traintest_inputs,
-            m_gram_inv_traintest_product);
+
+    if (m_algorithm_enum == AlgoExact) {    
+        productTranspose(m_gram_inv_traintest_product, m_gram_inverse,
+                         m_gram_traintest_inputs);
+        product(m_sigma_reductor, m_gram_traintest_inputs,
+                m_gram_inv_traintest_product);
+    }
+    else if (m_algorithm_enum == AlgoProjectedProcess) {
+        productTranspose(m_gram_inv_traintest_product, m_subgram_inverse,
+                         m_gram_traintest_inputs);
+        productTransposeScaleAcc(m_gram_inv_traintest_product, m_gram_inverse,
+                                 m_gram_traintest_inputs, -1.0, 1.0);
+        product(m_sigma_reductor, m_gram_traintest_inputs,
+                m_gram_inv_traintest_product);
+    }
+    
     covmat -= m_sigma_reductor;
 
     // As a preventive measure, never output negative variance, even though
@@ -577,9 +712,10 @@ TVec<string> GaussianProcessRegressor::getTestCostNames() const
 
 TVec<string> GaussianProcessRegressor::getTrainCostNames() const
 {
-    TVec<string> c(2);
-    c[0] = "nmll";
+    TVec<string> c(3);
+    c[0] = "nll";
     c[1] = "mse";
+    c[2] = "marginal-nll";
     return c;
 }
 
@@ -668,6 +804,106 @@ GaussianProcessRegressor::hyperOptimize(const Mat& inputs, const Mat& targets,
                                           "Hyperparameter final values:");
     return nll;
 }
+
+
+//#####  trainProjectedProcess (LAPACK)  ######################################
+
+void GaussianProcessRegressor::trainProjectedProcess(
+    const Mat& all_training_inputs, const Mat& sub_training_inputs,
+    const Mat& all_training_targets)
+{
+    PLASSERT( m_kernel );
+    const int activelength= m_active_set_indices.length();
+    const int trainlength = all_training_inputs.length();
+    const int targetsize  = all_training_targets.width();
+    
+    // The RHS matrix (when solving the linear system Gram*Params=RHS) is made
+    // up of two parts: the regression targets themselves, and the identity
+    // matrix if we requested them (for confidence intervals).  After solving
+    // the linear system, set the gram-inverse appropriately.  To interface
+    // nicely with LAPACK, we store this in a transposed format.
+    int rhs_width = targetsize + (m_compute_confidence? activelength : 0);
+    Mat tmp_rhs(rhs_width, activelength);
+    if (m_compute_confidence) {
+        Mat rhs_identity = tmp_rhs.subMatRows(targetsize, activelength);
+        identityMatrix(rhs_identity);
+    }
+
+    // We always need to solve K_mm^-1.  Prepare the RHS with the identity
+    // matrix to be ready to solve with a Cholesky decomposition.
+    m_subgram_inverse.resize(activelength, activelength);
+    Mat gram_cholesky(activelength, activelength);
+    identityMatrix(m_subgram_inverse);
+    
+    // Compute Gram Matrix and add weight decay to diagonal.  This is done in a
+    // few steps: (1) K_mm (using the active-set only), (2) then separately
+    // compute K_mn (active-set by all examples), (3) computing the covariance
+    // matrix of K_mn to give an m x m matrix, (4) and finally add them up.
+    // cf. R&W p. 179, eq. 8.26 :: (sigma_n^2 K_mm + K_mn K_nm)
+    m_kernel->setDataForKernelMatrix(all_training_inputs);
+    Mat gram(activelength, activelength);
+    Mat asym_gram(activelength, trainlength);
+    Vec self_cov(activelength);
+    m_kernel->computeTestGramMatrix(sub_training_inputs, asym_gram, self_cov);
+    // Note: asym_gram contains K_mn without any sampling noise.
+
+    // DBG_MODULE_LOG << "Asym_gram =\n" << asym_gram << endl;
+    
+    // Obtain K_mm, also without self-noise.  Add some jitter as per
+    // the Rasmussen & Williams code
+    selectColumns(asym_gram, m_active_set_indices, gram);
+    real jitter = m_weight_decay * trace(gram);
+    addToDiagonal(gram, jitter);
+
+    // DBG_MODULE_LOG << "Kmm =\n" << gram << endl;
+    
+    // Obtain an estimate of the EFFECTIVE sampling noise from the
+    // difference between self_cov and the diagonal of gram
+    Vec sigma_sq = self_cov - diag(gram);
+    double sigma_sq_est = mean(sigma_sq);
+    // DBG_MODULE_LOG << "Sigma^2 estimate = " << sigma_sq_est << endl;
+
+    // Before clobbering K_mm, compute its inverse.
+    gram_cholesky << gram;
+    lapackCholeskyDecompositionInPlace(gram_cholesky);
+    lapackCholeskySolveInPlace(gram_cholesky, m_subgram_inverse,
+                               true /* column-major */);
+    
+    gram *= sigma_sq_est;                            // sigma_n^2 K_mm
+    productTransposeAcc(gram, asym_gram, asym_gram); // Inner part of eq. 8.26
+
+    // DBG_MODULE_LOG << "Gram =\n" << gram << endl;
+    
+    // Dump a fragment of the Gram Matrix to the debug log
+    DBG_MODULE_LOG << "Projected-process Gram fragment: "
+                   << gram(0,0) << ' '
+                   << gram(1,0) << ' '
+                   << gram(1,1) << endl;
+
+    // The RHS should contain (K_mn*y)' = y'*K_mn'.  Compute it.
+    Mat targets_submat = tmp_rhs.subMatRows(0, targetsize);
+    transposeTransposeProduct(targets_submat, all_training_targets, asym_gram);
+    // DBG_MODULE_LOG << "Projected RHS =\n" << targets_submat << endl;
+    
+    // Compute Cholesky decomposition and solve the linear system.  LAPACK
+    // solves in-place, but luckily we don't need either the Gram and RHS
+    // matrices after solving.
+    lapackCholeskyDecompositionInPlace(gram);
+    lapackCholeskySolveInPlace(gram, tmp_rhs, true /* column-major */);
+
+    // Transpose final result.  LAPACK solved in-place for tmp_rhs.
+    m_alpha.resize(tmp_rhs.width(), tmp_rhs.length());
+    transpose(tmp_rhs, m_alpha);
+    if (m_compute_confidence) {
+        m_gram_inverse = m_alpha.subMatColumns(targetsize, activelength);
+        m_alpha        = m_alpha.subMatColumns(0, targetsize);
+
+        // Absorb sigma^2 into gram_inverse as per eq. 8.27 of R&W
+        m_gram_inverse *= sigma_sq_est;
+    }
+}
+
+
 
 } // end of namespace PLearn
 

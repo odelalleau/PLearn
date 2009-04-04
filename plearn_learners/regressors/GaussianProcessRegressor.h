@@ -2,7 +2,7 @@
 
 // GaussianProcessRegressor.h
 //
-// Copyright (C) 2006 Nicolas Chapados 
+// Copyright (C) 2006--2009 Nicolas Chapados 
 // 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -98,6 +98,18 @@ class Optimizer;
  *  number of training examples (due to the matrix inversion).  When saving the
  *  learner, the training set inputs must be saved, along with an additional
  *  matrix of length number-of-training-examples, and width number-of-targets.
+ *
+ *  To alleviate the computational bottleneck of the exact method, the sparse
+ *  approximation method of Projected Process is also available.  This method
+ *  requires identifying M datapoints in the training set called the active
+ *  set, although it makes use of all N training points for computing the
+ *  likelihood.  The computational complexity of the approach is then O(NM^2).
+ *  Note that in the current implementation, hyperparameter optimization is
+ *  performed using ONLY the active set (called the "Subset of Data" method in
+ *  the Rasmussen & Williams book).  Making use of the full set of datapoints
+ *  is more computationally expensive and would require substantial updates to
+ *  the PLearn Kernel class (to efficiently support asymmetric kernel-matrix
+ *  gradient).  This may come later.
  */
 class GaussianProcessRegressor : public PLearner
 {
@@ -179,6 +191,23 @@ public:
      */
     bool m_save_gram_matrix;
 
+    /**
+     *  Solution algorithm used for the regression.  If "exact", use the exact
+     *  Gaussian process solution (requires O(N^3) computation).  If
+     *  "projected-process", use the PP approximation, which requires O(MN^2)
+     *  computation, where M is given by the size of the active training
+     *  examples specified by the "active-set" option.  Default="exact".
+     */
+    string m_solution_algorithm;
+
+    /**
+     *  If a sparse approximation algorithm is used (e.g. projected process),
+     *  this specifies the indices of the training-set examples which should be
+     *  considered to be part of the active set.  Note that these indices must
+     *  be SORTED IN INCREASING ORDER and should not contain duplicates.
+     */
+    TVec<int> m_active_set_indices;
+    
 
 public:
     //#####  Public Member Functions  #########################################
@@ -262,15 +291,26 @@ protected:
     PP<GaussianProcessNLLVariable> hyperOptimize(
         const Mat& inputs, const Mat& targets, VarArray& hyperparam_vars);
 
+    /// Update the parameters required for the Projected Process approximation,
+    /// assuming hyperparameters have already been optimized.
+    void trainProjectedProcess(const Mat& all_training_inputs,
+                               const Mat& sub_training_inputs,
+                               const Mat& all_training_targets);
+    
 protected:
     //#####  Protected Options  ###############################################
 
     /**
      *  Matrix of learned parameters, determined from the equation
      *
-     *    (M + lambda I)^-1 y
+     *    (K + lambda I)^-1 y
      *
      *  (don't forget that y can be a matrix for multivariate output problems)
+     *
+     *  In the case of the projected-process approximation, this contains
+     *  the result of the equiation
+     *
+     *    (lambda K_mm + K_mn K_nm)^-1 K_mn y
      */
     Mat m_alpha;
 
@@ -278,15 +318,26 @@ protected:
      *  Inverse of the Gram matrix, used to compute confidence intervals (must
      *  be saved since the confidence intervals are obtained from the equation
      *
-     *    sigma^2 = k(x,x) - k(x)'(M + lambda I)^-1 k(x)
+     *    sigma^2 = k(x,x) - k(x)'(K + lambda I)^-1 k(x)
+     *
+     *  An adjustment similar to 'alpha' is made for the projected-process
+     *  approximation.
      */
     Mat m_gram_inverse;
 
+    /**
+     *  Inverse of the sub-Gram matrix, i.e. K_mm^-1.  Used only with the
+     *  projected-process approximation.
+     */
+    Mat m_subgram_inverse;
+    
     /// Mean of the targets, if the option 'include_bias' is true
     Vec m_target_mean;
     
     /// Saved version of the training set inputs, which must be kept along for
-    /// carrying out kernel evaluations with the test point
+    /// carrying out kernel evaluations with the test point.  If using the
+    /// projected-process approximation, only the inputs in the active set are
+    /// saved.
     Mat m_training_inputs;
 
     /// Buffer for kernel evaluations at test time
@@ -307,6 +358,13 @@ protected:
 
     //! Buffer to hold the sigma reductor for m_gram_inverse_product
     mutable Mat m_sigma_reductor;
+
+    //! Solution algorithm in enum form to avoid lengthy string-compare
+    //! each time we want to compute a confidence interval
+    enum {
+        AlgoExact,
+        AlgoProjectedProcess
+    } m_algorithm_enum;
     
 private: 
     /// This does the actual building. 
