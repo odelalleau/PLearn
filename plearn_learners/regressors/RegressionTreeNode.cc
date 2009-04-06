@@ -256,7 +256,7 @@ void RegressionTreeNode::lookForBestSplit()
     Vec missing_error(3);
     missing_error.clear();
     PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
-    bool one_pass_on_data=!train_set->haveMissing() && leave->classname()=="RegressionTreeLeave";
+    bool one_pass_on_data=!train_set->haveMissing();
 
     int inputsize = train_set->inputsize();
 #ifdef RCMP
@@ -352,10 +352,9 @@ void RegressionTreeNode::lookForBestSplit()
                                registered_target_weight);
         }else{
             ret=train_set->bestSplitInRow(leave_id, col, registered_row,
-                                          missing_leave,
                                           left_leave,
                                           right_leave, left_error,
-                                          right_error, missing_error);
+                                          right_error);
         }
         PLASSERT(registered_row.size()==leave->length());
 #endif

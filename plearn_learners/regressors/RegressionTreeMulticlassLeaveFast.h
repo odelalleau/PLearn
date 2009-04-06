@@ -85,7 +85,9 @@ public:
     void         getOutputAndError(Vec& output, Vec& error)const;
     TVec<string> getOutputNames() const;
     void         printStats();
-  
+    virtual void         addLeave(PP<RegressionTreeLeave> leave);
+    virtual void         removeLeave(PP<RegressionTreeLeave> leave);
+
 private:
     void         build_();
 };

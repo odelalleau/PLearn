@@ -269,6 +269,31 @@ bool RegressionTreeLeave::uniqTarget(){
         PLERROR("In RegressionTreeLeave::uniqTarget subclass must reimplement it.");
 }
 
+void RegressionTreeLeave::addLeave(PP<RegressionTreeLeave> leave){
+    if(leave->classname()=="RegressionTreeLeave" && classname()=="RegressionTreeLeave"){
+        length_ += leave->length_;
+        weights_sum += leave->weights_sum;
+        targets_sum += leave->targets_sum;
+        weighted_targets_sum += leave->weighted_targets_sum;
+        weighted_squared_targets_sum += leave->weighted_squared_targets_sum;        
+    }else
+        PLERROR("In RegressionTreeLeave::addLeave subclass %s or %s must reimplement it.",
+                classname().c_str(), leave->classname().c_str());
+}
+
+void RegressionTreeLeave::removeLeave(PP<RegressionTreeLeave> leave){
+    if(leave->classname()=="RegressionTreeLeave" && classname()=="RegressionTreeLeave"){
+        length_ -= leave->length_;
+        weights_sum -= leave->weights_sum;
+        targets_sum -= leave->targets_sum;
+        weighted_targets_sum -= leave->weighted_targets_sum;
+        weighted_squared_targets_sum -= leave->weighted_squared_targets_sum;
+    }else
+        PLERROR("In RegressionTreeLeave::removeLeave subclass %s or %s must reimplement it.",
+                classname().c_str(), leave->classname().c_str());
+}
+
+
 void RegressionTreeLeave::verbose(string the_msg, int the_level)
 {
     if (verbosity >= the_level)

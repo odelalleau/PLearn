@@ -107,6 +107,8 @@ public:
     inline real          getWeightsSum(){return weights_sum;}
     inline real          getTargetsSum(){return targets_sum;}
     virtual bool         uniqTarget();
+    virtual void         addLeave(PP<RegressionTreeLeave> leave);
+    virtual void         removeLeave(PP<RegressionTreeLeave> leave);
 
 private:
     void         build_();

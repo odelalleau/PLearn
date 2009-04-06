@@ -110,11 +110,7 @@ private:
     mutable vector<bool> compact_reg;
     mutable int compact_reg_leave;
 
-    mutable int l_length;
-    mutable real l_weights_sum;
-    mutable real l_targets_sum;
-    mutable real l_weighted_targets_sum;
-    mutable real l_weighted_squared_targets_sum;
+    mutable PP<RegressionTreeLeave> tmp_leave;
 
 public:
 
@@ -149,7 +145,7 @@ public:
     inline void         setWeight(int row,real val){
         target_weight[row].second = val;
     }
-    inline bool         haveMissing(){return have_missing;}
+    inline bool         haveMissing()const{return have_missing;}
     inline RTR_type_id     getNextId(){
         PLCHECK(next_id<std::numeric_limits<RTR_type_id>::max());
         next_id += 1;return next_id;}
@@ -166,11 +162,9 @@ public:
         TVec<RTR_type> &candidate)const;
     tuple<real,real,int> bestSplitInRow(
         RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
-        PP<RegressionTreeLeave> missing_leave,
         PP<RegressionTreeLeave> left_leave,
         PP<RegressionTreeLeave> right_leave,
-        Vec left_error, Vec right_error,
-        Vec missing_error)const;
+        Vec left_error, Vec right_error)const;
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
     inline virtual void put(int i, int j, real value)

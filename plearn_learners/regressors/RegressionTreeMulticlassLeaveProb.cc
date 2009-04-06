@@ -41,6 +41,7 @@
 
 #include "RegressionTreeMulticlassLeaveProb.h"
 #include "RegressionTreeRegisters.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;
@@ -242,6 +243,30 @@ TVec<string> RegressionTreeMulticlassLeaveProb::getOutputNames() const
         ret[mc_ind+1]="prob_class_"+tostring(mc_ind);
     }
     return ret;
+}
+
+void RegressionTreeMulticlassLeaveProb::addLeave(PP<RegressionTreeLeave> leave_){
+    PP<RegressionTreeMulticlassLeaveProb> leave = (PP<RegressionTreeMulticlassLeaveProb>) leave_;
+
+    if(leave->classname() == classname()){
+        length_ += leave->length_;
+        weights_sum += leave->weights_sum;
+        multiclass_weights_sum += leave->multiclass_weights_sum;
+    }else
+        PLERROR("In %s::addLeave the leave to add should have the same class. It have %s.",
+                classname().c_str(), leave->classname().c_str());
+}
+
+void RegressionTreeMulticlassLeaveProb::removeLeave(PP<RegressionTreeLeave> leave_){
+    PP<RegressionTreeMulticlassLeaveProb> leave = (PP<RegressionTreeMulticlassLeaveProb>) leave_;
+
+    if(leave->classname() == classname()){
+        length_ -= leave->length_;
+        weights_sum -= leave->weights_sum;
+        multiclass_weights_sum -= leave->multiclass_weights_sum;
+    }else
+        PLERROR("In %s::addLeave the leave to add should have the same class. It have %s.",
+                classname().c_str(), leave->classname().c_str());
 }
 
 void RegressionTreeMulticlassLeaveProb::printStats()

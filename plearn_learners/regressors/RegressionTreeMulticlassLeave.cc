@@ -41,6 +41,7 @@
 
 #include "RegressionTreeMulticlassLeave.h"
 #include "RegressionTreeRegisters.h"
+#include <plearn/math/TMat_maths_impl.h>
 
 namespace PLearn {
 using namespace std;
@@ -273,6 +274,28 @@ TVec<string> RegressionTreeMulticlassLeave::getOutputNames() const
     if(output_confidence_target)
         ret.append("confidence");
     return ret;
+}
+
+void RegressionTreeMulticlassLeave::addLeave(PP<RegressionTreeLeave> leave_){
+    PP<RegressionTreeMulticlassLeave> leave = (PP<RegressionTreeMulticlassLeave>) leave_;
+    if(leave->classname() == classname()){
+        length_ += leave->length_;
+        weights_sum += leave->weights_sum;
+        multiclass_weights_sum += leave->multiclass_weights_sum;
+    }else
+        PLERROR("In %s::addLeave the leave to add should have the same class. It have %s.",
+                classname().c_str(), leave->classname().c_str());
+}
+
+void RegressionTreeMulticlassLeave::removeLeave(PP<RegressionTreeLeave> leave_){
+    PP<RegressionTreeMulticlassLeave> leave = (PP<RegressionTreeMulticlassLeave>) leave_;
+    if(leave->classname() == classname()){
+        length_ -= leave->length_;
+        weights_sum -= leave->weights_sum;
+        multiclass_weights_sum -= leave->multiclass_weights_sum;
+    }else
+        PLERROR("In %s::addLeave the leave to add should have the same class. It have %s.",
+                classname().c_str(), leave->classname().c_str());
 }
 
 void RegressionTreeMulticlassLeave::printStats()
