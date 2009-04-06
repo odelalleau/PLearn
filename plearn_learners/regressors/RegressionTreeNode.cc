@@ -255,8 +255,8 @@ void RegressionTreeNode::lookForBestSplit()
     Vec right_error(3);
     Vec missing_error(3);
     missing_error.clear();
-    bool one_pass_on_data=!RTR_HAVE_MISSING && leave->classname()=="RegressionTreeLeave";
     PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
+    bool one_pass_on_data=!train_set->haveMissing() && leave->classname()=="RegressionTreeLeave";
 
     int inputsize = train_set->inputsize();
 #ifdef RCMP

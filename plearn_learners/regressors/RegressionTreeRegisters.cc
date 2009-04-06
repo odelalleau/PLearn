@@ -68,6 +68,7 @@ RegressionTreeRegisters::RegressionTreeRegisters():
     next_id(0),
     do_sort_rows(true),
     mem_tsource(true),
+    have_missing(true),
     compact_reg_leave(-1)
 {
     build();
@@ -85,6 +86,7 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
     next_id(0),
     do_sort_rows(do_sort_rows_),
     mem_tsource(mem_tsource_),
+    have_missing(true),
     compact_reg_leave(-1)
 {
     source = source_;
@@ -92,6 +94,7 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
     if(tsource->classname()=="MemoryVMatrixNoSave")
         tsource_mat = tsource.toMat();
     tsorted_row = tsorted_row_;
+    checkMissing();
     build();
 }
 
@@ -105,6 +108,7 @@ RegressionTreeRegisters::RegressionTreeRegisters(VMat source_,
     next_id(0),
     do_sort_rows(do_sort_rows_),
     mem_tsource(mem_tsource_),
+    have_missing(true),
     compact_reg_leave(-1)
 {
     source = source_;
@@ -423,9 +427,7 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
     Vec left_error, Vec right_error,
     Vec missing_error) const
 {
-//    fill reg, t_w et value and candidate
     PLCHECK(missing_leave->classname()=="RegressionTreeLeave");
-    PLCHECK(RTR_HAVE_MISSING==false);//need to modif the code to make it work with missing value.
 
     PLASSERT(tsource_mat.length()==tsource.length());
     getAllRegisteredRow(leave_id,col,reg);
@@ -589,6 +591,7 @@ void RegressionTreeRegisters::sortRows()
     if(isUpToDate(f)){
         DBG_LOG<<"RegressionTreeRegisters:: Reloading the sorted source VMatrix: "<<f<<endl;
         PLearn::load(f,tsorted_row);
+        checkMissing();
         return;
     }
 
@@ -615,6 +618,7 @@ void RegressionTreeRegisters::sortRows()
         sortEachDim(sample_dim);
         if (report_progress) pb->update(sample_dim+1);
     }
+    checkMissing();
     if (report_progress) pb->close();//in case of parallel sort.
     if(source->hasMetaDataDir()){
         DBG_LOG<<"RegressionTreeRegisters:: Saving the sorted source VMatrix: "<<f<<endl;
@@ -622,7 +626,21 @@ void RegressionTreeRegisters::sortRows()
     }else{
     }
 }
-                                                  
+
+//!check if their is missing in the input value.
+void RegressionTreeRegisters::checkMissing()
+{
+    if(have_missing==false)
+        return;
+    bool found_missing=false;
+    for(int j=0;j<inputsize()&&!found_missing;j++)
+        for(int i=0;i<length()&&!found_missing;i++)
+            if(is_missing(tsource(j,i)))
+                found_missing=true;
+    if(!found_missing)
+        have_missing=false;
+}
+
 void RegressionTreeRegisters::sortEachDim(int dim)
 {
     PLCHECK_MSG(tsource->classname()=="MemoryVMatrixNoSave",tsource->classname().c_str());

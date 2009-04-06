@@ -105,6 +105,7 @@ private:
 
     bool do_sort_rows;
     bool mem_tsource;
+    bool have_missing;
 
     mutable vector<bool> compact_reg;
     mutable int compact_reg_leave;
@@ -148,6 +149,7 @@ public:
     inline void         setWeight(int row,real val){
         target_weight[row].second = val;
     }
+    inline bool         haveMissing(){return have_missing;}
     inline RTR_type_id     getNextId(){
         PLCHECK(next_id<std::numeric_limits<RTR_type_id>::max());
         next_id += 1;return next_id;}
@@ -190,6 +192,7 @@ private:
     void         sortRows();
     void         sortEachDim(int dim);
     void         verbose(string msg, int level);
+    void         checkMissing();
 
 };
 
