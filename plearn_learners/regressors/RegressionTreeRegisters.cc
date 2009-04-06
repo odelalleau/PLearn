@@ -415,6 +415,165 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
 
 }
 
+tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
+    RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
+    PP<RegressionTreeLeave> missing_leave,
+    PP<RegressionTreeLeave> left_leave,
+    PP<RegressionTreeLeave> right_leave,
+    Vec left_error, Vec right_error,
+    Vec missing_error) const
+{
+//    fill reg, t_w et value and candidate
+    PLCHECK(missing_leave->classname()=="RegressionTreeLeave");
+    PLCHECK(RTR_HAVE_MISSING==false);//need to modif the code to make it work with missing value.
+
+    PLASSERT(tsource_mat.length()==tsource.length());
+    getAllRegisteredRow(leave_id,col,reg);
+    real * p = tsource_mat[col];
+    pair<RTR_target_t,RTR_weight_t>* ptw = target_weight.data();
+    RTR_type * preg = reg.data();
+
+    int row_idx_end = reg.size() - 1;
+    int prev_row=preg[row_idx_end];
+    real prev_val=p[prev_row];
+    PLASSERT(reg.size()>row_idx_end && row_idx_end>=0);
+    PLASSERT(p[prev_row]==tsource(col,prev_row));
+    //fill right_leave
+    for( ;row_idx_end>0;row_idx_end--)
+    {
+        int futur_row = preg[row_idx_end-8];
+        __builtin_prefetch(&ptw[futur_row],1,2);
+        __builtin_prefetch(&p[futur_row],1,2);
+
+        int row=prev_row;
+        real val=prev_val;
+        prev_row = preg[row_idx_end-1];
+        prev_val = p[prev_row];
+
+        PLASSERT(reg.size()>row_idx_end && row_idx_end>0);
+        PLASSERT(target_weight.size()>row && row>=0);
+        PLASSERT(p[row]==tsource(col,row));
+        RTR_target_t target = ptw[row].first;
+        RTR_weight_t weight = ptw[row].second;
+
+        if (RTR_HAVE_MISSING && is_missing(val))
+            missing_leave->addRow(row, target, weight);
+        else if(val==prev_val)
+            right_leave->addRow(row, target, weight);
+        else
+            break;
+    }
+
+    if(col==0){//do 2 pass finding of the best split.
+        //fill left_leave
+        for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
+        {
+            int futur_row = preg[row_idx+8];
+            __builtin_prefetch(&ptw[futur_row],1,2);
+            __builtin_prefetch(&p[futur_row],1,2);
+            
+            PLASSERT(reg.size()>row_idx && row_idx>=0);
+            int row=int(preg[row_idx]);
+            real val=p[row];
+            PLASSERT(target_weight.size()>row && row>=0);
+            PLASSERT(p[row]==tsource(col,row));
+            
+            RTR_target_t target = ptw[row].first;
+            RTR_weight_t weight = ptw[row].second;
+            if (RTR_HAVE_MISSING && is_missing(val)){
+                missing_leave->addRow(row, target, weight);
+            }else {
+                left_leave->addRow(row, target, weight);
+            }
+        }
+
+        l_length=left_leave->length()+right_leave->length();
+        l_weights_sum=left_leave->weights_sum+right_leave->weights_sum;
+        l_targets_sum=left_leave->targets_sum+right_leave->targets_sum;
+        l_weighted_targets_sum=left_leave->weighted_targets_sum+right_leave->weighted_targets_sum;
+        l_weighted_squared_targets_sum=left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum;
+    }else{//do 1 pass finding of the best split.
+
+        //fill left_leave
+        left_leave->length_=l_length-right_leave->length();
+        left_leave->weights_sum=l_weights_sum-right_leave->weights_sum;
+        left_leave->targets_sum=l_targets_sum-right_leave->targets_sum;
+        left_leave->weighted_targets_sum=l_weighted_targets_sum-right_leave->weighted_targets_sum;
+        left_leave->weighted_squared_targets_sum=l_weighted_squared_targets_sum-right_leave->weighted_squared_targets_sum;
+        PLCHECK(l_length==left_leave->length()+right_leave->length());
+        PLCHECK(fast_is_equal(l_weights_sum,left_leave->weights_sum+right_leave->weights_sum));
+        PLCHECK(fast_is_equal(l_targets_sum,left_leave->targets_sum+right_leave->targets_sum));
+        PLCHECK(fast_is_equal(l_weighted_targets_sum,left_leave->weighted_targets_sum+right_leave->weighted_targets_sum));
+        PLCHECK(fast_is_equal(l_weighted_squared_targets_sum,left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum));
+    }
+
+    //find best_split
+    int best_balance=INT_MAX;
+    real best_feature_value = REAL_MAX;
+    real best_split_error = REAL_MAX;
+    //in case of only missing value
+    if(left_leave->length()==0)
+        return make_tuple(best_feature_value, best_split_error, best_balance);
+
+
+    real missing_errors = missing_error[0] + missing_error[1];
+
+    Vec tmp(3);
+    int iter=reg.size()-right_leave->length()-1;
+    RTR_type row=reg[iter];
+//    RTR_type next_row = reg[reg.size()-2-right_leave->length()];
+    real first_value=p[preg[0]];
+    real next_feature=p[row];
+
+
+    //next_feature!=first_value is to check if their is more split point
+    // in case of binary variable or variable with few different value,
+    // this give a great speed up.
+    for(int i=iter-1;i>=0&&next_feature!=first_value;i--)
+    {
+        RTR_type next_row = preg[i];
+        real row_feature=next_feature;
+        next_feature=p[next_row];
+        
+        PLASSERT(next_row!=row);
+
+        PLASSERT((i+1)<reg.size() || row==reg[i+1]);
+        PLASSERT(next_row==reg[i]);
+        PLASSERT(get(next_row, col)==next_feature);
+        PLASSERT(get(row, col)==row_feature);
+        PLASSERT(next_feature<=row_feature);
+
+        int futur_row = preg[i+9];
+        __builtin_prefetch(&ptw[futur_row],1,2);
+        __builtin_prefetch(&p[futur_row],1,2);
+
+
+        real target=ptw[row].first;
+        real weight=ptw[row].second;
+
+        left_leave->removeRow(row, target, weight);
+        right_leave->addRow(row, target, weight);
+
+        row = next_row;
+        if (next_feature < row_feature){
+            left_leave->getOutputAndError(tmp, left_error);
+            right_leave->getOutputAndError(tmp, right_error);
+        }else
+            continue;
+        real work_error = missing_errors + left_error[0]
+            + left_error[1] + right_error[0] + right_error[1];
+        int work_balance = abs(left_leave->length() -
+                               right_leave->length());
+        if (fast_is_more(work_error,best_split_error)) continue;
+        else if (fast_is_equal(work_error,best_split_error) &&
+                 fast_is_more(work_balance,best_balance)) continue;
+
+        best_feature_value = 0.5 * (row_feature + next_feature);
+        best_split_error = work_error;
+        best_balance = work_balance;
+    }
+    return make_tuple(best_split_error, best_feature_value, best_balance);
+}
 void RegressionTreeRegisters::sortRows()
 {
     next_id = 0;

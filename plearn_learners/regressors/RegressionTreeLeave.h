@@ -50,7 +50,8 @@ using namespace std;
 class RegressionTreeLeave: public Object
 {
     typedef Object inherited;
- 
+    friend class RegressionTreeNode;
+    friend class RegressionTreeRegisters;
     static Vec dummy_vec;
 
 public:

@@ -109,6 +109,12 @@ private:
     mutable vector<bool> compact_reg;
     mutable int compact_reg_leave;
 
+    mutable int l_length;
+    mutable real l_weights_sum;
+    mutable real l_targets_sum;
+    mutable real l_weighted_targets_sum;
+    mutable real l_weighted_squared_targets_sum;
+
 public:
 
     RegressionTreeRegisters();
@@ -149,13 +155,20 @@ public:
     void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg)const;
     void         getAllRegisteredRow(RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
                                      TVec<pair<RTR_target_t,RTR_weight_t> > &t_w, Vec &value)const;
-    void         getAllRegisteredRowLeave(
+   void          getAllRegisteredRowLeave(
         RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
         TVec<pair<RTR_target_t,RTR_weight_t> > &t_w, Vec &value,
         PP<RegressionTreeLeave> missing_leave,
         PP<RegressionTreeLeave> left_leave,
         PP<RegressionTreeLeave> right_leave,
         TVec<RTR_type> &candidate)const;
+    tuple<real,real,int> bestSplitInRow(
+        RTR_type_id leave_id, int col, TVec<RTR_type> &reg,
+        PP<RegressionTreeLeave> missing_leave,
+        PP<RegressionTreeLeave> left_leave,
+        PP<RegressionTreeLeave> right_leave,
+        Vec left_error, Vec right_error,
+        Vec missing_error)const;
     void         printRegisters();
     void         getExample(int i, Vec& input, Vec& target, real& weight);
     inline virtual void put(int i, int j, real value)

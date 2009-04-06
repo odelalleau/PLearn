@@ -255,6 +255,7 @@ void RegressionTreeNode::lookForBestSplit()
     Vec right_error(3);
     Vec missing_error(3);
     missing_error.clear();
+    bool one_pass_on_data=!RTR_HAVE_MISSING && leave->classname()=="RegressionTreeLeave";
     PP<RegressionTreeRegisters> train_set = tree->getSortedTrainingSet();
 
     int inputsize = train_set->inputsize();
@@ -267,7 +268,13 @@ void RegressionTreeNode::lookForBestSplit()
     row_split_balance.clear();
 #endif
     int leave_id = leave->getId();
-   
+    
+    int l_length = 0;
+    real l_weights_sum = 0;
+    real l_targets_sum = 0;
+    real l_weighted_targets_sum = 0;
+    real l_weighted_squared_targets_sum = 0;
+
     for (int col = 0; col < inputsize; col++)
     {
         missing_leave->initStats();
@@ -276,6 +283,7 @@ void RegressionTreeNode::lookForBestSplit()
         
         PLASSERT(registered_row.size()==leave->length());
         PLASSERT(candidate.size()==0);
+        tuple<real,real,int> ret;
 #ifdef NPREFETCH
         //The ifdef is in case we don't want to use the optimized version with
         //prefetch of memory. Maybe the optimization is hurtfull for some computer.
@@ -320,24 +328,56 @@ void RegressionTreeNode::lookForBestSplit()
             }
         }
 
-#else
-        train_set->getAllRegisteredRowLeave(leave_id, col, registered_row,
-                                            registered_target_weight,
-                                            registered_value,
-                                            missing_leave,
-                                            left_leave,
-                                            right_leave, candidate);
-        PLASSERT(registered_row.size()==leave->length());
-        PLASSERT(candidate.size()>0);
+        missing_leave->getOutputAndError(tmp_vec, missing_error);
+        ret=bestSplitInRow(col, candidate, left_error,
+                           right_error, missing_error,
+                           right_leave, left_leave,
+                           train_set, registered_value,
+                           registered_target_weight);
 
+#else
+        if(!one_pass_on_data){
+            train_set->getAllRegisteredRowLeave(leave_id, col, registered_row,
+                                                registered_target_weight,
+                                                registered_value,
+                                                missing_leave,
+                                                left_leave,
+                                                right_leave, candidate);
+            PLASSERT(candidate.size()>0);
+            missing_leave->getOutputAndError(tmp_vec, missing_error);
+            ret=bestSplitInRow(col, candidate, left_error,
+                               right_error, missing_error,
+                               right_leave, left_leave,
+                               train_set, registered_value,
+                               registered_target_weight);
+        }else{
+            ret=train_set->bestSplitInRow(leave_id, col, registered_row,
+                                          missing_leave,
+                                          left_leave,
+                                          right_leave, left_error,
+                                          right_error, missing_error);
+        }
+        PLASSERT(registered_row.size()==leave->length());
 #endif
 
-        missing_leave->getOutputAndError(tmp_vec, missing_error);
-        tuple<real,real,int> ret=bestSplitInRow(col, candidate, left_error,
-                                                right_error, missing_error,
-                                                right_leave, left_leave,
-                                                train_set, registered_value,
-                                                registered_target_weight);
+        if(col==0){
+            l_length=left_leave->length()+right_leave->length();
+            l_weights_sum=left_leave->weights_sum+right_leave->weights_sum;
+            l_targets_sum=left_leave->targets_sum+right_leave->targets_sum;
+            l_weighted_targets_sum=left_leave->weighted_targets_sum+right_leave->weighted_targets_sum;
+            l_weighted_squared_targets_sum=left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum;
+        }else if(!one_pass_on_data){
+            PLCHECK(l_length==left_leave->length()+right_leave->length());
+            PLCHECK(fast_is_equal(l_weights_sum,
+                                  left_leave->weights_sum+right_leave->weights_sum));
+            PLCHECK(fast_is_equal(l_targets_sum,
+                                  left_leave->targets_sum+right_leave->targets_sum));
+            PLCHECK(fast_is_equal(l_weighted_targets_sum,
+                                  left_leave->weighted_targets_sum+right_leave->weighted_targets_sum));
+            PLCHECK(fast_is_equal(l_weighted_squared_targets_sum,
+                                  left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum));
+        }
+
 #ifdef RCMP
         row_split_err[col] = get<0>(ret);
         row_split_value[col] = get<1>(ret);
