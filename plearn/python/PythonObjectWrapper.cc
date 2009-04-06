@@ -230,13 +230,22 @@ void ConvertFromPyObject<Vec>::convert(PyObject* pyobj, Vec& v,
     PLASSERT( pyobj );
     PyObject* pyarr0= PyArray_CheckFromAny(pyobj, NULL,
                                            1, 1, NPY_CARRAY_RO, Py_None);
+    if(!pyarr0)
+    {
+        Py_XDECREF(pyarr0);
+        PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj,
+                                print_traceback);
+    }
     PyObject* pyarr= 
         PyArray_CastToType(reinterpret_cast<PyArrayObject*>(pyarr0),
                            PyArray_DescrFromType(PL_NPY_REAL), 0);
     Py_XDECREF(pyarr0);
-    if (! pyarr)
+    if(!pyarr)
+    {
+        Py_XDECREF(pyarr);
         PLPythonConversionError("ConvertFromPyObject<Vec>", pyobj,
                                 print_traceback);
+    }
     v.resize(PyArray_DIM(pyarr,0));
     v.copyFrom((real*)(PyArray_DATA(pyarr)), PyArray_DIM(pyarr,0));
     Py_XDECREF(pyarr);
