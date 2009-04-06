@@ -276,7 +276,6 @@ void RegressionTreeNode::lookForBestSplit()
         
         PLASSERT(registered_row.size()==leave->length());
         PLASSERT(candidate.size()==0);
-
 #ifdef NPREFETCH
         //The ifdef is in case we don't want to use the optimized version with
         //prefetch of memory. Maybe the optimization is hurtfull for some computer.
@@ -298,7 +297,7 @@ void RegressionTreeNode::lookForBestSplit()
             real val=prev_val;
             prev_row = registered_row[row_idx_end - 1];
             prev_val = registered_value[row_idx_end - 1];
-            if (is_missing(val))
+            if (RTR_HAVE_MISSING && is_missing(val))
                 missing_leave->addRow(row, registered_target_weight[row_idx_end].first,
                                       registered_target_weight[row_idx_end].second);
             else if(val==prev_val)
@@ -311,7 +310,7 @@ void RegressionTreeNode::lookForBestSplit()
         for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
         {
             int row=registered_row[row_idx];
-            if (is_missing(registered_value[row_idx]))
+            if (RTR_HAVE_MISSING && is_missing(registered_value[row_idx]))
                 missing_leave->addRow(row, registered_target_weight[row_idx].first,
                                       registered_target_weight[row_idx].second);
             else {
@@ -467,7 +466,7 @@ int RegressionTreeNode::expandNode()
     for (int row_index = 0;row_index<registered_row.size();row_index++)
     {
         int row=registered_row[row_index];
-        if (is_missing(train_set->get(row, split_col)))
+        if (RTR_HAVE_MISSING && is_missing(train_set->get(row, split_col)))
         {
             missing_leave->addRow(row);
             missing_leave->registerRow(row);
@@ -494,7 +493,7 @@ int RegressionTreeNode::expandNode()
 //  leave->printStats();
 //  left_leave->printStats();
 //  right_leave->printStats();
-    if (missing_is_valid > 0)
+    if (RTR_HAVE_MISSING && missing_is_valid > 0)
     {
         missing_node = new RegressionTreeNode(missing_is_valid);
         missing_node->initNode(tree, missing_leave);
@@ -519,7 +518,7 @@ void RegressionTreeNode::computeOutputAndNodes(const Vec& inputv, Vec& outputv,
         outputv << leave_output;
         return;
     }
-    if (is_missing(inputv[split_col]))
+    if (RTR_HAVE_MISSING && is_missing(inputv[split_col]))
     {
         if (missing_is_valid > 0)
         {

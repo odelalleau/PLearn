@@ -225,7 +225,7 @@ void RegressionTreeMulticlassLeave::getOutputAndError(Vec& output, Vec& error)co
             mc_winer = mc_ind;
     }
     output[0] = multiclass_outputs[mc_winer];
-    if (missing_leave)
+    if (RTR_HAVE_MISSING && missing_leave)
     {
         error[0] = 0.0;
         error[1] = weights_sum;

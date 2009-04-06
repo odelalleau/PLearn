@@ -270,7 +270,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
         RTR_target_t target = ptw[row].first;
         RTR_weight_t weight = ptw[row].second;
 
-        if (is_missing(val))
+        if (RTR_HAVE_MISSING && is_missing(val))
             missing_leave->addRow(row, target, weight);
         else if(val==prev_val)
             right_leave->addRow(row, target, weight);
@@ -304,7 +304,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
             
             RTR_target_t target = ptw[row].first;
             RTR_weight_t weight = ptw[row].second;
-            if (is_missing(val)){
+            if (RTR_HAVE_MISSING && is_missing(val)){
                 missing_leave->addRow(row, target, weight);
             }else {
                 left_leave->addRow(row, target, weight);

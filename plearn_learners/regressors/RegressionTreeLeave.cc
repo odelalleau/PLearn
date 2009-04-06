@@ -205,7 +205,7 @@ void RegressionTreeLeave::getOutputAndError(Vec& output, Vec& error)const
     real conf = 0;
     if(length_>0){
         output[0] = weighted_targets_sum / weights_sum;
-        if (missing_leave != true)
+        if (!RTR_HAVE_MISSING || missing_leave != true)
         {
             //we put the most frequent case first as an optimisation
             conf = 1.0;

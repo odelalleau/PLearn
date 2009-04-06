@@ -65,6 +65,12 @@
 #define RTR_weight_t real
 #endif
 
+//if you are sur the their is no missing value in the training set
+//you can set its value to false for some speed up.
+#ifndef RTR_HAVE_MISSING
+#define RTR_HAVE_MISSING true
+#endif
+
 namespace PLearn {
 using namespace std;
 
