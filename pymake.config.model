@@ -283,6 +283,7 @@ options_choices = [
   [ '', 'march=native'],
   [ '', 'cygwin-fgets-bugfix'],
   [ '', 'openmpgcc'],
+  [ '', 'no-miss'],
   
   [ '', 'pass']
 ]
@@ -973,7 +974,11 @@ pymakeOption( name = 'Wno-uninitialized',
 	      description = 'to remove warning about uninitialized variables',
 	      compileroptions = '-Wno-uninitialized',
               in_output_dirname = False)
-              
+			  
+pymakeOption( name = 'no-miss',
+	          description = 'To use an optimisation in RegressionTree when their is no missing value in the trainset.',
+	          compileroptions = '-DRTR_HAVE_MISSING=false')
+	
 pymakeOption( name = 'nolock',
               description = 'USE WITH CARE: disable vmatrix lock',
               cpp_definitions = ['DISABLE_VMATRIX_LOCK'])
@@ -986,7 +991,7 @@ pymakeOption( name = 'cygwin-fgets-bugfix',
               description = 'add the cpp definition CYGWIN_FGETS_BUGFIX',
               cpp_definitions = ['CYGWIN_FGETS_BUGFIX'])
 
-cpp_variables += ['DISABLE_VMATRIX_LOCK', 'CYGWIN_FGETS_BUGFIX']
+cpp_variables += ['DISABLE_VMATRIX_LOCK', 'CYGWIN_FGETS_BUGFIX', 'RTR_HAVE_MISSING']
 
 
 #####  Network Setup  #######################################################
