@@ -153,7 +153,7 @@ private:
     void computeTrainingError(Vec input, Vec target);
 
     void computeOutput_(const Vec& input, Vec& output,
-                       int start=0, real sum=0.) const;
+                        const int start=0, const real sum=0.) const;
 
 protected: 
     //! Declares this class' options

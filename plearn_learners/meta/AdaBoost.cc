@@ -789,7 +789,9 @@ void AdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         for(int row=0;row<testset.length();row++){
             output=old_outputs(row);
             //compute the new testoutputs
+            Profiler::pl_profile_start("AdaBoost::test() getExample" );
             testset.getExample(row, input, target, weight);
+            Profiler::pl_profile_end("AdaBoost::test() getExample" );
             computeOutput_(input, output, stages_done, output[1]);
             computeCostsFromOutputs(input,output,target,costs);
 #ifndef NDEBUG
@@ -809,7 +811,7 @@ void AdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
 }
 
 void AdaBoost::computeOutput_(const Vec& input, Vec& output,
-                             int start, real sum) const
+                              const int start, real const sum) const
 {
     PLASSERT(weak_learners.size()>0);
     PLASSERT(weak_learner_output.size()==weak_learner_template->outputsize());
