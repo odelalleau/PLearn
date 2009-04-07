@@ -415,7 +415,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
         }
     }else{
         compact_reg.resize(0);
-        compact_reg.resize(length(),0);
+        compact_reg.resize(length(),false);
 //        for(uint i=0;i<compact_reg.size();i++)
 //            compact_reg[i]=false;
         for(int i=0;i<length() && n> idx;i++){
@@ -545,7 +545,7 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
         PLASSERT(get(row, col)==row_feature);
         PLASSERT(next_feature<=row_feature);
 
-        int futur_row = preg[i+9];
+        int futur_row = preg[i-9];
         __builtin_prefetch(&ptw[futur_row],1,2);
         __builtin_prefetch(&p[futur_row],1,2);
 
