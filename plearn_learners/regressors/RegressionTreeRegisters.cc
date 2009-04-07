@@ -359,6 +359,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
 }
 
 //! reg.size() == the number of row that we will put in it.
+//! the register are not sorted. They are in increasing order.
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id,
                                                   TVec<RTR_type> &reg) const
 {
@@ -371,12 +372,14 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id,
     for(int i=0;i<length() && n> idx;i++){
         if (pleave_register[i] == leave_id){
             preg[idx++]=i;
+            PLASSERT(reg[idx-1]==i);
         }
     }
     PLASSERT(idx==reg->size());
 }
 
 //! reg.size() == the number of row that we will put in it.
+//! the register are sorted by col.
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                                                   TVec<RTR_type> &reg) const
 {
