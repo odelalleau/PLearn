@@ -110,7 +110,10 @@ private:
     mutable vector<bool> compact_reg;
     mutable int compact_reg_leave;
 
+    //!used in bestSplitInRow to save data
     mutable PP<RegressionTreeLeave> tmp_leave;
+    //!used in bestSplitInRow to don't allocate a new vector each time.
+    mutable Vec tmp_vec;
 
 public:
 

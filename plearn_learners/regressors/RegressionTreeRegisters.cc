@@ -214,7 +214,7 @@ void RegressionTreeRegisters::build_()
         }
     leave_register.resize(length());
     sortRows();
-    compact_reg.resize(length());
+//    compact_reg.resize(length());
 }
 
 void RegressionTreeRegisters::reinitRegisters()
@@ -390,7 +390,17 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     RTR_type* preg = reg.data();
     RTR_type* ptsorted_row = tsorted_row[col];
     RTR_type_id* pleave_register = leave_register.data();
-    if(false && compact_reg_leave==leave_id){
+    if(compact_reg.size()==0){
+        for(int i=0;i<length() && n> idx;i++){
+            PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
+            RTR_type srow = ptsorted_row[i];
+            if ( pleave_register[srow] == leave_id){
+                PLASSERT(leave_register[srow] == leave_id);
+                PLASSERT(preg[idx]==reg[idx]);
+                preg[idx++]=srow;
+            }
+        }
+    }else if(compact_reg_leave==leave_id){
         //compact_reg is used as an optimization.
         //as it is more compact in memory then leave_register
         //we are more memory friendly.
@@ -404,6 +414,8 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
             }
         }
     }else{
+        compact_reg.resize(0);
+        compact_reg.resize(length(),0);
 //        for(uint i=0;i<compact_reg.size();i++)
 //            compact_reg[i]=false;
         for(int i=0;i<length() && n> idx;i++){
@@ -413,7 +425,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
                 PLASSERT(leave_register[srow] == leave_id);
                 PLASSERT(preg[idx]==reg[idx]);
                 preg[idx++]=srow;
-                //compact_reg[srow]=true;
+                compact_reg[srow]=true;
             }
         }
         compact_reg_leave = leave_id;
@@ -432,6 +444,7 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
 
     if(!tmp_leave){
         tmp_leave = ::PLearn::deepCopy(left_leave);
+        tmp_vec.resize(left_leave->outputsize());
     }
 
     PLASSERT(tsource_mat.length()==tsource.length());
@@ -494,11 +507,11 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
         left_leave->addLeave(tmp_leave);
         left_leave->removeLeave(right_leave);
 
-        PLCHECK(tmp_leave->length()==left_leave->length()+right_leave->length());
-        PLCHECK(fast_is_equal(tmp_leave->weights_sum,left_leave->weights_sum+right_leave->weights_sum));
-        PLCHECK(fast_is_equal(tmp_leave->targets_sum,left_leave->targets_sum+right_leave->targets_sum));
-        PLCHECK(fast_is_equal(tmp_leave->weighted_targets_sum,left_leave->weighted_targets_sum+right_leave->weighted_targets_sum));
-        PLCHECK(fast_is_equal(tmp_leave->weighted_squared_targets_sum,
+        PLASSERT(tmp_leave->length()==left_leave->length()+right_leave->length());
+        PLASSERT(fast_is_equal(tmp_leave->weights_sum,left_leave->weights_sum+right_leave->weights_sum));
+        PLASSERT(fast_is_equal(tmp_leave->targets_sum,left_leave->targets_sum+right_leave->targets_sum));
+        PLASSERT(fast_is_equal(tmp_leave->weighted_targets_sum,left_leave->weighted_targets_sum+right_leave->weighted_targets_sum));
+        PLASSERT(fast_is_equal(tmp_leave->weighted_squared_targets_sum,
                               left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum));
     }
 
@@ -509,12 +522,8 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
     if(left_leave->length()==0)
         return make_tuple(best_feature_value, best_split_error, best_balance);
 
-
-
-    Vec tmp(3);
     int iter=reg.size()-right_leave->length()-1;
     RTR_type row=reg[iter];
-//    RTR_type next_row = reg[reg.size()-2-right_leave->length()];
     real first_value=p[preg[0]];
     real next_feature=p[row];
 
@@ -549,8 +558,8 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
 
         row = next_row;
         if (next_feature < row_feature){
-            left_leave->getOutputAndError(tmp, left_error);
-            right_leave->getOutputAndError(tmp, right_error);
+            left_leave->getOutputAndError(tmp_vec, left_error);
+            right_leave->getOutputAndError(tmp_vec, right_error);
         }else
             continue;
         real work_error = left_error[0]
