@@ -654,9 +654,24 @@ void GaussianProcessRegressor::computeOutputCovMat(
     // less lifted from Kernel.cc ==> must see with Olivier how to better
     // factor this code
     Mat& K = covmat;
-    Vec self_cov(N);
-    m_kernel->computeTestGramMatrix(inputs, K, self_cov);
-    
+
+    PLASSERT( K.width() == N && K.length() == N );
+    const int mod = K.mod();
+    real Kij;
+    real* Ki;
+    real* Kji;
+    for (int i=0 ; i<N ; ++i) {
+        Ki  = K[i];
+        Kji = &K[0][i];
+        const Vec& cur_input_i = inputs(i);
+        for (int j=0 ; j<=i ; ++j, Kji += mod) {
+            Kij = m_kernel->evaluate(cur_input_i, inputs(j));
+            *Ki++ = Kij;
+            if (j<i)
+                *Kji = Kij;    // Assume symmetry, checked at build
+        }
+    }
+
     // The predictive covariance matrix is for the exact cast(c.f. Rasmussen
     // and Williams):
     //
