@@ -770,7 +770,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         my_costs=VMat(new MemoryVMatrix(testset->length(),
 					nTestCosts()));
     }
-    Profiler::pl_profile_start("MultiClassAdaBoost::test() my_outputs");
+//    Profiler::pl_profile_start("MultiClassAdaBoost::test() my_outputs");//cheap
     if(my_outputs){
         for(int row=0;row<testset.length();row++){
             real out1=testoutputs1->get(row,0);
@@ -792,8 +792,8 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
 	    my_outputs->putOrAppendRow(row,tmp_output);
 	}
     }
-    Profiler::pl_profile_end("MultiClassAdaBoost::test() my_outputs");
-    Profiler::pl_profile_start("MultiClassAdaBoost::test() my_costs");
+//    Profiler::pl_profile_end("MultiClassAdaBoost::test() my_outputs");
+//    Profiler::pl_profile_start("MultiClassAdaBoost::test() my_costs");//cheap
 
     if (my_costs){
         tmp_costs.resize(nTestCosts());
@@ -826,9 +826,8 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
 	    my_costs->putOrAppendRow(row,tmp_costs);
         }
     }
-    Profiler::pl_profile_end("MultiClassAdaBoost::test() my_costs");
-    Profiler::pl_profile_start("MultiClassAdaBoost::test() test_stats");
-
+//    Profiler::pl_profile_end("MultiClassAdaBoost::test() my_costs");
+//    Profiler::pl_profile_start("MultiClassAdaBoost::test() test_stats");//cheap
     if (test_stats){
 	if(testset->weightsize()==0){
             for(int row=0;row<testset.length();row++){
@@ -845,7 +844,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
             }
 	}
     }
-    Profiler::pl_profile_end("MultiClassAdaBoost::test() test_stats");
+//    Profiler::pl_profile_end("MultiClassAdaBoost::test() test_stats");
     timer->stopTimer("MultiClassAdaBoost::test() current");
     timer->stopTimer("MultiClassAdaBoost::test()");
     Profiler::pl_profile_end("MultiClassAdaBoost::test()");
