@@ -800,9 +800,14 @@ class DBICondor(DBIBase):
         self.to_all = False
         self.keep_failed_jobs_in_queue = False
         self.clean_up = True
+        self.max_file_size = 10*1024*1024 #in blocks size, here they are 1k each
+        self.debug = False
+        self.local_log_file = False
 
         DBIBase.__init__(self, commands, **args)
-
+        if self.debug:
+            self.condor_submit_exec+=" -debug"
+            self.condor_submit_dag_exec+=" -debug"
         valid_universe = ["standard", "vanilla", "grid", "java", "scheduler", "local", "parallel", "vm"]
         if not self.universe in valid_universe:
             raise DBIError("[DBI] ERROR: the universe option have an invalid value",self.universe,". Valid values are:",valid_universe)
@@ -1183,12 +1188,15 @@ class DBICondor(DBIBase):
         if self.to_all:
             raise DBIError("[DBI] ERROR: condor backend don't support the option --to_all and a maximum number of process")
         condor_submit_fd = open( self.condor_submit_file, 'w' )
-
-        self.log_file = os.path.join("/tmp/bastienf/dbidispatch",self.log_dir)
+        if os.path.exists("/Tmp"):
+            self.log_file = "/Tmp"
+        else:
+            self.log_file = "/tmp"
+        self.log_file = os.path.join(self.log_file,os.getenv("USER"),"dbidispatch",self.log_dir)
         os.system('mkdir -p ' + self.log_file)
         self.log_file = os.path.join(self.log_file,"condor.log")
         self.print_common_condor_submit(condor_submit_fd, "$(stdout)", "$(stderr)","$(args)")
-
+        
         condor_submit_fd.write("\nqueue\n")
         condor_submit_fd.close()
 
@@ -1243,7 +1251,14 @@ class DBICondor(DBIBase):
 
 
         condor_submit_fd = open( self.condor_submit_file, 'w' )
-        self.log_file= os.path.join(self.log_dir,"condor.log")
+        self.log_file = os.path.join(self.log_dir,"condor.log")
+        if self.local_log_file:
+            if os.path.exists("/Tmp"):
+                self.log_file = "/Tmp"
+            else:
+                self.log_file = "/tmp"
+            self.log_file = os.path.join(self.log_file,os.getenv("USER"),"dbidispatch",self.log_dir)
+
         self.print_common_condor_submit(condor_submit_fd, self.log_dir+"/$(Process).out", self.log_dir+"/$(Process).error")
 
         if self.pkdilly:
