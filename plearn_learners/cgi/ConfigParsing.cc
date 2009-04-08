@@ -79,7 +79,7 @@ void ConfigParsing::run(const vector<string>& args)
     input.reorder_fieldspec_from_headers=1;
     input.txtfilenames.append(args[0]);
     input.partial_match=1;
-    input.setMetaDataDir(args[0]+".metadatadir");
+    input.setMetaDataDir("output.prepro/"+args[0]+".metadatadir");
     input.build();
     bool all_uptodate = true;
     for(int i=1;i<=5;i++)
