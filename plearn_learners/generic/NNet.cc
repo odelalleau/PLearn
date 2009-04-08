@@ -41,6 +41,7 @@
 
 #include <plearn/var/AffineTransformVariable.h>
 #include <plearn/var/AffineTransformWeightPenalty.h>
+#include <plearn/var/ArgmaxVariable.h>
 #include <plearn/var/BinaryClassificationLossVariable.h>
 #include <plearn/var/ClassificationLossVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
@@ -1008,8 +1009,14 @@ Var NNet::getCost(const string& costname, const Var& the_output,
     {
         if (the_output->width()==1)
             return binary_classification_loss(the_output, the_target);
-        else
-            return classification_loss(the_output, the_target);
+        else {
+            Var targ = the_target;
+            if (targetsize() > 1)
+                // One-hot encoding of target: we need to convert it to an
+                // index in order to be able to use 'classification_loss'.
+                targ = argmax(the_target);
+            return classification_loss(the_output, targ);
+        }
     }
     else if (costname=="binary_class_error")
         return binary_classification_loss(the_output, the_target);
