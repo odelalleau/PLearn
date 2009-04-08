@@ -802,7 +802,7 @@ class DBICondor(DBIBase):
         self.clean_up = True
         self.max_file_size = 10*1024*1024 #in blocks size, here they are 1k each
         self.debug = False
-        self.local_log_file = False
+        self.local_log_file = True#by default true as condor can have randomly failure otherwise.
 
         DBIBase.__init__(self, commands, **args)
         if self.debug:
