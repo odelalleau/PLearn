@@ -1193,8 +1193,8 @@ class DBICondor(DBIBase):
         else:
             self.log_file = "/tmp"
         self.log_file = os.path.join(self.log_file,os.getenv("USER"),"dbidispatch",self.log_dir)
-        os.system('mkdir -p ' + self.log_file)
         self.log_file = os.path.join(self.log_file,"condor.log")
+        os.system('mkdir -p ' + self.log_file)
         self.print_common_condor_submit(condor_submit_fd, "$(stdout)", "$(stderr)","$(args)")
         
         condor_submit_fd.write("\nqueue\n")
