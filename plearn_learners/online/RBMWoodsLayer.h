@@ -161,13 +161,17 @@ protected:
 
     // Probability that sampling reaches a node but samples h=0 (expectation is for h=1)
     Vec off_expectation;
+    Mat off_expectations;
     // Ordinary RBMBinomialLayer expectation
     Vec local_node_expectation;
+    Mat local_node_expectations;
 
     // Computations of the local_node_expectation free energies for h = 1
     Vec on_free_energy;
+    Mat on_free_energies;
     // Computations of the local_node_expectation free energies for h = 0
     Vec off_free_energy;
+    Mat off_free_energies;
 
     // Gradient through the local_node_expectations (after sigmoid)
     Vec local_node_expectation_gradient;

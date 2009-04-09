@@ -117,7 +117,44 @@ void RBMWoodsLayer::generateSamples()
 
     PLASSERT( samples.width() == size && samples.length() == batch_size );
 
-    PLERROR( "RBMWoodsLayer::generateSamples(): not implemented yet" );
+    //PLERROR( "RBMWoodsLayer::generateSamples(): not implemented yet" );
+    samples.clear();
+
+    int n_nodes_per_tree = size / n_trees;
+    int node, depth, node_sample, sub_tree_size;
+    int offset = 0;
+
+    for( int b=0; b<batch_size; b++ )
+    {
+        offset = 0;
+        for( int t=0; t<n_trees; t++ )
+        {
+            depth = 0;
+            node = n_nodes_per_tree / 2;
+            sub_tree_size = node;
+            while( depth < tree_depth )
+            {
+                // HUGO: Note that local_node_expectation is really
+                // used as a probability, even for signed samples.
+                // Sorry for the misleading choice of variable name...
+                node_sample = random_gen->binomial_sample(
+                    local_node_expectations(b, node + offset ) );
+                if( use_signed_samples )
+                    samples(b,node + offset) = 2*node_sample-1;
+                else
+                    samples(b,node + offset) = node_sample;
+                
+                // Descending in the tree
+                sub_tree_size /= 2;
+                if ( node_sample > 0.5 )
+                    node -= sub_tree_size+1;
+                else
+                    node += sub_tree_size+1;
+                depth++;
+            }
+            offset += n_nodes_per_tree;
+        }    
+    }
 }
 
 void RBMWoodsLayer::computeProbabilisticClustering(Vec& prob_clusters)
@@ -316,7 +353,177 @@ void RBMWoodsLayer::computeExpectations()
     if( expectations_are_up_to_date )
         return;
 
-    PLERROR( "RBMWoodsLayer::computeExpectations(): not implemented yet" );
+    PLASSERT( expectations.width() == size
+              && expectations.length() == batch_size );
+    off_expectations.resize(batch_size,size);
+    local_node_expectations.resize(batch_size,size);
+    on_free_energies.resize(batch_size,size);
+    off_free_energies.resize(batch_size,size);
+
+    int n_nodes_per_tree = size / n_trees;
+    int node, depth, sub_tree_size, grand_parent;
+    int offset = 0;
+    bool left_of_grand_parent;
+    real grand_parent_prob;
+    for( int b=0; b<batch_size; b++ )
+    {
+        offset=0;
+        // Get local expectations at every node
+        
+        // HUGO: Note that local_node_expectations is really
+        // used as a probability, even for signed samples.
+        // Sorry for the misleading choice of variable name...
+        
+        // Divide and conquer computation of local (conditional) free energies
+        for( int t=0; t<n_trees; t++ )
+        {
+            depth = tree_depth-1;
+            sub_tree_size = 0;
+
+            // Initialize last level
+            for( int n=sub_tree_size; n<n_nodes_per_tree; n += 2*sub_tree_size + 2 )
+            {
+                //on_free_energies(b, n + offset ) = safeexp(activations(b,n+offset));
+                //off_free_energies(b, n + offset ) = 1;
+                // Now working in log-domain
+                on_free_energies(b, n + offset ) = activations(b,n+offset);
+                if( use_signed_samples )
+                    off_free_energies(b, n + offset ) = -activations(b,n+offset);
+                else
+                    off_free_energies(b, n + offset ) = 0;
+            }
+
+            depth = tree_depth-2;
+            sub_tree_size = 1;
+
+            while( depth >= 0 )
+            {
+                for( int n=sub_tree_size; n<n_nodes_per_tree; n += 2*sub_tree_size + 2 )
+                {
+                    //on_free_energies(b, n + offset ) = safeexp(activations(b,n+offset)) *
+                    //    ( on_free_energies(b,n + offset - sub_tree_size) + off_free_energies(b,n + offset - sub_tree_size) ) ;
+                    //off_free_energies(b, n + offset ) =
+                    //    ( on_free_energies(b,n + offset + sub_tree_size) + off_free_energies(b,n + offset + sub_tree_size) ) ;
+                    // Now working in log-domain
+                    on_free_energies(b, n + offset ) = activations(b,n+offset) +
+                        logadd( on_free_energies(b,n + offset - (sub_tree_size/2+1)),
+                                off_free_energies(b,n + offset - (sub_tree_size/2+1)) ) ;
+                    if( use_signed_samples )
+                        off_free_energies(b, n + offset ) = -activations(b,n+offset) +
+                            logadd( on_free_energies(b,n + offset + (sub_tree_size/2+1)),
+                                    off_free_energies(b,n + offset + (sub_tree_size/2+1)) ) ;
+                    else
+                        off_free_energies(b, n + offset ) =
+                            logadd( on_free_energies(b,n + offset + (sub_tree_size/2+1)),
+                                    off_free_energies(b,n + offset + (sub_tree_size/2+1)) ) ;
+
+                }
+                sub_tree_size = 2 * ( sub_tree_size + 1 ) - 1;
+                depth--;
+            }
+            offset += n_nodes_per_tree;
+        }
+
+        for( int i=0 ; i<size ; i++ )
+            //local_node_expectations(b,i) = on_free_energies(b,i) / ( on_free_energies(b,i) + off_free_energies(b,i) );
+            // Now working in log-domain
+            local_node_expectations(b,i) = safeexp(on_free_energies(b,i)
+                                                - logadd(on_free_energies(b,i), off_free_energies(b,i)));
+
+        // Compute marginal expectations
+        offset = 0;
+        for( int t=0; t<n_trees; t++ )
+        {
+            // Initialize root
+            node = n_nodes_per_tree / 2;
+            expectations(b, node + offset ) = local_node_expectations(b, node + offset );
+            off_expectations(b, node + offset ) = (1 - local_node_expectations(b, node + offset ));
+            sub_tree_size = node;
+
+            // First level nodes
+            depth = 1;
+            sub_tree_size /= 2;
+
+            // Left child
+            node = sub_tree_size;
+            expectations(b, node + offset ) = local_node_expectations(b, node + offset )
+                * local_node_expectations(b, node + offset + sub_tree_size + 1 );
+            off_expectations(b, node + offset ) = (1 - local_node_expectations(b, node + offset ))
+                * local_node_expectations(b, node + offset + sub_tree_size + 1 );
+
+            // Right child
+            node = 3*sub_tree_size+2;
+            expectations(b, node + offset ) = local_node_expectations(b, node + offset )
+                * (1 - local_node_expectations(b, node + offset - sub_tree_size - 1 ));
+            off_expectations(b, node + offset ) = (1 - local_node_expectations(b, node + offset ))
+                * (1 - local_node_expectations(b, node + offset - sub_tree_size - 1 ));
+
+            // Set other nodes, level-wise
+            depth = 2;
+            sub_tree_size /= 2;
+            while( depth < tree_depth )
+            {
+                // Left child
+                left_of_grand_parent = true;
+                for( int n=sub_tree_size; n<n_nodes_per_tree; n += 4*sub_tree_size + 4 )
+                {
+                    if( left_of_grand_parent )
+                    {
+                        grand_parent = n + offset + 3*sub_tree_size + 3;
+                        grand_parent_prob = expectations(b, grand_parent );
+                        left_of_grand_parent = false;
+                    }
+                    else
+                    {
+                        grand_parent = n + offset - sub_tree_size - 1;
+                        grand_parent_prob = off_expectations(b, grand_parent );
+                        left_of_grand_parent = true;
+                    }
+
+                    expectations(b, n + offset ) = local_node_expectations(b, n + offset )
+                        * local_node_expectations(b, n + offset + sub_tree_size + 1 )
+                        * grand_parent_prob;
+                    off_expectations(b, n + offset ) = (1 - local_node_expectations(b, n + offset ))
+                        * local_node_expectations(b, n + offset + sub_tree_size + 1 )
+                        * grand_parent_prob;
+
+                }
+
+                // Right child
+                left_of_grand_parent = true;
+                for( int n=3*sub_tree_size+2; n<n_nodes_per_tree; n += 4*sub_tree_size + 4 )
+                {
+                    if( left_of_grand_parent )
+                    {
+                        grand_parent = n + offset + sub_tree_size + 1;
+                        grand_parent_prob = expectations(b, grand_parent );
+                        left_of_grand_parent = false;
+                    }
+                    else
+                    {
+                        grand_parent = n + offset - 3*sub_tree_size - 3;
+                        grand_parent_prob = off_expectations(b, grand_parent );
+                        left_of_grand_parent = true;
+                    }
+
+                    expectations(b, n + offset ) = local_node_expectations(b, n + offset )
+                        * (1 - local_node_expectations(b, n + offset - sub_tree_size - 1 ))
+                        * grand_parent_prob;
+                    off_expectations(b, n + offset ) = (1 - local_node_expectations(b, n + offset ))
+                        * (1 - local_node_expectations(b, n + offset - sub_tree_size - 1 ))
+                        * grand_parent_prob;
+                }
+                sub_tree_size /= 2;
+                depth++;
+            }
+            offset += n_nodes_per_tree;
+        }
+    }
+    
+    if( use_signed_samples )
+        for( int b=0; b<batch_size; b++ )
+            for( int i=0; i<expectation.length(); i++ )
+                expectations(b,i) = expectations(b,i) - off_expectations(b,i);
 
     expectations_are_up_to_date = true;
 }
@@ -1028,9 +1235,13 @@ void RBMWoodsLayer::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 
     deepCopyField( off_expectation, copies );
+    deepCopyField( off_expectations, copies );
     deepCopyField( local_node_expectation, copies );
+    deepCopyField( local_node_expectations, copies );
     deepCopyField( on_free_energy, copies );
+    deepCopyField( on_free_energies, copies );
     deepCopyField( off_free_energy, copies );
+    deepCopyField( off_free_energies, copies );
     deepCopyField( local_node_expectation_gradient, copies );
     deepCopyField( on_tree_gradient, copies );
     deepCopyField( off_tree_gradient, copies );
