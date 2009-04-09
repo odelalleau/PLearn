@@ -126,8 +126,39 @@ public:
     //int select_among_k_most_frequent;
 
     //! Indication that the input space NLL should be computed
-    //! during test
+    //! during test. It will require a procedure to compute
+    //! the partition function Z, which can be exact (see compute_Z_exactly)
+    //! or approximate (see use_ais_to_compute_Z). If both are true,
+    //! exact computation will be used.
     bool compute_input_space_nll;
+
+    //! Indication that the partition function should be computed exactly
+    bool compute_Z_exactly;
+
+    //! Whether to use AIS (see Salakhutdinov and Murray ICML2008) to
+    //! compute Z. Assumes the input layer is an RBMBinomialLayer.
+    bool use_ais_to_compute_Z;
+
+    //! Number of AIS chains.
+    int n_ais_chains;
+
+    // Schedule information for the betas in AIS. 
+    //! List of interval beginnings, used to specify the beta schedule.
+    //! Its first element is always set to 0.
+    Vec ais_beta_begin;
+    //! List of interval ends, used to specify the beta schedule.
+    //! Its last element is always set to 1.
+    Vec ais_beta_end;
+    //! Number of steps in each of the beta interval, used to specify the beta schedule
+    TVec<int> ais_beta_n_steps;
+
+    // Each row gives
+    //! the triplet <a_i,b_i,N_i>, which indicate that
+    //! in interval [a_i,b_i], N_i betas should be uniformly
+    //! laid out. The values of a_0 and b_{ais_beta_schedule.length()-1} are
+    //! fixed to 0 and 1 respectively, i.e. the values
+    //! for them as given by the option are ignored.
+    Mat ais_beta_schedule;
 
     //! Number of additional input variables chosen to form the joint
     //! condition likelihoods in generalized pseudolikelihood
@@ -325,6 +356,17 @@ protected:
     //! Keeps the index of the NLL cost in train_costs
     int nll_cost_index;
 
+    //! Index of log_Z "cost"
+    int log_Z_cost_index;
+    //! Index of log_Z "cost", computed by AIS
+    int log_Z_ais_cost_index;
+    //! Index of lower bound of confidence interval for log_Z,
+    //! as computed by AIS
+    int log_Z_interval_lower_cost_index;
+    //! Index of upper bound of confidence interval for log_Z,
+    //! as computed by AIS
+    int log_Z_interval_upper_cost_index;
+
     //! Keeps the index of the class_error cost in train_costs
     int class_cost_index;
 
@@ -337,11 +379,21 @@ protected:
     real cumulative_training_time;
     //real cumulative_testing_time;
     
-    //! Normalisation constant (on log scale)
+    //! Normalisation constant, computed exactly (on log scale)
     mutable real log_Z;
+    //! Normalisation constant, computed by AIS (on log scale)
+    mutable real log_Z_ais;
 
-    //! Indication that the normalisation constant Z is up to date
+    //! Lower bound of confidence interval for log_Z
+    mutable real log_Z_down;
+    //! Upper bound of confidence interval for log_Z
+    mutable real log_Z_up;
+
+    //! Indication that the normalisation constant Z (computed exactly) is up to date
     mutable bool Z_is_up_to_date;
+
+    //! Indication that the normalisation constant Z (computed with AIS) is up to date
+    mutable bool Z_ais_is_up_to_date;
 
     //! Indication that the prolonged gibbs chain for 
     //! Persistent Consistent Divergence is started, for each chain
