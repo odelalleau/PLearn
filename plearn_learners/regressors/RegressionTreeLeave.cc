@@ -117,7 +117,9 @@ void RegressionTreeLeave::declareOptions(OptionList& ol)
 void RegressionTreeLeave::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(train_set, copies);
+    //we don't deep copy it as we don't modify it 
+    //and this is a link to the RegressionTree train_set
+//    deepCopyField(train_set, copies);
 }
 
 void RegressionTreeLeave::build()

@@ -157,11 +157,11 @@ void RegressionTreeRegisters::declareOptions(OptionList& ol)
 void RegressionTreeRegisters::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
-    deepCopyField(tsorted_row, copies);
     deepCopyField(leave_register, copies);
-//tsource should be deep copied, but as currently when it is deep copied
-// the copy is not used anymore to train. To save memory we don't do it.
+//tsource and tsorted_row should be deep copied, but currently when it is deep copied
+// the copy is modified. To save memory we don't do it.
 // It is deep copied eavily by HyperLearner and HyperOptimizer
+//    deepCopyField(tsorted_row, copies);
 //    deepCopyField(tsource,copies);
 //no need to deep copy source as we don't reuse it after initialization
 //    deepCopyField(source,copies);
