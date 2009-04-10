@@ -4,7 +4,7 @@ GaussianProcessRegressor(
     weight_decay            = 0,
     include_bias            = 1,
     compute_confidence      = 1,
-    ARD_hyperprefix_initval = ("terms[0].isp_input_sigma", 0.0),
+    ARD_hyperprefix_initval = ("terms[0].isp_input_sigma",    0.0) ,
     hyperparameters         = [ ("terms[0].isp_signal_sigma", 0.0) ,
                                 ("terms[0].isp_alpha",        0.0) ,
                                 ("terms[1].isp_noise_sigma",  0.0) ],
@@ -13,5 +13,7 @@ GaussianProcessRegressor(
                                                     rho         = 0.05,
                                                     slope_ratio = 10,
                                                     verbosity   = 1),
-    nstages                 = 100
+    nstages                 = 100,
+    solution_algorithm      = "projected-process",
+    active_set_indices      = [ 0 1 2 3 4 ]
     )
