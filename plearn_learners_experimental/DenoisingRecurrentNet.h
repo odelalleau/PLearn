@@ -70,6 +70,7 @@ public:
 
     ////! Number of epochs for rbm phase
     //int rbm_nstages;
+    //int nCost;
 
     //! The training weights of each target layers
     Vec target_layers_weights;
@@ -126,6 +127,12 @@ public:
     string encoding;
 
     bool noise;
+
+    //! Optional (default=0) factor of L1 regularization term
+    real L1_penalty_factor;
+
+    //! Optional (default=0) factor of L2 regularization term
+    real L2_penalty_factor;
     
     //! Input window size
     int input_window_size;
@@ -154,6 +161,8 @@ public:
 
     // learnt bias for hidden reconstruction
     Vec hidden_reconstruction_bias;
+
+    Vec hidden_reconstruction_bias2;
     
     double prediction_cost_weight;
     double input_reconstruction_cost_weight;
@@ -181,7 +190,8 @@ public:
                                                   bool use_silence, int octav_nbits, int duration_nbits=20);
     
     static void encode_onehot_timeframe(Mat sequence, Mat& encoded_sequence, 
-                                        int prepend_zero_rows, bool use_silence=false);    
+                                        int prepend_zero_rows, bool use_silence=false); 
+
 
     static int duration_to_number_of_timeframes(int duration);
     static int getDurationBit(int duration);
@@ -189,6 +199,9 @@ public:
 
     // input noise injection
     void inject_zero_forcing_noise(Mat sequence, double noise_prob) const;
+
+    // noise injection
+    void inject_zero_forcing_noise(Vec sequence, double noise_prob) const;
 
     inline static Vec getInputWindow(Mat sequence, int startpos, int winsize)
     { return sequence.subMatRows(startpos, winsize).toVec(); }
@@ -414,16 +427,18 @@ private:
     // note: the following functions are declared const because they have
     // to be called by test (which is const). Similarly, the members they 
     // manipulate are all declared mutable.
-    void recurrentFprop(Vec train_costs, Vec train_n_items) const;
+    void recurrentFprop(Vec train_costs, Vec train_n_items, bool useDynamicConnections=true) const;
 
     //! does encoding if needed and populates the list.
-    void encodeSequenceAndPopulateLists(Mat seq) const;
+    void encodeSequenceAndPopulateLists(Mat seq, bool doNoise) const;
 
     //! encodes seq, then populates: inputslist, targets_list, masks_list
     void encodeAndCreateSupervisedSequence(Mat seq) const;
 
     //! For the (backward testing) raw_masked_supervised case. Populates: input_list, targets_list, masks_list
-    void splitRawMaskedSupervisedSequence(Mat seq) const;
+    void splitRawMaskedSupervisedSequence(Mat seq, bool doNoise) const;
+
+    void encode_artificialData(Mat seq) const; 
 
     void resize_lists(int l) const;
 
@@ -451,7 +466,8 @@ private:
                                int& down_size,
                                int& up_size,
                                real& lr,
-                               bool accumulate);
+                               bool accumulate,
+                               bool using_penalty_factor);
 
     void bpropUpdateHiddenLayer(const Vec& input, 
                                 const Vec& output,
@@ -459,6 +475,9 @@ private:
                                 const Vec& output_gradient,
                                 Vec& bias,
                                 real& lr);
+
+
+    void applyWeightPenalty(Mat& weights, Mat& acc_weights_gr, int& down_size, int& up_size, real& lr);
 
     //! Builds input_reconstruction_prob from hidden (using reconstruction_weights which is  nhidden x ninputs, and input_reconstruction_bias)
     //! then backpropagates reconstruction cost (after comparison with clean_input) with learning rate input_reconstruction_lr
@@ -479,7 +498,7 @@ private:
     void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Mat& acc_weights_gr, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
 
-    double fpropHiddenReconstructionFromLastHidden(Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
+    double fpropHiddenReconstructionFromLastHidden(Vec theInput, Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec& reconstruction_bias2, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
                                                                           Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
     
     double fpropHiddenSymmetricDynamicMatrix(Vec hidden, Mat reconstruction_weights, Vec& reconstruction_prob, 
