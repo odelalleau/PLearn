@@ -13,5 +13,6 @@ GaussianProcessRegressor(
                                                     rho         = 0.05,
                                                     slope_ratio = 10,
                                                     verbosity   = 1),
-    nstages                 = 100
+    ## NB: too many stages result in differing optima for Intel versus AMD...
+    nstages                 = 1
     )
