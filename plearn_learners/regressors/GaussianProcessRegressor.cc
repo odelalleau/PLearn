@@ -409,8 +409,9 @@ void GaussianProcessRegressor::train()
     PLASSERT( m_kernel );
     if (! train_set || ! m_training_inputs)
         PLERROR("GaussianProcessRegressor::train: the training set must be specified");
-    int activelength= m_active_set_indices.size();
     int trainlength = train_set->length();
+    int activelength= ( m_algorithm_enum == AlgoProjectedProcess?
+                        m_active_set_indices.size() : trainlength );
     int inputsize   = train_set->inputsize() ;
     int targetsize  = train_set->targetsize();
     int weightsize  = train_set->weightsize();
