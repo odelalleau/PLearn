@@ -101,11 +101,10 @@ void PLearnerDiagonalKernel::build_()
     if (m_learner.isNull())
         PLERROR("PLearnerDiagonalKernel::build: the option 'learner' must be specified");
 
-    if (m_learner->outputsize() != 1)
-        PLERROR("PLearnerDiagonalKernel::build: the learner must have an outputsize of 1; "
-                "current outputsize is %d", m_learner->outputsize());
-    
-    m_output_buffer.resize(m_learner->outputsize());
+    // At build-time, we don't yet know the learner outputsize
+    // if (m_learner->outputsize() != 1)
+    //     PLERROR("PLearnerDiagonalKernel::build: the learner must have an outputsize of 1; "
+    //             "current outputsize is %d", m_learner->outputsize());
     
     // Ensure that we multiply in Kronecker terms
     inherited::m_default_value = 1.0;
@@ -117,8 +116,10 @@ void PLearnerDiagonalKernel::build_()
 real PLearnerDiagonalKernel::evaluate(const Vec& x1, const Vec& x2) const
 {
     PLASSERT( x1.size() == x2.size() );
-    PLASSERT( ! m_learner.isNull() );
+    PLASSERT( ! m_learner.isNull() && m_learner->outputsize() == 1);
 
+    m_output_buffer.resize(m_learner->outputsize());
+    
     if (x1 == x2) {
         real gating_term = inherited::evaluate(x1,x2);
         real sigma = softplus(m_isp_signal_sigma);
@@ -136,7 +137,10 @@ real PLearnerDiagonalKernel::evaluate(const Vec& x1, const Vec& x2) const
 void PLearnerDiagonalKernel::computeGramMatrix(Mat K) const
 {
     PLASSERT( K.size() == 0 || m_data_cache.size() > 0 );  // Ensure data cached OK
+    PLASSERT( ! m_learner.isNull() && m_learner->outputsize() == 1);
 
+    m_output_buffer.resize(m_learner->outputsize());
+    
     // Most elements are zero, except for the diagonal
     K.fill(0.0);
 
