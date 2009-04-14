@@ -1,16 +1,23 @@
 __version_id__ = "$Id$"
 
-import os, popen2, string, types
+import os, string, subprocess, types
 
 from plearn.utilities.ppath     import cvs_directory
 from plearn.utilities.verbosity import vprint
 
+def run_cmd(cmd):
+    """
+    Return Popen object that corresponds to running the given command through
+    the shell.
+    """
+    return subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE)
+
 def add( path ):
     addCmd = "cvs add %s" % path 
     vprint("Adding: " + addCmd, 2)
-    process = popen2.Popen4(addCmd)
-
-    errors = process.fromchild.readlines()
+    process = run_cmd(addCmd)
+    errors = process.stderr.readlines()
     vprint("%s" % string.join( errors, '' ), 1)
 
     return True
@@ -27,9 +34,9 @@ def commit(files, msg):
         commit_cmd += f + " " 
         
     vprint("\n+++ Commiting (from "+ os.getcwd() +"):\n" + commit_cmd, 1)
-    commit_process = popen2.Popen4(commit_cmd)    
+    commit_process = run_cmd(commit_cmd)
 
-    errors = commit_process.fromchild.readlines()
+    errors = commit_process.stderr.readlines()
     vprint("%s" % string.join( errors, '' ), 1)
 
 def ignore( path, list_of_paths ):
@@ -49,9 +56,9 @@ def last_user_to_commit(file_path):
     return author
 
 def query(option, fname, lookingFor, delim = "\n"):
-    cvs_process = popen2.Popen4("cvs " + option + " " + fname)
+    cvs_process = run_cmd("cvs " + option + " " + fname)
     
-    lines = cvs_process.fromchild.readlines()
+    lines = cvs_process.stdout.readlines()
     for line in lines :
         index = string.find(line, lookingFor)
         if index != -1:

@@ -1,4 +1,4 @@
-import logging, os, sets, sys, subprocess
+import logging, os, sys, subprocess
 from plearn.utilities import ppath
 from plearn.utilities import moresh
 from plearn.utilities import toolkit
@@ -149,7 +149,7 @@ class Program(core.PyTestObject):
             
             cmdline_options = self.cmdline_compile_options.split(",")
 
-            options = list( sets.Set(config_options+cmdline_options) )
+            options = list( set(config_options+cmdline_options) )
             options = " -".join([""]+options).strip()
 
             logging.debug("Test %s: Using compile options '%s' instead of '%s'...",

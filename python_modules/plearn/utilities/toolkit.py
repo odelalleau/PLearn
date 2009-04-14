@@ -5,7 +5,7 @@ submodule. If a considerable number of functions contained in this
 module seems to manage similar tasks, it is probably time to create a
 I{similar_tasks.py} L{utilities} submodule to move those functions to.
 """
-import inspect, os, shutil, string, sys, time, types
+import inspect, os, shutil, string, subprocess, sys, time, types
 from os.path import exists, join, abspath
 from string import split
 
@@ -52,7 +52,7 @@ def centered_square(s, width, ldelim='[', rdelim=']'):
 def command_output(command, stderr = True, stdout = True):
     """Returns the output lines of a shell command.    
     
-    @deprecated Please use the subprocess module instead.
+    @deprecated Please use directly the subprocess module instead.
 
     @param command: The shell command to execute.
     @type command: String
@@ -66,16 +66,17 @@ def command_output(command, stderr = True, stdout = True):
     @return: Output lines.
     @rtype:  Array of strings.
     """
-    import popen2
     if stderr and stdout:
-        (stdout_and_stderr, stdin) = popen2.popen4(command)
-        return stdout_and_stderr.readlines()
+        p = subprocess.Popen(command, stdout = subprocess.PIPE,
+                stderr = subprocess.STDOUT, shell = True)
+        return p.stdout.readlines()
     else:
-        (stdout_only, stdin, stderr_only) = popen2.popen3(command)
+        p = subprocess.Popen(command, stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE, shell = True)
         if stderr:
-            return stderr_only.readlines()
+            return p.stderr.readlines()
         elif stdout:
-            return stdout_only.readlines()
+            return p.stdout.readlines()
         else:
             return ''
 

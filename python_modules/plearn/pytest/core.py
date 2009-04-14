@@ -1,4 +1,4 @@
-import os, sets, sys
+import os, sys
 from plearn.utilities import toolkit
 from plearn.pyplearn.PyPLearnObject import PLOption, PyPLearnObject, PyPLearnSingleton
 
@@ -124,7 +124,7 @@ __code_mappings = {
     "INTERNAL ERROR"     : 64
     }
 
-__exit_flags = sets.Set()
+__exit_flags = set()
 def exitPyTest(flag=""):
     updateExitCode(flag)    
     sys.exit( sum(__exit_flags) )
