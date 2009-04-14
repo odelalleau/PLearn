@@ -16,6 +16,8 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                                                  clusterid(condor only),
                                                  processid(condor only))}+]
                               [--raw=STRING[\nSTRING]]
+                              [*--[no_]set_special_env]
+                              [--env=VAR=VALUE[;VAR2=VALUE2]]
     cluster, condor options  :[--32|--64|--3264] [--os=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
                               [--queue=X] [--nano=X] [--submit_options=X]
@@ -26,9 +28,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [--[*no_]getenv] [*--[no_]prefserver] 
                               [--rank=RANK_EXPRESSION] 
                               [--files=file1[,file2...]]
-                              [--env=VAR=VALUE[;VAR2=VALUE2]]
                               [*--[no_]abs_path] [--[*no_]pkdilly]
-                              [*--[no_]set_special_env]
                               [--universe={vanilla*, standard, grid, java,
                                            scheduler, local, parallel, vm}]
                               [--machine=HOSTNAME+] [--machines=regex+]
@@ -113,6 +113,12 @@ bqtools and condor options:
       - none    : remove all preceding pattern
   The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the submit file.
       if this option appread many time, they will be concatanated with a new line.
+  The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
+    MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
+  The '--env=VAR=VALUE' option will set in the environment of the executing
+    jobs the variable VAR with value VALUE. To pass many variable you can:
+      1) use one --env option and separ the pair by ';'(don't forget to quote)
+      2) you can pass many time the --env parameter.
 
 cluster and condor options:
   The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
@@ -186,12 +192,6 @@ condor only options:
      dbidispatch '--req=regexp("computer0*", target.Machine)'
   The '--[no_]nice' option set the nice_user option to condor. 
     If nice, the job(s) will have the lowest possible priority.
-  The '--env=VAR=VALUE' option will set in the environment of the executing
-    jobs the variable VAR with value VALUE. To pass many variable you can:
-      1) use one --env option and separ the pair by ';'(don't forget to quote)
-      2) you can pass many time the --env parameter.
-  The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
-    MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
   The '--[no_]abs_path' option will tell condor to change the path to the 
     executable to the absolute path or not. Default True.
   The '--[no_]pkdilly': will use the pkdilly tool to make condor more 
@@ -395,7 +395,7 @@ elif launch_cmd=="Condor":
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
                        "nano", "queue", "raw", "submit_options", "jobs_name",
-                       "tasks_filename" ]
+                       "tasks_filename", "set_special_env", "env" ]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.

@@ -584,13 +584,20 @@ class DBIBqtools(DBIBase):
         self.submit_options = ""
         self.jobs_name = ""
         self.m32G = False
-        
+        self.set_special_env = True
+        self.env = ""
+        self.cpu = 0
         DBIBase.__init__(self, commands, **args)
-
+        
         self.nb_proc = int(self.nb_proc)
         self.micro = int(self.micro)
         self.nano = int(self.nano)
+        self.cpu = int(self.cpu)
 
+        if self.set_special_env and self.cpu>0:
+            self.env+=' OMP_NUM_THREADS=%d'%self.cpu
+        if self.env:
+            self.env='export '+self.env
 ### We can't accept the symbols "," as this cause trouble with bqtools
         if self.log_dir.find(',')!=-1 or self.log_file.find(',')!=-1:
             raise DBIError("[DBI] ERROR: The log file(%s) and the log dir(%s) should not have the symbol ','"%(self.log_file,self.log_dir))
@@ -646,9 +653,10 @@ class DBIBqtools(DBIBase):
                 HOME=%s
                 export HOME
 
+                %s
                 cd ../../../../
                 (%s '~~task~~')'''
-                % (bq_cluster_home, bq_shell_cmd)
+                % (bq_cluster_home, self.env, bq_shell_cmd)
                 ) )
 
         if int(self.file_redirect_stdout):
