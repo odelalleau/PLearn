@@ -2413,22 +2413,23 @@ TVec<string> DenoisingRecurrentNet::getTrainCostNames() const
     return getTestCostNames();
 }
 
-
+/*
 void DenoisingRecurrentNet::generate(int t, int n)
 {
     PLERROR("generate not yet implemented");
 }
+*/
 
 
-/*
-void DenoisingRecurrentNet::oldgenerate(int t, int n)
+void DenoisingRecurrentNet::generate(int t, int n)
 {
     //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
     data = new AutoVMatrix();
     //data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/listData/target_tm12_input_t_tm12_tp12/scoreGen_tar_tm12__in_tm12_tp12.amat";
-    data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/create_data/scoreGenSuitePerf.amat";
+    //data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/create_data/scoreGenSuitePerf.amat";
+    data->filename = "/home/stan/cvs/Gamme/expressive_data/dataGen.amat";
 
-    data->defineSizes(208,16,0);
+    data->defineSizes(173,16,0);
     //data->inputsize = 21;
     //data->targetsize = 0;
     //data->weightsize = 0;
@@ -2445,6 +2446,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
     Vec input;
     Vec target;
     real weight;
+    int targsize;
 
     Vec output(outputsize());
     output.clear();
@@ -2454,7 +2456,8 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
 //     n_items.clear();
 
     int r,r2;
-    
+    use_target_layers_masks = true;
+
     int ith_sample_in_sequence = 0;
     int inputsize_without_masks = inputsize() 
         - ( use_target_layers_masks ? targetsize() : 0 );
@@ -2471,7 +2474,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
                     for( int tar=0; tar < target_layers.length(); tar++ )
                     {
                         
-                        input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar][ith_sample_in_sequence-k];
+                        input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar](ith_sample_in_sequence-k);
                         partTarSize -= target_layers[tar]->size;
                         
                         
@@ -2487,7 +2490,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
 //             for( int tar=0; tar < target_layers.length(); tar++ )
 //             {
 //                 if(i>=t){
-//                     input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar][ith_sample_in_sequence-k];
+//                     input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar](ith_sample_in_sequence-k);
 //                     partTarSize -= target_layers[tar]->size;
 //                 }
 //             }
@@ -2513,12 +2516,12 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
         }
 
         // Resize internal variables
-        hidden_list.resize(ith_sample_in_sequence+1);
-        hidden_act_no_bias_list.resize(ith_sample_in_sequence+1);
+        hidden_list.resize(ith_sample_in_sequence+1, hidden_layer->size);
+        hidden_act_no_bias_list.resize(ith_sample_in_sequence+1, hidden_layer->size);
         if( hidden_layer2 )
         {
-            hidden2_list.resize(ith_sample_in_sequence+1);
-            hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1);
+            hidden2_list.resize(ith_sample_in_sequence+1, hidden_layer2->size);
+            hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1, hidden_layer2->size);
         }
                  
         input_list.resize(ith_sample_in_sequence+1);
@@ -2531,13 +2534,13 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
         {
             if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
-                targets_list[tar].resize( ith_sample_in_sequence+1);
-                targets_list[tar][ith_sample_in_sequence].resize( 
-                    target_layers[tar]->size);
+                targsize = target_layers[tar]->size;
+                targets_list[tar].resize( ith_sample_in_sequence+1, targsize);
+                //targets_list[tar][ith_sample_in_sequence].resize( target_layers[tar]->size);
                 target_prediction_list[tar].resize(
-                    ith_sample_in_sequence+1);
+                    ith_sample_in_sequence+1, targsize);
                 target_prediction_act_no_bias_list[tar].resize(
-                    ith_sample_in_sequence+1);
+                    ith_sample_in_sequence+1, targsize);
             }
         }
         nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
@@ -2546,7 +2549,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
             masks_list.resize( target_layers.length() );
             for( int tar=0; tar < target_layers.length(); tar++ )
                 if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                    masks_list[tar].resize( ith_sample_in_sequence+1 );
+                    masks_list[tar].resize( ith_sample_in_sequence+1, target_layers[tar]->size );
         }
 
         // Forward propagation
@@ -2565,6 +2568,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
             {
                 if( use_target_layers_masks )
                 {
+                    Vec masks_list_tar_i = masks_list[tar](ith_sample_in_sequence);
                     clamp_units(target.subVec(
                                     sum_target_elements,
                                     target_layers_n_of_target_elements[tar]),
@@ -2574,7 +2578,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
                                     inputsize_without_masks 
                                     + sum_target_elements, 
                                     target_layers_n_of_target_elements[tar]),
-                                masks_list[tar][ith_sample_in_sequence]
+                                masks_list_tar_i
                         );
                     
                 }
@@ -2586,81 +2590,68 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
                                 target_layers[tar],
                                 target_symbol_sizes[tar]);
                 }
-                targets_list[tar][ith_sample_in_sequence] << 
+                targets_list[tar](ith_sample_in_sequence) << 
                     target_layers[tar]->expectation;
             }
             sum_target_elements += target_layers_n_of_target_elements[tar];
         }
-                
+        
+        Vec hidden_act_no_bias_i = hidden_act_no_bias_list(ith_sample_in_sequence);
         input_connections->fprop( input_list[ith_sample_in_sequence], 
-                                  hidden_act_no_bias_list[ith_sample_in_sequence]);
+                                  hidden_act_no_bias_i);
                 
         if( ith_sample_in_sequence > 0 && dynamic_connections )
         {
             dynamic_connections->fprop( 
-                hidden_list[ith_sample_in_sequence-1],
+                hidden_list(ith_sample_in_sequence-1),
                 dynamic_act_no_bias_contribution );
 
-            hidden_act_no_bias_list[ith_sample_in_sequence] += 
+            hidden_act_no_bias_list(ith_sample_in_sequence) += 
                 dynamic_act_no_bias_contribution;
         }
-                 
-        hidden_layer->fprop( hidden_act_no_bias_list[ith_sample_in_sequence], 
-                             hidden_list[ith_sample_in_sequence] );
+        
+        Vec hidden_i = hidden_list(ith_sample_in_sequence);
+        hidden_layer->fprop( hidden_act_no_bias_i, 
+                             hidden_i );
+
+        Vec last_hidden = hidden_i;
                  
         if( hidden_layer2 )
         {
+            Vec hidden2_i = hidden2_list(ith_sample_in_sequence); 
+            Vec hidden2_act_no_bias_i = hidden2_act_no_bias_list(ith_sample_in_sequence);
+
             hidden_connections->fprop( 
-                hidden_list[ith_sample_in_sequence],
-                hidden2_act_no_bias_list[ith_sample_in_sequence]);
+                hidden2_i,
+                hidden2_act_no_bias_i);
 
             hidden_layer2->fprop( 
-                hidden2_act_no_bias_list[ith_sample_in_sequence],
-                hidden2_list[ith_sample_in_sequence] 
+                hidden2_act_no_bias_i,
+                hidden2_i 
                 );
 
-            for( int tar=0; tar < target_layers.length(); tar++ )
-            {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_connections[tar]->fprop(
-                        hidden2_list[ith_sample_in_sequence],
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence]
-                        );
-                    target_layers[tar]->fprop(
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence],
-                        target_prediction_list[tar][
-                            ith_sample_in_sequence] );
-                    if( use_target_layers_masks )
-                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                            masks_list[tar][ith_sample_in_sequence];
-                }
-            }
+            last_hidden = hidden2_i; // last hidden layer vec 
         }
-        else
+           
+       
+        for( int tar=0; tar < target_layers.length(); tar++ )
         {
-            for( int tar=0; tar < target_layers.length(); tar++ )
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
-                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
-                {
-                    target_connections[tar]->fprop(
-                        hidden_list[ith_sample_in_sequence],
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence]
-                        );
-                    target_layers[tar]->fprop(
-                        target_prediction_act_no_bias_list[tar][
-                            ith_sample_in_sequence],
-                        target_prediction_list[tar][
-                            ith_sample_in_sequence] );
-                    if( use_target_layers_masks )
-                        target_prediction_list[tar][ ith_sample_in_sequence] *= 
-                            masks_list[tar][ith_sample_in_sequence];
-                }
+                Vec target_prediction_i = target_prediction_list[tar](i);
+                Vec target_prediction_act_no_bias_i = target_prediction_act_no_bias_list[tar](i);
+                target_connections[tar]->fprop(
+                    last_hidden,
+                    target_prediction_act_no_bias_i
+                    );
+                target_layers[tar]->fprop(
+                    target_prediction_act_no_bias_i,
+                    target_prediction_i );
+                if( use_target_layers_masks )
+                    target_prediction_i *= masks_list[tar](ith_sample_in_sequence);
             }
         }
+        
 
         
 
@@ -2670,15 +2661,15 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
             if( !fast_exact_is_equal(target_layers_weights[tar],0) )
             {
                 target_layers[tar]->activation << 
-                    target_prediction_act_no_bias_list[tar][
-                        ith_sample_in_sequence];
+                    target_prediction_act_no_bias_list[tar](
+                        ith_sample_in_sequence);
                 target_layers[tar]->activation += target_layers[tar]->bias;
                 target_layers[tar]->setExpectation(
-                    target_prediction_list[tar][
-                        ith_sample_in_sequence]);
+                    target_prediction_list[tar](
+                        ith_sample_in_sequence));
                 nll_list(ith_sample_in_sequence,tar) = 
                     target_layers[tar]->fpropNLL( 
-                        targets_list[tar][ith_sample_in_sequence] ); 
+                        targets_list[tar](ith_sample_in_sequence) ); 
 //                 costs[tar] += nll_list(ith_sample_in_sequence,tar);
                 
 //                 // Normalize by the number of things to predict
@@ -2726,14 +2717,14 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
        
         for( int tar=0; tar < target_layers.length(); tar++ )
         {
-            for (int j = 0; j < target_prediction_list[tar][i].length() ; j++ ){
+            for (int j = 0; j < target_prediction_list[tar](i).length() ; j++ ){
                 
-                if(i>n){
-                    myfile << target_prediction_list[tar][i][j] << " ";
-                }
-                else{
-                    myfile << targets_list[tar][i][j] << " ";
-                }
+                //if(i>n){
+                    myfile << target_prediction_list[tar](i)[j] << " ";
+                    // }
+                    //else{
+                    //    myfile << targets_list[tar](i)[j] << " ";
+                    // }
                        
            
             }
@@ -2746,7 +2737,7 @@ void DenoisingRecurrentNet::oldgenerate(int t, int n)
 
 }
 
-*/
+
 
 /*
 void DenoisingRecurrentNet::gen()
