@@ -778,7 +778,7 @@ void viewVMat(const VMat& vm, PPath filename)
 
                     if (fname[0] == '\0')
                         strcpy(fname, "outCol.txt");
-                    string filename = fname;
+                    string fname_str = fname;
 
                     mvprintw(LINES-1,0,"Writing file '%s'...", fname);
                     clrtoeol();
@@ -787,7 +787,7 @@ void viewVMat(const VMat& vm, PPath filename)
                     // Save the selected columns to the desired file, keeping
                     // the string values if 'view_strings' is currently true
                     // (can be toggled with 's'/'S' keys).
-                    vm_showed.columns(indexs)->saveAMAT(filename, false,
+                    vm_showed.columns(indexs)->saveAMAT(fname_str, false,
                                                         false, view_strings);
 
                     mvprintw(LINES-1,0,"*** Output written on: %s ***", fname);
