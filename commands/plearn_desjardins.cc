@@ -107,6 +107,7 @@
 #include <plearn/vmat/VariableDeletionVMatrix.h>
 #include <plearn/vmat/MeanMedianModeImputationVMatrix.h>
 #include <plearn/vmat/MissingIndicatorVMatrix.h>
+#include <plearn/vmat/ValueSelectRowsVMatrix.h>
 
 
 #include "PLearnCommands/plearn_main.h"
