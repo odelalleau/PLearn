@@ -155,7 +155,7 @@ TVec<string> StabilisationLearner::getTrainCostNames() const
 TVec<string> StabilisationLearner::getOutputNames() const
 {
     TVec<string> names(1);
-    names[0]="predicted_class";
+    names[0]="SALES_CATEG_STAB";
     return names;
 }
 
