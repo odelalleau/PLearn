@@ -129,7 +129,7 @@ inline long filesize(const PPath& filename)
 void cp(const PPath& srcpath, const PPath& destpath);
 
 //! Remove a file (return 'true' if removed sucessfully).
-bool rm(const PPath& file);
+bool rm(const PPath& file, bool fail_on_error_if_exist = false);
 
 //! Calls system mv command to move the given source file to destination.
 //! It fail if file exist. Use mvforce to force the overwrite existing file.

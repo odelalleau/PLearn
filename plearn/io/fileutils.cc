@@ -353,10 +353,13 @@ void cp(const PPath& srcpath, const PPath& destpath)
 ////////
 // rm //
 ////////
-bool rm(const PPath& file)
+bool rm(const PPath& file, bool fail_on_error_if_exist)
 {
     // New cross-platform version.
-    return (PR_Delete(file.absolute().c_str()) == PR_SUCCESS);
+    PRStatus ret = PR_Delete(file.absolute().c_str());
+    if(fail_on_error_if_exist && ret != PR_SUCCESS && pathexists(file))
+        PLERROR("Can't delete file %s",file.c_str());
+    return ret == PR_SUCCESS;
     /*
     // TODO Better cross-platform version ?
 #ifdef WIN32
