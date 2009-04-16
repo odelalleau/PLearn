@@ -965,7 +965,7 @@ void StackedAutoassociatorsNet::train()
     if( !train_stats )
     {
         train_stats = new VecStatsCollector();
-        train_stats->setFieldNames(getTrainCostNames());
+        train_stats->setFieldNames(train_cost_names);
     }
 
     // clear stats of previous epoch
@@ -2602,7 +2602,7 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
 {
     //Assumes that computeOutput has been called
 
-    costs.resize( getTestCostNames().length() );
+    costs.resize( nTestCosts() );
     costs.fill( MISSING_VALUE );
 
     if(compute_all_test_costs)
