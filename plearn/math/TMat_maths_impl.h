@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <plearn/sys/Profiler.h>
 
 namespace PLearn {
 using namespace std;
@@ -2929,6 +2930,7 @@ void productScaleAcc(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v,
 template <class T>
 void transposeProduct(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
 {
+    Profiler::pl_profile_start("transposeProduct T");
     int l=m.length();
 #ifdef BOUNDCHECK
     int w=m.width();
@@ -2945,6 +2947,7 @@ void transposeProduct(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
         // not empty, is necessarily zero, since R^0 = {0}.
         if (!result.isEmpty())
             result.clear();
+        Profiler::pl_profile_end("transposeProduct T");
         return;
     }
 
@@ -2958,6 +2961,7 @@ void transposeProduct(const TVec<T>& result, const TMat<T>& m, const TVec<T>& v)
         for (int i=0;i<result.length();i++)
             rp[i] += mj[i] * vj;
     }
+    Profiler::pl_profile_end("transposeProduct T");
 }
 
 //!  result[i] += sum_j m[j,i] * v[j]
@@ -3854,6 +3858,8 @@ void externalProductAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2
 template<class T>
 void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2, T gamma)
 {
+    Profiler::pl_profile_start("externalProductScaleAcc T");
+
 #ifdef BOUNDCHECK
     if (v1.length()!=mat.length() || mat.width()!=v2.length())
         PLERROR("externalProductScaleAcc(Vec,Vec), incompatible arguments %dx%d= %d times %d",
@@ -3869,12 +3875,15 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
         for (int j=0;j<w;j++)
             mi[j] += gamma * v1i * v_2[j];
     }
+    Profiler::pl_profile_end("externalProductScaleAcc T");
 }
 
 // mat[i][j] = alpha * mat[i][j] + gamma * v1[i] * v2[j]
 template<class T>
 void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T>& v2, T gamma, T alpha)
 {
+    Profiler::pl_profile_start("externalProductScaleAcc T");
+
 #ifdef BOUNDCHECK
     if (v1.length()!=mat.length() || mat.width()!=v2.length())
         PLERROR("externalProductScaleAcc(Vec,Vec), incompatible arguments %dx%d= %d times %d",
@@ -3890,6 +3899,7 @@ void externalProductScaleAcc(const TMat<T>& mat, const TVec<T>& v1, const TVec<T
         for (int j=0;j<w;j++)
             mi[j] = alpha*mi[j] + gamma * v1i * v_2[j];
     }
+    Profiler::pl_profile_end("externalProductScaleAcc T");
 }
 
 // mat[i][j] *= v1[i] * v2[j]

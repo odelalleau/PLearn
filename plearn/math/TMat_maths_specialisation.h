@@ -194,7 +194,7 @@ inline void productScaleAcc(const TMat<double>& C,
                             const TMat<double>& B, bool transposeB,
                             double alpha, double beta)
 {
-    Profiler::pl_profile_start("productScaleAcc(dgemm)");
+    Profiler::pl_profile_start("productScaleAcc(dgemm) specialisation");
 #ifdef BOUNDCHECK
     int l2;
 #endif
@@ -253,7 +253,7 @@ inline void productScaleAcc(const TMat<double>& C,
 
     dgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(),
            &lda, &beta, C.data(), &ldc);
-    Profiler::pl_profile_end("productScaleAcc(dgemm)");
+    Profiler::pl_profile_end("productScaleAcc(dgemm) specialisation");
 }
 
 //! y <- alpha A.x + beta y 
@@ -262,6 +262,7 @@ inline void productScaleAcc(const TVec<double>& y,
                             const TMat<double>& A, bool transposeA,
                             const TVec<double>& x, double alpha, double beta)
 {
+    Profiler::pl_profile_start("productScaleAcc(dgemv_) specialisation");
 #ifdef BOUNDCHECK
     if(!transposeA)
     {
@@ -296,6 +297,7 @@ inline void productScaleAcc(const TVec<double>& y,
 
     dgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta,
            y.data(), &one);
+    Profiler::pl_profile_end("productScaleAcc(dgemv_) specialisation");
 }
 
 //! A <- A + alpha x.y'
@@ -303,6 +305,8 @@ inline void externalProductScaleAcc(const TMat<double>& A,
                                     const TVec<double>& x,
                                     const TVec<double>& y, double alpha)
 {
+    Profiler::pl_profile_start("externalProductScaleAcc(dger_) double specialisation");
+
 #ifdef BOUNDCHECK
     if(A.length()!=x.length() || A.width()!=y.length())
         PLERROR("In externalProductScaleAcc, incompatible dimensions:\n"
@@ -322,6 +326,7 @@ inline void externalProductScaleAcc(const TMat<double>& A,
         return;
 
     dger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
+    Profiler::pl_profile_end("externalProductScaleAcc(dger_) double specialisation");
 }
 
 inline void externalProductAcc(const TMat<double>& A,
@@ -427,7 +432,7 @@ inline void productScaleAcc(const TMat<float>& C,
                             const TMat<float>& B, bool transposeB,
                             float alpha, float beta)
 {
-    Profiler::pl_profile_start("productScaleAcc(sgemm)");
+    Profiler::pl_profile_start("productScaleAcc(sgemm) specialisation");
 
 #ifdef BOUNDCHECK
     int l2;
@@ -481,7 +486,7 @@ inline void productScaleAcc(const TMat<float>& C,
 
     sgemm_(&transb, &transa, &w2, &l1, &w1, &alpha, B.data(), &ldb, A.data(),
            &lda, &beta, C.data(), &ldc);
-    Profiler::pl_profile_end("productScaleAcc(sgemm)");
+    Profiler::pl_profile_end("productScaleAcc(sgemm) specialisation");
 }
 
 //! y <- alpha A.x + beta y
@@ -490,6 +495,7 @@ inline void productScaleAcc(const TVec<float>& y,
                             const TMat<float>& A, bool transposeA,
                             const TVec<float>& x, float alpha, float beta)
 {
+    Profiler::pl_profile_start("productScaleAcc(sger_) specialisation");
 #ifdef BOUNDCHECK
     if(!transposeA)
     {
@@ -515,12 +521,14 @@ inline void productScaleAcc(const TVec<float>& y,
 
       sgemv_(&trans, &m, &n, &alpha, A.data(), &lda, x.data(), &one, &beta,
              y.data(), &one);
+    Profiler::pl_profile_end("productScaleAcc(sger_) specialisation");
 }
 
 //! A <- A + alpha x.y'
 inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x,
                                     const TVec<float>& y, float alpha)
 {
+    Profiler::pl_profile_start("externalProductScaleAcc(sger_) float specialisation");
 #ifdef BOUNDCHECK
     if(A.length()!=x.length() || A.width()!=y.length())
         PLERROR("In externalProductScaleAcc, incompatible dimensions:\n"
@@ -536,6 +544,7 @@ inline void externalProductScaleAcc(const TMat<float>& A, const TVec<float>& x,
         return;                                 // with actual calculation
 
     sger_(&m, &n, &alpha, y.data(), &one, x.data(), &one, A.data(), &lda);
+    Profiler::pl_profile_end("externalProductScaleAcc(sger_) float specialisation");
 }
 
 inline void externalProductAcc(const TMat<float>& A, const TVec<float>& x,
