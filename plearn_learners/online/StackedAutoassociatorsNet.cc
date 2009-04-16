@@ -41,6 +41,7 @@
 
 #include "StackedAutoassociatorsNet.h"
 #include <plearn/io/pl_log.h>
+#include <plearn/sys/Profiler.h>
 
 #define minibatch_hack 0 // Do we force the minibatch setting? (debug hack)
 
@@ -937,6 +938,7 @@ void StackedAutoassociatorsNet::forget()
 
 void StackedAutoassociatorsNet::train()
 {
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::train");
     MODULE_LOG << "train() called " << endl;
     MODULE_LOG << "  training_schedule = " << training_schedule << endl;
 
@@ -976,8 +978,10 @@ void StackedAutoassociatorsNet::train()
 
     if( !online )
     {
+        Profiler::pl_profile_start("StackedAutoassociatorsNet::train !online");
 
         /***** initial greedy training *****/
+        Profiler::pl_profile_start("StackedAutoassociatorsNet::train greedy");
         for( int i=0 ; i<n_layers-1 ; i++ )
         {
             MODULE_LOG << "Training connection weights between layers " << i
@@ -1116,10 +1120,13 @@ void StackedAutoassociatorsNet::train()
                     pb->update( *this_stage - init_stage + 1 );
             }
         }
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::train greedy");
 
         /***** unsupervised fine-tuning by gradient descent *****/
         if( unsupervised_stage < unsupervised_nstages )
         {
+            Profiler::pl_profile_start("StackedAutoassociatorsNet::train unsupervised");
+
 //            if( unsupervised_nstages > 0 && correlation_connections.length() != 0 )
 //                PLERROR("StackedAutoassociatorsNet::train()"
 //                        " - \n"
@@ -1173,11 +1180,13 @@ void StackedAutoassociatorsNet::train()
                 if( pb )
                     pb->update( unsupervised_stage - init_stage + 1 );
             }
+            Profiler::pl_profile_end("StackedAutoassociatorsNet::train unsupervised");
         }
 
         /***** fine-tuning by gradient descent *****/
         if( stage < nstages )
         {
+            Profiler::pl_profile_start("StackedAutoassociatorsNet::train supervised");
 
             MODULE_LOG << "Fine-tuning all parameters, by gradient descent" << endl;
             MODULE_LOG << "  stage = " << stage << endl;
@@ -1222,9 +1231,13 @@ void StackedAutoassociatorsNet::train()
                   && greedy_stages[currently_trained_layer-1] <= 0)
                 currently_trained_layer--;
         }
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::train !online");
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::train supervised");
     }
     else // online==true
     {
+        Profiler::pl_profile_start("StackedAutoassociatorsNet::train online");
+
         if( unsupervised_nstages > 0 )
             PLERROR("StackedAutoassociatorsNet::train()"
                     " - \n"
@@ -1290,8 +1303,10 @@ void StackedAutoassociatorsNet::train()
                     pb->update(stage - init_stage + 1);
             }
         }
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::train online");
 
     }
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::train");
 }
 
 void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_input, int layer)
@@ -1375,6 +1390,7 @@ void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_i
 void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                            int index, Vec train_costs)
 {
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::greedyStep");
     PLASSERT( index < n_layers );
 
     expectations[0] << input;
@@ -1464,10 +1480,12 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                         activation_gradients[ index + 1 ],
                                         expectation_gradients[ index + 1 ] );
 
+        Profiler::pl_profile_start("StackedAutoassociatorsNet::greedyStep bprop connection");
         connections[ index ]->bpropUpdate( corrupted_autoassociator_expectations[index],
                                            activations[ index + 1 ],
                                            expectation_gradients[ index ],
                                            activation_gradients[ index + 1 ] );
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::greedyStep bprop connection");
     }
 
     reconstruction_connections[ index ]->fprop( expectations[ index + 1],
@@ -1523,6 +1541,7 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
 
         if(reconstruct_hidden)
         {
+            Profiler::pl_profile_start("StackedAutoassociatorsNet::greedyStep reconstruct_hidden");
             connections[ index ]->fprop( layers[ index ]->expectation,
                                          hidden_reconstruction_activations );
             layers[ index+1 ]->fprop( hidden_reconstruction_activations,
@@ -1538,17 +1557,20 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
                                         hidden_reconstruction_activation_gradients);
             layers[ index+1 ]->update(hidden_reconstruction_activation_gradients);
 
+            Profiler::pl_profile_start("StackedAutoassociatorsNet::greedyStep reconstruct_hidden connection bprop");
             connections[ index ]->bpropUpdate(
                 layers[ index ]->expectation,
                 hidden_reconstruction_activations,
                 reconstruction_expectation_gradients_from_hid_rec,
                 hidden_reconstruction_activation_gradients);
+            Profiler::pl_profile_end("StackedAutoassociatorsNet::greedyStep reconstruct_hidden connection bprop");
 
             layers[ index ]->bpropUpdate(
                 reconstruction_activations,
                 layers[ index ]->expectation,
                 reconstruction_activation_gradients_from_hid_rec,
                 reconstruction_expectation_gradients_from_hid_rec);
+            Profiler::pl_profile_end("StackedAutoassociatorsNet::greedyStep reconstruct_hidden");
         }
 
         layers[ index ]->update(reconstruction_activation_gradients);
@@ -1650,6 +1672,7 @@ void StackedAutoassociatorsNet::greedyStep(const Vec& input, const Vec& target,
         }
     }
 
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::greedyStep");
 }
 
 void StackedAutoassociatorsNet::greedyStep(const Mat& inputs,
@@ -1808,6 +1831,9 @@ void StackedAutoassociatorsNet::fineTuningStep(const Vec& input,
                                                const Vec& target,
                                                Vec& train_costs)
 {
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::fineTuningStep");
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::fineTuningStep fprop");
+
     // fprop
     expectations[0] << input;
 
@@ -1828,11 +1854,14 @@ void StackedAutoassociatorsNet::fineTuningStep(const Vec& input,
     {
         for( int i=0 ; i<n_layers-1; i++ )
         {
+            Profiler::pl_profile_start("StackedAutoassociatorsNet::fineTuningStep fprop connection");
             connections[i]->fprop( expectations[i], activations[i+1] );
+            Profiler::pl_profile_end("StackedAutoassociatorsNet::fineTuningStep fprop connection");
             layers[i+1]->fprop(activations[i+1],expectations[i+1]);
         }
     }
 
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::fineTuningStep fprop");
     final_module->fprop( expectations[ n_layers-1 ],
                          final_cost_input );
     final_cost->fprop( final_cost_input, target, final_cost_value );
@@ -1849,6 +1878,7 @@ void StackedAutoassociatorsNet::fineTuningStep(const Vec& input,
                                expectation_gradients[ n_layers-1 ],
                                final_cost_gradient );
 
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::fineTuningStep bpropUpdate");
     if( correlation_connections.length() != 0 )
     {
         for( int i=n_layers-1 ; i>0 ; i-- )
@@ -1885,12 +1915,16 @@ void StackedAutoassociatorsNet::fineTuningStep(const Vec& input,
                                     activation_gradients[i],
                                     expectation_gradients[i] );
 
+           Profiler::pl_profile_start("StackedAutoassociatorsNet::fineTuningStep bpropUpdate connection");
             connections[i-1]->bpropUpdate( expectations[i-1],
                                            activations[i],
                                            expectation_gradients[i-1],
                                            activation_gradients[i] );
+           Profiler::pl_profile_end("StackedAutoassociatorsNet::fineTuningStep bpropUpdate connection");
         }
     }
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::fineTuningStep bpropUpdate");
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::fineTuningStep");
 }
 
 void StackedAutoassociatorsNet::fineTuningStep(const Mat& inputs,
@@ -2495,6 +2529,7 @@ void StackedAutoassociatorsNet::onlineStep(const Mat& inputs,
 
 void StackedAutoassociatorsNet::computeOutput(const Vec& input, Vec& output) const
 {
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::computeOutput");
     // fprop
 
     expectations[0] << input;
@@ -2554,8 +2589,64 @@ void StackedAutoassociatorsNet::computeOutput(const Vec& input, Vec& output) con
     else
         final_module->fprop( expectations[ currently_trained_layer - 1],
                              output );
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::computeOutput");
 }
 
+void StackedAutoassociatorsNet::computeOutputs(const Mat& input, Mat& output) const
+{
+    if(correlation_connections.length() != 0
+       || currently_trained_layer!=n_layers
+       || compute_all_test_costs){
+        inherited::computeOutputs(input, output);
+    }else{
+        Profiler::pl_profile_start("StackedAutoassociatorsNet::computeOutputs");
+        PLCHECK(correlation_connections.length() == 0);
+        PLCHECK(currently_trained_layer == n_layers);
+        PLCHECK(!compute_all_test_costs);
+
+        expectations_m[0].resize(input.length(), inputsize());
+        Mat m = expectations_m[0];
+        m<<input;
+        for(int i=0 ; i<currently_trained_layer-1 ; i++ )
+        {
+            connections[i]->fprop( expectations_m[i], activations_m[i+1] );
+            layers[i+1]->fprop(activations_m[i+1],expectations_m[i+1]);
+        }
+        final_module->fprop( expectations_m[ currently_trained_layer - 1],
+                             output );
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::computeOutputs");
+    }
+}
+
+void StackedAutoassociatorsNet::computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                                       Mat& output, Mat& costs) const
+{
+    if(correlation_connections.length() != 0 
+       || currently_trained_layer!=n_layers
+       || compute_all_test_costs){
+        inherited::computeOutputsAndCosts(input, target, output, costs);
+    }else{
+        Profiler::pl_profile_start("StackedAutoassociatorsNet::computeOutputsAndCosts");
+        PLCHECK(correlation_connections.length() == 0);
+        PLCHECK(currently_trained_layer == n_layers);
+        PLCHECK(!compute_all_test_costs);
+
+        int n=input.length();
+        PLASSERT(target.length()==n);
+        output.resize(n,outputsize());
+        costs.resize(n,nTestCosts());
+        computeOutputs(input, output);
+        for (int i=0;i<n;i++)
+        {
+            Vec in_i = input(i);
+            Vec out_i = output(i); 
+            Vec target_i = target(i);
+            Vec c_i = costs(i);
+            computeCostsFromOutputs(in_i, out_i, target_i, c_i);
+        }
+        Profiler::pl_profile_end("StackedAutoassociatorsNet::computeOutputsAndCosts");
+    }
+}
 void StackedAutoassociatorsNet::computeOutputWithoutCorrelationConnections(const Vec& input, Vec& output) const
 {
     // fprop
@@ -2602,6 +2693,7 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
 {
     //Assumes that computeOutput has been called
 
+    Profiler::pl_profile_start("StackedAutoassociatorsNet::computeCostsFromOutputs");
     costs.resize( nTestCosts() );
     costs.fill( MISSING_VALUE );
 
@@ -2703,6 +2795,7 @@ void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const 
                      final_cost_value.length()) <<
             final_cost_value;
     }
+    Profiler::pl_profile_end("StackedAutoassociatorsNet::computeCostsFromOutputs");
 }
 
 TVec<string> StackedAutoassociatorsNet::getTestCostNames() const

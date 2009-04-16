@@ -244,9 +244,15 @@ public:
     //! Computes the output from the input.
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
+    //! Computes the output from the input.
+    virtual void computeOutputs(const Mat& input, Mat& output) const;
+
     //! Computes the costs from already computed output.
     virtual void computeCostsFromOutputs(const Vec& input, const Vec& output,
                                          const Vec& target, Vec& costs) const;
+
+    virtual void computeOutputsAndCosts(const Mat& input, const Mat& target,
+                                        Mat& output, Mat& costs) const;
 
     //! Returns the names of the costs computed by computeCostsFromOutpus (and
     //! thus the test method).
