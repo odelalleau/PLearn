@@ -47,7 +47,7 @@ class __injected_functions:
 # Overriding builtin import function
 import __builtin__  
 __builtin_import__ = __builtin__.__import__
-def __inject_import__(name, globals_arg=None, locals_arg=None, fromlist=[]):
+def __inject_import__(name, globals_arg=None, locals_arg=None, fromlist=[], level=-1):
     """Import function that injects locals in the imported module.
 
     This function is meant to override the builtin I{__import__} function
@@ -69,7 +69,7 @@ def __inject_import__(name, globals_arg=None, locals_arg=None, fromlist=[]):
 
     # print >>sys.stderr, "Python path is:",sys.path
     # print >>sys.stderr, "Current directory is:",os.getcwd()
-    module = __builtin_import__(name, globals_arg, locals_arg, fromlist)
+    module = __builtin_import__(name, globals_arg, locals_arg, fromlist, level)
     if '__injected__' in globals_arg:
         if hasattr(module, 'injected'):
             module.injected.update(globals_arg['__injected__'])
