@@ -186,8 +186,10 @@ void TextFilesVMatrix::buildIdx()
             {
                 fields = splitIntoFields(buf);
                 int nf = fields.length();
-                if(nf!=fieldspec.size())
+                if(nf!=fieldspec.size()){
                     fprintf(logfile, "ERROR In file %d line %d: Found %d fields (should be %d):\n %s",fileno,lineno,nf,fieldspec.size(),buf);
+                    PLWARNING("In file %d line %d: Found %d fields (should be %d):\n %s",fileno,lineno,nf,fieldspec.size(),buf);
+                }
                 else  // Row OK! append it to index
                 {
                     fputc(fileno, idxfile);
