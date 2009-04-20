@@ -123,8 +123,6 @@ void StabilisationLearner::computeOutput(const Vec& input, Vec& output) const
         ret = ((l2-threshold)>=0.5)+1;
     else if(old==2 and pred==1)
         ret = ((l2+threshold)>=0.5)+1;
-    else if(is_missing(old))
-        ret = pred;
     else{
         ret = pred;
         NORMAL_LOG<< "We don't know what to do with old="<<old<<" and pred="<<pred<<endl;    
