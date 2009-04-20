@@ -99,16 +99,20 @@ void StabilisationLearner::train()
 
 void StabilisationLearner::computeOutput(const Vec& input, Vec& output) const
 {
-    real pred=int(input[0]);
+    real pred_=input[0];
+    
     real l1=input[1];
     real l2=input[2];
-    real old_=int(input[3]);
-    real old,ret;
-    if(old_==3) old=2;
-    else old=old_;
+    real old_=input[3];
+    int old,pred;
+    real ret;
 
-//    if not isNaN(real):     ret = real
-    if(old==pred)           ret = pred;
+    pred=int(pred_);
+    old=int(old_);
+    if(old==3)                old=2;
+
+    if (is_missing(old_))       ret=pred;
+    else if(old==pred)          ret = pred;
     else if(old==0 and pred==2) ret = 1;
     else if(old==2 and pred==0) ret = 1;
     else if(old==0 and pred==1)
@@ -119,6 +123,8 @@ void StabilisationLearner::computeOutput(const Vec& input, Vec& output) const
         ret = ((l2-threshold)>=0.5)+1;
     else if(old==2 and pred==1)
         ret = ((l2+threshold)>=0.5)+1;
+    else if(is_missing(old))
+        ret = pred;
     else{
         ret = pred;
         NORMAL_LOG<< "We don't know what to do with old="<<old<<" and pred="<<pred<<endl;    
