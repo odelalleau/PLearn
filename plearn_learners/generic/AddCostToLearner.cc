@@ -88,6 +88,8 @@ AddCostToLearner::AddCostToLearner()
       total_train_time(0),
       test_time(0),
       total_test_time(0),
+      train_time_b(false),
+      test_time_b(false),
       check_output_consistency(1),
       combine_bag_outputs_method(1),
       compute_costs_on_bags(0),
@@ -214,6 +216,14 @@ void AddCostToLearner::declareOptions(OptionList& ol)
                   &AddCostToLearner::total_test_time, OptionBase::learntoption,
                   "The total time spent in the test() function in second.");
 
+    declareOption(ol, "train_time_b",
+                  &AddCostToLearner::train_time, OptionBase::learntoption,
+                  "If we should calculate the time spent in the train.");
+
+    declareOption(ol, "test_time_b",
+                  &AddCostToLearner::test_time, OptionBase::learntoption,
+                  "If we should calculate the time spent in the test.");
+
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
 }
@@ -238,7 +248,6 @@ void AddCostToLearner::build_()
     int n = costs.length();
     int min_verb = 2;
     bool display = (verbosity >= min_verb);
-    bool activ_profiler=false;
     int os = learner_->outputsize();
     if (os < 0) {
         // The sub-learner does not know its outputsize yet: we skip the build for
@@ -284,14 +293,13 @@ void AddCostToLearner::build_()
         } else if (c == "class_error") {
         } else if (c == "binary_class_error") {
         } else if (c == "train_time") {
-            activ_profiler=true;
+            train_time_b=true;
         } else if (c == "total_train_time") {
-            activ_profiler=true;
+            train_time_b=true;
         } else if (c == "test_time") {
-            activ_profiler=true;
-            Profiler::reset("AddCostToLearner::test");
+            test_time_b=true;
         } else if (c == "total_test_time") {
-            activ_profiler=true;
+            test_time_b=true;
         } else if (c == "linear_class_error") {
         } else if (c == "square_class_error") {
         } else if (c == "confusion_matrix") {
@@ -322,7 +330,11 @@ void AddCostToLearner::build_()
     if (n > 0 && display) {
         cout << endl;
     }
-    if(activ_profiler)
+    
+    if(test_time_b)
+        Profiler::reset("AddCostToLearner::test");
+
+    if(test_time_b || train_time_b)
         Profiler::activate();
 }
 
@@ -795,16 +807,17 @@ void AddCostToLearner::train()
 
     }
     Profiler::end("AddCostToLearner::train");
-    if(Profiler::isActive()){
+    if(train_time_b){
         const Profiler::Stats& stats = Profiler::getStats("AddCostToLearner::train");
         real tmp=stats.wall_duration/Profiler::ticksPerSecond();
         train_time=tmp - total_train_time;
         total_train_time=tmp;
-
+    }
+    if(test_time_b){
         //we get the test_time here as we want the test time for all dataset.
         //if we put it in the test function, we would have it for one dataset.
         const Profiler::Stats& stats_test = Profiler::getStats("AddCostToLearner::test");
-        tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
+        real tmp=stats_test.wall_duration/Profiler::ticksPerSecond();
         test_time=tmp-total_test_time;
         total_test_time=tmp;  
     }

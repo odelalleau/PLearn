@@ -117,6 +117,9 @@ protected:
     //! The total time passed in test()
     real total_test_time;
 
+    bool train_time_b;
+    bool test_time_b;
+
 public:
 
     // ************************
