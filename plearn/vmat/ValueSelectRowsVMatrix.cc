@@ -143,8 +143,9 @@ void ValueSelectRowsVMatrix::build_()
         }
     }
     if(indices.size()!=values_sec.size())
-        PLWARNING("In ValueSelectRowsVMatrix::build_() - we select less row(%d) then asked(%d)."
-                  " Meaby some disapeared.",indices.size(),values_sec.size());
+        PLWARNING("In ValueSelectRowsVMatrix::build_() - we selected less rows"
+                " (%d) than asked(%d). Maybe some disappeared.",
+                indices.size(), values_sec.size());
     updateMtime(source);
     updateMtime(second);
 }
