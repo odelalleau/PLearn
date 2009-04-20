@@ -191,11 +191,20 @@ DECLARE_OBJECT_PTR(PyPLearnScript);
 //! .plearn .vmat : perform simple plearn macro processing
 //! .pyplearn .pymat: use python preprocessor
 //! The given args vector can be used to pass string arguments of the form argname=value.
-Object* smartLoadObject(PPath filepath, const vector<string>& args);
+//! The return_date is set to the lastest date of dependence of file. 
+//!   Otherwise return (time_t)0. Work for .vmat, .psave and .plearn file.
+Object* smartLoadObject(PPath filepath, const vector<string>& args, time_t& return_date);
 
-//! Same as smartLoadObject(PPath, vector<string>) but passing an empty vector<string>
+//! Same as smartLoadObject(PPath, vector<string>, time_t) but passing an empty return_date
+inline Object* smartLoadObject(PPath filepath, const vector<string>& args)
+{ time_t d=0; return smartLoadObject(filepath, args, d); }
+//! Same as smartLoadObject(PPath, vector<string>, time_t) but passing an empty vector<string>
+inline Object* smartLoadObject(PPath filepath, time_t& return_date)
+{ vector<string> args; return smartLoadObject(filepath, args,return_date); }
+//! Same as smartLoadObject(PPath, vector<string>, time_t) but passing an empty vector<string> 
+//! and an empty return_date
 inline Object* smartLoadObject(PPath filepath)
-{ vector<string> args; return smartLoadObject(filepath, args); }
+{time_t d=0;return smartLoadObject(filepath, d);}
 
   
 } // end of namespace PLearn

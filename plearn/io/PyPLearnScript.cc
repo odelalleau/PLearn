@@ -322,7 +322,7 @@ void PyPLearnScript::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-Object* smartLoadObject(PPath filepath, const vector<string>& args)
+Object* smartLoadObject(PPath filepath, const vector<string>& args, time_t& return_date)
 {
     if (!isfile(filepath))
         PLERROR("Non-existent script file: %s\n",filepath.c_str());
@@ -372,6 +372,7 @@ Object* smartLoadObject(PPath filepath, const vector<string>& args)
     else if(extension==".psave") // do not perform plearn macro expansion
     {
         in = openFile(filepath, PStream::plearn_ascii);
+        date=mtime(filepath);
     }
     else
         PLERROR("In smartLoadObject: unsupported file extension. Must be one of .pyplearn .pymat .plearn .vmat .psave");
@@ -379,7 +380,7 @@ Object* smartLoadObject(PPath filepath, const vector<string>& args)
     Object* o = readObject(in);
     if(extension==".vmat")
         ((VMatrix*)o)->updateMtime(date);
-
+    return_date=date;
     if ( pyplearn_script.isNotNull() )
         pyplearn_script->close();
 
