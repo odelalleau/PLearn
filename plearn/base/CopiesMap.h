@@ -222,8 +222,10 @@ inline void deepCopyField(T&, CopiesMap&)
 {
     /*! no op */
     PLWARNING(
-        "In CopiesMap.h - deepCopyField not handled for this type. "
-        "If it actually doesn't need deep copy, edit CopiesMap.h and add NODEEPCOPY(your_type) to remove this warning."
+        "In CopiesMap.h - deepCopyField not handled for the type '%s'. "
+        "If it actually doesn't need deep copy, edit CopiesMap.h and add"
+        " NODEEPCOPY(your_type) to remove this warning.",
+        TypeTraits<T>().name().c_str()
         );
 }
 
