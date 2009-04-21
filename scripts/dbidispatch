@@ -8,14 +8,14 @@ ScriptName="launchdbi.py"
 ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
 
 <back-end parameter>:
-    bqtools, cluster, condor option  : [--mem=N]
-                              [--cpu=nb_cpu_per_node]
-    bqtools, cluster option  :[--duree=X]
-    bqtools, condor options  :[--tasks_filename={compact,explicit,nb0,nb1,
+    all                      :[--tasks_filename={compact,explicit,nb0,nb1,
                                                  sh(condor only),
                                                  clusterid(condor only),
                                                  processid(condor only))}+]
-                              [--raw=STRING[\nSTRING]]
+    bqtools, cluster, condor option  : [--mem=N]
+                              [--cpu=nb_cpu_per_node]
+    bqtools, cluster option  :[--duree=X]
+    bqtools, condor options  :[--raw=STRING[\nSTRING]]
                               [*--[no_]set_special_env]
                               [--env=VAR=VALUE[;VAR2=VALUE2]]
     cluster, condor options  :[--32|--64|--3264] [--os=X]
@@ -83,6 +83,21 @@ common options:
     line that was executed, all other options are are those passed to 
     dbidispatch this time. Work only with jobs launched with dbidispatch.
   The '--only_n_first=N' option tell to launch only the first N jobs from the list.
+  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
+    filename where the stdout, stderr are redirected. We can put many option 
+    separated by comma. They will apper in the filename in order separated by a 
+    dot. For all except sh, they have this pattern condor.X.{out,error} where X=:
+      - default : as --tasks_filename=nb0,compact
+      - compact : a unic string with parameter that change of value between jobs
+      - explicit: a unic string that represent the full command to execute
+      - nb0     : a number from 0 to nb job -1.
+      - nb1     : a number from 1 to nb job.
+      - sh      : parse the command for > and 2> redirection command.
+                  If one or both of them are missing, they are redirected
+                  to /dev/null
+      - clusterid: (condor only)put the cluster id of the jobs.
+      - processid: (condor only)put the process id of the jobs. Idem as nb0
+      - none    : remove all preceding pattern
 
 bqtools, cluster and condor option:
   The '--mem=X' speficify the number of ram in meg the program need to execute.
@@ -96,21 +111,6 @@ bqtools and cluster option:
     13 minutes and 15 seconds.
 
 bqtools and condor options:
-  The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
-    filename where the stdout, stderr are redirected. We can put many option 
-    separated by comma. They will apper in the filename in order separated by a 
-    dot. For all except sh, they have this pattern condor.X.{out,error} where X=:
-      - default : as --tasks_filename=nb0,compact
-      - compact : a unic string with parameter that change of value between jobs
-      - explicit: a unic string that represent the full command to execute
-      - nb0     : a number from 0 to nb job -1.
-      - nb1     : a number from 1 to nb job.
-      - sh      : (condor only)parse the command for > and 2> redirection command.
-                  If one or both of them are missing, they are redirected
-                  to /dev/null
-      - clusterid: (condor only)put the cluster id of the jobs.
-      - processid: (condor only)put the process id of the jobs. Idem as nb0
-      - none    : remove all preceding pattern
   The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the submit file.
       if this option appread many time, they will be concatanated with a new line.
   The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
@@ -364,8 +364,7 @@ for argv in to_parse:
         break
     command_argv.remove(argv)
 
-if launch_cmd in ["Bqtools","Condor"]:
-    dbi_param.setdefault("tasks_filename", ["nb0","compact"])
+dbi_param.setdefault("tasks_filename", ["nb0","compact"])
 
 if len(command_argv) == 0 and not dbi_param.has_key("file"):
     print "No command or file with command to execute!"
@@ -381,7 +380,8 @@ if dbi_param.has_key("file") and dbi_param.has_key("restart"):
 if not os.path.exists(LOGDIR):
     os.mkdir(LOGDIR)
 
-valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file"]
+valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file",
+                 "tasks_filename"]
 if launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","arch","interruptible",
                        "duree","cpu","mem","os"]
@@ -389,13 +389,13 @@ elif launch_cmd=="Condor":
     valid_dbi_param +=["req", "arch", "getenv", "nice", "files", "rank", "env",
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines", "no_machine","to_all",
-                       "keep_failed_jobs_in_queue", "tasks_filename", "restart",
+                       "keep_failed_jobs_in_queue", "restart",
                        "max_file_size", "debug", "local_log_file"
                        ]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
                        "nano", "queue", "raw", "submit_options", "jobs_name",
-                       "tasks_filename", "set_special_env", "env" ]
+                       "set_special_env", "env" ]
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.
@@ -571,10 +571,16 @@ for pattern in dbi_param.get("tasks_filename"):
         pass
     elif pattern == "none":
         dbi_param[n]=[""]*len(commands)
-    elif pattern == "clusterid":#$(Cluster)
-        dbi_param[n]=merge_pattern(["$(Cluster)"]*len(dbi_param[n]))
+    elif pattern == "clusterid":#$(Cluster)        
+        if launch_cmd=="Condor":
+            dbi_param[n]=merge_pattern(["$(Cluster)"]*len(dbi_param[n]))
+        else:
+            print "Warning the option tasks_filename=clusterid is only valid for condor"
     elif pattern == "processid":#$(Process)
-        dbi_param[n]=merge_pattern(["$(Process)"]*len(dbi_param[n]))
+        if launch_cmd=="Condor":
+            dbi_param[n]=merge_pattern(["$(Process)"]*len(dbi_param[n]))
+        else:
+            print "Warning the option tasks_filename=processid is only valid for condor"
     elif pattern == "sh":
         stdouts=[]
         stderrs=[]

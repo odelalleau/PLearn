@@ -180,6 +180,8 @@ class DBIBase:
         self.temp_files = []
         self.arch = 0 # TODO, we should put the local arch: 32,64 or 3264 bits
         self.base_tasks_log_file = []
+        self.stdouts = ''
+        self.stderrs = ''
         self.raw = ''
         self.cpu = 0
         self.mem = 0
@@ -209,6 +211,22 @@ class DBIBase:
     def n_avail_machines(self): raise NotImplementedError, "DBIBase.n_avail_machines()"
 
     def add_commands(self,commands): raise NotImplementedError, "DBIBase.add_commands()"
+
+    def get_file_redirection(self, task_id):
+        """ Calculate the file to use for stdout/stderr
+        """
+        n=task_id-1
+        base=self.tasks[n].log_file
+        if self.base_tasks_log_file:
+            base = self.base_tasks_log_file[n]
+            base=os.path.join(self.log_dir,base)
+            self.check_path(base)
+        elif self.stdouts and self.stderrs:
+            assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
+            return (self.stdouts[n], self.stderrs[n])
+
+        return (base + '.out',base + '.err')
+            
 
     def get_redirection(self,stdout_file,stderr_file):
         """Compute the needed redirection based of the objects attribute.
@@ -509,7 +527,7 @@ class DBICluster(DBIBase):
         task.launch_time = time.time()
         task.set_scheduled_time()
 
-        (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
+        (output,error)=self.get_redirection(*self.get_file_redirection(task.id))
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
         task.p_wait_ret=task.p.wait()
         task.dbi_return_status=None
@@ -669,17 +687,15 @@ class DBIBqtools(DBIBase):
         # and another one containing the log_file name associated
         tasks_file = open( 'tasks', 'w' )
         logfiles_file = open( 'logfiles', 'w' )
-        if self.base_tasks_log_file:
-            for task,base in zip(self.tasks,self.base_tasks_log_file):
-                #-4 as we will happend .err or .out
-                p=os.path.join(self.log_dir,base)
-                self.check_path(p)
-                tasks_file.write( ';'.join(task.commands) + '\n' )
-                logfiles_file.write( p + '\n' )
-        else:
-            for task in self.tasks:
-                tasks_file.write( ';'.join(task.commands) + '\n' )
-                logfiles_file.write( task.log_file + '\n' )
+        assert len(self.stdouts)==len(self.stderrs)==0
+        for task in self.tasks:
+            #-4 as we will happend .err or .out
+            base=self.get_file_redirection(task.id)[0][:-4]
+            p=os.path.join(self.log_dir,base)
+            self.check_path(p)
+            tasks_file.write( ';'.join(task.commands) + '\n' )
+            logfiles_file.write( p + '\n' )
+
         tasks_file.close()
         logfiles_file.close()
 
@@ -789,8 +805,6 @@ class DBICondor(DBIBase):
         self.redirect_stderr_to_stdout = False
         self.env = ''
         self.os = ''
-        self.stdouts = ''
-        self.stderrs = ''
         self.abs_path = True
         self.set_special_env = True
         self.nb_proc = -1 # < 0   mean unlimited
@@ -1220,19 +1234,11 @@ class DBICondor(DBIBase):
             condor_dag_fd.write('VARS %d stdout="%s"\n'%(id,stdout_file))
             condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(id,stderr_file))
 
-        if self.base_tasks_log_file:
-            for i in range(len(self.tasks)):
-                task=self.tasks[i]
-                s=os.path.join(self.log_dir,self.base_tasks_log_file[i])
-                print_task(i,task,s+".out",s+".err")
-        elif self.stdouts and self.stderrs:
-            assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
-            for (i,task,stdout_file,stderr_file) in zip(range(len(self.tasks)),self.tasks,self.stdouts,self.stderrs):
-                print_task(i,task,stdout_file,stderr_file)
-        else:
-            #should not happen
-            raise NotImplementedError()
-                
+            
+        for i in range(len(self.tasks)):
+            task=self.tasks[i]
+            print_task(i,task,*self.get_file_redirection(task.id))
+
         condor_dag_fd.close()
 
         self.make_launch_script('$@')
@@ -1292,19 +1298,13 @@ class DBICondor(DBIBase):
                     condor_submit_fd.write("error        = %s \nqueue\n" %stderr_file)
                 if req:
                     condor_submit_fd.write("requirements   = %s\n"%(req))
-            if self.base_tasks_log_file:
-                for (task,task_log,req) in zip(self.tasks,self.base_tasks_log_file,
-                                               self.tasks_req):
-                    s=os.path.join(self.log_dir,task_log)
-                    print_task(task,s+".out",s+".err",req)
-            elif self.stdouts and self.stderrs:
-                assert len(self.stdouts)==len(self.stderrs)==len(self.tasks)
-                for (task,stdout_file,stderr_file,req) in zip(self.tasks,self.stdouts,
-                                                              self.stderrs,self.tasks_req):
-                    print_task(task,stdout_file,stderr_file)
-            else:
-                for (task,req) in zip(self.tasks,self.tasks_req):
-                    print_task(task, "", "", req)
+
+            for i in range(len(self.tasks)):
+                task=self.tasks[i]
+                req=self.tasks_req[i]
+                (o,e)=self.get_file_redirection(task.id)
+                print_task(task,o,e,req)
+
         condor_submit_fd.close()
 
         self.make_launch_script('sh -c "$@"')
@@ -1425,7 +1425,6 @@ class DBICondor(DBIBase):
             
         #launch the jobs
         if self.test == False:
-            (output,error)=self.get_redirection(self.log_file + '.out',self.log_file + '.err')
             print "[DBI] Executing: " + cmd
             for task in self.tasks:
                 task.set_scheduled_time()
@@ -1513,7 +1512,7 @@ class DBILocal(DBIBase):
             print "[DBI] "+c
             return
 
-        (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
+        (output,error)=self.get_redirection(*self.get_file_redirection(task.id))
 
         self.started+=1
         print "[DBI,%d/%d,%s] %s"%(self.started,len(self.tasks),time.ctime(),c)
@@ -1729,8 +1728,7 @@ class DBISsh(DBIBase):
 
         task.launch_time = time.time()
         task.set_scheduled_time()
-
-        (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
+        (output,error)=self.get_redirection(*self.get_file_redirection(task.id))
 
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
         task.p.wait()
@@ -1753,7 +1751,6 @@ class DBISsh(DBIBase):
             task.launch_time = time.time()
             task.set_scheduled_time()
 
-###            (output,error)=self.get_redirection(task.log_file + '.out',task.log_file + '.err')
 
             task.p = Popen(command, shell=True,stdout=PIPE,stderr=PIPE)
             wait = task.p.wait()
