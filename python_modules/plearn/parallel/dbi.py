@@ -691,10 +691,9 @@ class DBIBqtools(DBIBase):
         for task in self.tasks:
             #-4 as we will happend .err or .out
             base=self.get_file_redirection(task.id)[0][:-4]
-            p=os.path.join(self.log_dir,base)
-            self.check_path(p)
+            self.check_path(base)
             tasks_file.write( ';'.join(task.commands) + '\n' )
-            logfiles_file.write( p + '\n' )
+            logfiles_file.write( base + '\n' )
 
         tasks_file.close()
         logfiles_file.close()
