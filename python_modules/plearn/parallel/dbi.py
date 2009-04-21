@@ -1132,8 +1132,11 @@ class DBICondor(DBIBase):
                     pwd 1>&2
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
-                    %s
+                    `%s`
+                    ret=$?
                     rm -f echo ${KRB5CCNAME:5}
+                    echo "return value ${ret}"
+                    exit ${ret}
                     '''%(bash_exec)))
             else:
                 fd.write(dedent('''\
