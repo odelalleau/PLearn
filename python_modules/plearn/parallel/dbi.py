@@ -1162,7 +1162,10 @@ class DBICondor(DBIBase):
                 pwd
                 echo "Running command: $argv"
                 $argv
+                set ret=$?
                 rm -f `echo  $KRB5CCNAME| cut -d':' -f2`
+                echo "return value ${ret}"
+                exit ${ret}
                 '''))
             fd.close()
             if self.pkdilly:
