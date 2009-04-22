@@ -56,11 +56,12 @@ ReadAndWriteCommand::ReadAndWriteCommand():
                 
                   "Used to check (debug) the serialization system",
                 
-                  "read_and_write <sourcefile> <destfile> [modification string] ...\n"
+                  "read_and_write <sourcefile> <destfile> [--updaet] [modification string] ...\n"
                   "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
                   "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
                   "Otherwise (ex: .plearn .vmat) it will. \n"
                   "If their is modification string in format option=value, the modification will be made to the object before saving\n"
+                  "The --update option make that we generate the file only if we can calculate the modification time of the sourcefile and it is older then the destfile."
         )
 {}
 
@@ -68,30 +69,42 @@ ReadAndWriteCommand::ReadAndWriteCommand():
 void ReadAndWriteCommand::run(const vector<string>& args)
 {
     if(args.size()<2)
-        PLERROR("read_and_write takes 2 or more arguments: <sourcefile> <destfile> [modification string] ...");
+        PLERROR("read_and_write takes 2 or more arguments: <sourcefile> <destfile> [--update] [modification string] ...");
     string source = args[0];
     string dest = args[1];
 
     string ext = extract_extension(source);
     PP<Object> o;
+    time_t date_src=0;
 
     //read the file
     if(ext==".psave") // may be binay. Don't macro-process
     {
         PLearn::load(source,o);
+        date_src=mtime(source);
     }
     else
     {
         map<string, string> vars;
-        string script = readFileAndMacroProcess(source, vars);
+        string script = readFileAndMacroProcess(source, vars, date_src);
         PStream in = openString(script,PStream::plearn_ascii);
         o = readObject(in);
+    }
+    int idx_start=2;
+    if(args.size()>2 && args[2]=="--update"){
+        PLCHECK(date_src>0);
+        idx_start++;
+        time_t date_dst=mtime(dest);
+        if((date_dst>date_src) && (date_src>0)){
+            pout << "The file is up to date. We don't regenerate it."<<endl;
+            return;
+        }
     }
 
     //modif the object
     string left;
     string right;
-    for(uint i=2; i<args.size();i++){
+    for(uint i=idx_start; i<args.size();i++){
         split_on_first(args[i], "=", left, right);
         o->setOption(left, right);
     }
