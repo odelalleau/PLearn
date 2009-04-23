@@ -538,6 +538,9 @@ public:
     //! of this vec in ascending order. If stable is true, will return a stable sort
     TVec<int> sortingPermutation(bool stable = false, bool missing = false) const;
     
+    //! Return the first index where the value COULD be.
+    //! If mulitiple value present, return the first index
+    //! If the value is not present, return the first index with data bigger then the value.
     int findSorted(T value) const
     {
         if (isEmpty())
