@@ -255,7 +255,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
     int prev_row=preg[row_idx_end];
     real prev_val=p[prev_row];
     PLASSERT(reg.size()>row_idx_end && row_idx_end>=0);
-    PLASSERT(p[prev_row]==tsource(col,prev_row));
+    PLASSERT(is_equal(p[prev_row],tsource(col,prev_row)));
 
     for( ;row_idx_end>0;row_idx_end--)
     {
@@ -270,7 +270,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
 
         PLASSERT(reg.size()>row_idx_end && row_idx_end>0);
         PLASSERT(target_weight.size()>row && row>=0);
-        PLASSERT(p[row]==tsource(col,row));
+        PLASSERT(is_equal(p[row],tsource(col,row)));
         RTR_target_t target = ptw[row].first;
         RTR_weight_t weight = ptw[row].second;
 
@@ -288,7 +288,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
         PLASSERT(reg.size()>idx && idx>=0);
         int row=int(preg[idx]);
         PLASSERT(target_weight.size()>row && row>=0);
-        PLASSERT(p[row]==tsource(col,row));
+        PLASSERT(is_equal(p[row],tsource(col,row)));
         pv[idx]=p[row];
     }
         for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
@@ -301,7 +301,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
             int row=int(preg[row_idx]);
             real val=p[row];
             PLASSERT(target_weight.size()>row && row>=0);
-            PLASSERT(p[row]==tsource(col,row));
+            PLASSERT(is_equal(p[row],tsource(col,row)));
             ptwd[row_idx].first=ptw[row].first;
             ptwd[row_idx].second=ptw[row].second;
             pv[row_idx]=val;
@@ -657,7 +657,7 @@ void RegressionTreeRegisters::sortEachDim(int dim)
         real v1 = tsource(dim,reg1);
         real v2 = tsource(dim,reg2);
 //check that the sort is valid.
-        PLASSERT(v1<=v2);
+        PLASSERT(v1<=v2 || is_missing(v2));
 //check that the sort is stable
         if(v1==v2 && reg1>reg2)
             PLWARNING("In RegressionTreeRegisters::sortEachDim(%d) - "
