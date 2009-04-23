@@ -494,20 +494,26 @@ elif dbi_param.get("restart",False):
     assert launch_cmd=="Condor"
     cmds=[]
     for arg in command_argv:
-        p1=Popen("condor_q -l "+arg, shell=True, stdout=PIPE)
+        #We accept to start jobs in the queue if they are completed
+        p1=Popen('condor_q -l -const "JobStatus!=4" '+arg, shell=True, stdout=PIPE)
         p2=Popen("condor_history -l "+arg, shell=True, stdout=PIPE)
-        p1.wait();p2.wait()
+        p3=Popen('condor_q -l -const "JobStatus==4" '+arg, shell=True, stdout=PIPE)
+        p1.wait();p2.wait();p3.wait()
         lines=p1.stdout.readlines()
         for l in lines:
             if l.startswith("Arguments = "):
-                print "We don't accept to restart jobs in the queue:", arg
+                print "We don't accept to restart jobs in the queue that are not completed:", arg
                 sys.exit(1)
+        print
         lines=p2.stdout.readlines()
+        lines+=p3.stdout.readlines()
         for l in lines:
             if l.startswith("Arguments = "):
                 cmd=l[13:-2]
                 cmds.append(cmd.replace("'",""))
     commands=cmds
+    if len(commands)<1:
+         raise Exception("Their is no commands selected to be restarted!")
     choise_args=[]
 else:
     (commands,choise_args)=generate_commands(command_argv)
