@@ -343,7 +343,11 @@ void RegressionTreeNode::lookForBestSplit()
                                                 missing_leave,
                                                 left_leave,
                                                 right_leave, candidate);
-            PLASSERT(candidate.size()>0);
+            PLASSERT(registered_target_weight.size()==candidate.size());
+            PLASSERT(registered_value.size()==candidate.size());
+            PLASSERT(left_leave->length()+right_leave->length()
+                     +missing_leave->length()==leave->length());
+            PLASSERT(candidate.size()>0||(left_leave->length()+right_leave->length()==0));
             missing_leave->getOutputAndError(tmp_vec, missing_error);
             ret=bestSplitInRow(col, candidate, left_error,
                                right_error, missing_error,
@@ -360,21 +364,30 @@ void RegressionTreeNode::lookForBestSplit()
 #endif
 
         if(col==0){
-            l_length=left_leave->length()+right_leave->length();
-            l_weights_sum=left_leave->weights_sum+right_leave->weights_sum;
-            l_targets_sum=left_leave->targets_sum+right_leave->targets_sum;
-            l_weighted_targets_sum=left_leave->weighted_targets_sum+right_leave->weighted_targets_sum;
-            l_weighted_squared_targets_sum=left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum;
+            l_length=left_leave->length()+right_leave->length()+missing_leave->length();
+            l_weights_sum=left_leave->weights_sum+right_leave->weights_sum+missing_leave->weights_sum;
+            l_targets_sum=left_leave->targets_sum+right_leave->targets_sum+missing_leave->targets_sum;
+            l_weighted_targets_sum=left_leave->weighted_targets_sum
+                +right_leave->weighted_targets_sum+missing_leave->weighted_targets_sum;
+            l_weighted_squared_targets_sum=left_leave->weighted_squared_targets_sum
+                +right_leave->weighted_squared_targets_sum+missing_leave->weighted_squared_targets_sum;
         }else if(!one_pass_on_data){
-            PLCHECK(l_length==left_leave->length()+right_leave->length());
+            PLCHECK(l_length==left_leave->length()+right_leave->length()
+                    +missing_leave->length());
             PLCHECK(fast_is_equal(l_weights_sum,
-                                  left_leave->weights_sum+right_leave->weights_sum));
+                                  left_leave->weights_sum+right_leave->weights_sum
+                                  +missing_leave->weights_sum));
             PLCHECK(fast_is_equal(l_targets_sum,
-                                  left_leave->targets_sum+right_leave->targets_sum));
+                                  left_leave->targets_sum+right_leave->targets_sum
+                                  +missing_leave->targets_sum));
             PLCHECK(fast_is_equal(l_weighted_targets_sum,
-                                  left_leave->weighted_targets_sum+right_leave->weighted_targets_sum));
+                                  left_leave->weighted_targets_sum
+                                  +right_leave->weighted_targets_sum
+                                  +missing_leave->weighted_targets_sum));
             PLCHECK(fast_is_equal(l_weighted_squared_targets_sum,
-                                  left_leave->weighted_squared_targets_sum+right_leave->weighted_squared_targets_sum));
+                                  left_leave->weighted_squared_targets_sum
+                                  +right_leave->weighted_squared_targets_sum
+                                  +missing_leave->weighted_squared_targets_sum));
         }
 
 #ifdef RCMP
@@ -436,7 +449,8 @@ tuple<real,real,int>RegressionTreeNode::bestSplitInRow(
     {
         int next_row = candidates[i];
         real row_feature=next_feature;
-        PLASSERT(row_feature==values[i+1]);
+        PLASSERT(is_equal(row_feature,values[i+1]));
+//                 ||(is_missing(row_feature)&&is_missing(values[i+1])));
         next_feature=values[i];
 
         real target=t_w[i+1].first;

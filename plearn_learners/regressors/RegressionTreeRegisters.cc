@@ -212,6 +212,25 @@ void RegressionTreeRegisters::build_()
             target_weight[i].first=source->get(i,inputsize());
             target_weight[i].second=source->get(i,inputsize()+targetsize());
         }
+#if 0
+    //usefull to weight the dataset to have the sum of weight==1 or ==length()
+    real weights_sum=0;
+    for(int i=0;i<source->length();i++){
+        weights_sum+=target_weight[i].second;
+    }
+    pout<<weights_sum<<endl;
+//    real t=length()/weights_sum;
+    real t=1/weights_sum;
+    for(int i=0;i<source->length();i++){
+        target_weight[i].second*=t;
+    }
+    weights_sum=0;
+    for(int i=0;i<source->length();i++){
+        weights_sum+=target_weight[i].second;
+    }
+    pout<<weights_sum<<endl;
+#endif
+
     leave_register.resize(length());
     sortRows();
 //    compact_reg.resize(length());
@@ -291,30 +310,32 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
         PLASSERT(is_equal(p[row],tsource(col,row)));
         pv[idx]=p[row];
     }
-        for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
-        {
-            int futur_row = preg[row_idx+8];
-            __builtin_prefetch(&ptw[futur_row],1,2);
-            __builtin_prefetch(&p[futur_row],1,2);
+    for(int row_idx = 0;row_idx<=row_idx_end;row_idx++)
+    {
+        int futur_row = preg[row_idx+8];
+        __builtin_prefetch(&ptw[futur_row],1,2);
+        __builtin_prefetch(&p[futur_row],1,2);
             
-            PLASSERT(reg.size()>row_idx && row_idx>=0);
-            int row=int(preg[row_idx]);
-            real val=p[row];
-            PLASSERT(target_weight.size()>row && row>=0);
-            PLASSERT(is_equal(p[row],tsource(col,row)));
+        PLASSERT(reg.size()>row_idx && row_idx>=0);
+        int row=int(preg[row_idx]);
+        real val=p[row];
+        PLASSERT(target_weight.size()>row && row>=0);
+        PLASSERT(is_equal(p[row],tsource(col,row)));
+            
+        RTR_target_t target = ptw[row].first;
+        RTR_weight_t weight = ptw[row].second;
+        if (RTR_HAVE_MISSING && is_missing(val)){
+            missing_leave->addRow(row, target, weight);
+        }else {
+            left_leave->addRow(row, target, weight);
+            candidate.append(row);
             ptwd[row_idx].first=ptw[row].first;
             ptwd[row_idx].second=ptw[row].second;
             pv[row_idx]=val;
-            
-            RTR_target_t target = ptw[row].first;
-            RTR_weight_t weight = ptw[row].second;
-            if (RTR_HAVE_MISSING && is_missing(val)){
-                missing_leave->addRow(row, target, weight);
-            }else {
-                left_leave->addRow(row, target, weight);
-                candidate.append(row);
-            }
         }
+    }
+    t_w.resize(candidate.size());
+    value.resize(candidate.size());
 }
 
 void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
