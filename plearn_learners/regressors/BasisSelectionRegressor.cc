@@ -1321,6 +1321,12 @@ TVec<string> BasisSelectionRegressor::getTrainCostNames() const
     return template_learner->getTrainCostNames();
 }
 
+void BasisSelectionRegressor::setTrainingSet(VMat training_set, bool call_forget)
+{
+    inherited::setTrainingSet(training_set, call_forget);
+    template_learner->setTrainingSet(training_set, call_forget);
+}
+
 
 } // end of namespace PLearn
 

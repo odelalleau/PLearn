@@ -143,6 +143,9 @@ public:
     //! and  for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
+    //! Forwards the call to sub-learner
+    virtual void setTrainingSet(VMat training_set, bool call_forget=true);
+
 
     //#####  PLearn::Object Protocol  #########################################
 
