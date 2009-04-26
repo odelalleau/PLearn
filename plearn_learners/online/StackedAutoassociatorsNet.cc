@@ -363,22 +363,6 @@ void StackedAutoassociatorsNet::declareMethods(RemoteMethodMap& rmm)
     // Insert a backpointer to remote methods; note that this is different from
     // declareOptions().
     rmm.inherited(inherited::_getRemoteMethodMap_());
-
-    declareMethod(
-        rmm, "computeOutputWithoutCorrelationConnections",
-        &StackedAutoassociatorsNet::remote_computeOutputWithoutCorrelationConnections,
-        (BodyDoc("On a trained learner, this computes the output from the input without using the correlation_connections"),
-         ArgDoc ("input", "Input vector (should have width inputsize)"),
-         RetDoc ("Computed output (will have width outputsize)")));
-
-    declareMethod(
-        rmm, "computeOutputsWithoutCorrelationConnections",
-        &StackedAutoassociatorsNet::remote_computeOutputsWithoutCorrelationConnections,
-        (BodyDoc("On a trained learner, this computes the outputs from the inputs without using the correlation_connections"),
-         ArgDoc ("input", "Input matrix (should have width inputsize)"),
-         RetDoc ("Computed outputs (will have width outputsize)")));
-
-
 }
 
 void StackedAutoassociatorsNet::build_()
@@ -2647,46 +2631,6 @@ void StackedAutoassociatorsNet::computeOutputsAndCosts(const Mat& input, const M
         Profiler::pl_profile_end("StackedAutoassociatorsNet::computeOutputsAndCosts");
     }
 }
-void StackedAutoassociatorsNet::computeOutputWithoutCorrelationConnections(const Vec& input, Vec& output) const
-{
-    // fprop
-
-    expectations[0] << input;
-
-    for(int i=0 ; i<currently_trained_layer-1 ; i++ )
-    {
-        connections[i]->fprop( expectations[i], activations[i+1] );
-        layers[i+1]->fprop(activations[i+1],expectations[i+1]);
-    }
-
-    if( currently_trained_layer<n_layers )
-    {
-        connections[currently_trained_layer-1]->fprop(
-            expectations[currently_trained_layer-1],
-            activations[currently_trained_layer] );
-        layers[currently_trained_layer]->fprop(
-            activations[currently_trained_layer],
-            output);
-    }
-    else
-        final_module->fprop( expectations[ currently_trained_layer - 1],
-                             output );
-}
-
-void StackedAutoassociatorsNet::computeOutputsWithoutCorrelationConnections(const Mat& inputs, Mat& outputs) const
-{
-
-    int n=inputs.length();
-    PLASSERT(outputs.length()==n);
-    for (int i=0;i<n;i++)
-    {
-        Vec in_i = inputs(i);
-        Vec out_i = outputs(i);
-        computeOutputWithoutCorrelationConnections(in_i,out_i);
-    }
-
-}
-
 
 void StackedAutoassociatorsNet::computeCostsFromOutputs(const Vec& input, const Vec& output,
                                            const Vec& target, Vec& costs) const
@@ -2873,23 +2817,6 @@ void StackedAutoassociatorsNet::setLearningRate( real the_learning_rate )
     final_cost->setLearningRate( the_learning_rate );
     final_module->setLearningRate( the_learning_rate );
 }
-
-//! Version of computeOutputWithoutCorrelationConnections(Vec,Vec) that returns a result by value
-Vec StackedAutoassociatorsNet::remote_computeOutputWithoutCorrelationConnections(const Vec& input) const
-{
-    tmp_output.resize(outputsize());
-    computeOutputWithoutCorrelationConnections(input, tmp_output);
-    return tmp_output;
-}
-
-//! Version of computeOutputsWithoutCorrelationConnections(Mat,Mat) that returns a result by value
-Mat StackedAutoassociatorsNet::remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const
-{
-    tmp_output_mat.resize(inputs.length(),outputsize());
-    computeOutputsWithoutCorrelationConnections(inputs, tmp_output_mat);
-    return tmp_output_mat;
-}
-
 
 } // end of namespace PLearn
 

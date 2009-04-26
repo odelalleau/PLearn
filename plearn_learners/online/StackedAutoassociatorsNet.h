@@ -235,13 +235,6 @@ public:
     virtual void train();
 
     //! Computes the output from the input.
-    virtual void computeOutputWithoutCorrelationConnections(const Vec& input,
-                                                        Vec& output) const;
-    //! Computes the output from the input
-    virtual void computeOutputsWithoutCorrelationConnections(const Mat& input,
-                                                        Mat& output) const;
-
-    //! Computes the output from the input.
     virtual void computeOutput(const Vec& input, Vec& output) const;
 
     //! Computes the output from the input.
