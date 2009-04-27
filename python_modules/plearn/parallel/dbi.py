@@ -824,6 +824,7 @@ class DBICondor(DBIBase):
         self.max_file_size = 10*1024*1024 #in blocks size, here they are 1k each
         self.debug = False
         self.local_log_file = True#by default true as condor can have randomly failure otherwise.
+        self.next_job_start_delay = -1
 
         DBIBase.__init__(self, commands, **args)
         if self.debug:
@@ -848,6 +849,7 @@ class DBICondor(DBIBase):
             os.mkdir(self.tmp_dir)
         self.args = args
 
+        self.next_job_start_delay=int(self.next_job_start_delay)
         self.add_commands(commands)
 
     def add_commands(self,commands):
@@ -1129,10 +1131,12 @@ class DBICondor(DBIBase):
                     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" 1>&2
                     echo "OMP_NUM_THREADS: $OMP_NUM_THREADS" 1>&2
                     echo "CONDOR_JOB_LOGDIR: $CONDOR_JOB_LOGDIR" 1>&2
+                    echo "HOME: $HOME" 1>&2
                     pwd 1>&2
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
-                    `%s`
+                    #[ -x "$1" ];echo $?
+                    %s
                     ret=$?
                     rm -f echo ${KRB5CCNAME:5}
                     echo "return value ${ret}"
@@ -1191,6 +1195,8 @@ class DBICondor(DBIBase):
             fd.write('arguments      = '+arguments+'\n')
         if self.keep_failed_jobs_in_queue:
             fd.write('leave_in_queue = (ExitCode!=0)\n')
+        if self.next_job_start_delay>0:
+            fd.write('next_job_start_delay = %s\n'%self.next_job_start_delay)
         if self.mem>0:
             #condor need value in Kb
             fd.write('ImageSize      = %d\n'%(self.mem))

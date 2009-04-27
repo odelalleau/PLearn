@@ -35,7 +35,7 @@ ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqt
                               [--no_machine=HOSTNAME+]
                               [--[*no_]keep_failed_jobs_in_queue]
                               [--max_file_size=N][--[no_]debug]
-                              [--[no_]local_log_file]
+                              [--[no_]local_log_file][--next_job_start_delay=N]
 
 An * after '[', '{' or ',' signals the default value.
 An + tell that we can put one or more separeted by a comma
@@ -209,6 +209,8 @@ condor only options:
   The '--[no_]debug' option is forwarded to condor_submit
   The '--[no_]local_log_file' option tell to put the condor log file on the 
       local disk. This help to solv a bug with condor and lock on NFS directory.
+  The '--next_job_start_delay=N' option allow to tell condor to wait N second
+      between each job we start. Default 0.
 
 where <command-template> is interpreted as follows: the first argument
 is the <command> above, and the rest are interpreted as <arguments>.
@@ -326,7 +328,7 @@ for argv in to_parse:
                                 "--queue", "--nano", "--submit_options",
                                 "--jobs_name", "--file", "--tasks_filename",
                                 "--only_n_first", "--no_machine",
-                                "--max_file_size" ]:
+                                "--max_file_size", "--next_job_start_delay"]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -393,6 +395,7 @@ elif launch_cmd=="Condor":
                        "universe", "machine", "machines", "no_machine","to_all",
                        "keep_failed_jobs_in_queue", "restart",
                        "max_file_size", "debug", "local_log_file",
+                       "next_job_start_delay"
                        ]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
