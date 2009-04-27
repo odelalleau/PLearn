@@ -61,7 +61,7 @@ ReadAndWriteCommand::ReadAndWriteCommand():
                   "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
                   "Otherwise (ex: .plearn .vmat) it will. \n"
                   "If their is modification string in format option=value, the modification will be made to the object before saving\n"
-                  "The --update option make that we generate the file only if we can calculate the modification time of the sourcefile and it is older then the destfile."
+                  "The --update option makes that we generate the file only if we can calculate the modification time of the sourcefile and it is more recent than the destfile."
         )
 {}
 
@@ -96,7 +96,7 @@ void ReadAndWriteCommand::run(const vector<string>& args)
         idx_start++;
         time_t date_dst=mtime(dest);
         if((date_dst>date_src) && (date_src>0)){
-            pout << "The file is up to date. We don't regenerate it."<<endl;
+            pout << "The file is up to date. We do not regenerate it."<<endl;
             return;
         }
     }
