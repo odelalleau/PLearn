@@ -5,7 +5,7 @@ from socket import gethostname
 from subprocess import Popen,PIPE
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [*--[no_]exec_in_exp_dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
 
 <back-end parameter>:
     all                      :[--tasks_filename={compact,explicit,nb0,nb1,
@@ -98,6 +98,7 @@ common options:
       - clusterid: (condor only)put the cluster id of the jobs.
       - processid: (condor only)put the process id of the jobs. Idem as nb0
       - none    : remove all preceding pattern
+  The '*--[no_]exec_in_exp_dir' option remove the executable from the log dir.
 
 bqtools, cluster and condor option:
   The '--mem=X' speficify the number of ram in meg the program need to execute.
@@ -252,7 +253,7 @@ in the file, it is not interpreted by the shell.
 
 dbi_param={}
 testmode=False
-
+MAX_FILE_NAME_SIZE=255
 PATH=os.getenv('PATH')
 if search_file('condor_submit',PATH):
     launch_cmd = 'Condor'
@@ -301,13 +302,13 @@ for argv in to_parse:
                    "--getenv", "--cwait", "--clean_up" ,"--nice",
                    "--set_special_env", "--abs_path", "--pkdilly", "--to_all",
                    "--m32G", "--keep_failed_jobs_in_queue", "--restart",
-                   "--debug", "--local_log_file"]:
+                   "--debug", "--local_log_file", "--exec_in_exp_dir"]:
         dbi_param[argv[2:]]=True
     elif argv in ["--no_force", "--no_interruptible", "--no_long",
                   "--no_getenv", "--no_cwait", "--no_clean_up" , "--no_nice",
                   "--no_set_special_env", "--no_abs_path", "--no_pkdilly",
                   "--no_m32G", "--no_keep_failed_jobs_in_queue", "--no_restart",
-                  "--no_debug", "--no_local_log_file"]:
+                  "--no_debug", "--no_local_log_file", "--no_exec_in_exp_dir"]:
         dbi_param[argv[5:]]=False
     elif argv=="--testdbi":
         dbi_param["test"]=True
@@ -381,7 +382,8 @@ if not os.path.exists(LOGDIR):
     os.mkdir(LOGDIR)
 
 valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file",
-                 "tasks_filename"]
+                 "tasks_filename", "exec_in_exp_dir"
+                 ]
 if launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","arch","interruptible",
                        "duree","cpu","mem","os"]
@@ -390,7 +392,7 @@ elif launch_cmd=="Condor":
                        "raw", "os", "set_special_env", "mem", "cpu", "pkdilly",
                        "universe", "machine", "machines", "no_machine","to_all",
                        "keep_failed_jobs_in_queue", "restart",
-                       "max_file_size", "debug", "local_log_file"
+                       "max_file_size", "debug", "local_log_file",
                        ]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
@@ -532,7 +534,11 @@ if dbi_param.has_key("exp_dir"):
     dbi_param["log_dir"]=os.path.join(LOGDIR,dbi_param["exp_dir"])
 elif not dbi_param.has_key("file"):
     t = [x for x in sys.argv[1:] if not x[:2]=="--"]
-    t[0]=os.path.split(t[0])[1]
+    if dbi_param.get("exec_in_exp_dir",True)==True:
+        t[0]=os.path.split(t[0])[1]#keep only the exec name, not the full path
+    else:
+        t=t[1:]#remove the exec.
+
     tmp="_".join(t)
     tmp=re.sub( '[^a-zA-Z0-9-.,]', '_', tmp )
     ### We need to remove the symbols "," as this cause trouble with bqtools
@@ -545,12 +551,12 @@ elif not dbi_param.has_key("file"):
         #bqtools have a limit. It must have a abspath size < max_file_size -16
         #(255 on ext3)
         l=len(os.path.abspath(tmp))
-        l=255-16-len(date_str)-(l-len(tmp))-10 #-10 for dbi.py #-16 for bqtools itself
+        l=MAX_FILE_NAME_SIZE-16-len(date_str)-(l-len(tmp))-10 #-10 for dbi.py #-16 for bqtools itself
         assert(l>0)
         tmp=tmp[:l]
     else:
-        tmp=tmp[:200]
-
+        l=MAX_FILE_NAME_SIZE-len(date_str)-1 #-1 for the '_' before date_str
+        tmp=tmp[:l]
     tmp+='_'+date_str.replace(' ','_')
     dbi_param["log_dir"]=os.path.join(LOGDIR,tmp)
 else:
