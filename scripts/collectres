@@ -292,20 +292,21 @@ if __name__=='__main__':
   verbose=1
   output_separator = " "
   separator = "_"
-
-  if args[1]=="--no_printcommand":
-    printcommand=False
-    del args[1]
-  if args[1].startswith("--verbose="):
-    verbose=int(args[1].split("=",1)[1])
-    del args[1]
-  if args[1].startswith("--separator=") or args[1].startswith("--sep=") :
-    separator=args[1].split("=",1)[1]
-  if args[1].startswith("--out_sep="):
-    output_separator=args[1].split("=",1)[1]
-    if output_separator == "tab":
-      output_separator = "\t"
-    print "output_separator",output_separator
-    del args[1]
-
+  while True:
+    if args[1]=="--no_printcommand":
+      printcommand=False
+      del args[1]
+    elif args[1].startswith("--verbose="):
+      verbose=int(args[1].split("=",1)[1])
+      del args[1]
+    elif args[1].startswith("--separator=") or args[1].startswith("--sep=") :
+      separator=args[1].split("=",1)[1]
+    elif args[1].startswith("--out_sep="):
+      output_separator=args[1].split("=",1)[1]
+      if output_separator == "tab":
+        output_separator = "\t"
+      print "output_separator: '%s'"%output_separator
+      del args[1]
+    else:
+      break
   collectres(args[1],args[2],args[3:], printcommand, verbose, separator, output_separator)
