@@ -221,6 +221,9 @@ void BootstrapVMatrix::build_()
                 indices.append(bag_to_indices[bag_indices[i]]);
         }
 
+        //if we only shuffle the rows, we remove a useless warning.
+        if(frac == 1 && allow_repetitions == 0 && rows_to_remove == 0 && shuffle == 1)
+            warn_if_all_rows_selected=false;
         // Because we changed the indices, a rebuild may be needed.
         inherited::build();
     }
