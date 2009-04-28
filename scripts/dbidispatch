@@ -526,14 +526,21 @@ else:
     (commands,choise_args)=generate_commands(command_argv)
 
 if dbi_param.has_key("only_n_first"):
-    commands=commands[:int(dbi_param["only_n_first"])]
+    n=int(dbi_param["only_n_first"])
+    commands=commands[:n]
+    choise_args=choise_args[:n]
     del dbi_param["only_n_first"]
 
 if dbi_param.has_key("repeat_jobs"):
-    print commands
-    commands=commands*int(dbi_param["repeat_jobs"])
+    n=int(dbi_param["repeat_jobs"])
+    commands=commands*n
+    choise_args=choise_args*n
     del dbi_param["repeat_jobs"]
-    print commands
+
+if not dbi_param.has_key("next_job_start_delay") and launch_cmd=="Condor" and len(commands)>20:
+    #by default, if their is more then 20 jobs we make a start delay of 1 second between each jobs start.
+    dbi_param["next_job_start_delay"]=1
+    
 
 #we duplicate the command so that everything else work correctly.
 if dbi_param.has_key("to_all"):
