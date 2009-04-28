@@ -5,7 +5,7 @@ from socket import gethostname
 from subprocess import Popen,PIPE
 
 ScriptName="launchdbi.py"
-ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [*--[no_]exec_in_exp_dir] [--only_n_first=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
+ShortHelp='''Usage: dbidispatch [--help|-h] [--[*no_]dbilog] [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]] [--[*no_]test] [--[*no_]testdbi] [--[*no_]nb_proc=N] [--exp_dir=dir] [*--[no_]exec_in_exp_dir] [--only_n_first=N] [--repeat_jobs=N] <back-end parameter> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
 
 <back-end parameter>:
     all                      :[--tasks_filename={compact,explicit,nb0,nb1,
@@ -83,6 +83,7 @@ common options:
     line that was executed, all other options are are those passed to 
     dbidispatch this time. Work only with jobs launched with dbidispatch.
   The '--only_n_first=N' option tell to launch only the first N jobs from the list.
+  The '--repeat_jobs=N' option tell that we must repeat N time each jobs.
   The '--tasks_filename={compact,explicit,nb0,nb1,sh}+' option will change the
     filename where the stdout, stderr are redirected. We can put many option 
     separated by comma. They will apper in the filename in order separated by a 
@@ -328,7 +329,8 @@ for argv in to_parse:
                                 "--queue", "--nano", "--submit_options",
                                 "--jobs_name", "--file", "--tasks_filename",
                                 "--only_n_first", "--no_machine",
-                                "--max_file_size", "--next_job_start_delay"]:
+                                "--max_file_size", "--next_job_start_delay",
+                                "--repeat_jobs", ]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -384,7 +386,7 @@ if not os.path.exists(LOGDIR):
     os.mkdir(LOGDIR)
 
 valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file",
-                 "tasks_filename", "exec_in_exp_dir"
+                 "tasks_filename", "exec_in_exp_dir", "repeat_jobs"
                  ]
 if launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","arch","interruptible",
@@ -526,6 +528,12 @@ else:
 if dbi_param.has_key("only_n_first"):
     commands=commands[:int(dbi_param["only_n_first"])]
     del dbi_param["only_n_first"]
+
+if dbi_param.has_key("repeat_jobs"):
+    print commands
+    commands=commands*int(dbi_param["repeat_jobs"])
+    del dbi_param["repeat_jobs"]
+    print commands
 
 #we duplicate the command so that everything else work correctly.
 if dbi_param.has_key("to_all"):
