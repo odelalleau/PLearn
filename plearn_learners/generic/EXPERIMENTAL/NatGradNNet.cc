@@ -204,7 +204,9 @@ void NatGradNNet::declareOptions(OptionList& ol)
                   &NatGradNNet::output_type,
                   OptionBase::buildoption,
                   "type of output cost: 'cross_entropy' for binary classification,\n"
-                  "'NLL' for classification problems, or 'MSE' for regression.\n");
+                  "'NLL' for classification problems(noutputs>=1),"
+                  " 'cross_entropy' for classification(noutputs==1)"
+                  " or 'MSE' for regression.\n");
 
     declareOption(ol, "input_size_lrate_normalization_power", 
                   &NatGradNNet::input_size_lrate_normalization_power, 
