@@ -93,7 +93,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         "for a 0.5 thresholding: 0.5 < 0 1 ifelse. To copy a single field, use [field].\n"
                         "There is also a special feature available only for single field copies: if you\n"
                         "use the syntax [field?], then VPL will not produce an error if the field cannot\n"
-                        "be found.\n"
+                        "be found. END-N(N an integer) will select a field conting from the END.\n"
                         "\n"
                         "Here's a real-life example of a VPL program:\n"
                         "\n"
@@ -388,7 +388,8 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                     // Keyword indicating we go till the end.
                     a = srcfieldnames.length() - 1;
                 else
-                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field (%s)",
+                        token.c_str());
 
                 if (parts[1][0] == '@')
                 {
@@ -404,8 +405,17 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 else if (parts[1] == "END")
                     // Keyword indicating we go till the end.
                     b = srcfieldnames.length() - 1;
+                
+                else if (parts[1].substr(0,3) == "END")
+                {
+                    // Keyword indicating we go till the end.
+                    int v = toint(parts[1].substr(3));
+                    PLCHECK(v<0);
+                    b = srcfieldnames.length() - 1 + v;
+                }
                 else
-                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field (%s)",
+                            token.c_str());
 
                 if (a > b)
                     PLERROR("In copyfield macro '%s', you have specified a "
@@ -450,8 +460,12 @@ void VMatLanguage::preprocess(PStream& in, map<string, string>& defines,
                 }
                 else if (parts[0][0] == '%')
                     a = toint(parts[0].substr(1));
+                else if (parts[0] == "END")
+                    // Keyword indicating we go till the end.
+                    a = srcfieldnames.length() - 1;
                 else
-                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field");
+                    PLERROR("fieldcopy macro syntax is : [start:end] EG: [@year:%%6]. 'end' must be after 'start'.. OR [field] to copy a single field (%s)",
+                            token.c_str());
 
                 if (a == -1) {
                     if (!ignore_if_missing)
