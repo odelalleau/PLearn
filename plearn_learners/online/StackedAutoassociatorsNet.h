@@ -157,6 +157,18 @@ public:
     //! Type of noise that corrupts the autoassociators input
     string noise_type;
 
+    //! Method used to fill the double_input vector when using missing_data
+    //| noise type.
+    string missing_data_method;
+
+    //! Weight given to a corrupted (or missing) data when
+    //! backpropagating the gradient of reconstruction cost.
+    real corrupted_data_weight;
+
+    //! Weight given to a data (not corrupted or not missing) when
+    //! backpropagating the gradient of reconstruction cost.
+    real data_weight;
+
     //! Random fraction of the autoassociators' input components that
     //! masked, i.e. unsused to reconstruct the input.
     real fraction_of_masked_inputs;
@@ -165,12 +177,19 @@ public:
     //! or fraction_of_masked_inputs should be > 0.
     real probability_of_masked_inputs;
 
-    //! Probability of masking the target, when using greedy_target_connections
+    //! Probability of masking the target, 
+    //! when using greedy_target_connections.
     real probability_of_masked_target;
 
-    //! Indication that inputs should be masked with the 
     //! training set mean of that component
     bool mask_with_mean;
+
+    //! Indication that inputs should be masked with 
+    //! 0 or 1 according to prop_salt_noise. 
+    bool mask_with_pepper_salt;
+
+    //! Probability that we mask the input by 1 instead of 0.
+    real prob_salt_noise;
 
     //! Standard deviation of Gaussian noise
     real gaussian_std;
@@ -189,6 +208,10 @@ public:
     //! The decrease constant of the learning rate used during
     //! unsupervised fine tuning gradient descent
     real unsupervised_fine_tuning_decrease_ct;
+
+    //! Indicates how many layers will be corrupted during
+    //! gready layer-wise learning (starting with input layer)
+    int nb_corrupted_layer;
 
     //! Indication that only the input layer should be masked
     //! during greedy layer-wise learning
@@ -216,7 +239,6 @@ public:
 
     //! Default constructor
     StackedAutoassociatorsNet();
-
 
     //#####  PLearner Member Functions  #######################################
 
@@ -276,6 +298,7 @@ public:
     void onlineStep(const Mat& inputs, const Mat& targets,
                     Mat& train_costs);
 
+
     //#####  PLearn::Object Protocol  #########################################
 
     // Declares other standard object methods.
@@ -305,6 +328,9 @@ protected:
     //! (at the output of the layers)
     mutable TVec<Vec> expectations;
     mutable TVec<Mat> expectations_m;
+    //! In case of missing_data: expectations doubled before corruption 
+    //! or before propagation to the next layer.
+    mutable TVec< Vec > doubled_expectations;
 
     //! Stores the gradient of the cost wrt the activations of
     //! the input and hidden layers
@@ -317,6 +343,8 @@ protected:
     //! (at the output of the layers)
     mutable TVec<Vec> expectation_gradients;
     mutable TVec<Mat> expectation_gradients_m;
+    //! Stores the gradients of the doubled version of expectations
+    mutable TVec< Vec > doubled_expectation_gradients;
 
     //! Reconstruction activations
     mutable Vec reconstruction_activations;
@@ -407,6 +435,14 @@ protected:
     //! Layers randomly masked, for unsupervised fine-tuning.
     TVec< Vec > corrupted_autoassociator_expectations;
 
+    //! Stores the weight of each data used when
+    //! backpropagating the gradient of reconstruction cost.
+    //! The weight is either corrupted_data_weight or data_weight
+    //! if the data has been corrupted or not, respectively.
+    //! Used for example to put emphasis on corrupted/missing data
+    //! during the reconstruction.
+    mutable Vec reconstruction_weights;
+
     //! Layers random binary maske, for online learning.
     TVec< Vec > binary_masks;
 
@@ -456,12 +492,29 @@ private:
 
     void setLearningRate( real the_learning_rate );
 
-    // List of remote methods
-    Vec remote_computeOutputWithoutCorrelationConnections(const Vec& input) const;
-
-    Mat remote_computeOutputsWithoutCorrelationConnections(const Mat& inputs) const;
-
     void corrupt_input(const Vec& input, Vec& corrupted_input, int layer);
+
+    //! Useful in case that noise_type == "missing_data", 
+    //! returns the input if it's not the case.
+    void double_input(const Vec& input, Vec& doubled_input, bool double_grad=false) const;
+
+    //! Useful in case that noise_type == "missing_data",
+    //! returns the input if it's not the case.
+    void divide_input(const Vec& input, Vec& divided_input) const ;
+
+    //! Supposes the learner is already trained.
+    //! Allows a codage-decodage ktime from a source image. Returns the 'fantasize' image. 
+    //! You can choose how many layers to use (including raws layer) by defining the size of sample. 
+    //! You can corrupt layers differently during the codage phase by defining maskNoiseFractOrProb 
+    //! You can apply a binary sampling (1) or not (0) differently for each layer during the decode phase
+    //! Lower element in sample and maskNoiseFractOrProb correspond to lower layer. 
+    //! Example using 3 hidden layers of a learner: 
+    //!     maskNoiseFractOrProb = [0.1,0.25,0]  // noise applied on raws layer
+    //!                                          // and first hidden layer.
+    //!     sample = [1,0,0] // sampling only before reconstruction of the
+    //!                      // raws input.
+    Vec fantasizeKTime(int KTime, const Vec& srcImg, const Vec& sample,
+                        const Vec& maskNoiseFractOrProb);
 
     void corrupt_input(const Vec& input, Vec& corrupted_input, int layer, Vec& binary_mask);
 

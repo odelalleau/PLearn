@@ -66,7 +66,7 @@ public:
     RBMBinomialLayer( real the_learning_rate=0. );
 
     //! Constructor from the number of units
-    RBMBinomialLayer( int the_size, real the_learning_rate=0. );
+    RBMBinomialLayer( int the_size, real the_learning_rate=0.);
 
     //! generate a sample, and update the sample field
     virtual void generateSample() ;
@@ -111,6 +111,10 @@ public:
     //! internal activations of the layer
     virtual real fpropNLL(const Vec& target);
     virtual void fpropNLL(const Mat& targets, const Mat& costs_column);
+    //! Computes the weighted negative log-likelihood of target given the
+    //! internal activations of the layer
+    virtual real fpropNLL(const Vec& target, const Vec& weights);
+
 
     //! Computes the gradient of the negative log-likelihood of target
     //! with respect to the layer's bias, given the internal activations
@@ -133,8 +137,7 @@ public:
     virtual void freeEnergyContributionGradient(const Vec& unit_activations,
                                                 Vec& unit_activations_gradient,
                                                 real output_gradient = 1,
-                                                bool accumulate = false)
-        const;
+                                                bool accumulate = false) const;
 
     virtual int getConfigurationCount();
 

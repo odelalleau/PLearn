@@ -184,7 +184,7 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
 {
     PLASSERT( input.size() == input_size );
     output.resize( output_size );
-
+   
     if( use_signed_samples )
         if (use_fast_approximations)
             for( int i=0 ; i<size ; i++ )
@@ -199,7 +199,6 @@ void RBMBinomialLayer::fprop( const Vec& input, Vec& output ) const
         else
             for( int i=0 ; i<size ; i++ )
                 output[i] = sigmoid( input[i] + bias[i] );
-
 }
 
 void RBMBinomialLayer::fprop( const Mat& inputs, Mat& outputs )
@@ -513,6 +512,78 @@ real RBMBinomialLayer::fpropNLL(const Vec& target)
 
     return ret;
 }
+
+real RBMBinomialLayer::fpropNLL(const Vec& target, const Vec& cost_weights)
+{
+    PLASSERT( target.size() == input_size );
+    PLASSERT( target.size() == cost_weights.size() );
+    PLASSERT (cost_weights.size() == size );
+
+    real ret = 0;
+    real target_i, activation_i;
+    if( use_signed_samples )
+    {
+        if(use_fast_approximations){
+            for( int i=0 ; i<size ; i++ )
+            {
+                if(cost_weights[i] != 0)
+                {
+                    target_i = (target[i]+1)/2;
+                    activation_i = 2*activation[i];
+
+                    ret += cost_weights[i]*(tabulated_softplus(activation_i) - target_i * activation_i);
+                }
+                // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
+                // but it is numerically unstable, so use instead the following identity:
+                //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
+                //     = act + softplus(-act) - target*act
+                //     = softplus(act) - target*act
+            }
+        } else {
+            for( int i=0 ; i<size ; i++ )
+            {
+                if(cost_weights[i] != 0)
+                {
+                    target_i = (target[i]+1)/2;
+                    activation_i = 2*activation[i];
+                    ret += cost_weights[i]*(softplus(activation_i) - target_i * activation_i);
+                }
+            }
+        }
+    }
+    else
+    {
+        if(use_fast_approximations){
+            for( int i=0 ; i<size ; i++ )
+            {
+                if(cost_weights[i] != 0)
+                {
+                    target_i = target[i];
+                    activation_i = activation[i];
+                    ret += cost_weights[i]*(tabulated_softplus(activation_i) - target_i * activation_i);
+                }
+                // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
+                // but it is numerically unstable, so use instead the following identity:
+                //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
+                //     = act + softplus(-act) - target*act
+                //     = softplus(act) - target*act
+            }
+        } else {
+            for( int i=0 ; i<size ; i++ )
+            {
+                if(cost_weights[i] != 0)
+                {
+                    target_i = target[i];
+                    activation_i = activation[i];
+                    ret += cost_weights[i]*(softplus(activation_i) - target_i * activation_i);
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
 
 void RBMBinomialLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {

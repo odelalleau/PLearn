@@ -369,6 +369,14 @@ real RBMLayer::fpropNLL(const Vec& target)
     return REAL_MAX;
 }
 
+real RBMLayer::fpropNLL(const Vec& target, const Vec& cost_weights)
+{
+    PLERROR("weighted version of RBMLayer::fpropNLL not implemented in subclass %s",
+            this->classname().c_str());
+    return REAL_MAX;
+}
+
+
 void RBMLayer::fpropNLL(const Mat& targets, const Mat& costs_column)
 {
     PLWARNING("batch version of RBMLayer::fpropNLL may not be optimized in subclass %s",
