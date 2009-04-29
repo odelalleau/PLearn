@@ -419,7 +419,11 @@ void MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(PPath file_name)
 
     mean_median_mode_file = new FileVMatrix(file_name);
     compatibleSizeError(mean_median_mode_file, "Bad file "+file_name);
-    PLCHECK(mean_median_mode_file->fieldNames()==fieldNames());
+    if(mean_median_mode_file->fieldNames()!=fieldNames())
+      PLERROR("In MeanMedianModeImputationVMatrix::loadMeanMedianModeFile(%s) -"
+	      " The file don't have the same field name as the source. "
+	      "Delete it to have it recreated it automatically.",
+	      file_name.c_str());
     mean_median_mode_file->getRow(0, variable_mean);
     mean_median_mode_file->getRow(1, variable_median);
     mean_median_mode_file->getRow(2, variable_mode);
