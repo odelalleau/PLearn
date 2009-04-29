@@ -42,6 +42,7 @@
 #include "VMat_computeStats.h"
 #include <plearn/io/load_and_save.h>
 #include <plearn/io/fileutils.h>
+#include <plearn/base/RemoteDeclareMethod.h>
 
 namespace PLearn {
 using namespace std;
@@ -132,11 +133,31 @@ void GaussianizeVMatrix::declareOptions(OptionList& ol)
         "An optional VMat that will be used instead of 'source' to compute\n"
         "the transformation parameters from the distribution statistics.");
 
+    declareOption(ol, "fields_to_gaussianize",
+                  &GaussianizeVMatrix::fields_to_gaussianize,
+                  OptionBase::buildoption,
+                  "The fields that we want to be gaussianized.");
+
     declareOption(ol, "stats_file_to_use",
                   &GaussianizeVMatrix::stats_file_to_use,
                   OptionBase::buildoption,
                   "The filename of the statistics to use instead of the"
                   " train_source.");
+
+    declareOption(ol, "save_fields_gaussianized",
+                  &GaussianizeVMatrix::save_fields_gaussianized,
+                  OptionBase::buildoption,
+                  "A path where we will save the fields selected to be gaussianized.");
+
+    declareOption(ol, "features_to_gaussianize",
+                  &GaussianizeVMatrix::features_to_gaussianize,
+                  OptionBase::learntoption,
+                  "The columsn that will be gaussianized.");
+
+    declareOption(ol, "values",
+                  &GaussianizeVMatrix::values,
+                  OptionBase::learntoption,
+                  "The values used to gaussinaze.");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -198,21 +219,51 @@ void GaussianizeVMatrix::build_()
 
     // Obtain meta information from source.
     setMetaInfoFromSource();
-    if(hasMetaDataDir() && values.size()==0)
+    if((hasMetaDataDir()||!stats_file_to_use.empty()) && values.size()==0)
         setMetaDataDir(getMetaDataDir());
+}
+
+///////////////////////////////
+// append_col_to_gaussianize //
+///////////////////////////////
+void GaussianizeVMatrix::append_col_to_gaussianize(int col, StatsCollector stat){
+    values.append(Vec());
+    Vec& values_j = values.lastElement();
+    features_to_gaussianize.append(col);
+    map<real, StatsCollectorCounts>::const_iterator it, it_dummy;
+    // Note that we obtain the approximate counts, so that almost equal
+    // values have been merged together already.
+    map<real,StatsCollectorCounts>* count_map =
+        stat.getApproximateCounts();
+    values_j.resize(0,count_map->size());
+    // We use a dummy iterator to get rid of the last element in the
+    // map, which is the max real value.
+    it_dummy = count_map->begin();
+    it_dummy++;
+    for (it = count_map->begin(); it_dummy != count_map->end();
+         it++, it_dummy++)
+    {
+        values_j.append(it->first);
+    }
 }
 
 ////////////////////
 // setMetaDataDir //
 ////////////////////
 void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
-    inherited::setMetaDataDir(the_metadatadir);
+
+    if(!the_metadatadir.empty())
+        inherited::setMetaDataDir(the_metadatadir);
 
     if(features_to_gaussianize.size()==0)
         return;
 
     VMat the_source = train_source ? train_source : source;
     
+    if(!the_source->hasMetaDataDir() && stats_file_to_use.empty() )
+        PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
+                " train_source, source or this VMatrix should have a metadata directory!");
+
     //to save the stats their must be a metadatadir
     if(!the_source->hasMetaDataDir() && hasMetaDataDir()){
         if (train_source)
@@ -221,10 +272,6 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
             the_source->setMetaDataDir(getMetaDataDir()+"source");
     }
 
-    if(!the_source->hasMetaDataDir() && stats_file_to_use.empty())
-        PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
-                " train_source, source or this VMatrix should have a metadata directory!");
-    
     TVec<StatsCollector> stats;
     if(!stats_file_to_use.empty()){
         if(!isfile(stats_file_to_use))
@@ -238,43 +285,56 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
     else
         stats = PLearn::computeStats(the_source, -1, true);
 
-    // See which dimensions violate the Gaussian assumption and will be
-    // actually Gaussianized, and store the corresponding list of values.
-    TVec<int> candidates = features_to_gaussianize.copy();
-    features_to_gaussianize.resize(0);
-    values.resize(0);
-    for (int i = 0; i < candidates.length(); i++) {
-        int j = candidates[i];
-        StatsCollector& stat = stats[j];
-        if (fast_exact_is_equal(stat.stddev(), 0)){
-            stats[j].forget();//to keep the total memory used lower faster
-            continue;
+    if(fields_to_gaussianize.size()>0){
+        for(int i=0;i<fields_to_gaussianize.size();i++){
+            int field=fields_to_gaussianize[i];
+            if(field>=width() || field<0)
+                PLERROR("In GaussianizeVMatrix::setMetaDataDir() - "
+                        "bad fields number to gaussianize(%d)!",field);
         }
-        if (!gaussianize_binary && stat.isbinary()) {
-            stats[j].forget();//to keep the total memory used lower faster
-            continue;
-        }
-        if ((stat.max() - stat.min()) > threshold_ratio * stat.stddev()) {
-            features_to_gaussianize.append(j);
-            values.append(Vec());
-            Vec& values_j = values.lastElement();
-            map<real, StatsCollectorCounts>::const_iterator it, it_dummy;
-            // Note that we obtain the approximate counts, so that almost equal
-            // values have been merged together already.
-            map<real,StatsCollectorCounts>* count_map =
-                                                stat.getApproximateCounts();
-            // We use a dummy iterator to get rid of the last element in the
-            // map, which is the max real value.
-            it_dummy = count_map->begin();
-            it_dummy++;
-            for (it = count_map->begin(); it_dummy != count_map->end();
-                                          it++, it_dummy++)
-            {
-                values_j.append(it->first);
-            }
-        }
+        features_to_gaussianize.resize(0,fields_to_gaussianize.length());
 
-        stats[j].forget();//to keep the total memory used lower.
+        values.resize(0);
+        int last_j=-1;
+        for (int i = 0; i < fields_to_gaussianize.length(); i++) {
+            int j = fields_to_gaussianize[i];
+            StatsCollector& stat = stats[j];
+            if(last_j+1!=j)
+                for(int k=last_j+1;k<j;k++){
+                    //to keep the total memory used lower faster.
+                    stats[k].forget();
+                }
+            append_col_to_gaussianize(j,stat);
+            stats[j].forget();//to keep the total memory used lower.
+        }
+    }else{
+
+        // See which dimensions violate the Gaussian assumption and will be
+        // actually Gaussianized, and store the corresponding list of values.
+        TVec<int> candidates = features_to_gaussianize.copy();
+        features_to_gaussianize.resize(0);
+        values.resize(0);
+        for (int i = 0; i < candidates.length(); i++) {
+            int j = candidates[i];
+            StatsCollector& stat = stats[j];
+            if (fast_exact_is_equal(stat.stddev(), 0)){
+                //we don't gaussianize
+            }else if (!gaussianize_binary && stat.isbinary()) {
+                //we don't gaussianize
+            }else if ((stat.max() - stat.min()) > threshold_ratio * stat.stddev()) {
+                append_col_to_gaussianize(j,stat);
+            }
+
+            stats[j].forget();//to keep the total memory used lower.
+        }
+    }
+
+    fields_gaussianized.resize(width());
+    fields_gaussianized.fill(-1);
+    for(int i=0;i<features_to_gaussianize.size();i++)
+        fields_gaussianized[features_to_gaussianize[i]]=i;
+    if(!save_fields_gaussianized.empty()){
+        PLearn::save(save_fields_gaussianized,features_to_gaussianize);
     }
     if(features_to_gaussianize.size()==0)
         PLWARNING("GaussianizeVMatrix::build_() 0 variable was gaussianized");
@@ -344,7 +404,84 @@ void GaussianizeVMatrix::makeDeepCopyFromShallowCopy(CopiesMap& copies)
 {
     inherited::makeDeepCopyFromShallowCopy(copies);
     deepCopyField(train_source, copies);
+    //features_to_gaussianize?
+    //scaling_factor?
+    //values?
 }
+
+
+/////////////
+// unGauss //
+/////////////
+real GaussianizeVMatrix::unGauss(real input, int j) const
+{
+    int k=fields_gaussianized[j];
+    if(k<0)
+        return input;//was not gaussianized
+    
+    real interpol = gauss_01_cum(input);
+    Vec& values_j = values[k];
+    int idx=int(interpol*values_j.length());
+    return values_j[idx];
+}
+
+/////////////
+// unGauss //
+/////////////
+void GaussianizeVMatrix::unGauss(Vec& inputs, Vec& ret, int j) const
+{
+    int k=fields_gaussianized[j];
+    if(k<0)
+        ret<<inputs;//was not gaussianized
+    
+    for(int i=0;i<inputs.size();i++){
+        real value = inputs[i];
+        real interpol = gauss_01_cum(value);
+        Vec& values_j = values[k];
+        int idx=int(interpol*values_j.length());
+        ret[i]=values_j[idx];
+    }
+   
+}
+
+//! Version of unGauss(vec,vec,int) that's called by RMI
+real GaussianizeVMatrix::remote_unGauss(real value, int col) const
+{
+    return unGauss(value,col);
+}
+
+//! Version of unGauss(vec,vec,int) that's called by RMI
+Vec GaussianizeVMatrix::remote_unGauss_vec(Vec values, int col) const
+{
+    Vec outputs(values.length());
+    unGauss(values,outputs,col);
+    return outputs;
+}
+
+////////////////////
+// declareMethods //
+////////////////////
+void GaussianizeVMatrix::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this is different from
+    // declareOptions().
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+
+    declareMethod(
+        rmm, "unGauss", &GaussianizeVMatrix::remote_unGauss,
+        (BodyDoc("Revert the gaussinisation done."),
+         ArgDoc ("value", "The value to revert."),
+         ArgDoc ("j", "The column of the value.")));
+
+
+    declareMethod(
+        rmm, "unGauss2", &GaussianizeVMatrix::remote_unGauss_vec,
+        (BodyDoc("Revert the gaussinisation done."),
+         ArgDoc ("values", "A vector of values to revert."),
+         ArgDoc ("j", "The column of the value.")));
+
+}
+
 
 } // end of namespace PLearn
 

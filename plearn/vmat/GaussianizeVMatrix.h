@@ -73,6 +73,8 @@ public:
     bool save_and_reuse_stats;
     VMat train_source;
     string stats_file_to_use;
+    TVec<int> fields_to_gaussianize;
+    PPath save_fields_gaussianized;
 
 public:
     //#####  Public Member Functions  #########################################
@@ -94,13 +96,19 @@ public:
     virtual void build();
 
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
+
+
+    //! return the approximate value of value before being gaussianized.
+    real unGauss(real value, int col)const;
+    void unGauss(Vec& values, Vec& ret, int col)const;
 
 protected:
 
     //! List of features that need to be Gaussianized.
     TVec<int> features_to_gaussianize;
+
+    TVec<int> fields_gaussianized;
 
     //! Scaling factor to map the rank to [0,1].
     Vec scaling_factor;
@@ -113,8 +121,10 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
+
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
     //! Fill the vector 'v' with the content of the i-th row.
     //! v is assumed to be the right size.
@@ -125,10 +135,11 @@ private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
     virtual void setMetaDataDir(const PPath& the_metadatadir);
-
+    real remote_unGauss(real input, int col)const;
+    Vec remote_unGauss_vec(Vec inputs, int col) const;
+    void append_col_to_gaussianize(int col, StatsCollector stat);
 private:
     //#####  Private Data Members  ############################################
 
