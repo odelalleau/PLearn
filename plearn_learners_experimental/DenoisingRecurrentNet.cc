@@ -2429,7 +2429,7 @@ void DenoisingRecurrentNet::generate(int t, int n)
     //data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/create_data/scoreGenSuitePerf.amat";
     data->filename = "/home/stan/cvs/Gamme/expressive_data/dataGen.amat";
 
-    data->defineSizes(173,16,0);
+    data->defineSizes(163,16,0);
     //data->inputsize = 21;
     //data->targetsize = 0;
     //data->weightsize = 0;
