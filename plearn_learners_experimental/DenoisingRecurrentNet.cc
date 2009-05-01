@@ -2737,6 +2737,326 @@ void DenoisingRecurrentNet::generate(int t, int n)
 
 }
 
+void DenoisingRecurrentNet::generateArtificial()
+{
+    //PPath* the_filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/generate/scoreGen.amat";
+    data = new AutoVMatrix();
+    //data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/data/listData/target_tm12_input_t_tm12_tp12/scoreGen_tar_tm12__in_tm12_tp12.amat";
+    //data->filename = "/home/stan/Documents/recherche_maitrise/DDBN_bosendorfer/create_data/scoreGenSuitePerf.amat";
+    //data->filename = "/home/stan/cvs/Gamme/expressive_data/dataGen.amat";
+    data->filename = "/home/stan/Documents/recherche_maitrise/artificialData/generate/dataGen.amat";
+    data->defineSizes(1,1,0);
+    //data->defineSizes(163,16,0);
+    //data->inputsize = 21;
+    //data->targetsize = 0;
+    //data->weightsize = 0;
+    data->build();
+
+    
+    
+   
+   
+
+    int len = data->length();
+    int tarSize = outputsize();
+    int partTarSize;
+    Vec input;
+    Vec target;
+    real weight;
+    int targsize;
+
+    Vec output(outputsize());
+    output.clear();
+//     Vec costs(nTestCosts());
+//     costs.clear();
+//     Vec n_items(nTestCosts());
+//     n_items.clear();
+
+    int r,r2;
+    use_target_layers_masks = false;
+
+    int ith_sample_in_sequence = 0;
+    int inputsize_without_masks = inputsize() 
+        - ( use_target_layers_masks ? targetsize() : 0 );
+    int sum_target_elements = 0;
+    for (int i = 0; i < len; i++)
+    {
+        data->getExample(i, input, target, weight);
+        /*if(i>n)
+        {
+            for (int k = 1; k <= t; k++)
+            {
+                if(k<=i){
+                    partTarSize = outputsize();
+                    for( int tar=0; tar < target_layers.length(); tar++ )
+                    {
+                        
+                        input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar](ith_sample_in_sequence-k);
+                        partTarSize -= target_layers[tar]->size;
+                        
+                        
+                    }
+                }
+            }       
+            }*/
+    
+
+//         for (int k = 1; k <= t; k++)
+//         {
+//             partTarSize = outputsize();
+//             for( int tar=0; tar < target_layers.length(); tar++ )
+//             {
+//                 if(i>=t){
+//                     input.subVec(inputsize_without_masks-(tarSize*(t-k))-partTarSize-1,target_layers[tar]->size) << target_prediction_list[tar](ith_sample_in_sequence-k);
+//                     partTarSize -= target_layers[tar]->size;
+//                 }
+//             }
+//         }
+
+        if( fast_exact_is_equal(input[0],end_of_sequence_symbol) )
+        {
+//             ith_sample_in_sequence = 0;
+//             hidden_list.resize(0);
+//             hidden_act_no_bias_list.resize(0);
+//             hidden2_list.resize(0);
+//             hidden2_act_no_bias_list.resize(0);
+//             target_prediction_list.resize(0);
+//             target_prediction_act_no_bias_list.resize(0);
+//             input_list.resize(0);
+//             targets_list.resize(0);
+//             nll_list.resize(0,0);
+//             masks_list.resize(0);
+
+            
+
+            continue;
+        }
+
+        // Resize internal variables
+        hidden_list.resize(ith_sample_in_sequence+1, hidden_layer->size);
+        hidden_act_no_bias_list.resize(ith_sample_in_sequence+1, hidden_layer->size);
+        if( hidden_layer2 )
+        {
+            hidden2_list.resize(ith_sample_in_sequence+1, hidden_layer2->size);
+            hidden2_act_no_bias_list.resize(ith_sample_in_sequence+1, hidden_layer2->size);
+        }
+                 
+        input_list.resize(ith_sample_in_sequence+1);
+        input_list[ith_sample_in_sequence].resize(input_layer->size);
+
+        targets_list.resize( target_layers.length() );
+        target_prediction_list.resize( target_layers.length() );
+        target_prediction_act_no_bias_list.resize( target_layers.length() );
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                targsize = target_layers[tar]->size;
+                targets_list[tar].resize( ith_sample_in_sequence+1, targsize);
+                //targets_list[tar][ith_sample_in_sequence].resize( target_layers[tar]->size);
+                target_prediction_list[tar].resize(
+                    ith_sample_in_sequence+1, targsize);
+                target_prediction_act_no_bias_list[tar].resize(
+                    ith_sample_in_sequence+1, targsize);
+            }
+        }
+        nll_list.resize(ith_sample_in_sequence+1,target_layers.length());
+        if( use_target_layers_masks )
+        {
+            masks_list.resize( target_layers.length() );
+            for( int tar=0; tar < target_layers.length(); tar++ )
+                if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+                    masks_list[tar].resize( ith_sample_in_sequence+1, target_layers[tar]->size );
+        }
+
+        // Forward propagation
+
+        // Fetch right representation for input
+        clamp_units(input.subVec(0,inputsize_without_masks),
+                    input_layer,
+                    input_symbol_sizes);                
+        input_list[ith_sample_in_sequence] << input_layer->expectation;
+
+        // Fetch right representation for target
+        sum_target_elements = 0;
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                if( use_target_layers_masks )
+                {
+                    Vec masks_list_tar_i = masks_list[tar](ith_sample_in_sequence);
+                    clamp_units(target.subVec(
+                                    sum_target_elements,
+                                    target_layers_n_of_target_elements[tar]),
+                                target_layers[tar],
+                                target_symbol_sizes[tar],
+                                input.subVec(
+                                    inputsize_without_masks 
+                                    + sum_target_elements, 
+                                    target_layers_n_of_target_elements[tar]),
+                                masks_list_tar_i
+                        );
+                    
+                }
+                else
+                {
+                    clamp_units(target.subVec(
+                                    sum_target_elements,
+                                    target_layers_n_of_target_elements[tar]),
+                                target_layers[tar],
+                                target_symbol_sizes[tar]);
+                }
+                targets_list[tar](ith_sample_in_sequence) << 
+                    target_layers[tar]->expectation;
+            }
+            sum_target_elements += target_layers_n_of_target_elements[tar];
+        }
+        
+        Vec hidden_act_no_bias_i = hidden_act_no_bias_list(ith_sample_in_sequence);
+        input_connections->fprop( input_list[ith_sample_in_sequence], 
+                                  hidden_act_no_bias_i);
+                
+        if( ith_sample_in_sequence > 0 && dynamic_connections )
+        {
+            dynamic_connections->fprop( 
+                hidden_list(ith_sample_in_sequence-1),
+                dynamic_act_no_bias_contribution );
+
+            hidden_act_no_bias_list(ith_sample_in_sequence) += 
+                dynamic_act_no_bias_contribution;
+        }
+        
+        Vec hidden_i = hidden_list(ith_sample_in_sequence);
+        hidden_layer->fprop( hidden_act_no_bias_i, 
+                             hidden_i );
+
+        Vec last_hidden = hidden_i;
+                 
+        if( hidden_layer2 )
+        {
+            Vec hidden2_i = hidden2_list(ith_sample_in_sequence); 
+            Vec hidden2_act_no_bias_i = hidden2_act_no_bias_list(ith_sample_in_sequence);
+
+            hidden_connections->fprop( 
+                hidden2_i,
+                hidden2_act_no_bias_i);
+
+            hidden_layer2->fprop( 
+                hidden2_act_no_bias_i,
+                hidden2_i 
+                );
+
+            last_hidden = hidden2_i; // last hidden layer vec 
+        }
+           
+       
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                Vec target_prediction_i = target_prediction_list[tar](i);
+                Vec target_prediction_act_no_bias_i = target_prediction_act_no_bias_list[tar](i);
+                target_connections[tar]->fprop(
+                    last_hidden,
+                    target_prediction_act_no_bias_i
+                    );
+                target_layers[tar]->fprop(
+                    target_prediction_act_no_bias_i,
+                    target_prediction_i );
+                if( use_target_layers_masks )
+                    target_prediction_i *= masks_list[tar](ith_sample_in_sequence);
+            }
+        }
+        
+
+        
+
+        sum_target_elements = 0;
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            if( !fast_exact_is_equal(target_layers_weights[tar],0) )
+            {
+                target_layers[tar]->activation << 
+                    target_prediction_act_no_bias_list[tar](
+                        ith_sample_in_sequence);
+                target_layers[tar]->activation += target_layers[tar]->bias;
+                target_layers[tar]->setExpectation(
+                    target_prediction_list[tar](
+                        ith_sample_in_sequence));
+                nll_list(ith_sample_in_sequence,tar) = 
+                    target_layers[tar]->fpropNLL( 
+                        targets_list[tar](ith_sample_in_sequence) ); 
+//                 costs[tar] += nll_list(ith_sample_in_sequence,tar);
+                
+//                 // Normalize by the number of things to predict
+//                 if( use_target_layers_masks )
+//                 {
+//                     n_items[tar] += sum(
+//                         input.subVec( inputsize_without_masks 
+//                                       + sum_target_elements, 
+//                                       target_layers_n_of_target_elements[tar]) );
+//                 }
+//                 else
+//                 n_items[tar]++;
+            }
+            if( use_target_layers_masks )
+                sum_target_elements += 
+                    target_layers_n_of_target_elements[tar];
+        }
+        ith_sample_in_sequence++;
+
+        
+
+    }
+
+//     ith_sample_in_sequence = 0;
+//     hidden_list.resize(0);
+//     hidden_act_no_bias_list.resize(0);
+//     hidden2_list.resize(0);
+//     hidden2_act_no_bias_list.resize(0);
+//     target_prediction_list.resize(0);
+//     target_prediction_act_no_bias_list.resize(0);
+//     input_list.resize(0);
+//     targets_list.resize(0);
+//     nll_list.resize(0,0);
+//     masks_list.resize(0);   
+
+    
+    //Vec tempo;
+    //TVec<real> tempo;
+    //tempo.resize(visible_layer->size);
+    ofstream myfile;
+    myfile.open ("/home/stan/Documents/recherche_maitrise/artificialData/generate/generationResult.txt");
+    
+    for (int i = 0; i < target_prediction_list[0].length() ; i++ ){
+       
+       
+        for( int tar=0; tar < target_layers.length(); tar++ )
+        {
+            for (int j = 0; j < target_prediction_list[tar](i).length() ; j++ ){
+                
+                //if(i>n){
+                    myfile << target_prediction_list[tar](i)[j] << " ";
+                    myfile << targets_list[tar](i)[j] << " ";
+                    // }
+                    //else{
+                    //    myfile << targets_list[tar](i)[j] << " ";
+                    // }
+                       
+           
+            }
+        }
+        myfile << "\n";
+    }
+     
+
+     myfile.close();
+
+}
+
+
+
 
 
 /*

@@ -265,6 +265,9 @@ public:
     //! Generate music in a folder
     void generate(int t, int n);
 
+    //! Generate music in a folder
+    void generateArtificial();
+
 //    //! Generate a part of the data in a folder
 //    void gen();
 
