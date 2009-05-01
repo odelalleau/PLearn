@@ -156,7 +156,7 @@ void GaussianizeVMatrix::declareOptions(OptionList& ol)
 
     declareOption(ol, "values",
                   &GaussianizeVMatrix::values,
-                  OptionBase::learntoption,
+                  OptionBase::learntoption|OptionBase::nosave,
                   "The values used to gaussinaze.");
 
     // Now call the parent class' declareOptions
