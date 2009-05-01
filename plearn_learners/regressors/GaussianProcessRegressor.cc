@@ -876,6 +876,8 @@ void GaussianProcessRegressor::trainProjectedProcess(
     // Obtain an estimate of the EFFECTIVE sampling noise from the
     // difference between self_cov and the diagonal of gram
     Vec sigma_sq = self_cov - diag(gram);
+    for (int i=0, n=sigma_sq.size() ; i<n ; ++i) // ensure does not get negative
+        sigma_sq[i] = max(m_weight_decay, sigma_sq[i]);
     double sigma_sq_est = mean(sigma_sq);
     // DBG_MODULE_LOG << "Sigma^2 estimate = " << sigma_sq_est << endl;
 
