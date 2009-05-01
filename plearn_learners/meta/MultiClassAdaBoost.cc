@@ -229,6 +229,8 @@ void MultiClassAdaBoost::build_()
     }
 
     timer->newTimer("MultiClassAdaBoost::test()", true);
+    timer->newTimer("MultiClassAdaBoost::test() current",true);
+
 }
 
 // ### Nothing to add here, simply calls build_
