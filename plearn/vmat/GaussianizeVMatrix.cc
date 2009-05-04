@@ -219,7 +219,7 @@ void GaussianizeVMatrix::build_()
 
     // Obtain meta information from source.
     setMetaInfoFromSource();
-    if((hasMetaDataDir()||!stats_file_to_use.empty()) && values.size()==0)
+    if((hasMetaDataDir()||!stats_file_to_use.empty()||!save_and_reuse_stats) && values.size()==0)
         setMetaDataDir(getMetaDataDir());
 }
 
@@ -260,9 +260,9 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
 
     VMat the_source = train_source ? train_source : source;
     
-    if(!the_source->hasMetaDataDir() && stats_file_to_use.empty() )
+    if((!the_source->hasMetaDataDir() && stats_file_to_use.empty()) && save_and_reuse_stats)
         PLERROR("In GaussianizeVMatrix::setMetaDataDir() - the "
-                " train_source, source or this VMatrix should have a metadata directory!");
+                " train_source, source or this VMatrix should have a metadata directory or save_and_reuse_stats must be false");
 
     //to save the stats their must be a metadatadir
     if(!the_source->hasMetaDataDir() && hasMetaDataDir()){
@@ -286,11 +286,15 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
         stats = PLearn::computeStats(the_source, -1, true);
 
     if(fields_to_gaussianize.size()>0){
+        if(fields_to_gaussianize.size()>width())
+           PLERROR("In GaussianizeVMatrix::setMetaDataDir() - "
+                   "More fields in fields_to_gaussianize then the weidth()");
         for(int i=0;i<fields_to_gaussianize.size();i++){
             int field=fields_to_gaussianize[i];
             if(field>=width() || field<0)
                 PLERROR("In GaussianizeVMatrix::setMetaDataDir() - "
-                        "bad fields number to gaussianize(%d)!",field);
+                        "bad fields number (%d) in fields_to_gaussianize!",
+                        field);
         }
         features_to_gaussianize.resize(0,fields_to_gaussianize.length());
 
