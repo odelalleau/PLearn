@@ -414,6 +414,7 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     if(reg.size()==length()){
         //get the full row
         reg<<tsorted_row(col);
+        idx=length();
     }else if(compact_reg.size()==0){
         for(int i=0;i<length() && n> idx;i++){
             PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
