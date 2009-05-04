@@ -96,17 +96,14 @@ void OneVsAllVMatrix::build_()
 {
     if(source)
     {
-        updateMtime(source);
-        inputsize_ = source->inputsize();
-        targetsize_ = source->targetsize();
-        weightsize_ = source->weightsize();
-        extrasize_ = source->extrasize();
-        //fieldinfos = source->fieldinfos;
-        length_ = source.length();
-        width_ = inputsize_+targetsize_+weightsize_+extrasize_;
-        sourcerow.resize(source->width());
-        if(targetsize_ != 1)
+        if(source->targetsize() != 1)
             PLERROR("OneVsAllVMatrix::build_(): targetsize_ should be 1");
+
+        updateMtime(source);
+        setMetaInfoFromSource();
+
+        PLCHECK(width_ == inputsize_+targetsize_+weightsize_+extrasize_);
+        sourcerow.resize(source->width());
     }
 }
 
