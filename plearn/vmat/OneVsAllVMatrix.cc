@@ -56,9 +56,11 @@ OneVsAllVMatrix::OneVsAllVMatrix()
 
 }
 
-OneVsAllVMatrix::OneVsAllVMatrix(VMat the_source,int the_target_class)
+OneVsAllVMatrix::OneVsAllVMatrix(VMat the_source, int the_target_class,
+                                 bool inverse_target)
     : inherited(the_source),
-      target_class(the_target_class)
+      target_class(the_target_class),
+      inverse_target(inverse_target)
 {
     build();
 }
@@ -98,9 +100,10 @@ void OneVsAllVMatrix::build_()
         inputsize_ = source->inputsize();
         targetsize_ = source->targetsize();
         weightsize_ = source->weightsize();
+        extrasize_ = source->extrasize();
         //fieldinfos = source->fieldinfos;
         length_ = source.length();
-        width_ = inputsize_+targetsize_+weightsize_;
+        width_ = inputsize_+targetsize_+weightsize_+extrasize_;
         sourcerow.resize(source->width());
         if(targetsize_ != 1)
             PLERROR("OneVsAllVMatrix::build_(): targetsize_ should be 1");
@@ -113,7 +116,8 @@ void OneVsAllVMatrix::build_()
 void OneVsAllVMatrix::getNewRow(int i, const Vec& v) const
 {
     source->getRow(i,v);
-    v[inputsize_] = int(v[inputsize_]) == target_class;
+    bool t = int(v[inputsize_]) == target_class;
+    v[inputsize_] = inverse_target? !t : t;
 }
 
 /////////////////////////////////

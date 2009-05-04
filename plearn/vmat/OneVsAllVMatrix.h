@@ -68,7 +68,7 @@ public:
     // ************************
 
     int target_class;
-
+    bool inverse_target;
     // ****************
     // * Constructors *
     // ****************
@@ -76,7 +76,8 @@ public:
     //! Default constructor.
     OneVsAllVMatrix();
 
-    OneVsAllVMatrix(VMat the_source,int the_target_class);
+    OneVsAllVMatrix(VMat the_source, int the_target_class,
+                    bool inverse_target=false);
 
     // ******************
     // * Object methods *
