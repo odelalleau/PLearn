@@ -321,7 +321,7 @@ void RegressionTreeRegisters::getAllRegisteredRowLeave(
         real val=p[row];
         PLASSERT(target_weight.size()>row && row>=0);
         PLASSERT(is_equal(p[row],tsource(col,row)));
-            
+        
         RTR_target_t target = ptw[row].first;
         RTR_weight_t weight = ptw[row].second;
         if (RTR_HAVE_MISSING && is_missing(val)){
@@ -411,7 +411,10 @@ void RegressionTreeRegisters::getAllRegisteredRow(RTR_type_id leave_id, int col,
     RTR_type* preg = reg.data();
     RTR_type* ptsorted_row = tsorted_row[col];
     RTR_type_id* pleave_register = leave_register.data();
-    if(compact_reg.size()==0){
+    if(reg.size()==length()){
+        //get the full row
+        reg<<tsorted_row(col);
+    }else if(compact_reg.size()==0){
         for(int i=0;i<length() && n> idx;i++){
             PLASSERT(ptsorted_row[i]==tsorted_row(col, i));
             RTR_type srow = ptsorted_row[i];
@@ -544,7 +547,7 @@ tuple<real,real,int> RegressionTreeRegisters::bestSplitInRow(
         return make_tuple(best_feature_value, best_split_error, best_balance);
 
     int iter=reg.size()-right_leave->length()-1;
-    RTR_type row=reg[iter];
+    RTR_type row=preg[iter];
     real first_value=p[preg[0]];
     real next_feature=p[row];
 
