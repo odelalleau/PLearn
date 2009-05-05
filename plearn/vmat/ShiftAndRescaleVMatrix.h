@@ -80,6 +80,7 @@ public:
     int n_inputs; // when automatic,
     bool negate_shift;
     bool no_scale;
+    TVec<string> fields;
     int verbosity;
 
     //! For all constructors, the original VMFields are copied upon construction

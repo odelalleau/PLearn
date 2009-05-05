@@ -213,6 +213,11 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
                   "If set to 1, no scaling will be performed (only a shift"
                   " will be applied).");
 
+    declareOption(ol, "fields", &ShiftAndRescaleVMatrix::fields,
+                  OptionBase::buildoption,
+                  "The fields to shift and rescale. Automatic must be true and"
+                  " if empty we use instead n_inputs.");
+
     declareOption(ol, "verbosity", &ShiftAndRescaleVMatrix::verbosity,
                   OptionBase::buildoption,
                   "Controls the amount of output.");
@@ -234,16 +239,18 @@ void ShiftAndRescaleVMatrix::declareOptions(OptionList& ol)
 void ShiftAndRescaleVMatrix::build_()
 {
     PLASSERT( n_inputs >= 0 || n_inputs == -1 || n_inputs == -2 );
+    PLCHECK(fields.size()<=0||automatic);
     if( source )
     {
         if (automatic && min_max.isEmpty())
         {
             if (n_inputs<0)
             {
+                PLCHECK( source->inputsize() >= 0 );
                 if (n_inputs == -1)
                     n_inputs = source->inputsize();
                 else if (n_inputs == -2) {
-                    PLASSERT( source->targetsize() >= 0 );
+                    PLCHECK( source->targetsize() >= 0 );
                     n_inputs = source->inputsize() + source->targetsize();
                 } else
                     PLERROR("In ShiftAndRescaleVMatrix::build_ - Wrong value "
@@ -274,6 +281,28 @@ void ShiftAndRescaleVMatrix::build_()
                 scale.resize(source->width());
                 scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
             }
+            
+            if(fields.size()>0){
+                //we shift and scale only the fields
+                TVec<int> idx(fields.size());
+                for(int i=0;i<fields.size();i++){
+                    idx[i]=source->getFieldIndex(fields[i]);
+                    if(idx[i]>n_inputs)
+                        PLERROR("In ShiftAndRescaleVMatrix::build_() - The "
+                                "fields index must be lower or equal to n_inputs");
+                }
+                for(int i=0;i<n_inputs;i++){
+                    bool found=false;
+                    for(int j=0;j<idx.size();j++){
+                        if(i==idx[j])
+                            found=true;
+                    }
+                    if(!found){
+                        shift[i]=0;
+                        scale[i]=1;
+                    }
+                }
+            }
             shift.resize(source->width());
             shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
         }
@@ -289,12 +318,15 @@ void ShiftAndRescaleVMatrix::build_()
                             "min_max[1]") ; 
             if (n_inputs<0)
             {
-                n_inputs = source->inputsize();
-                if (n_inputs<0)
-                    PLERROR("ShiftAndRescaleVMatrix: either n_inputs should be"
-                            " provided explicitly\n"
-                            "or the source VMatrix should have a set value of"
-                            " inputsize.\n");
+                PLCHECK(source->inputsize()>=0);
+                if(n_inputs==-1)
+                    n_inputs = source->inputsize();
+                else if (n_inputs == -2) {
+                    PLCHECK( source->targetsize() >= 0 );
+                    n_inputs = source->inputsize() + source->targetsize();
+                } else
+                    PLERROR("In ShiftAndRescaleVMatrix::build_ - Wrong value "
+                            "for 'n_inputs'");
             }
                 
                 Vec min_col(n_inputs) , max_col(n_inputs) ; 
