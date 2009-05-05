@@ -279,6 +279,7 @@ void HyperLearner::finalize()
 {
     inherited::finalize();
     learner_->finalize();
+    if(tester)tester->dataset=NULL;
 }
 
 ////////////
