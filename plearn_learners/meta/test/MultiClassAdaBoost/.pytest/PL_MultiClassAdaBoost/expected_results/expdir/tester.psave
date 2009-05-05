@@ -69,6 +69,7 @@ learners_error = []
 ;
 weak_learner_template = *8 ->RegressionTree(
 missing_is_valid = 0 ;
+will_train_again = 1 ;
 loss_function_weight = 1 ;
 maximum_number_of_nodes = 3 ;
 compute_train_stats = 0 ;
@@ -155,6 +156,7 @@ learners_error = []
 ;
 weak_learner_template = *11 ->RegressionTree(
 missing_is_valid = 0 ;
+will_train_again = 1 ;
 loss_function_weight = 1 ;
 maximum_number_of_nodes = 3 ;
 compute_train_stats = 0 ;
@@ -230,6 +232,7 @@ learners_error = []
 ;
 weak_learner_template = *13 ->RegressionTree(
 missing_is_valid = 0 ;
+will_train_again = 1 ;
 loss_function_weight = 1 ;
 maximum_number_of_nodes = 3 ;
 compute_train_stats = 0 ;

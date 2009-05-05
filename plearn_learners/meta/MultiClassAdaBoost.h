@@ -214,10 +214,6 @@ private:
     mutable TVec<Vec> sub_target_tmp;
 
     string targetname;
-    string input_prg;
-    string target_prg1;
-    string target_prg2;
-    string weight_prg;
 };
 
 // Declares a few other classes and functions related to this class

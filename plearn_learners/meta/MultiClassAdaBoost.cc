@@ -38,7 +38,7 @@
 
 
 #include "MultiClassAdaBoost.h"
-#include <plearn/vmat/ProcessingVMatrix.h>
+#include <plearn/vmat/OneVsAllVMatrix.h>
 #include <plearn/vmat/SubVMatrix.h>
 #include <plearn/vmat/MemoryVMatrix.h>
 #include <plearn_learners/regressors/RegressionTreeRegisters.h>
@@ -619,28 +619,17 @@ void MultiClassAdaBoost::setTrainingSet(VMat training_set, bool call_forget)
     bool training_set_has_changed = !train_set || !(train_set->looksTheSameAs(training_set));
 
     targetname = training_set->fieldName(training_set->inputsize());
-    input_prg  = "[%0:%"+tostring(training_set->inputsize()-1)+"]";
-    target_prg1= "@"+targetname+" 1 0 ifelse :"+targetname;
-    target_prg2= "@"+targetname+" 2 - 0 1 ifelse :"+targetname;
 
-    if(training_set->weightsize()>0){
-        int index = training_set->inputsize()+training_set->targetsize();
-        weight_prg = "[%"+tostring(index)+"]";
-    }else
-        weight_prg = "1 :weights";
-    
     //We don't give it if the script give them one explicitly.
     //This can be usefull for optimization
     if(training_set_has_changed || !learner1->getTrainingSet()){
-        VMat vmat1 = new ProcessingVMatrix(training_set, input_prg,
-                                           target_prg1,  weight_prg);
+        VMat vmat1 = new OneVsAllVMatrix(training_set,0,true);
         if(training_set->hasMetaDataDir())
             vmat1->setMetaDataDir(training_set->getMetaDataDir()/"0vsOther");
         learner1->setTrainingSet(vmat1, call_forget);
     }
     if(training_set_has_changed || !learner2->getTrainingSet()){
-        VMat vmat2 = new ProcessingVMatrix(training_set, input_prg,
-                                           target_prg2,  weight_prg);
+        VMat vmat2 = new OneVsAllVMatrix(training_set,2);
         PP<RegressionTreeRegisters> t1 =
             (PP<RegressionTreeRegisters>)learner1->getTrainingSet();
         if(t1->classname()=="RegressionTreeRegisters"){
@@ -733,10 +722,9 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
                                             learner2->nTestCosts()));
     }
     if(index<0){
-        testset1 = new ProcessingVMatrix(testset, input_prg,
-                                         target_prg1,  weight_prg);
-        testset2 = new ProcessingVMatrix(testset, input_prg,
-                                         target_prg2,  weight_prg);
+        testset1 = new OneVsAllVMatrix(testset,0,true);
+        testset2 = new OneVsAllVMatrix(testset,2);
+
         saved_testset.append(testset);
         saved_testset1.append(testset1);
         saved_testset2.append(testset2);
@@ -745,8 +733,8 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         //the same dataset to reuse their test results
         testset1=saved_testset1[index];
         testset2=saved_testset2[index];
-        PLCHECK(((PP<ProcessingVMatrix>)testset1)->source==testset);
-        PLCHECK(((PP<ProcessingVMatrix>)testset2)->source==testset);
+        PLCHECK(((PP<OneVsAllVMatrix>)testset1)->source==testset);
+        PLCHECK(((PP<OneVsAllVMatrix>)testset2)->source==testset);
     }
 
     //Profiler::pl_profile_end("MultiClassAdaBoost::test() part1");//cheap
