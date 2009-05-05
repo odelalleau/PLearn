@@ -219,7 +219,8 @@ void GaussianizeVMatrix::build_()
 
     // Obtain meta information from source.
     setMetaInfoFromSource();
-    if((hasMetaDataDir()||!stats_file_to_use.empty()||!save_and_reuse_stats) && values.size()==0)
+
+    if((the_source->hasMetaDataDir()||hasMetaDataDir()||!stats_file_to_use.empty()||!save_and_reuse_stats) && values.size()==0)
         setMetaDataDir(getMetaDataDir());
 }
 
@@ -349,6 +350,8 @@ void GaussianizeVMatrix::setMetaDataDir(const PPath& the_metadatadir){
 ///////////////
 void GaussianizeVMatrix::getNewRow(int i, const Vec& v) const
 {
+    if(values.size()==0 && features_to_gaussianize.size()>0)
+        PLERROR("In GaussianizeVMatrix::getNewRow() - We don't have been build correctly. Try to set a metadatadir or set save_and_reuse_stats=0.");
     PLASSERT( source );
     source->getRow(i, v);
     for (int k = 0; k < features_to_gaussianize.length(); k++) {
