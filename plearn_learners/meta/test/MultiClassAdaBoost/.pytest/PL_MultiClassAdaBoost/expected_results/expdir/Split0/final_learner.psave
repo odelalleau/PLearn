@@ -926,7 +926,6 @@ save_initial_tester = 0 ;
 save_stat_collectors = 1 ;
 save_split_stats = 1 ;
 save_learners = 0 ;
-save_learners_cond = "" ;
 save_initial_learners = 0 ;
 save_data_sets = 0 ;
 save_test_outputs = 0 ;
