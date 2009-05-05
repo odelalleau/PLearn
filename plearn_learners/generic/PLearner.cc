@@ -841,14 +841,53 @@ void PLearner::use(VMat testset, VMat outputs) const
         if(report_progress)
             pb = new ProgressBar("Using learner",l);
 
-        for(int i=0; i<l; i++)
+        if (test_minibatch_size==1)
         {
-            testset.getExample(i, input, target, weight);
-            computeOutput(input, output);
-            outputs->putOrAppendRow(i,output);
-            if(pb)
-                pb->update(i);
+            for(int i=0; i<l; i++)
+            {
+                testset.getExample(i, input, target, weight);
+                computeOutput(input, output);
+                outputs->putOrAppendRow(i,output);
+                if(pb)
+                    pb->update(i);
+            }
+        } else
+        {
+            int out_size = outputsize() >= 0 ? outputsize() : 0;
+            int n_batches = l/test_minibatch_size, i=0;
+            b_inputs.resize(test_minibatch_size,inputsize());
+            b_outputs.resize(test_minibatch_size, out_size);
+            b_costs.resize(test_minibatch_size,nTestCosts());
+            b_targets.resize(test_minibatch_size,targetsize());
+            b_weights.resize(test_minibatch_size);
+            for (int b=0;b<n_batches;b++,i+=test_minibatch_size)
+            {
+                testset->getExamples(i,test_minibatch_size,b_inputs,b_targets,b_weights);
+                computeOutputs(b_inputs,b_outputs);
+                for (int j=0;j<test_minibatch_size;j++)
+                {
+                    outputs->putOrAppendRow(i+j, b_outputs(j));
+                }
+                if (pb) pb->update(i+test_minibatch_size);
+            }
+            if (i<l)
+            {
+                b_inputs.resize(l-i,inputsize());
+                b_outputs.resize(l-i, out_size);
+                b_costs.resize(l-i,nTestCosts());
+                b_targets.resize(l-i,targetsize());
+                b_weights.resize(l-i);
+                testset->getExamples(i,l-i,b_inputs,b_targets,b_weights);
+                computeOutputs(b_inputs,b_outputs);
+                for (int j=0;j<l-i;j++)
+                {
+                    outputs->putOrAppendRow(i+j, b_outputs(j));
+                }
+                if (pb) pb->update(l);
+            }
         }
+
+
     }
     else // parallel code
     {
