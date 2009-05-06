@@ -77,6 +77,7 @@ TVec<string> HyperLearner::getTrainCostNames() const
 HyperLearner::HyperLearner()
     : provide_strategy_expdir(true),
       save_final_learner(true),
+      save_strategy_learner(false),
       reloaded(false),
       finalize_learner(false)
 {
@@ -129,6 +130,9 @@ HyperLearner::declareOptions(OptionList &ol)
 
     declareOption(ol, "save_final_learner", &HyperLearner::save_final_learner, OptionBase::buildoption,
                   "should final learner be saved in expdir/final_learner.psave");
+
+    declareOption(ol, "save_strategy_learner", &HyperLearner::save_strategy_learner, OptionBase::buildoption,
+                  "should final learner be saved in expdir/Strat#/final_learner.psave");
 
     declareOption(
         ol, "finalize_learner", &HyperLearner::finalize_learner,
@@ -239,6 +243,16 @@ void HyperLearner::train()
                 perr<<"HyperLearner: starting the optimization"<<endl;
 
             results = strategy[commandnum]->optimize();
+
+            if(save_strategy_learner)
+            {
+                PPath strat_expdir=strategy[commandnum]->getExperimentDirectory();
+                if(strat_expdir.isEmpty())
+                    PLERROR("Cannot save the strategy model: no experiment directory has been set");
+                if( getLearner().isNull() )
+                    PLERROR("Cannot save final model: no final learner available");
+                PLearn::save(strat_expdir+"final_learner.psave",*getLearner());
+            }
         }
 
         train_stats->update(results);

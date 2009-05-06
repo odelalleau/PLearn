@@ -75,6 +75,7 @@ public:
 
     bool provide_strategy_expdir; //!< should each strategy step be provided a directory expdir/Step#
     bool save_final_learner; //!< should final learner be saved in expdir/final_learner.psave
+    bool save_strategy_learner; //!< should final learner be saved in expdir/Strat#/final_learner.psave
     bool reloaded; //!< needed for a warning
     // HyperLearner methods
 
