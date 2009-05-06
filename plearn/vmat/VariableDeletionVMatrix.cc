@@ -214,7 +214,12 @@ void VariableDeletionVMatrix::declareOptions(OptionList &ol)
 ///////////
 void VariableDeletionVMatrix::build()
 {
-//    inherited::build();
+    //must be done even if we will call it later to have the
+    //source metadatadir set correctly.
+    bool saved_warn_non_selected_field=warn_non_selected_field;
+    warn_non_selected_field=false;
+    inherited::build();
+    warn_non_selected_field=saved_warn_non_selected_field;
     build_();
 }
 
