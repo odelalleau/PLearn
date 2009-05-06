@@ -740,7 +740,7 @@ void MultiClassAdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
     //Profiler::pl_profile_end("MultiClassAdaBoost::test() part1");//cheap
     Profiler::pl_profile_start("MultiClassAdaBoost::test() subtest");
 #ifdef _OPENMP
-#pragma omp parallel sections
+#pragma omp parallel sections if(false)//false as this is not thread safe right now.
 {
 #pragma omp section 
     learner1->test(testset1,test_stats1,testoutputs1,testcosts1);
