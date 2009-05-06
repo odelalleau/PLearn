@@ -126,7 +126,6 @@ protected:
 public:
     // simply calls inherited::build() then build_()
     virtual void build();
-    virtual void setMetaDataDir(const PPath& the_metadatadir);
 
 };
 

@@ -261,6 +261,50 @@ void ShiftAndRescaleVMatrix::build_()
                             "or the source VMatrix should have a set value of"
                             " inputsize.\n");
             }
+            if (n_train>0)
+                computeMeanAndStddev(source.subMatRows(0,n_train),
+                        shift, scale);
+            else
+                computeMeanAndStddev(source, shift, scale);
+            if (!negate_shift)
+                negateElements(shift);
+            if (!no_scale) {
+                for (int i=0;i<scale.length();i++)
+                    if (fast_exact_is_equal(scale[i], 0))
+                    {
+                        if (verbosity >= 1)
+                            PLWARNING("ShiftAndRescale: data column number %d"
+                                      " is constant",i);
+                        scale[i]=1;
+                    }
+                invertElements(scale);
+                scale.resize(source->width());
+                scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
+            }
+            
+            if(fields.size()>0){
+                //we shift and scale only the fields
+                TVec<int> idx(fields.size());
+                for(int i=0;i<fields.size();i++){
+                    idx[i]=source->getFieldIndex(fields[i]);
+                    if(idx[i]>n_inputs)
+                        PLERROR("In ShiftAndRescaleVMatrix::build_() - The "
+                                "fields index must be lower or equal to n_inputs");
+                }
+                for(int i=0;i<n_inputs;i++){
+                    bool found=false;
+                    for(int j=0;j<idx.size();j++){
+                        if(i==idx[j])
+                            found=true;
+                    }
+                    if(!found){
+                        shift[i]=0;
+                        scale[i]=1;
+                    }
+                }
+            }
+            shift.resize(source->width());
+            shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
         }
         else {
             if (!min_max.isEmpty()) {
@@ -345,76 +389,11 @@ void ShiftAndRescaleVMatrix::build_()
     }
 }
 
-////////////////////
-// setMetaDataDir //
-////////////////////
-void ShiftAndRescaleVMatrix::setMetaDataDir(const PPath& the_metadatadir)
-{
-    if(!source->hasMetaDataDir())
-        source->setMetaDataDir(the_metadatadir/"Source");
-
-    inherited::setMetaDataDir(the_metadatadir);
-
-    if( source )
-    {
-        if (automatic && min_max.isEmpty())
-        {
-            if (n_train>0)
-                computeMeanAndStddev(source.subMatRows(0,n_train),
-                        shift, scale);
-            else
-                computeMeanAndStddev(source, shift, scale);
-            if (!negate_shift)
-                negateElements(shift);
-            if (!no_scale) {
-                for (int i=0;i<scale.length();i++)
-                    if (fast_exact_is_equal(scale[i], 0))
-                    {
-                        if (verbosity >= 1)
-                            PLWARNING("ShiftAndRescale: data column number %d"
-                                      " is constant",i);
-                        scale[i]=1;
-                    }
-                invertElements(scale);
-                scale.resize(source->width());
-                scale.subVec(n_inputs, scale.length()-n_inputs).fill(1);
-            }
-            
-            if(fields.size()>0){
-                //we shift and scale only the fields
-                TVec<int> idx(fields.size());
-                for(int i=0;i<fields.size();i++){
-                    idx[i]=source->getFieldIndex(fields[i]);
-                    if(idx[i]>n_inputs)
-                        PLERROR("In ShiftAndRescaleVMatrix::build_() - The "
-                                "fields index must be lower or equal to n_inputs");
-                }
-                for(int i=0;i<n_inputs;i++){
-                    bool found=false;
-                    for(int j=0;j<idx.size();j++){
-                        if(i==idx[j])
-                            found=true;
-                    }
-                    if(!found){
-                        shift[i]=0;
-                        scale[i]=1;
-                    }
-                }
-            }
-            shift.resize(source->width());
-            shift.subVec(n_inputs, shift.length()-n_inputs).fill(0);
-        }
-    }
-}
-
 ///////////////
 // getNewRow //
 ///////////////
 void ShiftAndRescaleVMatrix::getNewRow(int i, const Vec& v) const
 {
-    if(source && automatic && min_max.isEmpty())
-        PLCHECK(hasMetaDataDir());
-
     source->getRow(i, v);
 
     if( negate_shift )
