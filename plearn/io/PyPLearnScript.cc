@@ -49,6 +49,7 @@
 #include <plearn/base/stringutils.h>
 #include <plearn/base/pl_repository_revision.h>
 #include <plearn/vmat/VMatrix.h>
+#include <plearn/io/pl_log.h>
 
 
 namespace PLearn {

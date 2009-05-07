@@ -47,7 +47,6 @@
 #include <plearn/base/Object.h>
 #include <plearn/io/PPath.h>
 #include <plearn/io/openString.h>
-#include <plearn/io/pl_log.h>
 #include <vector>
 
 namespace PLearn {
