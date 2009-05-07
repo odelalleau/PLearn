@@ -110,7 +110,6 @@ void CrossEntropyCostModule::fprop(const Vec& input, const Vec& target, real& co
             //                         = -log(1+exp(x)) = -softplus(x)
             cost += (1-target_i) * softplus(-activation_i);
     }
-
 }
 
 void CrossEntropyCostModule::fprop(const Vec& input, const Vec& target, Vec& cost) const
@@ -126,6 +125,59 @@ void CrossEntropyCostModule::fprop(const Mat& inputs, const Mat& targets, Mat& c
     for (int i = 0; i < inputs.length(); i++)
         fprop(inputs(i), targets(i), costs(i,0));
 
+}
+
+
+
+/////////////////
+// bpropUpdate //
+/////////////////
+void CrossEntropyCostModule::bpropUpdate(const Vec& input, const Vec& target,
+                                         real cost, Vec& input_gradient,
+                                         bool accumulate)
+{
+    PLASSERT( input.size() == input_size );
+    PLASSERT( target.size() == target_size );
+
+    if (accumulate)
+    {
+        PLASSERT_MSG( input_gradient.size() == input_size,
+                      "Cannot resize input_gradient AND accumulate into it" );
+    }
+    else
+    {
+        input_gradient.resize(input_size);
+        input_gradient.clear();
+    }
+
+    for (int i=0; i < target_size; i++)
+        input_gradient[i] += target[i] - sigmoid(-input[i]);
+}
+
+void CrossEntropyCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
+                                         const Vec& costs,
+                                         Mat& input_gradients, bool accumulate)
+{
+    PLASSERT( inputs.width() == input_size );
+    PLASSERT( targets.width() == target_size );
+
+    int batch_size = inputs.length();
+
+    if (accumulate)
+    {
+        PLASSERT_MSG( input_gradients.width() == input_size &&
+                      input_gradients.length() == batch_size,
+                      "Cannot resize input_gradients AND accumulate into it" );
+    }
+    else
+    {
+        input_gradients.resize(batch_size, input_size);
+        input_gradients.clear();
+    }
+
+    for (int i=0; i < batch_size; i++)
+        for (int j=0; j < target_size; j++)
+            input_gradients(i, j) += targets(i, j) - sigmoid(-inputs(i, j));
 }
 
 void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,

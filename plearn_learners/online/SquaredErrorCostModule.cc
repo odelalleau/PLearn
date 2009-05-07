@@ -160,12 +160,12 @@ void SquaredErrorCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
     {
         PLASSERT_MSG( input_gradients.width() == input_size &&
                       input_gradients.length() == inputs.length(),
-                      "Cannot resize input_gradient AND accumulate into it" );
+                      "Cannot resize input_gradients AND accumulate into it" );
     }
     else
     {
         input_gradients.resize( inputs.length(), input_size );
-        input_gradients.fill(0);
+        input_gradients.clear();
     }
 
     // input_gradient = 2*(input - target)

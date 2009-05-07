@@ -68,6 +68,15 @@ public:
     virtual void fprop(const Vec& input, const Vec& target, Vec& cost) const;
     virtual void fprop(const Mat& input, const Mat& target, Mat& cost) const;
 
+    //! Standard backpropagation
+    virtual void bpropUpdate(const Vec& input, const Vec& target, real cost,
+                             Vec& input_gradient, bool accumulate=false);
+
+    //! Minibatch backpropagation
+    virtual void bpropUpdate(const Mat& inputs, const Mat& targets,
+                             const Vec& costs, Mat& input_gradients,
+                             bool accumulate=false);
+
     //! New version of backpropagation
     virtual void bpropAccUpdate(const TVec<Mat*>& ports_value,
                                 const TVec<Mat*>& ports_gradient);
