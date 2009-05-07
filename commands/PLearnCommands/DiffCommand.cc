@@ -44,11 +44,8 @@
 #include "DiffCommand.h"
 #include <plearn/base/Object.h>
 #include <plearn/base/PLearnDiff.h>
-#include <plearn/io/fileutils.h>
-#include <plearn/io/openFile.h>
-#include <plearn/io/openString.h>
+#include <plearn/io/PyPLearnScript.h>
 #include <plearn/math/TVec_decl.h>
-//#include <plearn/math/TMat_impl.h>
 
 namespace PLearn {
 using namespace std;
@@ -104,10 +101,8 @@ void DiffCommand::run(const vector<string>& args)
     // Load objects.
     TVec< PP<Object> > obj;
     for (int i = 0; i < n; i++) {
-        PP<Object> new_object;
-        string object_spec = readFileAndMacroProcess(obj_spec[i]);
-        PStream in = openString(object_spec, PStream::plearn_ascii);
-        in >> new_object;
+        PP<Object> new_object = smartLoadObject(obj_spec[i]);
+
         if (!new_object)
             PLERROR("In DiffCommand::run - Unable to serialize file %s as an Object",
                     obj_spec[i].absolute().c_str());
