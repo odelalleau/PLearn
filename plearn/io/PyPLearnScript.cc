@@ -323,11 +323,28 @@ void PyPLearnScript::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     inherited::makeDeepCopyFromShallowCopy(copies);
 }
 
-Object* smartLoadObject(PPath filepath, const vector<string>& args, time_t& return_date)
+Object* smartLoadObject(PPath filepath, const vector<string>& args_, time_t& return_date)
 {
-    if (!isfile(filepath))
-        PLERROR("Non-existent script file: %s\n",filepath.c_str());
-    
+    vector<string> args = args_;
+    vector<string> args_augmented;
+
+    if (!isfile(filepath)) {
+        // There is no file with this exact name. Maybe there are parameters
+        // appended to the name?
+        string base;
+        map<string, string> params;
+        parseBaseAndParameters(filepath, base, params);
+        if (!isfile(base))
+            PLERROR("Non-existent script file: %s\n", filepath.c_str());
+        // Add new arguments.
+        args_augmented = args;
+        map<string, string>::const_iterator it = params.begin();
+        for (; it != params.end(); it++)
+            args_augmented.push_back(it->first + "=" + it->second);
+        args = args_augmented;
+        filepath = base;
+    }
+
     const string extension = extract_extension(filepath);
     string script;
     time_t date = 0;

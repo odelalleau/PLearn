@@ -199,7 +199,7 @@ inline Object* smartLoadObject(PPath filepath, const vector<string>& args)
 { time_t d=0; return smartLoadObject(filepath, args, d); }
 //! Same as smartLoadObject(PPath, vector<string>, time_t) but passing an empty vector<string>
 inline Object* smartLoadObject(PPath filepath, time_t& return_date)
-{ vector<string> args; return smartLoadObject(filepath, args,return_date); }
+{ vector<string> args; args.push_back("");/* empty script filename*/ return smartLoadObject(filepath, args,return_date); }
 //! Same as smartLoadObject(PPath, vector<string>, time_t) but passing an empty vector<string> 
 //! and an empty return_date
 inline Object* smartLoadObject(PPath filepath)
