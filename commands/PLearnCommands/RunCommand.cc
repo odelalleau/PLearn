@@ -47,9 +47,9 @@
 #include <plearn/sys/Popen.h>
 
 #include <plearn/io/PyPLearnScript.h>
-
 #include <plearn/io/openString.h>
 #include <plearn/io/openFile.h>
+#include <plearn/io/pl_log.h>
 
 #include <algorithm>
 
