@@ -190,6 +190,7 @@ DECLARE_OBJECT_PTR(PyPLearnScript);
 //! .plearn .vmat : perform simple plearn macro processing
 //! .pyplearn .pymat: use python preprocessor
 //! The given args vector can be used to pass string arguments of the form argname=value.
+//!   The first arguments is ignored as we consider that it is the script name.
 //! The return_date is set to the lastest date of dependence of file. 
 //!   Otherwise return (time_t)0. Work for .vmat, .psave and .plearn file.
 Object* smartLoadObject(PPath filepath, const vector<string>& args, time_t& return_date);
