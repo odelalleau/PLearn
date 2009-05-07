@@ -55,7 +55,7 @@ ReadAndWriteCommand::ReadAndWriteCommand():
                 
                   "Used to check (debug) the serialization system",
                 
-                  "read_and_write <sourcefile> <destfile> [--update] [modification string] ...\n"
+                  "read_and_write <sourcefile> <destfile> [--update] [--mode={plearn_ascii,plearn_binary}] [modification string] ...\n"
                   "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
                   "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
                   "Otherwise (ex: .plearn .vmat) it will. \n"
