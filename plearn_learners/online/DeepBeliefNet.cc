@@ -759,7 +759,7 @@ void DeepBeliefNet::build_final_cost()
         // check target size and final_cost->input_size
         if( n_classes == 0 ) // regression
         {
-            if( final_cost->input_size != targetsize() )
+            if( targetsize_ >= 0 && final_cost->input_size != targetsize() )
                 PLERROR("DeepBeliefNet::build_final_cost() - "
                     "final_cost->input_size (%d) != targetsize() (%d), "
                     "although we are doing regression (n_classes == 0).\n",
