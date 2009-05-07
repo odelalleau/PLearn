@@ -952,6 +952,14 @@ def get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link,
                 if not force_link and not force_recompilation and info.corresponding_output_is_up_to_date() and not create_dll:
                     # Refresh symbolic link.
                     info.make_symbolic_link(linkname, None, info.corresponding_output)
+
+                    if link_target_override and os.path.islink(info.corresponding_output):
+                        src=os.path.realpath(info.corresponding_output)
+                        os.remove(info.corresponding_output)
+                        shutil.copyfile(src, info.corresponding_output)
+                        shutil.copymode(src, info.corresponding_output)
+                        print "The link target was a symlink. We replaced it with a binary."
+
                     print 'Target', info.filebase, 'is up to date.'
                 else:
                     executables_to_link[info] = 1
@@ -2021,6 +2029,10 @@ class FileInfo:
 
         # In the following, we create the link 'symlink_from' -> 'symlink_to'.
 
+        #if we overrided the link-target, we should link to it.
+        if link_target_override and not symlink_to:
+            symlink_to=os.path.abspath(link_target_override)
+
         # First, we change to the directory of the source file. This is to
         # ensure that if the target is given by a relative path (in OBJS/...)
         # then this relative path is taken relative to the source file path.
@@ -2055,8 +2067,12 @@ class FileInfo:
         else:
             symlink_from = linkname
 
-        # Create symbolic link.
-        toolkit.symlink(symlink_to, symlink_from, True, True)
+        #we don't create a symlink to itself.
+        #otherwise their is a bug if link_target_override if the same as the destination of 
+
+        if not link_target_override or os.path.abspath(link_target_override)!=os.path.abspath(symlink_from):
+            # Create symbolic link.
+            toolkit.symlink(symlink_to, symlink_from, True, True)
 
         # Restore original working directory.
         os.chdir(backup_cwd)
