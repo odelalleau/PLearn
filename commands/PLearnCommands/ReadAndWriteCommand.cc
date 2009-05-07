@@ -40,10 +40,9 @@
 #include "ReadAndWriteCommand.h"
 #include <plearn/base/Object.h>
 #include <plearn/base/stringutils.h>      //!< For extract_extension.
-#include <plearn/io/fileutils.h>        //!< For readFileAndMacroProcess.
-#include <plearn/io/load_and_save.h>
+#include <plearn/io/fileutils.h>        //!< For mtime.
+#include <plearn/io/PyPLearnScript.h>   //!< For smartLoadObject
 #include <plearn/io/openFile.h>
-#include <plearn/io/openString.h>
 
 namespace PLearn {
 using namespace std;
@@ -56,7 +55,7 @@ ReadAndWriteCommand::ReadAndWriteCommand():
                 
                   "Used to check (debug) the serialization system",
                 
-                  "read_and_write <sourcefile> <destfile> [--updaet] [modification string] ...\n"
+                  "read_and_write <sourcefile> <destfile> [--update] [modification string] ...\n"
                   "Reads an Object (in PLearn serialization format) from the <sourcefile> and writes it to the <destfile>\n"
                   "If the sourcefile ends with a .psave file, then it will not be subjected to macro preprosessing \n"
                   "Otherwise (ex: .plearn .vmat) it will. \n"
@@ -69,7 +68,7 @@ ReadAndWriteCommand::ReadAndWriteCommand():
 void ReadAndWriteCommand::run(const vector<string>& args)
 {
     if(args.size()<2)
-        PLERROR("read_and_write takes 2 or more arguments: <sourcefile> <destfile> [--update] [modification string] ...");
+        PLERROR("read_and_write takes 2 or more arguments: <sourcefile> <destfile> [--update] [--mode={plearn_ascii,plearn_binary}][modification string] ...");
     string source = args[0];
     string dest = args[1];
 
@@ -78,27 +77,25 @@ void ReadAndWriteCommand::run(const vector<string>& args)
     time_t date_src=0;
 
     //read the file
-    if(ext==".psave") // may be binay. Don't macro-process
-    {
-        PLearn::load(source,o);
-        date_src=mtime(source);
-    }
-    else
-    {
-        map<string, string> vars;
-        string script = readFileAndMacroProcess(source, vars, date_src);
-        PStream in = openString(script,PStream::plearn_ascii);
-        o = readObject(in);
-    }
-    int idx_start=2;
-    if(args.size()>2 && args[2]=="--update"){
-        PLCHECK(date_src>0);
+    o=smartLoadObject(source, date_src);
+
+    uint idx_start=2;
+    PStream::mode_t mode = PStream::plearn_ascii;
+    for(;idx_start<args.size();){
+        if(args[idx_start]=="--update"){
+            PLCHECK(date_src>0);
+            time_t date_dst=mtime(dest);
+            if((date_dst>date_src) && (date_src>0)){
+                pout << "The file is up to date. We don't regenerate it."<<endl;
+                return;
+            }
+        } else if(args[idx_start]=="--mode=plearn_ascii"){
+            mode=PStream::plearn_ascii;
+        } else if(args[idx_start]=="--mode=plearn_binary"){
+            mode=PStream::plearn_binary;
+        } else
+            break;//the rest are modification string
         idx_start++;
-        time_t date_dst=mtime(dest);
-        if((date_dst>date_src) && (date_src>0)){
-            pout << "The file is up to date. We do not regenerate it."<<endl;
-            return;
-        }
     }
 
     //modif the object
@@ -110,7 +107,7 @@ void ReadAndWriteCommand::run(const vector<string>& args)
     }
 
     //write the file
-    PStream out = openFile(dest,PStream::plearn_ascii,"w");
+    PStream out = openFile(dest, mode, "w");
     if(!out)
         PLERROR("Could not open file %s for writing",dest.c_str());
     out << *o;
