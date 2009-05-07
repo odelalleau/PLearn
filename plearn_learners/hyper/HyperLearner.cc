@@ -75,7 +75,8 @@ TVec<string> HyperLearner::getTrainCostNames() const
 }
 
 HyperLearner::HyperLearner()
-    : provide_strategy_expdir(true),
+    : save_mode_(PStream::plearn_ascii),
+      provide_strategy_expdir(true),
       save_final_learner(true),
       save_strategy_learner(false),
       reloaded(false),
@@ -132,7 +133,10 @@ HyperLearner::declareOptions(OptionList &ol)
                   "should final learner be saved in expdir/final_learner.psave");
 
     declareOption(ol, "save_strategy_learner", &HyperLearner::save_strategy_learner, OptionBase::buildoption,
-                  "should final learner be saved in expdir/Strat#/final_learner.psave");
+                  "should final learner be saved in expdir/Strat#final_learner.psave");
+
+    declareOption(ol, "save_mode", &HyperLearner::save_mode, OptionBase::buildoption,
+                  "The mode to use to save the file. Default plearn_ascii.");
 
     declareOption(
         ol, "finalize_learner", &HyperLearner::finalize_learner,
@@ -251,7 +255,7 @@ void HyperLearner::train()
                     PLERROR("Cannot save the strategy model: no experiment directory has been set");
                 if( getLearner().isNull() )
                     PLERROR("Cannot save final model: no final learner available");
-                PLearn::save(strat_expdir+"final_learner.psave",*getLearner());
+                PLearn::save(strat_expdir+"final_learner.psave",*getLearner(), save_mode_);
             }
         }
 
@@ -266,7 +270,7 @@ void HyperLearner::train()
                 PLERROR("Cannot save final model: no experiment directory has been set");
             if( getLearner().isNull() )
                 PLERROR("Cannot save final model: no final learner available");
-            PLearn::save(expdir+"final_learner.psave",*getLearner());
+            PLearn::save(expdir+"final_learner.psave",*getLearner(), save_mode_);
         }
 
         stage = 1;
@@ -315,7 +319,14 @@ void HyperLearner::build_()
 
     for(int commandnum=0; commandnum<strategy.length(); commandnum++)
         strategy[commandnum]->setHyperLearner(this);
-
+    if(save_mode.empty());
+    else if(save_mode=="plearn_ascii")
+        save_mode_ = PStream::plearn_ascii;
+    else if(save_mode=="plearn_binary")
+        save_mode_ = PStream::plearn_binary;
+    else
+        PLERROR("In HyperLearner::build_(): invalid save_mode %s",
+                save_mode.c_str());
 }
 
 /////////
@@ -380,7 +391,7 @@ void HyperLearner::auto_save()
     if(verbosity>0)
         perr << "In HyperLearner::auto_save() - We save the hlearner"
              << endl;
-    PLearn::save(tmp, this);
+    PLearn::save(tmp, this, save_mode_);
 
 #ifdef BOUNDCHECK
     HyperLearner *n = new HyperLearner();

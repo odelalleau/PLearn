@@ -73,9 +73,11 @@ public:
 
     TVec< PP<HyperCommand> > strategy; //!< The strategy to follow to optimize hyper parameters
 
+    string save_mode;
+    PStream::mode_t save_mode_;
     bool provide_strategy_expdir; //!< should each strategy step be provided a directory expdir/Step#
     bool save_final_learner; //!< should final learner be saved in expdir/final_learner.psave
-    bool save_strategy_learner; //!< should final learner be saved in expdir/Strat#/final_learner.psave
+    bool save_strategy_learner; //!< should each Strat# learner be saved in expdir/Strat#final_learner.psave
     bool reloaded; //!< needed for a warning
     // HyperLearner methods
 
