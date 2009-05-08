@@ -88,6 +88,7 @@ template<class T> TVec<T> operator&(const T& x, const TVec<T>& v)
 PTester::PTester():
        reloaded(false),
        need_to_save_test_names(false),
+       save_mode_(PStream::plearn_ascii),
        provide_learner_expdir(false),
        report_stats(true),
        save_data_sets(false),
@@ -201,7 +202,11 @@ void PTester::declareOptions(OptionList& ol)
 
     declareOption(
         ol, "save_learners", &PTester::save_learners, OptionBase::buildoption,
-        "If true, the final trained learner for split#k will be saved in Split#k/final_learner.psave");
+        "If true, the final trained learner for split#k will be saved in Split#k/final_learner.psave."
+        "The format is defined by save_mode");
+
+    declareOption(ol, "save_mode", &PTester::save_mode, OptionBase::buildoption,
+                  "The mode to use to save the file. Default plearn_ascii.");
 
     declareOption(
         ol, "save_initial_learners", &PTester::save_initial_learners, OptionBase::buildoption,
@@ -464,6 +469,8 @@ void PTester::build_()
                           c,nb_testset);
         }
     }
+
+    save_mode_ = PStream::parseModeT(save_mode);
 }
 
 // ### Nothing to add here, simply calls build_
@@ -585,7 +592,7 @@ Vec PTester::perform1Split(int splitnum, bool call_forget)
             if (save_stat_collectors)
                 PLearn::save(splitdir / "train_stats.psave", train_stats);
             if (save_learners)
-                PLearn::save(splitdir / "final_learner.psave", learner);
+                PLearn::save(splitdir / "final_learner.psave", learner, save_mode_);
         }
     }
     else

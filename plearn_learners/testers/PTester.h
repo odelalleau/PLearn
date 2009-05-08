@@ -87,6 +87,9 @@ public:
     TVec<string> final_commands;
     PP<VecStatsCollector> global_template_stats_collector;
     PP<PLearner> learner;
+    string save_mode;
+    PStream::mode_t save_mode_;
+
     bool provide_learner_expdir;
     bool report_stats;
     bool save_data_sets;

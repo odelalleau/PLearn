@@ -319,14 +319,8 @@ void HyperLearner::build_()
 
     for(int commandnum=0; commandnum<strategy.length(); commandnum++)
         strategy[commandnum]->setHyperLearner(this);
-    if(save_mode.empty());
-    else if(save_mode=="plearn_ascii")
-        save_mode_ = PStream::plearn_ascii;
-    else if(save_mode=="plearn_binary")
-        save_mode_ = PStream::plearn_binary;
-    else
-        PLERROR("In HyperLearner::build_(): invalid save_mode %s",
-                save_mode.c_str());
+
+    save_mode_ = PStream::parseModeT(save_mode);
 }
 
 /////////

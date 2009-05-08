@@ -264,7 +264,19 @@ PStream::mode_t PStream::switchToPLearnOutMode()
     return oldmode;
 }
 
-
+PStream::mode_t PStream::parseModeT(const string& str_mode){
+    PStream::mode_t mode;
+    if(str_mode.empty())
+        mode = PStream::plearn_ascii;
+    else if(str_mode=="plearn_ascii")
+        mode = PStream::plearn_ascii;
+    else if(str_mode=="plearn_binary")
+        mode = PStream::plearn_binary;
+    else
+        PLERROR("In PStream::parseModeT(%s): invalid mode",
+                str_mode.c_str());
+    return mode;
+}
 /////////////
 // readAll //
 /////////////
