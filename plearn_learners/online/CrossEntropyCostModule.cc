@@ -145,7 +145,7 @@ void CrossEntropyCostModule::bpropUpdate(const Vec& input, const Vec& target,
     }
 
     for (int i=0; i < target_size; i++)
-        input_gradient[i] += target[i] - sigmoid(-input[i]);
+        input_gradient[i] += sigmoid(input[i]) - target[i];
 }
 
 void CrossEntropyCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
@@ -171,7 +171,7 @@ void CrossEntropyCostModule::bpropUpdate(const Mat& inputs, const Mat& targets,
 
     for (int i=0; i < batch_size; i++)
         for (int j=0; j < target_size; j++)
-            input_gradients(i, j) += targets(i, j) - sigmoid(-inputs(i, j));
+            input_gradients(i, j) += sigmoid(inputs(i, j)) - targets(i, j);
 }
 
 void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
@@ -214,7 +214,7 @@ void CrossEntropyCostModule::bpropAccUpdate(const TVec<Mat*>& ports_value,
         for( int i=0; i < batch_size; i++ )
             for ( int j=0; j < target->width(); j++ )
                 (*prediction_grad)(i, j) +=
-                (*cost_grad)(i,0)*((*target)(i,j) - sigmoid(-(*prediction)(i,j) ));
+                (*cost_grad)(i,0)*(sigmoid((*prediction)(i,j)) - (*target)(i,j));
     }
 
     else if( !prediction_grad && !target_grad &&
