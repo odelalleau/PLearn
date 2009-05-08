@@ -840,8 +840,13 @@ class DBICondor(DBIBase):
 
         #transform from meg to kilo
         self.mem=self.mem*1024
-
-        self.os = self.os.upper()
+        if not self.os:
+            #if their is not required os, condor launch on the same os.
+            p=Popen( "condor_config_val OpSyS", shell=True,stdout=PIPE)
+            p.wait()
+            self.os=p.stdout.readlines()[0].strip()
+        else: self.os = self.os.upper()
+        
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir) # condor log are always generated
 
@@ -1135,7 +1140,7 @@ class DBICondor(DBIBase):
                     pwd 1>&2
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
-                    #[ -x "$1" ];echo $?
+                    [ -x "$1" ];echo $?
                     %s
                     ret=$?
                     rm -f echo ${KRB5CCNAME:5}
@@ -1163,6 +1168,7 @@ class DBICondor(DBIBase):
                 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
                 echo "OMP_NUM_THREADS: $OMP_NUM_THREADS"
                 echo "CONDOR_JOB_LOGDIR: $CONDOR_JOB_LOGDIR"
+                echo "HOME: $HOME"
                 pwd
                 echo "Running command: $argv"
                 $argv
@@ -1177,7 +1183,17 @@ class DBICondor(DBIBase):
 
             os.chmod(launch_tmp_file, 0755)
             os.rename(launch_tmp_file, self.launch_file)
+
     def print_common_condor_submit(self, fd, output, error, arguments=None):
+        #check that their is some host with those requirement
+        cmd="""condor_status -const '%s' -tot |wc"""%self.req
+        p=Popen( cmd, shell=True,stdout=PIPE)
+        p.wait()
+        lines=p.stdout.readlines()
+        if p.returncode != 0 or lines==['      1       0       1\n']:
+            raise DBIError("Their is no compute node with those requirement: %s."%self.req)
+
+
         fd.write( dedent('''\
                 executable     = %s
                 universe       = %s
