@@ -95,20 +95,14 @@ void CrossEntropyCostModule::fprop(const Vec& input, const Vec& target, real& co
     real target_i, activation_i;
     for( int i=0 ; i < target_size ; i++ )
     {
+        // nll = - target*log(sigmoid(act)) -(1-target)*log(1-sigmoid(act))
+        // but it is numerically unstable, so use instead the following:
+        //     = target*softplus(-act) +(1-target)*(act+softplus(-act))
+        //     = act + softplus(-act) - target*act
+        //     = softplus(act) - target*act
         target_i = target[i];
         activation_i = input[i];
-        if(!fast_exact_is_equal(target_i,0.0))
-            // nll -= target[i] * pl_log(expectations[i]);
-            // but it is numerically unstable, so use instead
-            // log (1/(1+exp(-x))) = -log(1+exp(-x)) = -softplus(-x)
-            // but note that expectation = sigmoid(-activation)
-            cost += target_i * softplus(activation_i);
-        if(!fast_exact_is_equal(target_i,1.0))
-            // ret -= (1-target_i) * pl_log(1-expectation_i);
-            // log (1 - 1/(1+exp(-x))) = log(exp(-x)/(1+exp(-x)))
-            //                         = log(1/(1+exp(x)))
-            //                         = -log(1+exp(x)) = -softplus(x)
-            cost += (1-target_i) * softplus(-activation_i);
+        cost += softplus(activation_i) - target_i * activation_i;
     }
 }
 
