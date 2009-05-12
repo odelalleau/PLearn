@@ -957,12 +957,13 @@ class DBICondor(DBIBase):
             id+=1
             #keeps a list of the temporary files created, so that they can be deleted at will
 
-    def get_pkdilly_var(self):
+    def get_pkdilly_var(self, out):
 
 #the ssh is to have a renewed and cleaned kerberos ticket
 #the +P is to have only the KRV* var, 
 #the +P don't need a condor_submit_file
 #ssh HOSTNAME pkdilly +P
+
         cmd="pkdilly -S "+self.condor_submit_file
         self.p = Popen( cmd, shell=True, stdout=PIPE, stderr=PIPE)
         self.p.wait()
@@ -1003,6 +1004,10 @@ class DBICondor(DBIBase):
                 get.append(line.strip()[:-1])
         get=[x for x in get if x.startswith("KRV")]
         get=[x for x in get if not x.startswith("KRVEXECUTE=")]
+        if out and len(lines)==0:
+            out.write("We didnt found kerberos ticket!")
+        if out:
+            out.write(lines)
         return get
 
     def renew_launch_file(self, renew_out_file,
@@ -1038,13 +1043,17 @@ class DBICondor(DBIBase):
                     out.flush()
                     launch_tmp_file=self.launch_file+".tmp"
                     fd=open(launch_tmp_file,'w')
-                    kerb_vars=self.make_kerb_script(fd,self.second_lauch_file)
+                    kerb_vars=self.make_kerb_script(fd, self.second_lauch_file, 3, out)
                     fd.close()
                     os.chmod(launch_tmp_file, 0755)
                     os.rename(launch_tmp_file, self.launch_file)
                     s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
-                    out.write(line_header()+
-                              "generated "+str(len(kerb_vars))+" kerberos variables. The file size is "+str(s)+"\n")
+                    if len(kerb_vars)>0:
+                        out.write(line_header()+
+                                  "generated "+str(len(kerb_vars))+" kerberos variables. The file size is "+str(s)+".\n")
+                    else:
+                        out.write("We have not been able to renew kerberos ticket! Their is 0 kerberos variables!")
+                        
                 out.flush()
                 #we do this as in some case(with dagman) the log file can 
                 #take a few second to be created. So we don't loop too fast
@@ -1058,19 +1067,27 @@ class DBICondor(DBIBase):
             
             os.system("pkboost +d "+str(pid))
 
-    def make_kerb_script(self, fd, second_lauch_file):
+    def make_kerb_script(self, fd, second_lauch_file, nb_try=3, out=None):
+        for i in range(nb_try):
+            ##we try 3 times to get the keys as sometimes this fail.                                                    
+            vars=self.get_pkdilly_var(out)
+            if len(vars)>0:
+                break
+        if len(vars)==0:
+            print "We didn't got any kerberos ticket after %d try! We don't redo the kerberos script."%(nb_try)
+            return vars
+
         fd.write(dedent('''\
                     #!/bin/sh
                     '''))
-        get=self.get_pkdilly_var()
             
-        for g in get:
+        for g in vars:
             fd.write("export "+g+"\n")
         fd.write(dedent('''
                 export KRVEXECUTE=%s
                 /usr/sbin/circus "$@"
                 '''%(os.path.abspath(second_lauch_file))))
-        return get
+        return vars
 
     def make_launch_script(self, bash_exec):
             
@@ -1107,8 +1124,9 @@ class DBICondor(DBIBase):
             if self.pkdilly:
                 self.second_lauch_file = self.launch_file+"2.sh"
                 kerb_vars=self.make_kerb_script(fd, self.second_lauch_file)
-                assert(len(kerb_vars)>0)
                 fd.close()
+                if len(kerb_vars)==0:
+                    DBIError("We didn't got kerberos ticket!")
 
                 fd = open(self.second_lauch_file,'w')
 
@@ -1382,7 +1400,7 @@ class DBICondor(DBIBase):
         else :
             self.req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
         if self.cpu>0:
-            self.req+='&&(target.CPUS=='+self.cpu+')'
+            self.req+='&&(target.CPUS=='+str(self.cpu)+')'
 
         if self.os:
             self.req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
