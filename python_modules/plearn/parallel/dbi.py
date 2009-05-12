@@ -183,7 +183,7 @@ class DBIBase:
         self.stdouts = ''
         self.stderrs = ''
         self.raw = ''
-        self.cpu = 0
+        self.cpu = 1
         self.mem = 0
 
         for key in args.keys():
@@ -604,13 +604,11 @@ class DBIBqtools(DBIBase):
         self.m32G = False
         self.set_special_env = True
         self.env = ""
-        self.cpu = 0
         DBIBase.__init__(self, commands, **args)
         
         self.nb_proc = int(self.nb_proc)
         self.micro = int(self.micro)
         self.nano = int(self.nano)
-        self.cpu = int(self.cpu)
 
         if self.set_special_env and self.cpu>0:
             self.env+=' OMP_NUM_THREADS=%d'%self.cpu

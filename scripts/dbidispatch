@@ -104,7 +104,7 @@ common options:
 bqtools, cluster and condor option:
   The '--mem=X' speficify the number of ram in meg the program need to execute.
   The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
-    will be reserved for each job.
+    will be reserved for each job.(default=1, -1 won't set it)
 
 bqtools and cluster option:
   The '--duree' option specifies the maximum duration of the jobs. The syntax 
