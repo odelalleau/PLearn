@@ -93,7 +93,7 @@ PLEARN_IMPLEMENT_OBJECT(VMatLanguage,
                         "for a 0.5 thresholding: 0.5 < 0 1 ifelse. To copy a single field, use [field].\n"
                         "There is also a special feature available only for single field copies: if you\n"
                         "use the syntax [field?], then VPL will not produce an error if the field cannot\n"
-                        "be found. END-N(N an integer) will select a field conting from the END.\n"
+                        "be found. END-N (N an integer) will select a field counting from the END.\n"
                         "\n"
                         "Here's a real-life example of a VPL program:\n"
                         "\n"
