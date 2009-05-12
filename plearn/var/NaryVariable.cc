@@ -101,6 +101,11 @@ void NaryVariable::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(varray, copies);
 }
 
+void NaryVariable::setParents(const VarArray& parents)
+{
+    varray = parents;
+    sizeprop();
+}
 
 bool NaryVariable::markPath()
 {

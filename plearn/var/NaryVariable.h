@@ -79,6 +79,8 @@ public:
     
     //#####  PLearn::Variable Interface  ######################################
 
+    virtual void setParents(const VarArray& parents);
+
     virtual bool markPath();
     virtual void buildPath(VarArray& proppath);
     virtual VarArray sources();
