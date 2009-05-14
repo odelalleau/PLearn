@@ -466,7 +466,7 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
                 value_b >>= overflow;
                 remainder = 8 - nbits + remainder;
                 if (type == 'i')
-                    v[current_v] = (float)val / max;
+                    v[current_v] = (real)val / max;
                 else if (type == 'u')
                     v[current_v] = val;
                 else if (type == 'o' && val <= max)
@@ -475,7 +475,7 @@ void CompactFileVMatrix::getNewRow(int i, const Vec& v) const
             else { // the value is whole in the current byte
                 int val = (value_b & ((1<<nbits) - 1));
                 if (type == 'i')
-                    v[current_v] = (float)val / max;
+                    v[current_v] = (real)val / max;
                 else if (type == 'u')
                     v[current_v] = val;
                 else if (type == 'o' && val <= max) {

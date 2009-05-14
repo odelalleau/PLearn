@@ -73,9 +73,10 @@ struct GroupInfo {
         compact_length(-1)
     {}
 
-    char type; //!< type of data (i for int, o for onehot)
+    char type; //!< type of data (i for int, o for onehot, u for unsigned integer)
     int length; //!< number of fields
     int max; //!< maximal value of a field (entries will be normalized by that, there is no boundcheck)
+    //!we could change the type of bits_per_value if we want to minimize the size of GroupInfo
     int bits_per_value; //!< amount of bits used to encode each field (must be <= 8) (8 yields fastest conversion)
     bool active; //!< true if this field group is active
     int compact_length; //!< length of the group in the file
