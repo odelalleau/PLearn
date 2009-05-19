@@ -1007,7 +1007,7 @@ class DBICondor(DBIBase):
         if out and len(lines)==0:
             out.write("We didnt found kerberos ticket!")
         if out:
-            out.write(lines)
+            out.write(str(lines))
         return get
 
     def renew_launch_file(self, renew_out_file,
@@ -1141,6 +1141,9 @@ class DBICondor(DBIBase):
                     cd %s
                     '''%(os.path.abspath("."))))
                 if self.source_file:
+                    #we do the next line in hope to remove transiant error to
+                    #access this file by the nfs server.
+                    fd.write('[ -r "%s" ];echo "Can read the source file? " $? 1>&2 \n'%self.source_file)
                     fd.write('source ' + self.source_file + '\n')
 
                 fd.write(dedent('''\
@@ -1156,7 +1159,7 @@ class DBICondor(DBIBase):
                     pwd 1>&2
                     echo "nb args: $#" 1>&2
                     echo "Running: command: \\"$@\\"" 1>&2
-                    [ -x "$1" ];echo $?
+                    [ -x "$1" ];echo "Can execute the cmd? " $? 1>&2 
                     %s
                     ret=$?
                     rm -f echo ${KRB5CCNAME:5}
