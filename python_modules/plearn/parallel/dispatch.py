@@ -37,7 +37,7 @@ logging.root.setLevel(logging._levelNames["INFO"])
 #
 TASK_TYPE_MAP    = { 'apstat.com':            'SshTask',
                      'iro.umontreal.ca':      'ClusterTask',
-                     '## UNKNOWN DOMAINE ##': 'OnHostTask'
+                     '## UNKNOWN DOMAIN ##': 'OnHostTask'
                      }
 
 # Figure out if we are running on a 32bit or 64 bit machine.
@@ -66,7 +66,7 @@ SSH_MACHINES_MAP = { 'apstat.com': apstat_machines,
                                             'fermi',   'plank',   'einstein'
                                             ],
 
-                     '## UNKNOWN DOMAINE ##': [ 'host' ]
+                     '## UNKNOWN DOMAIN ##': [ 'host' ]
                      }
 
 # To override the default of 1
@@ -86,8 +86,10 @@ SLEEP_TIME    = 15
 LOGDIR        = None  # May be set by set_logdir()
 try:
     DOMAIN_NAME = get_domain_name()
+    if DOMAIN_NAME not in SSH_MACHINES_MAP.keys():
+        DOMAIN_NAME = "## UNKNOWN DOMAIN ##"
 except Exception, e:
-    DOMAIN_NAME = "## UNKNOWN DOMAINE ##"
+    DOMAIN_NAME = "## UNKNOWN DOMAIN ##"
 
 # Configurables
 NICE          = 'nice'
@@ -357,7 +359,7 @@ class SshTask( TaskType ):
             #print "Saved %f at %s (now %s)"%(loadavg, t, cur_t)
             if cur_t < t+LOADAVG_DELAY:
                 return loadavg
-        return cls.getMachineLoad(machine)
+        return cls.getMachineLoad(machine, command)
     getLoadAvg = classmethod(getLoadAvg)
 
     def getMachineLoad(cls, machine, command = lambda host: 'ssh -x %s cat /proc/loadavg' % host):
