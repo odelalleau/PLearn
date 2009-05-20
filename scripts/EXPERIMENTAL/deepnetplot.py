@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sys
+import matplotlib.pyplot as plt
+
 from pylab import *
 from plearn.io.server import *
 from plearn.pyplearn import *
@@ -14,6 +16,12 @@ import numpy.random
 ################
 ### methods ###
 ################
+
+def myion():
+    pass
+
+def myioff():
+    pass
 
 def print_usage_and_exit():
     print "Usage :"  
@@ -502,10 +510,10 @@ class InteractiveRepRecPlotter:
 
                     
                     figure(3)
-                    ioff()
+                    myioff()
                     clf()                  
                     plotMatrices([matW,matM,produit], [nameW, nameM,'term-to-term product'])
-                    ion()
+                    myion()
                     draw()
 
 #                     if nameWr in listNames and nameMr in listNames:
@@ -525,10 +533,10 @@ class InteractiveRepRecPlotter:
 #                         produit2 = matWr2*matMr2
 
 #                         figure(4)
-#                         ioff()
+#                         myioff()
 #                         clf()
 #                         plotMatrices([matWr1, matMr1, matWr2, matMr2, produit, produit2], [nameWr + "-", nameMr + "-", nameWr + "+", nameMr + "+", 't.-t.-t. product (-)', 't.-t.-t. product (+)'])
-#                         ion()
+#                         myion()
 #                         draw()
 
                 #BIAS
@@ -568,10 +576,10 @@ class InteractiveRepRecPlotter:
                     print learner.getParameterValue(nameW).shape
                    
                     figure(3)
-                    ioff()                    
+                    myioff()                    
                     clf()
                     plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
-                    ion()
+                    myion()
                     draw()
 
                 if nameW in listNames and nameM in listNames:
@@ -585,10 +593,10 @@ class InteractiveRepRecPlotter:
                         M[a] = m[y]*w[a]                    
 
                     figure(3)
-                    ioff()
+                    myioff()
                     clf()
                     plotLayer1(M, 28, .056,0,M.shape[0],.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
-                    ion()
+                    myion()
                     draw()
 
             # like 'w' on the max of each row -- 'C'
@@ -625,16 +633,16 @@ class InteractiveRepRecPlotter:
                 if nameW in listNames and nameM not in listNames:
                    
                     figure(3)
-                    ioff()                    
+                    myioff()                    
                     clf()
                     plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.05, self.from1568to784functions[self.from1568to784function], indexes,names, self.same_scale)
-                    ion()
+                    myion()
                     draw()
                     
                 if nameW in listNames and nameM in listNames:
                     
                     figure(3)
-                    ioff()
+                    myioff()
                     clf()
 
                     w = learner.getParameterValue(nameW)
@@ -647,23 +655,23 @@ class InteractiveRepRecPlotter:
                     print M
                     
                     plotLayer1(M, 28, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
-                    ion()
+                    myion()
                     draw()
 
                     figure(4)
-                    ioff()
+                    myioff()
                     clf()                    
                     plotLayer1(M, 28, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
-                    ion()
+                    myion()
                     draw()
 
                 if nameWr in listNames and nameMr not in listNames:
 
                     figure(5)
-                    ioff()
+                    myioff()
                     clf()
                     plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.05,self.from1568to784functions[self.from1568to784function],indexes,names, self.same_scale)
-                    ion()
+                    myion()
                     draw()
                     
                     
@@ -757,14 +765,15 @@ class InteractiveRepRecPlotter:
 
     def __linkEvents(self):
 
-        figure(self.fig_rep)
+        fig = figure(self.fig_rep)
         
         connect('key_press_event', self.__changeChar)
         connect('button_press_event', self.__clicked)
         connect('key_press_event', self.__repCommands)
 
-        figure(self.fig_rec)
+        fig = figure(self.fig_rec)
         
+        # fig.canvas.mpl_connect('key_press_event', self.__changeChar)        
         connect('key_press_event', self.__changeChar)        
         #connect('button_press_event', self.__clicked)        
         
@@ -775,16 +784,16 @@ class InteractiveRepRecPlotter:
     def __plotReconstructions(self):
         print 'plotting reconstructions...'        
         figure(self.fig_rec)
-        ioff()
+        myioff()
         clf()
         plotMatrices(self.reconstructions)
-        ion()
+        myion()
         draw()
         print '...done.'
 
     def __plotRepresentations(self):
         print 'plotting representations...'
-        ioff()
+        myioff()
         figure(self.fig_rep)
         clf()
         temp = []
@@ -793,7 +802,7 @@ class InteractiveRepRecPlotter:
         #draw()
         self.rep_axes = plotMatrices(temp)        
         draw()
-        ion()
+        myion()
         print '...done.'
 
     def __computeAndPlot(self):        
@@ -937,7 +946,7 @@ class EachRowPlotter:
 ### main ###
 ############
 
-server_command = "plearn_exp server"
+server_command = "myplearn server"
 serv = launch_plearn_server(command = server_command)
 
 #print "Press Enter to continue"
@@ -964,8 +973,8 @@ if task == 'plotEachRow':
     matrices = learner.listParameter() 
     names = learner.listParameterNames()
     
-    #doToRow = None
-    doToRow = toMinusRow
+    doToRow = None
+    #doToRow = toMinusRow
     #doToRow = toMinusRow
 
     matrixName = ''
@@ -975,15 +984,25 @@ if task == 'plotEachRow':
         print names
 
         print
-        matrixName = raw_input('Choose a matrix to be plotted (or \'exit\')>>>')
+        matrixName = raw_input('Choose a matrix to be plotted (or \'exit\') >>> ')
         
         if matrixName in names:
 
-            matrix = learner.getParameterValue(matrixName)
             #matrix = rand(500,28*28*2)
-            plotter = EachRowPlotter(matrix, 28, .1, .01, doToRow)
-            plotter.plot()
-            show()          
+            matrix = learner.getParameterValue(matrixName)
+            print "shape: ",matrix.shape
+
+            # guess image dimensions
+            n = matrix.shape[1]
+            imgheight = int(math.sqrt(n))+1
+            while n%imgheight != 0:
+                imgheight = imgheight-1
+            imgwidth = n/imgheight
+            
+            showRowsAsImages(matrix, img_height=imgheight, img_width=imgwidth, nrows=5, ncols=7, figtitle=matrixName)
+            #plotter = EachRowPlotter(matrix, 28, .1, .01, doToRow)
+            #plotter.plot()
+            #show()          
             
         elif matrixName != 'exit':
             print
@@ -1004,7 +1023,7 @@ elif task == 'plotRepAndRec':
     vmat = openVMat(datafname)
     
     matrix_plot = InteractiveRepRecPlotter(learner, vmat)
-    
+
     show()
 
     

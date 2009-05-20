@@ -511,7 +511,7 @@ class showRowsAsImages:
         show()
 
     def draw(self):
-        print "Start plotting..."
+        # print "Start plotting..."
         clf()
         endidx = min(self.startidx+self.nrows*self.ncols, len(self.X))        
         title = self.figtitle+" ("+str(self.startidx)+" ... "+str(endidx-1)+")"
@@ -529,9 +529,9 @@ class showRowsAsImages:
                          vmax = self.vmax,
                          transpose_img = self.transpose_img
                          )
-        print "Plotted,"
+        # print "Plotted,"
         draw()
-        print "Drawn."
+        # print "Drawn."
         
 
     def plotNext(self):
