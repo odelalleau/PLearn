@@ -31,9 +31,9 @@ PARAMS="$PARAMS""$PARAM "
 done
 
 # Wait until nobody else is messing with the output file.
-# we wait 60s in case the filesystem is too busy.
-# in that case retrying too often worsen the trouble.
-lockfile -n60 $OUTPUT.lock
+# We wait 60s in case the filesystem is too busy.
+# In that case retrying too often would make it worse.
+lockfile -60 $OUTPUT.lock
 
 if [ -d $DIR ];then
     echo -n "$PARAMS" >> $OUTPUT
