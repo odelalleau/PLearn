@@ -1045,10 +1045,10 @@ class DBICondor(DBIBase):
                     fd=open(launch_tmp_file,'w')
                     kerb_vars=self.make_kerb_script(fd, self.second_lauch_file, 3, out)
                     fd.close()
-                    os.chmod(launch_tmp_file, 0755)
-                    os.rename(launch_tmp_file, self.launch_file)
-                    s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
                     if len(kerb_vars)>0:
+                        os.chmod(launch_tmp_file, 0755)
+                        os.rename(launch_tmp_file, self.launch_file)
+                        s=os.stat(self.launch_file)[os.path.stat.ST_SIZE]
                         out.write(line_header()+
                                   "generated "+str(len(kerb_vars))+" kerberos variables. The file size is "+str(s)+".\n")
                     else:
