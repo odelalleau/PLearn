@@ -773,7 +773,7 @@ void DenoisingRecurrentNet::train()
 
                     // greedy phase hidden
                     if(hidden_reconstruction_lr!=0){
-                        setLearningRate( dynamic_gradient_scale_factor*hidden_reconstruction_lr);
+                        setLearningRate( hidden_reconstruction_lr);
                         recurrentFprop(train_costs, train_n_items, true);
                         //recurrentUpdate(0, hidden_reconstruction_cost_weight, 1, 0,1, train_costs, train_n_items );
                         recurrentUpdate(0, hidden_reconstruction_cost_weight, 1, 0,1, train_costs, train_n_items );
@@ -797,7 +797,7 @@ void DenoisingRecurrentNet::train()
                         if (noise)
                             encodeSequenceAndPopulateLists(seq, false);
                         //recurrentUpdate(input_reconstruction_cost_weight, 0, 1, 0,1, train_costs, train_n_items );
-                        recurrentUpdate(input_reconstruction_cost_weight, 0, 0, 0,1, train_costs, train_n_items );
+                        recurrentUpdate(input_reconstruction_cost_weight, 0, 1, 0,1, train_costs, train_n_items );
                     }
                     
                     
@@ -1422,8 +1422,18 @@ void DenoisingRecurrentNet::updateInputReconstructionFromHidden(Vec hidden, Mat&
 }
 
 
-double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec theInput, Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec& reconstruction_bias2, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
-                                                                 Vec hidden_target, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr)
+double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec theInput, 
+                                                                      Vec hidden, 
+                                                                      Mat reconstruction_weights, 
+                                                                      Mat& acc_weights_gr, 
+                                                                      Vec& reconstruction_bias, 
+                                                                      Vec& reconstruction_bias2, 
+                                                                      Vec hidden_reconstruction_activation_grad, 
+                                                                      Vec& reconstruction_prob, 
+                                                                      Vec hidden_target, 
+                                                                      Vec hidden_gradient, 
+                                                                      double hidden_reconstruction_cost_weight, 
+                                                                      double lr)
 {
     // set appropriate sizes
     int fullhiddenlength = hidden_target.length();
@@ -1431,6 +1441,7 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec theInp
     Vec hidden_input_noise;
     Vec hidden_fprop_noise;
     Vec hidden_act_no_bias;
+    Vec hidden_exp;
     Vec dynamic_act_no_bias_contribution;
     if(reconstruction_bias.length()==0)
     {
@@ -1448,22 +1459,22 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec theInp
     hidden_fprop_noise.resize(fullhiddenlength);
     hidden_input_noise.resize(fullhiddenlength);
     hidden_act_no_bias.resize(fullhiddenlength);
+    hidden_exp.resize(fullhiddenlength);
     dynamic_act_no_bias_contribution.resize(fullhiddenlength);
 
-    //input_connections->fprop( theInput, hidden_act_no_bias);
+    input_connections->fprop( theInput, hidden_act_no_bias);
     hidden_input_noise << hidden_target;
     inject_zero_forcing_noise(hidden_input_noise, input_noise_prob);
     dynamic_connections->fprop(hidden_input_noise, dynamic_act_no_bias_contribution );
     hidden_act_no_bias += dynamic_act_no_bias_contribution;
-    //hidden_layer->fprop( hidden_act_no_bias, hidden_fprop_noise);
-    hidden_act_no_bias += reconstruction_bias2;
-    for( int j=0 ; j<fullhiddenlength ; j++ )
-        hidden_fprop_noise[j] = fastsigmoid(hidden_act_no_bias[j] );
+    hidden_layer->fprop( hidden_act_no_bias, hidden_exp);
+    //hidden_act_no_bias += reconstruction_bias2;
+    //for( int j=0 ; j<fullhiddenlength ; j++ )
+    //    hidden_fprop_noise[j] = fastsigmoid(hidden_act_no_bias[j] );
 
     // predict (denoised) input_reconstruction 
-    transposeProduct(reconstruction_activation, reconstruction_weights, hidden_fprop_noise); //dynamic matrice tied
-    //transposeProduct(reconstruction_activation, reconstruction_weights, hidden); //dynamic matrice tied
-    //product(reconstruction_activation, reconstruction_weights, hidden); //dynamic matrice not tied
+    transposeProduct(reconstruction_activation, reconstruction_weights, hidden_exp); //dynamic matrice tied
+    //product(reconstruction_activation, reconstruction_weights, hidden_exp); //dynamic matrice not tied
     reconstruction_activation += reconstruction_bias;
 
     for( int j=0 ; j<fullhiddenlength ; j++ )
@@ -1484,11 +1495,11 @@ double DenoisingRecurrentNet::fpropHiddenReconstructionFromLastHidden(Vec theInp
     //update bias
     multiplyAcc(reconstruction_bias, hidden_reconstruction_activation_grad, -lr);
     // update weight
-    //externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr); //dynamic matrice tied
+    externalProductScaleAcc(acc_weights_gr, hidden, hidden_reconstruction_activation_grad, -lr); //dynamic matrice tied
     //externalProductScaleAcc(acc_weights_gr, hidden_reconstruction_activation_grad, hidden, -lr); //dynamic matrice not tied
                 
     //update bias2
-    multiplyAcc(reconstruction_bias2, hidden_gradient, -lr);
+    //multiplyAcc(reconstruction_bias2, hidden_gradient, -lr);
     /********************************************************************************/
     // Vec hidden_reconstruction_activation_grad;
     /*hidden_reconstruction_activation_grad.clear();
@@ -1815,7 +1826,18 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                     
                     //truc stan
                     //fpropHiddenSymmetricDynamicMatrix(hidden_list(i-1), reconstruction_weights, hidden_reconstruction_prob, hidden_list(i), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
-                    train_costs[train_costs.length()-1] += fpropHiddenReconstructionFromLastHidden(input_list[i], hidden_list(i), dynamicWeights, acc_dynamic_connections_gr, hidden_reconstruction_bias, hidden_reconstruction_bias2, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
+                    train_costs[train_costs.length()-1] += fpropHiddenReconstructionFromLastHidden(input_list[i], 
+                                                                                                   hidden_list(i), 
+                                                                                                   dynamicWeights, //reconsWeights, //dynamicWeights, 
+                                                                                                   acc_dynamic_connections_gr, //acc_reconstruction_dynamic_connections_gr, //acc_dynamic_connections_gr, 
+                                                                                                   hidden_reconstruction_bias, 
+                                                                                                   hidden_reconstruction_bias2, 
+                                                                                                   hidden_reconstruction_activation_grad, 
+                                                                                                   hidden_reconstruction_prob, 
+                                                                                                   hidden_list(i-1), 
+                                                                                                   hidden_gradient, 
+                                                                                                   hidden_reconstruction_weight, 
+                                                                                                   current_learning_rate);
                     //fpropHiddenReconstructionFromLastHidden(hidden_list(i), reconsWeights, acc_reconstruction_dynamic_connections_gr, hidden_reconstruction_bias, hidden_reconstruction_activation_grad, hidden_reconstruction_prob, hidden_list(i-1), hidden_gradient, hidden_reconstruction_weight, current_learning_rate);
                     train_n_items[train_costs.length()-1]++;
                 }
@@ -1842,26 +1864,26 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                 
                 
                 //input
-                if(hidden_reconstruction_weight==0)
-                {
+                //if(hidden_reconstruction_weight==0)
+                //{
                    
                     
-                    bpropUpdateConnection(input_list[i],
-                                          hidden_act_no_bias_list(i), 
-                                          visi_bias_gradient, 
-                                          hidden_temporal_gradient,// Here, it should be activations - cond_bias, but doesn't matter
-                                          inputWeights,
-                                          acc_input_connections_gr,
-                                          input_connections->down_size,
-                                          input_connections->up_size,
-                                          input_connections->learning_rate,
-                                          false,
-                                          true);
-                }
+                bpropUpdateConnection(input_list[i],
+                                      hidden_act_no_bias_list(i), 
+                                      visi_bias_gradient, 
+                                      hidden_temporal_gradient,// Here, it should be activations - cond_bias, but doesn't matter
+                                      inputWeights,
+                                      acc_input_connections_gr,
+                                      input_connections->down_size,
+                                      input_connections->up_size,
+                                      input_connections->learning_rate,
+                                      false,
+                                      true);
+                    //}
                 
                 //Dynamic
-                if(input_reconstruction_weight==0)
-                {
+                //if(input_reconstruction_weight==0)
+                //{
                     /*bpropUpdateHiddenLayer(hidden_act_no_bias_list(i), 
                                        hidden_list(i),
                                        hidden_temporal_gradient, 
@@ -1869,18 +1891,18 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
                                        hidden_layer->bias, 
                                        hidden_layer->learning_rate );*/
 
-                    bpropUpdateConnection(hidden_list(i-1),
-                                          hidden_act_no_bias_list(i), // Here, it should be dynamic_act_no_bias_contribution, but doesn't matter because a RBMMatrixConnection::bpropUpdate doesn't use its second argument
-                                          hidden_gradient, 
-                                          hidden_temporal_gradient, 
-                                          dynamicWeights,
-                                          acc_dynamic_connections_gr,
-                                          dynamic_connections->down_size,
-                                          dynamic_connections->up_size,
-                                          dynamic_connections->learning_rate,
-                                          false,
-                                          false);
-                }
+                bpropUpdateConnection(hidden_list(i-1),
+                                      hidden_act_no_bias_list(i), // Here, it should be dynamic_act_no_bias_contribution, but doesn't matter because a RBMMatrixConnection::bpropUpdate doesn't use its second argument
+                                      hidden_gradient, 
+                                      hidden_temporal_gradient, 
+                                      dynamicWeights,
+                                      acc_dynamic_connections_gr,
+                                      dynamic_connections->down_size,
+                                      dynamic_connections->up_size,
+                                      dynamic_connections->learning_rate,
+                                      false,
+                                      false);
+                    //}
                 
                 hidden_temporal_gradient << hidden_gradient; 
                 //if(hidden_reconstruction_weight!=0)
@@ -1922,7 +1944,7 @@ void DenoisingRecurrentNet::recurrentUpdate(real input_reconstruction_weight,
     if(dynamic_connections )
     {
         multiplyAcc(dynamicWeights, acc_dynamic_connections_gr, 1);
-        multiplyAcc(reconsWeights, acc_reconstruction_dynamic_connections_gr, 1);
+        //multiplyAcc(reconsWeights, acc_reconstruction_dynamic_connections_gr, 1);
     }
 }
 
