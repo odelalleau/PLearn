@@ -162,6 +162,9 @@ class Var:
     def transposeDoubleProduct(self, W, M):
         return Var(pl.TransposedDoubleProductVariable(varray=[self.v, W, M]))
 
+    def sumsquare(self):
+        return Var(pl.SumSquareVariable(input=self.v))
+
     def square(self):
         return Var(pl.SquareVariable(input=self.v))
 

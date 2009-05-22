@@ -51,8 +51,8 @@ using namespace std;
 /** SumSquareVariable **/
 
 PLEARN_IMPLEMENT_OBJECT(SumSquareVariable,
-                        "ONE LINE DESCR",
-                        "NO HELP");
+                        "Computes the sum of the squares of the values of all elements of its input",
+                        "");
 
 SumSquareVariable::SumSquareVariable(Variable* input)
     : inherited(input, 1, 1) {}
@@ -63,9 +63,14 @@ void SumSquareVariable::recomputeSize(int& l, int& w) const
 void SumSquareVariable::fprop()
 {
     int n=input->nelems();
-    *valuedata= 0;
+    const real* inputdata = input->valuedata;
+    real sumsq = 0;
     for(int i=0; i<n; i++)
-        *valuedata+= input->valuedata[i]*input->valuedata[i];
+    {
+        real v = inputdata[i];
+        sumsq += v*v;
+    }
+    *valuedata = sumsq;
 }
 
 
