@@ -43,7 +43,7 @@ from numpy.numarray import *
 threshold = 0
 
 def default_is_missing(x):
-    return x is None or x=='-' or (type(x) is str and x.strip()=='')
+    return x is None or x=='-' or x=='nan' or (type(x) is str and x.strip()=='')
     
 def to_numpy_float_array(values_list,
                          missing_value = ValueError("Found value interpreted as missing value and no missing_value was specified"),
