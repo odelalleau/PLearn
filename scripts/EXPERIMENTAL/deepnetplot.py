@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from pylab import *
 from plearn.io.server import *

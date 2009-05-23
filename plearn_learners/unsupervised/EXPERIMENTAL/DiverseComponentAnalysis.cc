@@ -77,6 +77,7 @@ DiverseComponentAnalysis::DiverseComponentAnalysis()
     :ncomponents(2),
      nonlinearity("none"),
      cov_transformation_type("cov"),
+     diag_add(0.),
      diag_premul(1.0),
      offdiag_premul(1.0),
      diag_nonlinearity("square"),
@@ -113,7 +114,7 @@ void DiverseComponentAnalysis::declareOptions(OptionList& ol)
 
     declareOption(
         ol, "nonlinearity", &DiverseComponentAnalysis::nonlinearity, OptionBase::buildoption,
-        "The nonlinearity to apply after linear transformation of the inpuits t ield the representation.");
+        "The nonlinearity to apply after linear transformation of the inputs to obtain the representation.");
 
     declareOption(
         ol, "force_zero_mean", &DiverseComponentAnalysis::force_zero_mean, OptionBase::buildoption,
@@ -148,6 +149,10 @@ void DiverseComponentAnalysis::declareOptions(OptionList& ol)
         "squaredist: do a 'squared distance kernel' Dij <- Cii+Cjj-2Cij kind of transformation\n"
         "sincov: instead of ||u|| ||v|| cos(angle(u,v)) we transform it to ||u|| ||v|| |sin(angle(u,v))|\n"
         "        this is computed as sqrt((1-<u.v>^2) * <u,u>^2 * <v,v>^2) where <u,v> is given by the covariance matrix\n");
+
+    declareOption(
+        ol, "diag_add", &DiverseComponentAnalysis::diag_add, OptionBase::buildoption,
+        "This value will be added to the diagonal (before premultiplying and applying non-linearity)");
 
     declareOption(
         ol, "diag_premul", &DiverseComponentAnalysis::diag_premul, OptionBase::buildoption,
@@ -352,9 +357,14 @@ void DiverseComponentAnalysis::build_()
             PLERROR("Invalid cov_transformation_type");
 
         if(diag_weight!=0)
-            L += diag_weight*sum(nonlinear_transform(diag(Cyt*diag_premul),diag_nonlinearity));
+        {
+            Var diagelems = diag(Cyt);
+            if(diag_add!=0)
+                diagelems = diagelems+diag_add;
+            L += diag_weight*sum(nonlinear_transform(diagelems*diag_premul,diag_nonlinearity));
+        }
         if(offdiag_weight!=0)
-            L += offdiag_weight*sum(nonlinear_transform(nondiag(Cyt*offdiag_premul),offdiag_nonlinearity));
+            L += offdiag_weight*sum(nonlinear_transform(nondiag(Cyt)*offdiag_premul,offdiag_nonlinearity));
             
         if(constrain_norm_type>0)
             L += L+constrain_norm_type*exp(sumsquare(W));

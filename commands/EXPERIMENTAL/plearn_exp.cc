@@ -373,6 +373,7 @@
 #include <plearn/var/EXPERIMENTAL/ProbabilityPairsInverseVariable.h>
 #include <plearn/var/EXPERIMENTAL/SoftSoftMaxVariable.h>
 #include <plearn/var/EXPERIMENTAL/LogSoftSoftMaxVariable.h>
+#include <plearn/var/EXPERIMENTAL/SumVarianceOfLinearTransformedBernoullis.h>
 #include <plearn_learners/generic/EXPERIMENTAL/DeepReconstructorNet.h>
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
@@ -401,6 +402,8 @@
 // Stuff used for DiverseComponentAnalysis
 // #include <plearn_learners/unsupervised/EXPERIMENTAL/DiverseComponentAnalysis.h>
 
+// Stuff used for DenoisingRecurrentNet
+#include <plearn_learners_experimental/DenoisingRecurrentNet.h>
 
 using namespace PLearn;
 

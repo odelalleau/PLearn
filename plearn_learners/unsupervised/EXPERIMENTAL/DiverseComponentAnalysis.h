@@ -72,6 +72,7 @@ public:
 
     string cov_transformation_type;
 
+    double diag_add;
     double diag_premul;
     double offdiag_premul;
 
