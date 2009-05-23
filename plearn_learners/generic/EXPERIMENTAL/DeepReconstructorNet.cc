@@ -374,7 +374,7 @@ void DeepReconstructorNet::train()
             for(int k=0; k<nreconstructions; k++)
             {
                 trainHiddenLayer(k, dset);
-                PLearn::save(expdir/"learner.psave", *this);
+                PLearn::save(expdir/"learner.psave", *this, PStream::plearn_binary, false);
                 // 'if' is a hack to avoid precomputing last hidden layer if not needed
                 // if(k<nreconstructions-1 ||  must_train_supervised_layer) 
                 { 
