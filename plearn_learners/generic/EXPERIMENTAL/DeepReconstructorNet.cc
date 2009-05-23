@@ -376,7 +376,7 @@ void DeepReconstructorNet::train()
                 trainHiddenLayer(k, dset);
                 PLearn::save(expdir/"learner.psave", *this, PStream::plearn_binary, false);
                 // 'if' is a hack to avoid precomputing last hidden layer if not needed
-                // if(k<nreconstructions-1 ||  must_train_supervised_layer) 
+                if(k<nreconstructions-1 ||  must_train_supervised_layer) 
                 { 
                     int width = layers[k+1].width();
                     outmat[k] = new FileVMatrix(outmatfname+tostring(k+1)+".pmat",0,width);
