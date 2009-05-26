@@ -402,11 +402,12 @@ void RBMGaussianLayer::build_()
         needs_forget = true;
     }
 
-    if ( fixed_std_deviation > 0 && share_quad_coeff )
+    if (fixed_std_deviation > 0)
     {
-        if( share_quad_coeff )
+        if (share_quad_coeff)
             PLERROR("In RBMGaussianLayer::build_(): fixed_std_deviation should not "
                     "be > 0 when share_quad_coeff is true.");
+
         quad_coeff.fill( 1 / ( M_SQRT2 * fixed_std_deviation ) );
     }
 
