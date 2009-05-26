@@ -36,7 +36,10 @@
 
 # from array import *
 import numpy
-import MA
+try:
+    import MA
+except ImportError:
+    print "WARNING: Import of MA (masked array) failed. Skipping this import." 
 import numpy.numarray as numarray
 from numpy.numarray import *
 
