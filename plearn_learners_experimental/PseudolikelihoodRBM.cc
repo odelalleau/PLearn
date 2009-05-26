@@ -83,6 +83,7 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     pseudolikelihood_context_type( "uniform_random" ),
     k_most_correlated( -1 ),
     generative_learning_weight( 0 ),
+    semi_sup_learning_weight( 0. ),
     nll_cost_index( -1 ),
     log_Z_cost_index( -1 ),
     log_Z_ais_cost_index( -1 ),
@@ -295,6 +296,13 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Weight of generative learning.\n"
                   );
+
+    declareOption(ol, "semi_sup_learning_weight", 
+                  &PseudolikelihoodRBM::semi_sup_learning_weight,
+                  OptionBase::buildoption,
+                  "Weight on unlabeled examples update during unsupervised learning.\n"
+                  "In other words, it's the same thing at generaitve_learning_weight,\n"
+                  "but for the unlabeled examples.\n");
 
     declareOption(ol, "input_layer", &PseudolikelihoodRBM::input_layer,
                   OptionBase::buildoption,
@@ -810,6 +818,7 @@ void PseudolikelihoodRBM::train()
     int target_index;
     real weight; // unused
     real lr;
+    int weightsize = train_set->weightsize();
 
     //real mean_pseudolikelihood = 0;
 
@@ -878,9 +887,12 @@ void PseudolikelihoodRBM::train()
         else 
             lr += denoising_learning_rate;
 
+        if( weightsize > 0 )
+            lr *= weight;
+
         setLearningRate(lr);
 
-        if( targetsize() == 1 )
+        if( targetsize() == 1 && !is_missing(target[0]) )
         {
             Vec target_act = target_layer->activation;
             Vec hidden_act = hidden_layer->activation;
@@ -1188,8 +1200,15 @@ void PseudolikelihoodRBM::train()
 
             if( targetsize() > 0 )
                 lr *= generative_learning_weight;
+            
+            if( weightsize > 0 )
+                lr *= weight;
 
             setLearningRate(lr);
+
+            if( is_missing(target[0]) )
+                PLERROR("In PseudolikelihoodRBM::train(): generative training with "
+                        "unlabeled examples not supported for pseudolikehood training.");
 
             if( pseudolikelihood_context_size == 0 )
             {
@@ -2871,6 +2890,11 @@ void PseudolikelihoodRBM::train()
         {
             if( input_is_sparse )
             {
+                if( is_missing(target[0]) )
+                    PLERROR("In PseudolikelihoodRBM::train(): generative training with "
+                            "unlabeled examples not supported for CD training with "
+                            "sparse inputs.");
+
                 // Randomly select inputs
                 if( n_selected_inputs_cd > inputsize() ||
                     n_selected_inputs_cd <= 0 )
@@ -2920,6 +2944,9 @@ void PseudolikelihoodRBM::train()
 
                 if( targetsize() > 0 )
                     lr *= generative_learning_weight;
+
+                if( weightsize > 0 )
+                    lr *= weight;
 
                 setLearningRate(lr);
 
@@ -3067,12 +3094,50 @@ void PseudolikelihoodRBM::train()
                     
                     lr *= (1-persistent_cd_weight);
 
+                    if( weightsize > 0 )
+                        lr *= weight;
+
                     setLearningRate(lr);
 
                     // Positive phase
                     pos_input = input;
-                    if( targetsize() > 0 )
+                    if( targetsize() > 0)
+                    {
+                        if( is_missing(target[0]) )
+                        {
+                            // Sample from p(y|x)
+                            lr *= semi_sup_learning_weight/generative_learning_weight;
+                            // Get output probabilities
+                            connection->setAsDownInput( input );
+                            hidden_layer->getAllActivations( 
+                                (RBMMatrixConnection*) connection );
+                            
+                            Vec target_act = target_layer->activation;
+                            Vec hidden_act = hidden_layer->activation;
+                            for( int i=0 ; i<target_layer->size ; i++ )
+                            {
+                                target_act[i] = target_layer->bias[i];
+                                // LATERAL CONNECTIONS CODE HERE!!
+                                real *w = &(target_connection->weights(0,i));
+                                // step from one row to the next in weights matrix
+                                int m = target_connection->weights.mod();                
+                                
+                                for( int j=0 ; j<hidden_layer->size ; j++, w+=m )
+                                {
+                                    // *w = weights(j,i)
+                                    hidden_activation_pos_i[j] = hidden_act[j] + *w;
+                                }
+                                target_act[i] -= hidden_layer->freeEnergyContribution(
+                                    hidden_activation_pos_i);
+                            }
+                            
+                            target_layer->expectation_is_up_to_date = false;
+                            target_layer->computeExpectation();
+                            target_layer->generateSample();
+                            target_one_hot << target_layer->sample;
+                        }
                         pos_target = target_one_hot;
+                    }
                     connection->setAsDownInput( input );
                     hidden_layer->getAllActivations( 
                         (RBMMatrixConnection*) connection );
@@ -3186,6 +3251,9 @@ void PseudolikelihoodRBM::train()
 
                     lr *= persistent_cd_weight;
 
+                    if( weightsize > 0 )
+                        lr *= weight;
+
                     setLearningRate(lr);
 
                     int chain_i = stage % n_gibbs_chains;
@@ -3287,6 +3355,9 @@ void PseudolikelihoodRBM::train()
 
             if( targetsize() > 0 )
                 lr *= generative_learning_weight;
+
+            if( weightsize > 0 )
+                lr *= weight;
 
             setLearningRate(lr);
             if( targetsize() > 0 )
@@ -3592,9 +3663,12 @@ void PseudolikelihoodRBM::computeCostsFromOutputs(const Vec& input,
 
     if( targetsize() == 1 )
     {
-        costs[class_cost_index] =
-            (argmax(output) == (int) round(target[0]))? 0 : 1;
-        costs[nll_cost_index] = -pl_log(output[(int) round(target[0])]);
+        if( !is_missing(target[0]) )
+        {
+            costs[class_cost_index] =
+                (argmax(output) == (int) round(target[0]))? 0 : 1;
+            costs[nll_cost_index] = -pl_log(output[(int) round(target[0])]);
+        }
     }
     else if( targetsize() > 1 )
     {

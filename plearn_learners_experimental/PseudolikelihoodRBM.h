@@ -182,6 +182,11 @@ public:
     //! Weight of generative learning
     real generative_learning_weight;
 
+    //! Weight on unlabeled examples update during unsupervised learning.
+    //! In other words, it's the same thing at generaitve_learning_weight,
+    //! but for the unlabeled examples.
+    real semi_sup_learning_weight;
+
     //! The binomial input layer of the RBM
     PP<RBMLayer> input_layer;
 
