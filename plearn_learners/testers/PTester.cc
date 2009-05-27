@@ -89,6 +89,7 @@ PTester::PTester():
        reloaded(false),
        need_to_save_test_names(false),
        save_mode_(PStream::plearn_ascii),
+       save_mode("plearn_ascii"),
        provide_learner_expdir(false),
        report_stats(true),
        save_data_sets(false),
@@ -205,8 +206,9 @@ void PTester::declareOptions(OptionList& ol)
         "If true, the final trained learner for split#k will be saved in Split#k/final_learner.psave."
         "The format is defined by save_mode");
 
-    declareOption(ol, "save_mode", &PTester::save_mode, OptionBase::buildoption,
-                  "The mode to use to save the file. Default plearn_ascii.");
+    declareOption(
+        ol, "save_mode", &PTester::save_mode, OptionBase::buildoption,
+        "The mode to use to save the file.");
 
     declareOption(
         ol, "save_initial_learners", &PTester::save_initial_learners, OptionBase::buildoption,

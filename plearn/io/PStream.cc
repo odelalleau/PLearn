@@ -242,10 +242,15 @@ PStream::PStream(istream* pin_, ostream* pout_, bool own_pin_, bool own_pout_)
      remote_plearn_comm(false)
 {}
 
-//! dtor.
+//////////////
+// ~PStream //
+//////////////
 PStream::~PStream()
 { }
 
+///////////////////////////
+// switchToPLearnOutMode //
+///////////////////////////
 PStream::mode_t PStream::switchToPLearnOutMode()
 {
     mode_t oldmode = outmode;
@@ -264,11 +269,17 @@ PStream::mode_t PStream::switchToPLearnOutMode()
     return oldmode;
 }
 
+////////////////
+// parseModeT //
+////////////////
 PStream::mode_t PStream::parseModeT(const string& str_mode){
     PStream::mode_t mode;
-    if(str_mode.empty())
+    if(str_mode.empty()) {
+        PLDEPRECATED("The use of an empty string as PStream mode to default to"
+                " 'plearn_ascii' is deprecated, please use 'plearn_ascii' "
+                "directly");
         mode = PStream::plearn_ascii;
-    else if(str_mode=="plearn_ascii")
+    } else if(str_mode=="plearn_ascii")
         mode = PStream::plearn_ascii;
     else if(str_mode=="plearn_binary")
         mode = PStream::plearn_binary;

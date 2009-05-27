@@ -269,8 +269,7 @@ public:
         return *this;
     }
 
-    //!parse a string and return the equivalent PStream::mode_t.
-    //!if empty string, we return plearn_ascii
+    //! Parse a string and return the equivalent PStream::mode_t.
     static PStream::mode_t parseModeT(const string& str);
 
 public:

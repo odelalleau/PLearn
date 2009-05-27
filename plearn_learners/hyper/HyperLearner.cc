@@ -76,6 +76,7 @@ TVec<string> HyperLearner::getTrainCostNames() const
 
 HyperLearner::HyperLearner()
     : save_mode_(PStream::plearn_ascii),
+      save_mode("plearn_ascii"),
       provide_strategy_expdir(true),
       save_final_learner(true),
       save_strategy_learner(false),
@@ -135,8 +136,9 @@ HyperLearner::declareOptions(OptionList &ol)
     declareOption(ol, "save_strategy_learner", &HyperLearner::save_strategy_learner, OptionBase::buildoption,
                   "should final learner be saved in expdir/Strat#final_learner.psave");
 
-    declareOption(ol, "save_mode", &HyperLearner::save_mode, OptionBase::buildoption,
-                  "The mode to use to save the file. Default plearn_ascii.");
+    declareOption(ol, "save_mode", &HyperLearner::save_mode,
+                  OptionBase::buildoption,
+                  "The mode to use to save the file.");
 
     declareOption(
         ol, "finalize_learner", &HyperLearner::finalize_learner,

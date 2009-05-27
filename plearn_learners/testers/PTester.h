@@ -73,6 +73,9 @@ protected:
     //! are provided with a training set).
     bool need_to_save_test_names;
 
+    //! Obtained automatically from the 'save_mode' option.
+    PStream::mode_t save_mode_;
+
 public:
 
     // ************************
@@ -88,7 +91,6 @@ public:
     PP<VecStatsCollector> global_template_stats_collector;
     PP<PLearner> learner;
     string save_mode;
-    PStream::mode_t save_mode_;
 
     bool provide_learner_expdir;
     bool report_stats;
