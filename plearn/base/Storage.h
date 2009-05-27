@@ -149,7 +149,7 @@ public:
         int l = length();
 #ifdef BOUNDCHECK
         if(l<0)
-            PLERROR("new Storage called with a length() <0; lenght = %d", l);
+            PLERROR("new Storage called with a length() < 0: length = %d", l);
 #endif
         if (l>0) 
         {
