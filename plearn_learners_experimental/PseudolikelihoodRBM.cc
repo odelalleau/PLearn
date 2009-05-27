@@ -83,6 +83,7 @@ PseudolikelihoodRBM::PseudolikelihoodRBM() :
     pseudolikelihood_context_type( "uniform_random" ),
     k_most_correlated( -1 ),
     generative_learning_weight( 0 ),
+    sparsity_bias_decay( 0 ),
     semi_sup_learning_weight( 0. ),
     nll_cost_index( -1 ),
     log_Z_cost_index( -1 ),
@@ -295,6 +296,13 @@ void PseudolikelihoodRBM::declareOptions(OptionList& ol)
                   &PseudolikelihoodRBM::generative_learning_weight,
                   OptionBase::buildoption,
                   "Weight of generative learning.\n"
+                  );
+
+    declareOption(ol, "sparsity_bias_decay", 
+                  &PseudolikelihoodRBM::sparsity_bias_decay,
+                  OptionBase::buildoption,
+                  "Constant to subtract (times the learning rate) to the hidden "
+                  "layer bias at each iteration.\n"
                   );
 
     declareOption(ol, "semi_sup_learning_weight", 
@@ -1188,6 +1196,13 @@ void PseudolikelihoodRBM::train()
         {
             // Multi-task binary classification
             PLERROR("NNNNNNNNNNOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!!!!!!!");
+        }
+
+        if( !fast_exact_is_equal(sparsity_bias_decay, 0.) )
+        {
+            Vec b = hidden_layer->bias;
+            for( int i=0 ; i<hidden_layer->size ; i++ )
+                b[i] -= lr * sparsity_bias_decay;
         }
 
         if( !fast_exact_is_equal(learning_rate, 0.) &&
@@ -3074,7 +3089,7 @@ void PseudolikelihoodRBM::train()
                 hidden_activation_gradient *= -lr;
                 for( int i=0; i<extra.length(); i++ )
                 {
-                    if( input_is_selected[i] = true )
+                    if( input_is_selected[i] == true )
                         pos_input_sparse[(int)extra[i]] = 0;
                     else
                         V((int)extra[i]) += hidden_activation_gradient;

@@ -182,6 +182,9 @@ public:
     //! Weight of generative learning
     real generative_learning_weight;
 
+    //! Constant to subtract (times the learning rate) to the hidden layer bias at each iteration
+    real sparsity_bias_decay;
+
     //! Weight on unlabeled examples update during unsupervised learning.
     //! In other words, it's the same thing at generaitve_learning_weight,
     //! but for the unlabeled examples.
