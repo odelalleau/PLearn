@@ -34,16 +34,22 @@
 # Author: Pascal Vincent
 
 
-from plearn.vmat.PMat import PMat
 from plearn.plotting.netplot import showRowsAsImages
 
-
-def showPMatRowsAsImages(pmatfile, imgheight, imgwidth, nrows=5, ncols=7, figtitle=""):
-    """Will open a .pmat file and consider the beginning of each row a imgheight x imgwidth imagette.
+def show_rows_as_images(matfile, imgheight, imgwidth, nrows=10, ncols=10, figtitle=""):
+    """Will open a .pmat .dmat .amat or .vmat file and consider the beginning of each row a imgheight x imgwidth imagette.
     These images will be interactively displayed in a nrows x ncols grid of imagettes."""
-    data = PMat(pmatfile)
+    data = None
     if figtitle=="":
-        figtitle = pmatfile 
+        figtitle = matfile 
+    if matfile.endswith(".pmat"):
+        # Use pure python implementation of pmat (faster loading)
+        from plearn.vmat.PMat import PMat
+        data = PMat(matfile)
+    else:
+        # Use of VMat through the Python-bridge
+        from plearn.pyext import AutoVMatrix
+        data = AutoVMatrix(filename=matfile)
     showRowsAsImages(data, img_height=imgheight, img_width=imgwidth, nrows=nrows, ncols=ncols, figtitle=figtitle)
 
 ####################
@@ -51,5 +57,5 @@ def showPMatRowsAsImages(pmatfile, imgheight, imgwidth, nrows=5, ncols=7, figtit
 
 if __name__ == '__main__':
     from plearn.utilities.autoscript import autoscript
-    autoscript(showPMatRowsAsImages, True)
+    autoscript(show_rows_as_images, True)
 

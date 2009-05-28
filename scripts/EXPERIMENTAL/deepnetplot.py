@@ -999,7 +999,7 @@ if task == 'plotEachRow':
                 imgheight = imgheight-1
             imgwidth = n/imgheight
             
-            showRowsAsImages(matrix, img_height=imgheight, img_width=imgwidth, nrows=5, ncols=7, figtitle=matrixName)
+            showRowsAsImages(matrix, img_height=imgheight, img_width=imgwidth, nrows=10, ncols=20, figtitle=matrixName)
             #plotter = EachRowPlotter(matrix, 28, .1, .01, doToRow)
             #plotter.plot()
             #show()          

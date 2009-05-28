@@ -183,7 +183,7 @@ def plotRowsAsImages(X,
     if len(inputs[0])>img_height*img_width:
         inputs = inputs[:,0:(img_height*img_width)]
         
-        print 'luminanca_scale_mode = ',luminance_scale_mode
+        print 'luminance_scale_mode = ',luminance_scale_mode
     if vmin is None and luminance_scale_mode!=0:
         vmin = inputs.min()
         vmax = inputs.max()
