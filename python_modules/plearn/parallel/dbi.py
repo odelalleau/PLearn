@@ -1021,6 +1021,19 @@ class DBICondor(DBIBase):
             out=open(renew_out_file,"w")
             out.write(line_header()+"will renew the lauch file "+self.launch_file+" each "+str(seconds)+"s\n")
             out.flush()
+            found=False
+            for i in range(5):
+                if os.path.isfile(self.log_file):
+                    found=True
+                    break
+                #we do this as in some case(with dagman) the log file can 
+                #take a few seconds to be created. So we let it enought time to create it.
+                time.sleep(15)
+            if not found:
+                out.write("Could not found the log file "+self.log_file+"."
+                          +"Probably that condor_submit failed.\n")
+                out.close()
+                sys.exit()
             while True:
                 p = Popen( cmd, shell=True, stdout=out, stderr=STDOUT)
                 ret = p.wait()
@@ -1056,9 +1069,9 @@ class DBICondor(DBIBase):
                         
                 out.flush()
                 #we do this as in some case(with dagman) the log file can 
-                #take a few second to be created. So we don't loop too fast
+                #take a few seconds to be created. So we don't loop too fast
                 #for no good reason.
-                time.sleep(5)
+                time.sleep(60)
             out.close()
             sys.exit()
         else:
