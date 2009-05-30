@@ -737,6 +737,9 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
 
         prev_mean = m;
 
+        // save_learner_after_each_pretraining_epoch
+        PLearn::save(expdir/"learner.psave", *this, PStream::plearn_binary, false);
+
         /*
         if(n==0)
         {
