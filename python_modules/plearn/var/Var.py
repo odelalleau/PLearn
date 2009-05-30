@@ -41,6 +41,8 @@ class Var:
         if isinstance(l, Var):
             self.v = l.v
         elif isinstance(l,int):
+            self.l = l
+            self.w = w
             if min_value == None and max_value == None:
                 self.v = pl.SourceVariable(build_length=l,
                                            build_width=w,
@@ -73,6 +75,9 @@ class Var:
 
     def exp(self):
         return Var(pl.ExpVariable(input=self.v))
+
+    def log(self):
+        return Var(pl.LogVariable(input=self.v))
 
     def sigmoid(self):
         return Var(pl.SigmoidVariable(input=self.v))
@@ -186,8 +191,10 @@ class Var:
     def __mul__(self, other):
         if type(other) in (int, float):
             return Var(pl.TimesConstantVariable(input=self.v, cst=other))
+        elif isinstance(other,Var) and other.l==1 and other.w==1:
+            return Var(pl.TimesScalarVariable(input1=self.v, input2=other.v))
         else:
-            raise NotImplementedError
+            raise NotImplementedError("type(other)=="+str(type(other)))
 
     def neg(self):
         return Var(pl.NegateElementsVariable(input=self.v))
