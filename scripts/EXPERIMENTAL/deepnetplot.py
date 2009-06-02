@@ -28,6 +28,7 @@ def print_usage_and_exit():
     print "deepnetplot.py plotSingleMatrix x.psave "
     print "deepnetplot.py plotEachRow learner.psave chars.pmat"
     print "deepnetplot.py plotRepAndRec learner.psave chars.pmat"
+    print "deepnetplot.py interact learner.psave chars.pmat"
     print "deepnetplot.py help"
     print ""
     print "where learner.psave is a .psave of a DeepReconstructorNet object"
@@ -45,6 +46,11 @@ def print_usage_repAndRec():
     print 'F : fproping form the last layer and for the next ones'
     print 'r : reconstructing this layer from the next one'
     print 'R : reconstructing this layer from the next one and also the previous ones'
+    print 'k : choose the value for k (will be prompted in console)'
+    print 'K : keep only the top k pixels, and set all others to zero'
+    print 'p : choose the value for p (will be prompted in console)'
+    print 'P : generate from a factorial bernoulli with parameter p'
+    print 'G : generate from current layer: sampling from fact bernoulli and reconstructing'
     print 'm : set the max of each group of the current hidden layer to 1 and the other elements of the group to 0'
     print 's : each group of the current layer is sampled (each group has to sum to 1.0)'
     print 'S : samples the current layer, then reconstruct the previous layer, thant sample this reconstructed layer, and continues until the input'
@@ -53,7 +59,7 @@ def print_usage_repAndRec():
     print 'c : set the current pixel to 0.5'
     print 'v : set the current pixel to 0.75'
     print 'b : set the current pixel to 1.0'
-    print ' space-bar : print value and position of the current pixel'
+    print ' space-bar : print value and position of the current pixel (printed in console)'
     print 'i : print values of the current layer'
     print 'w : plot the weight matrices associated with the current pixel'
     print 'W : same as w but for all a group'
@@ -141,6 +147,10 @@ class InteractiveRepRecPlotter:
     
     def __init__(self, learner, vmat, image_width=28, char_indice=0):
         '''constructor'''
+
+        self.k = 10
+        self.p = 0.01
+        
         self.current = char_indice-1#-1 because it's the first time
         self.learner = learner
         self.vmat = vmat
@@ -151,7 +161,11 @@ class InteractiveRepRecPlotter:
         self.fig_rep = 1
         figure(self.fig_rec)
         figure(self.fig_rep)
-
+        figure(2)
+        figure(3)
+        figure(4)
+        figure(5)
+        
         #self.current_fig = None
         #self.current_axes = None
         self.current_hl = None#current hidden layer
@@ -237,6 +251,7 @@ class InteractiveRepRecPlotter:
         imagetmat = TMat([self.input])
         print 'computing reconstructions...'
         rec = learner.computeReconstructions(imagetmat)
+        # rec = []
         print '...done.'
 
         matrices = [rowToMatrix(self.input, self.image_width)]
@@ -287,10 +302,55 @@ class InteractiveRepRecPlotter:
                 hl2 = self.hidden_layers[i+1]
 
             hl = hl1
+
+            # set k -- k
+            if char == 'k':
+                print "Enter the new value for k (currently "+str(self.k)+") : ",
+                self.k = input()
                         
+            # keep K top values -- K
+            elif char == 'K':
+                print 'keeping top k='+str(self.k)+' values'
+
+                values = [v for v in hl.hidden_layer]
+                values.sort()
+                keepval = values[-self.k]
+                for pos in xrange(hl.hidden_layer.size):
+                    if hl.hidden_layer[pos]<keepval:
+                        hl.hidden_layer[pos] = 0
+
+                self.rep_axes[i].imshow(hl.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                draw()                
+                print '...done'
+
+            # set p -- p
+            elif char == 'p':
+                print "Enter the new value for p (currently "+str(self.p)+") : ",
+                self.p = input()
+                        
+            # sample from independent bernoulli with prob p
+            elif char == 'P':
+                hl.hidden_layer[:] = numpy.random.binomial(1,self.p, hl.hidden_layer.size)
+                self.rep_axes[i].imshow(hl.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                draw()                
+
+            # generate (starting from independent bernoulli)            
+            elif char == 'G':
+                print "Generating..."
+                hl.hidden_layer[:] = numpy.random.binomial(1,self.p, hl.hidden_layer.size)
+                self.rep_axes[i].imshow(hl.getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                k = i-1
+                while k>=0:
+                    self.__reconstructLayer(k)
+                    if k!=0:
+                        self.__sampleLayer(k, "bernoulli")
+                    self.rep_axes[k].imshow(self.hidden_layers[k].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
+                    k = k-1
+                draw()                
+
             # fprop -- f
 
-            if char == 'f':                
+            elif char == 'f':                
                 print 'fproping...'
                 #update                
                 self.learner.setMatValue(i-1, reshape(hl0.hidden_layer, (1,-1)))
@@ -892,12 +952,26 @@ class InteractiveRepRecPlotter:
     ### utils
     ###
 
-    def __sampleLayer(self, which_layer):
+    def __sampleLayer(self, which_layer, sampling_type="multinomial"):
         hl = self.hidden_layers[which_layer]
-        for n in arange(hl.hidden_layer.size/hl.groupsize):
-            multi = numpy.random.multinomial(1,hl.getRow(n))                    
-            hl.setRow(n,multi)
 
+        if sampling_type=="multinomial":
+            for n in arange(hl.hidden_layer.size/hl.groupsize):
+                multi = numpy.random.multinomial(1,hl.getRow(n))                    
+                hl.setRow(n,multi)
+        elif sampling_type=="bernoulli":
+            for pos in xrange(hl.hidden_layer.size):
+                val = hl.hidden_layer[pos]
+                if val<0.:
+                    val = 0.
+                elif val>1.:
+                    val = 1.
+                else:
+                    val = numpy.random.binomial(1,val)
+                hl.hidden_layer[pos] = val
+        else:
+            raise ValueError("Invalid sampling_type: "+sampling_type)
+            
     def __reconstructLayer(self, which_layer):
         hl = self.hidden_layers[which_layer+1]
         
@@ -939,8 +1013,31 @@ class EachRowPlotter:
         connect("button_press_event",self.plotNext)
         
     
+def interact(learner,vmat):
 
+    helptext = \
+"""
+*** Commands: ***
+help          : prints this help screen
+ls            : list available variables
+print varname : print the matrix
+show varname  : graphical display of the matrix
+generate <depth> <prior> <n> 
+exit          : terminate and exit
+"""
+
+    command = "help"
+    while command!="exit":
+
+        if command=="ls":
+            pass
+        elif command=="show":
+            pass
+        elif command!="exit": # print help
+            print helptext            
+        command = raw_input('>>> ')
         
+
 
 ############
 ### main ###
@@ -1009,6 +1106,20 @@ if task == 'plotEachRow':
             print 'This matrix does not exist !'
 
 
+elif task == 'interact':
+    psave = sys.argv[2]
+    datafname = sys.argv[3]
+    #test = sys.argv[5]
+    #print test
+   
+    #loading learner
+    learner = serv.load(psave)
+    
+    #taking an input
+    vmat = openVMat(datafname)
+
+    interact(learner,vmat)
+    
 elif task == 'plotRepAndRec':
     
     psave = sys.argv[2]
