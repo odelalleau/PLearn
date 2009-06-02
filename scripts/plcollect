@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-# plcollect.py
+# plcollect
+#
 # Copyright (C) 2008 Pascal Vincent
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -138,7 +139,7 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedfilena
 
 
 if len(sys.argv)<3:
-    print "Usage: plcollect.py expdir results.txt list_of_matrix_filenames"
+    print "Usage: plcollect expdir results.txt list_of_matrix_filenames"
     print """
     Looks in expdir and its subdirectories for all matrix files whose name matches
     one specified in the list_of_matrix_filenames  
