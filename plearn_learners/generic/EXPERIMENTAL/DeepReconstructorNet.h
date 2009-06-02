@@ -88,6 +88,10 @@ public:
     // reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]
     VarArray reconstructed_layers;
 
+    // hidden_for_reconstruction[k] is the hidden representation used to reconstruct reconstructed_layers[k] 
+    // i.e. it is the representation at layer k+1 but possibly obtained from a corrupted input (contrary to layers[k+1]).
+    VarArray hidden_for_reconstruction;
+
     // optimizers if we use different ones for each layer
     TVec< PP<Optimizer> > reconstruction_optimizers;
     

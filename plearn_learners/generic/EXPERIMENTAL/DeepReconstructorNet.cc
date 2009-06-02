@@ -103,7 +103,16 @@ void DeepReconstructorNet::declareOptions(OptionList& ol)
 
     declareOption(ol, "reconstructed_layers", &DeepReconstructorNet::reconstructed_layers,
                   OptionBase::buildoption,
-                  "reconstructed_layers[k] is the reconstruction of layer k from layers[k+1]");
+                  "reconstructed_layers[k] is the reconstruction of layer k from hidden_for_reconstruction[k]\n"
+                  "(which corresponds to a version of layer k+1. See further explanation of hidden_for_reconstruction.\n");
+
+    declareOption(ol, "hidden_for_reconstruction", &DeepReconstructorNet::hidden_for_reconstruction,
+                  OptionBase::buildoption,
+                  "reconstructed_layers[k] is reconstructed from hidden_for_reconstruction[k]\n"
+                  "which corresponds to a version of layer k+1.\n"
+                  "hidden_for_reconstruction[k] can however be different from layers[k+1] \n"
+                  "since e.g. layers[k+1] may be obtained by transforming a clean input, while \n"
+                  "hidden_for_reconstruction[k] may be obtained by transforming a corrupted input \n");
 
     declareOption(ol, "reconstruction_optimizers", &DeepReconstructorNet::reconstruction_optimizers,
                   OptionBase::buildoption,
@@ -267,6 +276,48 @@ void DeepReconstructorNet::build_()
     Func f(input&target, fullcost);
     parameters = f->parameters;
     outmat.resize(n_rec_costs);
+
+
+    // older versions did not specify hidden_for_reconstruction
+    // if it's not there, let's try to infer it
+    if( (reconstructed_layers.length()!=0) && (hidden_for_reconstruction.length()==0) ) 
+    {
+        int n = reconstructed_layers.length();
+        for(int k=0; k<n; k++)
+        {
+            VarArray proppath = propagationPath(layers[k+1],reconstructed_layers[k]);
+            if(proppath.length()>0) // great, we found a path from layers[k+1] !
+                hidden_for_reconstruction.append(layers[k+1]);
+            else // ok this is getting much more difficult, let's try to guess
+            {
+                // let's consider the full path from sources to reconstructed_layers[k]
+                VarArray fullproppath = propagationPath(reconstructed_layers[k]);
+                // look for a variable with same type and dimension as layers[k+1]
+                int pos;
+                for(pos = fullproppath.length()-2; pos>=0; pos--)
+                {
+                    if( fullproppath[pos]->length()    == layers[k+1]->length() &&
+                        fullproppath[pos]->width()     == layers[k+1]->width() &&
+                        fullproppath[pos]->classname() == layers[k+1]->classname() )
+                        break; // found a matching one!
+                }
+                if(pos>=0) // found a match at pos, let's use it
+                {
+                    hidden_for_reconstruction.append(fullproppath[pos]);
+                    perr << "Found match for hidden_for_reconstruction " << k << endl;
+                    //displayVarGraph(propagationPath(hidden_for_reconstruction[k],reconstructed_layers[k])
+                    //                ,true, 333, "reconstr");        
+                }
+                else
+                {
+                    PLERROR("Unable to guess hidden_for_reconstruction variable. Unable to find match.");
+                }
+            }
+        }
+    }
+
+    if( reconstructed_layers.length() != hidden_for_reconstruction.length() )
+        PLERROR("reconstructed_layers and hidden_for_reconstruction should have the same number of elements.");
 }
 
 // ### Nothing to add here, simply calls build_
@@ -301,6 +352,7 @@ void DeepReconstructorNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(layers, copies);
     deepCopyField(reconstruction_costs, copies);
     deepCopyField(reconstructed_layers, copies);
+    deepCopyField(hidden_for_reconstruction, copies);
     deepCopyField(reconstruction_optimizers, copies);
     deepCopyField(reconstruction_optimizer, copies);
     varDeepCopyField(target, copies);
@@ -483,14 +535,33 @@ TVec<Mat> DeepReconstructorNet::computeRepresentations(Mat input)
     return representations;
 }
 
+
 void DeepReconstructorNet::reconstructInputFromLayer(int layer)
 {
     for(int k=layer; k>0; k--)
+        layers[k-1]->matValue << reconstructOneLayer(k);
+    /*
+    for(int k=layer; k>0; k--)
     {
-        VarArray proppath = propagationPath(layers[k],reconstructed_layers[k-1]);
+        VarArray proppath = propagationPath(hidden_for_reconstruction[k-1],reconstructed_layers[k-1]);
+
+        perr << "RECONSTRUCTING reconstructed_layers["<<k-1
+             << "] from layers["<< k
+             << "] " << endl;
+        perr << "proppath:" << endl;
+        perr << proppath << endl;
+        perr << "proppath length: " << proppath.length() << endl;
+
+        //perr << ">>>> reconstructed layers before fprop:" << endl;
+        //perr << reconstructed_layers[k-1]->matValue << endl;
+
         proppath.fprop();
-        // perr << "Graph for reconstructing layer " << k-1 << " from layer " << k << endl;
-        //displayVarGraph(proppath,true, 333, "reconstr");
+
+        //perr << ">>>> reconstructed layers after fprop:" << endl;
+        //perr << reconstructed_layers[k-1]->matValue << endl;
+
+        perr << "Graph for reconstructing layer " << k-1 << " from layer " << k << endl;
+        displayVarGraph(proppath,true, 333, "reconstr");        
 
         //WARNING MEGA-HACK
         if (reconstructed_layers[k-1].width() == 2*layers[k-1].width())
@@ -505,6 +576,7 @@ void DeepReconstructorNet::reconstructInputFromLayer(int layer)
         else
             reconstructed_layers[k-1]->matValue >> layers[k-1]->matValue;
     }
+    */
 }
 
 TVec<Mat> DeepReconstructorNet::computeReconstructions(Mat input)
@@ -832,7 +904,8 @@ Mat DeepReconstructorNet::fpropOneLayer(int layer)
 
 Mat DeepReconstructorNet::reconstructOneLayer(int layer)
 {
-    VarArray proppath = propagationPath(layers[layer],reconstructed_layers[layer-1]);
+    layers[layer]->matValue >> hidden_for_reconstruction[layer-1]->matValue;
+    VarArray proppath = propagationPath(hidden_for_reconstruction[layer-1],reconstructed_layers[layer-1]);
     proppath.fprop();       
     return reconstructed_layers[layer-1]->matValue;
 }
