@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # plcollect
-#
 # Copyright (C) 2008 Pascal Vincent
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -34,10 +33,11 @@
 
 
 import os
+import os.path
 import sys
-from os.path import join
+import fnmatch
 
-from plearn.table.table import *
+from apstat.data.table import *
 # from plearn.utilities.autoscript import autoscript
 
 def parse_filepath(filepath, separators=['__','/']):
@@ -86,25 +86,32 @@ def parse_filepath(filepath, separators=['__','/']):
             prev_sep = foundsep
     return pairs_list, summarized_path
 
-def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedfilenames=[]):
+def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedpatterns=[]):
     """
     Looks for all split_stats.pmat files it can find in rootdir and its subdirectories,
     and comples them into a single resultfile_txt
     """
 
-    if len(searchedfilenames) == 0: # use default
-        searchedfilenames = ["Strat0results.pmat"]
+    if len(searchedpatterns) == 0: # use default
+        searchedpatterns = ["*/Strat0results.pmat"]
 
-    filenames = []
+    filepaths = []
     # first look for all matching files
-    for root, dirs, files in os.walk(rootdir):
+    for dirpath, dirs, files in os.walk(rootdir):
         for filename in files:
-            if filename in searchedfilenames:
-                filenames.append(os.path.join(root,filename))
+            filepath = os.path.join(dirpath,filename)
+            match = False
+            for pattern in searchedpatterns:
+                #print 'trying to match '+filepath+' WITH '+pattern
+                match = match or fnmatch.fnmatch(filepath, pattern)               
+            if match:
+                filepaths.append(filepath)
+                #if filename in searchedpatterns:
+                #filepaths.append(os.path.join(dirpath,filename))
 
     filepath_fields = []
     content_fields = []
-    for filename in filenames:
+    for filename in filepaths:
         pairs, summarypath = parse_filepath(filename)
         t = openTable(filename)
         for key,val in pairs:
@@ -118,7 +125,7 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedfilena
     result_table = TableFile(resultfile_txt, 'w+', ["_filepath_","_summarypath_"]+fieldnames)
     print "fieldnames length:",len(fieldnames)
 
-    for filename in filenames:
+    for filename in filepaths:
         try:
             print "Processing ", filename
             pairs, summarypath = parse_filepath(filename)
@@ -139,13 +146,17 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedfilena
 
 
 if len(sys.argv)<3:
-    print "Usage: plcollect expdir results.txt list_of_matrix_filenames"
+    print "Usage: plcollect expdir results.txt matrix_filepath_pattern1 matrix_filepath_pattern2 ..."
     print """
     Looks in expdir and its subdirectories for all matrix files whose name matches
-    one specified in the list_of_matrix_filenames  
-    and compiles their content into a single results.txt
+    one of the specified patterns and compiles their content into a single results.txt table
 
-    list of matrix filenames if unspecified defaults to split_stats.pmat
+    Ex: plcollect exp results.txt '*/Strat?results.pmat'
+
+    Note how the quotes are important for the shell not to perform the wildcard expansion of the specified pattern.
+
+    You may then examine the produced results table with e.g.
+    pltable view results.txt
     """
     sys.exit()
 
