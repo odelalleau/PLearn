@@ -355,6 +355,11 @@
 // ***************************************************
 // ***   New EXPERIMENTAL stuff
 
+#include <plearn/var/EXPERIMENTAL/SumVarianceOfLinearTransformedBernoullis.h>
+#include <plearn/var/EXPERIMENTAL/SumEntropyOfBernoullis.h>
+#include <plearn/var/EXPERIMENTAL/LinearCombinationOfScalarVariables.h>
+#include <plearn/var/EXPERIMENTAL/SaltPepperNoiseVariable.h>
+
 // includes Pascal's gradient hack
 #include <plearn_learners/generic/EXPERIMENTAL/NatGradNNet.h>
 
@@ -373,12 +378,12 @@
 #include <plearn/var/EXPERIMENTAL/ProbabilityPairsInverseVariable.h>
 #include <plearn/var/EXPERIMENTAL/SoftSoftMaxVariable.h>
 #include <plearn/var/EXPERIMENTAL/LogSoftSoftMaxVariable.h>
-#include <plearn/var/EXPERIMENTAL/SumVarianceOfLinearTransformedBernoullis.h>
 #include <plearn_learners/generic/EXPERIMENTAL/DeepReconstructorNet.h>
 #include <plearn/var/SourceVariable.h>
 #include <plearn/var/ConcatColumnsVariable.h>
 #include <plearn/var/ConcatRowsVariable.h>
 #include <plearn/var/ExpVariable.h>
+#include <plearn/var/LogVariable.h>
 #include <plearn/var/SigmoidVariable.h>
 #include <plearn/var/ProductTransposeVariable.h>
 #include <plearn/var/NegCrossEntropySigmoidVariable.h>
