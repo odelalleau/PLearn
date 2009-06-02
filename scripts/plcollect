@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+
+# plcollect.py
+# Copyright (C) 2008 Pascal Vincent
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#   2. Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#
+#   3. The name of the authors may not be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
+#  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+#  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+#  NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#  This file is part of the PLearn library. For more information on the PLearn
+#  library, go to the PLearn Web site at www.plearn.org
+
+
+import os
+import sys
+from os.path import join
+
+from plearn.table.table import *
+# from plearn.utilities.autoscript import autoscript
+
+def parse_filepath(filepath, separators=['__','/']):
+    """parses the filepath:
+      Splits it on all given separators then checks each part in turn,
+      If it contains an = then it is assumed to form a key=value pair
+      and the coresponding pair which will get appended to a pairs_list.
+      If not the part is appended to a summarized path string.
+      The call returns a tuple (pairs_list, summarized_path).
+      """
+    pairs_list = []
+    summarized_path = ""
+    n = len(filepath)
+    part_start = 0
+    i = 0
+    prev_sep = '' # previous found separator
+    added_ellipses = False    
+    while i<n:
+        foundsep = None
+        for sep in separators:
+            if filepath[i:min(i+len(sep),n)]==sep: # we have found a separator
+                foundsep = sep
+                break
+        if foundsep is None and i==n-1: # consider the end of string as a separator
+            i += 1
+            foundsep = ''
+            
+        if foundsep is None: # no separator: increment i
+            i += 1
+        else: # found a separator: take care of that part
+            part = filepath[part_start:i]                
+            pair = tuple(part.split('=',1))
+            if len(pair)==2: # this part is a key=value pair: append it to the list
+                pairs_list.append(pair)
+                if not added_ellipses:
+                    summarized_path += '...'
+                    added_ellipses = True
+            else: # this part is not a key=value pair, append it to the summarized_path
+                if added_ellipses:
+                    summarized_path += prev_sep
+                summarized_path += part+foundsep
+                added_ellipses = False
+            # move past that separator
+            i += len(foundsep)
+            part_start = i
+            prev_sep = foundsep
+    return pairs_list, summarized_path
+
+def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedfilenames=[]):
+    """
+    Looks for all split_stats.pmat files it can find in rootdir and its subdirectories,
+    and comples them into a single resultfile_txt
+    """
+
+    if len(searchedfilenames) == 0: # use default
+        searchedfilenames = ["Strat0results.pmat"]
+
+    filenames = []
+    # first look for all matching files
+    for root, dirs, files in os.walk(rootdir):
+        for filename in files:
+            if filename in searchedfilenames:
+                filenames.append(os.path.join(root,filename))
+
+    filepath_fields = []
+    content_fields = []
+    for filename in filenames:
+        pairs, summarypath = parse_filepath(filename)
+        t = openTable(filename)
+        for key,val in pairs:
+            if key not in filepath_fields:
+                filepath_fields.append(key)
+        for fieldname in t.fieldnames:
+            if fieldname not in content_fields:
+                content_fields.append(fieldname)
+
+    fieldnames = filepath_fields+content_fields
+    result_table = TableFile(resultfile_txt, 'w+', ["_filepath_","_summarypath_"]+fieldnames)
+    print "fieldnames length:",len(fieldnames)
+
+    for filename in filenames:
+        try:
+            print "Processing ", filename
+            pairs, summarypath = parse_filepath(filename)
+            d = dict(pairs)
+            t = openTable(filename)
+            for trow in t:
+                d2 = d.copy()
+                d2.update(zip(t.fieldnames,trow))
+                resrow = [filename, summarypath]
+                for fieldname in fieldnames:
+                    if fieldname in d2:
+                        resrow.append(d2[fieldname])
+                    else:
+                        resrow.append("-")
+                result_table.append(resrow)
+        except struct.error:
+            print "Probably a buggy .pmat"
+
+
+if len(sys.argv)<3:
+    print "Usage: plcollect.py expdir results.txt list_of_matrix_filenames"
+    print """
+    Looks in expdir and its subdirectories for all matrix files whose name matches
+    one specified in the list_of_matrix_filenames  
+    and compiles their content into a single results.txt
+
+    list of matrix filenames if unspecified defaults to split_stats.pmat
+    """
+    sys.exit()
+
+
+plcollect(sys.argv[1], sys.argv[2], sys.argv[3:])
+
+

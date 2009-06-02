@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#
-# cldispatch: dispatch utility for parallel PLearn
-#
-# Copyright 2004, Apstat Technologies, inc.
-#
-# This file was contributed by ApSTAT Technologies to the
-# PLearn library under the following BSD-style license:
-#
+
+"""
+pltable
+Copyright (C) 2005 ApSTAT Technologies Inc.
+
+This file was contributed by ApSTAT Technologies to the
+PLearn library under the following BSD-style license: 
+
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are met:
 #
@@ -34,27 +34,10 @@
 #
 #  This file is part of the PLearn library. For more information on the PLearn
 #  library, go to the PLearn Web site at www.plearn.org
+"""
 
-from optparse import OptionParser
-from plearn.parallel.dispatch import *
+import sys
+import cgitb; cgitb.enable(format='PLearn')
+from plearn.table.pltable_commands import main
 
-#
-# Main
-#
-
-def main():
-    parser = OptionParser()
-    parser.add_option('-n', '--num-available-machines',
-                      help='Prints the number of available machines',
-                      action='store_true', default=False)
-    
-    (options, args) = parser.parse_args()
-
-
-    if options.num_available_machines:
-        print Task.availableMachinesCount()
-    elif args:        
-        launch_task( args, wait = True )
-
-if __name__ == '__main__':
-    main()
+main(sys.argv)
