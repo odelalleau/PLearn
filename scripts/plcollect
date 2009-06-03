@@ -37,7 +37,7 @@ import os.path
 import sys
 import fnmatch
 
-from apstat.data.table import *
+from plearn.table.table import *
 # from plearn.utilities.autoscript import autoscript
 
 def parse_filepath(filepath, separators=['__','/']):
@@ -100,11 +100,13 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedpatter
     for dirpath, dirs, files in os.walk(rootdir):
         for filename in files:
             filepath = os.path.join(dirpath,filename)
+            # print "Considering",filepath
             match = False
             for pattern in searchedpatterns:
                 #print 'trying to match '+filepath+' WITH '+pattern
-                match = match or fnmatch.fnmatch(filepath, pattern)               
+                match = match or filepath==pattern or fnmatch.fnmatch(filepath, pattern)               
             if match:
+                # print "**** MATCHED "+filepath
                 filepaths.append(filepath)
                 #if filename in searchedpatterns:
                 #filepaths.append(os.path.join(dirpath,filename))

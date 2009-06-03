@@ -1,0 +1,22 @@
+#! /bin/sh
+
+if [ "$2" = "" ]; then
+  echo "Usage:"
+  echo "     $0 sourcefile.txt destfile.txt "
+  echo "If destfile does not exist, will copy sourcefile to it as is."
+  echo "If destfile exists will append all but the first rows of sourcefile to it"
+  exit 127
+fi
+source=$1
+dest=$2
+
+lockfile -60 "$dest.lock"
+
+if [ -f "$dest" ];then
+    \tail -n+2 "$source" >> "$dest"
+else
+    \cp  "$source" "$dest"
+fi
+# Release the lock
+\rm -f "$dest.lock"
+
