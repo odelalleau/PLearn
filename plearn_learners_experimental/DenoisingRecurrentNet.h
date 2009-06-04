@@ -186,6 +186,9 @@ public:
     //! (declared const because it needs to be called in test)
     void encodeSequence(Mat sequence, Mat& encoded_seq) const;
 
+    static void encode_onehot_diffNote_duration(Mat sequence, Mat& encoded_sequence,
+                                                  bool use_silence, int duration_nbits=20);
+
     static void encode_onehot_note_octav_duration(Mat sequence, Mat& encoded_sequence, int prepend_zero_rows,
                                                   bool use_silence, int octav_nbits, int duration_nbits=20);
     
@@ -438,6 +441,8 @@ private:
     //! encodes seq, then populates: inputslist, targets_list, masks_list
     void encodeAndCreateSupervisedSequence(Mat seq) const;
 
+    void encodeAndCreateSupervisedSequence2(Mat seq) const;
+
     //! For the (backward testing) raw_masked_supervised case. Populates: input_list, targets_list, masks_list
     void splitRawMaskedSupervisedSequence(Mat seq, bool doNoise) const;
 
@@ -500,6 +505,9 @@ private:
     //! accumulates gradient in hidden_gradient, and updates reconstruction_weights and input_reconstruction_bias
     void updateInputReconstructionFromHidden(Vec hidden, Mat& reconstruction_weights, Mat& acc_weights_gr, Vec& input_reconstruction_bias, Vec input_reconstruction_prob, 
                                              Vec clean_input, Vec hidden_gradient, double input_reconstruction_cost_weight, double lr);
+
+    double fpropHiddenReconstructionFromLastHidden2(Vec theInput, Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec& reconstruction_bias2, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
+                                                                          Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
 
     double fpropHiddenReconstructionFromLastHidden(Vec theInput, Vec hidden, Mat reconstruction_weights, Mat& acc_weights_gr, Vec& reconstruction_bias, Vec& reconstruction_bias2, Vec hidden_reconstruction_activation_grad, Vec& reconstruction_prob, 
                                                                           Vec clean_input, Vec hidden_gradient, double hidden_reconstruction_cost_weight, double lr);
