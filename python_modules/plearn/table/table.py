@@ -39,7 +39,7 @@ PLearn library under the following BSD-style license:
 
 # Author: Pascal Vincent
 
-import os.path, string, struct, zlib, fpconst, pickle, csv, time, copy, subprocess
+import os, os.path, string, struct, zlib, fpconst, pickle, csv, time, copy, subprocess
 
 from numpy.numarray import array, argsort, random_array
 
@@ -914,8 +914,13 @@ class TableFile(Table):
             self.f = open(fname,'r')
             fieldnames = self.f.readline().strip('\r\n').split(self.separator)
             self.set_fieldnames(fieldnames)
+
+            if os.path.isfile(indexfname) and os.path.getmtime(self.fname)>os.path.getmtime(indexfname):
+                os.remove(indexfname)
+                
             if not os.path.isfile(indexfname):
                 build_row_index_file(fname,indexfname,self.struct_format)
+
             self.index = StructFile(indexfname,self.struct_format,'r')
         elif openmode=='r+':
             self.f = open(fname,'r+')
