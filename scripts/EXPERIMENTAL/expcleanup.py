@@ -40,6 +40,10 @@ import shutil
 
 def expcleanup(rootdir):
 
+    # remove all no loner needed outmat?.pmat
+    os.system("""sh -c 'PATH=/bin:/usr/bin; find %s -name training_costs_layer_2.pmat -execdir rm -f outmat1.pmat \;' """ % rootdir)
+    os.system("""sh -c 'PATH=/bin:/usr/bin; find %s -name training_costs_layer_3.pmat -execdir rm -f outmat2.pmat \;' """ % rootdir)
+
     # search for finished experiments
     for dirpath, dirs, files in os.walk(rootdir):
 
