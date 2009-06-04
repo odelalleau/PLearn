@@ -88,28 +88,38 @@ def parse_filepath(filepath, separators=['__','/']):
 
 def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedpatterns=[]):
     """
-    Looks for all split_stats.pmat files it can find in rootdir and its subdirectories,
-    and comples them into a single resultfile_txt
+    Looks for matrix result matrix files in rootdir and its subdirectories,
+    and compiles them into a single resultfile_txt
+    searchedpatterns is a list of searhcedpattenrs that can be either:
+     - full exact literal paths including the rootdir
+     - or wildcard pattenrs such as e.g. */Strat?results.pmat
+    Note that contrary to the shell, wildcard * does not stop at / boundaries.
     """
 
     if len(searchedpatterns) == 0: # use default
         searchedpatterns = ["*/Strat0results.pmat"]
 
-    filepaths = []
-    # first look for all matching files
-    for dirpath, dirs, files in os.walk(rootdir):
-        for filename in files:
-            filepath = os.path.join(dirpath,filename)
-            # print "Considering",filepath
-            match = False
-            for pattern in searchedpatterns:
-                #print 'trying to match '+filepath+' WITH '+pattern
-                match = match or filepath==pattern or fnmatch.fnmatch(filepath, pattern)               
-            if match:
-                # print "**** MATCHED "+filepath
-                filepaths.append(filepath)
-                #if filename in searchedpatterns:
-                #filepaths.append(os.path.join(dirpath,filename))
+    # first look for files with the exact literal path specified
+    filepaths = [ pattern for pattern in searchedpatterns if os.path.exists(pattern) ]
+
+    # remove those found from searchedpatterns
+    searchedpatterns = [ pattern for pattern in searchedpatterns if pattern not in filepaths ]
+
+    if len(searchedpatterns)>0:
+        # now look recursively for all files matching the remaining patterns
+        for dirpath, dirs, files in os.walk(rootdir):
+            for filename in files:
+                filepath = os.path.join(dirpath,filename)
+                # print "Considering",filepath
+                match = False
+                for pattern in searchedpatterns:
+                    # print 'trying to match '+filepath+' WITH '+pattern
+                    match = match or filepath==pattern or fnmatch.fnmatch(filepath, pattern)               
+                if match:
+                    # print "**** MATCHED "+filepath
+                    filepaths.append(filepath)
+                    #if filename in searchedpatterns:
+                    #filepaths.append(os.path.join(dirpath,filename))
 
     filepath_fields = []
     content_fields = []
@@ -150,15 +160,25 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedpatter
 if len(sys.argv)<3:
     print "Usage: plcollect expdir results.txt matrix_filepath_pattern1 matrix_filepath_pattern2 ..."
     print """
+
+    Looks for matrix result files in rootdir and its subdirectories,
+    and comples them into a single results.txt file
+    specified patterns can be either:
+     - full exact literal paths including the rootdir
+     - or wildcard pattenrs such as e.g. '*/Strat?results.pmat' 
+    Note that contrary to the shell, wildcard * does not stop at / boundaries.
+
     Looks in expdir and its subdirectories for all matrix files whose name matches
     one of the specified patterns and compiles their content into a single results.txt table
 
     Ex: plcollect exp results.txt '*/Strat?results.pmat'
-
+    Or: plcollect exp results.txt '*/split_stats.pmat'
+    
+    If results.txt existed prior to the call it will be overwritten.
     Note how the quotes are important for the shell not to perform the wildcard expansion of the specified pattern.
 
     You may then examine the produced results table with e.g.
-    pltable view results.txt
+    pltable view splitresults.txt
     """
     sys.exit()
 
