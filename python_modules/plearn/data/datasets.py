@@ -12,7 +12,7 @@ def listDatasets():
     return all_data_sets.keys()
 
 def getDatasets(datasetname, ntrain=None, nvalid=None, ntest=None):
-    """Ex: getDataset("mnist_bg")
+    """Ex: getDataset("mnist_bg_img")
     will return a tuple: inputsize, targetsize, nclasses, trainset, validset, testset
     where the sets are VMatrix specifications.
     If ntrain, nvalid, ntest are left unspecified (or None) then the full standard sets
@@ -45,7 +45,7 @@ mnist_small = [ 784, 1, 10,
                                weightsize = 0)
                 ]
 
-mnist_bg = [ 784, 1, 10, 
+mnist_bg_img = [ 784, 1, 10, 
              pl.AutoVMatrix(filename=datadir+"icml07data/mnist_background_images/plearn/mnist_all_background_images_train.amat",
                             inputsize=784,
                             targetsize = 1,
@@ -56,6 +56,21 @@ mnist_bg = [ 784, 1, 10,
                               weightsize = 0),
              pl.AutoVMatrix(filename=datadir+"icml07data/mnist_background_images/plearn/mnist_all_background_images_big_test.amat",
                               inputsize=784,
+                              targetsize = 1,
+                              weightsize = 0)
+             ]
+
+mnist_bg_rand = [ 784, 1, 10,
+             pl.AutoVMatrix(filename=datadir+"icml07data/mnist_background_random/plearn/mnist_all_background_random_train.amat",
+                            inputsize=784,
+                            targetsize = 1,
+                            weightsize = 0),
+             pl.AutoVMatrix(filename=datadir+"icml07data/mnist_background_random/plearn/mnist_all_background_random_valid.amat",
+			      inputsize=784,
+                              targetsize = 1,
+                              weightsize = 0),
+             pl.AutoVMatrix(filename=datadir+"icml07data/mnist_background_random/plearn/mnist_all_background_random_big_test.amat",
+		  	      inputsize=784,
                               targetsize = 1,
                               weightsize = 0)
              ]
@@ -97,6 +112,25 @@ mnist_tiny = [ 784, 1, 10,
                pl.RowsSubVMatrix(source=mnist_all_examples, startrow=100, length=30),
                pl.RowsSubVMatrix(source=mnist_all_examples, startrow=130, length=30) ]
 
+
+# image_net
+
+image_net = [ 1369, 1, 10,
+	      pl.AutoVMatrix(filename=datadir+"image_net/plearn/10_percent_sample/10_top_classes_10_percent_37X37_train.vmat",
+                              inputsize=1369,
+                              targetsize = 1,
+                              weightsize = 0),
+              pl.AutoVMatrix(filename=datadir+"image_net/plearn/10_percent_sample/10_top_classes_10_percent_37X37_valid.vmat",
+                              inputsize=1369,
+                              targetsize = 1,
+                              weightsize = 0),
+              pl.AutoVMatrix(filename=datadir+"image_net/plearn/10_percent_sample/10_top_classes_10_percent_37X37_test.vmat",
+                              inputsize=1369,
+                              targetsize = 1,
+                              weightsize = 0)
+	]
+
+
 # babyAI shape
 
 babyAIshape = [ 1024, 1, 3,
@@ -130,10 +164,12 @@ babyAIshape_norm = [ 1024, 1, 3,
 
 all_data_sets = {
     "mnist_small" : mnist_small,
-    "mnist_bg" : mnist_bg,
+    "mnist_bg_img" : mnist_bg_img,
+    "mnist_bg_rand" : mnist_bg_rand,	
     "mnist_rot" : mnist_rot,
     "mnist_full" : mnist_full,
     "mnist_tiny" : mnist_tiny,
+    "image_net" : image_net,
     "babyAIshape" : babyAIshape,
     "babyAIshape_norm" : babyAIshape_norm,    
     }
