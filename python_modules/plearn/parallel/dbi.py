@@ -1416,7 +1416,7 @@ class DBICondor(DBIBase):
         else :
             self.req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
         if self.cpu>0:
-            self.req+='&&(target.CPUS=='+str(self.cpu)+')'
+            self.req+='&&(target.CPUS>='+str(self.cpu)+')'
 
         if self.os:
             self.req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
