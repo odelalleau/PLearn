@@ -355,6 +355,11 @@ public:
 
     void computePartitionFunction();
 
+    //! See remote documentation.
+    //! Note that this is really a convenience method only, to avoid having to
+    //! obtain this likelihood through the ports.
+    Vec computeLogLikelihoodOfVisible(const Mat& visible);
+
     //! Compute probabilities of all hidden configurations given some visible
     //! inputs. The 'p_hidden' matrix is filled such that the (i,j)-th element
     //! is P(hidden_configuration_i | visible_j).

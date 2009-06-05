@@ -338,6 +338,17 @@ void RBMModule::declareMethods(RemoteMethodMap& rmm)
                    ArgDoc ("v_k", "Negative phase statistics on visible layer"),
                    ArgDoc ("h_k", "Negative phase statistics on hidden layer")
                   ));
+
+    declareMethod(rmm, "computePartitionFunction",
+        &RBMModule::computePartitionFunction,
+        (BodyDoc("Compute the log partition function (will be stored within "
+                 "the 'log_partition_function' field)")));
+
+    declareMethod(rmm, "computeLogLikelihoodOfVisible",
+        &RBMModule::computeLogLikelihoodOfVisible,
+        (BodyDoc("Compute log-likehood"),
+         ArgDoc("visible", "Matrix of visible inputs"),
+         RetDoc("A vector with the log-likelihood of each input")));
 }
 
 void RBMModule::CDUpdate(const Mat& v_0, const Mat& h_0,
@@ -627,6 +638,20 @@ void RBMModule::computeHiddenActivations(const Mat& visible)
         if (hidden_bias && !hidden_bias->isEmpty())
             hidden_layer->activations += *hidden_bias;
     }
+}
+
+///////////////////////////////////
+// computeLogLikelihoodOfVisible //
+///////////////////////////////////
+Vec RBMModule::computeLogLikelihoodOfVisible(const Mat& visible)
+{
+    Mat energy;
+    computePartitionFunction();
+    computeFreeEnergyOfVisible(visible, energy, false);
+    negateElements(energy);
+    for (int i = 0; i < energy.length(); i++)
+        energy(i, 0) -= log_partition_function;
+    return energy.toVec();
 }
 
 ///////////////////////////////////
