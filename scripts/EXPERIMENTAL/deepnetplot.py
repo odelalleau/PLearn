@@ -145,7 +145,7 @@ class HiddenLayer:
 class InteractiveRepRecPlotter:
     '''this class is used to plot representations and reconstructions of a DeepReconstructorNet'''
     
-    def __init__(self, learner, vmat, image_width=28, char_indice=0):
+    def __init__(self, learner, vmat, image_width=None, char_indice=0):
         '''constructor'''
 
         self.k = 10
@@ -155,6 +155,12 @@ class InteractiveRepRecPlotter:
         self.learner = learner
         self.vmat = vmat
         self.char = -1#the char we're looking for, -1 for anyone (it can be -1,0,1,2,3,4,5,6,7,8,9)
+
+        if image_width is None:
+            # guess image dimensions            
+            image_width,image_height = guess_image_dimensions(vmat.width-1)
+            print "guessed dimensions: ",vmat.width, image_width, image_height
+
         self.image_width = image_width
 
         self.fig_rec = 0
@@ -521,7 +527,7 @@ class InteractiveRepRecPlotter:
                     
                     #HACK !!!
                     print 'just hacked...'
-                    if i==1 and len(row) == 28*28*2:
+                    if i==1 and len(row) == self.image_width*self.image_width*2:
                         matricesToPlot.append(doubleSizedWeightVectorToImageMatrix(row))
                     #END OF HACK
                     else:
@@ -534,7 +540,7 @@ class InteractiveRepRecPlotter:
                     
                         #HACK !!!
                         print 'just hacked...'
-                        if i==1 and len(row) == 28*28*2:
+                        if i==1 and len(row) == self.image_width*self.image_width*2:
                             matricesToPlot.append(doubleSizedWeightVectorToImageMatrix(row))
                         #END OF HACK 
                         else:
@@ -554,7 +560,7 @@ class InteractiveRepRecPlotter:
                     
                     #HACK !!!
                     #print 'just hacked...'
-                    #if i==1 and len(row) == 28*28*2:
+                    #if i==1 and len(row) == self.image_width*self.image_width*2:
                     #    row = array(toMinusRow(row))
                     #END OF HACK
                                       
@@ -638,7 +644,7 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     myioff()                    
                     clf()
-                    plotLayer1(learner.getParameterValue(nameW), 28, .1, n, hl.groupsize,.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
+                    plotLayer1(learner.getParameterValue(nameW), self.image_width, .1, n, hl.groupsize,.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
                     myion()
                     draw()
 
@@ -655,7 +661,7 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     myioff()
                     clf()
-                    plotLayer1(M, 28, .056,0,M.shape[0],.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
+                    plotLayer1(M, self.image_width, .056,0,M.shape[0],.05, self.from1568to784functions[self.from1568to784function], [], names, self.same_scale)
                     myion()
                     draw()
 
@@ -695,7 +701,7 @@ class InteractiveRepRecPlotter:
                     figure(3)
                     myioff()                    
                     clf()
-                    plotLayer1(learner.getParameterValue(nameW), 28, .056, 0,0,.05, self.from1568to784functions[self.from1568to784function], indexes,names, self.same_scale)
+                    plotLayer1(learner.getParameterValue(nameW), self.image_width, .056, 0,0,.05, self.from1568to784functions[self.from1568to784function], indexes,names, self.same_scale)
                     myion()
                     draw()
                     
@@ -714,14 +720,14 @@ class InteractiveRepRecPlotter:
                         M[y] =  m[y]*w[x%hl.groupsize]
                     print M
                     
-                    plotLayer1(M, 28, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
+                    plotLayer1(M, self.image_width, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
                     myion()
                     draw()
 
                     figure(4)
                     myioff()
                     clf()                    
-                    plotLayer1(M, 28, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
+                    plotLayer1(M, self.image_width, .056,0,M.shape[0],.05,self.from1568to784functions[self.from1568to784function],[],names, self.same_scale)
                     myion()
                     draw()
 
@@ -730,7 +736,7 @@ class InteractiveRepRecPlotter:
                     figure(5)
                     myioff()
                     clf()
-                    plotLayer1(learner.getParameterValue(nameWr), 28, .056,0,0,.05,self.from1568to784functions[self.from1568to784function],indexes,names, self.same_scale)
+                    plotLayer1(learner.getParameterValue(nameWr), self.image_width, .056,0,0,.05,self.from1568to784functions[self.from1568to784function],indexes,names, self.same_scale)
                     myion()
                     draw()
                     
@@ -905,7 +911,7 @@ class InteractiveRepRecPlotter:
         print 'executing some matrix manipulations...'
         row = raw_rep[0][0]
         
-        image = rowToMatrix(row,28)
+        image = rowToMatrix(row,self.image_width)
         
         listDeMatrices = [image]        
         for el in raw_rep[1:]:
@@ -914,7 +920,7 @@ class InteractiveRepRecPlotter:
         listDeMatrices2 = [image]
         for el in rec:
             row = el[0]
-            listDeMatrices2.append(rowToMatrix(row,28))
+            listDeMatrices2.append(rowToMatrix(row,self.image_width))
         
     
         print 'plotting'
@@ -946,7 +952,7 @@ class InteractiveRepRecPlotter:
 
             file.write("\n\n\n---------- REC ------------------------------------------------------\n")            
             for i, mat in enumerate(rec):
-                appendMatrixToFile(file,  rowToMatrix(mat[0],28), 'rec of hidden layer ' + str(i+1))
+                appendMatrixToFile(file,  rowToMatrix(mat[0],self.image_width), 'rec of hidden layer ' + str(i+1))
 
     ###
     ### utils
@@ -979,7 +985,7 @@ class InteractiveRepRecPlotter:
         #reconstruct
         row = self.learner.reconstructOneLayer(which_layer+1)[0]
         #HACK
-        if len(row) == 28*28*2:
+        if len(row) == self.image_width*self.image_width*2:
             print 'hacking...'
             row = array(toMinusRow(row))
             #print the new layer
@@ -1043,7 +1049,7 @@ exit          : terminate and exit
 ### main ###
 ############
 
-server_command = "myplearn server"
+server_command = "plearn_exp server"
 serv = launch_plearn_server(command = server_command)
 
 #print "Press Enter to continue"
@@ -1053,6 +1059,14 @@ if len(sys.argv)<2:
     print_usage_and_exit()
 
 task = sys.argv[1]
+
+def guess_image_dimensions(n):
+    imgheight = int(math.sqrt(n))+1
+    while n%imgheight != 0:
+        imgheight = imgheight-1
+    imgwidth = n/imgheight
+    return imgwidth,imgheight
+
 
 def openVMat(vmatspec):
     if vmatspec.endswith(".amat") or vmatspec.endswith(".pmat"):
@@ -1085,19 +1099,15 @@ if task == 'plotEachRow':
         
         if matrixName in names:
 
-            #matrix = rand(500,28*28*2)
+            #matrix = rand(500,imgwidth*imgwidth*2)
             matrix = learner.getParameterValue(matrixName)
             print "shape: ",matrix.shape
 
             # guess image dimensions
-            n = matrix.shape[1]
-            imgheight = int(math.sqrt(n))+1
-            while n%imgheight != 0:
-                imgheight = imgheight-1
-            imgwidth = n/imgheight
+            imgwidth,imgheight = guess_image_dimensions(matrix.shape[1])
             
             showRowsAsImages(matrix, img_height=imgheight, img_width=imgwidth, nrows=10, ncols=20, figtitle=matrixName)
-            #plotter = EachRowPlotter(matrix, 28, .1, .01, doToRow)
+            #plotter = EachRowPlotter(matrix, imgwidth, .1, .01, doToRow)
             #plotter.plot()
             #show()          
             

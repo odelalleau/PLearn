@@ -124,15 +124,21 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedpatter
     filepath_fields = []
     content_fields = []
     for filename in filepaths:
-        pairs, summarypath = parse_filepath(filename)
-        t = openTable(filename)
-        for key,val in pairs:
-            if key not in filepath_fields:
-                filepath_fields.append(key)
-        for fieldname in t.fieldnames:
-            if fieldname not in content_fields:
-                content_fields.append(fieldname)
-
+        try:
+            pairs, summarypath = parse_filepath(filename)
+            try:
+                t = openTable(filename)
+            except ValueError:
+                print >> sys.stderr, "Warning plcollect could not open",filename," (incomplete or corrupted header?)"
+                raise
+            for key,val in pairs:
+                if key not in filepath_fields:
+                    filepath_fields.append(key)
+            for fieldname in t.fieldnames:
+                if fieldname not in content_fields:
+                    content_fields.append(fieldname)
+        except ValueError:
+            pass
     fieldnames = filepath_fields+content_fields
     result_table = TableFile(resultfile_txt, 'w+', ["_filepath_","_summarypath_"]+fieldnames)
     print "fieldnames length:",len(fieldnames)
@@ -153,7 +159,7 @@ def plcollect(rootdir="expdir", resultfile_txt="exp_results.txt", searchedpatter
                     else:
                         resrow.append("-")
                 result_table.append(resrow)
-        except struct.error:
+        except (struct.error, ValueError):
             print "Probably a buggy .pmat"
 
 
