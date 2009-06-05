@@ -42,6 +42,7 @@ def print_usage_and_exit():
 def print_usage_repAndRec():
     print 'putting you mouse OVER a hidden layer and hitting these keyes does... things :'
     print
+    print '! : toggle between sampling types (multinomial or bernoulli)'
     print 'f : fproping from the last layer'
     print 'F : fproping form the last layer and for the next ones'
     print 'r : reconstructing this layer from the next one'
@@ -52,7 +53,7 @@ def print_usage_repAndRec():
     print 'P : generate from a factorial bernoulli with parameter p'
     print 'G : generate from current layer: sampling from fact bernoulli and reconstructing'
     print 'm : set the max of each group of the current hidden layer to 1 and the other elements of the group to 0'
-    print 's : each group of the current layer is sampled (each group has to sum to 1.0)'
+    print 's : sample current layer (each group has to sum to 1.0)'
     print 'S : samples the current layer, then reconstruct the previous layer, thant sample this reconstructed layer, and continues until the input'
     print 'z : set the current pixel (the one the mouse is over) to 0.0'
     print 'x : set the current pixel to 0.25'
@@ -150,6 +151,7 @@ class InteractiveRepRecPlotter:
 
         self.k = 10
         self.p = 0.01
+        self.sampling_type = "bernoulli"
         
         self.current = char_indice-1#-1 because it's the first time
         self.learner = learner
@@ -309,8 +311,17 @@ class InteractiveRepRecPlotter:
 
             hl = hl1
 
+            # toggle between sampling types -- !
+            if char == '!':
+                if self.sampling_type=="multinomial":
+                    self.sampling_type = "bernoulli"
+                elif self.sampling_type=="bernoulli":
+                    self.sampling_type = "multinomial"
+                else:
+                    raise ValueError("invalid samplong type")
+
             # set k -- k
-            if char == 'k':
+            elif char == 'k':
                 print "Enter the new value for k (currently "+str(self.k)+") : ",
                 self.k = input()
                         
@@ -349,7 +360,7 @@ class InteractiveRepRecPlotter:
                 while k>=0:
                     self.__reconstructLayer(k)
                     if k!=0:
-                        self.__sampleLayer(k, "bernoulli")
+                        self.__sampleLayer(k)
                     self.rep_axes[k].imshow(self.hidden_layers[k].getMatrix(), interpolation = self.interpolation, cmap = self.cmap)
                     k = k-1
                 draw()                
@@ -958,14 +969,16 @@ class InteractiveRepRecPlotter:
     ### utils
     ###
 
-    def __sampleLayer(self, which_layer, sampling_type="multinomial"):
+    def __sampleLayer(self, which_layer):
         hl = self.hidden_layers[which_layer]
 
-        if sampling_type=="multinomial":
+        if self.sampling_type=="multinomial":
             for n in arange(hl.hidden_layer.size/hl.groupsize):
-                multi = numpy.random.multinomial(1,hl.getRow(n))                    
+                probs = hl.getRow(n)
+                probs = probs/sum(probs)
+                multi = numpy.random.multinomial(1,probs)                    
                 hl.setRow(n,multi)
-        elif sampling_type=="bernoulli":
+        elif self.sampling_type=="bernoulli":
             for pos in xrange(hl.hidden_layer.size):
                 val = hl.hidden_layer[pos]
                 if val<0.:
@@ -976,7 +989,7 @@ class InteractiveRepRecPlotter:
                     val = numpy.random.binomial(1,val)
                 hl.hidden_layer[pos] = val
         else:
-            raise ValueError("Invalid sampling_type: "+sampling_type)
+            raise ValueError("Invalid sampling_type: "+self.sampling_type)
             
     def __reconstructLayer(self, which_layer):
         hl = self.hidden_layers[which_layer+1]
