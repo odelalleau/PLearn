@@ -59,7 +59,8 @@ UniformizeLearner::UniformizeLearner()
 PLEARN_IMPLEMENT_OBJECT(UniformizeLearner, "Uniformizes selected input fields", 
                         "For each specified field, the full training set column will be read,\n"
                         "then sorted, and we'll store up to nquantiles and their mapping to [0,1] rank (as well as min and max)\n"
-                        "Uniformization maps to [0,1]. It is a piecewise linear interpolation between the remembered quantiles\n");
+                        "Uniformization maps to [0,1]. It is a piecewise linear interpolation between the remembered quantiles\n"
+                        "Work with missing value. We don't map them");
 
 void UniformizeLearner::declareOptions(OptionList& ol)
 {
@@ -397,8 +398,13 @@ void UniformizeLearner::computeOutput(const Vec& input, Vec& output) const
     int n= outputsize();
     output.resize(n);
     int nk= which_fieldnums.size();
-    for(int k= 0; k < nk; ++k)
-        output[k]= mapToRank(input[which_fieldnums[k]], val_to_rank[k]);
+    for(int k= 0; k < nk; ++k){
+        real val=input[which_fieldnums[k]];
+        if(is_missing(val))
+            output[k] = MISSING_VALUE;
+        else
+            output[k] = mapToRank(val, val_to_rank[k]);
+    }
     for(int k= nk; k < n; ++k)
         output[k]= input[k-nk];
 
