@@ -53,6 +53,7 @@ TVec<StatsCollector> computeStats(VMat m, int maxnvalues, bool report_progress)
 {
     int w = m.width();
     int l = m.length();
+    PLCHECK(w>=0);
     TVec<StatsCollector> stats(w, StatsCollector(maxnvalues));
     Vec v(w);
     PP<ProgressBar> pbar;
