@@ -1717,16 +1717,42 @@ class FieldTypeStats:
             return int(self.max_value+1)
         
 
-class StringMapFile:
+class StringMap:
+    """Mapping from string to numeric values of a field."""
 
-    def __init__(self, filepath, openmode='a', startid=1):
-        if openmode not in "rwa":
-            raise ValueError("openmode must be one of 'r','w','a'")
+    def __init__(self, startid=1):
         self.startid = startid
         self.maxid = None
+        self.map = {}
+
+    def __getitem__(self,strval):
+        return self.map[str(strval)]
+
+    def __len__(self):
+        return len(self.map)
+
+    def append(self, strval, numid=None):
+        strval = str(strval) # make sure it's a string
+        if numid is None:
+            if self.maxid is None:
+                self.maxid = self.startid
+            else:
+                self.maxid += 1
+            numid = self.maxid
+        self.map[strval] = numid
+        return numid
+            
+class StringMapFile(StringMap):
+    """A StringMap saved on disk."""
+
+    def __init__(self, filepath, openmode='a', startid=1):
+        StringMap.__init__(self, startid)
         self.filepath = filepath
         self.openmode = openmode
-        self.map = {}
+
+        if openmode not in "rwa":
+            raise ValueError("openmode must be one of 'r','w','a'")
+
         if openmode=='r':
             self.load_map()
         elif openmode=='w':
@@ -1749,23 +1775,10 @@ class StringMapFile:
                 self.maxid = max(numid, self.maxid)
         f.close()
 
-    def __getitem__(self,strval):
-        return self.map[str(strval)]
-
-    def __len__(self):
-        return len(self.map)
-
     def append(self, strval, numid=None):
-        strval = str(strval) # make sure it's a string
-        if numid is None:
-            if self.maxid is None:
-                self.maxid = self.startid
-            else:
-                self.maxid += 1
-            numid = self.maxid
+        numid = StringMap.append(self, strval, numid)
         # self.f.seek(0,2)
         print >> self.f, '"'+strval.replace('"','\\"')+'"', numid
-        self.map[strval] = numid
         self.flush()
         return numid
             
