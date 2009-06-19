@@ -343,9 +343,11 @@ class ListWithFieldNames:
         return len(self.list)
 
     def __getitem__(self,key):
-        if isinstance(key,str):
-            key = self.fieldpos[key]
-        return self.list[key]
+        # try 'fast' case first, ask forgiveness if it doesn't work
+        try:
+            return self.list[key]
+        except TypeError:
+            return self.list[self.fieldpos[key]]
 
     def __setitem__(self, key, value):
         if isinstance(key,str):
@@ -394,7 +396,9 @@ class ListWithFieldNames:
 
     def make_private_copy_of_fields(self):
         if self.fieldnames:
-            self.set_fieldnames(self.fieldnames[:])
+            # copy names and pos as is instead of recalculating
+            self.fieldnames = self.fieldnames[:]
+            self.fieldpos = copy.copy(self.fieldpos)
         self.shared_fieldnames = False
 
     def append(self, val, name='?'):
@@ -1228,7 +1232,8 @@ class SelectFields(Table):
 
     def getRow(self,i):
         row = self.table[i]
-        return [ row[field] for field in self.fieldnums ]
+        # map is faster than list comprehension (but uglier)
+        return map(row.__getitem__, self.fieldnums)
 
     def __len__(self):
         return len(self.table)
