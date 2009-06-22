@@ -39,6 +39,8 @@
 #define CompactFileVMatrix_INC
 
 #include "RowBufferedVMatrix.h"
+#include <plearn/db/getDataSet.h>
+#include <plearn/vmat/VMat.h>
 
 // While under development, we use this define to control
 // whether to use the NSPR 64 bit file access or the old std C FILE*
@@ -90,6 +92,7 @@ class CompactFileVMatrix: public RowBufferedVMatrix
 
 private:
     typedef RowBufferedVMatrix inherited;
+    static VMatrixExtensionRegistrar* extension_registrar;
 
 protected:
     PPath filename_;
@@ -151,8 +154,12 @@ public:
 
     virtual void build();
 
-    PLEARN_DECLARE_OBJECT(CompactFileVMatrix);
+    static VMat instantiateFromPPath(const PPath& filename)
+    {
+        return VMat(new CompactFileVMatrix(filename));
+    }
 
+    PLEARN_DECLARE_OBJECT(CompactFileVMatrix);
 
     //! Transform a shallow copy into a deep copy.
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);

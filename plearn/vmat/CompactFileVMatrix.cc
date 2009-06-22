@@ -554,6 +554,12 @@ void CompactFileVMatrix::updateHeader() {
     PLERROR("In CompactFileVMatrix::put - not implemented.");
 }
 
+VMatrixExtensionRegistrar* CompactFileVMatrix::extension_registrar =
+    new VMatrixExtensionRegistrar(
+        "cmat",
+        &CompactFileVMatrix::instantiateFromPPath,
+        "A compact file matrix");
+
 } // end of namespace PLearn
 
 
