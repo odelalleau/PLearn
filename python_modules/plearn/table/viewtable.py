@@ -910,6 +910,18 @@ class TableView:
         subprocess.Popen(command, shell=True)
         
     def chooseAndExecuteShellCommand(self):
+
+        def set_filepath(filename, guessdir):
+            return """
+            filepath="%s/%s";
+            if [[ -r $filepath ]]
+              then echo "located $filepath";
+              else echo "inexistent $filepath";
+                filepath=`find . -name %s`;
+                echo "instead found $filepath";
+            fi
+            """ % (guessdir,filename,filename)
+
         
         commands = [
             ('s',"Launch terminal and shell in this matrix's directory",
@@ -917,13 +929,37 @@ class TableView:
             ('1',"View layer 1 unsup training costs",
              """xterm -e sh -c 'cd "_DIRPATH_"; myplearn vmat view `find . -name training_costs_layer_1.pmat`' """),
             ('i',"deepnetplot.py plotRepAndRec learner.psave", 
-             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name learner.psave`; echo "found $learnerfile"; deepnetplot.py plotRepAndRec $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
-            ('w',"deepnetplot.py plotEachRow learner.psave", 
-             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name learner.psave`; echo "found $learnerfile"; deepnetplot.py plotEachRow $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd;"""+
+             set_filepath("learner.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """deepnetplot.py plotRepAndRec $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
+            ('v',"deepnetplot.py plotEachRow learner.psave", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("learner.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """deepnetplot.py plotEachRow $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
+            ('w',"open learner_Layer1_W.png", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("learner_Layer1_W.png","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """open $filepath' """),
+            ('r',"open learner_Layer1_Wr.png", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("learner_Layer1_Wr.png","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """open $filepath' """),
             ('I',"deepnetplot.py plotRepAndRec final_learner.psave", 
-             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name final_learner.psave`; echo "found $learnerfile"; deepnetplot.py plotRepAndRec $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
-            ('W',"deepnetplot.py plotEachRow final_learner.psave", 
-             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name final_learner.psave`; echo "found $learnerfile"; deepnetplot.py plotEachRow $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("final_learner.psave","Split0/LearnerExpdir")+
+             """deepnetplot.py plotRepAndRec $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
+            ('V',"deepnetplot.py plotEachRow final_learner.psave", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("final_learner.psave","Split0/LearnerExpdir")+
+             """deepnetplot.py plotEachRow $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
+            ('W',"open final_learner_Layer1_W.png", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("final_learner_Layer1_W.png","Split0/LearnerExpdir")+
+             """open $filepath' """),
+            ('R',"open final_learner_Layer1_Wr.png", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("final_learner_Layer1_Wr.png","Split0/LearnerExpdir")+
+             """open $filepath' """),
             ]
 
         menutxt = '\n'.join([ '['+commands[i][0]+'] '+commands[i][1] for i in range(len(commands)) ])+'\n'

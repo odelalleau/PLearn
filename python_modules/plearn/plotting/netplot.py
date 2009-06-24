@@ -469,6 +469,38 @@ def truncateMatrix(mat, n=10.):
             
     return truncMat
 
+
+def saveRowsAsImage(imgfile,
+                    matrix, img_width, img_height,
+                    nrows=10, ncols=20,
+                    figtitle="",
+                    luminance_scale_mode=0,
+                    colormap = cm.gray,
+                    show_colorbar = False,
+                    vmin = None,
+                    vmax = None,
+                    transpose_img = False):
+    """Saves filters contained in first few rows of matrix as an image file.
+    imgfile specifies the name of the image file,
+    img_width and img_height specify the sizes of the imagettes (not the size of the big saved image).
+    Other parameters are passed directly to plorRowsAsImages
+    """
+    clf()
+    endidx = min(nrows*ncols, len(matrix))        
+    plotRowsAsImages(matrix[0:endidx],
+                     img_height = img_height,
+                     img_width = img_width,
+                     nrows = nrows,
+                     ncols = ncols,
+                     figtitle = figtitle,
+                     luminance_scale_mode = luminance_scale_mode,
+                     show_colorbar = show_colorbar,
+                     disable_ticks = True,
+                     colormap = colormap,
+                     vmin = vmin,
+                     vmax = vmax,
+                     transpose_img = transpose_img)
+    savefig(imgfile)
       
 class showRowsAsImages:
 

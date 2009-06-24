@@ -238,7 +238,7 @@ class RemotePLearnServer:
 
     def callLoadObject(self, objid, filepath):
         self.clearMaps()
-        self.logged_write('!L '+str(objid)+' '+filepath+'\n')
+        self.logged_write('!L '+str(objid)+' "'+filepath+'"\n')
         self.expectResults(0)
 
     def callDeleteObject(self, objid):
