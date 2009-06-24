@@ -1062,7 +1062,7 @@ exit          : terminate and exit
 ### main ###
 ############
 
-server_command = "plearn_exp server"
+server_command = "myplearn server"
 serv = launch_plearn_server(command = server_command)
 
 #print "Press Enter to continue"

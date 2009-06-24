@@ -903,6 +903,8 @@ class TableView:
 
         # replace _DIRPATH_ in command by filepathdir
         command = command.replace('_DIRPATH_',filepathdir)
+
+        # k = self.display_fullscreen(command)
         
         # os.system(command)
         subprocess.Popen(command, shell=True)
@@ -911,17 +913,17 @@ class TableView:
         
         commands = [
             ('s',"Launch terminal and shell in this matrix's directory",
-             """xterm -e sh -c "cd '_DIRPATH_'; pwd; ls; sh" """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; ls; sh' """),
             ('1',"View layer 1 unsup training costs",
-             """xterm -e sh -c "cd '_DIRPATH_'; myplearn vmat view training_costs_layer_1.pmat" """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; myplearn vmat view `find . -name training_costs_layer_1.pmat`' """),
             ('i',"deepnetplot.py plotRepAndRec learner.psave", 
-             """xterm -e sh -c "cd '_DIRPATH_'; pwd; deepnetplot.py plotRepAndRec learner.psave ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh" """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name learner.psave`; echo "found $learnerfile"; deepnetplot.py plotRepAndRec $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
             ('w',"deepnetplot.py plotEachRow learner.psave", 
-             """xterm -e sh -c "cd '_DIRPATH_'; pwd; deepnetplot.py plotEachRow learner.psave ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh" """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name learner.psave`; echo "found $learnerfile"; deepnetplot.py plotEachRow $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
             ('I',"deepnetplot.py plotRepAndRec final_learner.psave", 
-             """xterm -e sh -c "cd '_DIRPATH_'; pwd; deepnetplot.py plotRepAndRec final_learner.psave ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh" """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name final_learner.psave`; echo "found $learnerfile"; deepnetplot.py plotRepAndRec $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
             ('W',"deepnetplot.py plotEachRow final_learner.psave", 
-             """xterm -e sh -c "cd '_DIRPATH_'; pwd; deepnetplot.py plotEachRow final_learner.psave ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh" """),
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; learnerfile=`find . -name final_learner.psave`; echo "found $learnerfile"; deepnetplot.py plotEachRow $learnerfile ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
             ]
 
         menutxt = '\n'.join([ '['+commands[i][0]+'] '+commands[i][1] for i in range(len(commands)) ])+'\n'
