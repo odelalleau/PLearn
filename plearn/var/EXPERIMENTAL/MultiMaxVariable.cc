@@ -258,23 +258,26 @@ void MultiMaxVariable::build_()
     // ### You should assume that the parent class' build_() has already been
     // ### called.
     
-    if (groupsizes.length() <= 0)
+    if (input.isNotNull() ) // otherwise postpone building until we have an input!
     {
-        if (groupsize <= 0)
-            PLERROR("Groupsize(s) not specified or invalid in MultiMaxVariable");    
-        if (input->width() % groupsize != 0)
-            PLERROR("Invalid groupsize in MultiMaxVariable");
+        if (groupsizes.length() <= 0)
+        {
+            if (groupsize <= 0)
+                PLERROR("Groupsize(s) not specified or invalid in MultiMaxVariable");    
+            if (input->width() % groupsize != 0)
+                PLERROR("Invalid groupsize in MultiMaxVariable");
 
-        TVec<int> vec(input->width()/groupsize, groupsize);
-        groupsizes = vec;
-    }
-    else
-    {
-        int sum = 0;
-        for(int i=0; i<groupsizes.length(); i++)
-            sum += groupsizes[i];       
-        if(sum != input->width())
-            PLERROR("Invalid groupsizes in MultiMaxVariable");    
+            TVec<int> vec(input->width()/groupsize, groupsize);
+            groupsizes = vec;
+        }
+        else
+        {
+            int sum = 0;
+            for(int i=0; i<groupsizes.length(); i++)
+                sum += groupsizes[i];       
+            if(sum != input->width())
+                PLERROR("Invalid groupsizes in MultiMaxVariable");    
+        }
     }
 }
 
