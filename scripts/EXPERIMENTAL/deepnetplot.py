@@ -32,7 +32,6 @@ def print_usage_and_exit():
     print "deepnetplot.py plotSingleMatrix x.psave "
     print "deepnetplot.py plotEachRow learner.psave chars.pmat"
     print "deepnetplot.py plotRepAndRec learner.psave chars.pmat"
-    print "deepnetplot.py collectFilters dirname"
     print "deepnetplot.py interact learner.psave chars.pmat"
     print "deepnetplot.py help"
     print ""
@@ -1093,27 +1092,6 @@ def openVMat(vmatspec):
         vmat = serv.load(vmatspec)
     return vmat
 
-def collectFilters(basedir):
-    for dirpath, dirs, files in os.walk(basedir):
-        for filename in files:
-            if filename.endswith(".psave") and "learner" in filename:
-                filepath = os.path.join(dirpath,filename)
-                print 
-                print "*** EXTRACTING FILTERS FROM "+filepath
-                learner = serv.load(filepath)
-                # matrices = learner.listParameter() 
-                names = learner.listParameterNames()
-                for varname in ["Layer1_W","Layer1_Wr"]:
-                    if varname in names:
-                        matrix = learner.getParameterValue(varname)
-                        imgwidth,imgheight = guess_image_dimensions(matrix.shape[1])
-                        imgfilename = filename[:-6]+"_"+varname+".png"
-                        print "   --> "+imgfilename
-                        # chose a non-GUI backend
-                        # matplotlib.use( 'Agg' )
-                        saveRowsAsImage(os.path.join(dirpath,imgfilename), matrix,
-                                        imgwidth, imgheight, 10, 20, figtitle=imgfilename)
-
 if task == 'plotEachRow':
 
     psave = sys.argv[2]
@@ -1153,11 +1131,6 @@ if task == 'plotEachRow':
         elif matrixName != 'exit':
             print
             print 'This matrix does not exist !'
-
-elif task == 'collectFilters':
-    basedir = sys.argv[2]
-    collectFilters(basedir)
-    
     
 elif task == 'interact':
     psave = sys.argv[2]
