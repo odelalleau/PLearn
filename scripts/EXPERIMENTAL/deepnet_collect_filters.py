@@ -49,7 +49,7 @@ def collectFilters(basedir):
                         imgfilename = filename[:-6]+"_"+varname+".png"
                         print "   --> "+imgfilename
                         saveRowsAsImage(os.path.join(dirpath,imgfilename), matrix,
-                                        imgwidth, imgheight, 10, 20, figtitle=imgfilename)
+                                        imgwidth, imgheight, 10, 20)
 
 
 ############
