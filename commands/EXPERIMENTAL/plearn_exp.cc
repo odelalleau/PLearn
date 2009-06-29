@@ -405,7 +405,7 @@
 #include <plearn_learners/classifiers/EXPERIMENTAL/LocalGaussianClassifier.h>
 
 // Stuff used for DiverseComponentAnalysis
-// #include <plearn_learners/unsupervised/EXPERIMENTAL/DiverseComponentAnalysis.h>
+#include <plearn_learners/unsupervised/EXPERIMENTAL/DiverseComponentAnalysis.h>
 
 // Stuff used for DenoisingRecurrentNet
 #include <plearn_learners_experimental/DenoisingRecurrentNet.h>

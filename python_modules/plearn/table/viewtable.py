@@ -936,14 +936,14 @@ class TableView:
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("learner.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
              """deepnetplot.py plotEachRow $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
-            ('w',"open learner_Layer1_W.png", 
+            ('w',"xv learner_Layer1_W.png", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("learner_Layer1_W.png","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
-             """open $filepath' """),
-            ('r',"open learner_Layer1_Wr.png", 
+             """xv $filepath' """),
+            ('r',"xv learner_Layer1_Wr.png", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("learner_Layer1_Wr.png","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
-             """open $filepath' """),
+             """xv $filepath' """),
             ('I',"deepnetplot.py plotRepAndRec final_learner.psave", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("final_learner.psave","Split0/LearnerExpdir")+
@@ -952,14 +952,14 @@ class TableView:
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("final_learner.psave","Split0/LearnerExpdir")+
              """deepnetplot.py plotEachRow $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
-            ('W',"open final_learner_Layer1_W.png", 
+            ('W',"xv final_learner_Layer1_W.png", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("final_learner_Layer1_W.png","Split0/LearnerExpdir")+
-             """open $filepath' """),
-            ('R',"open final_learner_Layer1_Wr.png", 
+             """xv $filepath' """),
+            ('R',"xv final_learner_Layer1_Wr.png", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("final_learner_Layer1_Wr.png","Split0/LearnerExpdir")+
-             """open $filepath' """),
+             """xv $filepath' """),
             ]
 
         menutxt = '\n'.join([ '['+commands[i][0]+'] '+commands[i][1] for i in range(len(commands)) ])+'\n'

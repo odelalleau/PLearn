@@ -546,7 +546,7 @@ void DiverseComponentAnalysis::train()
             int l = C.length();            
             inv_stddev_of_projections.resize(l);
             for(int i=0; i<l; i++)
-                inv_stddev_of_projections = 1.0/sqrt(C(i,i));
+                inv_stddev_of_projections.fill(1.0/sqrt(C(i,i)));
         }
 
         //... train for 1 stage, and update train_stats,

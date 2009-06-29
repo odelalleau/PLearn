@@ -477,6 +477,9 @@ if __name__ == "__main__":
     OLDEXAMPLE: dcaexperiment.py  123:1    123 2    -2 cov     -1 square 1       1 square 1   0"
     OLDEXAMPLE: dcaexperiment.py 121:-2    123 4    -2 squaredist     0 exp 1       1 exp -1.6   0"
     OLDEXAMPLE: dcaexperiment.py /data/icml07data/mnist_basic/plearn/mnist_basic2_train.pmat    125 400    -2 squaredist     0 exp -1       1 exp -1   0
+
+    Ex:
+                 data_set=123:1 seed=1827 ncomponents=2 nonlinearity=none constrain_norm_type=-2 cov_transformation_type=cov diag_add=0. diag_weight=0. diag_nonlinearity=square diag_premul=1.0 offdiag_weight=1.0 offdiag_nonlinearity=exp offdiag_premul=1.0 lr=0.01 nsteps=1 optimizer_nsteps=1 force_zero_mean=False
     """
     autoscript(DCAExperiment,True,helptext=helptext)
 

@@ -50,7 +50,7 @@ def collectFilters(basedir):
                         print "   --> "+imgfilename
                         saveRowsAsImage(os.path.join(dirpath,imgfilename), matrix,
                                         imgwidth, imgheight, 10, 20)
-
+                learner.delete()
 
 ############
 ### main ###
