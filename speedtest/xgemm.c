@@ -9,15 +9,16 @@
   /* Includes, cuda */
   #include <cublas.h>
 #else
-  /* Includes, cblas */
-  #include <gsl/gsl_cblas.h>
+#include <plearn/math/blas_proto.h>
 #endif
 #ifdef USEDOUBLE
-  typedef double real;
-  #define cblas_xgemm cblas_dgemm
+//  typedef double real;
+#define real double
+  #define xgemm_ dgemm_
 #elif USEFLOAT
-  typedef float real;
-  #define cblas_xgemm cblas_sgemm
+//  typedef float real;
+#define real float
+  #define xgemm_ sgemm_
 #else
   #error "USEDOUBLE or USEFLOAT must be defined"
 #endif
@@ -34,7 +35,7 @@ static void c_xgemm(int M, int N, int K, const real alpha, const real *A,
   int k;
   for (i = 0; i < M; ++i) {
     for (j = 0; j < N; ++j) {
-      float prod = 0;
+      real prod = 0;
       for (k = 0; k < K; ++k) {
 	prod += A[i * K + k] * B[k * N + j];
       }
@@ -146,7 +147,7 @@ int main(int argc, char** argv)
       c_xgemm(M,N,K, alpha, h_A, h_B, beta, h_C);
     h_C_ref = h_C;
     /* Allocate host memory for reading back the result from device memory */
-    h_C = (float*)malloc(NC * sizeof(h_C[0]));
+    h_C = (real*)malloc(NC * sizeof(h_C[0]));
     if (h_C == 0) {
         fprintf (stderr, "!!!! host memory allocation error (C)\n");
         return EXIT_FAILURE;
@@ -174,8 +175,10 @@ int main(int argc, char** argv)
     for (int i=0;i<NBITER;i++)
       c_xgemm(M,N,K, alpha, h_A, h_B, beta, h_C);
 #else
+    char transa='N', transb='N';
     for (int i=0;i<NBITER;i++)
-      cblas_xgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M,N,K, alpha, h_A, K, h_B, N, beta, h_C, N);
+      sgemm_(&transb, &transa, &N, &M, &K, &alpha, h_B, &N, h_A, &K, &beta, h_C, &N);
+
 #endif
 #ifdef COMPARE
     /* Check result against reference */

@@ -3,7 +3,8 @@ CFLAGS=-Wall -fPIC -O3
 LIBCBLAS=~bastienf/.NOBACKUP/CBLAS/lib/${OSARCH}/libcblas.a
 
 LIBBLAS=-lblas ${LIBCBLAS}
-LIBGOTO=-lgoto -lgfortran ${LIBCBLAS}
+#LIBGOTO=-lgoto -lgfortran ${LIBCBLAS}
+LIBGOTO=-lgoto -lgfortran -I~/PLearn
 LIBATLAS=-lcblas -lf77blas -latlas -lg2c
 LIBMKL=-lmkl -lvml ${LIBCBLAS}
 LIBMKLPT=-lmkl -lvml -lguide -lpthread ${LIBCBLAS}
@@ -12,7 +13,8 @@ ACMLBASE=/u/lisa/local/acml-3-6-1beta/gfortran64
 ACMLBASE=/u/lisa/local/acml-3-6-0/gfortran32
 LIBACML= ${LIBCBLAS} ${ACMLBASE}/lib/libacml.a -lgfortran
 LIBACMLPT= ${LIBCBLAS} ${ACMLBASE}_mp/lib/libacml_mp.a -lg2c -lgfortran
-LIBNVIDIA=-L/u/bastienf/NVIDIA_CUDA_SDK/cuda/lib -L/u/bastienf/NVIDIA_CUDA_SDK/lib/ -I/u/bastienf/NVIDIA_CUDA_SDK/cuda/include/ -lcuda -lcudart -lGL -lGLU -lcublas -l cutil
+LIBNVIDIA=-L/u/bastienf/NVIDIA_CUDA_SDK/cuda/lib -L/u/bastienf/NVIDIA_CUDA_SDK/lib/ -I/u/bastienf/NVIDIA_CUDA_SDK/cuda/include/ -lcuda -lcudart -lGL -lGLU -lcublas 
+#-l cutil
 
 all: xgemm
 
@@ -84,6 +86,12 @@ xgemm-sgemm-nvidia: xgemm.c
 
 xgemm-sgemm-nvidia-compare: xgemm.c
 	${CC} ${CFLAGS} -m32 -o $@ -DUSEFLOAT $< ${LIBNVIDIA} -DNVIDIA -DCOMPARE
+
+xgemm-sgemm-nvidia-64: xgemm.c
+	${CC} ${CFLAGS} -m64 -o $@ -DUSEFLOAT $<  ${LIBNVIDIA} -DNVIDIA
+
+xgemm-sgemm-nvidia-compare-64: xgemm.c
+	${CC} ${CFLAGS} -m64 -o $@ -DUSEFLOAT $< ${LIBNVIDIA} -DNVIDIA -DCOMPARE
 
 xgemv: xgemv-blas xgemv-blas-compare xgemv-cxgemm xgemv-goto xgemv-goto-compare xgemv-nvidia xgemv-nvidia-compare xgemv-sgemv-goto xgemv-dgemv-goto xgemv-sgemv-blas xgemv-dgemv-blas
 	true
