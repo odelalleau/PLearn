@@ -298,8 +298,13 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("save_strings", "save string instead of real values")));
 
     declareMethod(
-        rmm, "savePMAT", &VMatrix::savePMAT,
+        rmm, "savePMAT", &VMatrix::remote_savePMAT,
         (BodyDoc("Saves this matrix as a .pmat file."),
+         ArgDoc ("pmatfile", "Path of the file to create.")));
+
+    declareMethod(
+        rmm, "savePMAT_float", &VMatrix::remote_savePMAT_float,
+        (BodyDoc("Saves this matrix as a .pmat file in float format."),
          ArgDoc ("pmatfile", "Path of the file to create.")));
 
     declareMethod(
