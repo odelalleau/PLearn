@@ -657,7 +657,7 @@ int vmatmain(int argc, char** argv)
     {
         if(argc<4)
             PLERROR("Usage: vmat convert <source> <destination> "
-                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR]");
+                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR] [--force_float]");
 
         string source = argv[2];
         string destination = argv[3];
@@ -689,6 +689,8 @@ int vmatmain(int argc, char** argv)
          *     --update
          *           :: we generate the <destination> only when the <source> file is newer than
          *           :: the destination  file or when the destination file is missing
+         *     --force_float
+         *           :: if the destination is a pmat, we force the pmat file to be in float format
          */
         TVec<string> columns;
         TVec<string> date_columns;
@@ -698,6 +700,10 @@ int vmatmain(int argc, char** argv)
         bool convert_date = false;
         bool save_vmat = false;
         bool update = false;
+        bool force_float = false;
+
+        string ext = extract_extension(destination);
+
         for (int i=4 ; i < argc && argv[i] ; ++i) {
             string curopt = removeblanks(argv[i]);
             if (curopt == "")
@@ -716,6 +722,7 @@ int vmatmain(int argc, char** argv)
                 precision = toint(curopt.substr(12));
             }
             else if (curopt.substr(0,12) == "--delimiter=") {
+                PLCHECK(ext==".cvs");
                 delimiter = curopt.substr(12);
             }
             else if (curopt == "--convert-date")
@@ -726,7 +733,10 @@ int vmatmain(int argc, char** argv)
                 save_vmat = true;
             else if (curopt == "--update")
                 update = true;
-            else
+            else if (curopt == "--force_float"){
+                PLCHECK(ext==".pmat");
+                force_float = true;
+            }else
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                           curopt.c_str());
         }
@@ -738,7 +748,6 @@ int vmatmain(int argc, char** argv)
         if (columns.size() > 0)
             vm = new SelectColumnsVMatrix(vm, columns);
 
-        string ext = extract_extension(destination);
         if (ext != ".csv" && skip_missings)
             PLWARNING("Option '--skip-missings' not supported for extension '%s'; ignoring it...",
                       ext.c_str());
@@ -750,7 +759,7 @@ int vmatmain(int argc, char** argv)
             // Save strings as strings so they are not lost.
             vm->saveAMAT(destination, true, false, true);
         else if(ext==".pmat")
-            vm->savePMAT(destination);
+            vm->savePMAT(destination, force_float);
         else if(ext==".dmat")
             vm->saveDMAT(destination);
         else if(ext == ".csv")

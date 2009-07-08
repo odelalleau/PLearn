@@ -74,6 +74,7 @@ protected:
 #endif
     bool file_is_bigendian;
     bool file_is_float;
+    bool force_float;
 
 private:
 
@@ -85,7 +86,8 @@ public:
 
     FileVMatrix();
     FileVMatrix(const PPath& filename, bool writable_=false); //!<  opens an existing file
-    FileVMatrix(const PPath& filename, int the_length, int the_width); //!<  create a new matrix file
+    FileVMatrix(const PPath& filename, int the_length, int the_width,
+                bool force_float=false); //!<  create a new matrix file
     FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
 protected:

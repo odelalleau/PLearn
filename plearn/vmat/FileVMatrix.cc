@@ -77,10 +77,12 @@ FileVMatrix::FileVMatrix(const PPath& filename, bool writable_):
     build_();
 }
 
-FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width):
+FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width,
+                         bool force_float):
     inherited       (the_length, the_width, true),
     filename_       (filename.absolute()),
     f               (0),
+    force_float     (force_float),
     build_new_file  (true)
 {
     remove_when_done = track_ref = -1;
@@ -175,6 +177,8 @@ void FileVMatrix::build_()
 #ifdef BIGENDIAN
         file_is_bigendian = true;
 #endif
+        if(force_float)
+            file_is_float = true;
 
         updateHeader();
 
@@ -490,22 +494,18 @@ void FileVMatrix::flush()
 //////////////////
 void FileVMatrix::updateHeader() {
     char header[DATAFILE_HEADERLENGTH];
-#ifdef USEFLOAT
+    string real = "DOUBLE";
+    if(file_is_float)
+        real = "FLOAT";
+
 #ifdef LITTLEENDIAN
-    sprintf(header,"MATRIX %d %d FLOAT LITTLE_ENDIAN", length_, width_);
+    sprintf(header,"MATRIX %d %d %s LITTLE_ENDIAN", length_, width_, real.c_str());
 #endif
 #ifdef BIGENDIAN
-    sprintf(header,"MATRIX %d %d FLOAT BIG_ENDIAN", length_, width_);
+    sprintf(header,"MATRIX %d %d %s BIG_ENDIAN", length_, width_, real.c_str());
 #endif
-#endif
-#ifdef USEDOUBLE
-#ifdef LITTLEENDIAN
-    sprintf(header,"MATRIX %d %d DOUBLE LITTLE_ENDIAN", length_, width_);
-#endif
-#ifdef BIGENDIAN
-    sprintf(header,"MATRIX %d %d DOUBLE BIG_ENDIAN", length_, width_);
-#endif
-#endif
+
+
     int pos = strlen(header);
     for(; pos<DATAFILE_HEADERLENGTH; pos++)
     {

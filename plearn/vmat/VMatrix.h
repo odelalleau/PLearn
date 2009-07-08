@@ -323,7 +323,8 @@ public:
     virtual void save(const PPath& filename) const;
 
     /// Save the VMatrix in PMat format
-    virtual void savePMAT(const PPath& pmatfile) const;
+    virtual void savePMAT(const PPath& pmatfile,
+                          const bool force_float=false) const;
 
     /// Save the VMatrix in DMat format
     virtual void saveDMAT(const PPath& dmatdir) const;

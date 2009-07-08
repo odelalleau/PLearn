@@ -2019,7 +2019,7 @@ void VMatrix::save(const PPath& filename) const
 //////////////
 // savePMAT //
 //////////////
-void VMatrix::savePMAT(const PPath& pmatfile) const
+void VMatrix::savePMAT(const PPath& pmatfile, const bool force_float) const
 {
     if (width() == -1)
         PLERROR("In VMat::save - Saving in a pmat file is only possible for constant width VMats (where width()!=-1)");
@@ -2028,7 +2028,7 @@ void VMatrix::savePMAT(const PPath& pmatfile) const
     PPath pmatfiletmp=pmatfile+".tmp";
 
     {        
-    FileVMatrix m(pmatfiletmp,nsamples,width());
+    FileVMatrix m(pmatfiletmp,nsamples,width(),force_float);
     m.setMetaInfoFrom(this);
     // m.setFieldInfos(getFieldInfos());
     // m.copySizesFrom(this);
