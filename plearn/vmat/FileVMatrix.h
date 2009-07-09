@@ -87,7 +87,7 @@ public:
     FileVMatrix();
     FileVMatrix(const PPath& filename, bool writable_=false); //!<  opens an existing file
     FileVMatrix(const PPath& filename, int the_length, int the_width,
-                bool force_float=false); //!<  create a new matrix file
+                bool force_float=false, bool call_build_ = true); //!<  create a new matrix file
     FileVMatrix(const PPath& filename, int the_length, const TVec<string>& fieldnames); //!<  create a new matrix file
 
 protected:
@@ -122,6 +122,7 @@ public:
     //! Destructor.
     virtual ~FileVMatrix();
 
+    virtual int64_t getSizeOnDisk();
 private:
 
     void build_();

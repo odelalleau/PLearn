@@ -890,6 +890,9 @@ public:
     /// dataset)
     bool isSFIFDirect(int col, string ext);
     bool isSFIFDirect(string fieldname, string ext);
+
+    // return the size on the disk. If the sub class don't implement it return -1. 
+    virtual int64_t getSizeOnDisk(){return -1;}
 };
 
 DECLARE_OBJECT_PTR(VMatrix);

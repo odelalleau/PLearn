@@ -78,7 +78,7 @@ FileVMatrix::FileVMatrix(const PPath& filename, bool writable_):
 }
 
 FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width,
-                         bool force_float):
+                         bool force_float, bool call_build_):
     inherited       (the_length, the_width, true),
     filename_       (filename.absolute()),
     f               (0),
@@ -87,7 +87,8 @@ FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width,
 {
     remove_when_done = track_ref = -1;
     writable = true;
-    build_();
+    if(call_build_)
+        build_();
 }
 
 FileVMatrix::FileVMatrix(const PPath& filename, int the_length,
@@ -533,6 +534,11 @@ void FileVMatrix::openfile(const PPath& path, const char *mode,
         f = fopen(path.absolute().c_str(), mode);
 #endif
 
+}
+
+
+int64_t FileVMatrix::getSizeOnDisk(){
+    return DATAFILE_HEADERLENGTH + width_*length_*(file_is_float ? 4 : 8);
 }
 } // end of namespace PLearn
 
