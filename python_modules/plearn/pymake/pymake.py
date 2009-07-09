@@ -3015,7 +3015,10 @@ def main( args ):
         if verbose>2:
             print '*** Running pymake on '+os.path.basename(target)+' using configuration file: ' + configpath
         if verbose>1:
-            print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(lambda o: '-'+o if o else '', options))
+            def f(o):
+                if o: return '-'+o
+                else: return ''
+            print '*** Running pymake on '+os.path.basename(target)+' using options: ' + string.join(map(f, options))
             print '++++ Computing dependencies of '+target
         get_ccfiles_to_compile_and_link(target, ccfiles_to_compile, ccfiles_to_link, executables_to_link, linkname)
         if verbose>1:
