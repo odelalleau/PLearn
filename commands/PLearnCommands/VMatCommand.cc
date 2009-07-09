@@ -42,6 +42,8 @@
 #include "VMatCommand.h"
 #include <plearn/db/getDataSet.h>
 #include <plearn/base/lexical_cast.h>
+#include <plearn/vmat/FileVMatrix.h>
+#include <plearn/base/plerror.h>
 
 namespace PLearn {
 using namespace std;
@@ -133,6 +135,8 @@ VMatCommand::VMatCommand():
         "       Kolmogorov-Smirnov 2 samples statistic\n\n"
         "   or: vmat mtime <dataset>\n"
         "       Print the mtime of a dataset\n"
+        "   or: vmat pmat_float_save <dataset>...\n"
+        "       Print the number of byte saved if we transform the mat to pmat in float format and the maximum différence and maximum relative différence in value."
         "<dataset> is a parameter understandable by getDataSet: \n"
 
         + getDataSetHelp()
@@ -165,6 +169,40 @@ void VMatCommand::run(const vector<string>& args)
         for (size_t i = 1; i < args.size(); i++)
             new_args[i - 1] = args[i];
         PLearnCommandRegistry::run("vmat_view", new_args);
+    }
+    else if (command == "pmat_float_save")
+    {
+#ifdef USEFLOAT
+        PLERROR("vmat pmat_float_save don't work correctly when compiled in float.");
+#endif
+        PLCHECK(args.size()>1);
+        for(int f=1;f<args.size();f++){
+            string dataspec = args[f];
+            VMat vm = getDataSet(dataspec);
+            int64_t orig_size = vm->getSizeOnDisk();
+
+            if(orig_size==-1)
+                cout<<"-1 -1 -1"<<endl;
+            else{
+                FileVMatrix n = FileVMatrix(dataspec+"dummy",vm.length(),vm.width(),true,false);
+                int64_t new_size = n.getSizeOnDisk();
+                Vec v(vm->width());
+                double max_diff=0;
+                double max_rel_diff=0;
+                for(int i=0;i<vm->length();i++){
+                    vm->getRow(i,v);
+                    for(int j=0;j<vm->width();j++){
+                        double diff = v[j]-float(v[j]);
+                        if(max_diff<diff)
+                            max_diff=diff;
+                        double rel_diff = diff/v[j];
+                        if(max_rel_diff<rel_diff)
+                            max_rel_diff=rel_diff;
+                    }
+                }
+                cout << orig_size-new_size <<" "<< max_diff <<" "<<max_rel_diff<<endl;
+            }
+        }
     }
     else
     {

@@ -82,6 +82,7 @@ FileVMatrix::FileVMatrix(const PPath& filename, int the_length, int the_width,
     inherited       (the_length, the_width, true),
     filename_       (filename.absolute()),
     f               (0),
+    file_is_float   (force_float),
     force_float     (force_float),
     build_new_file  (true)
 {
