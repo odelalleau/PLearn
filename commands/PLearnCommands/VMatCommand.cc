@@ -44,6 +44,7 @@
 #include <plearn/base/lexical_cast.h>
 #include <plearn/vmat/FileVMatrix.h>
 #include <plearn/base/plerror.h>
+#include <plearn/io/fileutils.h>
 
 namespace PLearn {
 using namespace std;
@@ -76,6 +77,7 @@ VMatCommand::VMatCommand():
         "   or: vmat convert <source> <destination> [--cols=col1,col2,col3,...] [--mat_to_mem] [--save_vmat] [--force_float]\n"
         "       To convert any dataset into a .amat, .pmat, .dmat, .vmat, .csv or .arff format. \n"
         "       The extension of the destination is used to determine the format you want. \n"
+        "       WARNING: In dmat format, all double are currently casted to float!\n"
         "       If the option --cols is specified, it requests to keep only the given columns\n"
         "       (no space between the commas and the columns); columns can be given either as a\n"
         "       number (zero-based) or a column name (string).  You can also specify a range,\n"
@@ -176,8 +178,13 @@ void VMatCommand::run(const vector<string>& args)
         PLERROR("vmat pmat_float_save don't work correctly when compiled in float.");
 #endif
         PLCHECK(args.size()>1);
-        for(int f=1;f<args.size();f++){
-            string dataspec = args[f];
+        for(uint f=1;f<args.size();f++){
+            PPath dataspec = args[f];
+            if(!isfile(dataspec)){
+                PLWARNING("%s is not a file!",dataspec.c_str());
+                continue;
+            }
+                
             VMat vm = getDataSet(dataspec);
             int64_t orig_size = vm->getSizeOnDisk();
 
