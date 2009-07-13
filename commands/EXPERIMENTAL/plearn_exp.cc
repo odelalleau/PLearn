@@ -356,7 +356,9 @@
 // ***   New EXPERIMENTAL stuff
 
 #include <plearn/var/EXPERIMENTAL/SumVarianceOfLinearTransformedBernoullis.h>
+#include <plearn/var/EXPERIMENTAL/SumVarianceOfLinearTransformedCategoricals.h>
 #include <plearn/var/EXPERIMENTAL/SumEntropyOfBernoullis.h>
+#include <plearn/var/EXPERIMENTAL/SumEntropyOfCategoricals.h>
 #include <plearn/var/EXPERIMENTAL/LinearCombinationOfScalarVariables.h>
 #include <plearn/var/EXPERIMENTAL/SaltPepperNoiseVariable.h>
 
