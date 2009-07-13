@@ -717,6 +717,7 @@ void AdaBoost::train()
             voting_weights.push_back(1);
             sum_voting_weights = 1;
             found_zero_error_weak_learner = true;
+            stage++;
             break;
         }
 
@@ -758,9 +759,27 @@ void AdaBoost::test(VMat testset, PP<VecStatsCollector> test_stats,
         inherited::test(testset, test_stats, testoutputs, testcosts);
         saved_testset.append(testset);
         saved_testoutputs.append(PLearn::deepCopy(testoutputs));
-        PLCHECK(weak_learners.length()==stage);
+        PLCHECK(weak_learners.length()==stage || found_zero_error_weak_learner);
+        cout << weak_learners.length()<<" "<<stage<<endl;;
         saved_last_test_stages.append(stage);
         Profiler::pl_profile_end("AdaBoost::test() first" );
+    }else if(found_zero_error_weak_learner && saved_last_test_stages.last()==stage){
+        Vec input;
+        Vec output(outputsize());
+        Vec target;
+        Vec costs(nTestCosts());
+        real weight;
+        VMat old_outputs=saved_testoutputs[index];
+        PLCHECK(old_outputs->width()==testoutputs->width());
+        PLCHECK(old_outputs->length()==testset->length());
+        for(int row=0;row<testset.length();row++){
+            output=old_outputs(row);
+            testset.getExample(row, input, target, weight);
+            computeCostsFromOutputs(input,output,target,costs);
+            if(testoutputs)testoutputs->putOrAppendRow(row,output);
+            if(testcosts)testcosts->putOrAppendRow(row,costs);
+            if(test_stats)test_stats->update(costs,weight);
+        }
     }else{
         Profiler::pl_profile_start("AdaBoost::test() seconds" );
         PLCHECK(weak_learners.size()>1);
