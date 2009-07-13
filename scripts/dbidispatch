@@ -510,30 +510,45 @@ if dbi_param.has_key("file"):
 elif dbi_param.get("restart",False):
     assert launch_cmd=="Condor"
     cmds=[]
-#    p1_=Popen('condor_q -l -const "JobStatus!=4" '+args(command_argv, shell=True, stdout=PIPE)
-#TODO put condor_history outside the loop as this take much time the we have a not too small history.
+    #We accept to start jobs in the queue only if they are completed
+    p=Popen('condor_q -l -const "JobStatus!=4" '+" ".join(command_argv),
+             shell=True, stdout=PIPE)
+    p.wait();
+    lines=p.stdout.readlines()
+    for l in lines:
+        if l.startswith("Arguments = "):
+            print "We don't accept to restart jobs in the queue that are not completed:", arg
+            sys.exit(1)
+
+    #get all jobs in the queue that are completed.
+    p=Popen('condor_q -l -const "JobStatus==4" '+" ".join(command_argv),
+             shell=True, stdout=PIPE)
+    p.wait()
+    for l in p.stdout.readlines():
+        if l.startswith("Arguments = "):
+            cmd=l[13:-2]
+            cmds.append(cmd.replace("'",""))
+
     for arg in command_argv:
-        #We accept to start jobs in the queue if they are completed
-        p1=Popen('condor_q -l -const "JobStatus!=4" '+arg, shell=True, stdout=PIPE)
-        p2=Popen("condor_history -l "+arg, shell=True, stdout=PIPE)
-        p3=Popen('condor_q -l -const "JobStatus==4" '+arg, shell=True, stdout=PIPE)
-        p1.wait();p2.wait();p3.wait()
-        lines=p1.stdout.readlines()
-        for l in lines:
-            if l.startswith("Arguments = "):
-                print "We don't accept to restart jobs in the queue that are not completed:", arg
-                sys.exit(1)
-        print
-        lines=p2.stdout.readlines()
-        lines+=p3.stdout.readlines()
+        #condor_history don't accept multiple argument! This is the bottleneck.
+        #We need to modif condor_history to let it accept multiple parameter!
+        p=Popen("condor_history -l "+arg, shell=True, stdout=PIPE)
+        p.wait()
+        lines=p.stdout.readlines()
         for l in lines:
             if l.startswith("Arguments = "):
                 cmd=l[13:-2]
                 cmds.append(cmd.replace("'",""))
     commands=cmds
     if len(commands)<1:
-         raise Exception("Their is no commands selected to be restarted!")
+        raise Exception("Their is no commands selected to be restarted!")
+    if len(commands)<len(command_argv):
+        raise Exception("Their is a bad command number in '%s'!"%command_argv)
+    if all([x.find(".")>=0 for x in command_argv]) and len(commands)!=len(command_argv):
+        raise Exception("Their is a bad command number in '%s'!"%command_argv)
+        
     choise_args=[]
+    del p, lines, cmds
 else:
     (commands,choise_args)=generate_commands(command_argv)
 
