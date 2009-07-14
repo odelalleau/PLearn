@@ -2031,13 +2031,13 @@ void VMatrix::savePMAT(const PPath& pmatfile, bool force_float,
         PLERROR("In VMat::save - Saving in a pmat file is only possible for constant width VMats (where width()!=-1)");
 
     if(force_float && auto_float)
-        PLERROR("force_float an auto_float are incompatible option");
+        PLERROR("VMatrix::savePMAT() - force_float an auto_float are incompatible option");
 
     int nsamples = length();
     PPath pmatfiletmp=pmatfile+".tmp";
     if(auto_float){
 #ifdef USEFLOAT
-        PLERROR("VMatrix::savePMAT auto_float can't reliably select  float or double when compiled in float. Compile it in double.");
+        PLERROR("VMatrix::savePMAT() - auto_float can't reliably select  float or double when compiled in float. Compile it in double.");
 #endif
         Vec v(width());
         bool found_not_equal=false;
