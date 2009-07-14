@@ -657,7 +657,7 @@ int vmatmain(int argc, char** argv)
     {
         if(argc<4)
             PLERROR("Usage: vmat convert <source> <destination> "
-                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR] [--force_float]");
+                    "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR] [--force_float] [--auto_float]");
 
         string source = argv[2];
         string destination = argv[3];
@@ -691,6 +691,8 @@ int vmatmain(int argc, char** argv)
          *           :: the destination  file or when the destination file is missing
          *     --force_float
          *           :: if the destination is a pmat, we force the pmat file to be in float format
+         *     --auto_float
+         *           :: if the destination is a pmat, we will store the data in float format if this don't loose any precision compared to double format.
          */
         TVec<string> columns;
         TVec<string> date_columns;
@@ -701,6 +703,7 @@ int vmatmain(int argc, char** argv)
         bool save_vmat = false;
         bool update = false;
         bool force_float = false;
+        bool auto_float = false;
 
         string ext = extract_extension(destination);
 
@@ -736,11 +739,13 @@ int vmatmain(int argc, char** argv)
             else if (curopt == "--force_float"){
                 PLCHECK(ext==".pmat");
                 force_float = true;
+            }else if (curopt == "--auto_float"){
+                PLCHECK(ext==".pmat");
+                auto_float = true;
             }else
                 PLWARNING("VMat convert: unrecognized option '%s'; ignoring it...",
                           curopt.c_str());
         }
-
         VMat vm = getVMat(source, indexf);
 
         // If columns specified, select them.  Note: SelectColumnsVMatrix is very
@@ -759,7 +764,7 @@ int vmatmain(int argc, char** argv)
             // Save strings as strings so they are not lost.
             vm->saveAMAT(destination, true, false, true);
         else if(ext==".pmat")
-            vm->savePMAT(destination, force_float);
+            vm->savePMAT(destination, force_float, auto_float);
         else if(ext==".dmat")
             vm->saveDMAT(destination);
         else if(ext == ".csv")

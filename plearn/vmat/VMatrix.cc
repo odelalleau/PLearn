@@ -2024,15 +2024,39 @@ void VMatrix::save(const PPath& filename) const
 //////////////
 // savePMAT //
 //////////////
-void VMatrix::savePMAT(const PPath& pmatfile, const bool force_float) const
+void VMatrix::savePMAT(const PPath& pmatfile, bool force_float, 
+                       bool auto_float) const
 {
     if (width() == -1)
         PLERROR("In VMat::save - Saving in a pmat file is only possible for constant width VMats (where width()!=-1)");
 
+    if(force_float && auto_float)
+        PLERROR("force_float an auto_float are incompatible option");
+
     int nsamples = length();
     PPath pmatfiletmp=pmatfile+".tmp";
-
-    {        
+    if(auto_float){
+#ifdef USEFLOAT
+        PLERROR("VMatrix::savePMAT auto_float can't reliably select  float or double when compiled in float. Compile it in double.");
+#endif
+        Vec v(width());
+        bool found_not_equal=false;
+        for(int i=0;i<length();i++){
+            getRow(i,v);
+            for(int j=0;j<width();j++){
+                if( ((double)((float)(v[j])))!=v[j] ){
+                    found_not_equal=true;break;
+                }
+            }
+        }
+        if(!found_not_equal){
+            force_float=true;
+            pout<<"We will store the result matrix in FLOAT format."<<endl;
+        }
+        else
+            pout<<"We will store the result matrix in DOUBLE format."<<endl;
+    }
+    {
     FileVMatrix m(pmatfiletmp,nsamples,width(),force_float);
     m.setMetaInfoFrom(this);
     // m.setFieldInfos(getFieldInfos());

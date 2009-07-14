@@ -324,7 +324,8 @@ public:
 
     /// Save the VMatrix in PMat format
     virtual void savePMAT(const PPath& pmatfile,
-                          const bool force_float=false) const;
+                          bool force_float=false,
+                          bool auto_float=false) const;
     virtual void remote_savePMAT(const PPath& pmatfile) const{savePMAT(pmatfile,false);}
     virtual void remote_savePMAT_float(const PPath& pmatfile) const{savePMAT(pmatfile,true);}
 
