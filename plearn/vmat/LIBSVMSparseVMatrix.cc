@@ -66,6 +66,13 @@ LIBSVMSparseVMatrix::LIBSVMSparseVMatrix(): use_coarse_representation(false)
 {
 }
 
+LIBSVMSparseVMatrix::LIBSVMSparseVMatrix(PPath filename, bool use_coarse_representation):
+    libsvm_file(filename),
+    use_coarse_representation(use_coarse_representation)
+{
+    build();
+}
+
 void LIBSVMSparseVMatrix::getNewRow(int i, const Vec& v) const
 {
     if( !use_coarse_representation )
@@ -83,7 +90,7 @@ void LIBSVMSparseVMatrix::declareOptions(OptionList& ol)
 {
     declareOption(ol, "class_strings", &LIBSVMSparseVMatrix::class_strings,
                   OptionBase::buildoption,
-                  "Strings associated to the different classes.\n");
+                  "Strings associated to the different classes. If not present we suppose classes are int.\n");
 
     declareOption(ol, "libsvm_file", &LIBSVMSparseVMatrix::libsvm_file,
                   OptionBase::buildoption,
@@ -116,6 +123,9 @@ void LIBSVMSparseVMatrix::declareOptions(OptionList& ol)
 void LIBSVMSparseVMatrix::build_()
 {
 
+    if(libsvm_file.isEmpty())
+        return;
+
     // Read data
     PStream libsvm_stream = openFile(libsvm_file, PStream::raw_ascii);
     updateMtime(libsvm_file);
@@ -140,10 +150,14 @@ void LIBSVMSparseVMatrix::build_()
         
         // Get target
         target_index = class_strings.find(tokens[0]);
-        if( target_index < 0)
-            PLERROR("In LIBSVMSparseVMatrix::build_(): target %s unknown",
-                    tokens[0].c_str());
-        
+        if( target_index < 0){
+            double d;
+            if(pl_isnumber(tokens[0],&d) && ((double)((int)d))==d)
+                target_index=(int)d;
+            else
+                PLERROR("In LIBSVMSparseVMatrix::build_(): target %s unknown and not an int",
+                        tokens[0].c_str());
+        }
         if( (tokens.size()-1)%2 != 0 )
             PLERROR("In LIBSVMSparseVMatrix::build_(): line %s has incompatible "
                     "format", line.c_str()); 
@@ -233,6 +247,12 @@ void LIBSVMSparseVMatrix::getExtra(int i, Vec& extra)
         extra << libsvm_extra_data[i];
     }
 }
+
+VMatrixExtensionRegistrar* LIBSVMSparseVMatrix::extension_registrar =
+    new VMatrixExtensionRegistrar(
+        "libsvm",
+        &LIBSVMSparseVMatrix::instantiateFromPPath,
+        "libsvm format(good for sparce input).");
 
 } // end of namespace PLearn
 

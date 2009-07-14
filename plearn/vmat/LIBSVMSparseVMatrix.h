@@ -41,6 +41,8 @@
 #define LIBSVMSparseVMatrix_INC
 
 #include <plearn/vmat/RowBufferedVMatrix.h>
+#include <plearn/db/getDataSet.h>
+#include <plearn/vmat/VMat.h>
 
 namespace PLearn {
 
@@ -50,6 +52,7 @@ namespace PLearn {
 class LIBSVMSparseVMatrix : public RowBufferedVMatrix
 {
     typedef RowBufferedVMatrix inherited;
+    static VMatrixExtensionRegistrar* extension_registrar;
 
 public:
     //#####  Public Build Options  ############################################
@@ -78,6 +81,7 @@ public:
 
     //! Default constructor
     LIBSVMSparseVMatrix();
+    LIBSVMSparseVMatrix(PPath filename, bool use_coarse_representation);
 
     //#####  PLearn::Object Protocol  #########################################
 
@@ -87,8 +91,13 @@ public:
     // Simply calls inherited::build() then build_()
     virtual void build();
 
+    static VMat instantiateFromPPath(const PPath& filename)
+    {
+        //By default use normal representation
+        return VMat(new LIBSVMSparseVMatrix(filename, true));
+    }
+
     //! Transforms a shallow copy into a deep copy
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void makeDeepCopyFromShallowCopy(CopiesMap& copies);
 
     virtual void getExample(int i, Vec& input, Vec& target, real& weight);
@@ -106,19 +115,16 @@ protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
-    // (PLEASE IMPLEMENT IN .cc)
     static void declareOptions(OptionList& ol);
 
     //! Fill the vector 'v' with the content of the i-th row.
     //! 'v' is assumed to be the right size.
-    // (PLEASE IMPLEMENT IN .cc)
     virtual void getNewRow(int i, const Vec& v) const;
 
 private:
     //#####  Private Member Functions  ########################################
 
     //! This does the actual building.
-    // (PLEASE IMPLEMENT IN .cc)
     void build_();
 
 private:
