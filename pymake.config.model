@@ -893,7 +893,7 @@ pymakeLinkOption( name = 'scs',
 
 pymakeLinkOption( name = 'goto',
               description = 'linking using GOTO lib for BLAS',
-              linkeroptions = '-L' + libdir +'goto -lgoto -lgfortran'
+              linkeroptions = '-L' + libdir +'goto -lgoto'
               )
 
 tmp = getOptions(options_choices, optionargs[:])
