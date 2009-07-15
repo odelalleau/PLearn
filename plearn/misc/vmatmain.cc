@@ -796,28 +796,32 @@ int vmatmain(int argc, char** argv)
     }
     else if(command=="info")
     {
-        string dbname = argv[2];
-        VMat vm = getVMat(dbname, indexf);
-        pout<<vm.length()<<" x "<<vm.width()<<endl;
-        pout << "inputsize: " << vm->inputsize() << endl;
-        pout << "targetsize: " << vm->targetsize() << endl;
-        pout << "weightsize: " << vm->weightsize() << endl;
-        pout << "extrasize: " << vm->extrasize() << endl;
-        VVMatrix * vvm = dynamic_cast<VVMatrix*>((VMatrix*)vm);
-        if(vvm!=NULL)
-        {
-            pout<< "Last modification (including dependencies of .vmat): "
-                << int32_t(vvm->getMtime()) << endl;
-            bool ispre=vvm->isPrecomputedAndUpToDate();
-            pout<<"precomputed && uptodate : ";
-            if(ispre)
+        for(int i=2;i<argc;i++){
+            string dbname = argv[i];
+            VMat vm = getVMat(dbname, indexf);
+            if(argc>3)
+                pout<<dbname<<endl;
+            pout<<vm.length()<<" x "<<vm.width()<<endl;
+            pout << "inputsize: " << vm->inputsize() << endl;
+            pout << "targetsize: " << vm->targetsize() << endl;
+            pout << "weightsize: " << vm->weightsize() << endl;
+            pout << "extrasize: " << vm->extrasize() << endl;
+            VVMatrix * vvm = dynamic_cast<VVMatrix*>((VMatrix*)vm);
+            if(vvm!=NULL)
             {
-                pout <<"yes : " << vvm->getPrecomputedDataName()<<endl;
-                pout<< "timestamp of precom. data : "
-                    << int32_t(getDataSetDate(vvm->getPrecomputedDataName()))
-                    << endl;
+                pout<< "Last modification (including dependencies of .vmat): "
+                    << int32_t(vvm->getMtime()) << endl;
+                bool ispre=vvm->isPrecomputedAndUpToDate();
+                pout<<"precomputed && uptodate : ";
+                if(ispre)
+                {
+                    pout <<"yes : " << vvm->getPrecomputedDataName()<<endl;
+                    pout<< "timestamp of precom. data : "
+                        <<int32_t(getDataSetDate(vvm->getPrecomputedDataName()))
+                        << endl;
+                }
+                else pout <<"no"<<endl;
             }
-            else pout <<"no"<<endl;
         }
     }
     else if(command=="fields")

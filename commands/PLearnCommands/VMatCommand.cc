@@ -56,7 +56,7 @@ VMatCommand::VMatCommand():
     PLearnCommand(
         "vmat",
         "Examination and manipulation of vmat datasets",
-        "Usage: vmat info <dataset> \n"
+        "Usage: vmat info <dataset>... \n"
         "       Will info about dataset (size, etc..)\n"
         "   or: vmat fields <dataset> [name_only] [transpose] \n"
         "       To list the fields with their names (if 'name_only' is specified, the indexes won't be displayed,\n"
