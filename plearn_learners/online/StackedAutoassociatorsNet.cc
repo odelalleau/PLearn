@@ -93,6 +93,8 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     // random_gen will be initialized in PLearner::build_()
     random_gen = new PRandom();
     nstages = 0;
+    //To have faster test time by default. That don't change the result.
+    test_minibatch_size = 128;
 }
 
 void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
