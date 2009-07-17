@@ -94,7 +94,8 @@ StackedAutoassociatorsNet::StackedAutoassociatorsNet() :
     random_gen = new PRandom();
     nstages = 0;
     //To have faster test time by default. That don't change the result.
-    test_minibatch_size = 128;
+    if(test_minibatch_size==1)
+        test_minibatch_size = 128;
 }
 
 void StackedAutoassociatorsNet::declareOptions(OptionList& ol)
