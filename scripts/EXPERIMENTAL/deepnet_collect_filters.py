@@ -17,8 +17,9 @@ from plearn.plotting.netplot import *
 ################
 
 def print_usage_and_exit():
-    print "Usage : deepnet_collect_filters.py dirname"
-    print "  will collect ad save .png files of filters found in any *learner*.psave in specified directory and subdirectories"
+    print "Usage : deepnet_collect_filters.py dirname [dataset.vmat]"
+    print "  will collect and save .png files of filters found in any *learner*.psave in specified directory and subdirectories"
+    print "  if a dataset is specfied, the first layer activation statistics for that set will be saved in a ..._layer1_actstats.pmat"
     sys.exit()
 
 #print "Press Enter to continue"
@@ -32,7 +33,13 @@ def guess_image_dimensions(n):
     return imgwidth,imgheight
 
 
-def collectFilters(basedir):
+def collectFilters(basedir, datasetspec):
+
+    if datasetspec is None:
+        dataset = None
+    else:
+        dataset = serv.new('AutoVMatrix(specification ="'+datasetspec+'");')
+
     for dirpath, dirs, files in os.walk(basedir):
         for filename in files:
             if filename.endswith(".psave") and "learner" in filename:
@@ -50,6 +57,10 @@ def collectFilters(basedir):
                         print "   --> "+imgfilename
                         saveRowsAsImage(os.path.join(dirpath,imgfilename), matrix,
                                         imgwidth, imgheight, 10, 20)
+                if dataset is not None:
+                    print "   Now computing first layer activation statistics"
+                    actpath = os.path.join(dirpath,filename[:-6]+"_layer1_actstats.pmat")
+                    learner.computeAndSaveLayerActivationStats(dataset,1,actpath)
                 learner.delete()
 
 ############
@@ -63,5 +74,9 @@ server_command = "myplearn server"
 serv = launch_plearn_server(command = server_command)
 
 basedir = sys.argv[1]
-collectFilters(basedir)
+if len(sys.argv)<3:
+    datasetspec = None
+else:
+    datasetspec = sys.argv[2]
+collectFilters(basedir, datasetspec)
     

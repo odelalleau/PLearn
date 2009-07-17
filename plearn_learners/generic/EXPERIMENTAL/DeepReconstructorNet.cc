@@ -233,6 +233,15 @@ void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
                    (BodyDoc(""),
                     ArgDoc("layer", "no of the layer"),
                     RetDoc("")));
+
+    declareMethod(rmm,
+                   "computeAndSaveLayerActivationStats",
+                   &DeepReconstructorNet::computeAndSaveLayerActivationStats,
+                   (BodyDoc(""),
+                    ArgDoc("dataset", "the data vmatrix to compute activaitons on"),
+                    ArgDoc("which_layer", "the layer (1 for first hidden layer)"),
+                    ArgDoc("pmatfilepath", ".pmat file where to save computed stats")));
+
 }
 
 void DeepReconstructorNet::build_()
@@ -824,6 +833,44 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     }
 }
 
+
+void DeepReconstructorNet::computeAndSaveLayerActivationStats(VMat dataset, int which_layer, const string& pmatfilepath)
+{
+    int len = dataset.length();
+    Var layer = layers[which_layer];
+    int layersize = layer->size();
+    Mat actstats(1+layersize,5);
+    actstats.fill(0.);
+
+    Vec input;
+    Vec target;
+    real weight;
+    Vec output;
+
+    for(int i=0; i<len; i++)
+    {
+        dataset.getExample(i, input, target, weight);
+        computeOutput(input, output);
+        Vec activations = layer->value;
+        for(int k=0; k<layersize; k++)
+        {
+            real act = activations[k];
+            actstats(k+1,0) += act;
+            if(act<0.25)
+                actstats(k+1,1)++;
+            else if(act<0.50)
+                actstats(k+1,2)++;
+            else if(act<0.75)
+                actstats(k+1,3)++;                
+            else
+                actstats(k+1,4)++;
+        }        
+    }
+    actstats *= 1./len;
+    Vec meanvec = actstats(0);
+    columnMean(actstats.subMat(1,0,layersize,5), meanvec);
+    savePMat(pmatfilepath, actstats);
+}
 
 void DeepReconstructorNet::computeOutput(const Vec& input, Vec& output) const
 {

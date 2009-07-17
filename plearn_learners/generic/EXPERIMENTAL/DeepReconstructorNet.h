@@ -206,8 +206,7 @@ public:
     Mat fpropOneLayer(int layer);
     Mat reconstructOneLayer(int layer);
        
-
-    
+    void computeAndSaveLayerActivationStats(VMat dataset, int which_layer, const string& pmatfilepath);
 
     // *** SUBCLASS WRITING: ***
     // While in general not necessary, in case of particular needs
