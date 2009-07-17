@@ -59,8 +59,9 @@ def collectFilters(basedir, datasetspec):
                                         imgwidth, imgheight, 10, 20)
                 if dataset is not None:
                     print "   Now computing first layer activation statistics"
-                    actpath = os.path.join(dirpath,filename[:-6]+"_layer1_actstats.pmat")
-                    learner.computeAndSaveLayerActivationStats(dataset,1,actpath)
+                    pmatfname = filename[:-6]+"_layer1_actstats.pmat"
+                    learner.computeAndSaveLayerActivationStats(dataset,1,os.path.join(dirpath,pmatfname))
+                    print "   --> "+pmatfname
                 learner.delete()
 
 ############
@@ -70,7 +71,7 @@ def collectFilters(basedir, datasetspec):
 if len(sys.argv)<2:
     print_usage_and_exit()
 
-server_command = "myplearn server"
+server_command = "plearn_exp server"
 serv = launch_plearn_server(command = server_command)
 
 basedir = sys.argv[1]

@@ -54,9 +54,9 @@ PLEARN_IMPLEMENT_OBJECT(
     "  this correponds to drawings from independent categorical variables whose probablity parameters are those in P \n"
     "Let W=input2 a (d,d') linear transformation matrix. \n"
     "Let X=H W^t a (l,d) random variable matrix corresponding to applying the transformation. \n"
-    "  i.e. X_i = \sum_j H_ij W^t_j \n" 
+    "  i.e. X_i = sum_j H_ij W^t_j \n" 
     "SumVarianceOfLinearTransformedCategoricals computes the sum of the variances of the elements of X.\n"
-    "i.e. \sum_ij Var[X_ij] \n"
+    "i.e. sum_ij Var[X_ij] \n"
     );
 
 SumVarianceOfLinearTransformedCategoricals::SumVarianceOfLinearTransformedCategoricals()

@@ -839,7 +839,7 @@ void DeepReconstructorNet::computeAndSaveLayerActivationStats(VMat dataset, int 
     int len = dataset.length();
     Var layer = layers[which_layer];
     int layersize = layer->size();
-    Mat actstats(1+layersize,5);
+    Mat actstats(1+layersize,6);
     actstats.fill(0.);
 
     Vec input;
@@ -856,19 +856,20 @@ void DeepReconstructorNet::computeAndSaveLayerActivationStats(VMat dataset, int 
         {
             real act = activations[k];
             actstats(k+1,0) += act;
+            actstats(k+1,1) += act*act;
             if(act<0.25)
-                actstats(k+1,1)++;
-            else if(act<0.50)
                 actstats(k+1,2)++;
+            else if(act<0.50)
+                actstats(k+1,3)++;
             else if(act<0.75)
-                actstats(k+1,3)++;                
+                actstats(k+1,4)++;                
             else
-                actstats(k+1,4)++;
+                actstats(k+1,5)++;
         }        
     }
     actstats *= 1./len;
     Vec meanvec = actstats(0);
-    columnMean(actstats.subMat(1,0,layersize,5), meanvec);
+    columnMean(actstats.subMat(1,0,layersize,6), meanvec);
     savePMat(pmatfilepath, actstats);
 }
 
