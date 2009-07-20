@@ -623,7 +623,6 @@ class DBIBqtools(DBIBase):
             os.mkdir(self.tmp_dir)
         self.tmp_dir = os.path.join(self.tmp_dir,os.path.split(self.log_dir)[1])
         print "[DBI] All bqtools file will be in ",self.tmp_dir
-        os.mkdir(self.tmp_dir)
         os.chdir(self.tmp_dir)
 
         if self.long:
