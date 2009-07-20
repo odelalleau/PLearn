@@ -764,6 +764,8 @@ int vmatmain(int argc, char** argv)
         else if(ext==".amat")
             // Save strings as strings so they are not lost.
             vm->saveAMAT(destination, true, false, true);
+        else if(ext==".cmat")
+            vm->saveCMAT(destination);
         else if(ext==".pmat")
             vm->savePMAT(destination, force_float, auto_float);
         else if(ext==".dmat")

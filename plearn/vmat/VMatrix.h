@@ -343,6 +343,8 @@ public:
     virtual void saveAMAT(const PPath& amatfile, bool verbose = true,
                           bool no_header = false, bool save_strings = false) const;
 
+    virtual void saveCMAT(const PPath& filename) const;
+
     /// Return true if the matrix is writable, i.e. if put()-like member
     /// functions can succeed.
     inline bool isWritable() const { return writable; }

@@ -39,6 +39,7 @@
  ******************************************************* */
 
 #include "VMatrix.h"
+#include "CompactFileVMatrix.h"
 #include "DiskVMatrix.h"
 #include "FileVMatrix.h"
 #include "SubVMatrix.h"
@@ -53,6 +54,7 @@
 #include <nspr/prenv.h>
 #include <plearn/math/TMat_maths.h> //!< for dot, powdistance externalProductAcc
 #include <plearn/sys/procinfo.h> //!< for getPid, getUser
+#include <limits>
 
 namespace PLearn {
 using namespace std;
@@ -2154,6 +2156,86 @@ void VMatrix::saveAMAT(const PPath& amatfile, bool verbose, bool no_header, bool
     }
 }
 
+void VMatrix::saveCMAT(const PPath& filename) const
+{
+    PLWARNING("VMatrix::saveCMAT() - NOT FULLY IMPLEMENTED");
+
+    //calculate the datatype needed
+    TVec<StatsCollector> stats = getStats(true);
+    CompactFileVMatrix n = CompactFileVMatrix();
+    int max_bits=0;
+    for(int i=0;i<stats.size();i++){
+        StatsCollector stat = stats[i];
+        if(! stat.isinteger())
+            PLERROR("VMatrix::saveCMAT() currently the source need to contain only integer.");
+        if(stat.min()>=0){
+            int bits=ceil(sqrt(stat.max()));
+            if(max_bits<bits)max_bits=bits;
+        }else{
+            PLERROR("not implemented to store negatif number.");
+        }
+        
+    }
+    //example 12000000 u:784:1:8 u:1:1:8
+    //write the header
+     if(max_bits>8) PLERROR("VMatrix::saveCMAT() currently we convert to cmat with a maximum of 8 bits by fields!");
+    if(max_bits > 1 && max_bits<8){
+        max_bits=8;
+        PLWARNING("VMatrix::saveCMAT() currently when we need less then 8 bits(except for 1), we upgrade to 8 bits.");
+    }
+    if(max_bits==0){
+        PLERROR("VMatrix::saveCMAT() - their was only 0 in the matrix! This is not supported as we don't think this can happen in real case!");
+    }
+    //write the data
+    if(max_bits==8){
+        PStream out = openFile(filename, PStream::raw_ascii, "w");
+        out<<length()<<" u:"<<width()<<":1:"<<max_bits<<endl;
+        Vec v(width());
+        for(int i=0;i<length();i++){
+            getRow(i,v);
+            for(int j=0;j<width();j++){
+                out.put((char)v[j]);
+            }
+        }
+    }else if(max_bits==1){
+        PStream out = openFile(filename, PStream::raw_ascii, "w");
+        int w2=width()%8;
+        int w1=width()-w2;
+        PLCHECK(w2+w1==width());
+        PLCHECK(w1%8==0);
+        PLCHECK(w1>0 && w2>=0);
+        out<<length()<<" u:"<<w1<<":1:"<<max_bits;
+        if(w2!=0)
+            out<<" u:"<<w2<<":1:8";
+        out<<endl;
+        Vec v(width());
+
+        for(int i=0;i<length();i++){
+            getRow(i,v);
+            int j;
+            for(j=0;j<w1;){
+                char c=0;
+                for(int k=0;k<8;j++,k++){
+                    c=c<<1;
+                    c|=((bool)v[j]);
+                }
+                //revert the bits
+                char value=c;
+                value = (value & 0x0f) << 4 | (value & 0xf0) >> 4;
+                value = (value & 0x33) << 2 | (value & 0xcc) >> 2;
+                value = (value & 0x55) << 1 | (value & 0xaa) >> 1;
+                out.put(value);
+            }
+            PLCHECK(width()-j==w2);
+            for(;j<width();j++){
+                out.put((char)v[j]);
+            }
+        }
+    }
+    else
+        PLERROR("VMatrix::saveCMAT() - %d bits are not supported!",max_bits);
+    pout<<"generated the file " <<filename <<endl;
+}
 ///////////////////
 // accumulateXtY //
 ///////////////////
