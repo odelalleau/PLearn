@@ -619,9 +619,9 @@ class DBIBqtools(DBIBase):
             raise DBIError("[DBI] ERROR: The log file(%s) and the log dir(%s) should not have the symbol ','"%(self.log_file,self.log_dir))
 
         # create directory in which all the temp files will be created
+        self.tmp_dir = os.path.join(self.tmp_dir,os.path.split(self.log_dir)[1])
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
-        self.tmp_dir = os.path.join(self.tmp_dir,os.path.split(self.log_dir)[1])
         print "[DBI] All bqtools file will be in ",self.tmp_dir
         os.chdir(self.tmp_dir)
 
