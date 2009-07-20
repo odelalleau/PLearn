@@ -659,10 +659,11 @@ int vmatmain(int argc, char** argv)
             PLERROR("Usage: vmat convert <source> <destination> "
                     "[--mat_to_mem] [--cols=col1,col2,col3,...] [--save_vmat] [--skip-missings] [--precision=N] [--delimiter=CHAR] [--force_float] [--auto_float]");
 
-        string source = argv[2];
-        string destination = argv[3];
+        PPath source = argv[2];
+        PPath destination = argv[3];
         bool mat_to_mem = false;
-
+        if(source==destination)
+            PLERROR("You are overwriting the source. This is not allowed!");
         /**
          * Interpret the following options:
          *
