@@ -43,6 +43,9 @@
 #include <plearn/vmat/ConcatColumnsVMatrix.h>
 #include <plearn/var/ConcatColumnsVariable.h>
 #include <plearn/io/load_and_save.h>
+#include <plearn/io/MatIO.h>
+#include <plearn/math/PRandom.h>
+#include <plearn/math/VecStatsCollector.h>
 
 namespace PLearn {
 using namespace std;
@@ -237,10 +240,28 @@ void DeepReconstructorNet::declareMethods(RemoteMethodMap& rmm)
     declareMethod(rmm,
                    "computeAndSaveLayerActivationStats",
                    &DeepReconstructorNet::computeAndSaveLayerActivationStats,
-                   (BodyDoc(""),
+                   (BodyDoc("computeAndSaveLayerActivationStats will compute statistics (univariate and bivariate)\n"
+                            "of the post-nonlinearity activations of a hidden layer on a given dataset:\n"
+                            "\n"
+                            "  - It will compute a matrix of simple statistics for all units of that layer and \n"
+                            "    save it in filebasename_all_simplestats.pmat \n"
+                            "  - It will also select a subset of the units made of the first nfirstunits units \n"
+                            "    and of notherunits randomly selected units among the others.\n"
+                            "    For this selected subset more extensive statistics are computed and saved:\n"
+                            "      + a VecStatsCollector collecting univariate histograms and bivariate\n"
+                            "        covariance will be saved in filebasename_selected_statscol.psave\n"
+                            "      + a matrix of bivariate histograms will be saved as \n"
+                            "        filebasename_selected_bihist.pmat \n"
+                            "        Row i*nselectedunits+j of that matrix will contain the 5*5 bivariate\n"
+                            "        histogram for the activations of selected_unit_i vs selected_unit_j.\n"
+                            "\n"
+                            "which_layer: 1 means first hidden layer, 2, second hidden layer, etc... \n"),
                     ArgDoc("dataset", "the data vmatrix to compute activaitons on"),
                     ArgDoc("which_layer", "the layer (1 for first hidden layer)"),
-                    ArgDoc("pmatfilepath", ".pmat file where to save computed stats")));
+                    ArgDoc("filebasename", "basename for generated files"),
+                    ArgDoc("nfirstunits", "number of first units to select for extensive stats."),
+                    ArgDoc("notherunits", "number of other units to select for extensive stats.")
+                    ));
 
 }
 
@@ -833,25 +854,84 @@ void DeepReconstructorNet::trainHiddenLayer(int which_input_layer, VMat inputs)
     }
 }
 
+/**
+computeAndSaveLayerActivationStats will compute statistics (univariate and bivariate) 
+of the post-nonlinearity activations of a hidden layer on a given dataset:
 
-void DeepReconstructorNet::computeAndSaveLayerActivationStats(VMat dataset, int which_layer, const string& pmatfilepath)
+- It will compute a matrix of simple statistics for all units of that layer and 
+  save it in filebasename_all_simplestats.pmat
+- It will also select a subset of the units made of the first nfirstunits units 
+  and of notherunits randomly selected units among the others.
+  For this selected subset more extensive statistics are computed and saved:
+    + a VecStatsCollector collecting univariate histograms and bivariate covariance 
+      will be saved in filebasename_selected_statscol.psave
+    + a matrix of bivariate histograms will be saved as 
+      filebasename_selected_bihist.pmat
+      Row i*nselectedunits+j of that matrix will contain the 5*5 bivariate
+      histogram for the activations of selected_unit_i vs selected_unit_j.
+
+which_layer: 1 means first hidden layer, 2, second hidden layer, etc... 
+**/
+
+void DeepReconstructorNet::computeAndSaveLayerActivationStats(VMat dataset, int which_layer, const string& filebasename, int nfirstunits, int notherunits)
 {
     int len = dataset.length();
     Var layer = layers[which_layer];
     int layersize = layer->size();
     Mat actstats(1+layersize,6);
     actstats.fill(0.);
+    TVec<string> actstatsfields(6);
+    actstatsfields[0] = "E[act]";
+    actstatsfields[1] = "E[act^2]";
+    actstatsfields[2] = "[0,.25)";
+    actstatsfields[3] = "[.25,.50)";
+    actstatsfields[4] = "[.50,.75)";
+    actstatsfields[5] = "[.75,1.00]";
 
+    // build the list of indexes of the units for which we want to keep bivariate statistics
+    // we will take the nfirstunits first units, and notherunits at random from the rest.
+    // resulting list of indices will be put in unitindexes.
+    TVec<int> unitindexes(0,nfirstunits-1,1);
+    if(notherunits>0)
+    {
+        TVec<int> randomindexes(notherunits, layersize, 1);
+        PRandom rnd;
+        rnd.shuffleElements(randomindexes);
+        randomindexes = randomindexes.subVec(0,notherunits);
+        unitindexes = concat(unitindexes, randomindexes);
+    }
+    int nselectunits = unitindexes.length();
+    Vec selectedactivations(nselectunits); // will hold the activations of the selected units
+
+    TVec<string> fieldnames(nselectunits);
+    for(int k=0; k<nselectunits; k++)
+        fieldnames[k] = tostring(unitindexes[k]);
+    VecStatsCollector stcol;
+    stcol.maxnvalues = 20;
+    stcol.compute_covariance = true;
+    stcol.setFieldNames(fieldnames);
+    stcol.build();
+
+    const int nbins = 5;
+    // bivariate nbins*nbins histograms will be computed for each of the nselectunits*nselectunits pairs of units
+    Mat bihist(nselectunits*nselectunits, nbins*nbins);
+    bihist.fill(0.);
+    TVec<string> bihistfields(nbins*nbins);
+    for(int k=0; k<nbins*nbins; k++)
+        bihistfields[k] = tostring(1+k/nbins)+","+tostring(1+k%nbins);
+        
     Vec input;
     Vec target;
     real weight;
     Vec output;
 
-    for(int i=0; i<len; i++)
+    for(int t=0; t<len; t++)
     {
-        dataset.getExample(i, input, target, weight);
+        dataset.getExample(t, input, target, weight);
         computeOutput(input, output);
         Vec activations = layer->value;
+        
+        // collect simple univariate stats for all units
         for(int k=0; k<layersize; k++)
         {
             real act = activations[k];
@@ -862,15 +942,56 @@ void DeepReconstructorNet::computeAndSaveLayerActivationStats(VMat dataset, int 
             else if(act<0.50)
                 actstats(k+1,3)++;
             else if(act<0.75)
-                actstats(k+1,4)++;                
+                actstats(k+1,4)++;   
             else
                 actstats(k+1,5)++;
-        }        
+        }
+
+        // collect more extensive stats for selected units
+        for(int k=0; k<nselectunits; k++)
+            selectedactivations[k] = activations[unitindexes[k]];
+
+        stcol.update(selectedactivations);
+
+        // collect bivariate histograms for selected units
+        for(int i=0; i<nselectunits; i++)
+        {
+            real act_i = selectedactivations[i];
+            
+            int binpos_i = int(act_i*nbins);
+            if(binpos_i<0)
+                binpos_i = 0;
+            else if(binpos_i>=nbins)
+                binpos_i = nbins-1;
+
+            for(int j=0; j<nselectunits; j++)
+            {
+                real act_j = selectedactivations[j];
+                int binpos_j = int(act_j*nbins);
+                if(binpos_j<0)
+                    binpos_j = 0;
+                else if(binpos_j>=nbins)
+                    binpos_j = nbins-1;
+                
+                bihist(i*nselectunits+j, nbins*binpos_i+binpos_j)++;
+            }
+        }
     }
+
+    stcol.finalize();
+    PLearn::save(filebasename+"_selected_statscol.psave", stcol);
+
+    bihist *= 1./len;
+    string pmatfilename = filebasename+"_selected_bihist.pmat";
+    savePMat(pmatfilename, bihist);
+    savePMatFieldnames(pmatfilename, bihistfields);
+
     actstats *= 1./len;
     Vec meanvec = actstats(0);
     columnMean(actstats.subMat(1,0,layersize,6), meanvec);
-    savePMat(pmatfilepath, actstats);
+    pmatfilename = filebasename+"_all_simplestats.pmat";
+    savePMat(pmatfilename, actstats);
+    savePMatFieldnames(pmatfilename, actstatsfields);
 }
 
 void DeepReconstructorNet::computeOutput(const Vec& input, Vec& output) const

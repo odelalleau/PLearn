@@ -42,7 +42,7 @@ def collectFilters(basedir, datasetspec):
 
     for dirpath, dirs, files in os.walk(basedir):
         for filename in files:
-            if filename.endswith(".psave") and "learner" in filename:
+            if filename.endswith("learner.psave"):
                 filepath = os.path.join(dirpath,filename)
                 print 
                 print "*** EXTRACTING FILTERS FROM "+filepath
@@ -59,9 +59,9 @@ def collectFilters(basedir, datasetspec):
                                         imgwidth, imgheight, 10, 20)
                 if dataset is not None:
                     print "   Now computing first layer activation statistics"
-                    pmatfname = filename[:-6]+"_layer1_actstats.pmat"
-                    learner.computeAndSaveLayerActivationStats(dataset,1,os.path.join(dirpath,pmatfname))
-                    print "   --> "+pmatfname
+                    basename = filename[:-6]+"_layer1act"
+                    learner.computeAndSaveLayerActivationStats(dataset,1,os.path.join(dirpath,basename), 100, 0)
+                    print "   --> "+basename+"_*"
                 learner.delete()
 
 ############

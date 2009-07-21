@@ -226,9 +226,8 @@ public:
     }
 
     //! Remote version of getMean.
-    Vec remote_getMean() {
-        return getMean();
-    }
+    Vec remote_getMean() 
+    { return getMean(); }
   
     //! Store the empirical mean in the given vec (which is resized)
     void getMean(Vec& mean) const;
@@ -253,6 +252,10 @@ public:
     //! coefficient is not exactly the sum of weights.
     void getCovariance(Mat& covar) const;
     Mat getCovariance() const;
+
+    //! Remote version of getCovariance.
+    Mat remote_getCovariance() 
+    { return getCovariance(); }
   
     //! returns correlation matrix
     Mat getCorrelation() const;

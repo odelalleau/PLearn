@@ -216,6 +216,36 @@ void VecStatsCollector::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("The vector of means for each field.")));
 
     declareMethod(
+        rmm, "getVariance", &VecStatsCollector::getVariance,
+        (BodyDoc("Return the vector of variances of all field..\n"),
+         RetDoc ("The vector of variance for each field.")));
+
+    declareMethod(
+        rmm, "getStdDev", &VecStatsCollector::getStdDev,
+        (BodyDoc("Return the vector of standard deviations of all field..\n"),
+         RetDoc ("The vector of standard deviation for each field.")));
+
+    declareMethod(
+        rmm, "getStdError", &VecStatsCollector::getStdError,
+        (BodyDoc("Return the vector of standard error of all field..\n"),
+         RetDoc ("The vector of standard error for each field.")));
+
+    declareMethod(
+        rmm, "getXtX", &VecStatsCollector::getXtX,
+        (BodyDoc(""),
+         RetDoc ("Return the matrix XtX ")));
+
+    declareMethod(
+        rmm, "getCovariance", &VecStatsCollector::remote_getCovariance,
+        (BodyDoc(""),
+         RetDoc ("Returns the (centered) covariance matrix")));
+    
+    declareMethod(
+        rmm, "getCorrelation", &VecStatsCollector::getCorrelation,
+        (BodyDoc(""),
+         RetDoc ("Returns the correlation matrix")));
+
+    declareMethod(
         rmm, "setFieldNames", &VecStatsCollector::setFieldNames,
         (BodyDoc("Set field names.\n"),
          ArgDoc ("fieldnames", 
