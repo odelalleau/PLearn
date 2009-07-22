@@ -726,7 +726,8 @@ int vmatmain(int argc, char** argv)
                 precision = toint(curopt.substr(12));
             }
             else if (curopt.substr(0,12) == "--delimiter=") {
-                PLCHECK(ext==".cvs");
+                if(ext!=".csv")
+                    PLERROR("Vmat convert: the --delimiter option is supported only with .csv destination file. You have a '%s' extension.",ext.c_str());
                 delimiter = curopt.substr(12);
             }
             else if (curopt == "--convert-date")
