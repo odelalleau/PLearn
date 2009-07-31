@@ -217,7 +217,7 @@ class DBIBase:
         """
         n=task_id-1
         base=self.tasks[n].log_file
-        if self.base_tasks_log_file:
+        if self.base_tasks_log_file and self.base_tasks_log_file[n]:
             base = self.base_tasks_log_file[n]
             base=os.path.join(self.log_dir,base)
             self.check_path(base)
@@ -512,7 +512,7 @@ class DBICluster(DBIBase):
         if self.interruptible:
             command += " --interruptible"
         if self.cpu>0:
-            command += " --cpu "+self.cpu
+            command += " --cpu " + str(self.cpu)
         if self.os:
             command += " --os "+self.os
         command += " --execute '"+ filename + "'"
@@ -686,7 +686,7 @@ class DBIBqtools(DBIBase):
         logfiles_file = open( 'logfiles', 'w' )
         assert len(self.stdouts)==len(self.stderrs)==0
         for task in self.tasks:
-            #-4 as we will happend .err or .out
+            #-4 as we will append .err or .out.
             base=self.get_file_redirection(task.id)[0][:-4]
             self.check_path(base)
             tasks_file.write( ';'.join(task.commands) + '\n' )
