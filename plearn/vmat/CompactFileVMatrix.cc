@@ -232,6 +232,7 @@ void CompactFileVMatrix::build_()
     }
 
     updateMtime(filename_);
+    loadFieldInfos();
 }
 
 

@@ -48,6 +48,7 @@
 #include <plearn/base/lexical_cast.h>
 #include <plearn/base/stringutils.h> //!< For pgetline()
 #include <plearn/io/fileutils.h>     //!< For isfile() mtime()
+#include <plearn/base/tostring.h>     //!< For isfile() mtime()
 #include <plearn/io/load_and_save.h>
 #include <plearn/math/random.h>      //!< For uniform_multinomial_sample()
 #include <plearn/base/RemoteDeclareMethod.h>
@@ -2162,14 +2163,13 @@ void VMatrix::saveCMAT(const PPath& filename) const
 
     //calculate the datatype needed
     TVec<StatsCollector> stats = getStats(true);
-    CompactFileVMatrix n = CompactFileVMatrix();
     int max_bits=0;
     for(int i=0;i<stats.size();i++){
         StatsCollector stat = stats[i];
         if(! stat.isinteger())
             PLERROR("VMatrix::saveCMAT() currently the source need to contain only integer.");
         if(stat.min()>=0){
-            int bits=ceil(sqrt(stat.max()));
+            int bits=(int)ceil(sqrt(stat.max()));
             if(max_bits<bits)max_bits=bits;
         }else{
             PLERROR("not implemented to store negatif number.");
@@ -2234,6 +2234,13 @@ void VMatrix::saveCMAT(const PPath& filename) const
     }
     else
         PLERROR("VMatrix::saveCMAT() - %d bits are not supported!",max_bits);
+
+    CompactFileVMatrix m = CompactFileVMatrix(filename);
+    m.setMetaDataDir(filename + ".metadata");
+    m.setMetaInfoFrom(this);
+    m.saveFieldInfos();
+    m.saveAllStringMappings();
+
     pout<<"generated the file " <<filename <<endl;
 }
 ///////////////////
