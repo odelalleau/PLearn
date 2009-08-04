@@ -449,7 +449,8 @@ class DBICluster(DBIBase):
         self.os=None
         DBIBase.__init__(self, commands, **args)
 
-        self.os = self.os.lower()
+        if self.os:
+            self.os = self.os.lower()
 
         self.pre_tasks=["echo '[DBI] executing on host' $HOSTNAME"]+self.pre_tasks
         self.post_tasks=["echo '[DBI] exit status' $?"]+self.post_tasks
@@ -527,12 +528,13 @@ class DBICluster(DBIBase):
         task.launch_time = time.time()
         task.set_scheduled_time()
 
-        (output,error)=self.get_redirection(*self.get_file_redirection(task.id))
+        (output_file, error_file)=self.get_file_redirection(task.id)
+        (output, error)=self.get_redirection(output_file, error_file)
         task.p = Popen(command, shell=True,stdout=output,stderr=error)
         task.p_wait_ret=task.p.wait()
         task.dbi_return_status=None
         if output!=PIPE:#TODO what do to if = PIPE?
-            fd=open(task.log_file+'.out','r')
+            fd=open(output_file,'r')
             last=""
             for l in fd.readlines():
                 last=l
@@ -1246,7 +1248,7 @@ class DBICondor(DBIBase):
             fd.write('next_job_start_delay = %s\n'%self.next_job_start_delay)
         if self.mem>0:
             #condor need value in Kb
-            fd.write('ImageSize      = %d\n'%(self.mem))
+            fd.write('ImageSize      = %d\n'%(self.mem))#need to be in k.
 
         if self.files: #ON_EXIT_OR_EVICT
             fd.write( dedent('''\
