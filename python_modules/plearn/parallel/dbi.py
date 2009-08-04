@@ -824,6 +824,7 @@ class DBICondor(DBIBase):
         self.debug = False
         self.local_log_file = True#by default true as condor can have randomly failure otherwise.
         self.next_job_start_delay = -1
+        self.imagesize=-1
 
         DBIBase.__init__(self, commands, **args)
         if self.debug:
@@ -837,8 +838,6 @@ class DBICondor(DBIBase):
             if len(commands)>int(n):
                 raise DBIError("[DBI] ERROR we refuse to start more jobs on the local universe then the total number of core. Start less jobs or use another universe.")
 
-        #transform from meg to kilo
-        self.mem=self.mem*1024
         if not self.os:
             #if their is not required os, condor launch on the same os.
             p=Popen( "condor_config_val OpSyS", shell=True,stdout=PIPE)
@@ -1147,7 +1146,7 @@ class DBICondor(DBIBase):
             bash=not self.source_file or not self.source_file.endswith(".cshrc")
             if bash:
                 fd.write(dedent('''\
-                    #!/bin/sh
+                    #!/bin/bash
                     '''))
                 if self.condor_home:
                     fd.write('export HOME=%s\n' % self.condor_home)
@@ -1246,9 +1245,9 @@ class DBICondor(DBIBase):
             fd.write('leave_in_queue = (ExitCode!=0)\n')
         if self.next_job_start_delay>0:
             fd.write('next_job_start_delay = %s\n'%self.next_job_start_delay)
-        if self.mem>0:
+        if self.imagesize>0:
             #condor need value in Kb
-            fd.write('ImageSize      = %d\n'%(self.mem))#need to be in k.
+            fd.write('ImageSize      = %d\n'%(self.imagesize))#need to be in k.
 
         if self.files: #ON_EXIT_OR_EVICT
             fd.write( dedent('''\
@@ -1418,7 +1417,8 @@ class DBICondor(DBIBase):
             self.req+="&&(Arch == \"%s\")"%(self.targetcondorplatform)
         if self.cpu>0:
             self.req+='&&(target.CPUS>='+str(self.cpu)+')'
-
+        if self.mem>0:
+            self.req+='&&(Memory>='+str(self.mem)+')'#Must be in Meg
         if self.os:
             self.req=reduce(lambda x,y:x+' || (OpSys == "'+str(y)+'")',
                             self.os.split(','),
@@ -1450,11 +1450,10 @@ class DBICondor(DBIBase):
             self.req+='&&(Machine!="'+m+'")'
         #if no mem requirement added, use the executable size.
         #todo: if they are not the same executable, take the biggest
-        if self.mem<=0:
-            try:
-                self.mem = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
-            except:
-                pass
+        try:
+            self.imagesize = os.stat(self.tasks[0].commands[0].split()[0]).st_size/1024
+        except:
+            pass
 
         self.condor_submit_file = os.path.join(self.log_dir,
                                                "submit_file.condor")
