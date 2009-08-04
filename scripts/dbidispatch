@@ -618,7 +618,12 @@ n="base_tasks_log_file"
 dbi_param[n]=[""]*len(commands)
 
 def merge_pattern(new_list):
-    return [x+'.'+y if x else y for (x,y) in  zip(dbi_param[n], new_list)]
+#    return [x+'.'+y if x else y for (x,y) in  zip(dbi_param[n], new_list)]
+    l=[]
+    for (x,y) in zip(dbi_param[n], new_list):
+        if x:
+            l.append(x+'.'+y)
+    return l
 for pattern in dbi_param.get("tasks_filename"):
     if pattern == "explicit":
         dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands])
