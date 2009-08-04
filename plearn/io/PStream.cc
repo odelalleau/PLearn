@@ -55,7 +55,12 @@ using namespace std;
 
 // Default format string for floats and doubles
 const char* PStream::format_float_default  = "%.8g";
-const char* PStream::format_double_default = "%.18g";
+//We put 15 decimal. We need 10 for the precision of double
+// + 4 as when the g format print as 0.0004... we need more digit.
+//Probably 14 was enought, but I put 15 as I was not sur of the border case.
+//Old version with 18 decimal printed value as 0.008659999999999999
+// are now printed as 0.00866(take less space and are more readable).
+const char* PStream::format_double_default = "%.15g";
 bool PStream::windows_endl = false;
 // Initialization for pin, pout, ...
 
