@@ -922,20 +922,29 @@ class TableView:
             fi
             """ % (guessdir,filename,filename)
 
-        
         commands = [
             ('s',"Launch terminal and shell in this matrix's directory",
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; ls; sh' """),
             ('1',"View layer 1 unsup training costs",
              """xterm -e sh -c 'cd "_DIRPATH_"; myplearn vmat view `find . -name training_costs_layer_1.pmat`' """),
+
+            ('a',"view learner layer1 activation stats", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("learner_layer1act_all_simplestats.pmat","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """myplearn vmat view $filepath' """),        
+            ('b',"display learner layer1 activation statscollector", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("learner_layer1act_selected_statscol.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """displaystatscol.py $filepath' """),        
+            ('c',"display learner layer1 activation bivariate histograms", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("learner_layer1act_selected_bihist.pmat","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """displaybihist.py $filepath' """),        
+
             ('i',"deepnetplot.py plotRepAndRec learner.psave", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd;"""+
              set_filepath("learner.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
              """deepnetplot.py plotRepAndRec $filepath ~/data/mnist/mnist_small/mnist_basic2_valid.pmat; sh' """),
-            ('a',"view learner layer1 activation stats", 
-             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
-             set_filepath("learner_layer1_actstats.pmat","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
-             """myplearn vmat view $filepath' """),        
             ('v',"deepnetplot.py plotEachRow learner.psave", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("learner.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
@@ -948,10 +957,20 @@ class TableView:
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("learner_Layer1_Wr.png","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
              """xv $filepath' """),
-            ('a',"view final_learner layer1 activation stats", 
+
+            ('A',"view final_learner layer1 activation stats", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
-             set_filepath("final_learner_layer1_actstats.pmat","Split0/LearnerExpdir")+
+             set_filepath("final_learner_layer1act_all_simplestats.pmat","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
              """myplearn vmat view $filepath' """),        
+            ('B',"display final_learner layer1 activation statscollector", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("final_learner_layer1act_selected_statscol.psave","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """displaystatscol.py $filepath' """),        
+            ('C',"display final_learner layer1 activation bivariate histograms", 
+             """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
+             set_filepath("final_learner_layer1act_selected_bihist.pmat","Split0/LearnerExpdir/Strat0/Trials0/Split0/LearnerExpdir")+
+             """displaybihist.py $filepath' """),        
+
             ('I',"deepnetplot.py plotRepAndRec final_learner.psave", 
              """xterm -e sh -c 'cd "_DIRPATH_"; pwd; """+
              set_filepath("final_learner.psave","Split0/LearnerExpdir")+
