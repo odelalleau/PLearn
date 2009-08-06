@@ -196,9 +196,9 @@ PPointable* ConvertFromPyObject<PPointable*>::convert(PyObject* pyobj,
 Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
                                               bool print_traceback)
 {
-    DBG_MODULE_LOG << "ConvertFromPyObject<Object*>::convert("
-                   << (void*)pyobj << ' ' << PythonObjectWrapper(pyobj)
-                   << ')' << endl;
+//     DBG_MODULE_LOG << "ConvertFromPyObject<Object*>::convert("
+//                    << (void*)pyobj << ' ' << PythonObjectWrapper(pyobj)
+//                    << ')' << endl;
     PLASSERT(pyobj);
     if(pyobj == Py_None)
         return 0;
@@ -217,9 +217,9 @@ Object* ConvertFromPyObject<Object*>::convert(PyObject* pyobj,
     Object* obj= static_cast<Object*>(PyCObject_AsVoidPtr(cptr));
 
     Py_DECREF(cptr);
-    DBG_MODULE_LOG << "EXITING ConvertFromPyObject<Object*>::convert("
-                   << (void*)pyobj << ' ' << PythonObjectWrapper(pyobj)
-                   << ')' << " => " << (void*)obj << ' ' << obj->asString() << endl;
+//     DBG_MODULE_LOG << "EXITING ConvertFromPyObject<Object*>::convert("
+//                    << (void*)pyobj << ' ' << PythonObjectWrapper(pyobj)
+//                    << ')' << " => " << (void*)obj << ' ' << obj->asString() << endl;
     return obj;
 }
 
@@ -520,8 +520,8 @@ bool PythonObjectWrapper::isNull() const
 //##### Trampoline ############################################################
 PyObject* PythonObjectWrapper::trampoline(PyObject* self, PyObject* args)
 {
-    DBG_MODULE_LOG << "PythonObjectWrapper::trampoline(" << PythonObjectWrapper(self)
-                   << ", " << PythonObjectWrapper(args) << ')' << endl;
+//     DBG_MODULE_LOG << "PythonObjectWrapper::trampoline(" << PythonObjectWrapper(self)
+//                    << ", " << PythonObjectWrapper(args) << ')' << endl;
     PythonGlobalInterpreterLock gil;         // For thread-safety
 
     //get object and trampoline from self
