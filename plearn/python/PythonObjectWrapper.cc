@@ -633,7 +633,7 @@ PyObject* PythonObjectWrapper::newCPPObj(PyObject* self, PyObject* args)
         PythonObjectWrapper(args).as<TVec<PyObject*> >();
     Object* o= newObjectFromClassname(PyString_AsString(args_tvec[1]));
 
-    DBG_MODULE_LOG << "In PythonObjectWrapper::newCPPObj() " << PyString_AsString(args_tvec[1]) << " <-> " << (void*)o << '\t' << o << endl;
+    //DBG_MODULE_LOG << "In PythonObjectWrapper::newCPPObj() " << PyString_AsString(args_tvec[1]) << " <-> " << (void*)o << '\t' << o << endl;
     //perr << "new o->usage()= " << o->usage() << endl;
 
     return PyCObject_FromVoidPtr(o, 0);
@@ -653,7 +653,7 @@ PyObject* PythonObjectWrapper::refCPPObj(PyObject* self, PyObject* args)
     //checkWrappedObjects(">>>>>>>>>> in refcppobj -> checkWrappedObjects");// debug only
     //perr << "refCPPObj: " << (void*)o << " : " << (void*)pyo << endl;
 
-    DBG_MODULE_LOG << "In PythonObjectWrapper::refCPPObj() " << PythonObjectWrapper(pyo) << " <-> " << (void*)o << '\t' << o << endl;
+    //DBG_MODULE_LOG << "In PythonObjectWrapper::refCPPObj() " << PythonObjectWrapper(pyo) << " <-> " << (void*)o << '\t' << o << endl;
     addToWrappedObjectsSet(pyo);//Py_INCREF(pyo);
     
     //printWrappedObjects();///***///***
@@ -676,11 +676,11 @@ void PythonObjectWrapper::gc_collect1()
             //Py_DECREF(it->second);
             DBG_MODULE_LOG.clearInOutMaps();
             PyObject* cptr= PyObject_GetAttrString(it->second, const_cast<char*>("_cptr"));
-            DBG_MODULE_LOG << "In PythonObjectWrapper::gc_collect1(), removing object " 
-                           << PythonObjectWrapper(it->second)
-                           << " ; python version of: " << it->first << " (" << (void*)it->first 
-                           << ", " << PyCObject_AsVoidPtr(cptr) << ')'
-                           << endl;
+//             DBG_MODULE_LOG << "In PythonObjectWrapper::gc_collect1(), removing object " 
+//                            << PythonObjectWrapper(it->second)
+//                            << " ; python version of: " << it->first << " (" << (void*)it->first 
+//                            << ", " << PyCObject_AsVoidPtr(cptr) << ')'
+//                            << endl;
             if(!cptr)
             {
                 if(PyErr_Occurred()) PyErr_Print();
@@ -720,8 +720,8 @@ PythonObjectWrapper::wrapped_objects_t::iterator
 
 PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 {
-    DBG_MODULE_LOG << "ENTER ConvertToPyObject<Object*>::newPyObject " 
-                   << (void*)x << ' ' << (x?x->asString():"") << endl;
+//     DBG_MODULE_LOG << "ENTER ConvertToPyObject<Object*>::newPyObject " 
+//                    << (void*)x << ' ' << (x?x->asString():"") << endl;
     // void ptr becomes None
     if(!x) return PythonObjectWrapper::newPyObject();
 
@@ -775,9 +775,9 @@ PyObject* ConvertToPyObject<Object*>::newPyObject(const Object* x)
 
     addToWrappedObjectsSet(the_obj);//Py_INCREF(the_obj);
     //printWrappedObjects();
-    DBG_MODULE_LOG << "EXIT ConvertToPyObject<Object*>::newPyObject " 
-                   << (void*)x << ' ' << x->asString() << " => "
-                   << (void*) the_obj << ' ' << PythonObjectWrapper(the_obj) << endl;
+//     DBG_MODULE_LOG << "EXIT ConvertToPyObject<Object*>::newPyObject " 
+//                    << (void*)x << ' ' << x->asString() << " => "
+//                    << (void*) the_obj << ' ' << PythonObjectWrapper(the_obj) << endl;
 
     return the_obj;
 }
