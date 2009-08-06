@@ -265,6 +265,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("rows", "A matrix containing the rows to append.\n")));
 
     declareMethod(
+        rmm, "putRow", &VMatrix::putRow,
+        (BodyDoc("Store a row into the VMatrix.\n"),
+         ArgDoc ("i", "Index of the row being modified.\n"),
+         ArgDoc ("v", "Vec with values (row) to store.\n")));
+
+    declareMethod(
         rmm, "saveFieldInfos", &VMatrix::saveFieldInfos,
         (BodyDoc("Saves field names, etc. in metadatadir.\n")));
 
