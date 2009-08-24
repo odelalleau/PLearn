@@ -37,7 +37,7 @@ import inspect
 import os.path
 import sys
 import threading
-from   datetime import datetime
+import datetime
 
 _HAS_DISPLAY_ = os.environ.has_key("DISPLAY")
 
@@ -441,7 +441,7 @@ class ExperimentWorkbench(HasTraits) :
     def expdir_name(expdir_root, expdir=None):
         """Return an experiment directory from a root location and possibly a dir name."""
         if expdir is None or expdir == '':
-            expdir = datetime.now().strftime("expdir_%Y%m%d_%H%M%S")
+            expdir = datetime.datetime.now().strftime("expdir_%Y%m%d_%H%M%S")
         return os.path.join(expdir_root, expdir)
 
 
