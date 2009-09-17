@@ -623,6 +623,8 @@ def merge_pattern(new_list):
     for (x,y) in zip(dbi_param[n], new_list):
         if x:
             l.append(x+'.'+y)
+        else:
+            l.append(l)
     return l
 for pattern in dbi_param.get("tasks_filename"):
     if pattern == "explicit":
