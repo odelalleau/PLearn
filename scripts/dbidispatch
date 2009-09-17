@@ -622,7 +622,7 @@ def merge_pattern(new_list):
     l=[]
     for (x,y) in zip(dbi_param[n], new_list):
         if x:
-            l.append(x+'.'+y)
+            l.append(x+'.'+str(y))
         else:
             l.append(l)
     return l
