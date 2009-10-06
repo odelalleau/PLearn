@@ -138,7 +138,7 @@ VMatCommand::VMatCommand():
         "   or: vmat mtime <dataset>\n"
         "       Print the mtime of a dataset\n"
         "   or: vmat pmat_float_save <dataset>...\n"
-        "       Print the number of byte saved if we transform the mat to pmat in float format and the maximum différence and maximum relative différence in value."
+        "       Print the size of the new pmat file in float format, the size of saved bytes, the maximum value difference, the maximum relative difference in value and the column of the maximum value and maximum relative value."
         "<dataset> is a parameter understandable by getDataSet: \n"
 
         + getDataSetHelp()
@@ -187,28 +187,35 @@ void VMatCommand::run(const vector<string>& args)
                 
             VMat vm = getDataSet(dataspec);
             int64_t orig_size = vm->getSizeOnDisk();
-
-            if(orig_size==-1)
-                cout<<"-1 -1 -1"<<endl;
-            else{
+            int saved_size=-1;
+            int new_size=-1;
+            if(orig_size!=-1){
                 FileVMatrix n = FileVMatrix(dataspec+"dummy",vm.length(),vm.width(),true,false);
-                int64_t new_size = n.getSizeOnDisk();
-                Vec v(vm->width());
-                double max_diff=0;
-                double max_rel_diff=0;
-                for(int i=0;i<vm->length();i++){
-                    vm->getRow(i,v);
-                    for(int j=0;j<vm->width();j++){
-                        double diff = v[j]-float(v[j]);
-                        if(max_diff<diff)
-                            max_diff=diff;
-                        double rel_diff = diff/v[j];
-                        if(max_rel_diff<rel_diff)
-                            max_rel_diff=rel_diff;
+                new_size=n.getSizeOnDisk();
+                saved_size=orig_size-new_size;
+            }
+
+            Vec v(vm->width());
+            double max_diff=0;
+            double max_rel_diff=0;
+            int col_max = -1;
+            int col_max_rel = -1;
+            for(int i=0;i<vm->length();i++){
+                vm->getRow(i,v);
+                for(int j=0;j<vm->width();j++){
+                    double diff = v[j]-float(v[j]);
+                    if(max_diff<diff){
+                        max_diff=diff;
+                        col_max = j;
+                    }
+                    double rel_diff = diff/v[j];
+                    if(max_rel_diff<rel_diff){
+                        max_rel_diff=rel_diff;
+                        col_max_rel = j;
                     }
                 }
-                cout << orig_size-new_size <<" "<< max_diff <<" "<<max_rel_diff<<endl;
             }
+            cout<<"new_size="<<new_size<<" saved_size="<< saved_size <<" max_difference="<< max_diff <<" max_relatif_difference="<<max_rel_diff<<" col_max="<<col_max<<" col_max_rel="<<col_max_rel<<endl;
         }
     }
     else
