@@ -204,5 +204,5 @@ def todate(date):
     elif type(date)==int:
         return dateint_to_date(date)
         
-def daydiff(cyymmdd1, cyymmdd2):
-    return (CYYMMDD_to_date(cyymmdd1)-CYYMMDD_to_date(cyymmdd2)).days
+def daydiff(date1, date2):
+    return (dateint_to_date(date1) - dateint_to_date(date2)).days
