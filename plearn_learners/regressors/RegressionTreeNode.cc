@@ -55,8 +55,12 @@ PLEARN_IMPLEMENT_OBJECT(RegressionTreeNode,
                         "It may be an expanded node pointing to 3 children nodes: a leave for missing values on the splitting attribute,\n"
                         "a left leave for samples with values below the value of the splitting attribute, and a right leave for the others,\n"
     );
+
 int RegressionTreeNode::dummy_int = 0;
 Vec RegressionTreeNode::tmp_vec;
+PP<RegressionTreeLeave> RegressionTreeNode::dummy_leave_template;
+PP<RegressionTreeRegisters> RegressionTreeNode::dummy_train_set;
+
 RegressionTreeNode::RegressionTreeNode():
     missing_is_valid(0),
     split_col(-1),
@@ -163,6 +167,25 @@ void RegressionTreeNode::declareOptions(OptionList& ol)
     declareStaticOption(ol, "inputsize", &RegressionTreeNode::dummy_int,
                   OptionBase::learntoption | OptionBase::nosave,
                   "DEPRECATED The inputsize of the train set\n");
+    declareStaticOption(ol, "inputsize", &RegressionTreeNode::dummy_int,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED The inputsize of the train set\n");
+    declareStaticOption(ol, "loss_function_weight", 
+                  &RegressionTreeNode::dummy_int,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED Only to reload old saved learner\n");
+    declareStaticOption(ol, "verbosity", 
+                  &RegressionTreeNode::dummy_int,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED Only to reload old saved learner\n");
+    declareStaticOption(ol, "leave_template", 
+                  &RegressionTreeNode::dummy_leave_template,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED Only to reload old saved learner\n");
+    declareStaticOption(ol, "train_set", 
+                  &RegressionTreeNode::dummy_train_set,
+                  OptionBase::learntoption | OptionBase::nosave,
+                  "DEPRECATED Only to reload old saved learner\n");
 
     inherited::declareOptions(ol);
 }

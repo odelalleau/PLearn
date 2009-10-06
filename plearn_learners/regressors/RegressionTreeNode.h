@@ -88,8 +88,11 @@ private:
     PP<RegressionTreeNode> right_node;
     PP<RegressionTreeLeave> right_leave;
     
+    //only there to reload old version. Put static to use less space.
     static int dummy_int;
     static Vec tmp_vec;
+    static PP<RegressionTreeLeave> dummy_leave_template;
+    static PP<RegressionTreeRegisters> dummy_train_set;
 public:  
     RegressionTreeNode();
     RegressionTreeNode(int missing_is_valid);
