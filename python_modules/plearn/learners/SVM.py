@@ -670,6 +670,16 @@ class SVM(object):
                                     calling svm_model. This allow to use locally modified versions of libsvm.
                                     e.g: dict(max_iter= 10000) for the libsvm version installed at ApStat.
 
+        'intern_kfold': <list> of <list> (or None) list of indices to use for the internal k-folds (if provided).
+                        The list has to be exactly of length n_fold (for safety), and each element is a list of
+                        length two (first list for train indices, second list of test indices).
+
+        'recompute_stats_at_each_train': <bool> Do we re-estimate train statistics each time we call train()
+                        The value of this option has an impact only in the following cases:
+                        * if balanceC is activated
+                          (weights of penalty C will be computed at each train).
+                        * if you normalize inputs.
+
     learnt options:
 
         'best_model':
@@ -733,6 +743,8 @@ class SVM(object):
                         'results_filename',
                         'preproc_optionnames',
                         'preproc_optionvalues',
+                        'intern_kfold',
+                        'recompute_stats_at_each_train',
                         \
                         'validtype',
                         'param',
@@ -766,8 +778,10 @@ class SVM(object):
         self.train_stats     = None
         self.validtype       = 'simple'
         self.multiclass_strategy = 'onevsone'
-        
-        self.n_fold   = 5
+
+        self.n_fold = 5
+        self.intern_kfold = None
+        self.recompute_stats_at_each_train = False
         self.balanceC = False
         self.balance_classes = False
         self.normalize_inputs = False
@@ -1171,6 +1185,8 @@ class SVM(object):
             print "launching libsvm with param %s " % param    
         
         trainset = self.train_inputspec(dataspec)
+        if self.recompute_stats_at_each_train:
+            self.stats_are_uptodate= False
         self.get_data_stats( trainset )
 
         train_samples, train_targets = self.get_svminputlist( trainset, True )
@@ -1453,58 +1469,81 @@ class SVM(object):
             print "   with param %s" % param
         
         trainset = self.train_inputspec(dataspec)
-        trainset_class = [None]*nclasses
-        N=[0]*nclasses
-        Nfold=[0]*nclasses
-        Nlastfold=[0]*nclasses
-        for c in range(nclasses):
-            trainset_class[c] = ClassSubsetVMatrix( source = trainset,
-                                                    classes = [c],)
-            N[c] = trainset_class[c].length
-            Nfold[c] = int(N[c] / n_fold)
-            if Nfold[c] == 0:
-                raise ValueError, "%d-fold cross-validation is not possible as class %d has only %d samples" % \
-                                 (n_fold, c, N[c])
-            Nlastfold[c] = N[c] - Nfold[c] * (n_fold-1)
+        if not self.intern_kfold:
+            # determining an internal k-fold that keep the class proportions inside each split
+            trainset_class = [None]*nclasses
+            N=[0]*nclasses
+            Nfold=[0]*nclasses
+            Nlastfold=[0]*nclasses
+            for c in range(nclasses):
+                trainset_class[c] = ClassSubsetVMatrix( source = trainset,
+                                                        classes = [c],)
+                N[c] = trainset_class[c].length
+                Nfold[c] = int(N[c] / n_fold)
+                if Nfold[c] == 0:
+                    raise ValueError, "%d-fold cross-validation is not possible as class %d has only %d samples" % \
+                                     (n_fold, c, N[c])
+                Nlastfold[c] = N[c] - Nfold[c] * (n_fold-1)
+            sub_trainset_class = [None]*nclasses
+            sub_testset_class = [None]*nclasses
         
         validstats = None
         if return_outputs:
             validoutputs = numpy.zeros((trainset.length, nclasses))
-        sub_trainset_class = [None]*nclasses
-        sub_testset_class = [None]*nclasses
-        for i in range(n_fold):
-            test_indices = []
-            for c in range(nclasses):
-                if i < n_fold-1:
-                    test_indices_class = range( i*Nfold[c], (i+1)*Nfold[c] )
-                    train_indices_class = range( 0,i*Nfold[c])+range((i+1)*Nfold[c], N[c] )
-                else:
-                    test_indices_class = range( i*Nfold[c], N[c] )
-                    train_indices_class = range( 0, N[c]-Nlastfold[c] )
-                sub_testset_class[c] = SelectRowsVMatrix(
-                                    source = trainset_class[c],
-                                    indices = test_indices_class,)
-                sub_trainset_class[c] = SelectRowsVMatrix(
-                                    source = trainset_class[c],
-                                    indices = train_indices_class,)
-                test_indices += test_indices_class
-            sub_testset = ConcatRowsVMatrix( sources = sub_testset_class,
-                                             fully_check_mappings = False,)
-            sub_trainset = ConcatRowsVMatrix( sources = sub_trainset_class,
-                                             fully_check_mappings = False,)
+            
+        for i_fold in range(n_fold):
+        
+            if self.intern_kfold:
+                assert isinstance(self.intern_kfold,list)
+                assert len(self.intern_kfold) == n_fold
+                assert isinstance(self.intern_kfold[0],list)
+                assert len(self.intern_kfold[0]) == 2
+                train_indices = self.intern_kfold[i_fold][0]
+                test_indices = self.intern_kfold[i_fold][1]
+                
+                print "loading suggested k-fold train: ", len(train_indices), "  -- test: ", len(test_indices)
+                
+                sub_testset = SelectRowsVMatrix(
+                                source = trainset,
+                                indices = test_indices,)
+                sub_trainset= SelectRowsVMatrix(
+                                source = trainset,
+                                indices = train_indices,)
+            else:
+                test_indices = []
+                for c in range(nclasses):
+                    if i_fold < n_fold-1:
+                        test_indices_class = range( i_fold*Nfold[c], (i_fold+1)*Nfold[c] )
+                        train_indices_class = range( 0,i_fold*Nfold[c])+range((i_fold+1)*Nfold[c], N[c] )
+                    else:
+                        test_indices_class = range( i_fold*Nfold[c], N[c] )
+                        train_indices_class = range( 0, N[c]-Nlastfold[c] )
+                    sub_testset_class[c] = SelectRowsVMatrix(
+                                        source = trainset_class[c],
+                                        indices = test_indices_class,)
+                    sub_trainset_class[c] = SelectRowsVMatrix(
+                                        source = trainset_class[c],
+                                        indices = train_indices_class,)
+                    test_indices += test_indices_class
+                sub_testset = ConcatRowsVMatrix( sources = sub_testset_class,
+                                                 fully_check_mappings = False,)
+                sub_trainset = ConcatRowsVMatrix( sources = sub_trainset_class,
+                                                 fully_check_mappings = False,)
             if return_outputs:
-                validstats, outputs = self.simplevalid(  {self.trainset_key:sub_trainset,
-                                                self.validset_key:sub_testset},
-                                                param,
-                                                validstats = validstats, verbose = False, return_outputs = True)
-                #validoutputs[test_indices,:] = outputs
+                validstats, outputs = self.simplevalid( 
+                                        {   self.trainset_key:sub_trainset,
+                                            self.validset_key:sub_testset},
+                                        param,
+                                        validstats = validstats, verbose = False, return_outputs = True)
+                for i, o in enumerate(outputs):
+                    validoutputs[test_indices[i]] = o
                 validoutputs = numpy.array(list(validoutputs)+list(outputs))
             else:
-                validstats = self.simplevalid(  {self.trainset_key:sub_trainset,
-                                                self.validset_key:sub_testset},
-                                                param,
-                                                validstats = validstats, verbose = False)
-
+                validstats = self.simplevalid(
+                                        {   self.trainset_key:sub_trainset,
+                                            self.validset_key:sub_testset},
+                                        param,
+                                        validstats = validstats, verbose = False)
         if return_outputs:
             return validstats, validoutputs
         else:
