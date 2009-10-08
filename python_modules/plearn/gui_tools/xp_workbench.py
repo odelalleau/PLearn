@@ -40,13 +40,20 @@ import threading
 import datetime
 
 _HAS_DISPLAY_ = os.environ.has_key("DISPLAY")
+## Check the usability of the display
+if _HAS_DISPLAY_:
+    try:
+        from enthought.pyface.api import confirm, YES
+    except:
+        _HAS_DISPLAY_ = False
+        #print '_HAS_DISPLAY_ = False'
 
 ## Traits
 from enthought.traits.api          import *
 if _HAS_DISPLAY_:
+    from enthought.pyface.api          import confirm, YES
     from enthought.traits.ui.api       import *
     from enthought.traits.ui.menu      import NoButtons
-    from enthought.pyface.api          import confirm, YES
     from console_logger import ConsoleLogger
 else:
     ## Dummy definitions for some Traits UI stuff
@@ -62,11 +69,10 @@ else:
     confirm   = None
     YES       = None
     Directory = Str
+    File      = Str
 
     class ConsoleLogger(object): pass
     class Handler(object): pass
-    
-
 
 ## If there is no display, set the matplotlib backend to Agg
 if not _HAS_DISPLAY_:
