@@ -216,6 +216,11 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          RetDoc ("The content of this VMatrix as a Mat")));
 
     declareMethod(
+            rmm, "getLength", &VMatrix::length,
+            (BodyDoc("Return length of this VMatrix.\n"),
+             RetDoc("The length of this VMatrix.")));
+
+    declareMethod(
         rmm, "declareField", &VMatrix::declareField,
         (BodyDoc("Declares the field infos for a given column (index).\n"),
          ArgDoc ("fieldindex", "The column index.\n"),
