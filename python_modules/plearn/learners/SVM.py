@@ -1501,7 +1501,7 @@ class SVM(object):
                 train_indices = self.intern_kfold[i_fold][0]
                 test_indices = self.intern_kfold[i_fold][1]
                 
-                print "loading suggested k-fold train: ", len(train_indices), "  -- test: ", len(test_indices)
+                print "Loading suggested intern k-fold --  train: ", len(train_indices), "  -- test: ", len(test_indices)
                 
                 sub_testset = SelectRowsVMatrix(
                                 source = trainset,
