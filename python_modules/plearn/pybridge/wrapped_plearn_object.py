@@ -212,7 +212,7 @@ class WrappedPLearnVMat(WrappedPLearnObject):
     supplies __len__ and __getitem__ methods.
     """
     def __len__(self):
-        return self.length
+        return self.getLength()
 
     def __getitem__(self, key):
         class len_thunk(object):
