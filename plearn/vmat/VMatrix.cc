@@ -854,8 +854,8 @@ void VMatrix::saveFieldInfos() const
     // check if we need to save the sizes
     int inp, targ, weight, extr;
     bool sizes_exist = getSavedSizes(inp, targ, weight, extr);
-    if ((! sizes_exist && inputsize_ != -1 && targetsize_ != -1 && weightsize_ != -1) ||
-        (inp != inputsize_ || targ != targetsize_ || weight != weightsize_ || extr!=extrasize_))
+    if ((! sizes_exist && (inputsize_ != -1 || targetsize_ != -1 || weightsize_ != -1 || extrasize_ > 0)) ||
+        (sizes_exist && (inp != inputsize_ || targ != targetsize_ || weight != weightsize_ || extr!=extrasize_)))
     {
         // Slightly hackish phenomenon :: if the sizes file doesn't previously
         // exist and we cannot write them, THIS IS NOT AN ERROR.  In this case,
@@ -888,8 +888,8 @@ void VMatrix::loadFieldInfos() const
     // Update only if they can successfully be read from the saved metadata
     // and they don't already exist in the VMatrix
     int inp, tar, weight, extr;
-    if (getSavedSizes(inp,tar,weight,extr) &&
-        inputsize_ == -1 && targetsize_ == -1 && weightsize_ == -1)
+    if (inputsize_ == -1 && targetsize_ == -1 && weightsize_ == -1 
+        && getSavedSizes(inp,tar,weight,extr))
     {
         inputsize_  = inp;
         targetsize_ = tar;
