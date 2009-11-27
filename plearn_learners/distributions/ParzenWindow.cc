@@ -46,7 +46,7 @@ namespace PLearn {
 PLEARN_IMPLEMENT_OBJECT(ParzenWindow,
                         "Parzen Window density estimate.",
                         "Standard Parzen Window algorithm. The user only needs\n"
-                        "to set the sigma_square parameter"
+                        "to set the isotropic_sigma parameter"
     );
 
 // TODO Allow the user to specify the kernel.
@@ -55,13 +55,13 @@ PLEARN_IMPLEMENT_OBJECT(ParzenWindow,
 // ParzenWindow //
 /////////////////////
 ParzenWindow::ParzenWindow()
-    : sigma_square(1)
+    : isotropic_sigma(1)
 {
     nstages = 1;
 }
 
-ParzenWindow::ParzenWindow(real the_sigma_square)
-    : sigma_square(the_sigma_square)
+ParzenWindow::ParzenWindow(real the_isotropic_sigma)
+    : isotropic_sigma(the_isotropic_sigma)
 {
 }
 
@@ -80,8 +80,8 @@ void ParzenWindow::build()
 ////////////////////
 void ParzenWindow::declareOptions(OptionList& ol)
 {
-    declareOption(ol,"sigma_square", &ParzenWindow::sigma_square, OptionBase::buildoption,
-                  "Spherical variance parameter");
+    declareOption(ol,"isotropic_sigma", &ParzenWindow::isotropic_sigma, OptionBase::buildoption,
+                  "Spherical standard deviation parameter (NOTE: old implementation called this sigma_square, but it really was sigma, hence the renaming)");
 
     // Now call the parent class' declareOptions
     inherited::declareOptions(ol);
@@ -128,7 +128,7 @@ void ParzenWindow::train()
             //    cerr << "[SEQUENTIAL TRAIN: processing pattern #" << i << "/" << l << "]\n";            
             Vec input = center(i);
             train_set->getExample(i,input,target,weight);
-            sigma[i] = sigma_square;
+            sigma[i] = isotropic_sigma;
             if(has_weights)
             {
                 alpha[i] = weight;

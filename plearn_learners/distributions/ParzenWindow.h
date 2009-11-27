@@ -56,7 +56,7 @@ public:
     // ### declare protected option fields (such as learnt parameters) here
     // ...
 
-    real sigma_square;
+    real isotropic_sigma;
 
     // ************************
     // * public build options *
@@ -77,7 +77,7 @@ public:
     // * Object methods *
     // ******************
 
-    ParzenWindow(real sigma_square);
+    ParzenWindow(real isotropic_sigma);
 
 protected:
 
