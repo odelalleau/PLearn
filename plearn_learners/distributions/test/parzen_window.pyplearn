@@ -8,6 +8,7 @@ def main():
         pl.ParzenWindow(
             # conditional_updating_time = -1,
             # training_time = -1
+            sigma_square = 2
         )
     )
 
