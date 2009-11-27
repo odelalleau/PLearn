@@ -1,5 +1,5 @@
 *1 ->ParzenWindow(
-sigma_square = 2 ;
+isotropic_sigma = 2 ;
 L = 150 ;
 type = "spherical" ;
 n_eigen = -1 ;
