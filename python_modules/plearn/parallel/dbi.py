@@ -1335,6 +1335,15 @@ class DBICondor(DBIBase):
             self.log_file = os.path.join(self.log_file,"condor.log")
         self.print_common_condor_submit(condor_submit_fd, self.log_dir+"/$(Process).out", self.log_dir+"/$(Process).error")
 
+        if self.mem>0:
+            condor_submit_fd.write(dedent("""
+            request_memory = %i
+            """)%(self.mem))
+        if self.cpu>0:
+            condor_submit_fd.write(dedent("""
+            request_cpus = %i
+            """)%(self.cpu))
+
         if self.pkdilly:
             condor_submit_fd.write(dedent("""
             stream_error            = True
