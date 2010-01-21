@@ -3493,11 +3493,12 @@ TVec<Vec> StackedAutoassociatorsNet::fantasizeKTime(const int KTime, const Vec& 
             }
 
             if(bFractOrProbUseful)
+            {
                 if(bFraction_masked_input)
                     fraction_of_masked_inputs = maskNoiseFractOrProb[i];
                 else
                     probability_of_masked_inputs = maskNoiseFractOrProb[i];
-
+            }
             double_input(expectations[i], doubled_expectations[i]);
             corrupt_input(
                 doubled_expectations[i],
@@ -3513,8 +3514,7 @@ TVec<Vec> StackedAutoassociatorsNet::fantasizeKTime(const int KTime, const Vec& 
             // Binomial sample
             if( sample[i] == 1 )
                 for( int j=0; j<expectations[i+1].size(); j++ )
-                    expectations[i+1][j] =
-                    random_gen->binomial_sample(expectations[i+1][j]);
+                    expectations[i+1][j] = random_gen->binomial_sample(expectations[i+1][j]);
     
             reconstruction_connections[i]->fprop(
                 expectations[i+1],
