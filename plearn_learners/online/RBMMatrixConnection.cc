@@ -866,7 +866,7 @@ void RBMMatrixConnection::applyWeightPenalty()
         for( int j=0; j<down_size; j++ )
         {
             if( delta_L2 != 0. )
-                w_[j] *= (1 - 2*delta_L2);
+                w_[j] *= (1 - delta_L2);
 
             if( delta_L1 != 0. )
             {
@@ -900,7 +900,7 @@ void RBMMatrixConnection::addWeightPenalty(Mat weights, Mat weight_gradients)
         for( int j=0; j<weights.width(); j++ )
         {
             if( delta_L2 != 0. )
-                gw_[j] += 2*delta_L2*w_[j];
+                gw_[j] += delta_L2*w_[j];
 
             if( delta_L1 != 0. )
             {
