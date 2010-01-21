@@ -41,6 +41,7 @@
 #include "DeepBeliefNet.h"
 #include "RBMMatrixTransposeConnection.h"
 #include <plearn/io/pl_log.h>
+#include <plearn/io/load_and_save.h>
 
 #define minibatch_hack 0 // Do we force the minibatch setting? (debug hack)
 
@@ -70,7 +71,14 @@ DeepBeliefNet::DeepBeliefNet() :
     use_classification_cost( true ),
     reconstruct_layerwise( false ),
     i_output_layer( -1 ),
+    learnerExpdir(""),
+    save_learner_before_fine_tuning( false ),
     use_sample_for_up_layer( false ),
+    use_corrupted_posDownVal( "none" ),
+    noise_type( "masking_noise" ),
+    fraction_of_masked_inputs( 0 ),
+    mask_with_pepper_salt( false ),
+    prob_salt_noise( 0.5 ),
     online ( false ),
     background_gibbs_update_ratio(0),
     gibbs_chain_reinit_freq( INT_MAX ),
@@ -92,6 +100,49 @@ DeepBeliefNet::DeepBeliefNet() :
     random_gen = new PRandom();
     n_layers = 0;
 }
+
+
+void DeepBeliefNet::declareMethods(RemoteMethodMap& rmm)
+{
+    // Insert a backpointer to remote methods; note that this is different from declareOptions().
+    rmm.inherited(inherited::_getRemoteMethodMap_());
+    declareMethod(
+        rmm, "fantasizeKTime",
+        &DeepBeliefNet::fantasizeKTime,
+        (BodyDoc("On a trained learner, computes a codage-decodage (fantasize) through a specified number of hidden layer."),
+         ArgDoc ("kTime", "Number of time we want to fantasize. \n"
+                 "Next input image will again be the source Image (if alwaysFromSrcImg is True) \n"
+                 "or next input image will be the last fantasize image (if alwaysFromSrcImg is False), and so on for kTime.)"),
+         ArgDoc ("srcImg", "Source image vector (should have same width as raws layer)"),
+         ArgDoc ("sampling", "Vector of bool indicating whether or not a sampling will be done for each hidden layer\n"
+                "during decodage. Its width indicates how many hidden layer will be used.)\n"
+                " (should have same width as maskNoiseFractOrProb)\n"
+                "smaller element of the vector correspond to lower layer"),
+         ArgDoc ("alwaysFromSrcImg", "Booleen indicating whether each encode-decode \n"
+                "steps are done from the source image (sets to True) or \n"
+                "if the next input image is the last fantasize image (sets to False). "),
+         RetDoc ("Fantasize images obtained for each kTime.")));
+
+
+    declareMethod(
+        rmm, "fantasizeKTimeOnMultiSrcImg",
+        &DeepBeliefNet::fantasizeKTimeOnMultiSrcImg,
+        (BodyDoc("Call the 'fantasizeKTime' function for each source images found in the matrix 'srcImg'."),
+         ArgDoc ("kTime", "Number of time we want to fantasize for each source images. \n"
+                 "Next input image will again be the source Image (if alwaysFromSrcImg is True) \n"
+                 "or next input image will be the last fantasize image (if alwaysFromSrcImg is False), and so on for kTime.)"),
+         ArgDoc ("srcImg", "Source images matrix (should have same width as raws layer)"),
+         ArgDoc ("sampling", "Vector of bool indicating whether or not a sampling will be done for each hidden layer\n"
+                "during decodage. Its width indicates how many hidden layer will be used.)\n"
+                " (should have same width as maskNoiseFractOrProb)\n"
+                "smaller element of the vector correspond to lower layer"),
+         ArgDoc ("alwaysFromSrcImg", "Booleen indicating whether each encode-decode \n"
+                "steps are done from the source image (sets to True) or \n"
+                "if the next input image is the preceding fantasize image obtained (sets to False). "),
+         RetDoc ("For each source images, fantasize images obtained for each kTime.")));
+}
+
+
 
 ////////////////////
 // declareOptions //
@@ -209,6 +260,19 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Optional target matrix connections for greedy layer-wise pretraining");
 
+    declareOption(ol, "learnerExpdir",
+                  &DeepBeliefNet::learnerExpdir,
+                  OptionBase::buildoption,
+                  "Experiment directory where the learner will be save\n"
+                  "if save_learner_before_fine_tuning is true."
+        );
+
+    declareOption(ol, "save_learner_before_fine_tuning",
+                  &DeepBeliefNet::save_learner_before_fine_tuning,
+                  OptionBase::buildoption,
+                  "Saves the learner before the supervised fine-tuning."
+        );
+
     declareOption(ol, "classification_module",
                   &DeepBeliefNet::classification_module,
                   OptionBase::learntoption,
@@ -266,6 +330,41 @@ void DeepBeliefNet::declareOptions(OptionList& ol)
                   OptionBase::buildoption,
                   "Indication that the update of the top layer during CD uses\n"
                   "a sample, not the expectation.\n");
+
+    declareOption(ol, "use_corrupted_posDownVal",
+                  &DeepBeliefNet::use_corrupted_posDownVal,
+                  OptionBase::buildoption,
+                  "Indicates whether we will use a corrupted version of the\n"
+                  "positive down value during the CD step.\n"
+                  "Choose among:\n"
+                  " - \"for_cd_fprop\"\n"
+                  " - \"for_cd_update\"\n"
+                  " - \"none\"\n");
+
+    declareOption(ol, "noise_type",
+                  &DeepBeliefNet::noise_type,
+                  OptionBase::buildoption,
+                  "Type of noise that corrupts the pos_down_val. "
+                  "Choose among:\n"
+                  " - \"masking_noise\"\n"
+                  " - \"none\"\n");
+
+    declareOption(ol, "fraction_of_masked_inputs",
+                  &DeepBeliefNet::fraction_of_masked_inputs,
+                  OptionBase::buildoption,
+                  "Fraction of the pos_down_val components which\n"
+                  "will be masked.\n");
+
+    declareOption(ol, "mask_with_pepper_salt",
+                  &DeepBeliefNet::mask_with_pepper_salt,
+                  OptionBase::buildoption,
+                  "Indication that inputs should be masked with "
+                  "0 or 1 according to prob_salt_noise.\n");
+
+    declareOption(ol, "prob_salt_noise",
+                  &DeepBeliefNet::prob_salt_noise,
+                  OptionBase::buildoption,
+                  "Probability that we mask the input by 1 instead of 0.\n");
 
     declareOption(ol, "online", &DeepBeliefNet::online,
                   OptionBase::buildoption,
@@ -387,6 +486,12 @@ void DeepBeliefNet::build_()
         mean_field_contrastive_divergence_ratio > 1 )
         PLERROR("In DeepBeliefNet::build_ - mean_field_contrastive_divergence_ratio should "
             "be in [0,1].");
+
+    if( use_corrupted_posDownVal != "for_cd_fprop" &&
+        use_corrupted_posDownVal != "for_cd_update" &&
+        use_corrupted_posDownVal != "none" )
+        PLERROR("In DeepBeliefNet::build_ - use_corrupted_posDownVal should "
+            "be chosen among {\"for_cd_fprop\",\"for_cd_update\",\"none\"}.");
 
     if( !online )
     {
@@ -546,6 +651,7 @@ void DeepBeliefNet::build_layers_and_connections()
     expectation_gradients.resize( n_layers );
     expectations_gradients.resize( n_layers );
     gibbs_down_state.resize( n_layers-1 );
+    expectation_indices.resize( n_layers-1 );
 
     for( int i=0 ; i<n_layers-1 ; i++ )
     {
@@ -645,6 +751,39 @@ void DeepBeliefNet::build_layers_and_connections()
             {
                 greedy_target_layers[i]->random_gen = random_gen;
                 greedy_target_layers[i]->forget();
+            }
+        }
+        if( use_corrupted_posDownVal != "none" )
+        {
+            if( greedy_target_layers.length() != 0 )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_corrupted_posDownVal not implemented for greedy_target_layers.");
+
+            if( online )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_corrupted_posDownVal not implemented for online.");
+
+            if( use_classification_cost )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_classification_cost not implemented for use_corrupted_posDownVal.");
+
+            if( background_gibbs_update_ratio != 0 )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_corrupted_posDownVal not implemented with background_gibbs_update_ratio!=0.");
+
+            if( batch_size != 1 || minibatch_hack )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_corrupted_posDownVal not implemented for batch_size != 1 or minibatch_hack.");
+    
+            if( !partial_costs.isEmpty() )
+                PLERROR("DeepBeliefNet::build_layers_and_connections() - \n"
+                        "use_corrupted_posDownVal not implemented for partial_costs.");
+
+            if( noise_type == "masking_noise" && fraction_of_masked_inputs > 0 )
+            {
+                expectation_indices[i].resize( layers[i]->size );
+                for( int j=0 ; j < expectation_indices[i].length() ; j++ )
+                    expectation_indices[i][j] = j;
             }
         }
     }
@@ -852,6 +991,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(save_layer_activations,   copies);
     deepCopyField(save_layer_expectations,  copies);
     deepCopyField(pos_down_val,             copies);
+    deepCopyField(corrupted_pos_down_val,   copies);
     deepCopyField(pos_up_val,               copies);
     deepCopyField(pos_down_vals,            copies);
     deepCopyField(pos_up_vals,              copies);
@@ -872,6 +1012,7 @@ void DeepBeliefNet::makeDeepCopyFromShallowCopy(CopiesMap& copies)
     deepCopyField(generative_connections,   copies);
     deepCopyField(up_sample,                copies);
     deepCopyField(down_sample,              copies);
+    deepCopyField(expectation_indices,      copies);
 }
 
 
@@ -1244,6 +1385,16 @@ void DeepBeliefNet::train()
                 if( pb )
                     pb->update( up_down_stage - init_stage + 1 );
             }
+        }
+
+        if( save_learner_before_fine_tuning )
+        {
+            if( learnerExpdir == "" )
+                PLWARNING("DeepBeliefNet::train() - \n"
+                    "cannot save model before fine-tuning because\n"
+                    "no experiment directory has been set.");
+            else
+                PLearn::save(learnerExpdir + "/learner_before_finetuning.psave",*this);
         }
 
         /***** fine-tuning by gradient descent *****/
@@ -1866,7 +2017,14 @@ void DeepBeliefNet::greedyStep(const Vec& input, const Vec& target, int index)
         }
         else
         {
-            connections[i]->setAsDownInput( layers[i]->expectation );
+            if( i == index && use_corrupted_posDownVal == "for_cd_fprop" )
+            {
+                corrupted_pos_down_val.resize( layers[i]->size );
+                corrupt_input( layers[i]->expectation, corrupted_pos_down_val, index );
+                connections[i]->setAsDownInput( corrupted_pos_down_val );
+            }
+            else
+                connections[i]->setAsDownInput( layers[i]->expectation );
             layers[i+1]->getAllActivations( connections[i] );
             layers[i+1]->computeExpectation();
         }
@@ -1950,6 +2108,7 @@ void DeepBeliefNet::greedyStep(const Mat& inputs, const Mat& targets,
 
     for( int i=0 ; i<=index ; i++ )
     {
+        
         connections[i]->setAsDownInputs( layers[i]->getExpectations() );
         layers[i+1]->getAllActivations( connections[i], 0, true );
         layers[i+1]->computeExpectations();
@@ -2656,7 +2815,14 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             up_layer->getAllActivations( connection, 0, true );
             up_layer->computeExpectations();
         } else {
-            connection->setAsDownInput( down_layer->expectation );
+            if( use_corrupted_posDownVal == "for_cd_fprop" )
+            {
+                corrupted_pos_down_val.resize( down_layer->size );
+                corrupt_input( down_layer->expectation, corrupted_pos_down_val, layer_index );
+                connection->setAsDownInput( corrupted_pos_down_val );
+            }
+            else
+                connection->setAsDownInput( down_layer->expectation );
             up_layer->getAllActivations( connection );
             up_layer->computeExpectation();
         }
@@ -2835,6 +3001,7 @@ void DeepBeliefNet::contrastiveDivergenceStep(
         Vec neg_up_val;
 
         pos_down_val << down_layer->expectation;
+
         pos_up_val << up_layer->expectation;
         up_layer->generateSample();
             
@@ -2886,10 +3053,21 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             down_layer->setLearningRate(lr_dl * (1-mean_field_contrastive_divergence_ratio));
             up_layer->setLearningRate(lr_ul * (1-mean_field_contrastive_divergence_ratio));
             connection->setLearningRate(lr_c * (1-mean_field_contrastive_divergence_ratio));
-            
-            down_layer->update( pos_down_val, neg_down_val );
-            connection->update( pos_down_val, pos_up_val,
+           
+            if( use_corrupted_posDownVal == "for_cd_update" )
+            {
+                corrupted_pos_down_val.resize( down_layer->size );
+                corrupt_input( pos_down_val, corrupted_pos_down_val, layer_index );
+                down_layer->update( corrupted_pos_down_val, neg_down_val );
+                connection->update( corrupted_pos_down_val, pos_up_val,
                                 neg_down_val, neg_up_val );
+            }
+            else
+            {
+                down_layer->update( pos_down_val, neg_down_val );
+                connection->update( pos_down_val, pos_up_val,
+                                neg_down_val, neg_up_val );
+            }
             up_layer->update( pos_up_val, neg_up_val );
             
             down_layer->setLearningRate(lr_dl);
@@ -2907,9 +3085,20 @@ void DeepBeliefNet::contrastiveDivergenceStep(
             up_layer->setLearningRate(lr_ul * mean_field_contrastive_divergence_ratio);
             connection->setLearningRate(lr_c * mean_field_contrastive_divergence_ratio);
             
-            down_layer->update( pos_down_val, mf_cd_neg_down_val );
-            connection->update( pos_down_val, pos_up_val,
+            if( use_corrupted_posDownVal == "for_cd_update" )
+            {
+                corrupted_pos_down_val.resize( down_layer->size );
+                corrupt_input( pos_down_val, corrupted_pos_down_val, layer_index );
+                down_layer->update( corrupted_pos_down_val, mf_cd_neg_down_val );
+                connection->update( corrupted_pos_down_val, pos_up_val,
                                 mf_cd_neg_down_val, mf_cd_neg_up_val );
+            }
+            else
+            {
+                down_layer->update( pos_down_val, mf_cd_neg_down_val );
+                connection->update( pos_down_val, pos_up_val,
+                                mf_cd_neg_down_val, mf_cd_neg_up_val );
+            }
             up_layer->update( pos_up_val, mf_cd_neg_up_val );
             
             down_layer->setLearningRate(lr_dl);
@@ -3235,6 +3424,50 @@ void DeepBeliefNet::computeClassifAndFinalCostsFromOutputs(const Mat& inputs, co
                 "(expectations are not up to date in the batch version)");
 }
 
+/////////////////////
+//  corrupt_input  //
+/////////////////////
+void DeepBeliefNet::corrupt_input(const Vec& input, Vec& corrupted_input, int layer)
+{
+    corrupted_input.resize(input.length());
+
+    if( noise_type == "masking_noise" )
+    {
+        corrupted_input << input;
+        if( fraction_of_masked_inputs != 0 )
+        {
+            random_gen->shuffleElements(expectation_indices[layer]);
+            if( mask_with_pepper_salt )
+                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
+                    corrupted_input[ expectation_indices[layer][j] ] = random_gen->binomial_sample(prob_salt_noise);
+            else
+                for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
+                    corrupted_input[ expectation_indices[layer][j] ] = 0;
+        }
+    }
+ /*   else if( noise_type == "binary_sampling" )
+    {
+        for( int i=0; i<corrupted_input.length(); i++ )
+            corrupted_input[i] = random_gen->binomial_sample((input[i]-0.5)*binary_sampling_noise_parameter+0.5);
+    }
+    else if( noise_type == "gaussian" )
+    {
+        for( int i=0; i<corrupted_input.length(); i++ )
+            corrupted_input[i] = input[i] +
+                random_gen->gaussian_01() * gaussian_std;
+    }
+    else
+            PLERROR("In StackedAutoassociatorsNet::corrupt_input(): "
+                    "missing_data_method %s not valid with noise_type %s",
+                     missing_data_method.c_str(), noise_type.c_str());
+    }*/
+    else if( noise_type == "none" )
+        corrupted_input << input;
+    else
+        PLERROR("In DeepBeliefNet::corrupt_input(): noise_type %s not valid", noise_type.c_str());
+}
+
+
 void DeepBeliefNet::test(VMat testset, PP<VecStatsCollector> test_stats, VMat testoutputs, VMat testcosts) const
 {
 
@@ -3334,6 +3567,71 @@ void DeepBeliefNet::setLearningRate( real the_learning_rate )
 
     for( int i=0; i<greedy_target_layers.length(); i++ )
         greedy_target_layers[i]->setLearningRate( the_learning_rate );
+}
+
+
+
+
+TVec<Vec> DeepBeliefNet::fantasizeKTimeOnMultiSrcImg(const int KTime, const Mat& srcImg, const Vec& sample, bool alwaysFromSrcImg)
+{
+    int n=srcImg.length();
+    TVec<Vec> output(0);
+
+    for( int i=0; i<n; i++ )
+    {
+        const Vec img_i = srcImg(i);
+        TVec<Vec> outputTmp;
+        outputTmp = fantasizeKTime(KTime, img_i, sample, alwaysFromSrcImg);
+        output = concat(output, outputTmp);
+    }
+
+    return output;
+}
+
+
+TVec<Vec> DeepBeliefNet::fantasizeKTime(const int KTime, const Vec& srcImg, const Vec& sample, bool alwaysFromSrcImg)
+{
+    if(sample.size() > n_layers-1)
+        PLERROR("In DeepBeliefNet::fantasize():"
+        " Size of sample (%i) should be <= "
+        "number of hidden layer (%i).",sample.size(), n_layers-1);
+
+    int n_hlayers_used = sample.size();
+
+    TVec<Vec> fantaImagesObtained(KTime+1);
+    fantaImagesObtained[0].resize(srcImg.size());
+    fantaImagesObtained[0] << srcImg;
+    layers[0]->setExpectation(srcImg);
+
+    for( int k=0 ; k<KTime ; k++ )
+    {
+        fantaImagesObtained[k+1].resize(srcImg.size());
+        for( int i=0 ; i<n_hlayers_used; i++ )
+        {
+            connections[i]->setAsDownInput( layers[i]->expectation );
+            layers[i+1]->getAllActivations( connections[i], 0, false );
+            layers[i+1]->computeExpectation();
+        }
+
+        for( int i=n_hlayers_used-1 ; i>=0; i-- )
+        {
+            if( sample[i] == 1 )
+            {
+                Vec expectDecode(layers[i+1]->size);
+                expectDecode << layers[i+1]->expectation;
+                for( int j=0; j<expectDecode.size(); j++ )
+                    expectDecode[j] = random_gen->binomial_sample(expectDecode[j]);
+                layers[i+1]->setExpectation(expectDecode);
+            }
+            connections[i]->setAsUpInput( layers[i+1]->expectation );
+                layers[i]->getAllActivations( connections[i], 0, false );
+                layers[i]->computeExpectation();
+        }
+        fantaImagesObtained[k+1] << layers[0]->expectation;
+        if( alwaysFromSrcImg )
+            layers[0]->setExpectation(srcImg);
+    }
+    return fantaImagesObtained;
 }
 
 } // end of namespace PLearn

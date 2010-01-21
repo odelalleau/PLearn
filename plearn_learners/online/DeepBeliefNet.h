@@ -137,6 +137,13 @@ public:
     //! (when the final module is external)
     int i_output_layer;
 
+    //! Experiment directory where the learner will be save
+    //! if save_learner_before_fine_tuning is true.
+    string learnerExpdir;
+ 
+    //! Saves the learner before the supervised fine_tuning.
+    bool save_learner_before_fine_tuning;
+  
     //! The weights of the connections between the layers
     TVec< PP<RBMConnection> > connections;
 
@@ -168,6 +175,30 @@ public:
     //! Indication that the update of the top layer during CD uses
     //! a sample, not the expectation.
     bool use_sample_for_up_layer;
+
+    //! Indicates whether we will use a corrupted version of the
+    //! positive down value during the CD step. 
+    //! "Choose among:
+    //! - \"for_cd_fprop\"
+    //! - \"for_cd_update\"
+    //!   \"none\" 
+    string use_corrupted_posDownVal;
+    
+    //! Type of noise that corrupts the pos_down_val
+    string noise_type;
+    
+    //! Fraction of components that will be corrupted in
+    //! function corrupt_input.
+    real fraction_of_masked_inputs;
+    
+    //! Indication that inputs should be
+    //! masked with 0 or 1 according to prop_salt_noise.
+    bool mask_with_pepper_salt;
+    
+    //! Probability that we mask by 1 instead of 0 when
+    //! using mask_with_pepper_salt
+    real prob_salt_noise;
+
 
     //#####  Public Learnt Options  ###########################################
     //! The module computing the probabilities of the different classes.
@@ -271,7 +302,6 @@ public:
     //! and  for which it updates the VecStatsCollector train_stats.
     // (PLEASE IMPLEMENT IN .cc)
     virtual TVec<std::string> getTrainCostNames() const;
-
 
     void onlineStep(const Vec& input, const Vec& target, Vec& train_costs);
     void onlineStep(const Mat& inputs, const Mat& targets, Mat& train_costs);
@@ -381,6 +411,7 @@ protected:
 
     //! Store a copy of the positive phase values
     mutable Vec pos_down_val;
+    mutable Vec corrupted_pos_down_val;
     mutable Vec pos_up_val;
     mutable Mat pos_down_vals;
     mutable Mat pos_up_vals;
@@ -452,11 +483,17 @@ protected:
     mutable TVec<Vec> up_sample;
     mutable TVec<Vec> down_sample;
 
+    //! Indices of the expectation components
+    TVec< TVec<int> > expectation_indices;
+
 protected:
     //#####  Protected Member Functions  ######################################
 
     //! Declares the class options.
     static void declareOptions(OptionList& ol);
+   
+    //! Declare the methods that are remote-callable
+    static void declareMethods(RemoteMethodMap& rmm);
 
 private:
     //#####  Private Member Functions  ########################################
@@ -472,7 +509,14 @@ private:
 
     void build_final_cost();
 
+    void corrupt_input(const Vec& input, Vec& corrupted_input, int layer);
+
     void setLearningRate( real the_learning_rate );
+
+    TVec<Vec> fantasizeKTime(const int KTime, const Vec& srcImg, const Vec& sample,
+                         bool alwaysFromSrcImg);
+    TVec<Vec> fantasizeKTimeOnMultiSrcImg(const int KTime, const Mat& srcImg, const Vec& sample,
+                         bool alwaysFromSrcImg);
 
 private:
     //#####  Private Data Members  ############################################
