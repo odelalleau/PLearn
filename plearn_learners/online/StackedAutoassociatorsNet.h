@@ -103,6 +103,12 @@ public:
     //! The layers of units in the network
     TVec< PP<RBMLayer> > layers;
 
+    //! The reconstruction layers in the network.
+    //! If not defined, will be the same layers as in the encodage phase.
+    //! Useful for example if we want binomial input components 
+    //! and real reconstruction components.
+    TVec< PP<RBMLayer> > reconstruction_layers;
+
     //! The weights of the connections between the layers
     TVec< PP<RBMConnection> > connections;
 
@@ -158,7 +164,7 @@ public:
     string noise_type;
 
     //! Method used to fill the double_input vector when using missing_data
-    //| noise type.
+    //! noise type.
     string missing_data_method;
 
     //! Weight given to a corrupted (or missing) data when
@@ -187,6 +193,25 @@ public:
     //! Indication that inputs should be masked with 
     //! 0 or 1 according to prop_salt_noise. 
     bool mask_with_pepper_salt;
+
+    //! Indicate if the pepper salt is zero centered (>0) or not (0).
+    //! If pep_salt_zero_centered equal 0
+    //!   then pepper value is 0 and salt value is 1.
+    //! If pep_salt_zero_centered is greater than 0, 
+    //!   then the pepper value is -pep_salt_zero_centered and 
+    //!   the salt value is pep_salt_zero_centered.
+    real pep_salt_zero_centered;
+
+    //! Indication that the autoassociator will try to
+    //! "reconstruct" another _corrupted version_ of the input
+    //! (instead of the input itself).
+    bool renoising;
+
+    //! Usage of noisy example before doing a particular training.
+    //! Could be before unsup. pre-training (=1) or 
+    //! before unsup pre-training AND before supervised fine-tuning (=2).
+    //! Original example are used for any test.
+    int noisy;   
 
     //! Probability that we mask the input by 1 instead of 0.
     real prob_salt_noise;
@@ -225,6 +250,16 @@ public:
     //! -1 (default) means the number of training samples.
     int train_stats_window;
 
+    //! Experiment directory where the learner will be save
+    //! if save_learner_before_fine_tuning is true.
+    string learnerExpdir;
+
+    //! Saves the learner before the supervised fine_tuning.
+    bool save_learner_before_fine_tuning;
+    
+    //! Keep trace of the representations obtained during an 
+    //! unsupervised training phase.
+    bool keep_online_representations;
 
     //#####  Public Learnt Options  ###########################################
 
@@ -277,9 +312,20 @@ public:
     //! and  for which it updates the VecStatsCollector train_stats.
     virtual TVec<std::string> getTrainCostNames() const;
 
+    //! Returns the representations obtained during last pre-training of the current layer.
+    inline TVec< Vec > getTrainRepresentations() const
+    {
+        return train_representations;
+    }
+
+    inline void remote_setCurrentlyTrainedLayer(int new_currently_trained_layer)
+    {
+        currently_trained_layer = new_currently_trained_layer;
+    }
+        
 
     void greedyStep(const Vec& input, const Vec& target, int index,
-                    Vec train_costs);
+                    Vec train_costs, Vec& representation);
     void greedyStep(const Mat& inputs, const Mat& targets, int index,
                     Mat& train_costs);
 
@@ -435,6 +481,14 @@ protected:
     //! Layers randomly masked, for unsupervised fine-tuning.
     TVec< Vec > corrupted_autoassociator_expectations;
 
+    //! Corrupted version of the autoassociator input not used for denoising.
+    //! Useful when renoising or noisy is true. 
+    //! In the first case: autoassociator will try to have its decoded version
+    //! getting closer to this corrupted version during the non-supervised training.
+    //! In the second case: example will be corrupted before any non-supervised
+    //! (without denoising) and supervised training. 
+    TVec< Vec > second_corrupted_autoassociator_expectations;
+
     //! Stores the weight of each data used when
     //! backpropagating the gradient of reconstruction cost.
     //! The weight is either corrupted_data_weight or data_weight
@@ -442,6 +496,9 @@ protected:
     //! Used for example to put emphasis on corrupted/missing data
     //! during the reconstruction.
     mutable Vec reconstruction_weights;
+
+    //! Representations computed for the current trained layer.
+    mutable TVec< Vec > train_representations;
 
     //! Layers random binary maske, for online learning.
     TVec< Vec > binary_masks;
@@ -503,7 +560,9 @@ private:
     void divide_input(const Vec& input, Vec& divided_input) const ;
 
     //! Supposes the learner is already trained.
-    //! Allows a codage-decodage ktime from a source image. Returns the 'fantasize' image. 
+    //! Allows a codage-decodage ktime, each time from the same source image (alwaysFromSrcImg==True)
+    //!   or each time from the last fantasize image (alwaysFromSrcImg==False). 
+    //!   Returns the source image followed by the kTime obtained 'fantasize' images. 
     //! You can choose how many layers to use (including raws layer) by defining the size of sample. 
     //! You can corrupt layers differently during the codage phase by defining maskNoiseFractOrProb 
     //! You can apply a binary sampling (1) or not (0) differently for each layer during the decode phase
@@ -513,8 +572,12 @@ private:
     //!                                          // and first hidden layer.
     //!     sample = [1,0,0] // sampling only before reconstruction of the
     //!                      // raws input.
-    Vec fantasizeKTime(int KTime, const Vec& srcImg, const Vec& sample,
-                        const Vec& maskNoiseFractOrProb);
+    TVec<Vec> fantasizeKTime(const int KTime, const Vec& srcImg, const Vec& sample,
+                        const Vec& maskNoiseFractOrProb, bool alwaysFromSrcImg);
+
+    //! Same as fantasizeKTime, but does it on different source images.
+    TVec<Vec> fantasizeKTimeOnMultiSrcImg(const int KTime, const Mat& srcImg, const Vec& sample,
+                        const Vec& maskNoiseFractOrProb, bool alwaysFromSrcImg);
 
     void corrupt_input(const Vec& input, Vec& corrupted_input, int layer, Vec& binary_mask);
 
