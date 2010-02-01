@@ -37,7 +37,7 @@ import inspect
 import os.path
 import sys
 import threading
-from   datetime import datetime
+import datetime
 
 ## Traits
 from enthought.traits.api          import *
@@ -180,8 +180,7 @@ class ExperimentWorkbench(HasTraits) :
           instance giving, among other things, an experiment directory and
           facility to create Matplotlib figures to be added to the workbench.
 
-        - gui: Either a boolean, or if '__AUTO__', taken from the
-          command-line switch --no-gui or --gui.
+        - gui: Should be "False" (kept only for back-compatibility)
         """
         assert(not gui)
         ## Instantiate the params container if a class was passed
@@ -206,10 +205,29 @@ class ExperimentWorkbench(HasTraits) :
         'params' (and the classes contained therin) inherits from
         HasStrictTraits so that any assignment to inexistant options raises
         an exception.
+
+        If an argument starts with an '@'-sign, it is intrepreted as a filename
+        containing extra arguments to insert in the list of arguments. The file is
+        opened, and each line that doesn't start with a '#'-sign is taken as a new 
+        argument. These argument are inserted in order, where the @filename directive
+        was found, with said @filename directive being removed from the list of 
+        arguments. It is possible to use this multiple times: @filename2 @filename2
         """
+
+        # First replace all @filename by their contents
+        expanded_argv = []
         for arg in argv:
+            if arg.startswith('@'):
+                f = open(arg[1:], 'rU')
+                expanded_argv.extend(line.strip() for line in f if not line.startswith('#'))
+                f.close()
+            else:
+                expanded_argv.append(arg)
+
+        for arg in expanded_argv:
             if arg.startswith('-'):
                 continue
+
             if '=' in arg:
                 (k,v) = arg.split('=', 1)
                 v = v.replace("'", "\\'")
@@ -241,7 +259,7 @@ class ExperimentWorkbench(HasTraits) :
     def expdir_name(expdir_root, expdir=None):
         """Return an experiment directory from a root location and possibly a dir name."""
         if expdir is None or expdir == '':
-            expdir = datetime.now().strftime("expdir_%Y%m%d_%H%M%S")
+            expdir = datetime.datetime.now().strftime("expdir_%Y%m%d_%H%M%S")
         return os.path.join(expdir_root, expdir)
 
 
@@ -340,3 +358,4 @@ if __name__ == "__main__":
 
     ExperimentWorkbench().run(AllOpt, f)
     
+# vim: filetype=python:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
