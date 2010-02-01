@@ -186,19 +186,19 @@ PStream& operator<<(PStream& out, const PDate& date);
 PStream& operator>>(PStream& in, PDate& date);
 
 
-//! Takes a date in cyymmdd format and adds the given number of months (may be negative)
-//! Returns result in CYYMMDD format.  
-inline int CYYMMDD_add_months(int cyymmdd, int nmonths)
+//! Takes a date (in cyymmdd or yyyymmdd format) and adds the given number of months (may be negative)
+//! Returns result in same format.
+inline int add_months_to_date(int xyymmdd, int nmonths)  // x=c or x=yy
 {
-    int cyy  = cyymmdd/10000;
-    int mmdd = cyymmdd%10000;
+    int xyy  = xyymmdd/10000;
+    int mmdd = xyymmdd%10000;
     int mm   = mmdd/100;
     int dd   = mmdd%100;
     
-    int monthpos = cyy*12+(mm-1)+nmonths;
-    cyy = monthpos/12;
+    int monthpos = xyy*12+(mm-1)+nmonths;
+    xyy = monthpos/12;
     mm  = 1+monthpos%12;
-    return cyy*10000+mm*100+dd;
+    return xyy*10000+mm*100+dd;
 }
 
 //! Converts date to float: ex: September 29 1972: 720929; December 25 2002: 1021225
