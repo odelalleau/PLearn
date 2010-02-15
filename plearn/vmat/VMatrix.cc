@@ -369,6 +369,12 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
          ArgDoc ("val", "numeric value")));
 
     declareMethod(
+        rmm, "setStringMapping", &VMatrix::setStringMapping,
+        (BodyDoc("Set the string->real mapping for a given column.\n"),
+         ArgDoc ("col", "column number"),
+         ArgDoc ("map", "map of string->real")));
+
+    declareMethod(
         rmm, "getStringToRealMapping", &VMatrix::getStringToRealMapping,
         (BodyDoc("Get the string->real mapping for a given column.\n"),
          ArgDoc ("col", "column number"),
@@ -384,6 +390,10 @@ void VMatrix::declareMethods(RemoteMethodMap& rmm)
         rmm, "setMetaInfoFrom", &VMatrix::setMetaInfoFrom,
         (BodyDoc("Set this vmatrix's meta-info from another vmatrix\n"),
          ArgDoc ("vm", "the other vmatrix")));
+
+    declareMethod(
+        rmm, "saveAllStringMappings", &VMatrix::saveAllStringMappings,
+        (BodyDoc("Save this vmatrix's string mapping infos\n")));
 
 }
 
