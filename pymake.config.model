@@ -881,7 +881,7 @@ pymakeLinkOption( name = 'mammouthblas',
 
 pymakeLinkOption( name = 'apintelblas',
               description = 'Intel BLAS+LAPACK for generic install in /usr/local/lib (incl. ApSTAT)',
-              linkeroptions = '-L/home/chrish/mkl/install/lib/32 -lmkl_lapack -lmkl -lguide -lpthread' )
+              linkeroptions = '-lmkl_lapack -lmkl -lguide -lpthread' )
 
 pymakeLinkOption( name = 'veclib',
               description = "Apple's vecLib library, a version of the BLAS library for the G4 and G5 under OS X",
