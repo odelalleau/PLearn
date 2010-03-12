@@ -276,6 +276,7 @@ class TableView:
  N            : search next
  P            : search previous
  !            : filter rows satisfying python expression (or current selected fields values)
+ @            : filter rows keeping only the first for each combination of current selected field values.
  o            : revert to the original table (all fields and rows in orignal order)
  h            : display this help screen
  *            : mark main conditioning field (Also used for subplot rows)
@@ -855,6 +856,32 @@ class TableView:
         self.selected_fields = [ self.table.fieldnames[j] for j in constant_cols ]
         self.redraw()
 
+    def keep_first_of_group(self):
+        selection = []
+        keys = {}
+
+        for i in xrange(self.length()):
+            if self.selected_rows is None:
+                orig_i = i
+            else:
+                orig_i = self.selected_rows[i]
+            row = self.table[orig_i]
+
+            key = tuple([ row[fname] for fname in self.selected_fields ])
+            if key not in keys:
+                # self.display_fullscreen(str(key))
+                selection.append(orig_i)
+                keys[key] = 1
+
+        self.selected_rows = selection
+        # self.selected_fields = []
+        self.i0 = 0
+        #self.j0 = 0
+        self.current_i = 0
+        #self.current_j = 0
+        self.redraw()
+
+        
     def filter(self):
         if self.selected_fields == []:
             filter_expression = self.input('Filter expression ex: float(AGE)>3 : ').strip()
@@ -1442,6 +1469,8 @@ class TableView:
                 self.search_next()
         elif c == ord('!'):
             self.filter()
+        elif c == ord('@'):
+            self.keep_first_of_group()
         elif c == ord('N'):
             self.search_next()
         elif c == ord('P'):
