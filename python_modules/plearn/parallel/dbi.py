@@ -840,9 +840,13 @@ class DBICondor(DBIBase):
 
         if not self.os:
             #if their is not required os, condor launch on the same os.
-            p=Popen( "condor_config_val OpSyS", shell=True,stdout=PIPE)
+            p=Popen( "condor_config_val OpSyS", shell=True, stdout=PIPE, stderr=PIPE)
             p.wait()
-            self.os=p.stdout.readlines()[0].strip()
+            out=p.stdout.readlines()
+            err=p.stderr.readlines()
+            if len(err)!=0 or p.returncode!=0:
+                raise Exception("Can't find the os code used by condor on this computer.\n Is condor installed on this computer?\n return code=%d, \n%s"%(p.returncode,"\n".join(err)))
+            self.os=out[0].strip()
         else: self.os = self.os.upper()
         
         if not os.path.exists(self.log_dir):
