@@ -342,7 +342,7 @@ class Task:
             self.unique_id = get_new_sid('')#compation intense
             self.log_file = truncate( os.path.join(log_dir, self.unique_id +'_'+ formatted_command), 200) + ".log"
         else:
-            self.unique_id = formatted_command[:200]+'_'+str(datetime.datetime.now()).replace(' ','_')
+            self.unique_id = formatted_command[:200]+'_'+str(datetime.datetime.now()).replace(' ','_').replace(':','-')
             self.log_file = os.path.join(log_dir, self.unique_id) + ".log"
 
         if self.add_unique_id:
@@ -770,6 +770,171 @@ class DBIBqtools(DBIBase):
     def wait(self):
         print "[DBI] WARNING cannot wait until all jobs are done for bqtools, use bqwatch or bqstatus"
 
+
+###############################
+# Sun Grid Engine
+# (used on CLUMEQ's colosse
+###############################
+
+class DBISge(DBIBase):
+    def __init__(self, commands, **args):
+        self.jobs_name = ''
+        self.queue = ''
+        self.duree = '23:59:59'
+        self.project = 'jvb-000-aa'
+        DBIBase.__init__(self, commands, **args)
+
+        self.tmp_dir = os.path.abspath(self.tmp_dir)
+        self.log_dir = os.path.abspath(self.log_dir)
+        if not self.jobs_name:
+            #self.jobs_name = os.path.split(self.log_dir)[1]
+            self.jobs_name = 'dbi_'+self.unique_id[1:12]
+        ## No TMP_DIR needed for the moment
+        ##if not os.path.exists(self.tmp_dir):
+        ##    os.makedirs(self.tmp_dir)
+        ##print "[DBI] All SGE file will be in ", self.tmp_dir
+        ##os.chdir(self.tmp_dir)
+        self.args = args
+        self.add_commands(commands)
+
+        # Warn for not implemented features
+        if getattr(self, 'nb_proc', -1) != -1:
+            print "[DBI] WARNING: DBISge does not support nb_proc != -1", self.nb_proc
+
+    def add_commands(self,commands):
+        if not isinstance(commands, list):
+            commands=[commands]
+
+        # create the information about the tasks
+        for command in commands:
+            id=len(self.tasks)+1
+            self.tasks.append(Task(
+                command = command,
+                tmp_dir = self.tmp_dir,
+                log_dir = self.log_dir,
+                time_format = self.time_format,
+                pre_tasks = self.pre_tasks,
+                post_tasks = self.post_tasks,
+                dolog = self.dolog,
+                id = id,
+                gen_unique_id = False,
+                args = self.args))
+            id+=1
+
+    def run(self):
+        pre_batch_command = ';'.join( self.pre_batch )
+        post_batch_command = ';'.join( self.post_batch )
+
+        launcher = open(os.path.join(self.log_dir, 'launcher'), 'w')
+        launcher.write(dedent('''\
+                #!/bin/bash -l
+                # Bash is needed because we use its "array" data structure
+                # the -l flag means it will act like a login shell,
+                # and source the .profile, .bashrc, and so on
+
+                # List of all tasks to execute
+                tasks=(
+                '''))
+        for task in self.tasks:
+            launcher.write("'" + ';'.join(task.commands) + "'\n")
+        launcher.write(dedent('''\
+                )
+
+                # The index in 'tasks' array starts at 0,
+                # but SGE_TASK_ID starts at 1...
+                ID=$(($SGE_TASK_ID - 1))
+
+                # Execute the task
+                ${tasks[$ID]}
+                '''))
+
+        submit_sh_template = '''
+                #!/bin/bash
+
+                ## Reasonable default values
+                # Execute the job from the current working directory.
+                #$ -cwd
+                # Send "warning" signals to a running job prior to sending the signals themselves. 
+                #$ -notify
+
+                ## Mandatory arguments
+                #Specifies  the  project (RAPI number from CCDB) to  which this job is assigned.
+                #$ -P %(project)s
+                #All jobs must be submitted with an estimated run time
+                #$ -l h_rt=%(duree)s
+
+                ## Job name
+                #$ -N %(name)s
+
+                ## log out/err files
+                #$ -o %(log_dir)s/$JOB_NAME.$JOB_ID.$TASK_ID.log.out
+                #$ -e %(log_dir)s/$JOB_NAME.$JOB_ID.$TASK_ID.log.err
+
+                ## Execute as many jobs as needed
+                #$ -t 1-%(n_tasks)i:1
+                '''
+        if self.cpu > 0:
+            submit_sh_template += '''
+                ## Number of CPU (on the same node) per job
+                #$ -pe smp %(cpu)i
+                '''
+        if self.queue:
+            submit_sh_template += '''
+                ## Queue name
+                #$ -q %(queue)s
+                '''
+        submit_sh_template += '''
+                ## Execute the 'launcher' script in bash
+                # Bash is needed because we use its "array" data structure
+                # the -l flag means it will act like a login shell,
+                # and source the .profile, .bashrc, and so on
+                /bin/bash -l -e %(log_dir)s/launcher
+                '''
+
+        submit_sh = open(os.path.join(self.log_dir, 'submit.sh'), 'w')
+        submit_sh.write(dedent(
+            submit_sh_template % dict(
+                project = self.project,
+                duree = self.duree,
+                name = self.jobs_name,
+                log_dir = self.log_dir,
+                n_tasks = len(self.tasks),
+                cpu = self.cpu,
+                queue = self.queue,
+            )))
+
+        submit_sh.close()
+
+        # Execute pre-batch
+        self.exec_pre_batch()
+
+        print "[DBI] All logs will be in the directory: ", self.log_dir
+        print "[DBI] WARNING: the log formatting specified by --task_names will be ignored,"
+        print "     the following format will be used: $JOB_NAME.$JOB_ID.$TASK_ID.log.{err,out}"
+        # Launch qsub
+        if not self.test:
+            for t in self.tasks:
+                t.set_scheduled_time()
+
+            submit_command = 'qsub ' + os.path.join(self.log_dir, 'submit.sh')
+            self.p = Popen(submit_command, shell=True)
+            self.p.wait()
+
+            if self.p.returncode!=0:
+                raise DBIError("[DBI] ERROR: qsub returned an error code of"+str(self.p.returncode))
+        else:
+            print "[DBI] Test mode, we generated all files, but will not execute bqsubmit"
+            if self.dolog:
+                print "[DBI] The scheduling time will not be logged when you submit the generated file"
+
+        # Execute post-batchs
+        self.exec_post_batch()
+
+    def clean(self):
+        pass
+
+    def wait(self):
+        print "[DBI] WARNING cannot wait until all jobs are done for SGE, use qstat"
 
 # Transfor a string so that it is treated by Condor as a single argument
 def condor_escape_argument(argstring):
