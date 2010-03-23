@@ -1683,7 +1683,12 @@ void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_i
                 {
                     if( random_gen->uniform_sample() < probability_of_masked_inputs )
                     {
-                        corrupted_input[ j ] = random_gen->bounded_sample(prob_salt_noise,pepVal,saltVal);
+                        // Sample saltVal with probability prob_salt_noise,
+                        // else pepVal
+                        corrupted_input[ j ] =
+                            random_gen->binomial_sample(prob_salt_noise) == 1 ?
+                                saltVal:
+                                pepVal;
                         reconstruction_weights[j] = corrupted_data_weight;
                     }
                     else
@@ -1692,13 +1697,13 @@ void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_i
                         reconstruction_weights[j] = data_weight;
                     }
                 }
-            }       
+            }
             else if( mask_with_mean )
             {
                 for( int j=0 ; j <input.length() ; j++)
                 {
                     if( random_gen->uniform_sample() < probability_of_masked_inputs )
-                    {                    
+                    {
                         corrupted_input[ j ] = expectation_means[layer][ j ];
                         reconstruction_weights[j] = corrupted_data_weight;
                         binary_mask[ j ] = 0;
@@ -1716,7 +1721,7 @@ void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_i
                 {
                     if( random_gen->uniform_sample() < probability_of_masked_inputs )
                     {
-                        corrupted_input[ j ] = 0;   
+                        corrupted_input[ j ] = 0;
                         reconstruction_weights[j] = corrupted_data_weight;
                         binary_mask[ j ] = 0;
                     }
@@ -1746,7 +1751,12 @@ void StackedAutoassociatorsNet::corrupt_input(const Vec& input, Vec& corrupted_i
                     }
                     for( int j=0 ; j < round(fraction_of_masked_inputs*input.length()) ; j++)
                     {
-                        corrupted_input[ autoassociator_expectation_indices[layer][j] ] = random_gen->bounded_sample(prob_salt_noise,pepVal,saltVal);
+                        // Sample saltVal with probability prob_salt_noise,
+                        // else pepVal
+                        corrupted_input[ autoassociator_expectation_indices[layer][j] ] =
+                            random_gen->binomial_sample(prob_salt_noise) == 1?
+                                saltVal:
+                                pepVal;
                         reconstruction_weights[autoassociator_expectation_indices[layer][j]] = corrupted_data_weight;
                     }
                 }   
