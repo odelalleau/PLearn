@@ -260,19 +260,20 @@ options_choices = [
   [ 'g++', 'g++3', 'g++no-cygwin', 'g++-4', 'icc',
     'icc8', 'icc9', 'icc10', 'mpi',
     'purify', 'quantify', 'vc++', 'condor' ],
-  
+
   [ 'dbg', 'opt', 'pintel', 'gprof', 'optdbg', 'optdbggprof', 'safegprof', 
     'safeopt', 'safeoptdbg', 'checkopt', 'genericvc++', 'pydbg', 'vecgcc' ],
-  
+
   [ 'double', 'float' ],
-  
+
   # [ 'throwerrors', 'exiterrors' ],
   [ 'autopython', 'python23', 'python24', 'python25', 'python26','nopython' ],
-  
+
   [ 'blas', 'noblas' ],
-  [ 'defblas', 'nolibblas', 'p3blas','p4blas','athlonblas','pentiumblas',
-    'mammouthblas', 'apintelblas', 'veclib', 'scs', 'goto', 'lisa' ],
-  
+  [ 'defblas', 'nolibblas', 'p3blas', 'p4blas', 'athlonblas', 'pentiumblas',
+    'mammouthblas','apintelblas', 'veclib', 'scs', 'goto', 'lisa',
+    'colosseblas' ],
+
   [ 'logging=dbg', 'logging=mand', 'logging=imp', 'logging=normal',
     'logging=extreme', 'logging=dbg-profile' ],
 
@@ -284,7 +285,7 @@ options_choices = [
   [ '', 'cygwin-fgets-bugfix'],
   [ '', 'openmpgcc'],
   [ '', 'no-miss'],
-  
+
   [ '', 'pass']
 ]
 
@@ -895,6 +896,10 @@ pymakeLinkOption( name = 'goto',
               description = 'linking using GOTO lib for BLAS',
               linkeroptions = '-L' + libdir +'goto -lgoto'
               )
+
+pymakeLinkOption( name = 'colosseblas',
+              description = 'linking BLAS for CLUMEQ colosse cluster',
+              linkeroptions = '-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_lapack -openmp -lglib-2.0' )
 
 tmp = getOptions(options_choices, optionargs[:])
 if 'goto' in tmp:
