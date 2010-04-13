@@ -844,11 +844,16 @@ class DBISge(DBIBase):
                 # but SGE_TASK_ID starts at 1...
                 ID=$(($SGE_TASK_ID - 1))
 
+                ## Trap SIGUSR1 and SIGUSR2, so the job has time to react
+                # These signals are emitted by SGE before (respectively)
+                # SIGSTOP and SIGKILL (typically 60 s before on colosse)
+                trap "echo signal trapped by $0 >&2" SIGUSR1 SIGUSR2
+
                 # Execute the task
                 ${tasks[$ID]}
                 '''))
 
-        submit_sh_template = '''
+        submit_sh_template = '''\
                 #!/bin/bash
 
                 ## Reasonable default values
@@ -869,6 +874,11 @@ class DBISge(DBIBase):
                 ## log out/err files
                 #$ -o %(log_dir)s/$JOB_NAME.$JOB_ID.$TASK_ID.log.out
                 #$ -e %(log_dir)s/$JOB_NAME.$JOB_ID.$TASK_ID.log.err
+
+                ## Trap SIGUSR1 and SIGUSR2, so the job has time to react
+                # These signals are emitted by SGE before (respectively)
+                # SIGSTOP and SIGKILL (typically 60 s before on colosse)
+                trap "echo signal trapped by $0 >&2" SIGUSR1 SIGUSR2
 
                 ## Execute as many jobs as needed
                 #$ -t 1-%(n_tasks)i:1
