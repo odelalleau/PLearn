@@ -28,6 +28,9 @@ def pljulian_to_date(x):
 def date_to_cyymmdd(d):
     return (d.year-1900)*10000 + d.month*100 +d.day
 
+def date_to_yyyymmdd(d):
+    return d.year*10000 + d.month*100 +d.day
+
 def cyymmdd_to_ordinal(x):
     if isNaN(x):
       return x
