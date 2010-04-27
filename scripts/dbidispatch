@@ -3,6 +3,12 @@ import sys,os,re,time,datetime
 from plearn.utilities.toolkit import search_file
 from socket import gethostname
 from subprocess import Popen,PIPE
+if sys.version_info[:2] < (2,5):
+    def any(iterable):
+        for element in iterable:
+            if element:
+                return True
+        return False
 
 ScriptName="launchdbi.py"
 ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
