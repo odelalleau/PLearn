@@ -301,7 +301,9 @@ fast_computer+=["zappa"+str(x) for x in range(1,9)]
 MAX_FILE_NAME_SIZE=255
 
 dbi_param={"req":"True", "files":"", "rank":"True", "raw":"", "env":"",
-           "machine":[], "machines":[], "no_machine":[], "tasks_filename":[]}
+           "machine":[], "machines":[], "no_machine":[], "tasks_filename":[],
+           "restart":False,'whitespace':False,"fast":False,
+           "gpu":False,"gpu_enabled":False}
 dbi_param_orig = dbi_param.copy()
 testmode=False
 PATH=os.getenv('PATH')
@@ -424,7 +426,7 @@ if len(command_argv) == 0 and not dbi_param.has_key("file"):
     print
     print ShortHelp
     sys.exit(1)
-if dbi_param.has_key("file") and dbi_param.has_key("restart"):
+if dbi_param.has_key("file") and dbi_param["restart"]:
     print "the --file= and --restart option are incompatible!"
     print
     print ShortHelp
@@ -455,10 +457,10 @@ elif launch_cmd=="Bqtools":
 elif launch_cmd=="Sge":
     valid_dbi_param += ["duree", "jobs_name", "queue"]
 
-if dbi_param.get('gpu',False):
+if dbi_param['gpu']:
     dbi_param['req']+="&&(Target.GPU=?=True)"
     dbi_param['raw']+='\n+GPU=True'
-elif dbi_param.get('gpu_enabled',False):
+elif dbi_param['gpu_enabled']:
     dbi_param['rank']+="&&(Target.GPU=?=True)"
     dbi_param['raw']+='\n+GPU=True'
 
@@ -471,7 +473,7 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     nokerb_path=["/home/fringant1/","/home/fringant2/","/cluster/", "/data/"]
     pkdilly=False
     dir_with_kerb=not any([p.startswith(x) for x in nokerb_path])
-    if not dir_with_kerb or dbi_param.get('files'):
+    if not dir_with_kerb or dbi_param['files']:
         pass
     elif dbi_param.get("pkdilly")==True:
         pkdilly = True
@@ -486,12 +488,11 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
 
 
 print "\n\nThe jobs will be launched on the system:", launch_cmd
-import pdb;pdb.set_trace()
 print "With options: ",[str(param)+":"+str(value) for param,value in dbi_param.items() if value!=dbi_param_orig.get(param,None)]
 for i in dbi_param:
     if i not in valid_dbi_param:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end. It will be ignored."
-if dbi_param.get("restart",False):
+if dbi_param["restart"]:
     print "With the command to be restarted:"," ".join(command_argv),"\n\n"
 else:
     print "With the command to be expanded:"," ".join(command_argv),"\n\n"
@@ -513,7 +514,7 @@ def generate_combination(repl,sep=" "):
 def generate_commands(sp):
 ### Find replacement lists in the arguments
     repl = []
-    if dbi_param.get('whitespace',False):
+    if dbi_param['whitespace']:
         p = re.compile('\{\{.*\}\}')
     else:
         p = re.compile('\{\{\S*?\}\}')
@@ -547,7 +548,7 @@ def generate_commands(sp):
 
 #generate the command
 if dbi_param.has_key("file"):
-    fd = open(dbi_param.get("file"),'r')
+    fd = open(dbi_param["file"],'r')
     commands=[]
     choise_args = []
     for line in fd.readlines():
@@ -559,7 +560,7 @@ if dbi_param.has_key("file"):
         commands+=t1
         choise_args+=t2
     fd.close
-elif dbi_param.get("restart",False):
+elif dbi_param["restart"]:
     assert launch_cmd=="Condor"
     cmds=[]
     #We accept to start jobs in the queue only if they are completed
@@ -621,7 +622,7 @@ if not dbi_param.has_key("next_job_start_delay") and launch_cmd=="Condor" and le
     dbi_param["next_job_start_delay"]=1
     
 
-if dbi_param.get("fast",False):
+if dbi_param["fast"]:
     for m in fast_computer:
         dbi_param["machine"]+=[m+".iro.umontreal.ca"]
     del dbi_param["fast"]
@@ -629,7 +630,7 @@ if dbi_param.get("fast",False):
 #we duplicate the command so that everything else work correctly.
 if dbi_param.has_key("to_all"):
     assert(len(commands)==1)
-    assert(dbi_param.has_key("machine"))
+    assert(len(dbi_param["machine"]>0))
     commands=commands*len(dbi_param["machine"])
 
 if dbi_param.has_key("exp_dir"):
@@ -646,7 +647,7 @@ elif not dbi_param.has_key("file"):
     ### We need to remove the symbols "," as this cause trouble with bqtools
     tmp=re.sub( ',', '-', tmp )
     date_str=str(datetime.datetime.now())
-    if dbi_param.has_key("restart"):
+    if dbi_param["restart"]:
         tmp="jobs_restarted_"+tmp
     
     if launch_cmd == "Bqtools":
@@ -677,7 +678,7 @@ def merge_pattern(new_list):
         else:
             l.append(x)
     return l
-for pattern in dbi_param.get("tasks_filename"):
+for pattern in dbi_param["tasks_filename"]:
     if pattern == "explicit":
         dbi_param[n]=merge_pattern([re.sub( '[^a-zA-Z=0-9-]', '_', x ) for x in commands])
     elif pattern == "compact":
