@@ -628,7 +628,6 @@ class DBIBqtools(DBIBase):
         os.chdir(self.tmp_dir)
 
         if self.long:
-            self.queue = "qlong@ms"
             # Get max job duration from environment variable if it is set.
             max = os.getenv("BQ_MAX_JOB_DURATION")
             if max:
