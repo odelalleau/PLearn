@@ -1592,9 +1592,15 @@ class DBICondor(DBIBase):
             return #no task to run
 
         if self.set_special_env:
-            self.env+='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+            if self.env:
+                self.env=self.env[:-1]+' OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+            else:
+                self.env='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) CONDOR_JOB_LOGDIR=%s"'%self.log_dir
         else:
-            self.env+='" CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+            if self.env:
+                self.env=self.env[:-1]+' CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+            else:
+                self.env='" CONDOR_JOB_LOGDIR=%s"'%self.log_dir
 
         if not self.req:
             self.req = "True"
