@@ -184,7 +184,7 @@ class DBIBase:
         self.stderrs = ''
         self.raw = ''
         self.cpu = 1
-        self.mem = 0
+        self.mem = "0"
 
         for key in args.keys():
             self.__dict__[key] = args[key]
@@ -193,8 +193,14 @@ class DBIBase:
         if (not os.path.exists(self.log_dir)):
 #            if self.dolog or self.file_redirect_stdout or self.file_redirect_stderr:
             os.mkdir(self.log_dir)
-
-        self.mem = int(self.mem)
+        if self.mem[-1] in ['G', 'g']:
+            self.mem = int(self.mem[:-1])*1024
+        elif self.mem[-1] in ['M', 'm']:
+            self.mem = int(self.mem[:-1])
+        elif self.mem[-1] in ['K', 'k']:
+            self.mem = int(self.mem[:-1])/1024
+        else: self.mem = int(self.mem)
+            
         self.cpu = int(self.cpu)
         # If some arguments aren't lists, put them in a list
         if not isinstance(commands, list):
@@ -888,6 +894,12 @@ class DBISge(DBIBase):
                 ## Number of CPU (on the same node) per job
                 #$ -pe smp %(cpu)i
                 '''
+        if self.mem > 0:
+            submit_sh_template += '''
+                ## Memory size (on the same node) per job
+                #$ -l ml=%sM
+                '''%str(self.mem)
+            
         if self.queue:
             submit_sh_template += '''
                 ## Queue name

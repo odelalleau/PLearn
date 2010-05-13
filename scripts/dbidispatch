@@ -31,7 +31,7 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
                                                  clusterid(condor only),
                                                  processid(condor only))}+]
     bqtools, cluster, condor, sge option:   [--cpu=nb_cpu_per_node]
-    bqtools, cluster, condor option:        [--mem=N]
+                                            [--mem=N]
     bqtools, cluster, sge option:           [--duree=X]
     bqtools, condor, sge options:           [--env=VAR=VALUE[ VAR2=VALUE2]]  (must be quoted into the shell!)
     bqtools, condor options  :[--raw=STRING[\nSTRING]]
@@ -130,9 +130,9 @@ common options:
 bqtools, cluster, condor and sge option:
   The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
     will be reserved for each job.(default=1, -1 won't set it)
-
-bqtools, cluster and condor option:
   The '--mem=X' speficify the number of ram in meg the program need to execute.
+    If you put G[g],M[m] or K[k] at the end. We consider it as Gig, Meg or K
+    with multiple of 1024.
 
 bqtools, cluster and sge option:
   The '--duree' option specifies the maximum duration of the jobs. The syntax 
@@ -462,7 +462,7 @@ elif launch_cmd=="Bqtools":
                        "nano", "queue", "raw", "submit_options", "jobs_name",
                        "set_special_env", "env" ]
 elif launch_cmd=="Sge":
-    valid_dbi_param += ["duree", "jobs_name", "queue", "env"]
+    valid_dbi_param += ["duree", "jobs_name", "queue", "mem", "env"]
 
 if dbi_param['gpu']:
     dbi_param['req']+="&&(Target.GPU=?=True)"
