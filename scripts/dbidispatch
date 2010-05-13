@@ -35,7 +35,7 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
     bqtools, cluster, sge option:           [--duree=X]
     bqtools, condor options  :[--raw=STRING[\nSTRING]]
                               [*--[no_]set_special_env]
-                              [--env=VAR=VALUE[;VAR2=VALUE2]]
+                              [--env=VAR=VALUE[ VAR2=VALUE2]] (must be quoted into the shell!)
     cluster, condor options  :[--32|--64|--3264] [--os=X]
     bqtools, sge options:     [--queue=X] [--jobs_name=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
@@ -147,7 +147,7 @@ bqtools and condor options:
     MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
   The '--env=VAR=VALUE' option will set in the environment of the executing
     jobs the variable VAR with value VALUE. To pass many variable you can:
-      1) use one --env option and separ the pair by ';'(don't forget to quote)
+      1) use one --env option and separ the pair by ' '(don't forget to quote)
       2) you can pass many time the --env parameter.
 
 cluster and condor options:
