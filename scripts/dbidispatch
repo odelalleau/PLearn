@@ -313,6 +313,8 @@ elif search_file('bqsubmit',PATH):
     launch_cmd = 'Bqtools'
 elif search_file('cluster',PATH):
     launch_cmd = 'Cluster'
+elif search_file('qsub',PATH):
+    launch_cmd = 'Sge'
 else:
     launch_cmd = 'Local'
 LOGDIR=os.getenv("DBIDISPATCH_LOGDIR")
@@ -493,7 +495,7 @@ if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
 print "\n\nThe jobs will be launched on the system:", launch_cmd
 print "With options: ",[str(param)+":"+str(value) for param,value in dbi_param.items() if value!=dbi_param_orig.get(param,None)]
 for i in dbi_param:
-    if i not in valid_dbi_param:
+    if i not in valid_dbi_param and i in dbi_param_orig and dbi_param_orig[i]!=dbi_param[i]:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end. It will be ignored."
 if dbi_param["restart"]:
     print "With the command to be restarted:"," ".join(command_argv),"\n\n"
