@@ -917,6 +917,10 @@ class DBISge(DBIBase):
                 #$ -v %s
                 '''%(','.join(env[1:-1].split()))
 
+        if self.raw:
+            submit_sh_template += '''%s
+                '''%self.raw
+
         submit_sh_template += '''
                 ## Execute the 'launcher' script in bash
                 # Bash is needed because we use its "array" data structure
