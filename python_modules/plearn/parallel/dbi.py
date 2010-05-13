@@ -788,6 +788,7 @@ class DBISge(DBIBase):
         self.duree = '23:59:59'
         self.project = 'jvb-000-aa'
         self.env = ''
+        self.set_special_env = True
         DBIBase.__init__(self, commands, **args)
 
         self.tmp_dir = os.path.abspath(self.tmp_dir)
@@ -905,11 +906,16 @@ class DBISge(DBIBase):
                 ## Queue name
                 #$ -q %(queue)s
                 '''
-        if self.env:
+        env = self.env
+        if self.set_special_env and self.cpu>0:
+            if not env:
+                env = '""'
+            env = env[:-1]+ ' OMP_NUM_THREADS=%d GOTO_NUM_THREADS=%d MKL_NUM_THREADS=%d"'%(self.cpu,self.cpu,self.cpu)
+        if env:
             submit_sh_template += '''
                 ## Variable to put into the environment
                 #$ -v %s
-                '''%(','.join(self.env[1:-1].split()))
+                '''%(','.join(env[1:-1].split()))
 
         submit_sh_template += '''
                 ## Execute the 'launcher' script in bash
