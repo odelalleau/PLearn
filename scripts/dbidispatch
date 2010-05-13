@@ -33,9 +33,9 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
     bqtools, cluster, condor, sge option:   [--cpu=nb_cpu_per_node]
     bqtools, cluster, condor option:        [--mem=N]
     bqtools, cluster, sge option:           [--duree=X]
+    bqtools, condor, sge options:           [--env=VAR=VALUE[ VAR2=VALUE2]]  (must be quoted into the shell!)
     bqtools, condor options  :[--raw=STRING[\nSTRING]]
                               [*--[no_]set_special_env]
-                              [--env=VAR=VALUE[ VAR2=VALUE2]] (must be quoted into the shell!)
     cluster, condor options  :[--32|--64|--3264] [--os=X]
     bqtools, sge options:     [--queue=X] [--jobs_name=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
@@ -140,15 +140,17 @@ bqtools, cluster and sge option:
     For bqtools and sge, the syntax is '--duree=12:13:15', giving 12 hours, 
     13 minutes and 15 seconds.
 
+bqtools, condor and sge options:
+  The '--env=VAR=VALUE' option will set in the environment of the executing
+    jobs the variable VAR with value VALUE. To pass many variable you can:
+      1) use one --env option and separ the pair by ' '(don't forget to quote)
+      2) you can pass many time the --env parameter.
+
 bqtools and condor options:
   The '--raw=STRING1[\nSTRING2...]' option append all STRINGX in the submit file.
       if this option appread many time, they will be concatanated with a new line.
   The '--[no_]set_special_env' option will set the varialbe OMP_NUM_THREADS, 
     MKL_NUM_THREADS and GOTO_NUM_THREADS to the number of cpus allocated to job.
-  The '--env=VAR=VALUE' option will set in the environment of the executing
-    jobs the variable VAR with value VALUE. To pass many variable you can:
-      1) use one --env option and separ the pair by ' '(don't forget to quote)
-      2) you can pass many time the --env parameter.
 
 cluster and condor options:
   The '--3264', '--32' or '--64' specify the type of cpu for the execution node.
@@ -460,7 +462,7 @@ elif launch_cmd=="Bqtools":
                        "nano", "queue", "raw", "submit_options", "jobs_name",
                        "set_special_env", "env" ]
 elif launch_cmd=="Sge":
-    valid_dbi_param += ["duree", "jobs_name", "queue"]
+    valid_dbi_param += ["duree", "jobs_name", "queue", "env"]
 
 if dbi_param['gpu']:
     dbi_param['req']+="&&(Target.GPU=?=True)"

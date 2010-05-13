@@ -781,6 +781,7 @@ class DBISge(DBIBase):
         self.queue = ''
         self.duree = '23:59:59'
         self.project = 'jvb-000-aa'
+        self.env = ''
         DBIBase.__init__(self, commands, **args)
 
         self.tmp_dir = os.path.abspath(self.tmp_dir)
@@ -892,6 +893,12 @@ class DBISge(DBIBase):
                 ## Queue name
                 #$ -q %(queue)s
                 '''
+        if self.env:
+            submit_sh_template += '''
+                ## Variable to put into the environment
+                #$ -v %s
+                '''%(','.join(self.env[1:-1].split()))
+
         submit_sh_template += '''
                 ## Execute the 'launcher' script in bash
                 # Bash is needed because we use its "array" data structure
@@ -921,18 +928,20 @@ class DBISge(DBIBase):
         print "[DBI] WARNING: the log formatting specified by --task_names will be ignored,"
         print "     the following format will be used: $JOB_NAME.$JOB_ID.$TASK_ID.log.{err,out}"
         # Launch qsub
+        submit_command = 'qsub ' + os.path.join(self.log_dir, 'submit.sh')
         if not self.test:
             for t in self.tasks:
                 t.set_scheduled_time()
 
-            submit_command = 'qsub ' + os.path.join(self.log_dir, 'submit.sh')
             self.p = Popen(submit_command, shell=True)
             self.p.wait()
 
             if self.p.returncode!=0:
                 raise DBIError("[DBI] ERROR: qsub returned an error code of"+str(self.p.returncode))
         else:
-            print "[DBI] Test mode, we generated all files, but will not execute bqsubmit"
+            print "[DBI] Test mode, we generated all files, but will not execute qsub"
+            print '[DBI] Test mode, to manually launch it execute "'+submit_command+'"'
+            
             if self.dolog:
                 print "[DBI] The scheduling time will not be logged when you submit the generated file"
 
