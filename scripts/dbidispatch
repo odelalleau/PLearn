@@ -462,7 +462,8 @@ elif launch_cmd=="Bqtools":
                        "nano", "queue", "raw", "submit_options", "jobs_name",
                        "set_special_env", "env" ]
 elif launch_cmd=="Sge":
-    valid_dbi_param += ["duree", "jobs_name", "queue", "mem", "env"]
+    valid_dbi_param += ["duree", "jobs_name", "queue", "cpu", "mem", "env",
+                        ]
 
 if dbi_param['gpu']:
     dbi_param['req']+="&&(Target.GPU=?=True)"
