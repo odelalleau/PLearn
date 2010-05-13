@@ -396,10 +396,7 @@ for argv in to_parse:
         elif param == "raw":
             dbi_param[param]+='\n'+val
         elif param=="env":
-            if dbi_param[param]:
-                dbi_param[param]=dbi_param[param][:-1]+' '+val+'"'
-            else:
-                dbi_param[param]+='"'+val+'"'
+            dbi_param[param] += ' '+val
         elif param in ["machine", "machines", "no_machine", "tasks_filename"]:
             dbi_param[param]+=val.split(",")
         else:

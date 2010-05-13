@@ -619,7 +619,7 @@ class DBIBqtools(DBIBase):
         self.nano = int(self.nano)
 
         if self.set_special_env and self.cpu>0:
-            self.env+=' OMP_NUM_THREADS=%d'%self.cpu
+            self.env+=' OMP_NUM_THREADS=%d OMP_NUM_THREADS=%d GOTO_NUM_THREADS=%d MKL_NUM_THREADS=%d'%(self.cpu,self.cpu,self.cpu)
         if self.env:
             self.env='export '+self.env
 ### We can't accept the symbols "," as this cause trouble with bqtools
@@ -910,12 +910,12 @@ class DBISge(DBIBase):
         if self.set_special_env and self.cpu>0:
             if not env:
                 env = '""'
-            env = env[:-1]+ ' OMP_NUM_THREADS=%d GOTO_NUM_THREADS=%d MKL_NUM_THREADS=%d"'%(self.cpu,self.cpu,self.cpu)
+            env += ' OMP_NUM_THREADS=%d GOTO_NUM_THREADS=%d MKL_NUM_THREADS=%d'%(self.cpu,self.cpu,self.cpu)
         if env:
             submit_sh_template += '''
                 ## Variable to put into the environment
                 #$ -v %s
-                '''%(','.join(env[1:-1].split()))
+                '''%(','.join(env.split()))
 
         if self.raw:
             submit_sh_template += '''%s
@@ -1465,7 +1465,7 @@ class DBICondor(DBIBase):
                 transfer_input_files    = %s
                 '''%(self.files+','+self.launch_file+','+self.tasks[0].commands[0].split()[0]))) # no directory
         if self.env:
-            fd.write('environment    = '+self.env+'\n')
+            fd.write('environment    = "'+self.env+'"\n')
         if self.raw:
             fd.write( self.raw+'\n')
         if self.rank:
@@ -1623,15 +1623,9 @@ class DBICondor(DBIBase):
             return #no task to run
 
         if self.set_special_env:
-            if self.env:
-                self.env=self.env[:-1]+' OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) CONDOR_JOB_LOGDIR=%s"'%self.log_dir
-            else:
-                self.env='" OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS) CONDOR_JOB_LOGDIR=%s"'%self.log_dir
-        else:
-            if self.env:
-                self.env=self.env[:-1]+' CONDOR_JOB_LOGDIR=%s"'%self.log_dir
-            else:
-                self.env='" CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+            self.env += ' OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS)'
+
+        self.env += ' CONDOR_JOB_LOGDIR=%s"'%self.log_dir
 
         if not self.req:
             self.req = "True"
