@@ -619,7 +619,7 @@ class DBIBqtools(DBIBase):
         self.nano = int(self.nano)
 
         if self.set_special_env and self.cpu>0:
-            self.env+=' OMP_NUM_THREADS=%d OMP_NUM_THREADS=%d GOTO_NUM_THREADS=%d MKL_NUM_THREADS=%d'%(self.cpu,self.cpu,self.cpu)
+            self.env+=' OMP_NUM_THREADS=%d GOTO_NUM_THREADS=%d MKL_NUM_THREADS=%d'%(self.cpu,self.cpu,self.cpu)
         if self.env:
             self.env='export '+self.env
 ### We can't accept the symbols "," as this cause trouble with bqtools
