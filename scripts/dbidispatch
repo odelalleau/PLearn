@@ -11,6 +11,7 @@ if sys.version_info[:2] < (2,5):
         return False
 
 ScriptName="launchdbi.py"
+verbose=False
 ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=FILEPATH | <command-template>|--[*no_]restart condor_jobs_number... }
 
 <common options>:
@@ -450,7 +451,8 @@ elif launch_cmd=="Condor":
                        "universe", "machine", "machines", "no_machine","to_all",
                        "keep_failed_jobs_in_queue", "restart",
                        "max_file_size", "debug", "local_log_file",
-                       "next_job_start_delay", "gpu", "gpu_enabled"
+                       "next_job_start_delay", "gpu", "gpu_enabled",
+                       "fast",
                        ]
 elif launch_cmd=="Bqtools":
     valid_dbi_param +=["cpu", "duree", "long", "mem", "micro",
@@ -498,7 +500,7 @@ for i in dbi_param:
         print "WARNING: The parameter",i,"is not valid for the",launch_cmd,"back-end. It will be ignored."
 if dbi_param["restart"]:
     print "With the command to be restarted:"," ".join(command_argv),"\n\n"
-else:
+elif verbose:
     print "With the command to be expanded:"," ".join(command_argv),"\n\n"
 
 def generate_combination(repl,sep=" "):
@@ -634,7 +636,7 @@ if dbi_param["fast"]:
 #we duplicate the command so that everything else work correctly.
 if dbi_param.has_key("to_all"):
     assert(len(commands)==1)
-    assert(len(dbi_param["machine"]>0))
+    assert(len(dbi_param["machine"])>0)
     commands=commands*len(dbi_param["machine"])
 
 if dbi_param.has_key("exp_dir"):
@@ -784,7 +786,8 @@ else:
     jobs = DBI(commands,launch_cmd,**dbi_param)
     t2=time.time()
     error=False
-    print "it took %f s to create the DBI objects"%(t2-t1)
+    if verbose:
+        print "it took %f s to create the DBI objects"%(t2-t1)
     try:
         jobs.run()
     except DBIError, e:
@@ -797,5 +800,6 @@ else:
         print "[DBI dispatch] In test mode, we do not make dbi errase temp file"
     else:
         jobs.clean()
-    print "it took %f s to launch all the commands"%(t3-t2)
+    if verbose:
+        print "it took %f s to launch all the commands"%(t3-t2)
 
