@@ -1625,7 +1625,7 @@ class DBICondor(DBIBase):
         if self.set_special_env:
             self.env += ' OMP_NUM_THREADS=$$(CPUS) GOTO_NUM_THREADS=$$(CPUS) MKL_NUM_THREADS=$$(CPUS)'
 
-        self.env += ' CONDOR_JOB_LOGDIR=%s"'%self.log_dir
+        self.env += ' CONDOR_JOB_LOGDIR=%s'%self.log_dir
 
         if not self.req:
             self.req = "True"
