@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,os,re,time,datetime
+import datetime,os,random,re,sys,time
 from plearn.utilities.toolkit import search_file
 from socket import gethostname
 from subprocess import Popen,PIPE
@@ -25,6 +25,8 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
         [*--[no_]exec_in_exp_dir]
         [--only_n_first=N]
         [--repeat_jobs=N]
+        [--[*no_]whitespace]
+        [--sort={generated*,random}]
 
 <back-end parameter>:
     all                      :[--tasks_filename={compact,explicit,nb0,nb1,
@@ -126,8 +128,9 @@ common options:
       - processid: (condor only)put the process id of the jobs. Idem as nb0
       - none    : remove all preceding pattern
   The '*--[no_]exec_in_exp_dir' option remove the executable from the log dir.
-  The '--[no_*]whitespace' option allow to put white space inside {{}}. I put this as an option as I don't remember the reason why their was this restriction.
-
+  The '--[*no_]whitespace' option allow to put white space inside {{}}. I put this as an option as I don't remember the reason why their was this restriction.
+  The '--sort={generated*,random}' option allow to change the default order of jobs.
+  
 bqtools, cluster, condor and sge option:
   The '--cpu=nb_cpu_per_node' option determine the number of cpu(cores) that 
     will be reserved for each job.(default=1, -1 won't set it)
@@ -304,7 +307,7 @@ MAX_FILE_NAME_SIZE=255
 dbi_param={"req":"True", "files":"", "rank":"True", "raw":"", "env":"",
            "machine":[], "machines":[], "no_machine":[], "tasks_filename":[],
            "restart":False,'whitespace':False,"fast":False,
-           "gpu":False,"gpu_enabled":False}
+           "gpu":False,"gpu_enabled":False, "sort":"generated"}
 dbi_param_orig = dbi_param.copy()
 testmode=False
 PATH=os.getenv('PATH')
@@ -387,7 +390,7 @@ for argv in to_parse:
                                 "--jobs_name", "--file", "--tasks_filename",
                                 "--only_n_first", "--no_machine",
                                 "--max_file_size", "--next_job_start_delay",
-                                "--repeat_jobs", ]:
+                                "--repeat_jobs", "--sort",]:
         sp = argv.split('=',1)
         param=sp[0][2:]
         val = sp[1]
@@ -440,7 +443,7 @@ if not os.path.exists(LOGDIR):
 
 valid_dbi_param=["clean_up", "test", "dolog", "nb_proc", "exp_dir", "file",
                  "tasks_filename", "exec_in_exp_dir", "repeat_jobs",
-                 "whitespace",
+                 "whitespace", "sort",
                  ]
 if launch_cmd=="Cluster":
     valid_dbi_param +=["cwait","force","arch","interruptible",
@@ -622,6 +625,13 @@ if dbi_param.has_key("repeat_jobs"):
     commands=commands*n
     choise_args=choise_args*n
     del dbi_param["repeat_jobs"]
+
+if dbi_param['sort']=='random':
+    random.shuffle(commands)
+elif dbi_param['sort']=='generated':
+    pass
+else:
+    raise Exception("--sort option accept value random and generated only. got %s"%dbi_param['sort'])
 
 if not dbi_param.has_key("next_job_start_delay") and launch_cmd=="Condor" and len(commands)>20:
     #by default, if their is more then 20 jobs we make a start delay of 1 second between each jobs start.
