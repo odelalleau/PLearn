@@ -806,7 +806,7 @@ class DBISge(DBIBase):
 
         # Warn for not implemented features
         if getattr(self, 'nb_proc', -1) != -1:
-            print "[DBI] WARNING: DBISge does not support nb_proc != -1", self.nb_proc
+            print "[DBI] WARNING: DBISge need sge 6.2u4 or higher to work for nb_proc!=-1 to work. Colosse have 6.2u3", self.nb_proc
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -906,6 +906,13 @@ class DBISge(DBIBase):
                 ## Queue name
                 #$ -q %(queue)s
                 '''
+
+        if self.nb_proc>0:
+            submit_sh_template += '''
+                ## Maximum of concurrent jobs need sge 6.2u4 or more recent.
+                #$ -tc %s
+                '''%self.max_concurrent
+
         env = self.env
         if self.set_special_env and self.cpu>0:
             if not env:
@@ -1060,6 +1067,9 @@ class DBICondor(DBIBase):
         if not os.path.exists(self.tmp_dir):
             os.mkdir(self.tmp_dir)
         self.args = args
+
+        if self.env and self.env[0]=='"' and self.env[-1]=='"':
+            self.env = self.env[1:-1]
 
         self.next_job_start_delay=int(self.next_job_start_delay)
         self.add_commands(commands)
