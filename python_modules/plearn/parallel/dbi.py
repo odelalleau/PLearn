@@ -194,7 +194,7 @@ class DBIBase:
 #            if self.dolog or self.file_redirect_stdout or self.file_redirect_stderr:
             os.mkdir(self.log_dir)
         if self.mem[-1] in ['G', 'g']:
-            self.mem = int(self.mem[:-1])*1024
+            self.mem = int(float(self.mem[:-1])*1024)
         elif self.mem[-1] in ['M', 'm']:
             self.mem = int(self.mem[:-1])
         elif self.mem[-1] in ['K', 'k']:
