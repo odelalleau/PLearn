@@ -17,7 +17,7 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
 <common options>:
         [--help|-h]
         [--[*no_]dbilog]
-        [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--ssh[=N]|--sge[=N]]
+        [--condor[=N]|--bqtools[=N]|--cluster[=N]|--local[=N]|--sge[=N]|--sharcnet|--ssh[=N]i]
         [--[*no_]test]
         [--[*no_]testdbi]
         [--[*no_]nb_proc=N]
@@ -33,14 +33,18 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
                                                  sh(condor only),
                                                  clusterid(condor only),
                                                  processid(condor only))}+]
-    bqtools, cluster, condor, sge option:   [--cpu=nb_cpu_per_node]
-                                            [--mem=N]
-    bqtools, cluster, sge option:           [--duree=X]
-    bqtools, condor, sge options:           [--env=VAR=VALUE[ VAR2=VALUE2]]  (must be quoted into the shell!)
-                                            [*--[no_]set_special_env]
-                                            [--raw=STRING[\nSTRING]]
+    bqtools, cluster, condor, sge, sharcnet options:
+                              [--cpu=nb_cpu_per_node]
+                              [--mem=N]
+    bqtools, cluster, sge, sharcnet option:
+                              [--duree=X]
+    bqtools, condor, sge options:
+                              [--env=VAR=VALUE[ VAR2=VALUE2]]  (must be quoted into the shell!)
+                              [*--[no_]set_special_env]
+                              [--raw=STRING[\nSTRING]]
     cluster, condor options  :[--32|--64|--3264] [--os=X]
-    bqtools, sge options:     [--queue=X] [--jobs_name=X]
+    bqtools, sge, sharcnet options:
+                              [--queue=X] [--jobs_name=X]
     bqtools options          :[--micro[=nb_batch]] [--[*no_]long]
                               [--nano=X] [--submit_options=X]
                               [*--[no_]clean_up] [*--[no_]m32G]
@@ -60,7 +64,8 @@ ShortHelp='''Usage: dbidispatch <common options> <back-end parameters> {--file=F
                               [--[no_]local_log_file][--next_job_start_delay=N]
                               [--fast] [--[no_]gpu] [--[no_]gpu_enabled]
     sge options              :[--project=STRING]
-        (Note: SGE support is experimental)
+    (Note: SGE support is experimental)
+    (Note: Sharcnet support is even more experimental)
 
 An * after '[', '{' or ',' signals the default value.
 An + tell that we can put one or more separeted by a comma
@@ -317,6 +322,8 @@ elif search_file('bqsubmit',PATH):
     launch_cmd = 'Bqtools'
 elif search_file('cluster',PATH):
     launch_cmd = 'Cluster'
+elif search_file('sqsub',PATH):
+    launch_cmd = 'Sharcnet'
 elif search_file('qsub',PATH):
     launch_cmd = 'Sge'
 else:
@@ -465,13 +472,17 @@ elif launch_cmd=="Sge":
     valid_dbi_param += ["duree", "jobs_name", "queue", "cpu", "mem", "env",
                         "raw", "set_special_env",
                         ]
+elif launch_cmd=="Sharcnet":
+    valid_dbi_param += ["cpu", "mem", "duree", "queue", "jobs_name", "gpu"] #"env, "set_special_env", "raw" ?
 
-if dbi_param['gpu']:
-    dbi_param['req']+="&&(Target.GPU=?=True)"
-    dbi_param['raw']+='\n+GPU=True'
-elif dbi_param['gpu_enabled']:
-    dbi_param['rank']+="&&(Target.GPU=?=True)"
-    dbi_param['raw']+='\n+GPU=True'
+# Only valid for condor
+if launch_cmd == 'Condor':
+    if dbi_param['gpu']:
+        dbi_param['req']+="&&(Target.GPU=?=True)"
+        dbi_param['raw']+='\n+GPU=True'
+    elif dbi_param['gpu_enabled']:
+        dbi_param['rank']+="&&(Target.GPU=?=True)"
+        dbi_param['raw']+='\n+GPU=True'
 
 if  launch_cmd == 'Condor' and gethostname().endswith(".iro.umontreal.ca"):
     #default value for pkdilly is true.

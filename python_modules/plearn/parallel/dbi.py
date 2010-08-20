@@ -983,6 +983,129 @@ class DBISge(DBIBase):
     def wait(self):
         print "[DBI] WARNING cannot wait until all jobs are done for SGE, use qstat"
 
+
+
+###################
+# Sharcnet tools
+###################
+
+class DBISharcnet(DBIBase):
+    def __init__(self, commands, **args):
+        self.jobs_name = ''
+        self.queue = ''
+        self.duree = '7d'
+
+        #TODO:
+        # self.env
+        # self.set_special_env
+
+        DBIBase.__init__(self, commands, **args)
+
+        self.tmp_dir = os.path.abspath(self.tmp_dir)
+        self.log_dir = os.path.abspath(self.log_dir)
+        if not self.jobs_name:
+            self.jobs_name = 'dbi_'+self.unique_id[1:12]
+
+        self.tmp_dir = os.path.join(self.tmp_dir, os.path.split(self.log_dir)[1])
+        if not os.path.exists(self.tmp_dir):
+            os.makedirs(self.tmp_dir)
+        print "[DBI] All temporary files will be in ", self.tmp_dir
+        os.chdir(self.tmp_dir)
+
+        args['tmp_dir'] = self.tmp_dir
+        self.args = args
+        self.add_commands(commands)
+
+    def add_commands(self, commands):
+        if not isinstance(commands, list):
+            commands=[commands]
+
+        # create the information about the tasks
+        for command in commands:
+            id = len(self.tasks) + 1
+            self.tasks.append(Task(
+                command = command,
+                tmp_dir = self.tmp_dir,
+                log_dir = self.log_dir,
+                time_format = self.time_format,
+                pre_tasks = self.pre_tasks,
+                post_tasks = self.post_tasks,
+                dolog = self.dolog,
+                id = id,
+                gen_unique_id = False,
+                args = self.args))
+            id += 1
+
+    def run_one_job(self, task):
+        DBIBase.run(self)
+
+        remote_command = string.join(task.commands, '\n')
+        filename = os.path.join(self.tmp_dir, task.unique_id)
+        filename = os.path.abspath(filename)
+        f = open(filename, 'w')
+        f.write(remote_command)
+        f.write('\n')
+        f.close()
+        os.chmod(filename, 0750)
+        self.temp_files.append(filename)
+
+        command = 'sqsub'
+        (output_file, error_file)=self.get_file_redirection(task.id)
+        command += ' -o ' + output_file
+        command += ' -e ' + error_file
+        if self.cpu > 0:
+            command += ' -n ' + str(self.cpu)
+        if self.mem > 0:
+            command += ' --mpp=' + str(self.mem) + 'M' # The suffix is needed by sqsub
+        if self.duree:
+            command += ' -r ' + self.duree
+        if self.queue:
+            command += ' -q ' + self.queue
+        if self.jobs_name:
+            command += ' -j ' + self.jobs_name
+        if self.gpu:
+            # TODO: support several GPUs per job?
+            command += ' --gpp=1'
+
+        command += " '" + filename + "'"
+
+        if not self.test:
+            task.set_scheduled_time()
+
+            self.p = Popen(command, shell=True)
+            self.p.wait()
+            if self.p.returncode != 0:
+                raise DBIError("[DBI] ERROR: sqsub returned an error code of"+str(self.p.returncode))
+        else:
+            print '[DBI] Test mode, to manually submit, execute "'+command+'"'
+
+
+    def run(self):
+        print "[DBI] The log files are under %s" % self.log_dir
+        if self.test:
+            "[DBI] Test mode, we generated all files, but will not execute sqsub"
+
+        pre_batch_command = ';'.join(self.pre_batch)
+        post_batch_command = ';'.join(self.post_batch)
+
+        # Execute pre-batch
+        self.exec_pre_batch()
+
+        for t in self.tasks:
+            self.run_one_job(t)
+
+        # Execute post-batch
+        self.exec_post_batch()
+
+    def clean(self):
+        return
+        for f in self.temp_files:
+            os.remove(f)
+
+    def wait(self):
+        print "[DBI] WARNING cannot wait until all jobs are done on Sharcnet, use sqjobs or sqstat"
+
+
 # Transfor a string so that it is treated by Condor as a single argument
 def condor_escape_argument(argstring):
     # Double every single quote and double quote character,
