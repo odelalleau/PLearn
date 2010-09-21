@@ -373,7 +373,7 @@ if not 'nopython' in optionargs:
         #numpy_site_packages = join(homedir, '../delallea/local/lib/python2.5/site-packages/numarray -lutil')
         python_version = '2.6'
         optionargs += [ 'python%s' % python_version.replace('.', '') ]
-        python_lib_root = '/opt/python64/2.6.1/lib'
+        python_lib_root = '/opt/python64/2.6.4/lib'
     elif domain_name.endswith('.rqchp.qc.ca'):
         numpy_includedirs   = [ '/usr/network.ALTIX/python-2.4.1/include' ]
         numpy_site_packages = join(homedir, '../delallea/local/lib/python2.4/site-packages/numarray -lutil')
