@@ -806,7 +806,17 @@ class DBISge(DBIBase):
 
         # Warn for not implemented features
         if getattr(self, 'nb_proc', -1) != -1:
-            print "[DBI] WARNING: DBISge need sge 6.2u4 or higher to work for nb_proc!=-1 to work. Colosse have 6.2u3", self.nb_proc
+            sge_root = os.getenv("SGE_ROOT")
+            if not sge_root:
+                print "[DBI] WARNING: DBISge need sge 6.2u4 or higher to work for nb_proc!=-1 to work. Colosse have 6.2u3", self.nb_proc
+            elif os.path.split(sge_root)[1].startswith('ge'):
+                if os.path.split(sge_root)[1][2:]<'6.2u4':
+                    print "[DBI] WARNING: DBISge need sge 6.2u4 or higher to work for nb_proc!=-1 to work. We found version '%s' to be running."%(sge_root[2:]), self.nb_proc
+            else:
+                print "[DBI] WARNING: DBISge need sge 6.2u4 or higher to work for nb_proc!=-1 to work. Can't determine the version of sge that is running.", self.nb_proc
+            #print "[DBI] WARNING: DBISge need sge 6.2u4 or higher to work for nb_proc!=-1 to work. Colosse have 6.2u3", self.nb_proc
+
+
 
     def add_commands(self,commands):
         if not isinstance(commands, list):
@@ -911,7 +921,7 @@ class DBISge(DBIBase):
             submit_sh_template += '''
                 ## Maximum of concurrent jobs need sge 6.2u4 or more recent.
                 #$ -tc %s
-                '''%self.max_concurrent
+                '''%self.nb_proc
 
         env = self.env
         if self.set_special_env and self.cpu>0:
