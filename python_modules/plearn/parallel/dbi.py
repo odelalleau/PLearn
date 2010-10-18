@@ -991,7 +991,7 @@ class DBISge(DBIBase):
         pass
 
     def wait(self):
-        print "[DBI] WARNING cannot wait until all jobs are done for SGE, use qstat"
+        print "[DBI] WARNING cannot wait until all jobs are done for SGE, use qstat or qmon(need X11)"
 
 
 
