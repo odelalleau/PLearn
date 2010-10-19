@@ -1616,18 +1616,29 @@ class DBICondor(DBIBase):
                 rank = %s
                 ''' %(self.rank)))
 
+        if self.mem>0:
+            fd.write(dedent("""
+            request_memory = %i
+            """)%(self.mem))
+        if self.cpu>0:
+            fd.write(dedent("""
+            request_cpus = %i
+            """)%(self.cpu))
+
+        if self.pkdilly:
+            fd.write(dedent("""
+            stream_error            = True
+            stream_output           = True
+            transfer_executable     = True
+            when_to_transfer_output = ON_EXIT
+            """))
         
     def run_dag(self):
         if self.to_all:
             raise DBIError("[DBI] ERROR: condor backend don't support the option --to_all and a maximum number of process")
+
         condor_submit_fd = open( self.condor_submit_file, 'w' )
-        if os.path.exists("/Tmp"):
-            self.log_file = "/Tmp"
-        else:
-            self.log_file = "/tmp"
-        self.log_file = os.path.join(self.log_file,os.getenv("USER"),"dbidispatch",self.log_dir)
-        os.system('mkdir -p ' + self.log_file)
-        self.log_file = os.path.join(self.log_file,"condor.log")
+
         self.print_common_condor_submit(condor_submit_fd, "$(stdout)", "$(stderr)","$(args)")
         
         condor_submit_fd.write("\nqueue\n")
@@ -1644,7 +1655,6 @@ class DBICondor(DBIBase):
             condor_dag_fd.write('VARS %d args="%s"\n'%(id,argstring))
             condor_dag_fd.write('VARS %d stdout="%s"\n'%(id,stdout_file))
             condor_dag_fd.write('VARS %d stderr="%s"\n\n'%(id,stderr_file))
-
             
         for i in range(len(self.tasks)):
             task=self.tasks[i]
@@ -1662,6 +1672,7 @@ class DBICondor(DBIBase):
 
         #we supose that each task in tasks have the same number of commands
         #it should be true.
+        #NOT IN DAG VERSION
         if len(self.tasks[0].commands)>1:
             for task in self.tasks:
                 condor_data = os.path.join(self.tmp_dir,self.unique_id +'.'+ task.unique_id + '.data')
@@ -1676,33 +1687,11 @@ class DBICondor(DBIBase):
 
 
         condor_submit_fd = open( self.condor_submit_file, 'w' )
-        self.log_file = os.path.join(self.log_dir,"condor.log")
-        if self.local_log_file:
-            if os.path.exists("/Tmp"):
-                self.log_file = "/Tmp"
-            else:
-                self.log_file = "/tmp"
-            self.log_file = os.path.join(self.log_file,os.getenv("USER"),"dbidispatch",self.log_dir)
-            os.system('mkdir -p ' + self.log_file)
-            self.log_file = os.path.join(self.log_file,"condor.log")
+            
+        #DIFFER IN DAG VERSION
+        #self.print_common_condor_submit(condor_submit_fd, "$(stdout)", "$(stderr)","$(args)")
         self.print_common_condor_submit(condor_submit_fd, self.log_dir+"/$(Process).out", self.log_dir+"/$(Process).error")
 
-        if self.mem>0:
-            condor_submit_fd.write(dedent("""
-            request_memory = %i
-            """)%(self.mem))
-        if self.cpu>0:
-            condor_submit_fd.write(dedent("""
-            request_cpus = %i
-            """)%(self.cpu))
-
-        if self.pkdilly:
-            condor_submit_fd.write(dedent("""
-            stream_error            = True
-            stream_output           = True
-            transfer_executable     = True
-            when_to_transfer_output = ON_EXIT
-            """))
         if len(condor_datas)!=0:
             for i in condor_datas:
                 condor_submit_fd.write("arguments      = sh "+i+" $$(Arch) \nqueue\n")
@@ -1819,6 +1808,17 @@ class DBICondor(DBIBase):
         self.condor_submit_file = os.path.join(self.log_dir,
                                                "submit_file.condor")
         self.temp_files.append(self.condor_submit_file)
+
+        if self.local_log_file or self.pkdilly:
+            if os.path.exists("/Tmp"):
+                self.log_file = "/Tmp"
+            else:
+                self.log_file = "/tmp"
+            self.log_file = os.path.join(self.log_file,os.getenv("USER"),"dbidispatch",self.log_dir)
+            os.system('mkdir -p ' + self.log_file)
+            self.log_file = os.path.join(self.log_file,"condor.log")
+        else:
+            self.log_file = os.path.join(self.log_dir,"condor.log")
 
         #exec dependent code
         if self.nb_proc > 0:
