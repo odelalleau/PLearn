@@ -1366,7 +1366,8 @@ class DBICondor(DBIBase):
                           bash_exec, seconds=3600):
         def line_header():
             return "[DBICondor] "+str(datetime.datetime.now())+" "+str(os.getpid())+" "
-        cmd="condor_wait -wait "+str(seconds)+" "+self.log_file
+        
+        cmd="condor_wait -wait "+str(seconds)+" "+self.condor_wait_file
         pid=os.fork()
         if pid==0:#in the childreen
             #renew each hour
@@ -1663,6 +1664,7 @@ class DBICondor(DBIBase):
         condor_dag_fd.close()
 
         self.make_launch_script('$@')
+        time.sleep(5)#we do this in hope that the error 'launch.sh2.sh is not executable' disapear
 
         condor_cmd = self.condor_submit_dag_exec+' -maxjobs %s %s'%(str(self.nb_proc), condor_dag_file)
         return condor_cmd
@@ -1717,7 +1719,7 @@ class DBICondor(DBIBase):
         condor_submit_fd.close()
 
         self.make_launch_script('sh -c "$@"')
-        time.sleep(5)#we do this in hope that the error 'launch.sh2.sh is not executable'
+        time.sleep(5)#we do this in hope that the error 'launch.sh2.sh is not executable' disapear
 
         return self.condor_submit_exec + " " + self.condor_submit_file
 
@@ -1732,8 +1734,6 @@ class DBICondor(DBIBase):
                 pass
 
     def run(self):
-        if (self.pkdilly and self.nb_proc > 0):
-            raise DBIError("[DBI] ERROR: curently pkdilly with nb_proc >0 is not supported!")
         if (self.stdouts and not self.stderrs) or (self.stderrs and not self.stdouts):
             raise DBIError("[DBI] ERROR: the condor back-end should have both stdouts and stderrs or none of them")
         if self.stdouts and self.stderrs:
@@ -1823,8 +1823,10 @@ class DBICondor(DBIBase):
         #exec dependent code
         if self.nb_proc > 0:
             cmd=self.run_dag()
+            self.condor_wait_file = self.condor_submit_file+".dag.dagman.log"
         else:
             cmd=self.run_non_dag()
+            self.condor_wait_file = self.log_file
 
         #add file if needed?
         #why are they needed?
@@ -1867,7 +1869,7 @@ class DBICondor(DBIBase):
         self.exec_post_batch()
 
     def wait(self):
-        print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s'"%(self.log_file)
+        print "[DBI] WARNING no waiting for all job to finish implemented for condor, use 'condor_q' or 'condor_wait %s'"%(self.condor_wait_file)
 
     def clean(self):
         pass
