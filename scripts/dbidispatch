@@ -102,6 +102,13 @@ common options:
     --ssh=N is the same as --ssh --nb_proc=N
     --condor=N  is the same as --condor --nb_proc=N
     condor and bqtools default -1. Cluster default 32.  local and ssh default 1
+
+    --local=FILE_PATH is accepted. The file should contain only the number of
+    threads wanted. This allows dynamically changing the number of threads. 
+    The change in the number of threads happen before we start the threads or 
+    when a thread ends. We wait until threads finish to lower the number of
+    running threads.
+
   The '--exp_dir=dir' specifies the name of the temporary directory
     relative to LOGDIR, instead of one generated automatically based
     upon the command line and the time.

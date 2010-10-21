@@ -8,7 +8,7 @@ import subprocess
 from subprocess import Popen,PIPE,STDOUT
 import sys
 from textwrap import dedent
-from threading import Thread,Lock
+from threading import currentThread,Lock,Thread,Lock
 import time
 from time import sleep
 import traceback
@@ -94,6 +94,7 @@ class MultiThread:
         self._function     = function
         self._argsIterator = LockedIterator( iter( argsVector ) )
         self._threadPool   = []
+        self.maxThreads_file = None
         self.print_when_finish = print_when_finished
         self.running = 0
         self.init_len_list = len(argsVector)
@@ -101,18 +102,72 @@ class MultiThread:
 
         if maxThreads==-1:
             nb_thread=len(argsVector)
+        elif isinstance(maxThreads,str):
+            self._lock_threadPool = Lock()
+            self.maxThreads_file = maxThreads
+            nb_thread = 0#Thread will be created when self.start() is called.
         elif maxThreads<=0:
             raise DBIError("[DBI] ERROR: you set %d concurrent jobs. Must be higher then 0!!"%(maxThreads))
         else:
             nb_thread=maxThreads
         if nb_thread>len(argsVector):
             nb_thread=len(argsVector)
-        for i in range( nb_thread ):
-            self._threadPool.append( Thread( target=self._tailRecurse ) )
+
+        self.update_nb_thread(nb_thread, False)
+
+    def parse_maxThreads_file( self ):
+        """ return the number of Thread to use give in a file        
+        """
+        f = open( self.maxThreads_file )
+        nb_thread = f.readlines()
+        f.close()
+        return int( nb_thread[0] )
+
+    def update_nb_thread(self, nb_thread, by_running_threads):
+        """ Update the thread pool to the good number of thread
+            Return False when the running Thread should stop.
+
+            :type nb_thread: int
+            :param nb_thread: The number of threads wanted
+            :type by_running_threads: bool
+            :param by_running_threads: Must be True when called from a 
+                                       Thread in the pool 
+        """
+        try:
+            self._lock_threadPool.acquire()
+            if nb_thread != len( self._threadPool ):
+                if nb_thread < len( self._threadPool ):
+                    if by_running_threads:
+                        #I don't remove the thread from the pool as this
+                        #seam to end a thread too early.
+                        #If we raise the number of thread after
+                        #we end up with too much thread in the pool
+                        #But next time we start the pool, we will 
+                        #resize it correctly.
+                        #self._threadPool.remove(currentThread())
+                        pass
+                    else:
+                        self._threadPool = self._threadPool[:nb_thread]
+                    return False
+                else:
+                    for i in range( nb_thread - len( self._threadPool ) ):
+                        self._threadPool.append( Thread( target=self._tailRecurse ) )
+                        if by_running_threads:
+                            time.sleep( self.sleep_time )
+                            self.running+=1
+                            self._threadPool[-1].start()
+            return True
+        finally:
+            self._lock_threadPool.release()
+
 
     def _tailRecurse( self ):
         for args in self._argsIterator:
             self._function( args )
+            if self.maxThreads_file:
+                ret = self.update_nb_thread(self.parse_maxThreads_file(), True)
+                if not ret:
+                    break
         self.running-=1
         if self.print_when_finish:
             if callable(self.print_when_finish):
@@ -121,6 +176,10 @@ class MultiThread:
                 print self.print_when_finish,"left running: %d/%d"%(self.running,self.init_len_list)
 
     def start( self  ):
+        if self.maxThreads_file:
+        #update the number of thread
+            self.update_nb_thread(self.parse_maxThreads_file(), False)
+                    
         for thread in self._threadPool:
             # necessary to give other threads a chance to run
             time.sleep( self.sleep_time )
@@ -1881,7 +1940,14 @@ class DBILocal(DBIBase):
         self.threads=[]
         self.mt = None
         self.started=0
-        self.nb_proc=int(self.nb_proc)
+        try:
+            self.nb_proc=int(self.nb_proc)
+        except ValueError,e:
+            self.nb_proc_file = self.nb_proc
+            f = open(self.nb_proc_file)
+            self.nb_proc = int(f.readlines()[0])
+            f.close()
+
         self.add_commands(commands)
 
     def add_commands(self,commands):
@@ -1934,7 +2000,7 @@ class DBILocal(DBIBase):
 
         (output,error)=self.get_redirection(*self.get_file_redirection(task.id))
 
-        self.started+=1
+        self.started+=1#Is this atomic?
         print "[DBI,%d/%d,%s] %s"%(self.started,len(self.tasks),time.ctime(),c)
         p = Popen(c, shell=True,stdout=output,stderr=error)
         p.wait()
@@ -1955,16 +2021,25 @@ class DBILocal(DBIBase):
             print "[DBI] Test mode, we only print the command to be executed, we don't execute them"
         if not self.file_redirect_stdout and self.nb_proc>1:
             print "[DBI] WARNING: many process but all their stdout are redirected to the parent"
+        elif not self.file_redirect_stdout and self.nb_proc_file:
+            print "[DBI] WARNING: nb process dynamic with one thread and their stdout are redirected to the parent. Don't change to more then 1 thread!"
         if not self.file_redirect_stderr and self.nb_proc>1:
             print "[DBI] WARNING: many process but all their stderr are redirected to the parent"
+        elif not self.file_redirect_stderr and self.nb_proc_file:
+            print "[DBI] WARNING: nb process dynamic with one thread and their stderr are redirected to the parent. Don't change to more then 1 thread!"
         print "[DBI] The Log file are under %s"%self.log_dir
 
         # Execute pre-batch
         self.exec_pre_batch()
 
         # Execute all Tasks (including pre_tasks and post_tasks if any)
-        self.mt=MultiThread(self.run_one_job,self.tasks,self.nb_proc,lambda :("[DBI,%s]"%time.ctime()))
+        nb_proc = self.nb_proc
+        if self.nb_proc_file:
+            nb_proc = self.nb_proc_file
+        self.mt=MultiThread(self.run_one_job,self.tasks,nb_proc,lambda :("[DBI,%s]"%time.ctime()))
         self.mt.start()
+
+        #TODO: Need to wait before post_bach?
 
         # Execute post-batchs
         self.exec_post_batch()
