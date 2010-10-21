@@ -293,7 +293,7 @@ class DBIBase:
             elif t.status==STATUS_FINISHED:
                 finished+=1
             elif t.status==STATUS_WAITING:
-                waiting+=i
+                waiting+=1
                 unfinished.append(t.id)
             else:
                 print "[DBI] jobs %i have an unknow status: %d",t.id
@@ -414,12 +414,12 @@ class Task:
         # get the string representation
         str_sched = get_config_value(self.log_file,'SCHEDULED_TIME')
         # transform in seconds from the start of epoch
-        sched_time = time.mktime(time.strptime(str_sched,ClusterLauncher.time_format))
+        sched_time = time.mktime(time.strptime(str_sched,self.time_format))
 
         # get the string representation
         str_launch = get_config_value(self.log_file,'LAUNCH_TIME')
         # transform in seconds from the start of epoch
-        launch_time = time.mktime(time.strptime(str_launch,ClusterLauncher.time_format))
+        launch_time = time.mktime(time.strptime(str_launch,self.time_format))
 
         return launch_time - sched_time
 
@@ -428,12 +428,12 @@ class Task:
         # get the string representation
         str_launch = get_config_value(self.log_file,'LAUNCH_TIME')
         # transform in seconds from the start of epoch
-        launch_time = time.mktime(time.strptime(str_launch,ClusterLauncher.time_format))
+        launch_time = time.mktime(time.strptime(str_launch,self.time_format))
 
         # get the string representation
         str_finished = get_config_value(self.log_file,'FINISHED_TIME')
         # transform in seconds from the start of epoch
-        finished_time = time.mktime(time.strptime(str_finished,ClusterLauncher.time_format))
+        finished_time = time.mktime(time.strptime(str_finished,self.time_format))
 
         return finished_time - launch_time
 
