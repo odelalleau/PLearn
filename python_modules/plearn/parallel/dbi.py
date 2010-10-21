@@ -13,7 +13,7 @@ import time
 from time import sleep
 import traceback
 
-from utils import get_condor_platform, get_config_value, get_plearndir, get_new_sid, set_config_value, truncate, 
+from utils import get_condor_platform, get_config_value, get_plearndir, get_new_sid, set_config_value, truncate
 
 try:
     from random import shuffle
