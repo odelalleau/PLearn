@@ -1,21 +1,19 @@
 #! /usr/bin/env python
+import datetime
 import os
-import getopt
 import re
 import shutil
 import string
 import subprocess
-import sys
-import time
-import traceback
 from subprocess import Popen,PIPE,STDOUT
-from utils import *
-from configobj import ConfigObj
+import sys
 from textwrap import dedent
-import pdb
 from threading import Thread,Lock
+import time
 from time import sleep
-import datetime
+import traceback
+
+from utils import get_condor_platform, get_config_value, get_plearndir, get_new_sid, set_config_value, truncate, 
 
 try:
     from random import shuffle
