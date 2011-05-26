@@ -213,19 +213,18 @@ void softsoftmax_bprop(int n, int d,
         for(int j=0; j<d; j++)
         {          
             int ij = row_i_pos+j; // ij index offset
-            real l_ij = logH[ij];
-            real h_ij = SOFTSOFTMAX_SAFEEXP(l_ij);
             real sumk = 0;
             for(int k=0, Ukj_pos=j; k<d; k++, Ukj_pos+=d)
             {
                 // Ukj_pos = k*d+j;
                 int ik = row_i_pos+k; // ik index offset
                 real l_ik = logH[ik];
-                real val_k = -H_gr[ik]*SOFTSOFTMAX_SAFEEXP(l_ij+l_ik+U[Ukj_pos]);
+                real val_k = -H_gr[ik]*SOFTSOFTMAX_SAFEEXP(U[Ukj_pos] + l_ik+l_ik - X[ik] + X[ij]);
                 if(k!=j)
                     U_gr[Ukj_pos] += val_k;
                 sumk += val_k;
             }
+            real h_ij = SOFTSOFTMAX_SAFEEXP(logH[ij]);
             X_gr[ij] += H_gr[ij]*h_ij + sumk; 
         }
     }
