@@ -206,6 +206,8 @@ def plotRowsAsImages(X,
         if transpose_img:
             img = transpose(img)        
         imshow(img, interpolation="nearest", cmap = colormap, vmin = vmin, vmax = vmax)
+        if show_colorbar and vmin is None:
+            colorbar()
             
         # if show_colorbar and vmin is None:
         #    colorbar()

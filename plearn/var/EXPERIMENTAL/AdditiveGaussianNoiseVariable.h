@@ -1,8 +1,8 @@
 // -*- C++ -*-
 
-// SoftSoftMaxVariable.h
+// AdditiveGaussianNoiseVariable.h
 //
-// Copyright (C) 2007 Simon Lemieux, Pascal Vincent
+// Copyright (C) 2010 Pascal Vincent
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -32,53 +32,58 @@
 // This file is part of the PLearn library. For more information on the PLearn
 // library, go to the PLearn Web site at www.plearn.org
 
-// Authors: Simon Lemieux, Pascal Vincent
+// Authors: Pascal Vincent
 
-/*! \file SoftSoftMaxVariable.h */
+/*! \file AdditiveGaussianNoiseVariable.h */
 
 
-#ifndef SoftSoftMaxVariable_INC
-#define SoftSoftMaxVariable_INC
+#ifndef AdditiveGaussianNoiseVariable_INC
+#define AdditiveGaussianNoiseVariable_INC
 
-#include <plearn/var/BinaryVariable.h>
+#include <plearn/var/UnaryVariable.h>
+#include <plearn/math/PRandom.h>
 
 namespace PLearn {
 using namespace std;
 
-/*! * SoftSoftMaxVariable * */
+/*! * AdditiveGaussianNoiseVariable * */
 
 /**
- * Kind of SoftMax 
+ * The first sentence should be a BRIEF DESCRIPTION of what the class does.
+ * Place the rest of the class programmer documentation here.  Doxygen supports
+ * Javadoc-style comments.  See http://www.doxygen.org/manual.html
  *
  * @todo Write class to-do's here if there are any.
  *
  * @deprecated Write deprecated stuff here if there is any.  Indicate what else
  * should be used instead.
  */
-class SoftSoftMaxVariable : public BinaryVariable
+class AdditiveGaussianNoiseVariable : public UnaryVariable
 {
-    typedef BinaryVariable inherited;
+    typedef UnaryVariable inherited;
 
 public:
     //#####  Public Build Options  ############################################
 
     //! ### declare public option fields (such as build options) here
     //! Start your comments with Doxygen-compatible comments such as //!
+    PP<PRandom> random_gen;
+    real sigma;
 
 public:
     //#####  Public Member Functions  #########################################
 
     //! Default constructor, usually does nothing
-    SoftSoftMaxVariable(){}
+    AdditiveGaussianNoiseVariable();
 
-    //! Constructor initializing from two input variables
-    // ### Make sure the implementation in the .cc calls inherited constructor
-    // ### and initializes all fields with reasonable default values.
-    SoftSoftMaxVariable(Variable* input1, Variable* input2);
+    // ### If your class has parameters, you probably want a constructor that
+    // ### initializes them
+    // AdditiveGaussianNoiseVariable(Variable* input, param_type the_parameter, ...);
 
     // Your other public member functions go here
 
     //#####  PLearn::Variable methods #########################################
+    // (PLEASE IMPLEMENT IN .cc)
     virtual void recomputeSize(int& l, int& w) const;
     virtual void fprop();
     virtual void bprop();
@@ -93,7 +98,7 @@ public:
     // Declares other standard object methods.
     // ### If your class is not instantiatable (it has pure virtual methods)
     // ### you should replace this by PLEARN_DECLARE_ABSTRACT_OBJECT
-    PLEARN_DECLARE_OBJECT(SoftSoftMaxVariable);
+    PLEARN_DECLARE_OBJECT(AdditiveGaussianNoiseVariable);
 
     // Simply calls inherited::build() then build_()
     virtual void build();
@@ -107,6 +112,9 @@ protected:
 
     // ### Declare protected option fields (such as learned parameters) here
     // ...
+    
+    // will contain true where features have been corrupted 
+    TVec<bool> corrupted;
 
 protected:
     //#####  Protected Member Functions  ######################################
@@ -126,19 +134,16 @@ private:
     //#####  Private Data Members  ############################################
 
     // The rest of the private stuff goes here
-    Mat logH_mat; // storage for keeping log of hidden
 };
 
 // Declares a few other classes and functions related to this class
-DECLARE_OBJECT_PTR(SoftSoftMaxVariable);
+DECLARE_OBJECT_PTR(AdditiveGaussianNoiseVariable);
 
-// ### Put here a convenient method for building your variable from two
-// ### existing ones.
+// ### Put here a convenient method for building your variable.
 // ### e.g., if your class is TotoVariable, with two parameters foo_type foo
 // ### and bar_type bar, you could write:
-// inline Var toto(Var v1, Var v2,
-//                 foo_type foo=default_foo, bar_type bar=default_bar)
-// { return new TotoVariable(v1, v2, foo, bar); }
+// inline Var toto(Var v, foo_type foo=default_foo, bar_type bar=default_bar)
+// { return new TotoVariable(v, foo, bar); }
 
 } // end of namespace PLearn
 

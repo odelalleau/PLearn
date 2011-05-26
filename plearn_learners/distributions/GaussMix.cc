@@ -2724,8 +2724,8 @@ void GaussMix::resizeDataBeforeTraining() {
     eigenvalues.resize(0, 0);
     error_covariance.resize(0);
     initial_weights.resize(nsamples);
-    posteriors.resize(nsamples, L);
-    updated_weights.resize(L, nsamples);
+    //posteriors.resize(nsamples, L);
+    //updated_weights.resize(L, nsamples);
     stage_replaced.resize(L);
     stage_replaced.fill(-1);
 

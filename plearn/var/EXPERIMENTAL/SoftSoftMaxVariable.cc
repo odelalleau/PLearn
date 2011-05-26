@@ -51,6 +51,188 @@ PLEARN_IMPLEMENT_OBJECT(
     );
 
 
+/*
+All matrices must be contiguous space storage.
+X is a (n,d) matrix
+U is a (d,d) matrix
+out is a (n,d) matrix
+
+Beware: You must ensure that U_kk = 0 prior to calling these functions, as they assume this is true
+
+*/
+
+// Provided are two versions: a twopass version and asinglepass version. 
+// The twopass version does a first pass to find the max (no transcendental involved), and a second pass where it calls a single transcendental (exp), 
+// The singlepass version repeatedly calls scalar logadd which means two transcendentals exp and log (possibly yields a numerically more accurate result).
+// I don't know which is faster.
+
+
+#define SOFTSOFTMAX_SAFELOG safelog
+#define SOFTSOFTMAX_EXP exp
+#define SOFTSOFTMAX_SAFEEXP safeexp
+#define SOFTSOFTMAX_LOGADD(a,b) ( ((a)>(b)) ? (a)+log1p(exp((b)-(a))) : (b)+log1p(exp((a)-(b))) )
+// #define SOFTSOFTMAX_LOGADD(a,b) ( ((a)>(b)) ? (a)+softplus((b)-(a)) : (b)+softplus((a)-(b)) )
+// #define SOFTSOFTMAX_LOGADD(a,b) logadd(a,b)
+
+
+// Singlepass version does a stable logadd computation by repeatedly calling scalar logadd (as in normal reduction)
+void softsoftmax_fprop_singlepass_version(int n, int d, 
+                                          const real* __restrict__ const X, 
+                                          const real* __restrict__ const U, 
+                                          real* __restrict__ const H)
+{
+  int Hpos = 0;
+  int xistart = 0;
+  for(int i=0; i<n; i++, xistart+=d)
+    {
+
+      int upos  = 0;
+      for(int j=0; j<d; j++)
+        {
+          real Xij = X[xistart+j];
+
+          real res = X[xistart] + U[upos++] - Xij;
+          for(int xpos=xistart+1; xpos<xistart+d; xpos++, upos++)
+            {
+              real newelem = X[xpos] + U[upos] - Xij;
+              res = SOFTSOFTMAX_LOGADD(res,newelem);
+            }
+
+          H[Hpos++] = SOFTSOFTMAX_SAFEEXP(-res);
+        }
+    }
+}
+
+// Twopass version does a stable logadd computation by first finding the max
+void softsoftmax_fprop_twopass_version(int n, int d, 
+                                       const real* __restrict__ const X, 
+                                       const real* __restrict__ const U, 
+                                       real* __restrict__ const H)
+{
+  int Hpos = 0;
+  int xistart = 0;
+  for(int i=0; i<n; i++, xistart+=d)
+    {
+      int uposstart  = 0;
+      for(int j=0; j<d; j++, uposstart+=d)
+        {
+          real maxelem = X[xistart] + U[uposstart];
+          for(int xpos=xistart+1, upos=uposstart+1; xpos<xistart+d; xpos++, upos++)
+            {
+              real elem = X[xpos] + U[upos];
+              if(elem>maxelem)
+                maxelem = elem;
+            }
+          real res = 0;
+          for(int xpos=xistart, upos=uposstart; xpos<xistart+d; xpos++, upos++)
+            res += SOFTSOFTMAX_EXP(X[xpos] + U[upos] - maxelem);
+          res = maxelem + SOFTSOFTMAX_SAFELOG(res) - X[xistart+j];
+
+          H[Hpos++] = SOFTSOFTMAX_SAFEEXP(-res);
+        }
+    }
+}
+
+// Twopass version does a stable logadd computation by first finding the max
+void softsoftmax_with_log_twopass_version(int n, int d, 
+                                          const real* __restrict__ const X, 
+                                          const real* __restrict__ const U, 
+                                          real* __restrict__ const logH,
+                                          real* __restrict__ const H)
+{
+  int Hpos = 0;
+  int xistart = 0;
+  for(int i=0; i<n; i++, xistart+=d)
+    {
+      int uposstart  = 0;
+      for(int j=0; j<d; j++, uposstart+=d)
+        {
+          real maxelem = X[xistart] + U[uposstart];
+          for(int xpos=xistart+1, upos=uposstart+1; xpos<xistart+d; xpos++, upos++)
+            {
+              real elem = X[xpos] + U[upos];
+              if(elem>maxelem)
+                maxelem = elem;
+            }
+          real res = 0;
+          for(int xpos=xistart, upos=uposstart; xpos<xistart+d; xpos++, upos++)
+            res += SOFTSOFTMAX_EXP(X[xpos] + U[upos] - maxelem);
+          res = -(maxelem + SOFTSOFTMAX_SAFELOG(res) - X[xistart+j]);
+
+          logH[Hpos] = res;
+          H[Hpos] = SOFTSOFTMAX_SAFEEXP(res);
+          Hpos++;
+        }
+    }
+}
+
+
+// Hardapprox version uses only the max of the denominator terms
+void softsoftmax_fprop_hardapprox_version(int n, int d, 
+                                          const real* __restrict__ const X, 
+                                          const real* __restrict__ const U, 
+                                          real* __restrict__ const H)
+{
+  int Hpos = 0;
+  int xistart = 0;
+  for(int i=0; i<n; i++, xistart+=d)
+    {
+      int uposstart  = 0;
+      for(int j=0; j<d; j++, uposstart+=d)
+        {
+          real maxelem = X[xistart] + U[uposstart];
+          for(int xpos=xistart+1, upos=uposstart+1; xpos<xistart+d; xpos++, upos++)
+            {
+              real elem = X[xpos] + U[upos];
+              if(elem>maxelem)
+                maxelem = elem;
+            }
+          H[Hpos++] = SOFTSOFTMAX_SAFEEXP(X[xistart+j]-maxelem);
+        }
+    }
+}
+
+
+void softsoftmax_bprop(int n, int d, 
+                       const real* __restrict__ const X, 
+                       const real* __restrict__ const U, 
+                       const real* __restrict__ const logH,
+                       const real* __restrict__ const H_gr,
+                       real* __restrict__ const X_gr,
+                       real* __restrict__ const U_gr)
+{
+    // Beware: must be passed logH and H_gr, where H_gr is the gradient on H, not on logH. 
+
+    // note: X, logH, H_gr, X_gr  all have the same shape (n,d) 
+    // Offset positions will be the same for these matrices, so we wont prefix the variable holding offset positions for these.
+    // However, variable indicating offset positions kj in U and U_gr (which are (d,d) matrices) will be called Ukj_pos.
+
+
+    for(int i=0, row_i_pos=0; i<n; i++, row_i_pos+=d)
+    {
+        for(int j=0; j<d; j++)
+        {          
+            int ij = row_i_pos+j; // ij index offset
+            real l_ij = logH[ij];
+            real h_ij = SOFTSOFTMAX_SAFEEXP(l_ij);
+            real sumk = 0;
+            for(int k=0, Ukj_pos=j; k<d; k++, Ukj_pos+=d)
+            {
+                // Ukj_pos = k*d+j;
+                int ik = row_i_pos+k; // ik index offset
+                real l_ik = logH[ik];
+                real val_k = -H_gr[ik]*SOFTSOFTMAX_SAFEEXP(l_ij+l_ik+U[Ukj_pos]);
+                if(k!=j)
+                    U_gr[Ukj_pos] += val_k;
+                sumk += val_k;
+            }
+            X_gr[ij] += H_gr[ij]*h_ij + sumk; 
+        }
+    }
+}
+
+
+
 // constructor from input variables.
 SoftSoftMaxVariable::SoftSoftMaxVariable(Variable* input1, Variable* input2)
     : inherited(input1, input2, input1->length(), input1->width())
@@ -73,24 +255,52 @@ void SoftSoftMaxVariable::recomputeSize(int& l, int& w) const
 // ### computes value from input1 and input2 values
 void SoftSoftMaxVariable::fprop()
 {
-    Mat X = input1->matValue,
-        A = input2->matValue;
+    if(input1->matValue.isNotContiguous() || input2->matValue.isNotContiguous())
+        PLERROR("SoftSoftMaxVariable input matrices must be contiguous.");
 
-    real sum;
+    int n = input1->matValue.length();
+    int d = input1->matValue.width();
+    
+    if(input2->matValue.length()!=d || input2->matValue.width()!=d)
+        PLERROR("SoftSoftMaxVariable second input matriuix (U) must be a square matrix of width and length matching the width of first input matrix");
+        
+    // make sure U's diagonal is 0
+    Mat Umat = input2->matValue;
+    for(int i=0; i<d; i++)
+        Umat(i,i) = 0;
 
-    for (int n=0; n<X.length(); n++)    
-        for (int k=0; k<X.width(); k++)
-        {
-            sum=0;
-            for (int i=0; i<X.width(); i++)
-                sum += safeexp(X(n,i) + A(k,i));
-            matValue(n,k) = safeexp(X(n,k))/sum;
-        }    
+    const real* const X = input1->matValue.data();
+    const real* const U = input2->matValue.data();
+    real* const H = matValue.data();
+    logH_mat.resize(n,d);
+    real* const logH = logH_mat.data();
+    
+    softsoftmax_with_log_twopass_version(n, d, X, U, logH, H);
+    // perr << "Twopass version: " << endl << matValue << endl;
+    // softsoftmax_fprop_singlepass_version(n, d, X, U, H);
+    // perr << "Singlepass version: " << endl << matValue << endl;
+    // perr << "--------------------------------------" << endl;
 }
 
 // ### computes input1 and input2 gradients from gradient
 void SoftSoftMaxVariable::bprop()
 {
+    int n = input1->matValue.length();
+    int d = input1->matValue.width();
+    const real* const X = input1->matValue.data();
+    const real* const U = input2->matValue.data();
+    // const real* const H = matValue.data();
+    // For numerical reasons we use logH that has been computed during fprop and stored, rather than H that is in output->matValue. 
+    const real* const logH = logH_mat.data(); 
+    
+    const real* const H_gr = matGradient.data();
+    real* const X_gr = input1->matGradient.data();
+    real* const U_gr = input2->matGradient.data();
+
+    softsoftmax_bprop(n, d, X, U, logH, H_gr,  
+                      X_gr, U_gr);
+
+    /*
     Mat X = input1->matValue,
         A = input2->matValue,
         grad_X = input1->matGradient,
@@ -114,6 +324,7 @@ void SoftSoftMaxVariable::bprop()
                                                                                             
                 grad_A(j,k) -= temp;
             }
+    */
 }
 
 // ### You can implement these methods:
@@ -178,9 +389,6 @@ void SoftSoftMaxVariable::build_()
     // ###    options have been modified.
     // ### You should assume that the parent class' build_() has already been
     // ### called.
-
-    if (input2.length() != input1.width() || input2.width() != input1.width())
-        PLERROR("Length and width of input2 must be equal to width of input1 in SoftSoftMaxVariable");
 }
 
 
