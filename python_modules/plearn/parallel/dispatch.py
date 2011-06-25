@@ -42,7 +42,7 @@ TASK_TYPE_MAP    = { 'apstat.com':            'SshTask',
 
 # Figure out if we are running on a 32bit or 64 bit machine.
 if sys.maxint > 2147483647:
-    apstat_machines = [ 'nai' ]
+    apstat_machines = [ 'nai', 'oni1' ]
 else:
     apstat_machines = [ 'lodur',
                         'garm',
@@ -70,12 +70,13 @@ SSH_MACHINES_MAP = { 'apstat.com': apstat_machines,
                      }
 
 # To override the default of 1
-MAX_LOADAVG = { 'inari'     : 4,
-                'kamado'    : 4,
-                'lodur'     : 4,
-                'mimir'     : 4,
-                'garm'      : 4,
-                'nai'       : 8
+MAX_LOADAVG = { 'inari'     :  4,
+                'kamado'    :  4,
+                'lodur'     :  4,
+                'mimir'     :  4,
+                'garm'      :  4,
+                'nai'       :  8,
+                'oni1'      : 24
               }
 
 # Do not perform a new query for the loadavg until recently launched
