@@ -452,7 +452,7 @@ class OnHostTask( SshTask ):
     def getLaunchCommand(self):
         # Get the first available machine
         self.host = self.nextAvailableMachine()
-        assert self.host == 'host', self.host
+        #assert self.host == 'host', self.host
         return ' '.join(self.argv)
 
     def getLogFileBaseName(self):
