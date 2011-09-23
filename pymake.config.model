@@ -267,7 +267,7 @@ options_choices = [
   [ 'double', 'float' ],
 
   # [ 'throwerrors', 'exiterrors' ],
-  [ 'autopython', 'python23', 'python24', 'python25', 'python26','nopython' ],
+  [ 'autopython', 'python23', 'python24', 'python25', 'python26','python27', 'nopython' ],
 
   [ 'blas', 'noblas' ],
   [ 'defblas', 'nolibblas', 'p3blas', 'p4blas', 'athlonblas', 'pentiumblas',
@@ -413,6 +413,10 @@ if not 'nopython' in optionargs:
             getpyver = toolkit.command_output('python%s -V' % python_version)
             if len(getpyver) == 1:
                 tokens = getpyver[0].split()
+                if len(tokens) > 3 and tokens[2]=="--" and tokens[3] == 'EPD':
+                    # This is a EPD installation of python
+                    # Version are like Python 2.7.2 -- EPD 7.1-2 (64-bit)
+                    tokens = tokens[:2]
                 if len(tokens) == 2:
                     foundver = tokens[1]
                     tokens = foundver.split('.')
@@ -809,6 +813,9 @@ pymakeOption( name = 'python25',
 pymakeOption( name = 'python26',
               description = 'the installed version of python is 2.6.X',
               cpp_definitions = ['PL_PYTHON_VERSION=260'] )
+pymakeOption( name = 'python27',
+              description = 'the installed version of python is 2.7.X',
+              cpp_definitions = ['PL_PYTHON_VERSION=270'] )
 pymakeOption( name = 'nopython',
               description = 'compile w/o python')
 

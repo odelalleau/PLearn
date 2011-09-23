@@ -73,7 +73,23 @@
 #  error "Symbols PL_USE_NUMARRAY and PL_USE_NUMPY are mutually exclusive; they should not both be defined"
 #endif
 
-#if PL_PYTHON_VERSION >= 260
+#if PL_PYTHON_VERSION >= 270
+
+#include <python2.7/Python.h>
+#include <python2.7/compile.h>  // define PyCodeObject
+#include <python2.7/eval.h>     // for accessing PyEval_EvalCode: not included by default
+#ifdef PL_USE_NUMARRAY
+#  include <python2.7/numarray/libnumarray.h>
+#else
+#  ifdef PL_USE_NUMPY
+#    pragma GCC system_header //suppress all warnings/errors for numpy
+#    include <libnumarray.h>
+#  else
+#    error "should use either NumPy (preferred) or NUMARRAY (deprecated)"
+#  endif //def PL_USE_NUMPY
+#endif //def PL_USE_NUMARRAY
+
+#elif PL_PYTHON_VERSION >= 260
 
 #include <python2.6/Python.h>
 #include <python2.6/compile.h>  // define PyCodeObject
