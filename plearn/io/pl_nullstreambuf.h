@@ -41,6 +41,7 @@
 #else
 #  include <streambuf>
 #endif
+#include <cstdio> //Needed by g++ 4.5.1 
 
 namespace PLearn {
 using namespace std;

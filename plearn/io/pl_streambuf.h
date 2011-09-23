@@ -45,6 +45,7 @@
 
 //#include <iosfwd>
 #include <iostream>
+#include <cstdio> //Needed by g++ 4.5.1
 //#include "plerror.h"
 #include <plearn/base/PP.h>
 

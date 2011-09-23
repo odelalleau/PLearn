@@ -40,6 +40,7 @@
 #ifndef PStreamBuf_INC
 #define PStreamBuf_INC
 
+#include <cstdio> //Needed by g++ 4.5.1 
 #include <plearn/base/PP.h>
 
 namespace PLearn {

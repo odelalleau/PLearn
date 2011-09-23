@@ -48,6 +48,7 @@
 #ifndef pl_io_INC
 #define pl_io_INC
 
+#include <cstdio> // needed by g++ 4.5.1
 #include <iostream>
 #include <map>
 #include <plearn/math/pl_math.h>        //!< For 'real'.
