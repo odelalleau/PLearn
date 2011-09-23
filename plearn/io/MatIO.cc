@@ -159,7 +159,7 @@ void loadMat(const string& file_name, TMat<double>& mat)
 void loadVec(const string& file_name, TVec<float>& vec)
 {
     const char* filename = file_name.c_str();
-    char* suffix = strrchr(filename,'.');
+    const char* suffix = strrchr(filename,'.');
     if (!suffix || strcmp(suffix,".avec")==0)
         loadAscii(file_name, vec);
     else if (strcmp(suffix,".pvec")==0 || strcmp(suffix,".lpvec")==0 || strcmp(suffix,".bpvec")==0)
@@ -171,7 +171,7 @@ void loadVec(const string& file_name, TVec<float>& vec)
 void loadVec(const string& file_name, TVec<double>& vec)
 {
     const char* filename = file_name.c_str();
-    char* suffix = strrchr(filename,'.');
+    const char* suffix = strrchr(filename,'.');
     if (!suffix || strcmp(suffix,".avec")==0)
         loadAscii(file_name, vec);
     else if (strcmp(suffix,".pvec")==0 || strcmp(suffix,".lpvec")==0 || strcmp(suffix,".bpvec")==0)
